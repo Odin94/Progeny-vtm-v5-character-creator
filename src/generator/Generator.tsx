@@ -18,6 +18,7 @@ import AttributePicker from "./components/AttributePicker"
 import { Text } from "@mantine/core"
 import SkillPicker from "./components/SkillPicker"
 import GenerationPicker from "./components/GenerationPicker"
+import PredatorTypePicker from "./components/PredatorTypePicker"
 
 
 
@@ -36,6 +37,7 @@ const Generator = () => {
             case 1: return <AttributePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 2: return <SkillPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 3: return <GenerationPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            case 4: return <PredatorTypePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             default: throw new Error(`Step ${selectedStep} not yet implemented`)
         }
     }

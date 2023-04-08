@@ -76,11 +76,32 @@ export const touchstoneSchema = z.object({
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
 
+export const predatorTypeSchema = z.union([
+    z.literal("Alleycat"),
+    z.literal("Extortionist"),
+    z.literal("Roadside Killer"),
+    z.literal("Cleaver"),
+    z.literal("Consensualist"),
+    z.literal("Osiris"),
+    z.literal("Scene Queen"),
+    z.literal("Siren"),
+    z.literal("Sandman"),
+    z.literal("Graverobber"),
+    z.literal("Bagger"),
+    z.literal("Blood Leech"),
+    z.literal("Farmer"),
+])
+export type PredatorType = z.infer<typeof predatorTypeSchema>
+
+
 export const characterSchema = z.object({
     name: z.string(),
     description: z.string(),
-    touchstone: touchstoneSchema.array(),
+
     clan: clanSchema,
+    predatorType: predatorTypeSchema,
+    touchstones: touchstoneSchema.array(),
+    ambition: z.string(),
 
     attributes: attributesSchema,
     skills: skillsSchema,
@@ -104,7 +125,12 @@ export const getEmptyCharacter = (): Character => {
     return characterSchema.parse({
         name: "",
         description: "",
+
         clan: "Brujah",
+        predatorType: "Alleycat",
+        touchstones: [],
+        ambition: "",
+
         attributes: {
             strength: 1,
             dexterity: 1,
