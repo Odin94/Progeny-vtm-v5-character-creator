@@ -13,7 +13,6 @@ export const attributesSchema = z.object({
     wits: z.number().min(1).max(5).int(),
     resolve: z.number().min(1).max(5).int(),
 })
-
 export type Attributes = z.infer<typeof attributesSchema>
 
 
@@ -48,13 +47,40 @@ export const skillsSchema = z.object({
     science: z.number().min(0).max(5).int(),
     technology: z.number().min(0).max(5).int(),
 })
-
 export type Skills = z.infer<typeof skillsSchema>
+
+
+export const meritFlawSchema = z.object({
+    name: z.string(),
+    level: z.number().min(1).int()
+})
+export type MeritFlaw = z.infer<typeof meritFlawSchema>
+
+
+export const clanSchema = z.union([
+    z.literal('Brujah'),
+    z.literal('Gangrel'),
+    z.literal('Nosferatu'),
+    z.literal('Malkavian'),
+    z.literal('Tremere'),
+    z.literal('Ventrue'),
+    z.literal('Toreador'),
+])
+export type Clan = z.infer<typeof clanSchema>
+
+export const touchstoneSchema = z.object({
+    name: z.string(),
+    description: z.string(),
+    conviction: z.string(),
+})
+export type Touchstone = z.infer<typeof touchstoneSchema>
 
 
 export const characterSchema = z.object({
     name: z.string(),
-    clan: z.string(),
+    description: z.string(),
+    touchstone: touchstoneSchema.array(),
+    clan: clanSchema,
 
     attributes: attributesSchema,
     skills: skillsSchema,
@@ -67,14 +93,18 @@ export const characterSchema = z.object({
     willpower: z.number().min(0).int(),
     experience: z.number().min(0).int(),
     humanity: z.number().min(0).int(),
-})
 
+    merits: meritFlawSchema.array(),
+    flaws: meritFlawSchema.array(),
+})
 export type Character = z.infer<typeof characterSchema>
+
 
 export const getEmptyCharacter = (): Character => {
     return characterSchema.parse({
         name: "",
-        clan: "",
+        description: "",
+        clan: "Brujah",
         attributes: {
             strength: 1,
             dexterity: 1,
@@ -124,5 +154,8 @@ export const getEmptyCharacter = (): Character => {
         willpower: 0,
         experience: 0,
         humanity: 0,
+
+        merits: [],
+        flaws: [],
     })
 }
