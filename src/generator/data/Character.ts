@@ -97,11 +97,13 @@ export type PredatorType = z.infer<typeof predatorTypeSchema>
 export const characterSchema = z.object({
     name: z.string(),
     description: z.string(),
+    sire: z.string(),
 
     clan: clanSchema,
     predatorType: predatorTypeSchema,
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
+    desire: z.string(),
 
     attributes: attributesSchema,
     skills: skillsSchema,
@@ -125,11 +127,13 @@ export const getEmptyCharacter = (): Character => {
     return characterSchema.parse({
         name: "",
         description: "",
+        sire: "",
 
         clan: "Brujah",
         predatorType: "Alleycat",
         touchstones: [],
         ambition: "",
+        desire: "",
 
         attributes: {
             strength: 1,
