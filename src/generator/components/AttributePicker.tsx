@@ -34,6 +34,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             }
         } else {
             onClick = () => {
+                const finalPick = { ...pickedAttributes, medium: [...pickedAttributes.medium, attribute] }
                 const attributes = {
                     strength: 2,
                     charisma: 2,
@@ -45,19 +46,25 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                     composure: 2,
                     resolve: 2,
                 }
-                attributes[pickedAttributes.strongest!] = 4
-                attributes[pickedAttributes.weakest!] = 1
-                pickedAttributes.medium.forEach((medium) => attributes[medium] = 3)
+                attributes[finalPick.strongest!] = 4
+                attributes[finalPick.weakest!] = 1
+                finalPick.medium.forEach((medium) => attributes[medium] = 3)
                 setCharacter({ ...character, attributes })
                 nextStep()
             }
         }
 
         const disabled = [pickedAttributes.strongest, pickedAttributes.weakest, ...pickedAttributes.medium].includes(attribute)
+        const dots = (() => {
+            if (attribute === pickedAttributes.strongest) return "💪"
+            if (attribute === pickedAttributes.weakest) return "🪶"
+            if (pickedAttributes.medium.includes(attribute)) return "👌"
+            return ""
+        })()
 
         return (
             <Grid.Col key={attribute} span={4}>
-                <Button disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
+                <Button disabled={disabled} color="grape" fullWidth onClick={onClick}>{dots} {upcase(attribute)}</Button>
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
             </Grid.Col>
         )
