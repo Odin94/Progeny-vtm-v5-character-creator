@@ -1,6 +1,6 @@
-import { Button, Grid, Select, Stack } from "@mantine/core"
-import { Character } from "../data/Character"
+import { Button, Select, Stack } from "@mantine/core"
 import { useState } from "react"
+import { Character } from "../data/Character"
 
 
 type GenerationPickerProps = {

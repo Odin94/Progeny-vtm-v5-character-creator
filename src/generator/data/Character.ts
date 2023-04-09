@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { powerSchema } from "./Disciplines";
+import { clanSchema } from "./Clans";
 
 export const attributesSchema = z.object({
     strength: z.number().min(1).max(5).int(),
@@ -57,17 +59,6 @@ export const meritFlawSchema = z.object({
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
 
 
-export const clanSchema = z.union([
-    z.literal('Brujah'),
-    z.literal('Gangrel'),
-    z.literal('Nosferatu'),
-    z.literal('Malkavian'),
-    z.literal('Tremere'),
-    z.literal('Ventrue'),
-    z.literal('Toreador'),
-])
-export type Clan = z.infer<typeof clanSchema>
-
 export const touchstoneSchema = z.object({
     name: z.string(),
     description: z.string(),
@@ -107,7 +98,7 @@ export const characterSchema = z.object({
 
     attributes: attributesSchema,
     skills: skillsSchema,
-    disciplines: z.string().array(),
+    disciplines: powerSchema.array(),
 
     bloodPotency: z.number().min(0).int(),
     generation: z.number().min(0).int(),
