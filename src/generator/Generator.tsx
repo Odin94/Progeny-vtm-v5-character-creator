@@ -21,6 +21,7 @@ import GenerationPicker from "./components/GenerationPicker"
 import PredatorTypePicker from "./components/PredatorTypePicker"
 import BasicsPicker from "./components/BasicsPicker"
 import DisciplinesPicker from "./components/DisciplinesPicker"
+import TouchstonePicker from "./components/TouchstonePicker"
 
 
 
@@ -42,6 +43,7 @@ const Generator = () => {
             case 4: return <PredatorTypePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 5: return <BasicsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 6: return <DisciplinesPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            case 7: return <TouchstonePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             default: throw new Error(`Step ${selectedStep} not yet implemented`)
         }
     }
