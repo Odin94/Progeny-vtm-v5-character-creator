@@ -54,7 +54,9 @@ export type Skills = z.infer<typeof skillsSchema>
 
 export const meritFlawSchema = z.object({
     name: z.string(),
-    level: z.number().min(1).int()
+    level: z.number().min(1).int(),
+    summary: z.string(),
+    type: z.union([z.literal("merit"), z.literal("flaw")])
 })
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
 

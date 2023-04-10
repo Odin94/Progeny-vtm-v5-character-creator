@@ -22,13 +22,10 @@ import PredatorTypePicker from "./components/PredatorTypePicker"
 import BasicsPicker from "./components/BasicsPicker"
 import DisciplinesPicker from "./components/DisciplinesPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
+import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 
 
 
-// Interface
-// One parent component that holds the character info
-// Cycles through child components for each step, passes them a "completeStep" function that triggers next component and sets value in parent
-// 
 
 const Generator = () => {
     const [character, setCharacter] = useState<Character>(getEmptyCharacter())
@@ -44,7 +41,8 @@ const Generator = () => {
             case 5: return <BasicsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 6: return <DisciplinesPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 7: return <TouchstonePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
-            default: throw new Error(`Step ${selectedStep} not yet implemented`)
+            case 8: return <MeritsAndFlawsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            default: return <Text size={"xl"}>{`Error: Step ${selectedStep} is not implemented`}</Text>
         }
     }
 
