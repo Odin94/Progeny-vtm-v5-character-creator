@@ -15,3 +15,9 @@ Quickly and easily create your VTM character
 * Store selection in localstorage to preserve for re-loads
 * Add blood magic
 * Add more clans and their disciplines..?
+
+
+## Acknowledgement
+* VtM is owned by https://www.worldofdarkness.com/dark-pack
+
+![](readme_assets/darkpack_logo1.png)
