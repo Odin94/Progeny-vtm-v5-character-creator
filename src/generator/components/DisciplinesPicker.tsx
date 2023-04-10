@@ -1,8 +1,8 @@
-import { Accordion, Button, Card, Divider, Grid, Stack, Text } from "@mantine/core"
+import { Accordion, Button, Card, Center, Divider, Grid, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../data/Character"
 import { Discipline, Power, disciplines } from "../data/Disciplines"
-import { upcase } from "../utils"
+import { intersection, upcase } from "../utils"
 
 
 type DisciplinesPickerProps = {
@@ -23,16 +23,18 @@ type DisciplineSetting = {
     }
 }
 
+const getEmptyPower = (): Power => { return { name: "", description: "", dicePool: "", summary: "", level: 1, discipline: "animalism" } }
+
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     const [pickedDisciplines, setPickedDisciplines] = useState<DisciplineSetting>({
         firstDiscipline: {
             name: "",
-            firstPower: { name: "", description: "", dicePool: "", summary: "", level: 1, discipline: "animalism" },
-            secondPower: { name: "", description: "", dicePool: "", summary: "", level: 1, discipline: "animalism" }
+            firstPower: getEmptyPower(),
+            secondPower: getEmptyPower()
         },
         secondDiscipline: {
             name: "",
-            power: { name: "", description: "", dicePool: "", summary: "", level: 1, discipline: "animalism" }
+            power: getEmptyPower()
         }
     })
 
@@ -48,13 +50,42 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         }
     }
 
-    const isPicked = (powerName: string) => {
+    const isPicked = (power: Power) => {
         return [
             pickedDisciplines.firstDiscipline.firstPower.name,
             pickedDisciplines.firstDiscipline.secondPower.name,
             pickedDisciplines.secondDiscipline.power.name,
 
-        ].includes(powerName)
+        ].includes(power.name)
+    }
+    const isLvl2WithNoLvl1PickedYet = (power: Power) => {
+        const powersOfDiscipline = disciplines[power.discipline].powers
+        const pickedPowers = [
+            pickedDisciplines.firstDiscipline.firstPower,
+            pickedDisciplines.firstDiscipline.secondPower,
+            pickedDisciplines.secondDiscipline.power,
+        ]
+        return power.level === 2 && intersection(powersOfDiscipline, pickedPowers).length === 0
+    }
+    const haveAlreadyPickedTwo = (power: Power) => {
+        const powersOfDiscipline = disciplines[power.discipline].powers
+        const pickedPowers = [
+            pickedDisciplines.firstDiscipline.firstPower,
+            pickedDisciplines.firstDiscipline.secondPower,
+            pickedDisciplines.secondDiscipline.power,
+        ]
+        return intersection(powersOfDiscipline, pickedPowers).length === 2
+    }
+    const allPowersPicked = () => pickedDisciplines.secondDiscipline.name !== ""
+
+    const undoPick = () => {
+        if (pickedDisciplines.secondDiscipline.name !== "") {
+            setPickedDisciplines({ ...pickedDisciplines, secondDiscipline: { name: "", power: getEmptyPower() } })
+        } else if (pickedDisciplines.firstDiscipline.secondPower.name !== "") {
+            setPickedDisciplines({ ...pickedDisciplines, firstDiscipline: { ...(pickedDisciplines.firstDiscipline), secondPower: getEmptyPower() } })
+        } else {
+            setPickedDisciplines({ ...pickedDisciplines, firstDiscipline: { name: "", firstPower: getEmptyPower(), secondPower: getEmptyPower() } })
+        }
     }
 
     const getDisciplineAccordionItem = (disciplineName: string, discipline: Discipline) => {
@@ -71,7 +102,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
                                     <Text size="sm" color="dimmed">{power.summary}</Text>
 
-                                    <Button disabled={isPicked(power.name)} onClick={() => pickDisciplinePower(disciplineName, power)} variant="light" color="blue" fullWidth mt="md" radius="md">
+                                    <Button disabled={isPicked(power) || isLvl2WithNoLvl1PickedYet(power) || haveAlreadyPickedTwo(power) || allPowersPicked()} onClick={() => pickDisciplinePower(disciplineName, power)} variant="light" color="blue" fullWidth mt="md" radius="md">
                                         Take {power.name}
                                     </Button>
                                 </Card>
@@ -89,15 +120,18 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             <Stack align="center" spacing="xl">
                 <Grid style={{ width: "100%" }}>
                     <Grid.Col span={2}>
-                        <Stack>
-                            {pickedDisciplines.firstDiscipline.name ? <Text weight={700} size={"xl"}>{upcase(pickedDisciplines.firstDiscipline.name)}</Text> : null}
-                            <Text>{pickedDisciplines.firstDiscipline.firstPower.name}</Text>
-                            <Text>{pickedDisciplines.firstDiscipline.secondPower.name}</Text>
+                        <Center style={{ height: "100%" }}>
+                            <Stack>
+                                {pickedDisciplines.firstDiscipline.name ? <Text weight={700} size={"xl"}>{upcase(pickedDisciplines.firstDiscipline.name)}</Text> : null}
+                                <Text>{pickedDisciplines.firstDiscipline.firstPower.name}</Text>
+                                <Text>{pickedDisciplines.firstDiscipline.secondPower.name}</Text>
 
-                            {pickedDisciplines.secondDiscipline.name ? <> <Divider /> <Text weight={700} size={"xl"}>{upcase(pickedDisciplines.secondDiscipline.name)}</Text></> : null}
-                            <Text>{pickedDisciplines.secondDiscipline.power.name}</Text>
+                                {pickedDisciplines.secondDiscipline.name ? <> <Divider /> <Text weight={700} size={"xl"}>{upcase(pickedDisciplines.secondDiscipline.name)}</Text></> : null}
+                                <Text>{pickedDisciplines.secondDiscipline.power.name}</Text>
 
-                        </Stack>
+                                {pickedDisciplines.firstDiscipline.name ? <Button onClick={undoPick}>Undo last pick</Button> : null}
+                            </Stack>
+                        </Center>
                     </Grid.Col>
                     <Grid.Col span={6} offset={1}>
                         <Accordion style={{ width: "400px" }}>
@@ -108,7 +142,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     </Grid.Col>
                 </Grid>
 
-                <Button disabled={pickedDisciplines.secondDiscipline.name === ""} color="grape" onClick={() => {
+                <Button disabled={!allPowersPicked()} color="grape" onClick={() => {
                     setCharacter({ ...character, disciplines: [pickedDisciplines.firstDiscipline.firstPower, pickedDisciplines.firstDiscipline.secondPower, pickedDisciplines.secondDiscipline.power] })
                     nextStep()
                 }}>Confirm</Button>
