@@ -37,7 +37,7 @@ export const skillsSchema = z.object({
     performance: z.number().min(0).max(5).int(),
     persuasion: z.number().min(0).max(5).int(),
     streetwise: z.number().min(0).max(5).int(),
-    subertfuge: z.number().min(0).max(5).int(),
+    subtertfuge: z.number().min(0).max(5).int(),
 
     academics: z.number().min(0).max(5).int(),
     awareness: z.number().min(0).max(5).int(),
@@ -157,7 +157,7 @@ export const getEmptyCharacter = (): Character => {
             performance: 0,
             persuasion: 0,
             streetwise: 0,
-            subertfuge: 0,
+            subtertfuge: 0,
             academics: 0,
             awareness: 0,
             finance: 0,

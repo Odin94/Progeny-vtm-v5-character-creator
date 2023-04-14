@@ -23,21 +23,21 @@ const SkillDisplay = ({ skills }: SkillsProps) => {
                 <Grid.Col span={4}>
                     <Title order={4}>Physical</Title>
                     {(["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"] as SkillKeys).map((skill) => {
-                        return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 3)}: <Tally n={skills[skill]} /></Text>)
+                        return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} /></Text>)
                     })}
                 </Grid.Col>
 
                 <Grid.Col span={4}>
                     <Title order={4}>Social</Title>
-                    {(["animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subertfuge"] as SkillKeys).map((skill) => {
-                        return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 3)}: <Tally n={skills[skill]} /></Text>)
+                    {(["animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subtertfuge"] as SkillKeys).map((skill) => {
+                        return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} /></Text>)
                     })}
                 </Grid.Col>
 
                 <Grid.Col span={4}>
                     <Title order={4}>Mental</Title>
                     {(["academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",] as SkillKeys).map((skill) => {
-                        return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 3)}: <Tally n={skills[skill]} /></Text>)
+                        return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} /></Text>)
                     })}
                 </Grid.Col>
 
