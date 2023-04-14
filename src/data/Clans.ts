@@ -9,5 +9,6 @@ export const clanSchema = z.union([
     z.literal('Tremere'),
     z.literal('Ventrue'),
     z.literal('Toreador'),
+    z.literal(''),
 ])
 export type Clan = z.infer<typeof clanSchema>

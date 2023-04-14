@@ -83,6 +83,7 @@ export const predatorTypeSchema = z.union([
     z.literal("Bagger"),
     z.literal("Blood Leech"),
     z.literal("Farmer"),
+    z.literal(""),
 ])
 export type PredatorType = z.infer<typeof predatorTypeSchema>
 
@@ -117,13 +118,13 @@ export type Character = z.infer<typeof characterSchema>
 
 
 export const getEmptyCharacter = (): Character => {
-    return characterSchema.parse({
+    return {
         name: "",
         description: "",
         sire: "",
 
-        clan: "Brujah",
-        predatorType: "Alleycat",
+        clan: "",
+        predatorType: "",
         touchstones: [],
         ambition: "",
         desire: "",
@@ -180,5 +181,5 @@ export const getEmptyCharacter = (): Character => {
 
         merits: [],
         flaws: [],
-    })
+    }
 }

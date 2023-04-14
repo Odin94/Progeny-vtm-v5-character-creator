@@ -5,8 +5,8 @@ import SkillDisplay from "./components/SkillsDisplay"
 import BasicsDisplay from "./components/BasicsDisplay"
 import DisciplineDisplay from "./components/DisciplinesDisplay"
 import TouchstoneDisplay from "./components/TouchstoneDisplay"
-import MeritsAndFlawsPicker from "../generator/components/MeritsAndFlawsPicker"
 import MeritsAndFlawsDisplay from "./components/MeritsAndFlawsDisplay"
+import { isEmptyList } from "../generator/utils"
 
 export type SidebarProps = {
     character: Character
@@ -17,6 +17,7 @@ const emptyCharacter = getEmptyCharacter()
 
 const Sidebar = ({ character }: SidebarProps) => {
     const notDefault = (attribute: keyof Character) => {
+        if (isEmptyList(character[attribute])) return false
         return character[attribute] !== emptyCharacter[attribute]
     }
 
