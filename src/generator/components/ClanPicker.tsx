@@ -1,6 +1,6 @@
 import { Grid, Button } from "@mantine/core"
-import { Character } from "../data/Character"
-import { Clan } from "../data/Clans"
+import { Character } from "../../data/Character"
+import { Clan } from "../../data/Clans"
 
 
 type ClanPickerProps = {

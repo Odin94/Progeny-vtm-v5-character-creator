@@ -1,5 +1,5 @@
 import { Button, Grid, Stack } from "@mantine/core"
-import { Character, PredatorType } from "../data/Character"
+import { Character, PredatorType } from "../../data/Character"
 
 
 type PredatorTypePickerProps = {

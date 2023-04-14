@@ -1,5 +1,5 @@
 import { Grid, Button, Divider, Text, Group } from "@mantine/core"
-import { Skills, Character } from "../data/Character"
+import { Skills, Character } from "../../data/Character"
 import { useState } from "react"
 import { upcase } from "../utils"
 
@@ -45,7 +45,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
                     larceny: 0,
                     stealth: 0,
                     survival: 0,
-                    animalKen: 0,
+                    animal_ken: 0,
                     etiquette: 0,
                     insight: 0,
                     intimidation: 0,
@@ -109,7 +109,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
                     {
                         (["atheltics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival",
-                            "animalKen", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge",
+                            "animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge",
                             "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology"] as (keyof Skills)[])
                             .map((clan, i) => createButton(clan, i))
                     }

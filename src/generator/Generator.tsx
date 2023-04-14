@@ -12,7 +12,6 @@
 */
 
 import { useState } from "react"
-import { Character, getEmptyCharacter } from "./data/Character"
 import ClanPicker from "./components/ClanPicker"
 import AttributePicker from "./components/AttributePicker"
 import { Text } from "@mantine/core"
@@ -23,12 +22,15 @@ import BasicsPicker from "./components/BasicsPicker"
 import DisciplinesPicker from "./components/DisciplinesPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
 import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
+import { Character } from "../data/Character"
 
 
+export type GeneratorProps = {
+    character: Character,
+    setCharacter: (character: Character) => void
+}
 
-
-const Generator = () => {
-    const [character, setCharacter] = useState<Character>(getEmptyCharacter())
+const Generator = ({ character, setCharacter }: GeneratorProps) => {
     const [selectedStep, setSelectedStep] = useState(0)
 
     const getStepComponent = () => {

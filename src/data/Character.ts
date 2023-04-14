@@ -29,7 +29,7 @@ export const skillsSchema = z.object({
     stealth: z.number().min(0).max(5).int(),
     survival: z.number().min(0).max(5).int(),
 
-    animalKen: z.number().min(0).max(5).int(),
+    animal_ken: z.number().min(0).max(5).int(),
     etiquette: z.number().min(0).max(5).int(),
     insight: z.number().min(0).max(5).int(),
     intimidation: z.number().min(0).max(5).int(),
@@ -149,7 +149,7 @@ export const getEmptyCharacter = (): Character => {
             larceny: 0,
             stealth: 0,
             survival: 0,
-            animalKen: 0,
+            animal_ken: 0,
             etiquette: 0,
             insight: 0,
             intimidation: 0,

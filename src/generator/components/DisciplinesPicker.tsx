@@ -1,7 +1,7 @@
 import { Accordion, Button, Card, Center, Divider, Grid, Stack, Text } from "@mantine/core"
 import { useState } from "react"
-import { Character } from "../data/Character"
-import { Discipline, Power, disciplines } from "../data/Disciplines"
+import { Character } from "../../data/Character"
+import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { intersection, upcase } from "../utils"
 
 

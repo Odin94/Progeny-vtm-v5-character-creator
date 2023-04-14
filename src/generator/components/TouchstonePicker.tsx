@@ -1,6 +1,6 @@
 import { Button, Center, Divider, Grid, Stack, TextInput, Textarea } from "@mantine/core"
 import { useState } from "react"
-import { Character, Touchstone } from "../data/Character"
+import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from "@fortawesome/free-regular-svg-icons"
 

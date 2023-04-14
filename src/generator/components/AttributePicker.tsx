@@ -1,5 +1,5 @@
 import { Grid, Button, Divider, Text, Group } from "@mantine/core"
-import { Attributes, Character } from "../data/Character"
+import { Attributes, Character } from "../../data/Character"
 import { useState } from "react"
 import { upcase } from "../utils"
 
