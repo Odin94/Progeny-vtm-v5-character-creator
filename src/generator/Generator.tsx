@@ -11,7 +11,7 @@
  * Pick merits and flaws
 */
 
-import { Button, Text } from "@mantine/core"
+import { Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
@@ -23,7 +23,6 @@ import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 import PredatorTypePicker from "./components/PredatorTypePicker"
 import SkillPicker from "./components/SkillPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
-import { downloadCharacterSheet } from "./pdfCreator"
 
 
 export type GeneratorProps = {
@@ -54,8 +53,6 @@ const Generator = ({ character, setCharacter }: GeneratorProps) => {
             <Text>{JSON.stringify(character, null, 2)}</Text>
 
             {getStepComponent()}
-
-            <Button onClick={() => { downloadCharacterSheet(character) }}>Download PDF</Button>
         </div>
     )
 }

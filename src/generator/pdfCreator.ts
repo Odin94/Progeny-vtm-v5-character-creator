@@ -27,7 +27,7 @@ function downloadPdf(fileName: string, bytes: Uint8Array) {
     link.href = window.URL.createObjectURL(blob);
     link.download = fileName;
     link.click();
-};
+}
 
 const createPdf = async (character: Character): Promise<Uint8Array> => {
     const basePdf = await loadTemplate()
