@@ -11,18 +11,19 @@
  * Pick merits and flaws
 */
 
+import { Button, Text } from "@mantine/core"
 import { useState } from "react"
-import ClanPicker from "./components/ClanPicker"
-import AttributePicker from "./components/AttributePicker"
-import { Text } from "@mantine/core"
-import SkillPicker from "./components/SkillPicker"
-import GenerationPicker from "./components/GenerationPicker"
-import PredatorTypePicker from "./components/PredatorTypePicker"
-import BasicsPicker from "./components/BasicsPicker"
-import DisciplinesPicker from "./components/DisciplinesPicker"
-import TouchstonePicker from "./components/TouchstonePicker"
-import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 import { Character } from "../data/Character"
+import AttributePicker from "./components/AttributePicker"
+import BasicsPicker from "./components/BasicsPicker"
+import ClanPicker from "./components/ClanPicker"
+import DisciplinesPicker from "./components/DisciplinesPicker"
+import GenerationPicker from "./components/GenerationPicker"
+import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
+import PredatorTypePicker from "./components/PredatorTypePicker"
+import SkillPicker from "./components/SkillPicker"
+import TouchstonePicker from "./components/TouchstonePicker"
+import { downloadCharacterSheet } from "./pdfCreator"
 
 
 export type GeneratorProps = {
@@ -53,6 +54,8 @@ const Generator = ({ character, setCharacter }: GeneratorProps) => {
             <Text>{JSON.stringify(character, null, 2)}</Text>
 
             {getStepComponent()}
+
+            <Button onClick={() => { downloadCharacterSheet(character) }}>Download PDF</Button>
         </div>
     )
 }

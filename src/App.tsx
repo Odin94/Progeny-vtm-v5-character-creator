@@ -11,7 +11,7 @@ function App() {
     <AppShell
       padding="md"
       navbar={<Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
-      header={<Header height={60} p="xs"><Center><Title>VtM v5 Character Generator </Title><Text c="dimmed">&nbsp; by Odin</Text></Center></Header>}
+      header={<Header height={60} p="xs"><Center><Title>VtM v5 Character Creator</Title><Text c="dimmed">&nbsp; by Odin</Text></Center></Header>}
       styles={(theme) => ({
         main: { backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] },
       })}

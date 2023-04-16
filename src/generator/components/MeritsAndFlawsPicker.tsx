@@ -145,7 +145,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         const wasPickedLevel = alreadyPickedItem?.level
 
         const createButton = (level: number) => {
-            return (<Button disabled={!!wasPickedLevel && wasPickedLevel >= level} onClick={() => {
+            return (<Button key={level} disabled={!!wasPickedLevel && wasPickedLevel >= level} onClick={() => {
                 // TODO: Enable clicking buttons again for same merit/flaw and updating the existing pick
                 if (type === "flaw") {
                     if (remainingFlaws < level) return
@@ -161,7 +161,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         let bg = {}
         if (!!wasPickedLevel) bg = { background: type === "flaw" ? "red" : "green" }
         return (<>
-            <Text style={bg}>
+            <Text style={bg} key={meritOrFlaw.name}>
                 {icon} &nbsp;
                 {meritOrFlaw.name} - {meritOrFlaw.summary}
 
@@ -177,7 +177,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             <Grid>
                 {meritsAndFlaws.map((category) => {
                     return (
-                        <Grid.Col span={6}>
+                        <Grid.Col span={6} key={category.title}>
                             <Stack>
                                 <Text size={"xl"}>{category.title}</Text>
                                 {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}

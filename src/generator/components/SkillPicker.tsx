@@ -53,7 +53,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
                     performance: 0,
                     persuasion: 0,
                     streetwise: 0,
-                    subtertfuge: 0,
+                    subterfuge: 0,
                     academics: 0,
                     awareness: 0,
                     finance: 0,

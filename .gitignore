@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+src/resources/v5_charactersheet_fillable_v3.pdf
+src/resources/v5_charactersheet_fillable_v3.base64
