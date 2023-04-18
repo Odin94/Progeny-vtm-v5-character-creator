@@ -77,13 +77,13 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
         const dots = (() => {
             if (pickedSkills.strongest.includes(skill)) return "🥇"
             if (pickedSkills.decent.includes(skill)) return "🥈"
-            if (pickedSkills.acceptable.includes(skill)) return "🥉👌"
+            if (pickedSkills.acceptable.includes(skill)) return "🥉"
             return ""
         })()
 
         return (
             <Grid.Col key={skill} span={4}>
-                <Button disabled={disabled} color="grape" fullWidth onClick={onClick}>{dots} {upcase(skill)}</Button>
+                <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(skill)}</Button>
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
             </Grid.Col>
         )

@@ -64,7 +64,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
 
         return (
             <Grid.Col key={attribute} span={4}>
-                <Button disabled={disabled} color="grape" fullWidth onClick={onClick}>{dots} {upcase(attribute)}</Button>
+                <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
             </Grid.Col>
         )

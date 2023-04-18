@@ -1,8 +1,7 @@
-import { Attributes, Skills } from '../data/Character';
-import { Character } from '../data/Character';
-import base64Pdf from '../resources/v5_charactersheet_fillable_v3.base64';
+import { PDFDocument, PDFForm } from 'pdf-lib';
+import { Attributes, Character, Skills } from '../data/Character';
 import base64Check from '../resources/CheckSolid.base64';
-import { PDFDocument, PDFForm } from 'pdf-lib'
+import base64Pdf from '../resources/v5_charactersheet_fillable_v3.base64';
 import { upcase } from './utils';
 
 type BloodPotencyEffect = {
@@ -76,7 +75,18 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     }
 
     // Blood Potency
-    const bloodPotency = 1
+    const bloodPotency = (() => {
+        switch (character.generation) {
+            case 16:
+            case 15:
+            case 14: return 0
+            case 13:
+            case 12: return 1
+            case 11:
+            case 10: return 2
+            default: return 1
+        }
+    })()
     for (let i = 1; i <= bloodPotency; i++) {
         form.getCheckBox(`potency${i}`).check()
     }
@@ -192,6 +202,21 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
             .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
             .join("\n\n")
     )
+
+    // Experience
+    const experience = (() => {
+        switch (character.generation) {
+            case 16:
+            case 15:
+            case 14: return 0
+            case 13:
+            case 12: return 15
+            case 11:
+            case 10: return 35
+            default: return 0
+        }
+    })()
+    form.getTextField("totalxp").setText(`${experience} XP`)
 
     return await pdfDoc.save()
 }
