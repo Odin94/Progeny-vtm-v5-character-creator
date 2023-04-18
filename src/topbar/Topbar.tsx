@@ -1,4 +1,5 @@
 import { Center, Grid, Text, Title } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { Character } from "../data/Character"
 import TopMenu from "./TopMenu"
 
@@ -8,13 +9,14 @@ export type TopBarProps = {
 }
 
 const Topbar = ({ character, setCharacter }: TopBarProps) => {
+    const largeScreen = useMediaQuery('(min-width: 1500px)');
 
     return (
         <>
             <Grid>
-                <Grid.Col offset={4} span={4}>
+                <Grid.Col offset={largeScreen ? 4 : 2} span={largeScreen ? 4 : 6}>
                     <Center>
-                        <Title>VtM v5 Character Creator</Title>
+                        <Title order={largeScreen ? 1 : 3}>VtM v5 Character Creator</Title>
                         <Text c="dimmed">&nbsp; by Odin</Text>
                     </Center>
                 </Grid.Col>
