@@ -59,17 +59,23 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
         }
     })
 
-    // TODO: Consider fortitude
-    const health = 3 + character.attributes["stamina"]
+    // Health
+    let health = 3 + character.attributes["stamina"]
+    if (character.disciplines.find((power) => power.name === "Resilience")) {
+        const fortitudeLevel = character.disciplines.filter((power) => power.discipline === "fortitude").length
+        health += fortitudeLevel
+    }
     for (let i = 10; i > health; i--) {
         form.getTextField(`health${i}`).setText("-")
     }
 
+    // Willpower
     const willpower = character.attributes["composure"] + character.attributes["resolve"]
     for (let i = 1; i <= willpower; i++) {
         form.getTextField(`will${i}`).setText("o")
     }
 
+    // Blood Potency
     const bloodPotency = 1
     for (let i = 1; i <= bloodPotency; i++) {
         form.getCheckBox(`potency${i}`).check()
@@ -91,6 +97,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     form.getTextField("Feeding Penalty").setText(effects.penalty)
     form.getTextField("Bane Severity").setText(`${effects.bane}`)
 
+    //Humanity
     const humanity = 7
     const checkImageBytes = await fetch(base64Check).then(res => res.text())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
@@ -98,6 +105,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
         form.getButton(`Button7.${i}`).setImage(checkImage)
     }
 
+    // Top fields
     const nameField = form.getTextField("Name")
     nameField.setText(character.name)
 
@@ -165,7 +173,6 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
         subterfuge: "AT.1.1.2.14",
     }
 
-
     // Merits & flaws
     const meritFlawBase = "adflaw"
     const meritsAndFlaws = [...character.merits, ...character.flaws]
@@ -179,6 +186,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
         }
     })
 
+    // Touchstones & Convictions
     form.getTextField("Touchstones Convictions").setText(
         character.touchstones
             .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
