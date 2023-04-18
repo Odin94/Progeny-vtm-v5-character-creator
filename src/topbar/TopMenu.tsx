@@ -1,6 +1,7 @@
-import { faFileExport, faFloppyDisk, faUpload } from "@fortawesome/free-solid-svg-icons"
+import { faAnkh, faFileExport, faFloppyDisk, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Center, Container, FileInput, Menu, Space, Stack } from "@mantine/core"
+import { Button, Divider, FileInput, Group, Menu, Modal, Stack, Text } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
 import { Buffer } from 'buffer'
 import { useState } from "react"
 import { Character, characterSchema } from "../data/Character"
@@ -13,58 +14,63 @@ export type TopMenuProps = {
 }
 
 const TopMenu = ({ character, setCharacter }: TopMenuProps) => {
-    const [loadedCharacter, setLoadedCharacter] = useState<File | null>(null);
-    const [opened, setOpened] = useState(false);
+    const [loadedFile, setLoadedFile] = useState<File | null>(null);
+    const [menuOpened, setMenuOpened] = useState(false);
+    const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
-    return (<Menu shadow="md" width={200} opened={opened} onChange={setOpened}>
-        <Menu.Target>
-            <Button>(Down)load</Button>
-        </Menu.Target>
+    return (
+        <Menu shadow="md" width={200} opened={menuOpened} onChange={setMenuOpened}>
+            <Menu.Target>
+                <Button color="grape" variant="light" leftIcon={<FontAwesomeIcon icon={faAnkh} />}>(Down)load</Button>
+            </Menu.Target>
 
-        <Menu.Dropdown>
-            <Menu.Item icon={<FontAwesomeIcon icon={faFileExport} />} onClick={() => { downloadCharacterSheet(character) }}>Download PDF</Menu.Item>
-            <Menu.Item icon={<FontAwesomeIcon icon={faFloppyDisk} />} onClick={() => { downloadJson(character) }}>Download JSON</Menu.Item>
+            <Menu.Dropdown>
+                <Menu.Item icon={<FontAwesomeIcon icon={faFileExport} />} onClick={() => { downloadCharacterSheet(character) }}>Download PDF</Menu.Item>
+                <Menu.Item icon={<FontAwesomeIcon icon={faFloppyDisk} />} onClick={() => { downloadJson(character) }}>Download JSON</Menu.Item>
 
-            <Menu.Divider />
+                <Menu.Divider />
 
-            <Menu.Item icon={<FontAwesomeIcon icon={faUpload} />}>Load Character from JSON</Menu.Item>
+                <FileInput
+                    placeholder="character.json"
+                    label="Load character from json"
+                    value={loadedFile}
+                    onChange={async (payload: File | null) => {
+                        console.log(payload)
+                        if (!payload) return
 
-            <Stack>
-                <Center>
-                    {/* TODO: Get this functionality into the Menu.Item for uploading somehow..? */}
-                    {/* TODO: Make this open the LoadConfirmModal */}
-                    <FileInput
-                        placeholder="character.json"
-                        label="Load character from json"
-                        value={loadedCharacter}
-                        onChange={async (payload: File | null) => {
-                            if (!payload) return
+                        console.log("Clicked")
+                        setLoadedFile(payload)
+                        openModal()
+                    }}
+                />
+            </Menu.Dropdown>
 
-                            const fileData = await getUploadFile(payload)
+            <Modal opened={modalOpened} onClose={closeModal} title="Load" centered>
+                <Stack>
+                    <Text fz={"xl"}>Overwrite current character and load from selected file?</Text>
+                    <Divider my="sm" />
+                    <Group position="apart">
+                        <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeModal}>Cancel</Button>
+
+                        <Button color="red" onClick={async () => {
+                            if (!loadedFile) {
+                                console.log("Error: No file loaded!")
+                                return
+                            }
+                            const fileData = await getUploadFile(loadedFile)
                             const base64 = fileData.split(",")[1]
                             const json = Buffer.from(base64, "base64").toString()
                             const parsed = JSON.parse(json)
                             console.log({ loadedCharacter: parsed })
 
                             setCharacter(characterSchema.parse(parsed))
-                        }}
-                    />
-                </Center>
-                <Space h={"xs"} />
-                {/* <Button color="red" onClick={async () => {
-                        if (!loadedCharacter) return
-
-                        const fileData = await getUploadFile(loadedCharacter)
-                        const base64 = fileData.split(",")[1]
-                        const json = Buffer.from(base64, "base64").toString()
-                        const parsed = JSON.parse(json)
-                        console.log({ loadedCharacter: parsed })
-
-                        setCharacter(characterSchema.parse(parsed))
-                    }}>Load character</Button> */}
-            </Stack>
-        </Menu.Dropdown>
-    </Menu>)
+                            closeModal()
+                        }}>Load/Overwrite character</Button>
+                    </Group>
+                </Stack>
+            </Modal>
+        </Menu>
+    )
 }
 
 export default TopMenu
