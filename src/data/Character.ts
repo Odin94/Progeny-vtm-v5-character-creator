@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { powerSchema } from "./Disciplines";
 import { clanSchema } from "./Clans";
+import { predatorTypeSchema } from "./PredatorType";
 
 export const attributesSchema = z.object({
     strength: z.number().min(1).max(5).int(),
@@ -67,25 +68,6 @@ export const touchstoneSchema = z.object({
     conviction: z.string(),
 })
 export type Touchstone = z.infer<typeof touchstoneSchema>
-
-
-export const predatorTypeSchema = z.union([
-    z.literal("Alleycat"),
-    z.literal("Extortionist"),
-    z.literal("Roadside Killer"),
-    z.literal("Cleaver"),
-    z.literal("Consensualist"),
-    z.literal("Osiris"),
-    z.literal("Scene Queen"),
-    z.literal("Siren"),
-    z.literal("Sandman"),
-    z.literal("Graverobber"),
-    z.literal("Bagger"),
-    z.literal("Blood Leech"),
-    z.literal("Farmer"),
-    z.literal(""),
-])
-export type PredatorType = z.infer<typeof predatorTypeSchema>
 
 
 export const characterSchema = z.object({
