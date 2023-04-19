@@ -131,11 +131,13 @@ const meritIcon = () => {
 
 
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
-    const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([])
-    const [remainingMerits, setRemainingMerits] = useState(7)
-    const [remainingFlaws, setRemainingFlaws] = useState(2)
+    const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([...(character.merits), ...(character.flaws)])
 
+    const usedMeritsLevel = character.merits.reduce((acc, { level }) => acc + level, 0)
+    const usedFLawsLevel = character.flaws.reduce((acc, { level }) => acc + level, 0)
 
+    const [remainingMerits, setRemainingMerits] = useState(7 - usedMeritsLevel)
+    const [remainingFlaws, setRemainingFlaws] = useState(2 - usedFLawsLevel)
 
     const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => {
         const buttonColor = type === "flaw" ? "red" : "green"
@@ -159,7 +161,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         }
 
         let bg = {}
-        if (!!wasPickedLevel) bg = { background: type === "flaw" ? "red" : "green" }
+        if (!!wasPickedLevel) bg = { background: type === "flaw" ? "rgba(255, 25, 25, 0.2)" : "rgba(50, 255, 100, 0.2)" }
         return (<>
             <Text style={bg} key={meritOrFlaw.name}>
                 {icon} &nbsp;
