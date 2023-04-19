@@ -147,7 +147,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         const wasPickedLevel = alreadyPickedItem?.level
 
         const createButton = (level: number) => {
-            return (<Button key={level} disabled={!!wasPickedLevel && wasPickedLevel >= level} onClick={() => {
+            return (<Button key={meritOrFlaw.name + level} disabled={!!wasPickedLevel && wasPickedLevel >= level} onClick={() => {
                 // TODO: Enable clicking buttons again for same merit/flaw and updating the existing pick
                 if (type === "flaw") {
                     if (remainingFlaws < level) return

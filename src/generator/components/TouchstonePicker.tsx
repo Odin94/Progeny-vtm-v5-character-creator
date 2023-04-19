@@ -1,4 +1,4 @@
-import { Button, Center, Divider, Grid, Stack, TextInput, Textarea } from "@mantine/core"
+import { Button, Center, Divider, Grid, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
 import { useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -22,8 +22,12 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
     return (
         <div>
             <h1>Pick your Touchstones & Convictions</h1>
-            <Stack align="center" spacing="xl">
 
+            <Text ta="center" fz="xl" fw={700} c="red">Touchstones</Text>
+            <hr color="#e03131" />
+            <Space h={"sm"} />
+
+            <Stack align="center" spacing="xl">
                 {
                     touchtones.map((touchstone, i) => {
                         return (

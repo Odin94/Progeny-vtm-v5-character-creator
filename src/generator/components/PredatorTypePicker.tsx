@@ -1,4 +1,4 @@
-import { Button, Grid, Stack } from "@mantine/core"
+import { Button, Grid, Space, Stack, Text } from "@mantine/core"
 import { Character, PredatorType } from "../../data/Character"
 
 
@@ -21,6 +21,11 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     return (
         <div>
             <h1>How do you obtain blood?</h1>
+
+            <Text ta="center" fz="xl" fw={700} c="red">Predator Type</Text>
+            <hr color="#e03131" />
+            <Space h={"sm"} />
+
             <Stack spacing="xl">
                 <Grid>
                     <Grid.Col span={5}><h1>Brutal</h1></Grid.Col>

@@ -1,4 +1,4 @@
-import { Button, Select, Stack } from "@mantine/core"
+import { Button, Select, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 
@@ -15,6 +15,11 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
     return (
         <div>
             <h1>Pick your generation</h1>
+
+            <Text ta="center" fz="xl" fw={700} c="red">Generation</Text>
+            <hr color="#e03131" />
+            <Space h={"sm"} />
+
             <Stack align="center" spacing="xl">
                 <Select
                     style={{ width: "300px" }}

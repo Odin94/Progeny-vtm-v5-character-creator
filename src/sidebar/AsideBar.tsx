@@ -13,7 +13,7 @@ export type AsideBarProps = {
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
     return (
-        <Aside p="md" hiddenBreakpoint="sm" width={{ sm: 200, xs: 50 }}>
+        <Aside p="md" hiddenBreakpoint="sm" width={{ sm: 200, xs: 50 }} style={{ zIndex: 0 }}>
             <Center h={"100%"}>
                 <Stepper color="grape" orientation="vertical" active={selectedStep} onStepClick={setSelectedStep} breakpoint="sm">
                     {(["clan", "attributes", "skills", "generation", "predatorType", "name", "disciplines", "touchstones", "merits"] as (keyof Character)[]).map((title) => {

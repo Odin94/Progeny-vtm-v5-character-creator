@@ -59,7 +59,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
-        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) { // -1 so the very last pick goes to nextStep()
+        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {  // -1 so the very last pick goes to nextStep()
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] })
             }

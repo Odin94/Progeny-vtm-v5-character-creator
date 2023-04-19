@@ -1,4 +1,4 @@
-import { Accordion, Button, Card, Center, Divider, Grid, Stack, Text } from "@mantine/core"
+import { Accordion, Button, Card, Center, Divider, Grid, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
@@ -117,6 +117,11 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     return (
         <div>
             <h1>Pick 2 powers in one disciplines, and 1 power in another</h1>
+
+            <Text ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
+            <hr color="#e03131" />
+            <Space h={"sm"} />
+
             <Stack align="center" spacing="xl">
                 <Grid style={{ width: "100%" }}>
                     <Grid.Col span={2}>

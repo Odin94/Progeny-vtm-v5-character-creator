@@ -35,14 +35,13 @@ const TopMenu = ({ character, setCharacter }: TopMenuProps) => {
                     label="Load character from json"
                     value={loadedFile}
                     onChange={async (payload: File | null) => {
-                        console.log(payload)
                         if (!payload) return
 
-                        console.log("Clicked")
                         setLoadedFile(payload)
                         openModal()
                     }}
                 />
+                {/* TODO: Add reset button */}
             </Menu.Dropdown>
 
             <Modal opened={modalOpened} onClose={closeModal} title="Load" centered>

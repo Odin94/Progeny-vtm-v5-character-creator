@@ -1,4 +1,4 @@
-import { Grid, Button } from "@mantine/core"
+import { Grid, Button, Text, Space } from "@mantine/core"
 import { Character } from "../../data/Character"
 import { Clan } from "../../data/Clans"
 
@@ -24,6 +24,11 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
     return (
         <div>
             <h1>Pick your clan</h1>
+
+            <Text ta="center" fz="xl" fw={700} c="red">Clan</Text>
+            <hr color="#e03131" />
+            <Space h={"sm"} />
+
             <Grid grow>
                 {
                     (["Brujah", "Gangrel", "Nosferatu", "Malkavian", "Tremere", "Ventrue", "Toreador"] as Clan[]).map((clan) => createButton(clan))
