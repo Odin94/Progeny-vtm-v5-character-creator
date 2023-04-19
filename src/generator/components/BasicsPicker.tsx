@@ -10,11 +10,11 @@ type BasicsPickerProps = {
 }
 
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
-    const [name, setName] = useState("")
-    const [sire, setSire] = useState("")
-    const [ambition, setAmbition] = useState("")
-    const [desire, setDesire] = useState("")
-    const [description, setDescription] = useState("")
+    const [name, setName] = useState(character.name)
+    const [sire, setSire] = useState(character.sire)
+    const [ambition, setAmbition] = useState(character.ambition)
+    const [desire, setDesire] = useState(character.desire)
+    const [description, setDescription] = useState(character.description)
 
     return (
         <div>

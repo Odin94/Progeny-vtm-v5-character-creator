@@ -28,13 +28,13 @@ const getEmptyPower = (): Power => { return { name: "", description: "", dicePoo
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     const [pickedDisciplines, setPickedDisciplines] = useState<DisciplineSetting>({
         firstDiscipline: {
-            name: "",
-            firstPower: getEmptyPower(),
-            secondPower: getEmptyPower()
+            name: character.disciplines[0]?.discipline ?? "",
+            firstPower: character.disciplines[0] ?? getEmptyPower(),
+            secondPower: character.disciplines[1] ?? getEmptyPower()
         },
         secondDiscipline: {
-            name: "",
-            power: getEmptyPower()
+            name: character.disciplines[2]?.discipline ?? "",
+            power: character.disciplines[2] ?? getEmptyPower()
         }
     })
 

@@ -1,4 +1,4 @@
-import { Character } from "../data/Character";
+import { Attributes, Character, Skills, getEmptyCharacter } from "../data/Character";
 
 export const upcase = (str: string) => str[0].toUpperCase() + str.slice(1);
 
@@ -28,3 +28,18 @@ export const getUploadFile = async (file: File): Promise<string> => {
         reader.readAsDataURL(file);
     });
 }
+
+export const emptyCharacter = getEmptyCharacter()
+const isNonDefaultAttributes = (attributes: Attributes) => {
+    return !Object.values(attributes).reduce((acc, attrLvl) => acc && attrLvl === 1, true)
+}
+const isNonDefaultSkills = (skills: Skills) => {
+    return !Object.values(skills).reduce((acc, skillLvl) => acc && skillLvl === 0, true)
+}
+export const notDefault = (character: Character, attribute: keyof Character) => {
+    if (isEmptyList(character[attribute])) return false
+    if (attribute === "attributes") return isNonDefaultAttributes(character[attribute])
+    if (attribute === "skills") return isNonDefaultSkills(character[attribute])
+    return character[attribute] !== emptyCharacter[attribute]
+}
+export const isDefault = (character: Character, attribute: keyof Character) => !notDefault(character, attribute)

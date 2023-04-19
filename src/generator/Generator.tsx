@@ -12,7 +12,6 @@
 */
 
 import { Text } from "@mantine/core"
-import { useState } from "react"
 import { Character } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
@@ -28,11 +27,12 @@ import TouchstonePicker from "./components/TouchstonePicker"
 export type GeneratorProps = {
     character: Character,
     setCharacter: (character: Character) => void
+
+    selectedStep: number,
+    setSelectedStep: (step: number) => void
 }
 
-const Generator = ({ character, setCharacter }: GeneratorProps) => {
-    const [selectedStep, setSelectedStep] = useState(0)
-
+const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
     const getStepComponent = () => {
         switch (selectedStep) {
             case 0: return <ClanPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
@@ -50,8 +50,7 @@ const Generator = ({ character, setCharacter }: GeneratorProps) => {
 
     return (
         <div>
-            <Text>{JSON.stringify(character, null, 2)}</Text>
-
+            {/* <Text>{JSON.stringify(character, null, 2)}</Text> */}
             {getStepComponent()}
         </div>
     )
