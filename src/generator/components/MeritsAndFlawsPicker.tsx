@@ -163,7 +163,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         let bg = {}
         if (!!wasPickedLevel) bg = { background: type === "flaw" ? "rgba(255, 25, 25, 0.2)" : "rgba(50, 255, 100, 0.2)" }
         return (<>
-            <Text style={bg} key={meritOrFlaw.name}>
+            <Text style={{ ...bg, padding: "5px" }} key={meritOrFlaw.name}>
                 {icon} &nbsp;
                 {meritOrFlaw.name} - {meritOrFlaw.summary}
 

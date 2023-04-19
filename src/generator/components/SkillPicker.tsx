@@ -1,4 +1,4 @@
-import { Grid, Button, Divider, Text, Group } from "@mantine/core"
+import { Grid, Button, Divider, Text, Group, Space } from "@mantine/core"
 import { Skills, Character } from "../../data/Character"
 import { useState } from "react"
 import { upcase } from "../utils"
@@ -10,25 +10,56 @@ type SkillPickerProps = {
 }
 
 type SkillSetting = {
+    specialty: (keyof Skills)[],
     strongest: (keyof Skills)[],
     decent: (keyof Skills)[],
     acceptable: (keyof Skills)[],
 }
 
+type DistributionKey = "Jack of All Trades" | "Balanced" | "Specialist"
+
+const distributionByType: Record<DistributionKey, { strongest: number, decent: number, acceptable: number, specialty: number }> = {
+    "Jack of All Trades": {
+        specialty: 0,
+        strongest: 1,
+        decent: 8,
+        acceptable: 10
+    },
+    Balanced: {
+        specialty: 0,
+        strongest: 3,
+        decent: 5,
+        acceptable: 7
+    },
+    Specialist: {
+        specialty: 1,
+        strongest: 3,
+        decent: 3,
+        acceptable: 3
+    },
+}
+
 const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) => {
-    const [pickedSkills, setPickedSkills] = useState<SkillSetting>({ strongest: [], decent: [], acceptable: [] })
+    const [pickedSkills, setPickedSkills] = useState<SkillSetting>({ specialty: [], strongest: [], decent: [], acceptable: [] })
+    const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
+    const distr = pickedDistribution ? distributionByType[pickedDistribution] : { specialty: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: keyof Skills, i: number) => {
         let onClick;
-        if (pickedSkills.strongest.length < 3) {
+        if (pickedSkills.specialty.length < distr.specialty) {
+            onClick = () => {
+                setPickedSkills({ ...pickedSkills, specialty: [...pickedSkills.specialty, skill] })
+            }
+        }
+        else if (pickedSkills.strongest.length < distr.strongest) {
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, strongest: [...pickedSkills.strongest, skill] })
             }
-        } else if (pickedSkills.decent.length < 5) {
+        } else if (pickedSkills.decent.length < distr.decent) {
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
-        } else if (pickedSkills.acceptable.length < 6) {
+        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) { // -1 so the very last pick goes to nextStep()
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] })
             }
@@ -64,6 +95,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
                     science: 0,
                     technology: 0,
                 }
+                finalPick.specialty.forEach((specialty) => skills[specialty] = 4)
                 finalPick.strongest.forEach((strongest) => skills[strongest] = 3)
                 finalPick.decent.forEach((decent) => skills[decent] = 2)
                 finalPick.acceptable.forEach((acceptable) => skills[acceptable] = 1)
@@ -73,8 +105,9 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
             }
         }
 
-        const disabled = [...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill)
+        const disabled = [...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill) || pickedDistribution === null
         const dots = (() => {
+            if (pickedSkills.specialty.includes(skill)) return "🚀"
             if (pickedSkills.strongest.includes(skill)) return "🥇"
             if (pickedSkills.decent.includes(skill)) return "🥈"
             if (pickedSkills.acceptable.includes(skill)) return "🥉"
@@ -90,9 +123,11 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
     }
 
     const header = (() => {
-        if (pickedSkills.strongest.length < 3) return (<h1>Pick your <b>3 strongest</b> skills</h1>)
-        if (pickedSkills.decent.length < 5) return (<h1>Pick <b>5</b> skills you're <b>decent</b> in</h1>)
-        return (<h1>Pick <b>7</b> skills you're <b>ok</b> in</h1>)
+        if (!pickedDistribution) return (<h1>Pick your <b>Skill Distribution</b></h1>)
+        if (pickedSkills.specialty.length < distr.specialty) return (<h1>Pick your <b>{distr.specialty} specialty</b> skill</h1>)
+        if (pickedSkills.strongest.length < distr.strongest) return (<h1>Pick your <b>{distr.strongest} strongest</b> skills</h1>)
+        if (pickedSkills.decent.length < distr.decent) return (<h1>Pick <b>{distr.decent}</b> skills you're <b>decent</b> in</h1>)
+        return (<h1>Pick <b>{distr.acceptable}</b> skills you're <b>ok</b> in</h1>)
     })()
     return (
         <div>
@@ -101,6 +136,19 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
             <Text ta="center" fz="xl" fw={700} c="red">Skills</Text>
 
             <hr color="#e03131" />
+
+            <Space h="sm" />
+            <Grid grow>
+                {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
+                    return (
+                        <Grid.Col span={4} key={distribution}>
+                            <Button disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>{distribution}</Button>
+                        </Grid.Col>
+                    )
+                })}
+            </Grid>
+            <Space h="xl" />
+            <Space h="xl" />
 
             <Group>
                 <Grid grow>
