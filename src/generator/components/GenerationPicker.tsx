@@ -13,7 +13,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
     const [generation, setGeneration] = useState<string | null>("13");
 
     return (
-        <div>
+        <div style={{ width: "100%" }}>
             <h1>Pick your generation</h1>
 
             <Text ta="center" fz="xl" fw={700} c="red">Generation</Text>
@@ -22,7 +22,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
             <Stack align="center" spacing="xl">
                 <Select
-                    style={{ width: "300px" }}
+                    style={{ width: "100%" }}
                     value={generation}
                     onChange={setGeneration}
                     label="When were you turned?"

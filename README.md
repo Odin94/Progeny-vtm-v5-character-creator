@@ -16,15 +16,16 @@ Quickly and easily create your VTM character
 
 
 ## TODOs:
-* Add pretty VtM logos & images
+* Add pretty VtM logos & images  (consider https://www.svgrepo.com)
 * Make things prettier in general
 * Store selection in localstorage to preserve for re-loads
 * Add blood magic
 * Add more clans and their disciplines..?
 
 
-## Acknowledgement
+## Credits & Acknowledgements
 * VtM is owned by https://www.worldofdarkness.com/dark-pack
 * CheckSolid.base64 is converted from fontawesome
+* Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus Bellamy, Peter Scherbatykh, Thomas Le on [unsplash](unsplash.com)
 
 ![](readme_assets/darkpack_logo1.png)

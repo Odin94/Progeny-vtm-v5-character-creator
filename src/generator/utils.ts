@@ -1,5 +1,12 @@
 import { Attributes, Character, Skills, getEmptyCharacter } from "../data/Character";
 
+// The maximum is exclusive and the minimum is inclusive
+export const rndInt = (min: number, max: number) => {
+    min = Math.ceil(min)
+    max = Math.floor(max)
+    return Math.floor(Math.random() * (max - min) + min)
+}
+
 export const upcase = (str: string) => str[0].toUpperCase() + str.slice(1);
 
 export const intersection = <T>(arr1: T[], arr2: T[]) => arr1.filter(value => arr2.includes(value))

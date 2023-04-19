@@ -1,4 +1,4 @@
-import { AppShell, Container, Header, Navbar } from '@mantine/core';
+import { AppShell, BackgroundImage, Container, Header, Navbar } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useState } from "react";
 import './App.css';
@@ -8,10 +8,21 @@ import AsideBar from './sidebar/AsideBar';
 import Sidebar from './sidebar/Sidebar';
 import Topbar from './topbar/Topbar';
 
+import club from './resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg';
+import brokenDoor from './resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg';
+import city from './resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg';
+import bloodGuy from './resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg';
+import batWoman from './resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg';
+import alley from './resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg';
+import { rndInt } from './generator/utils';
+
+const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
+
 function App() {
   const phoneSizedScreen = useMediaQuery('(max-width: 550px)');
   const [character, setCharacter] = useState<Character>(getEmptyCharacter())
   const [selectedStep, setSelectedStep] = useState(0)
+  const [backgroundIndex, setBackgroundIndex] = useState(rndInt(0, backgrounds.length))
 
   return (
     <AppShell
@@ -24,9 +35,13 @@ function App() {
       })}
     >
       {
-        <Container>
-          <Generator character={character} setCharacter={setCharacter} selectedStep={selectedStep} setSelectedStep={setSelectedStep} />
-        </Container >
+        <BackgroundImage h={"99%"} src={backgrounds[backgroundIndex]}>
+          <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%" }}>
+            <Container h={"100%"}>
+              <Generator character={character} setCharacter={setCharacter} selectedStep={selectedStep} setSelectedStep={setSelectedStep} />
+            </Container >
+          </div>
+        </BackgroundImage>
       }
     </AppShell>
   );

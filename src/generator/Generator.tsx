@@ -11,7 +11,7 @@
  * Pick merits and flaws
 */
 
-import { Text } from "@mantine/core"
+import { Center, Text } from "@mantine/core"
 import { Character } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
@@ -49,10 +49,10 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     }
 
     return (
-        <div>
+        <Center h={"100%"}>
             {/* <Text>{JSON.stringify(character, null, 2)}</Text> */}
             {getStepComponent()}
-        </div>
+        </Center>
     )
 }
 
