@@ -1,4 +1,4 @@
-import { Button, Card, Center, Grid, Image, Space, Text, Title } from "@mantine/core";
+import { Card, Center, Grid, Image, Space, Text, Title, useMantineTheme } from "@mantine/core";
 import { Character } from "../../data/Character";
 import { Clan, descriptionByClan, logoByClan } from "../../data/Clans";
 
@@ -26,12 +26,22 @@ type ClanPickerProps = {
 // }
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
+    const theme = useMantineTheme();
+
+    const c1 = "rgba(26, 27, 30, 0.90)"
+    const c2 = theme.fn.rgba(theme.colors.grape[8], 0.90)//"rgba(156, 54, 181, 0.90)"  // grape
+    const bgColor = theme.fn.linearGradient(0, c1, c2)
+
     const createClanPick = (clan: Clan) => {
         return (
             <Grid.Col key={clan} span={4}>
-                <Card shadow="sm" padding="lg" radius="md" h={300} style={{ backgroundColor: "rgba(26, 27, 30, 0.95)" }}>
+                <Card className="hoverCard" shadow="sm" padding="lg" radius="md" h={275} style={{ background: bgColor, cursor: "pointer", }}
+                    onClick={() => {
+                        setCharacter({ ...character, clan })
+                        nextStep()
+                    }}>
                     <Card.Section>
-                        <Center>
+                        <Center pt={10}>
                             <Image
                                 fit="contain"
                                 withPlaceholder
@@ -47,18 +57,11 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         <Title p="md">{clan}</Title>
                     </Center>
 
-                    <Text h={40} size="sm" color="dimmed">
+                    <Text h={55} size="sm" color="dimmed">
                         {descriptionByClan[clan]}
                     </Text>
-
-                    <Button variant="light" color={"grape"} fullWidth mt="md" radius="md" onClick={() => {
-                        setCharacter({ ...character, clan })
-                        nextStep()
-                    }}>
-                        Pick {clan}
-                    </Button>
                 </Card>
-            </Grid.Col>
+            </Grid.Col >
         )
     }
 
