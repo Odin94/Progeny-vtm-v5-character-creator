@@ -83,7 +83,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "Mesmerize", description: "", amalgamPrerequisites: [], summary: "allow issuing more complex commands", dicePool: "", level: 2, discipline: "dominate" },
             { name: "Domitor's Favor", description: "", amalgamPrerequisites: [], summary: "make it harder for thralls to resist you", dicePool: "", level: 2, discipline: "dominate" },
             { name: "Slavish Devotion", description: "", amalgamPrerequisites: [{ discipline: "presence", level: 1 }], summary: "strengthen the mind of your dominated victims against interference from other kindred", dicePool: "", level: 2, discipline: "dominate" },
-            { name: "Dementation", description: "", amalgamPrerequisites: [{ discipline: "obfuscate", level: 2 }], summary: "trigger psychotic breaks or nervous breakdowns in others", dicePool: "", level: 2, discipline: "dominate" },
+            // { name: "Dementation", description: "", amalgamPrerequisites: [{ discipline: "obfuscate", level: 2 }], summary: "trigger psychotic breaks or nervous breakdowns in others", dicePool: "", level: 2, discipline: "dominate" },
         ],
     },
     fortitude: {
@@ -94,7 +94,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "Unswayable Mind", description: "", amalgamPrerequisites: [], summary: "add extra defense against mind-swaying", dicePool: "", level: 1, discipline: "fortitude" },
             { name: "Toughness", description: "", amalgamPrerequisites: [], summary: "reduce Superficial physical damage sustained", dicePool: "", level: 2, discipline: "fortitude" },
             { name: "Valeren", description: "", amalgamPrerequisites: [{ discipline: "auspex", level: 1 }], summary: "use your blood to heal other vampires", dicePool: "", level: 2, discipline: "fortitude" },
-            { name: "Obdurate", description: "", amalgamPrerequisites: [{ discipline: "potence", level: 2 }], summary: "maintain steady footing even when struck by massive force", dicePool: "", level: 2, discipline: "fortitude" },
+            // { name: "Obdurate", description: "", amalgamPrerequisites: [{ discipline: "potence", level: 2 }], summary: "maintain steady footing even when struck by massive force", dicePool: "", level: 2, discipline: "fortitude" },
         ],
     },
     obfuscate: {
@@ -105,7 +105,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "Silence of Death", description: "", amalgamPrerequisites: [], summary: "mute all sounds you make", dicePool: "", level: 1, discipline: "obfuscate" },
             { name: "Unseen Passage", description: "", amalgamPrerequisites: [], summary: "move while remaining hidden", dicePool: "", level: 2, discipline: "obfuscate" },
             { name: "Ghost's Passing", description: "", amalgamPrerequisites: [{ discipline: "animalism", level: 1 }], summary: "extend your obfuscate powers to animals under your influence", dicePool: "", level: 2, discipline: "obfuscate" },
-            { name: "Ventriloquism", description: "", amalgamPrerequisites: [{ discipline: "auspex", level: 2 }], summary: "choose who can and cannot hear you when speaking", dicePool: "", level: 2, discipline: "obfuscate" },
+            // { name: "Ventriloquism", description: "", amalgamPrerequisites: [{ discipline: "auspex", level: 2 }], summary: "choose who can and cannot hear you when speaking", dicePool: "", level: 2, discipline: "obfuscate" },
         ],
     },
     potence: {
@@ -133,7 +133,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "Eyes of the Beast", description: "", amalgamPrerequisites: [], summary: "see in total darkness", dicePool: "", level: 1, discipline: "protean" },
             { name: "Weight of the Feather", description: "", amalgamPrerequisites: [], summary: "become weightless", dicePool: "", level: 1, discipline: "protean" },
             { name: "Feral Weapons", description: "", amalgamPrerequisites: [], summary: "grow deadly claws", dicePool: "", level: 2, discipline: "protean" },
-            { name: "Vicissitude", description: "", amalgamPrerequisites: [{ discipline: "dominate", level: 2 }], summary: "reshape your own skin, muscles and bone at will", dicePool: "", level: 2, discipline: "protean" },
+            // { name: "Vicissitude", description: "", amalgamPrerequisites: [{ discipline: "dominate", level: 2 }], summary: "reshape your own skin, muscles and bone at will", dicePool: "", level: 2, discipline: "protean" },
         ],
     },
     "blood sorcery": {
@@ -156,8 +156,8 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "The Binding Fetter", description: "", amalgamPrerequisites: [], summary: "identify objects and locations that are connected to ghosts", dicePool: "", level: 1, discipline: "oblivion" },
             { name: "Shadow Cast", description: "", amalgamPrerequisites: [], summary: "summon a supernatural shadow you control", dicePool: "", level: 2, discipline: "oblivion" },
             { name: "Where the Shroud Thins", description: "", amalgamPrerequisites: [], summary: "find places where ghosts can cross between worlds", dicePool: "", level: 2, discipline: "oblivion" },
-            { name: "Arms of Ahriman", description: "", amalgamPrerequisites: [{ discipline: "potence", level: 2 }], summary: "xxx", dicePool: "", level: 2, discipline: "oblivion" },
-            { name: "Fatal Precognition", description: "", amalgamPrerequisites: [{ discipline: "auspex", level: 2 }], summary: "xxx", dicePool: "", level: 2, discipline: "oblivion" },
+            // { name: "Arms of Ahriman", description: "", amalgamPrerequisites: [{ discipline: "potence", level: 2 }], summary: "xxx", dicePool: "", level: 2, discipline: "oblivion" },
+            // { name: "Fatal Precognition", description: "", amalgamPrerequisites: [{ discipline: "auspex", level: 2 }], summary: "xxx", dicePool: "", level: 2, discipline: "oblivion" },
         ]
     },
 }
