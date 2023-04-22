@@ -105,7 +105,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
             }
         }
 
-        const disabled = [...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill) || pickedDistribution === null
+        const disabled = [...pickedSkills.specialty, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill) || pickedDistribution === null
         const dots = (() => {
             if (pickedSkills.specialty.includes(skill)) return "🚀"
             if (pickedSkills.strongest.includes(skill)) return "🥇"
@@ -156,6 +156,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
                     {
+                        // TODO: Fix order of skills (atm showing eg. "brawl" as "social" skill)
                         (["atheltics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival",
                             "animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge",
                             "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology"] as (keyof Skills)[])

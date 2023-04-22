@@ -1,4 +1,4 @@
-import { Accordion, Button, Card, Center, Divider, Grid, Space, Stack, Text } from "@mantine/core"
+import { Accordion, Button, Card, Center, Grid, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
@@ -11,98 +11,67 @@ type DisciplinesPickerProps = {
     nextStep: () => void
 }
 
-type DisciplineSetting = {
-    firstDiscipline: {
-        name: string,
-        firstPower: Power,
-        secondPower: Power
-    },
-    secondDiscipline: {
-        name: string,
-        power: Power
-    }
-}
-
-const getEmptyPower = (): Power => { return { name: "", description: "", dicePool: "", summary: "", level: 1, discipline: "animalism" } }
-
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
-    const [pickedDisciplines, setPickedDisciplines] = useState<DisciplineSetting>({
-        firstDiscipline: {
-            name: character.disciplines[0]?.discipline ?? "",
-            firstPower: character.disciplines[0] ?? getEmptyPower(),
-            secondPower: character.disciplines[1] ?? getEmptyPower()
-        },
-        secondDiscipline: {
-            name: character.disciplines[2]?.discipline ?? "",
-            power: character.disciplines[2] ?? getEmptyPower()
-        }
-    })
+    const [pickedPowers, setPickedPowers] = useState<Power[]>([])
 
     const disciplinesForClan = Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(character.clan)))
 
-    const pickDisciplinePower = (disciplineName: string, power: Power) => {
-        if (pickedDisciplines.firstDiscipline.firstPower.name === "") {
-            setPickedDisciplines({ ...pickedDisciplines, firstDiscipline: { ...(pickedDisciplines.firstDiscipline), name: disciplineName, firstPower: power } })
-        } else if (pickedDisciplines.firstDiscipline.secondPower.name === "") {
-            setPickedDisciplines({ ...pickedDisciplines, firstDiscipline: { ...(pickedDisciplines.firstDiscipline), secondPower: power } })
-        } else {
-            setPickedDisciplines({ ...pickedDisciplines, secondDiscipline: { name: disciplineName, power } })
-        }
-    }
-
     const isPicked = (power: Power) => {
-        return [
-            pickedDisciplines.firstDiscipline.firstPower.name,
-            pickedDisciplines.firstDiscipline.secondPower.name,
-            pickedDisciplines.secondDiscipline.power.name,
+        return pickedPowers.map((power) => power.name).includes(power.name)
+    }
+    const missingPrerequisites = (power: Power) => {
+        const powersOfDiscipline = disciplines[power.discipline].powers
 
-        ].includes(power.name)
+        // lvl 2 powers require picking a lvl 1 power first
+        if (power.level === 2 && intersection(powersOfDiscipline, pickedPowers).length === 0) return true
+
+        // amalgam prerequisites
+        for (const { discipline, level } of power.amalgamPrerequisites) {
+            const pickedDisciplineLevel = pickedPowers
+                .map((power) => power.discipline)
+                .filter((powerDisc) => powerDisc === discipline)
+                .length
+
+            if (pickedDisciplineLevel < level) return true
+        }
+
+        return false
     }
-    const isLvl2WithNoLvl1PickedYet = (power: Power) => {
+    const alreadyPickedTwoPowers = (power: Power) => {
         const powersOfDiscipline = disciplines[power.discipline].powers
-        const pickedPowers = [
-            pickedDisciplines.firstDiscipline.firstPower,
-            pickedDisciplines.firstDiscipline.secondPower,
-            pickedDisciplines.secondDiscipline.power,
-        ]
-        return power.level === 2 && intersection(powersOfDiscipline, pickedPowers).length === 0
-    }
-    const haveAlreadyPickedTwo = (power: Power) => {
-        const powersOfDiscipline = disciplines[power.discipline].powers
-        const pickedPowers = [
-            pickedDisciplines.firstDiscipline.firstPower,
-            pickedDisciplines.firstDiscipline.secondPower,
-            pickedDisciplines.secondDiscipline.power,
-        ]
+
         return intersection(powersOfDiscipline, pickedPowers).length === 2
     }
-    const allPowersPicked = () => pickedDisciplines.secondDiscipline.name !== ""
+    const alreadyPickedTwoDisciplines = (power: Power) => {
+        const pickedDisciplines = pickedPowers.map((power) => power.discipline)
+        const uniquePickedDisciplines = [...new Set(pickedDisciplines)]
+
+        return uniquePickedDisciplines.length >= 2 && !uniquePickedDisciplines.includes(power.discipline)
+    }
+    const allPowersPicked = () => pickedPowers.length >= 3
 
     const undoPick = () => {
-        if (pickedDisciplines.secondDiscipline.name !== "") {
-            setPickedDisciplines({ ...pickedDisciplines, secondDiscipline: { name: "", power: getEmptyPower() } })
-        } else if (pickedDisciplines.firstDiscipline.secondPower.name !== "") {
-            setPickedDisciplines({ ...pickedDisciplines, firstDiscipline: { ...(pickedDisciplines.firstDiscipline), secondPower: getEmptyPower() } })
-        } else {
-            setPickedDisciplines({ ...pickedDisciplines, firstDiscipline: { name: "", firstPower: getEmptyPower(), secondPower: getEmptyPower() } })
-        }
+        setPickedPowers(pickedPowers.slice(0, -1))
     }
 
+    // TODO: Consider putting two rows per discipline (one for lvl1, one for lvl2) to make accordion contents shorter
     const getDisciplineAccordionItem = (disciplineName: string, discipline: Discipline) => {
-        const haveToPickSecondPower = pickedDisciplines.firstDiscipline.firstPower.name !== "" && pickedDisciplines.firstDiscipline.secondPower.name === ""
         return (
             <Accordion.Item key={disciplineName} value={disciplineName}>
-                <Accordion.Control disabled={haveToPickSecondPower}>{upcase(disciplineName)}</Accordion.Control>
+                <Accordion.Control>{upcase(disciplineName)}</Accordion.Control>
                 <Accordion.Panel>
                     <Stack>
                         {discipline.powers.map((power) => {
+                            const isButtonDisabled = isPicked(power) || missingPrerequisites(power) || alreadyPickedTwoPowers(power) || alreadyPickedTwoDisciplines(power) || allPowersPicked()
+
                             return (
+                                // TODO: Add badge with leve
+                                // TODO: Include amalgam prerequisites somewhere
                                 <Card key={power.name}>
                                     <Text weight={500}>{power.name}</Text>
 
                                     <Text size="sm" color="dimmed">{power.summary}</Text>
-
-                                    <Button disabled={isPicked(power) || isLvl2WithNoLvl1PickedYet(power) || haveAlreadyPickedTwo(power) || allPowersPicked()} onClick={() => pickDisciplinePower(disciplineName, power)} variant="light" color="blue" fullWidth mt="md" radius="md">
+                                    <Button disabled={isButtonDisabled} onClick={() => setPickedPowers([...pickedPowers, power])} variant="light" color="blue" fullWidth mt="md" radius="md">
                                         Take {power.name}
                                     </Button>
                                 </Card>
@@ -114,6 +83,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         )
     }
 
+    const powersSortedByDiscipline = pickedPowers.sort()
+    let disciplineTitle = ""
     return (
         <div>
             <h1>Pick 2 powers in one disciplines, and 1 power in another</h1>
@@ -127,14 +98,19 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     <Grid.Col span={2}>
                         <Center style={{ height: "100%" }}>
                             <Stack>
-                                {pickedDisciplines.firstDiscipline.name ? <Text weight={700} size={"xl"}>{upcase(pickedDisciplines.firstDiscipline.name)}</Text> : null}
-                                <Text>{pickedDisciplines.firstDiscipline.firstPower.name}</Text>
-                                <Text>{pickedDisciplines.firstDiscipline.secondPower.name}</Text>
-
-                                {pickedDisciplines.secondDiscipline.name ? <> <Divider /> <Text weight={700} size={"xl"}>{upcase(pickedDisciplines.secondDiscipline.name)}</Text></> : null}
-                                <Text>{pickedDisciplines.secondDiscipline.power.name}</Text>
-
-                                {pickedDisciplines.firstDiscipline.name ? <Button onClick={undoPick}>Undo last pick</Button> : null}
+                                {powersSortedByDiscipline.map((power) => {
+                                    if (power.discipline !== disciplineTitle) {
+                                        disciplineTitle = power.discipline
+                                        return (
+                                            <div key={power.name}>
+                                                <Text weight={700} size={"xl"}>{upcase(power.discipline)}</Text>
+                                                <Text> {power.name}</Text>
+                                            </div>
+                                        )
+                                    }
+                                    return (<Text key={power.name}>{power.name}</Text>)
+                                })}
+                                {pickedPowers.length > 0 ? <Button variant="light" color="red" onClick={undoPick}>Undo last pick</Button> : null}
                             </Stack>
                         </Center>
                     </Grid.Col>
@@ -148,11 +124,11 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 </Grid>
 
                 <Button disabled={!allPowersPicked()} color="grape" onClick={() => {
-                    setCharacter({ ...character, disciplines: [pickedDisciplines.firstDiscipline.firstPower, pickedDisciplines.firstDiscipline.secondPower, pickedDisciplines.secondDiscipline.power] })
+                    setCharacter({ ...character, disciplines: pickedPowers })
                     nextStep()
                 }}>Confirm</Button>
             </Stack>
-        </div>
+        </div >
     )
 }
 

@@ -72,7 +72,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
 
             <Grid grow>
                 {
-                    (["Brujah", "Gangrel", "Nosferatu", "Malkavian", "Tremere", "Ventrue", "Toreador"] as Clan[]).map((clan) => createClanPick(clan))
+                    (["Brujah", "Gangrel", "Nosferatu", "Malkavian", "Tremere", "Ventrue", "Toreador",
+                        "Lasombra", "Banu Haqim", "Ministry", "Ravnos", "Tzimisce", "Hecata", "Salubri"] as Clan[]).map((clan) => createClanPick(clan))
                 }
             </Grid>
         </div>

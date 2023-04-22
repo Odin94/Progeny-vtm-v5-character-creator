@@ -16,11 +16,10 @@ Quickly and easily create your VTM character
 
 
 ## TODOs:
+* Add Banes & Compulsions
 * Add pretty VtM logos & images  (consider https://www.svgrepo.com)
 * Make things prettier in general
 * Store selection in localstorage to preserve for re-loads
-* Add blood magic
-* Add more clans and their disciplines..?
 
 
 ## Credits & Acknowledgements
