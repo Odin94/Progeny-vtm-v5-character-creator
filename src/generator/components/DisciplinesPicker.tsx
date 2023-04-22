@@ -1,6 +1,7 @@
-import { Accordion, Button, Card, Center, Grid, Space, Stack, Text } from "@mantine/core"
+import { Accordion, Badge, Button, Card, Center, Grid, Group, List, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
+import { Clan } from "../../data/Clans"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { intersection, upcase } from "../utils"
 
@@ -11,10 +12,14 @@ type DisciplinesPickerProps = {
     nextStep: () => void
 }
 
+const getDisciplinesForClan = (clan: Clan) => {
+    return Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(clan)))
+}
+
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
 
-    const disciplinesForClan = Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(character.clan)))
+    const disciplinesForClan = getDisciplinesForClan(character.clan)
 
     const isPicked = (power: Power) => {
         return pickedPowers.map((power) => power.name).includes(power.name)
@@ -54,29 +59,61 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         setPickedPowers(pickedPowers.slice(0, -1))
     }
 
-    // TODO: Consider putting two rows per discipline (one for lvl1, one for lvl2) to make accordion contents shorter
+    const getPowerCards = (powers: Power[]) => {
+        return powers.map((power) => {
+            const isButtonDisabled = isPicked(power) || missingPrerequisites(power) || alreadyPickedTwoPowers(power) || alreadyPickedTwoDisciplines(power) || allPowersPicked()
+
+            return (
+                <Card key={power.name} mb={20} h={255} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
+                    <Group position="apart" mt="md" mb="xs">
+                        <Text weight={500}>{power.name}</Text>
+                        <Badge color="pink" variant="light">lv {power.level}</Badge>
+                    </Group>
+
+                    <Text h={65} size="sm" color="dimmed">{power.summary}</Text>
+                    {power.amalgamPrerequisites.length > 0 ?
+                        <div style={{ height: 55 }}>
+                            <Text size="sm" color="red">Requires:</Text>
+                            <List size="xs">
+                                {power.amalgamPrerequisites.map((prereq) => {
+                                    return (<List.Item key={power.name + prereq.discipline}>{upcase(prereq.discipline)}: Lv {prereq.level}</List.Item>)
+                                })}
+                            </List>
+                        </div>
+                        : <div style={{ height: 55 }}></div>}
+
+                    <Button disabled={isButtonDisabled} onClick={() => setPickedPowers([...pickedPowers, power])} variant="light" color="blue" fullWidth mt="md" radius="md">
+                        Take {power.name}
+                    </Button>
+                </Card >
+            )
+        })
+    }
+
     const getDisciplineAccordionItem = (disciplineName: string, discipline: Discipline) => {
+        const clanHasPrereqDisciplines = (power: Power) => {
+            const prereqDisciplines = power.amalgamPrerequisites.map((prereq) => prereq.discipline)
+            for (const disc of prereqDisciplines) {
+                if (disciplinesForClan[disc] === undefined) return false
+            }
+            return true
+        }
+
+        // Only show Amalgams that the clan can theoretically pick
+        const eligiblePowers = discipline.powers.filter(clanHasPrereqDisciplines)
+
+        const lvl1Powers = eligiblePowers.filter((power) => power.level === 1)
+        const lvl2Powers = eligiblePowers.filter((power) => power.level === 2)
+
         return (
             <Accordion.Item key={disciplineName} value={disciplineName}>
                 <Accordion.Control>{upcase(disciplineName)}</Accordion.Control>
                 <Accordion.Panel>
                     <Stack>
-                        {discipline.powers.map((power) => {
-                            const isButtonDisabled = isPicked(power) || missingPrerequisites(power) || alreadyPickedTwoPowers(power) || alreadyPickedTwoDisciplines(power) || allPowersPicked()
-
-                            return (
-                                // TODO: Add badge with leve
-                                // TODO: Include amalgam prerequisites somewhere
-                                <Card key={power.name}>
-                                    <Text weight={500}>{power.name}</Text>
-
-                                    <Text size="sm" color="dimmed">{power.summary}</Text>
-                                    <Button disabled={isButtonDisabled} onClick={() => setPickedPowers([...pickedPowers, power])} variant="light" color="blue" fullWidth mt="md" radius="md">
-                                        Take {power.name}
-                                    </Button>
-                                </Card>
-                            )
-                        })}
+                        <Grid>
+                            <Grid.Col span={6}>{getPowerCards(lvl1Powers)}</Grid.Col>
+                            <Grid.Col span={6}>{getPowerCards(lvl2Powers)}</Grid.Col>
+                        </Grid>
                     </Stack>
                 </Accordion.Panel>
             </Accordion.Item>
@@ -115,7 +152,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         </Center>
                     </Grid.Col>
                     <Grid.Col span={6} offset={1}>
-                        <Accordion style={{ width: "400px" }}>
+                        <Accordion style={{ width: "600px" }}>
                             {
                                 Object.entries(disciplinesForClan).map(([name, discipline]) => getDisciplineAccordionItem(name, discipline))
                             }
