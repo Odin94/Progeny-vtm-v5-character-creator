@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { clanNameSchema } from "./Clans";
 import { powerSchema } from "./Disciplines";
-import { clanSchema } from "./Clans";
 import { predatorTypeSchema } from "./PredatorType";
 
 export const attributesSchema = z.object({
@@ -52,7 +52,6 @@ export const skillsSchema = z.object({
     technology: z.number().min(0).max(5).int(),
 })
 export type Skills = z.infer<typeof skillsSchema>
-
 export const skillsKeySchema = skillsSchema.keyof()
 export type SkillsKey = z.infer<typeof skillsKeySchema>
 
@@ -78,7 +77,7 @@ export const characterSchema = z.object({
     description: z.string(),
     sire: z.string(),
 
-    clan: clanSchema,
+    clan: clanNameSchema,
     predatorType: predatorTypeSchema,
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),

@@ -39,7 +39,7 @@ const distributionByType: Record<DistributionKey, { strongest: number, decent: n
     },
 }
 
-const SkillPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
+const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
     const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({ specialty: [], strongest: [], decent: [], acceptable: [] })
     const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
     const distr = pickedDistribution ? distributionByType[pickedDistribution] : { specialty: 0, strongest: 0, decent: 0, acceptable: 0 }
@@ -173,4 +173,4 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) =
     )
 }
 
-export default SkillPicker
+export default SkillsPicker

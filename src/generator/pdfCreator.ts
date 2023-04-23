@@ -1,5 +1,5 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
-import { Attributes, Character, Skills, SkillsKey, attributesKeySchema, skillsKeySchema } from '../data/Character';
+import { Character, SkillsKey, attributesKeySchema, skillsKeySchema } from '../data/Character';
 import base64Check from '../resources/CheckSolid.base64';
 import base64Pdf from '../resources/v5_charactersheet_fillable_v3.base64';
 import { upcase } from './utils';

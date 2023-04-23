@@ -1,7 +1,7 @@
 import { Accordion, Badge, Button, Card, Center, Grid, Group, List, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
-import { Clan } from "../../data/Clans"
+import { ClanName } from "../../data/Clans"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { intersection, upcase } from "../utils"
 
@@ -12,7 +12,7 @@ type DisciplinesPickerProps = {
     nextStep: () => void
 }
 
-const getDisciplinesForClan = (clan: Clan) => {
+const getDisciplinesForClan = (clan: ClanName) => {
     return Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(clan)))
 }
 

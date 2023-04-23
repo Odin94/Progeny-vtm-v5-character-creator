@@ -1,6 +1,6 @@
 import { Card, Center, Grid, Image, Space, Text, Title, useMantineTheme } from "@mantine/core";
 import { Character } from "../../data/Character";
-import { Clan, descriptionByClan, logoByClan } from "../../data/Clans";
+import { ClanName, Clans, clanNameSchema } from "../../data/Clans";
 
 
 type ClanPickerProps = {
@@ -32,7 +32,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
     const c2 = theme.fn.rgba(theme.colors.grape[8], 0.90)//"rgba(156, 54, 181, 0.90)"  // grape
     const bgColor = theme.fn.linearGradient(0, c1, c2)
 
-    const createClanPick = (clan: Clan) => {
+    const createClanPick = (clan: ClanName) => {
         return (
             <Grid.Col key={clan} span={4}>
                 <Card className="hoverCard" shadow="sm" padding="lg" radius="md" h={275} style={{ background: bgColor, cursor: "pointer", }}
@@ -45,7 +45,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                             <Image
                                 fit="contain"
                                 withPlaceholder
-                                src={logoByClan[clan]}
+                                src={Clans[clan].logo}
                                 height={120}
                                 width={120}
                                 alt="Norway"
@@ -58,7 +58,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     </Center>
 
                     <Text h={55} size="sm" color="dimmed">
-                        {descriptionByClan[clan]}
+                        {Clans[clan].description}
                     </Text>
                 </Card>
             </Grid.Col >
@@ -75,8 +75,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
 
             <Grid grow>
                 {
-                    (["Brujah", "Gangrel", "Nosferatu", "Malkavian", "Tremere", "Ventrue", "Toreador",
-                        "Lasombra", "Banu Haqim", "Ministry", "Ravnos", "Tzimisce", "Hecata", "Salubri"] as Clan[]).map((clan) => createClanPick(clan))
+                    ["Brujah", "Gangrel", "Nosferatu", "Malkavian", "Tremere", "Ventrue", "Toreador",
+                        "Lasombra", "Banu Haqim", "Ministry", "Ravnos", "Tzimisce", "Hecata", "Salubri"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan))
                 }
             </Grid>
         </div>

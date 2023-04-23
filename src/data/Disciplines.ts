@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { clanSchema } from "./Clans";
+import { clanNameSchema } from "./Clans";
 
 export const disciplineNameSchema = z.union([
     z.literal("animalism"),
@@ -36,7 +36,7 @@ export type Power = z.infer<typeof powerSchema>
 
 
 export const disciplineSchema = z.object({
-    clans: clanSchema.array(),
+    clans: clanNameSchema.array(),
     summary: z.string(),
     powers: powerSchema.array(),
 })
