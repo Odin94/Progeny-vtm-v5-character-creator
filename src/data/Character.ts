@@ -17,7 +17,8 @@ export const attributesSchema = z.object({
     resolve: z.number().min(1).max(5).int(),
 })
 export type Attributes = z.infer<typeof attributesSchema>
-
+export const attributesKeySchema = attributesSchema.keyof()
+export type AttributesKey = z.infer<typeof attributesKeySchema>
 
 export const skillsSchema = z.object({
     athletics: z.number().min(0).max(5).int(),
@@ -52,6 +53,8 @@ export const skillsSchema = z.object({
 })
 export type Skills = z.infer<typeof skillsSchema>
 
+export const skillsKeySchema = skillsSchema.keyof()
+export type SkillsKey = z.infer<typeof skillsKeySchema>
 
 export const meritFlawSchema = z.object({
     name: z.string(),

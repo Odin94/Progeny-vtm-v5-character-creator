@@ -42,7 +42,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
 
                                 <Grid.Col span={4}>
                                     <TextInput
-                                        style={{ width: "300px" }}
+                                        style={{ width: "250px" }}
                                         value={touchstone.name}
                                         onChange={(event) => updateTouchstone(i, { name: event.currentTarget.value })}
                                         placeholder="Max Mustermann"
@@ -50,7 +50,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     />
 
                                     <TextInput
-                                        style={{ width: "300px" }}
+                                        style={{ width: "250px" }}
                                         value={touchstone.conviction}
                                         onChange={(event) => updateTouchstone(i, { conviction: event.currentTarget.value })}
                                         placeholder="Never betray your friends and acquaintances"

@@ -1,5 +1,5 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
-import { Attributes, Character, Skills } from '../data/Character';
+import { Attributes, Character, Skills, SkillsKey, attributesKeySchema, skillsKeySchema } from '../data/Character';
 import base64Check from '../resources/CheckSolid.base64';
 import base64Pdf from '../resources/v5_charactersheet_fillable_v3.base64';
 import { upcase } from './utils';
@@ -37,7 +37,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
 
     // Attributes
     const attributes = character.attributes;
-    (["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"] as (keyof Attributes)[]).forEach((attr) => {
+    (["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"].map((a) => attributesKeySchema.parse(a))).forEach((attr) => {
         const lvl = attributes[attr]
         for (let i = 1; i <= lvl; i++) {
             const checkBox = form.getCheckBox(attr + i)
@@ -50,7 +50,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     (["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival",
         "animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge", "academics",
         "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",
-    ] as (keyof Skills)[]).forEach((skill) => {
+    ].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
             const checkBox = form.getCheckBox(skill.replace("_", "") + i)
@@ -152,7 +152,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     form.getCheckBox("main2-1").check();
 
 
-    const specialtyFieldNames: Record<keyof Skills, string> =
+    const specialtyFieldNames: Record<SkillsKey, string> =
     {
         animal_ken: "AT.0.1",
         athletics: "AT.0.0.0",

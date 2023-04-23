@@ -1,6 +1,6 @@
-import { Grid, Button, Divider, Text, Group } from "@mantine/core"
-import { Attributes, Character } from "../../data/Character"
+import { Button, Divider, Grid, Group, Text } from "@mantine/core"
 import { useState } from "react"
+import { AttributesKey, Character, attributesKeySchema } from "../../data/Character"
 import { upcase } from "../utils"
 
 type AttributePickerProps = {
@@ -10,15 +10,15 @@ type AttributePickerProps = {
 }
 
 type AttributeSetting = {
-    strongest: keyof Attributes | null,
-    weakest: keyof Attributes | null,
-    medium: (keyof Attributes)[],
+    strongest: AttributesKey | null,
+    weakest: AttributesKey | null,
+    medium: AttributesKey[],
 }
 
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
 
-    const createButton = (attribute: keyof Attributes, i: number) => {
+    const createButton = (attribute: AttributesKey, i: number) => {
         let onClick;
         if (!pickedAttributes.strongest) {
             onClick = () => {
@@ -89,9 +89,10 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
                     {
-                        (["strength", "charisma", "intelligence",
+                        ["strength", "charisma", "intelligence",
                             "dexterity", "manipulation", "wits",
-                            "stamina", "composure", "resolve"] as (keyof Attributes)[])
+                            "stamina", "composure", "resolve"]
+                            .map((a) => attributesKeySchema.parse(a))
                             .map((clan, i) => createButton(clan, i))
                     }
                 </Grid>

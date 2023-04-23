@@ -1,19 +1,19 @@
-import { Grid, Button, Divider, Text, Group, Space } from "@mantine/core"
-import { Skills, Character } from "../../data/Character"
+import { Button, Divider, Grid, Group, Space, Text } from "@mantine/core"
 import { useState } from "react"
+import { Character, SkillsKey, Skills, skillsKeySchema } from "../../data/Character"
 import { upcase } from "../utils"
 
-type SkillPickerProps = {
+type SkillsPickerProps = {
     character: Character,
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
 
-type SkillSetting = {
-    specialty: (keyof Skills)[],
-    strongest: (keyof Skills)[],
-    decent: (keyof Skills)[],
-    acceptable: (keyof Skills)[],
+type SkillsSetting = {
+    specialty: SkillsKey[],
+    strongest: SkillsKey[],
+    decent: SkillsKey[],
+    acceptable: SkillsKey[],
 }
 
 type DistributionKey = "Jack of All Trades" | "Balanced" | "Specialist"
@@ -39,12 +39,12 @@ const distributionByType: Record<DistributionKey, { strongest: number, decent: n
     },
 }
 
-const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) => {
-    const [pickedSkills, setPickedSkills] = useState<SkillSetting>({ specialty: [], strongest: [], decent: [], acceptable: [] })
+const SkillPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
+    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({ specialty: [], strongest: [], decent: [], acceptable: [] })
     const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
     const distr = pickedDistribution ? distributionByType[pickedDistribution] : { specialty: 0, strongest: 0, decent: 0, acceptable: 0 }
 
-    const createButton = (skill: keyof Skills, i: number) => {
+    const createButton = (skill: SkillsKey, i: number) => {
         let onClick;
         if (pickedSkills.specialty.length < distr.specialty) {
             onClick = () => {
@@ -66,7 +66,7 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
         } else {
             const finalPick = { ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] }
             onClick = () => {
-                const skills = {
+                const skills: Skills = {
                     athletics: 0,
                     brawl: 0,
                     craft: 0,
@@ -156,11 +156,16 @@ const SkillPicker = ({ character, setCharacter, nextStep }: SkillPickerProps) =>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
                     {
-                        // TODO: Fix order of skills (atm showing eg. "brawl" as "social" skill)
-                        (["atheltics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival",
-                            "animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge",
-                            "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology"] as (keyof Skills)[])
-                            .map((clan, i) => createButton(clan, i))
+                        ["athletics", "animal_ken", "academics",
+                            "brawl", "etiquette", "awareness",
+                            "craft", "insight", "finance",
+                            "drive", "intimidation", "investigation",
+                            "firearms", "leadership", "medicine",
+                            "melee", "performance", "occult",
+                            "larceny", "persuasion", "politics",
+                            "stealth", "streetwise", "science",
+                            "survival", "subterfuge", "technology"
+                        ].map((s) => skillsKeySchema.parse(s)).map((clan, i) => createButton(clan, i))
                     }
                 </Grid>
             </Group>
