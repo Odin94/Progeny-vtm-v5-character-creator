@@ -3,6 +3,7 @@ import { Character, SkillsKey, attributesKeySchema, skillsKeySchema } from '../d
 import base64Check from '../resources/CheckSolid.base64';
 import base64Pdf from '../resources/v5_charactersheet_fillable_v3.base64';
 import { upcase } from './utils';
+import { Clans } from '../data/Clans';
 
 type BloodPotencyEffect = {
     surge: number,
@@ -40,8 +41,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     (["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"].map((a) => attributesKeySchema.parse(a))).forEach((attr) => {
         const lvl = attributes[attr]
         for (let i = 1; i <= lvl; i++) {
-            const checkBox = form.getCheckBox(attr + i)
-            checkBox.check()
+            form.getCheckBox(attr + i).check()
         }
     })
 
@@ -53,8 +53,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     ].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
-            const checkBox = form.getCheckBox(skill.replace("_", "") + i)
-            checkBox.check()
+            form.getCheckBox(skill.replace("_", "") + i).check()
         }
     })
 
@@ -116,29 +115,17 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     }
 
     // Top fields
-    const nameField = form.getTextField("Name")
-    nameField.setText(character.name)
+    form.getTextField("Name").setText(character.name)
+    form.getTextField("Concept").setText(character.description)
+    form.getTextField("Predator").setText(character.predatorType)
+    form.getTextField("Ambition").setText(character.ambition)
 
-    const descriptionField = form.getTextField("Concept")
-    descriptionField.setText(character.description)
+    form.getTextField("Clan").setText(character.clan)
+    form.getTextField("Clan Banes").setText(Clans[character.clan].bane + "\n\nCompulsion:\n" + Clans[character.clan].compulsion)
 
-    const predatorTypeField = form.getTextField("Predator")
-    predatorTypeField.setText(character.predatorType)
-
-    const ambitionField = form.getTextField("Ambition")
-    ambitionField.setText(character.ambition)
-
-    const clanField = form.getTextField("Clan")
-    clanField.setText(character.clan)
-
-    const sireField = form.getTextField("Sire")
-    sireField.setText(character.sire)
-
-    const desireField = form.getTextField("Desire")
-    desireField.setText(character.desire)
-
-    const generationField = form.getTextField("Generation")
-    generationField.setText(`${character.generation}`)
+    form.getTextField("Sire").setText(character.sire)
+    form.getTextField("Desire").setText(character.desire)
+    form.getTextField("Generation").setText(`${character.generation}`)
 
     // Disciplines
     form.getTextField("Main1").setText(upcase(character.disciplines[0].discipline))
@@ -188,11 +175,9 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     const meritsAndFlaws = [...character.merits, ...character.flaws]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
-        const textField = form.getTextField(meritFlawBase + fieldNum)
-        textField.setText(name + ": " + summary)
+        form.getTextField(meritFlawBase + fieldNum).setText(name + ": " + summary)
         for (let l = 1; l <= level; l++) {
-            const checkBox = form.getCheckBox(meritFlawBase + fieldNum + "-" + l)
-            checkBox.check()
+            form.getCheckBox(meritFlawBase + fieldNum + "-" + l).check()
         }
     })
 
