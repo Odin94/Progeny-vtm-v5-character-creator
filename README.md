@@ -18,7 +18,6 @@ Quickly and easily create your VTM character
 ## TODOs:
 * Add pretty VtM logos & images  (consider https://www.svgrepo.com)
 * Make things prettier in general
-* Store selection in localstorage to preserve for re-loads
 
 
 ## Credits & Acknowledgements

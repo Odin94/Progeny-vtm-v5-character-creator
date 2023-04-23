@@ -1,5 +1,5 @@
 import { AppShell, BackgroundImage, Container, Header, Navbar } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
 import { useState } from "react";
 import './App.css';
 import { Character, getEmptyCharacter } from "./data/Character";
@@ -20,8 +20,8 @@ const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
   const phoneSizedScreen = useMediaQuery('(max-width: 550px)');
-  const [character, setCharacter] = useState<Character>(getEmptyCharacter())
-  const [selectedStep, setSelectedStep] = useState(0)
+  const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
+  const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
   const [backgroundIndex, setBackgroundIndex] = useState(rndInt(0, backgrounds.length))
 
   return (
