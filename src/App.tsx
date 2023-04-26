@@ -30,7 +30,7 @@ function App() {
     <AppShell
       padding="md"
       navbar={phoneSizedScreen ? <></> : <Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
-      header={<Header height={60} p="xs"><Topbar character={character} setCharacter={setCharacter} /></Header>}
+      header={<Header height={60} p="xs"><Topbar character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} /></Header>}
       aside={<AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />}
       styles={(theme) => ({
         main: { backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] },

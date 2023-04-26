@@ -6,9 +6,10 @@ import TopMenu from "./TopMenu"
 export type TopBarProps = {
     character: Character
     setCharacter: (character: Character) => void
+    setSelectedStep: (step: number) => void,
 }
 
-const Topbar = ({ character, setCharacter }: TopBarProps) => {
+const Topbar = ({ character, setCharacter, setSelectedStep }: TopBarProps) => {
     const largeScreen = useMediaQuery('(min-width: 1500px)');
 
     return (
@@ -23,7 +24,7 @@ const Topbar = ({ character, setCharacter }: TopBarProps) => {
 
                 <Grid.Col offset={2} span={2}>
                     <span style={{ float: "right" }}>
-                        <TopMenu character={character} setCharacter={setCharacter} />
+                        <TopMenu character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
                     </span>
                 </Grid.Col>
             </Grid>
