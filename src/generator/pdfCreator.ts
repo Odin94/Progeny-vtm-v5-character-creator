@@ -15,12 +15,35 @@ type BloodPotencyEffect = {
 }
 
 
-const loadTemplate = async () => {
-    return fetch(base64Pdf)
+const loadTemplate = async (pdf = base64Pdf) => {
+    return fetch(pdf)
         .then(r => r.text())
 }
 
-function downloadPdf(fileName: string, bytes: Uint8Array) {
+export const testTemplate = async (basePdf: string) => {
+    let form
+    try {
+        // const basePdf = await loadTemplate(pdf)
+        const bytes = base64ToArrayBuffer(basePdf)
+
+        const pdfDoc = await PDFDocument.load(bytes)
+        form = pdfDoc.getForm();
+    } catch (err) {
+        return { success: false, error: new Error("Can't get form from pdf - is it a fillable pdf?") }
+    }
+    try {
+        form.getTextField("Name").setText("")
+        form.getTextField("Concept").setText("")
+        form.getTextField("Predator").setText("")
+        form.getTextField("Ambition").setText("")
+    } catch (err) {
+        return { success: false, error: new Error("PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?") }
+    }
+
+    return { success: true, error: null }
+}
+
+const downloadPdf = (fileName: string, bytes: Uint8Array) => {
     const blob = new Blob([bytes], { type: "application/pdf" });
     const link = document.createElement('a');
 

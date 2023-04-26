@@ -24,6 +24,8 @@ function App() {
   const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
   const [backgroundIndex, setBackgroundIndex] = useState(rndInt(0, backgrounds.length))
 
+  const [fillableCharacterSheet, setFillableCharacterSheet] = useLocalStorage<string | null>({ key: "characterSheet", defaultValue: null })
+
   return (
     <AppShell
       padding="md"
@@ -38,7 +40,7 @@ function App() {
         <BackgroundImage h={"99%"} src={backgrounds[backgroundIndex]}>
           <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%" }}>
             <Container h={"100%"}>
-              <Generator character={character} setCharacter={setCharacter} selectedStep={selectedStep} setSelectedStep={setSelectedStep} />
+              <Generator character={character} setCharacter={setCharacter} selectedStep={selectedStep} setSelectedStep={setSelectedStep} fillableCharacterSheet={fillableCharacterSheet} setFillableCharacterSheet={setFillableCharacterSheet} />
             </Container >
           </div>
         </BackgroundImage>

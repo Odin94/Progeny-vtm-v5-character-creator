@@ -11,7 +11,7 @@
  * Pick merits and flaws
 */
 
-import { Center, Text } from "@mantine/core"
+import { Alert, Center, FileInput, Text } from "@mantine/core"
 import { Character } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
@@ -22,6 +22,10 @@ import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 import PredatorTypePicker from "./components/PredatorTypePicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
+import { useState } from "react"
+import { getUploadFile } from "./utils"
+import { testTemplate } from "./pdfCreator"
+import { IconAlertCircle } from "@tabler/icons-react"
 
 
 export type GeneratorProps = {
@@ -30,9 +34,15 @@ export type GeneratorProps = {
 
     selectedStep: number,
     setSelectedStep: (step: number) => void
+
+    fillableCharacterSheet: string | null,
+    setFillableCharacterSheet: (sheet: string) => void
 }
 
-const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
+const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fillableCharacterSheet, setFillableCharacterSheet }: GeneratorProps) => {
+    const [loadedFile, setLoadedFile] = useState<File | null>(null);
+    const [fileLoadingError, setFileLoadingError] = useState<string | null>(null);
+
     const getStepComponent = () => {
         switch (selectedStep) {
             case 0: return <ClanPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
@@ -51,7 +61,33 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     return (
         <Center h={"100%"}>
             {/* <Text>{JSON.stringify(character, null, 2)}</Text> */}
-            {getStepComponent()}
+            {fillableCharacterSheet !== null ? getStepComponent()
+                : <div>
+                    {fileLoadingError
+                        ? <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red">
+                            Loading the v5_charactersheet_fillable_v3.pdf failed:
+                        </Alert> : null
+                    }
+                    <FileInput
+                        placeholder="v5_charactersheet_fillable_v3"
+                        label="Upload v5_charactersheet_fillable_v3.pdf"
+                        value={loadedFile}
+                        onChange={async (payload: File | null) => {
+                            if (!payload) return
+
+                            const fileData = await getUploadFile(payload)
+                            const base64 = fileData.split(",")[1]
+                            const testResult = await testTemplate(base64)
+                            console.log(testResult)
+
+                            if (testResult.success) {
+                                setFillableCharacterSheet(base64)
+                                setFileLoadingError(null)
+                            }
+                        }}
+                    />
+                </div>
+            }
         </Center>
     )
 }
