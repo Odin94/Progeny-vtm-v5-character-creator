@@ -10,7 +10,7 @@ export type TopBarProps = {
 }
 
 const Topbar = ({ character, setCharacter, setSelectedStep }: TopBarProps) => {
-    const largeScreen = useMediaQuery('(min-width: 1500px)');
+    const largeScreen = useMediaQuery('(min-width: 1500px)')
 
     return (
         <>

@@ -26,7 +26,7 @@ type ClanPickerProps = {
 // }
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
-    const theme = useMantineTheme();
+    const theme = useMantineTheme()
 
     const c1 = "rgba(26, 27, 30, 0.90)"
     const c2 = theme.fn.rgba(theme.colors.grape[8], 0.90)//"rgba(156, 54, 181, 0.90)"  // grape

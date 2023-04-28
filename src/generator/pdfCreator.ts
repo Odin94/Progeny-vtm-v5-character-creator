@@ -1,10 +1,11 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
-import { Character, SkillsKey, attributesKeySchema, skillsKeySchema } from '../data/Character';
+import { Character, attributesKeySchema, } from '../data/Character';
 import base64Check from '../resources/CheckSolid.base64';
 import base64Pdf from '../resources/charsheet_v5-own-alternative-formfillable-v2.base64';
 import { upcase } from './utils';
 import { Clans } from '../data/Clans';
 import { PredatorTypes } from '../data/PredatorType';
+import { SkillsKey, skillsKeySchema } from '../data/Skills';
 
 type BloodPotencyEffect = {
     surge: number,

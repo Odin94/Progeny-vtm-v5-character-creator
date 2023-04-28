@@ -1,7 +1,7 @@
 import { Grid, Stack, Text, Title } from "@mantine/core"
-import { Skills, skillsKeySchema } from "../../data/Character"
 import { upcase } from "../../generator/utils"
 import Tally from "../../components/Tally"
+import { Skills, skillsKeySchema } from "../../data/Skills"
 
 export type SkillsProps = {
     skills: Skills

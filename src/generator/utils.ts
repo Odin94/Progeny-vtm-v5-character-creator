@@ -1,4 +1,5 @@
-import { Attributes, Character, Skills, getEmptyCharacter } from "../data/Character";
+import { Attributes, Character, getEmptyCharacter } from "../data/Character";
+import { Skills } from "../data/Skills";
 
 // The maximum is exclusive and the minimum is inclusive
 export const rndInt = (min: number, max: number) => {
@@ -19,20 +20,20 @@ export const isEmptyList = (maybeList: unknown) => {
 }
 
 export const downloadJson = (character: Character) => {
-    const blob = new Blob([JSON.stringify(character, null, 2)], { type: "application/json" });
-    const link = document.createElement('a');
+    const blob = new Blob([JSON.stringify(character, null, 2)], { type: "application/json" })
+    const link = document.createElement('a')
 
-    link.href = window.URL.createObjectURL(blob);
-    link.download = `vtm_v5_${character.name}.json`;
-    link.click();
+    link.href = window.URL.createObjectURL(blob)
+    link.download = `vtm_v5_${character.name}.json`
+    link.click()
 }
 
 export const getUploadFile = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file);
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = error => reject(error)
+        reader.readAsDataURL(file)
     });
 }
 

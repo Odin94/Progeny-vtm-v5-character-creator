@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { skillsKeySchema } from "./Character";
 import { disciplineNameSchema } from "./Disciplines";
+import { specialtySchema } from "./Specialties";
 
 
 export const predatorTypeNameSchema = z.union([
@@ -23,8 +23,9 @@ export type PredatorTypeName = z.infer<typeof predatorTypeNameSchema>
 
 
 export const predatorTypeSchema = z.object({
+    name: z.string(),
     summary: z.string(),
-    specialtyOptions: z.object({ skill: skillsKeySchema, name: z.string() }).array(),
+    specialtyOptions: specialtySchema.array(),
     disciplineOptions: z.object({ name: disciplineNameSchema }).array(),
     meritsAndFlaws: z.object({ name: z.string(), level: z.number().int(), summary: z.string() }).array(),
     humanityChange: z.number().int(),
@@ -35,6 +36,7 @@ export type PredatorType = z.infer<typeof predatorTypeSchema>
 
 export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
     Alleycat: {
+        name: "Alleycat",
         summary: "Ambush prey in alleys",
         specialtyOptions: [{
             skill: "intimidation",
@@ -50,6 +52,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Extortionist: {
+        name: "Extortionist",
         summary: "Strongarm prey into giving you their blood",
         specialtyOptions: [{
             skill: "intimidation",
@@ -60,11 +63,12 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             name: "Security",
         }],
         disciplineOptions: [{ name: "dominate" }, { name: "potence" }],
-        meritsAndFlaws: [{ name: "Spend these between Contacts and Resources", level: 3, summary: "" }, { name: "Enemy (Police or Victim)", level: 2, summary: "" }],
+        meritsAndFlaws: [{ name: "Spend between Contacts and Resources", level: 3, summary: "" }, { name: "Enemy (Police or Victim)", level: 2, summary: "" }],
         humanityChange: 0,
         bloodPotencyChange: 0,
     },
     "Roadside Killer": {
+        name: "Roadside Killer",
         summary: "Hunt prey on desolate roads",
         specialtyOptions: [{
             skill: "survival",
@@ -80,6 +84,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Cleaver: {
+        name: "Cleaver",
         summary: "Feed on friends and family",
         specialtyOptions: [{
             skill: "persuasion",
@@ -95,6 +100,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Consensualist: {
+        name: "Consensualist",
         summary: "Take blood only from the willing",
         specialtyOptions: [{
             skill: "medicine",
@@ -110,6 +116,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Osiris: {
+        name: "Osiris",
         summary: "Feed on your followers",
         specialtyOptions: [{
             skill: "occult",
@@ -125,6 +132,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     "Scene Queen": {
+        name: "Scene Queen",
         summary: "Feed in your scene",
         specialtyOptions: [{
             skill: "etiquette",
@@ -143,6 +151,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Siren: {
+        name: "Siren",
         summary: "Seduce prey and take their blood",
         specialtyOptions: [{
             skill: "persuasion",
@@ -158,6 +167,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Sandman: {
+        name: "Sandman",
         summary: "Break into homes and feed on sleeping prey",
         specialtyOptions: [{
             skill: "medicine",
@@ -173,6 +183,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Graverobber: {
+        name: "Graverobber",
         summary: "Feed on fresh corpses and mourning families",
         specialtyOptions: [{
             skill: "occult",
@@ -188,6 +199,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     Bagger: {
+        name: "Bagger",
         summary: "Feed on blood bags",
         specialtyOptions: [{
             skill: "larceny",
@@ -203,6 +215,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     "Blood Leech": {
+        name: "Blood Leech",
         summary: "Feed on other vampires",
         specialtyOptions: [{
             skill: "brawl",
@@ -218,6 +231,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 1,
     },
     Farmer: {
+        name: "Farmer",
         summary: "Feed on animals",
         specialtyOptions: [{
             skill: "animal ken",
@@ -233,6 +247,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         bloodPotencyChange: 0,
     },
     "": {
+        name: "",
         summary: "",
         specialtyOptions: [],
         disciplineOptions: [],

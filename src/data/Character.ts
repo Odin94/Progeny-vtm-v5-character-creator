@@ -2,6 +2,8 @@ import { z } from "zod";
 import { clanNameSchema } from "./Clans";
 import { powerSchema } from "./Disciplines";
 import { predatorTypeNameSchema } from "./PredatorType";
+import { specialtySchema } from "./Specialties";
+import { skillsSchema } from "./Skills";
 
 export const attributesSchema = z.object({
     strength: z.number().min(1).max(5).int(),
@@ -20,41 +22,6 @@ export type Attributes = z.infer<typeof attributesSchema>
 export const attributesKeySchema = attributesSchema.keyof()
 export type AttributesKey = z.infer<typeof attributesKeySchema>
 
-export const skillsSchema = z.object({
-    athletics: z.number().min(0).max(5).int(),
-    brawl: z.number().min(0).max(5).int(),
-    craft: z.number().min(0).max(5).int(),
-    drive: z.number().min(0).max(5).int(),
-    firearms: z.number().min(0).max(5).int(),
-    melee: z.number().min(0).max(5).int(),
-    larceny: z.number().min(0).max(5).int(),
-    stealth: z.number().min(0).max(5).int(),
-    survival: z.number().min(0).max(5).int(),
-
-    "animal ken": z.number().min(0).max(5).int(),
-    etiquette: z.number().min(0).max(5).int(),
-    insight: z.number().min(0).max(5).int(),
-    intimidation: z.number().min(0).max(5).int(),
-    leadership: z.number().min(0).max(5).int(),
-    performance: z.number().min(0).max(5).int(),
-    persuasion: z.number().min(0).max(5).int(),
-    streetwise: z.number().min(0).max(5).int(),
-    subterfuge: z.number().min(0).max(5).int(),
-
-    academics: z.number().min(0).max(5).int(),
-    awareness: z.number().min(0).max(5).int(),
-    finance: z.number().min(0).max(5).int(),
-    investigation: z.number().min(0).max(5).int(),
-    medicine: z.number().min(0).max(5).int(),
-    occult: z.number().min(0).max(5).int(),
-    politics: z.number().min(0).max(5).int(),
-    science: z.number().min(0).max(5).int(),
-    technology: z.number().min(0).max(5).int(),
-})
-export type Skills = z.infer<typeof skillsSchema>
-export const skillsKeySchema = skillsSchema.keyof()
-export type SkillsKey = z.infer<typeof skillsKeySchema>
-
 export const meritFlawSchema = z.object({
     name: z.string(),
     level: z.number().min(1).int(),
@@ -71,7 +38,6 @@ export const touchstoneSchema = z.object({
 })
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-
 export const characterSchema = z.object({
     name: z.string(),
     description: z.string(),
@@ -85,6 +51,7 @@ export const characterSchema = z.object({
 
     attributes: attributesSchema,
     skills: skillsSchema,
+    specialties: specialtySchema.array(),
     disciplines: powerSchema.array(),
 
     bloodPotency: z.number().min(0).int(),
@@ -153,6 +120,7 @@ export const getEmptyCharacter = (): Character => {
             science: 0,
             technology: 0,
         },
+        specialties: [],
         disciplines: [],
 
         bloodPotency: 0,

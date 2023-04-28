@@ -40,8 +40,8 @@ export type GeneratorProps = {
 }
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fillableCharacterSheet, setFillableCharacterSheet }: GeneratorProps) => {
-    const [loadedFile, setLoadedFile] = useState<File | null>(null);
-    const [fileLoadingError, setFileLoadingError] = useState<string | null>(null);
+    const [loadedFile, setLoadedFile] = useState<File | null>(null)
+    const [fileLoadingError, setFileLoadingError] = useState<string | null>(null)
 
     const getStepComponent = () => {
         switch (selectedStep) {

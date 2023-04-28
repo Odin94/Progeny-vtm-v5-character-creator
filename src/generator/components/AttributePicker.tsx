@@ -19,7 +19,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
 
     const createButton = (attribute: AttributesKey, i: number) => {
-        let onClick;
+        let onClick
         if (!pickedAttributes.strongest) {
             onClick = () => {
                 setPickedAttributes({ ...pickedAttributes, strongest: attribute })

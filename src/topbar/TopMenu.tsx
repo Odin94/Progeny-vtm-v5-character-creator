@@ -15,10 +15,10 @@ export type TopMenuProps = {
 }
 
 const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => {
-    const [loadedFile, setLoadedFile] = useState<File | null>(null);
-    const [menuOpened, setMenuOpened] = useState(false);
-    const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false);
-    const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false);
+    const [loadedFile, setLoadedFile] = useState<File | null>(null)
+    const [menuOpened, setMenuOpened] = useState(false)
+    const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
+    const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
 
     return (
         <Menu shadow="md" width={200} opened={menuOpened} onChange={setMenuOpened}>

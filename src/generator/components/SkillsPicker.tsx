@@ -1,7 +1,8 @@
 import { Button, Divider, Grid, Group, Space, Text } from "@mantine/core"
 import { useState } from "react"
-import { Character, SkillsKey, Skills, skillsKeySchema } from "../../data/Character"
+import { Character } from "../../data/Character"
 import { upcase } from "../utils"
+import { Skills, SkillsKey, skillsKeySchema } from "../../data/Skills"
 
 type SkillsPickerProps = {
     character: Character,
@@ -45,7 +46,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const distr = pickedDistribution ? distributionByType[pickedDistribution] : { specialty: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: SkillsKey, i: number) => {
-        let onClick;
+        let onClick
         if (pickedSkills.specialty.length < distr.specialty) {
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, specialty: [...pickedSkills.specialty, skill] })
