@@ -1,6 +1,6 @@
 import { Button, Divider, Grid, Space, Stack, Text, Tooltip } from "@mantine/core"
 import { Character } from "../../data/Character"
-import { PredatorType, summaryByPredatorType } from "../../data/PredatorType"
+import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 
 
 type PredatorTypePickerProps = {
@@ -10,9 +10,9 @@ type PredatorTypePickerProps = {
 }
 
 const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypePickerProps) => {
-    const createButton = (predatorType: PredatorType, color: string) => {
+    const createButton = (predatorType: PredatorTypeName, color: string) => {
         return (
-            <Tooltip label={summaryByPredatorType[predatorType]} key={predatorType}>
+            <Tooltip label={PredatorTypes[predatorType].summary} key={predatorType}>
                 <Button disabled={character.clan === "Ventrue" && ["Bagger", "Farmer"].includes(predatorType)} color={color} onClick={() => {
                     setCharacter({ ...character, predatorType: predatorType })
                     nextStep()
@@ -33,7 +33,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 <Grid>
                     <Grid.Col span={4}><h1>Violent</h1></Grid.Col>
                     <Grid.Col span={4}>
-                        <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorType[]).map((clan) => createButton(clan, "red"))}</Stack>
+                        <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
                     </Grid.Col>
                 </Grid>
 
@@ -42,7 +42,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 <Grid>
                     <Grid.Col span={4}><h1>Sociable</h1></Grid.Col>
                     <Grid.Col span={4}>
-                        <Stack>{(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren",] as PredatorType[]).map((clan) => createButton(clan, "grape"))}</Stack>
+                        <Stack>{(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren",] as PredatorTypeName[]).map((clan) => createButton(clan, "grape"))}</Stack>
                     </Grid.Col>
                 </Grid>
 
@@ -51,7 +51,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 <Grid>
                     <Grid.Col span={4}><h1>Stealth</h1></Grid.Col>
                     <Grid.Col span={4}>
-                        <Stack>{(["Sandman", "Graverobber",] as PredatorType[]).map((clan) => createButton(clan, "gray"))}</Stack>
+                        <Stack>{(["Sandman", "Graverobber",] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
                     </Grid.Col>
                 </Grid>
 
@@ -60,7 +60,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 <Grid>
                     <Grid.Col span={4}><h1>Excluding Mortals</h1></Grid.Col>
                     <Grid.Col span={4}>
-                        <Stack>{(["Bagger", "Blood Leech", "Farmer",] as PredatorType[]).map((clan) => createButton(clan, "violet"))}</Stack>
+                        <Stack>{(["Bagger", "Blood Leech", "Farmer",] as PredatorTypeName[]).map((clan) => createButton(clan, "violet"))}</Stack>
                     </Grid.Col>
                 </Grid>
             </Stack>

@@ -76,7 +76,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     larceny: 0,
                     stealth: 0,
                     survival: 0,
-                    animal_ken: 0,
+                    "animal ken": 0,
                     etiquette: 0,
                     insight: 0,
                     intimidation: 0,
@@ -156,7 +156,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
                     <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
                     {
-                        ["athletics", "animal_ken", "academics",
+                        ["athletics", "animal ken", "academics",
                             "brawl", "etiquette", "awareness",
                             "craft", "insight", "finance",
                             "drive", "intimidation", "investigation",

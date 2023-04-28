@@ -1,9 +1,10 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
 import { Character, SkillsKey, attributesKeySchema, skillsKeySchema } from '../data/Character';
 import base64Check from '../resources/CheckSolid.base64';
-import base64Pdf from '../resources/v5_charactersheet_fillable_v3.base64';
+import base64Pdf from '../resources/charsheet_v5-own-alternative-formfillable-v2.base64';
 import { upcase } from './utils';
 import { Clans } from '../data/Clans';
+import { PredatorTypes } from '../data/PredatorType';
 
 type BloodPotencyEffect = {
     surge: number,
@@ -71,12 +72,12 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     // Skills
     const skills = character.skills;
     (["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival",
-        "animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge", "academics",
+        "animal ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge", "academics",
         "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",
     ].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
-            form.getCheckBox(skill.replace("_", "") + i).check()
+            form.getCheckBox(skill + i).check()
         }
     })
 
@@ -97,7 +98,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     }
 
     // Blood Potency
-    const bloodPotency = (() => {
+    let bloodPotency = (() => {
         switch (character.generation) {
             case 16:
             case 15:
@@ -109,6 +110,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
             default: return 1
         }
     })()
+    bloodPotency += PredatorTypes[character.predatorType].bloodPotencyChange
     for (let i = 1; i <= bloodPotency; i++) {
         form.getCheckBox(`potency${i}`).check()
     }
@@ -130,7 +132,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     form.getTextField("Bane Severity").setText(`${effects.bane}`)
 
     //Humanity
-    const humanity = 7
+    const humanity = 7 + PredatorTypes[character.predatorType].humanityChange
     const checkImageBytes = await fetch(base64Check).then(res => res.text())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
     for (let i = 0; i <= humanity - 1; i++) {
@@ -164,7 +166,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
 
     const specialtyFieldNames: Record<SkillsKey, string> =
     {
-        animal_ken: "AT.0.1",
+        "animal ken": "AT.0.1",
         athletics: "AT.0.0.0",
         etiquette: "AT.0.0.1",
         craft: "AT.0.0.2",
@@ -195,7 +197,8 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
 
     // Merits & flaws
     const meritFlawBase = "adflaw"
-    const meritsAndFlaws = [...character.merits, ...character.flaws]
+    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType].meritsAndFlaws
+    const meritsAndFlaws = [...character.merits, ...character.flaws, ...predatorTypeMeritsFlaws]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
         form.getTextField(meritFlawBase + fieldNum).setText(name + ": " + summary)

@@ -28,7 +28,7 @@ const SkillDisplay = ({ skills }: SkillsProps) => {
 
                 <Grid.Col span={4}>
                     <Title order={4}>Social</Title>
-                    {["animal_ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge"].map((s) => skillsKeySchema.parse(s)).map((skill) => {
+                    {["animal ken", "etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge"].map((s) => skillsKeySchema.parse(s)).map((skill) => {
                         return (<Text style={textStyle} key={skill}>{upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} /></Text>)
                     })}
                 </Grid.Col>

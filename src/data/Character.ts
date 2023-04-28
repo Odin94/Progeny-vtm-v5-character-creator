@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { clanNameSchema } from "./Clans";
 import { powerSchema } from "./Disciplines";
-import { predatorTypeSchema } from "./PredatorType";
+import { predatorTypeNameSchema } from "./PredatorType";
 
 export const attributesSchema = z.object({
     strength: z.number().min(1).max(5).int(),
@@ -31,7 +31,7 @@ export const skillsSchema = z.object({
     stealth: z.number().min(0).max(5).int(),
     survival: z.number().min(0).max(5).int(),
 
-    animal_ken: z.number().min(0).max(5).int(),
+    "animal ken": z.number().min(0).max(5).int(),
     etiquette: z.number().min(0).max(5).int(),
     insight: z.number().min(0).max(5).int(),
     intimidation: z.number().min(0).max(5).int(),
@@ -78,7 +78,7 @@ export const characterSchema = z.object({
     sire: z.string(),
 
     clan: clanNameSchema,
-    predatorType: predatorTypeSchema,
+    predatorType: predatorTypeNameSchema,
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
     desire: z.string(),
@@ -134,7 +134,7 @@ export const getEmptyCharacter = (): Character => {
             larceny: 0,
             stealth: 0,
             survival: 0,
-            animal_ken: 0,
+            "animal ken": 0,
             etiquette: 0,
             insight: 0,
             intimidation: 0,
