@@ -1,9 +1,9 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, Group, Modal, SegmentedControl, Space, Stack, Text, Tooltip } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
+import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { useState } from "react"
-import { Character, getEmptyCharacter } from "../../data/Character"
+import { Character } from "../../data/Character"
 import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 import { upcase } from "../utils"
 
@@ -96,22 +96,57 @@ type SpecialtyModalProps = {
 }
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty }: SpecialtyModalProps) => {
+    const phoneSizedScreen = useMediaQuery('(max-width: 550px)');
+
     const predatorType = PredatorTypes[pickedPredatorType]
 
     return (
-        <Modal size="lg" opened={modalOpened} onClose={closeModal} title={predatorType.name} centered>
+        <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">{predatorType.name}</Text>} centered>
             <Stack>
                 <Divider my="sm" />
 
-                {predatorType.bloodPotencyChange !== 0 ? <Text fz={"xl"}><b>Blood Potency Change:</b>{` ${predatorType.bloodPotencyChange}`}</Text> : null}
-                {predatorType.humanityChange !== 0 ? <Text fz={"xl"}><b>Humanity Change:</b>{` ${predatorType.humanityChange}`}</Text> : null}
-                {predatorType.disciplineOptions.length !== 0 ? <Text fz={"xl"}><b>Discipline Options:</b>{` ${predatorType.disciplineOptions.map((d) => d.name).join(", ")}`}</Text> : null}
-                {predatorType.meritsAndFlaws.length !== 0 ? <Text fz={"xl"}><b>Merits and Flaws:</b>{` ${predatorType.meritsAndFlaws.map((mf) => mf.name).join(", ")}`}</Text> : null}
+                {predatorType.bloodPotencyChange !== 0 ?
+                    <div>
+                        <Group position="apart">
+                            <Text fw={700} fz={"xl"}>Blood Potency Change:</Text>
+                            <Text fz={"xl"}>{`${predatorType.bloodPotencyChange}`}</Text>
+                        </Group>
+                        <Divider my="sm" variant="dotted" />
+                    </div>
+                    : null}
 
-                <Divider my="sm" />
-                <Text fz={"xl"}>Select a skill specialty</Text>
+                {predatorType.humanityChange !== 0 ?
+                    <div>
+                        <Group position="apart">
+                            <Text fw={700} fz={"xl"}>Humanity Change:</Text>
+                            <Text fz={"xl"}>{`${predatorType.humanityChange}`}</Text>
+                        </Group>
+                        <Divider my="sm" variant="dotted" />
+                    </div>
+                    : null}
+                {predatorType.disciplineOptions.length !== 0 ?
+                    <div>
+                        <Group position="apart">
+                            <Text fw={700} fz={"xl"}>Discipline Options:</Text>
+                            <Text fz={"xl"}>{`${predatorType.disciplineOptions.map((d) => upcase(d.name)).join(", ")}`}</Text>
+                        </Group>
+                        <Divider my="sm" variant="dotted" />
+                    </div>
+                    : null}
+                {predatorType.meritsAndFlaws.length !== 0 ?
+                    <div>
+                        <Group position="apart">
+                            <Text fw={700} fz={"xl"}>Merits and Flaws:</Text>
+                            <Text fz={"xl"}>{`${predatorType.meritsAndFlaws.map((mf) => `${mf.name}: ${mf.level}`).join(", ")}`}</Text>
+                        </Group>
+                        <Divider my="sm" />
+                    </div>
+                    : null}
+
+                <Text fw={700} fz={"xl"} ta="center">Select a skill specialty</Text>
 
                 <SegmentedControl
+                    size={"md"}
                     color="red"
                     value={specialty}
                     onChange={setSpecialty}
