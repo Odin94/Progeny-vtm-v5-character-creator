@@ -114,15 +114,15 @@ export const disciplines: Record<DisciplineName, Discipline> = {
         powers: [
             { name: "Lethal Body", description: "", amalgamPrerequisites: [], summary: "cause serious physical damage to a mortals", dicePool: "", level: 1, discipline: "potence" },
             { name: "Soaring Leap", description: "", amalgamPrerequisites: [], summary: "jump over long distance", dicePool: "", level: 1, discipline: "potence" },
-            { name: "Prowess", description: "", amalgamPrerequisites: [], summary: "add Potence rating to strength", dicePool: "", level: 2, discipline: "potence" },
+            { name: "Prowess", description: "", amalgamPrerequisites: [], summary: "add Potence rating to strength checks", dicePool: "", level: 2, discipline: "potence" },
         ],
     },
     presence: {
         clans: ["Toreador", "Brujah", "Ventrue", "Ministry", "Ravnos"],
         summary: "",
         powers: [
-            { name: "Awe", description: "", amalgamPrerequisites: [], summary: "become attractive and charismatic", dicePool: "", level: 1, discipline: "presence" },
-            { name: "Daunt", description: "", amalgamPrerequisites: [], summary: "push people away and intimidate", dicePool: "", level: 1, discipline: "presence" },
+            { name: "Awe", description: "", amalgamPrerequisites: [], summary: "become attractive and charismatic; add Presence rating to Persuasion and Performance checks", dicePool: "", level: 1, discipline: "presence" },
+            { name: "Daunt", description: "", amalgamPrerequisites: [], summary: "push people away and intimidate; add Presence rating to Intimidation checks", dicePool: "", level: 1, discipline: "presence" },
             { name: "Lingering Kiss", description: "", amalgamPrerequisites: [], summary: "make mortals you feed from love you", dicePool: "", level: 2, discipline: "presence" },
         ],
     },

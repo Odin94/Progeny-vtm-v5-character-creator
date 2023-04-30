@@ -19,7 +19,7 @@ import { rndInt } from './generator/utils';
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
-  const phoneSizedScreen = useMediaQuery('(max-width: 550px)');
+  const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
   const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
   const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
   const [backgroundIndex, setBackgroundIndex] = useState(rndInt(0, backgrounds.length))

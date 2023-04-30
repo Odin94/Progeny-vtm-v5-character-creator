@@ -4,6 +4,7 @@ import { Character } from "../../data/Character"
 import { ClanName } from "../../data/Clans"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { intersection, upcase } from "../utils"
+import { useMediaQuery } from "@mantine/hooks"
 
 
 type DisciplinesPickerProps = {
@@ -17,6 +18,7 @@ const getDisciplinesForClan = (clan: ClanName) => {
 }
 
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
+    const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
 
     const disciplinesForClan = getDisciplinesForClan(character.clan)

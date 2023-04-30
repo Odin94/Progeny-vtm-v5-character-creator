@@ -1,7 +1,8 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
 import { Character, attributesKeySchema, } from '../data/Character';
 import base64Check from '../resources/CheckSolid.base64';
-import base64Pdf from '../resources/charsheet_v5-own-alternative-formfillable-v2.base64';
+import base64Pdf_nerdbert from '../resources/charsheet_v5-own-alternative-formfillable-v2.base64';
+import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { upcase } from './utils';
 import { Clans } from '../data/Clans';
 import { PredatorTypes } from '../data/PredatorType';
@@ -17,7 +18,7 @@ type BloodPotencyEffect = {
 }
 
 
-const loadTemplate = async (pdf = base64Pdf) => {
+const loadTemplate = async (pdf = base64Pdf_renegade) => {
     return fetch(pdf)
         .then(r => r.text())
 }
@@ -164,7 +165,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     form.getTextField("Row1_2").setText(character.disciplines[2].name + ": " + character.disciplines[2].summary)
     form.getCheckBox("main2-1").check();
 
-
+    // Specialties
     const specialtyFieldNames: Record<SkillsKey, string> =
     {
         "animal ken": "AT.0.1",
@@ -194,6 +195,10 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
         streetwise: "AT.1.1.2.12",
         technology: "AT.1.1.2.13",
         subterfuge: "AT.1.1.2.14",
+    }
+    for (const specialty of character.specialties) {
+        const specialtyFieldName = specialtyFieldNames[specialty.skill]
+        form.getTextField(specialtyFieldName).setText(specialty.name)
     }
 
     // Merits & flaws

@@ -30,7 +30,7 @@ const Sidebar = ({ character }: SidebarProps) => {
                 {notDefault(character, "predatorType") ? <Text><b>Predator Type:</b> {character.predatorType}</Text> : null}
                 {notDefault(character, "disciplines") ? <DisciplineDisplay powers={character.disciplines} /> : null}
                 {notDefault(character, "touchstones") ? <TouchstoneDisplay touchstones={character.touchstones} /> : null}
-                {notDefault(character, "merits") ? <MeritsAndFlawsDisplay merits={character.merits} flaws={character.flaws} /> : null}
+                {notDefault(character, "merits") || notDefault(character, "flaws") ? <MeritsAndFlawsDisplay merits={character.merits} flaws={character.flaws} /> : null}
             </Stack>
         </ScrollArea>
     )
