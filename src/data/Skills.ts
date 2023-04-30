@@ -35,3 +35,67 @@ export const skillsSchema = z.object({
 export type Skills = z.infer<typeof skillsSchema>
 export const skillsKeySchema = skillsSchema.keyof()
 export type SkillsKey = z.infer<typeof skillsKeySchema>
+
+export const allSkills: SkillsKey[] = [
+    "athletics",
+    "brawl",
+    "craft",
+    "drive",
+    "firearms",
+    "melee",
+    "larceny",
+    "stealth",
+    "survival",
+
+    "animal ken",
+    "etiquette",
+    "insight",
+    "intimidation",
+    "leadership",
+    "performance",
+    "persuasion",
+    "streetwise",
+    "subterfuge",
+
+    "academics",
+    "awareness",
+    "finance",
+    "investigation",
+    "medicine",
+    "occult",
+    "politics",
+    "science",
+    "technology",
+]
+
+export const emptySkills: Skills = {
+    athletics: 0,
+    brawl: 0,
+    craft: 0,
+    drive: 0,
+    firearms: 0,
+    melee: 0,
+    larceny: 0,
+    stealth: 0,
+    survival: 0,
+
+    "animal ken": 0,
+    etiquette: 0,
+    insight: 0,
+    intimidation: 0,
+    leadership: 0,
+    performance: 0,
+    persuasion: 0,
+    streetwise: 0,
+    subterfuge: 0,
+
+    academics: 0,
+    awareness: 0,
+    finance: 0,
+    investigation: 0,
+    medicine: 0,
+    occult: 0,
+    politics: 0,
+    science: 0,
+    technology: 0,
+}

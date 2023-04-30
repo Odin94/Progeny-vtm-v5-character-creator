@@ -1,8 +1,12 @@
-import { Button, Divider, Grid, Group, Space, Text } from "@mantine/core"
+import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextInput } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
-import { upcase } from "../utils"
-import { Skills, SkillsKey, skillsKeySchema } from "../../data/Skills"
+import { intersection, upcase } from "../utils"
+import { Skills, SkillsKey, allSkills, emptySkills, skillsKeySchema } from "../../data/Skills"
+import { useDisclosure, useMediaQuery } from "@mantine/hooks"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
+import { Specialty } from "../../data/Specialties"
 
 type SkillsPickerProps = {
     character: Character,
@@ -11,7 +15,7 @@ type SkillsPickerProps = {
 }
 
 type SkillsSetting = {
-    specialty: SkillsKey[],
+    special: SkillsKey[],
     strongest: SkillsKey[],
     decent: SkillsKey[],
     acceptable: SkillsKey[],
@@ -19,37 +23,45 @@ type SkillsSetting = {
 
 type DistributionKey = "Jack of All Trades" | "Balanced" | "Specialist"
 
-const distributionByType: Record<DistributionKey, { strongest: number, decent: number, acceptable: number, specialty: number }> = {
+type SkillDistribution = { strongest: number, decent: number, acceptable: number, special: number }
+
+const distributionByType: Record<DistributionKey, SkillDistribution> = {
     "Jack of All Trades": {
-        specialty: 0,
+        special: 0,
         strongest: 1,
         decent: 8,
         acceptable: 10
     },
     Balanced: {
-        specialty: 0,
+        special: 0,
         strongest: 3,
         decent: 5,
         acceptable: 7
     },
     Specialist: {
-        specialty: 1,
+        special: 1,
         strongest: 3,
         decent: 3,
         acceptable: 3
     },
 }
 
+const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
+    return Object.values(skillSetting).reduce((acc, s) => [...acc, ...s], [])
+}
+
 const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
-    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({ specialty: [], strongest: [], decent: [], acceptable: [] })
+    const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
+    const [skills, setSkills] = useState(emptySkills)
+    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({ special: [], strongest: [], decent: [], acceptable: [] })
     const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
-    const distr = pickedDistribution ? distributionByType[pickedDistribution] : { specialty: 0, strongest: 0, decent: 0, acceptable: 0 }
+    const distr = pickedDistribution ? distributionByType[pickedDistribution] : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: SkillsKey, i: number) => {
         let onClick
-        if (pickedSkills.specialty.length < distr.specialty) {
+        if (pickedSkills.special.length < distr.special) {
             onClick = () => {
-                setPickedSkills({ ...pickedSkills, specialty: [...pickedSkills.specialty, skill] })
+                setPickedSkills({ ...pickedSkills, special: [...pickedSkills.special, skill] })
             }
         }
         else if (pickedSkills.strongest.length < distr.strongest) {
@@ -60,7 +72,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
-        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {  // -1 so the very last pick goes to nextStep()
+        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {  // -1 so the very last pick opens modal
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] })
             }
@@ -77,6 +89,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     larceny: 0,
                     stealth: 0,
                     survival: 0,
+
                     "animal ken": 0,
                     etiquette: 0,
                     insight: 0,
@@ -86,6 +99,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     persuasion: 0,
                     streetwise: 0,
                     subterfuge: 0,
+
                     academics: 0,
                     awareness: 0,
                     finance: 0,
@@ -96,19 +110,21 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     science: 0,
                     technology: 0,
                 }
-                finalPick.specialty.forEach((specialty) => skills[specialty] = 4)
+                finalPick.special.forEach((special) => skills[special] = 4)
                 finalPick.strongest.forEach((strongest) => skills[strongest] = 3)
                 finalPick.decent.forEach((decent) => skills[decent] = 2)
                 finalPick.acceptable.forEach((acceptable) => skills[acceptable] = 1)
 
-                setCharacter({ ...character, skills: skills })
-                nextStep()
+                setPickedSkills(finalPick)
+                setSkills(skills)
+
+                openModal()
             }
         }
 
-        const disabled = [...pickedSkills.specialty, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill) || pickedDistribution === null
+        const disabled = [...pickedSkills.special, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill) || pickedDistribution === null
         const dots = (() => {
-            if (pickedSkills.specialty.includes(skill)) return "🚀"
+            if (pickedSkills.special.includes(skill)) return "🚀"
             if (pickedSkills.strongest.includes(skill)) return "🥇"
             if (pickedSkills.decent.includes(skill)) return "🥈"
             if (pickedSkills.acceptable.includes(skill)) return "🥉"
@@ -125,7 +141,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
     const header = (() => {
         if (!pickedDistribution) return (<h1>Pick your <b>Skill Distribution</b></h1>)
-        if (pickedSkills.specialty.length < distr.specialty) return (<h1>Pick your <b>{distr.specialty} specialty</b> skill</h1>)
+        if (pickedSkills.special.length < distr.special) return (<h1>Pick your <b>{distr.special} specialty</b> skill</h1>)
         if (pickedSkills.strongest.length < distr.strongest) return (<h1>Pick your <b>{distr.strongest} strongest</b> skills</h1>)
         if (pickedSkills.decent.length < distr.decent) return (<h1>Pick <b>{distr.decent}</b> skills you're <b>decent</b> in</h1>)
         return (<h1>Pick <b>{distr.acceptable}</b> skills you're <b>ok</b> in</h1>)
@@ -170,7 +186,92 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     }
                 </Grid>
             </Group>
+
+            <SpecialtyModal modalOpened={modalOpened} closeModal={closeModal} setCharacter={setCharacter} nextStep={nextStep} character={character} pickedSkills={pickedSkills} skills={skills} />
         </div>
+    )
+}
+
+type SpecialtyModalProps = {
+    modalOpened: boolean
+    closeModal: () => void
+    character: Character,
+    pickedSkills: SkillsSetting,
+    skills: Skills,
+    setCharacter: (character: Character) => void
+    nextStep: () => void
+}
+
+type SpecialtySkill = "academics" | "craft" | "performance" | "science"
+
+const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedSkills, skills }: SpecialtyModalProps) => {
+    const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
+    const [pickedSkill, setPickedSkill] = useState<string>("athletics")
+    const [pickedSkillSpecialty, setPickedSkillSpecialty] = useState("")
+
+    const [academicsSpecialty, setAcademicsSpecialty] = useState("")
+    const [craftSpecialty, setCraftSpecialty] = useState("")
+    const [performanceSpecialty, setPerformanceSpecialty] = useState("")
+    const [scienceSpecialty, setScienceSpecialty] = useState("")
+
+    const specialtySkills = ["academics", "craft", "performance", "science"]
+
+    const specialtyStates: Record<SpecialtySkill, { value: string, setValue: (s: string) => void }> = {
+        academics: { value: academicsSpecialty, setValue: setAcademicsSpecialty },
+        craft: { value: craftSpecialty, setValue: setCraftSpecialty },
+        performance: { value: performanceSpecialty, setValue: setPerformanceSpecialty },
+        science: { value: scienceSpecialty, setValue: setScienceSpecialty },
+    }
+
+    const pickedSpecialtySkills = intersection(specialtySkills, getAll(pickedSkills)) as SpecialtySkill[]
+    return (
+        <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>} centered>
+            <Stack>
+                <Divider my="sm" />
+                <Text fw={700} fz={"xl"} ta="center">Select a skill specialty</Text>
+
+                <Group position="apart">
+                    <Select
+                        label="Pick a free specialty"
+                        placeholder="Pick one"
+                        searchable
+                        onSearchChange={setPickedSkill}
+                        searchValue={pickedSkill}
+                        nothingFound="No options"
+                        data={allSkills.filter((s) => !specialtySkills.includes(s))}
+                    />
+
+                    <TextInput value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
+                </Group>
+
+                {pickedSpecialtySkills.map((s) => (
+                    <div>
+                        <Group position="apart">
+                            <Text fw={700} fz={"xl"}>{s}:</Text>
+                            <TextInput value={specialtyStates[s].value} onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)} />
+                        </Group>
+                        <Divider my="sm" variant="dotted" />
+                    </div>
+                ))}
+
+
+                <Divider my="sm" />
+                <Group position="apart">
+                    <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>Back</Button>
+
+                    <Button color="grape" onClick={async () => {
+                        let pickedSpecialties = specialtySkills.reduce<Specialty[]>((acc, s) => {
+                            return [...acc, { skill: skillsKeySchema.parse(s), name: specialtyStates[s as SpecialtySkill].value }]
+                        }, [])
+                        pickedSpecialties = [...pickedSpecialties, { skill: skillsKeySchema.parse(pickedSkill), name: pickedSkillSpecialty }]
+
+                        closeModal()
+                        setCharacter({ ...character, skills: skills, specialties: [...(character.specialties), ...pickedSpecialties] })
+                        nextStep()
+                    }}>Confirm</Button>
+                </Group>
+            </Stack>
+        </Modal>
     )
 }
 

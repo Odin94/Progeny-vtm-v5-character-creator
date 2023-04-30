@@ -96,7 +96,7 @@ type SpecialtyModalProps = {
 }
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty }: SpecialtyModalProps) => {
-    const phoneSizedScreen = useMediaQuery('(max-width: 550px)');
+    const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
 
     const predatorType = PredatorTypes[pickedPredatorType]
 
