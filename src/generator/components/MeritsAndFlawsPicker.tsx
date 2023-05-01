@@ -177,9 +177,9 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             <h1>Spend 7 dots in Advantages and 2 dots in Flaws</h1>
             <h1>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws} </h1>
             <Grid>
-                {meritsAndFlaws.map((category) => {
+                {meritsAndFlaws.map((category, i) => {
                     return (
-                        <Grid.Col span={6} key={category.title}>
+                        <Grid.Col span={6} key={category.title + i}>
                             <Stack>
                                 <Text size={"xl"}>{category.title}</Text>
                                 {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}

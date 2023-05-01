@@ -1,12 +1,14 @@
+import { notifications } from '@mantine/notifications';
 import { PDFDocument, PDFForm } from 'pdf-lib';
 import { Character, attributesKeySchema, } from '../data/Character';
-import base64Check from '../resources/CheckSolid.base64';
-import base64Pdf_nerdbert from '../resources/charsheet_v5-own-alternative-formfillable-v2.base64';
-import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
-import { upcase } from './utils';
 import { Clans } from '../data/Clans';
 import { PredatorTypes } from '../data/PredatorType';
 import { SkillsKey, skillsKeySchema } from '../data/Skills';
+import base64Check from '../resources/CheckSolid.base64';
+import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
+import base64Pdf_nerdbert from '../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64';
+import { upcase } from './utils';
+
 
 type BloodPotencyEffect = {
     surge: number,
@@ -18,7 +20,7 @@ type BloodPotencyEffect = {
 }
 
 
-const loadTemplate = async (pdf = base64Pdf_renegade) => {
+const loadTemplate = async (pdf = base64Pdf_nerdbert) => {
     return fetch(pdf)
         .then(r => r.text())
 }
@@ -55,8 +57,174 @@ const downloadPdf = (fileName: string, bytes: Uint8Array) => {
     link.click();
 }
 
-const createPdf = async (character: Character): Promise<Uint8Array> => {
-    const basePdf = await loadTemplate()
+const potencyEffects: Record<number, BloodPotencyEffect> = {
+    0: { surge: 1, mend: "1 superficial", discBonus: "-", discRouse: "-", bane: 0, penalty: "-" },
+    1: { surge: 2, mend: "1 superficial", discBonus: "-", discRouse: "Lvl 1", bane: 2, penalty: "-" },
+    2: { surge: 2, mend: "2 superficial", discBonus: "Add 1 die", discRouse: "Lvl 1", bane: 2, penalty: "Animal and bagged blood slake half Hunger" },
+    3: { surge: 3, mend: "2 superficial", discBonus: "Add 1 die", discRouse: "Lvl 2 and below", bane: 3, penalty: "Animal and bagged blood slake no Hunger" },
+    4: { surge: 3, mend: "3 superficial", discBonus: "Add 2 dice", discRouse: "Lvl 2 and below", bane: 3, penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human" },
+    5: { surge: 4, mend: "3 superficial", discBonus: "Add 2 dice", discRouse: "Lvl 3 and below", bane: 4, penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2" },
+}
+
+const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
+    const basePdf = await loadTemplate(base64Pdf_nerdbert)
+    const bytes = base64ToArrayBuffer(basePdf)
+
+    const pdfDoc = await PDFDocument.load(bytes)
+    const form = pdfDoc.getForm();
+
+    // Attributes
+    const attributes = character.attributes;
+    (["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"].map((a) => attributesKeySchema.parse(a))).forEach((attr) => {
+        const lvl = attributes[attr]
+        for (let i = 1; i <= lvl; i++) {
+            form.getCheckBox(`${upcase(attr).slice(0, 3)}-${i}`).check()
+        }
+    })
+
+    // Skills
+    const skills = character.skills;
+    (["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
+        const lvl = skills[skill]
+        for (let i = 1; i <= lvl; i++) {
+            form.getCheckBox(`${upcase(skill).slice(0, 3)}-${i}`).check()
+        }
+
+        const specialty = character.specialties.find((s) => s.skill === skill)
+        if (specialty) form.getTextField(`spec${upcase(skill).slice(0, 3)}`).setText(specialty.name)
+    });
+
+    const lvl = skills["animal ken"]
+    for (let i = 1; i <= lvl; i++) {
+        form.getCheckBox(`AniKen-${i}`).check()
+    }
+    const specialty = character.specialties.find((s) => s.skill === "animal ken")
+    if (specialty) form.getTextField("specAniKen").setText(specialty.name);
+
+    (["etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
+        const lvl = skills[skill]
+        for (let i = 1; i <= lvl; i++) {
+            form.getCheckBox(`${upcase(skill).slice(0, 4)}-${i}`).check()
+        }
+
+        const specialty = character.specialties.find((s) => s.skill === skill)
+        if (specialty) form.getTextField(`spec${upcase(skill).slice(0, 4)}`).setText(specialty.name)
+    });
+
+    // Health
+    let health = 3 + character.attributes["stamina"]
+    if (character.disciplines.find((power) => power.name === "Resilience")) {
+        const fortitudeLevel = character.disciplines.filter((power) => power.discipline === "fortitude").length
+        health += fortitudeLevel
+    }
+    for (let i = 1; i <= health; i++) {
+        form.getCheckBox(`Health-${i}`).check()
+    }
+
+    // Willpower
+    const willpower = character.attributes["composure"] + character.attributes["resolve"]
+    for (let i = 1; i <= willpower; i++) {
+        form.getCheckBox(`WP-${i}`).check()
+    }
+
+    // Blood Potency
+    let bloodPotency = (() => {
+        switch (character.generation) {
+            case 16:
+            case 15:
+            case 14: return 0
+            case 13:
+            case 12: return 1
+            case 11:
+            case 10: return 2
+            default: return 1
+        }
+    })()
+    bloodPotency += PredatorTypes[character.predatorType].bloodPotencyChange
+    for (let i = 1; i <= bloodPotency; i++) {
+        form.getCheckBox(`BloodPotency-${i}`).check()
+    }
+
+    const effects = potencyEffects[bloodPotency]
+    form.getTextField("BloodSurge").setText(`${effects.surge}`)
+    form.getTextField("Mend").setText(effects.mend)
+    form.getTextField("PowBonus").setText(effects.discBonus)
+    form.getTextField("ReRouse").setText(effects.discRouse)
+    form.getTextField("FeedPen").setText(effects.penalty)
+    form.getTextField("BaneSev").setText(`${effects.bane}`)
+
+    //Humanity
+    const humanity = 7 + PredatorTypes[character.predatorType].humanityChange
+    const checkImageBytes = await fetch(base64Check).then(res => res.text())
+    const checkImage = await pdfDoc.embedPng(checkImageBytes)
+    for (let i = 1; i <= humanity; i++) {
+        form.getButton(`Humanity-${i}`).setImage(checkImage)
+    }
+
+    // Top fields
+    form.getTextField("Name").setText(character.name)
+    form.getTextField("pcDescription").setText(character.description)
+    form.getTextField("Predator type").setText(character.predatorType)
+    form.getTextField("Ambition").setText(character.ambition)
+
+    form.getTextField("Clan").setText(character.clan)
+    form.getTextField("ClanBane").setText(Clans[character.clan].bane)
+    form.getTextField("ClanCompulsion").setText(Clans[character.clan].compulsion)
+
+    form.getTextField("Sire").setText(character.sire)
+    form.getTextField("Desire").setText(character.desire)
+    form.getTextField("Title").setText(`${character.generation}`) // Yes, "Title" is the generation field
+
+    // Disciplines
+    form.getTextField("Disc1").setText(upcase(character.disciplines[0].discipline))
+    form.getTextField("Disc1_Ability1").setText(character.disciplines[0].name + ": " + character.disciplines[0].summary)
+    form.getTextField("Disc1_Ability1").disableRichFormatting()
+    form.getTextField("Disc1_Ability2").setText(character.disciplines[1].name + ": " + character.disciplines[1].summary)
+    form.getCheckBox("Disc1-1").check()
+    form.getCheckBox("Disc1-2").check()
+
+    form.getTextField("Disc2").setText(upcase(character.disciplines[2].discipline))
+    form.getTextField("Disc2_Ability1").setText(character.disciplines[2].name + ": " + character.disciplines[2].summary)
+    form.getCheckBox("Disc2-1").check()
+
+    // Merits & flaws
+    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType].meritsAndFlaws
+    const meritsAndFlaws = [...character.merits, ...predatorTypeMeritsFlaws, ...character.flaws]
+    meritsAndFlaws.forEach(({ name, level, summary }, i) => {
+        const fieldNum = i + 1
+        form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)
+        for (let l = 1; l <= level; l++) {
+            form.getCheckBox(`Merit${fieldNum}-${l}`).check()
+        }
+    })
+
+    // Touchstones & Convictions
+    form.getTextField("Convictions").setText(
+        character.touchstones
+            .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
+            .join("\n\n")
+    )
+
+    // Experience
+    const experience = (() => {
+        switch (character.generation) {
+            case 16:
+            case 15:
+            case 14: return 0
+            case 13:
+            case 12: return 15
+            case 11:
+            case 10: return 35
+            default: return 0
+        }
+    })()
+    form.getTextField("tEXP").setText(`${experience} XP`)
+
+    return await pdfDoc.save()
+}
+
+const createPdf_renegade = async (character: Character): Promise<Uint8Array> => {
+    const basePdf = await loadTemplate(base64Pdf_renegade)
     const bytes = base64ToArrayBuffer(basePdf)
 
     const pdfDoc = await PDFDocument.load(bytes)
@@ -79,7 +247,7 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
     ].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
-            form.getCheckBox(skill + i).check()
+            form.getCheckBox(skill.replace(" ", "") + i).check()
         }
     })
 
@@ -117,14 +285,6 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
         form.getCheckBox(`potency${i}`).check()
     }
 
-    const potencyEffects: Record<number, BloodPotencyEffect> = {
-        0: { surge: 1, mend: "1 superficial", discBonus: "-", discRouse: "-", bane: 0, penalty: "-" },
-        1: { surge: 2, mend: "1 superficial", discBonus: "-", discRouse: "Lvl 1", bane: 2, penalty: "-" },
-        2: { surge: 2, mend: "2 superficial", discBonus: "Add 1 die", discRouse: "Lvl 1", bane: 2, penalty: "Animal and bagged blood slake half Hunger" },
-        3: { surge: 3, mend: "2 superficial", discBonus: "Add 1 die", discRouse: "Lvl 2 and below", bane: 3, penalty: "Animal and bagged blood slake no Hunger" },
-        4: { surge: 3, mend: "3 superficial", discBonus: "Add 2 dice", discRouse: "Lvl 2 and below", bane: 3, penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human" },
-        5: { surge: 4, mend: "3 superficial", discBonus: "Add 2 dice", discRouse: "Lvl 3 and below", bane: 4, penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2" },
-    }
     const effects = potencyEffects[bloodPotency]
     form.getTextField("Blood Surge").setText(`${effects.surge}`)
     form.getTextField("Mend Amount").setText(effects.mend)
@@ -239,7 +399,13 @@ const createPdf = async (character: Character): Promise<Uint8Array> => {
 }
 
 export const downloadCharacterSheet = async (character: Character) => {
-    const pdfBytes = await createPdf(character)
+    const pdfBytes = await createPdf_nerdbert(character)
+    notifications.show({
+        title: "PDF base kindly provided by Nerdbert!",
+        message: "https://linktr.ee/nerdbert",
+        autoClose: 10000,
+        color: "grape",
+    })
     downloadPdf(`vtm_v5_${character.name}.pdf`, pdfBytes)
 }
 
@@ -280,4 +446,4 @@ export const printFieldNames = async () => {
 
 
 
-export default createPdf
+export default createPdf_renegade

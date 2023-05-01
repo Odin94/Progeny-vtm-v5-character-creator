@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const pdfPath = path.join(__dirname, '../src/resources/charsheet_v5-own-alternative-formfillable-v2.pdf')
-const base64Path = path.join(__dirname, '../src/resources/charsheet_v5-own-alternative-formfillable-v2.base64')
+const pdfPath = path.join(__dirname, '../src/resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.pdf')
+const base64Path = path.join(__dirname, '../src/resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64')
 
 const main = () => {
     console.log(`Converting pdf to base64`)

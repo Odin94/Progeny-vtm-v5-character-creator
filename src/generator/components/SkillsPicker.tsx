@@ -2,7 +2,7 @@ import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextIn
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { intersection, upcase } from "../utils"
-import { Skills, SkillsKey, allSkills, emptySkills, skillsKeySchema } from "../../data/Skills"
+import { Skills, SkillsKey, emptySkills, skillsKeySchema } from "../../data/Skills"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
@@ -146,6 +146,11 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         if (pickedSkills.decent.length < distr.decent) return (<h1>Pick <b>{distr.decent}</b> skills you're <b>decent</b> in</h1>)
         return (<h1>Pick <b>{distr.acceptable}</b> skills you're <b>ok</b> in</h1>)
     })()
+
+    const closeModalAndUndoLastPick = () => {
+        setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
+        closeModal()
+    }
     return (
         <div>
             {header}
@@ -187,7 +192,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                 </Grid>
             </Group>
 
-            <SpecialtyModal modalOpened={modalOpened} closeModal={closeModal} setCharacter={setCharacter} nextStep={nextStep} character={character} pickedSkills={pickedSkills} skills={skills} />
+            <SpecialtyModal modalOpened={modalOpened} closeModal={closeModalAndUndoLastPick} setCharacter={setCharacter} nextStep={nextStep} character={character} pickedSkillNames={getAll(pickedSkills)} skills={skills} />
         </div>
     )
 }
@@ -196,7 +201,7 @@ type SpecialtyModalProps = {
     modalOpened: boolean
     closeModal: () => void
     character: Character,
-    pickedSkills: SkillsSetting,
+    pickedSkillNames: SkillsKey[],
     skills: Skills,
     setCharacter: (character: Character) => void
     nextStep: () => void
@@ -204,9 +209,10 @@ type SpecialtyModalProps = {
 
 type SpecialtySkill = "academics" | "craft" | "performance" | "science"
 
-const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedSkills, skills }: SpecialtyModalProps) => {
+// TODO: Make modal prettier
+const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedSkillNames, skills }: SpecialtyModalProps) => {
     const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
-    const [pickedSkill, setPickedSkill] = useState<string>("athletics")
+    const [pickedSkill, setPickedSkill] = useState<string>(/*pickedSkillNames[0]*/"")  // Need to define this and set it in parent-component to automatically select the first one (see PredatorTypePicker)
     const [pickedSkillSpecialty, setPickedSkillSpecialty] = useState("")
 
     const [academicsSpecialty, setAcademicsSpecialty] = useState("")
@@ -223,7 +229,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
         science: { value: scienceSpecialty, setValue: setScienceSpecialty },
     }
 
-    const pickedSpecialtySkills = intersection(specialtySkills, getAll(pickedSkills)) as SpecialtySkill[]
+    const pickedSpecialtySkills = intersection(specialtySkills, pickedSkillNames) as SpecialtySkill[]
     return (
         <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>} centered>
             <Stack>
@@ -232,30 +238,29 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
 
                 <Group position="apart">
                     <Select
-                        label="Pick a free specialty"
+                        // label="Pick a free specialty"
                         placeholder="Pick one"
                         searchable
                         onSearchChange={setPickedSkill}
                         searchValue={pickedSkill}
                         nothingFound="No options"
-                        data={allSkills.filter((s) => !specialtySkills.includes(s))}
+                        data={pickedSkillNames.filter((s) => !specialtySkills.includes(s))}
                     />
 
                     <TextInput value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
                 </Group>
+                <Divider my="sm" />
 
                 {pickedSpecialtySkills.map((s) => (
-                    <div>
+                    <div key={s}>
                         <Group position="apart">
-                            <Text fw={700} fz={"xl"}>{s}:</Text>
+                            <Text fw={700} fz={"xl"}>{upcase(s)}:</Text>
                             <TextInput value={specialtyStates[s].value} onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)} />
                         </Group>
                         <Divider my="sm" variant="dotted" />
                     </div>
                 ))}
 
-
-                <Divider my="sm" />
                 <Group position="apart">
                     <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>Back</Button>
 
