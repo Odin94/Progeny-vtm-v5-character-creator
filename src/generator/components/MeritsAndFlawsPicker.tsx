@@ -1,6 +1,6 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Grid, Space, Stack, Text } from "@mantine/core"
+import { Button, Grid, Space, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useState } from "react"
 import { Character, MeritFlaw } from "../../data/Character"
 
@@ -144,19 +144,18 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         const icon = type === "flaw" ? flawIcon() : meritIcon()
 
         const alreadyPickedItem = pickedMeritsAndFlaws.find((l) => l.name === meritOrFlaw.name)
-        const wasPickedLevel = alreadyPickedItem?.level
+        const wasPickedLevel = alreadyPickedItem?.level ?? 0
 
         const createButton = (level: number) => {
             return (<Button key={meritOrFlaw.name + level} disabled={!!wasPickedLevel && wasPickedLevel >= level} onClick={() => {
-                // TODO: Enable clicking buttons again for same merit/flaw and updating the existing pick
                 if (type === "flaw") {
-                    if (remainingFlaws < level) return
-                    setRemainingFlaws(remainingFlaws - level)
+                    if (remainingFlaws + wasPickedLevel < level) return
+                    setRemainingFlaws(remainingFlaws + wasPickedLevel - level)
                 } else {
-                    if (remainingMerits < level) return
-                    setRemainingMerits(remainingMerits - level)
+                    if (remainingMerits + wasPickedLevel < level) return
+                    setRemainingMerits(remainingMerits + wasPickedLevel - level)
                 }
-                setPickedMeritsAndFlaws([...pickedMeritsAndFlaws, { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary }])
+                setPickedMeritsAndFlaws([...(pickedMeritsAndFlaws.filter((m) => m.name !== alreadyPickedItem?.name)), { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary }])
             }} style={{ marginRight: "5px" }} compact variant="outline" color={buttonColor}>{level}</Button>)
         }
 
@@ -167,7 +166,13 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 {icon} &nbsp;
                 {meritOrFlaw.name} - {meritOrFlaw.summary}
 
-                <span> &nbsp; {meritOrFlaw.cost.map((i) => createButton(i))} </span>
+                <span>
+                    &nbsp; {meritOrFlaw.cost.map((i) => createButton(i))}
+                    {alreadyPickedItem ? <Button onClick={() => {
+                        setPickedMeritsAndFlaws([...(pickedMeritsAndFlaws.filter((m) => m.name !== alreadyPickedItem?.name))])
+                        type === "flaw" ? setRemainingFlaws(remainingFlaws + wasPickedLevel) : setRemainingMerits(remainingMerits + wasPickedLevel)
+                    }} style={{ marginRight: "5px" }} compact variant="subtle" color={"yellow"}>Unpick</Button> : null}
+                </span>
             </Text>
         </>)
     }
