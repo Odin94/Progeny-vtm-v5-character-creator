@@ -26,6 +26,7 @@ import { useState } from "react"
 import { getUploadFile } from "./utils"
 import { testTemplate } from "./pdfCreator"
 import { IconAlertCircle } from "@tabler/icons-react"
+import Final from "./components/Final"
 
 
 export type GeneratorProps = {
@@ -54,6 +55,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fil
             case 6: return <DisciplinesPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 7: return <TouchstonePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 8: return <MeritsAndFlawsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            case 9: return <Final character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
             default: return <Text size={"xl"}>{`Error: Step ${selectedStep} is not implemented`}</Text>
         }
     }

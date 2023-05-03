@@ -8,7 +8,8 @@ export const rndInt = (min: number, max: number) => {
     return Math.floor(Math.random() * (max - min) + min)
 }
 
-export const upcase = (str: string) => str[0].toUpperCase() + str.slice(1);
+export const upcase = (str: string) => str[0] ? str[0].toUpperCase() + str.slice(1) : str;
+export const lowcase = (str: string) => str[0] ? str[0].toLowerCase() + str.slice(1) : str;
 
 export const intersection = <T>(arr1: T[], arr2: T[]) => arr1.filter(value => arr2.includes(value))
 

@@ -1,7 +1,7 @@
 import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextInput } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
-import { intersection, upcase } from "../utils"
+import { intersection, lowcase, upcase } from "../utils"
 import { Skills, SkillsKey, emptySkills, skillsKeySchema } from "../../data/Skills"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -209,10 +209,9 @@ type SpecialtyModalProps = {
 
 type SpecialtySkill = "academics" | "craft" | "performance" | "science"
 
-// TODO: Make modal prettier
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedSkillNames, skills }: SpecialtyModalProps) => {
     const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
-    const [pickedSkill, setPickedSkill] = useState<string>(/*pickedSkillNames[0]*/"")  // Need to define this and set it in parent-component to automatically select the first one (see PredatorTypePicker)
+    const [pickedSkillDisplay, setPickedSkillDisplay] = useState<string>(/*pickedSkillNames[0]*/"")  // Need to define this and set it in parent-component to automatically select the first one (see PredatorTypePicker)
     const [pickedSkillSpecialty, setPickedSkillSpecialty] = useState("")
 
     const [academicsSpecialty, setAcademicsSpecialty] = useState("")
@@ -230,6 +229,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
     }
 
     const pickedSpecialtySkills = intersection(specialtySkills, pickedSkillNames) as SpecialtySkill[]
+    const pickedSkill = lowcase(pickedSkillDisplay)
     return (
         <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>} centered>
             <Stack>
@@ -241,10 +241,10 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                         // label="Pick a free specialty"
                         placeholder="Pick one"
                         searchable
-                        onSearchChange={setPickedSkill}
-                        searchValue={pickedSkill}
+                        onSearchChange={setPickedSkillDisplay}
+                        searchValue={pickedSkillDisplay}
                         nothingFound="No options"
-                        data={pickedSkillNames.filter((s) => !specialtySkills.includes(s))}
+                        data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
 
                     <TextInput value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
@@ -268,7 +268,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                         let pickedSpecialties = specialtySkills.reduce<Specialty[]>((acc, s) => {
                             return [...acc, { skill: skillsKeySchema.parse(s), name: specialtyStates[s as SpecialtySkill].value }]
                         }, [])
-                        pickedSpecialties = [...pickedSpecialties, { skill: skillsKeySchema.parse(pickedSkill), name: pickedSkillSpecialty }]
+                        pickedSpecialties = [...pickedSpecialties, { skill: skillsKeySchema.parse(pickedSkill), name: lowcase(pickedSkillSpecialty) }]
 
                         closeModal()
                         setCharacter({ ...character, skills: skills, specialties: [...(character.specialties), ...pickedSpecialties] })

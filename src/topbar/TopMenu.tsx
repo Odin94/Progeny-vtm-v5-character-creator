@@ -7,6 +7,7 @@ import { useState } from "react"
 import { Character, characterSchema, getEmptyCharacter } from "../data/Character"
 import { downloadCharacterSheet } from "../generator/pdfCreator"
 import { downloadJson, getUploadFile } from "../generator/utils"
+import ResetModal from "../components/ResetModal"
 
 export type TopMenuProps = {
     character: Character
@@ -52,9 +53,9 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
 
 
             {/* Load Modal */}
-            <Modal opened={loadModalOpened} onClose={closeLoadModal} title="Load" centered>
+            <Modal opened={loadModalOpened} onClose={closeLoadModal} title="" centered withCloseButton={false}>
                 <Stack>
-                    <Text fz={"xl"}>Overwrite current character and load from selected file?</Text>
+                    <Text fz={"xl"} ta={"center"}>Overwrite current character and load from selected file?</Text>
                     <Divider my="sm" />
                     <Group position="apart">
                         <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>Cancel</Button>
@@ -77,23 +78,7 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
                 </Stack>
             </Modal>
 
-            {/* Reset Modal */}
-            <Modal opened={resetModalOpened} onClose={closeResetModal} title="Reset" centered>
-                <Stack>
-                    <Text fz={"xl"}>Reset current character?</Text>
-                    <Divider my="sm" />
-                    <Group position="apart">
-                        <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeResetModal}>Cancel</Button>
-
-                        <Button color="red" onClick={async () => {
-                            setCharacter(getEmptyCharacter())
-                            setSelectedStep(0)
-
-                            closeResetModal()
-                        }}>Reset character</Button>
-                    </Group>
-                </Stack>
-            </Modal>
+            <ResetModal setCharacter={setCharacter} setSelectedStep={setSelectedStep} resetModalOpened={resetModalOpened} closeResetModal={closeResetModal} />
         </Menu>
     )
 }
