@@ -14,6 +14,8 @@ export const disciplineNameSchema = z.union([
     z.literal("blood sorcery"),
 
     z.literal("oblivion"),
+
+    z.literal(""),
 ])
 export type DisciplineName = z.infer<typeof disciplineNameSchema>
 
@@ -159,5 +161,11 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             // { name: "Arms of Ahriman", description: "", amalgamPrerequisites: [{ discipline: "potence", level: 2 }], summary: "xxx", dicePool: "", level: 2, discipline: "oblivion" },
             // { name: "Fatal Precognition", description: "", amalgamPrerequisites: [{ discipline: "auspex", level: 2 }], summary: "xxx", dicePool: "", level: 2, discipline: "oblivion" },
         ]
+    },
+
+    "": {
+        clans: [],
+        summary: "",
+        powers: []
     },
 }

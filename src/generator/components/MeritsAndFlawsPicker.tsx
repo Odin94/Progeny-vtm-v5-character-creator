@@ -198,7 +198,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             <Space h={"xl"} />
 
             <Button color="grape" onClick={() => {
-                setCharacter({ ...character, merits: pickedMeritsAndFlaws.filter((l) => l.type === "merit"), flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw") })
+                setCharacter({
+                    ...character,
+                    merits: pickedMeritsAndFlaws.filter((l) => l.type === "merit"),
+                    flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw")
+                })
                 nextStep()
             }}>Confirm</Button>
 

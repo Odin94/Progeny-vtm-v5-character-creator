@@ -6,6 +6,7 @@ import { useState } from "react"
 import { Character } from "../../data/Character"
 import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 import { upcase } from "../utils"
+import { disciplineNameSchema } from "../../data/Disciplines"
 
 
 type PredatorTypePickerProps = {
@@ -19,15 +20,18 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
 
     const [specialty, setSpecialty] = useState("")
+    const [discipline, setDiscipline] = useState("")
 
     const createButton = (predatorTypeName: PredatorTypeName, color: string) => {
         return (
             <Tooltip label={PredatorTypes[predatorTypeName].summary} key={predatorTypeName}>
                 <Button disabled={character.clan === "Ventrue" && ["Bagger", "Farmer"].includes(predatorTypeName)} color={color} onClick={() => {
                     const firstSpecialtyOption = PredatorTypes[predatorTypeName].specialtyOptions[0]
+                    const firstDisciplineOption = PredatorTypes[predatorTypeName].disciplineOptions[0]
 
                     setPickedPredatorType(predatorTypeName)
-                    setSpecialty(`${firstSpecialtyOption.skill}_${firstSpecialtyOption.name}`)
+                    setSpecialty(`${firstSpecialtyOption?.skill}_${firstSpecialtyOption?.name}`)
+                    setDiscipline(firstDisciplineOption?.name)
                     openModal()
                 }}>{predatorTypeName}</Button>
             </Tooltip>
@@ -79,7 +83,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
             </Stack>
 
             <SpecialtyModal modalOpened={modalOpened} closeModal={closeModal} character={character} pickedPredatorType={pickedPredatorType}
-                setCharacter={setCharacter} nextStep={nextStep} specialty={specialty} setSpecialty={setSpecialty} />
+                setCharacter={setCharacter} nextStep={nextStep} specialty={specialty} setSpecialty={setSpecialty} discipline={discipline} setDiscipline={setDiscipline} />
         </div>
     )
 }
@@ -93,15 +97,17 @@ type SpecialtyModalProps = {
     nextStep: () => void
     specialty: string,
     setSpecialty: (specialty: string) => void,
+    discipline: string,
+    setDiscipline: (specialty: string) => void,
 }
 
-const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty }: SpecialtyModalProps) => {
+const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty, discipline, setDiscipline }: SpecialtyModalProps) => {
     const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
 
     const predatorType = PredatorTypes[pickedPredatorType]
 
     return (
-        <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">{predatorType.name}</Text>} centered>
+        <Modal withCloseButton={false} size="xl" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "750px"} fw={700} fz={"30px"} ta="center">{predatorType.name}</Text>} centered>
             <Stack>
                 <Divider my="sm" />
 
@@ -144,7 +150,6 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     : null}
 
                 <Text fw={700} fz={"xl"} ta="center">Select a skill specialty</Text>
-
                 <SegmentedControl
                     size={"md"}
                     color="red"
@@ -152,18 +157,35 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     onChange={setSpecialty}
                     data={predatorType.specialtyOptions.map((specialty) => ({ label: `${upcase(specialty.skill)}: ${specialty.name}`, value: `${specialty.skill}_${specialty.name}` }))}
                 />
-
                 <Divider my="sm" />
+
+                <Text fw={700} fz={"xl"} ta="center">Take a bonus level to a discipline</Text>
+                <SegmentedControl
+                    size={"md"}
+                    color="red"
+                    value={discipline}
+                    onChange={setDiscipline}
+                    data={predatorType.disciplineOptions.map((discipline) => ({ label: upcase(discipline.name), value: discipline.name }))}
+                />
+                <Divider my="sm" />
+
                 <Group position="apart">
                     <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>Back</Button>
 
                     <Button color="grape" onClick={async () => {
                         const pickedSpecialty = predatorType.specialtyOptions.find(({ name }) => name === specialty.split("_")[1])
+                        const pickedDiscipline = predatorType.disciplineOptions.find(({ name }) => name === discipline)
                         if (!pickedSpecialty) {
                             console.error(`Couldn't find specialty with name ${specialty}`)
+                        } else if (!pickedDiscipline) {
+                            console.error(`Couldn't find discipline with name ${discipline}`)
                         } else {
                             closeModal()
-                            setCharacter({ ...character, predatorType: pickedPredatorType, specialties: [...(character.specialties), pickedSpecialty] })
+                            setCharacter({
+                                ...character,
+                                predatorType: { name: pickedPredatorType, pickedDiscipline: disciplineNameSchema.parse(discipline) },
+                                specialties: [...(character.specialties), pickedSpecialty]
+                            })
                             nextStep()
                         }
 

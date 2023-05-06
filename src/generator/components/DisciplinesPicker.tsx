@@ -126,7 +126,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     let disciplineTitle = ""
     return (
         <div>
-            <h1>Pick 2 powers in one disciplines, and 1 power in another</h1>
+            {/* TODO: Keep picking the regular disciplines as is, and once you have all show "now pick one x from predator type" and close + disable all disciplines not from your predator type - can even keep the same undo functionality */}
+            <h1>Pick 2 powers in one disciplines,<br /> 1 power in another,<br /> and 1 power in {upcase(character.predatorType.pickedDiscipline)} from your predator type</h1>
 
             <Text ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
             <hr color="#e03131" />

@@ -19,10 +19,12 @@ Quickly and easily create your VTM character & export to printable, editable PDF
 <!-- ## TODOs:
 * Add pretty VtM logos & images  (consider https://www.svgrepo.com)
 * Make things prettier in general
-* Add Predator Type bonuses to sheet 
+* Add 3rd level disciplines
+* Add Predator Type Discipline bonuses to sheet 
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones
-* 
-* 
+* Add rituals for blood sorcery
+* Add description / explanation to first page?
+* Add tooltip-descriptions to Attributes and Skills (maybe find on a list in nerdbert's resource collection?)
 * -->
 
 ## Credits & Acknowledgements

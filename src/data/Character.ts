@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { clanNameSchema } from "./Clans";
-import { powerSchema } from "./Disciplines";
+import { disciplineNameSchema, powerSchema } from "./Disciplines";
 import { predatorTypeNameSchema } from "./PredatorType";
 import { specialtySchema } from "./Specialties";
 import { skillsSchema } from "./Skills";
@@ -44,7 +44,10 @@ export const characterSchema = z.object({
     sire: z.string(),
 
     clan: clanNameSchema,
-    predatorType: predatorTypeNameSchema,
+    predatorType: z.object({
+        name: predatorTypeNameSchema,
+        pickedDiscipline: disciplineNameSchema,
+    }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
     desire: z.string(),
@@ -75,7 +78,7 @@ export const getEmptyCharacter = (): Character => {
         sire: "",
 
         clan: "",
-        predatorType: "",
+        predatorType: { name: "", pickedDiscipline: "" },
         touchstones: [],
         ambition: "",
         desire: "",

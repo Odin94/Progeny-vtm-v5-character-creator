@@ -140,7 +140,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
             default: return 1
         }
     })()
-    bloodPotency += PredatorTypes[character.predatorType].bloodPotencyChange
+    bloodPotency += PredatorTypes[character.predatorType.name].bloodPotencyChange
     for (let i = 1; i <= bloodPotency; i++) {
         form.getCheckBox(`BloodPotency-${i}`).check()
     }
@@ -154,7 +154,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     form.getTextField("BaneSev").setText(`${effects.bane}`)
 
     //Humanity
-    const humanity = 7 + PredatorTypes[character.predatorType].humanityChange
+    const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
     const checkImageBytes = await fetch(base64Check).then(res => res.text())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
     for (let i = 1; i <= humanity; i++) {
@@ -164,7 +164,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     // Top fields
     form.getTextField("Name").setText(character.name)
     form.getTextField("pcDescription").setText(character.description)
-    form.getTextField("Predator type").setText(character.predatorType)
+    form.getTextField("Predator type").setText(character.predatorType.name)
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
@@ -188,7 +188,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     form.getCheckBox("Disc2-1").check()
 
     // Merits & flaws
-    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType].meritsAndFlaws
+    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws
     const meritsAndFlaws = [...character.merits, ...predatorTypeMeritsFlaws, ...character.flaws]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
@@ -280,7 +280,7 @@ const createPdf_renegade = async (character: Character): Promise<Uint8Array> => 
             default: return 1
         }
     })()
-    bloodPotency += PredatorTypes[character.predatorType].bloodPotencyChange
+    bloodPotency += PredatorTypes[character.predatorType.name].bloodPotencyChange
     for (let i = 1; i <= bloodPotency; i++) {
         form.getCheckBox(`potency${i}`).check()
     }
@@ -294,7 +294,7 @@ const createPdf_renegade = async (character: Character): Promise<Uint8Array> => 
     form.getTextField("Bane Severity").setText(`${effects.bane}`)
 
     //Humanity
-    const humanity = 7 + PredatorTypes[character.predatorType].humanityChange
+    const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
     const checkImageBytes = await fetch(base64Check).then(res => res.text())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
     for (let i = 0; i <= humanity - 1; i++) {
@@ -304,7 +304,7 @@ const createPdf_renegade = async (character: Character): Promise<Uint8Array> => 
     // Top fields
     form.getTextField("Name").setText(character.name)
     form.getTextField("Concept").setText(character.description)
-    form.getTextField("Predator").setText(character.predatorType)
+    form.getTextField("Predator").setText(character.predatorType.name)
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
@@ -363,7 +363,7 @@ const createPdf_renegade = async (character: Character): Promise<Uint8Array> => 
 
     // Merits & flaws
     const meritFlawBase = "adflaw"
-    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType].meritsAndFlaws
+    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws
     const meritsAndFlaws = [...character.merits, ...character.flaws, ...predatorTypeMeritsFlaws]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
