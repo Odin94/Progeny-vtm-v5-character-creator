@@ -17,10 +17,10 @@ Quickly and easily create your VTM character & export to printable, editable PDF
 
 
 <!-- ## TODOs:
-* Add 3rd level disciplines
 * Add tooltip-descriptions to Attributes and Skills (maybe find on a list in nerdbert's resource collection?)
 * Add description / explanation to first page?
 * Add rituals for blood sorcery
+* Add dice pools & rouse checks to disciplines
 * Add pretty VtM logos & images  (consider https://www.svgrepo.com)
 * Make things prettier in general
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones

@@ -17,6 +17,7 @@ const getDisciplinesForClan = (clan: ClanName) => {
     return Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(clan)))
 }
 
+// TODO: Fix background image size changing when opening a tab with 3 powers at one level (eg. Animalism/Cleaver)
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
@@ -87,11 +88,13 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
             const onClick = () => isForPredatorType ? setPickedPredatorTypePower(power) : setPickedPowers([...pickedPowers, power])
 
+            const canReachLvl3 = power.discipline === character.predatorType.pickedDiscipline
             return (
                 <Card key={power.name} mb={20} h={255} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                     <Group position="apart" mt="md" mb="xs">
                         <Text weight={500}>{power.name}</Text>
-                        <Badge color="pink" variant="light">lv {power.level}</Badge>
+                        {/* FIXUP: Hide badges for small cards + long name to prevent badge being in new line and pushing button down */}
+                        {canReachLvl3 && power.name.length > 10 ? null : <Badge color="pink" variant="light">lv {power.level}</Badge>}
                     </Group>
 
                     <Text h={65} size="sm" color="dimmed">{power.summary}</Text>
@@ -128,6 +131,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         const lvl1Powers = eligiblePowers.filter((power) => power.level === 1)
         const lvl2Powers = eligiblePowers.filter((power) => power.level === 2)
+        const lvl3Powers = eligiblePowers.filter((power) => power.level === 3)
+
+        const canReachLvl3 = disciplineName === character.predatorType.pickedDiscipline
 
         return (
             <Accordion.Item key={disciplineName + isPredatorType} value={disciplineName + isPredatorType}>
@@ -135,8 +141,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 <Accordion.Panel>
                     <Stack>
                         <Grid>
-                            <Grid.Col span={6}>{getPowerCards(lvl1Powers, isPredatorType)}</Grid.Col>
-                            <Grid.Col span={6}>{getPowerCards(lvl2Powers, isPredatorType)}</Grid.Col>
+                            <Grid.Col span={canReachLvl3 ? 4 : 6}>{getPowerCards(lvl1Powers, isPredatorType)}</Grid.Col>
+                            <Grid.Col span={canReachLvl3 ? 4 : 6}>{getPowerCards(lvl2Powers, isPredatorType)}</Grid.Col>
+                            {canReachLvl3 ? <Grid.Col span={4}>{getPowerCards(lvl3Powers, isPredatorType)}</Grid.Col> : null}
                         </Grid>
                     </Stack>
                 </Accordion.Panel>
