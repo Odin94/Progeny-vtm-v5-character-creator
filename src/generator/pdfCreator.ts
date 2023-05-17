@@ -1,6 +1,6 @@
 import { notifications } from '@mantine/notifications';
 import { PDFDocument, PDFForm } from 'pdf-lib';
-import { Character, attributesKeySchema, } from '../data/Character';
+import { Character, } from '../data/Character';
 import { Clans } from '../data/Clans';
 import { PredatorTypes } from '../data/PredatorType';
 import { SkillsKey, skillsKeySchema } from '../data/Skills';
@@ -8,6 +8,7 @@ import base64Check from '../resources/CheckSolid.base64';
 import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import base64Pdf_nerdbert from '../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64';
 import { upcase } from './utils';
+import { attributesKeySchema } from '../data/Attributes';
 
 
 type BloodPotencyEffect = {

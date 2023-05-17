@@ -1,8 +1,8 @@
-import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextInput } from "@mantine/core"
+import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextInput, Tooltip } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { intersection, lowcase, upcase } from "../utils"
-import { Skills, SkillsKey, emptySkills, skillsKeySchema } from "../../data/Skills"
+import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } from "../../data/Skills"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
@@ -133,7 +133,13 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
         return (
             <Grid.Col key={skill} span={4}>
-                <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(skill)}</Button>
+                <Tooltip label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
+                    {/* div here because button being disabled freezes tooltip in place */}
+                    <div>
+                        <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(skill)}</Button>
+                    </div>
+                </Tooltip>
+
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
             </Grid.Col>
         )

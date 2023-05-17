@@ -1,4 +1,5 @@
-import { Attributes, Character, getEmptyCharacter } from "../data/Character";
+import { Attributes } from "../data/Attributes";
+import { Character, getEmptyCharacter } from "../data/Character";
 import { Skills } from "../data/Skills";
 
 // The maximum is exclusive and the minimum is inclusive

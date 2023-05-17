@@ -24,7 +24,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
     const createButton = (predatorTypeName: PredatorTypeName, color: string) => {
         return (
-            <Tooltip label={PredatorTypes[predatorTypeName].summary} key={predatorTypeName}>
+            <Tooltip label={PredatorTypes[predatorTypeName].summary} key={predatorTypeName} transitionProps={{ transition: 'slide-up', duration: 200 }}>
                 <Button disabled={character.clan === "Ventrue" && ["Bagger", "Farmer"].includes(predatorTypeName)} color={color} onClick={() => {
                     const firstSpecialtyOption = PredatorTypes[predatorTypeName].specialtyOptions[0]
                     const firstDisciplineOption = PredatorTypes[predatorTypeName].disciplineOptions[0]

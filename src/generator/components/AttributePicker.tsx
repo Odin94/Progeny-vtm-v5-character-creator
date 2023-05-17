@@ -1,7 +1,8 @@
-import { Button, Divider, Grid, Group, Text } from "@mantine/core"
+import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
 import { useState } from "react"
-import { AttributesKey, Character, attributesKeySchema } from "../../data/Character"
+import { Character } from "../../data/Character"
 import { upcase } from "../utils"
+import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 
 type AttributePickerProps = {
     character: Character,
@@ -64,7 +65,13 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
 
         return (
             <Grid.Col key={attribute} span={4}>
-                <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
+                <Tooltip label={attributeDescriptions[attribute]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
+                    {/* div here because button being disabled freezes tooltip in place */}
+                    <div>
+                        <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
+                    </div>
+                </Tooltip>
+
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
             </Grid.Col>
         )

@@ -17,7 +17,6 @@ Quickly and easily create your VTM character & export to printable, editable PDF
 
 
 <!-- ## TODOs:
-* Add tooltip-descriptions to Attributes and Skills (maybe find on a list in nerdbert's resource collection?)
 * Add description / explanation to first page?
 * Add rituals for blood sorcery
 * Add dice pools & rouse checks to disciplines

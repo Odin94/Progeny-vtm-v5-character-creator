@@ -1,7 +1,7 @@
 import { Grid, Stack, Text, Title } from "@mantine/core"
-import { Attributes, attributesKeySchema } from "../../data/Character"
 import { upcase } from "../../generator/utils"
 import Tally from "../../components/Tally"
+import { Attributes, attributesKeySchema } from "../../data/Attributes"
 
 export type AttributesProps = {
     attributes: Attributes
