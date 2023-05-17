@@ -58,8 +58,20 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const distr = pickedDistribution ? distributionByType[pickedDistribution] : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: SkillsKey, i: number) => {
+        const alreadyPicked = [...pickedSkills.special, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill)
+
         let onClick
-        if (pickedSkills.special.length < distr.special) {
+        if (alreadyPicked) {
+            onClick = () => {
+                setPickedSkills({
+                    special: pickedSkills.special.filter((it) => it !== skill),
+                    strongest: pickedSkills.strongest.filter((it) => it !== skill),
+                    decent: pickedSkills.decent.filter((it) => it !== skill),
+                    acceptable: pickedSkills.acceptable.filter((it) => it !== skill),
+                })
+            }
+        }
+        else if (pickedSkills.special.length < distr.special) {
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, special: [...pickedSkills.special, skill] })
             }
@@ -122,7 +134,6 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             }
         }
 
-        const disabled = [...pickedSkills.special, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill) || pickedDistribution === null
         const dots = (() => {
             if (pickedSkills.special.includes(skill)) return "🚀"
             if (pickedSkills.strongest.includes(skill)) return "🥇"
@@ -133,11 +144,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
         return (
             <Grid.Col key={skill} span={4}>
-                <Tooltip label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                    {/* div here because button being disabled freezes tooltip in place */}
-                    <div>
-                        <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(skill)}</Button>
-                    </div>
+                <Tooltip disabled={alreadyPicked} label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
+                    <Button variant={alreadyPicked ? "outline" : "filled"} leftIcon={dots} disabled={pickedDistribution === null} color="grape" fullWidth onClick={onClick}>{upcase(skill)}</Button>
                 </Tooltip>
 
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}

@@ -20,8 +20,19 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
 
     const createButton = (attribute: AttributesKey, i: number) => {
+        const alreadyPicked = [pickedAttributes.strongest, pickedAttributes.weakest, ...pickedAttributes.medium].includes(attribute)
+
         let onClick
-        if (!pickedAttributes.strongest) {
+        if (alreadyPicked) {
+            onClick = () => {
+                setPickedAttributes({
+                    strongest: pickedAttributes.strongest === attribute ? null : pickedAttributes.strongest,
+                    medium: pickedAttributes.medium.filter((it) => it !== attribute),
+                    weakest: pickedAttributes.weakest === attribute ? null : pickedAttributes.weakest,
+                })
+            }
+        }
+        else if (!pickedAttributes.strongest) {
             onClick = () => {
                 setPickedAttributes({ ...pickedAttributes, strongest: attribute })
             }
@@ -55,7 +66,6 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             }
         }
 
-        const disabled = [pickedAttributes.strongest, pickedAttributes.weakest, ...pickedAttributes.medium].includes(attribute)
         const dots = (() => {
             if (attribute === pickedAttributes.strongest) return "💪"
             if (attribute === pickedAttributes.weakest) return "🪶"
@@ -65,11 +75,8 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
 
         return (
             <Grid.Col key={attribute} span={4}>
-                <Tooltip label={attributeDescriptions[attribute]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                    {/* div here because button being disabled freezes tooltip in place */}
-                    <div>
-                        <Button leftIcon={dots} disabled={disabled} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
-                    </div>
+                <Tooltip disabled={alreadyPicked} label={attributeDescriptions[attribute]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
+                    <Button leftIcon={dots} variant={alreadyPicked ? "outline" : "filled"} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
                 </Tooltip>
 
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
@@ -80,7 +87,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
     const header = (() => {
         if (!pickedAttributes.strongest) return (<h1>Pick your <b>strongest</b> attribute!</h1>)
         if (!pickedAttributes.weakest) return (<h1>Pick your <b>weakest</b> attribute!</h1>)
-        return (<h1>Pick your <b>3 medium</b> attributes!</h1>)
+        return (<h1>Pick <b>{3 - pickedAttributes.medium.length} medium</b> attribute{pickedAttributes.medium.length < 2 ? "s" : ""}!</h1>)
     })()
     return (
         <div>
