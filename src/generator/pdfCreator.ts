@@ -9,6 +9,7 @@ import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base6
 import base64Pdf_nerdbert from '../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64';
 import { upcase } from './utils';
 import { attributesKeySchema } from '../data/Attributes';
+import { Power } from '../data/Disciplines';
 
 
 type BloodPotencyEffect = {
@@ -85,7 +86,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     // Skills
     const skills = character.skills;
-    (["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
+    (["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "survival", "leadership"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
             form.getCheckBox(`${upcase(skill).slice(0, 3)}-${i}`).check()
@@ -102,7 +103,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     const specialty = character.specialties.find((s) => s.skill === "animal ken")
     if (specialty) form.getTextField("specAniKen").setText(specialty.name);
 
-    (["etiquette", "insight", "intimidation", "leadership", "performance", "persuasion", "streetwise", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
+    (["stealth", "etiquette", "insight", "intimidation", "performance", "persuasion", "streetwise", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
             form.getCheckBox(`${upcase(skill).slice(0, 4)}-${i}`).check()
@@ -177,15 +178,27 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     form.getTextField("Title").setText(`${character.generation}`) // Yes, "Title" is the generation field
 
     // Disciplines
+    const getDisciplineText = (power: Power) => {
+        let text = power.name + ": " + power.summary
+        if (power.dicePool !== "") {
+            text += ` // ${power.dicePool}`
+        }
+        if (power.rouseChecks > 0) {
+            text += ` // ${power.rouseChecks} rouse check${power.rouseChecks > 1 ? "s" : ""}`
+        }
+
+        return text
+    }
+
     form.getTextField("Disc1").setText(upcase(character.disciplines[0].discipline))
-    form.getTextField("Disc1_Ability1").setText(character.disciplines[0].name + ": " + character.disciplines[0].summary)
+    form.getTextField("Disc1_Ability1").setText(getDisciplineText(character.disciplines[0]))
     form.getTextField("Disc1_Ability1").disableRichFormatting()
-    form.getTextField("Disc1_Ability2").setText(character.disciplines[1].name + ": " + character.disciplines[1].summary)
+    form.getTextField("Disc1_Ability2").setText(getDisciplineText(character.disciplines[1]))
     form.getCheckBox("Disc1-1").check()
     form.getCheckBox("Disc1-2").check()
 
     form.getTextField("Disc2").setText(upcase(character.disciplines[2].discipline))
-    form.getTextField("Disc2_Ability1").setText(character.disciplines[2].name + ": " + character.disciplines[2].summary)
+    form.getTextField("Disc2_Ability1").setText(getDisciplineText(character.disciplines[2]))
     form.getCheckBox("Disc2-1").check()
 
     // Merits & flaws
