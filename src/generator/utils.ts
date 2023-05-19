@@ -46,10 +46,14 @@ const isNonDefaultAttributes = (attributes: Attributes) => {
 const isNonDefaultSkills = (skills: Skills) => {
     return !Object.values(skills).reduce((acc, skillLvl) => acc && skillLvl === 0, true)
 }
+const isNonDefaultPredatorType = (predatorType: { name: string, pickedDiscipline: string }) => {
+    return predatorType.name !== "" || predatorType.pickedDiscipline !== ""
+}
 export const notDefault = (character: Character, attribute: keyof Character) => {
     if (isEmptyList(character[attribute])) return false
     if (attribute === "attributes") return isNonDefaultAttributes(character[attribute])
     if (attribute === "skills") return isNonDefaultSkills(character[attribute])
+    if (attribute === "predatorType") return isNonDefaultPredatorType(character[attribute])
     return character[attribute] !== emptyCharacter[attribute]
 }
 export const isDefault = (character: Character, attribute: keyof Character) => !notDefault(character, attribute)

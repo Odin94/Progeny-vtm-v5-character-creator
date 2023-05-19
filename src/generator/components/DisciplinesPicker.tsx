@@ -155,7 +155,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     let disciplineTitle = ""
     return (
         <div>
-            <h1>Pick 2 powers in one disciplines,<br /> 1 power in another,<br /> and 1 power in {upcase(character.predatorType.pickedDiscipline)} from your predator type</h1>
+            <h1>Pick two powers in one discipline,<br /> One power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</h1>
 
             <Text ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
             <hr color="#e03131" />

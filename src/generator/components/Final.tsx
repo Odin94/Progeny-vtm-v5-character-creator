@@ -1,13 +1,13 @@
-import { faCheck, faFileExport, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
+import { faFileExport, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Alert, Button, Stack, Text } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
+import { IconAlertCircle } from "@tabler/icons-react"
+import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { downloadCharacterSheet } from "../pdfCreator"
 import { downloadJson } from "../utils"
-import { useDisclosure } from "@mantine/hooks"
-import ResetModal from "../../components/ResetModal"
-import { IconAlertCircle } from "@tabler/icons-react"
-import { faCheckCircle, faCheckSquare } from "@fortawesome/free-regular-svg-icons"
 
 
 type FinalProps = {

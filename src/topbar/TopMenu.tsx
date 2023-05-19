@@ -1,13 +1,13 @@
-import { faAnkh, faFileExport, faFloppyDisk, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
+import { faAnkh, faFileArrowUp, faFileExport, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, FileInput, Group, Menu, Modal, Stack, Text } from "@mantine/core"
+import { Button, FileButton, Menu } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { Buffer } from 'buffer'
 import { useState } from "react"
-import { Character, characterSchema, getEmptyCharacter } from "../data/Character"
-import { downloadCharacterSheet } from "../generator/pdfCreator"
-import { downloadJson, getUploadFile } from "../generator/utils"
+import LoadModal from "../components/LoadModal"
 import ResetModal from "../components/ResetModal"
+import { Character } from "../data/Character"
+import { downloadCharacterSheet } from "../generator/pdfCreator"
+import { downloadJson } from "../generator/utils"
 
 export type TopMenuProps = {
     character: Character
@@ -33,17 +33,14 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
 
                 <Menu.Divider />
 
-                <FileInput
-                    placeholder="character.json"
-                    label="Load character from json"
-                    value={loadedFile}
-                    onChange={async (payload: File | null) => {
-                        if (!payload) return
+                <FileButton onChange={async (payload: File | null) => {
+                    if (!payload) return
 
-                        setLoadedFile(payload)
-                        openLoadModal()
-                    }}
-                />
+                    setLoadedFile(payload)
+                    openLoadModal()
+                }} accept="application/json">
+                    {(props) => <Button leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />} ml={"11px"} fw={400} size="s" color="dark" variant="subtle"  {...props}>Load from file</Button>}
+                </FileButton>
 
                 <Menu.Divider />
 
@@ -51,33 +48,7 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
 
             </Menu.Dropdown>
 
-
-            {/* Load Modal */}
-            <Modal opened={loadModalOpened} onClose={closeLoadModal} title="" centered withCloseButton={false}>
-                <Stack>
-                    <Text fz={"xl"} ta={"center"}>Overwrite current character and load from selected file?</Text>
-                    <Divider my="sm" />
-                    <Group position="apart">
-                        <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>Cancel</Button>
-
-                        <Button color="red" onClick={async () => {
-                            if (!loadedFile) {
-                                console.log("Error: No file loaded!")
-                                return
-                            }
-                            const fileData = await getUploadFile(loadedFile)
-                            const base64 = fileData.split(",")[1]
-                            const json = Buffer.from(base64, "base64").toString()
-                            const parsed = JSON.parse(json)
-                            console.log({ loadedCharacter: parsed })
-
-                            setCharacter(characterSchema.parse(parsed))
-                            closeLoadModal()
-                        }}>Load/Overwrite character</Button>
-                    </Group>
-                </Stack>
-            </Modal>
-
+            <LoadModal loadedFile={loadedFile} setCharacter={setCharacter} loadModalOpened={loadModalOpened} closeLoadModal={closeLoadModal} />
             <ResetModal setCharacter={setCharacter} setSelectedStep={setSelectedStep} resetModalOpened={resetModalOpened} closeResetModal={closeResetModal} />
         </Menu>
     )
