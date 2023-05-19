@@ -1,6 +1,8 @@
 import { Card, Center, Grid, Image, Space, Text, Title, useMantineTheme } from "@mantine/core";
 import { Character } from "../../data/Character";
 import { ClanName, Clans, clanNameSchema } from "../../data/Clans";
+import { notDefault } from "../utils";
+import { notifications } from "@mantine/notifications";
 
 
 type ClanPickerProps = {
@@ -37,7 +39,20 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
             <Grid.Col key={clan} span={4}>
                 <Card className="hoverCard" shadow="sm" padding="lg" radius="md" h={275} style={{ background: bgColor, cursor: "pointer", }}
                     onClick={() => {
-                        setCharacter({ ...character, clan })
+                        if ((notDefault(character, "disciplines") || notDefault(character, "predatorType"))
+                            && clan !== character.clan) {
+                            notifications.show({
+                                title: "Reset Disciplines",
+                                message: "Because you changed your clan",
+                                autoClose: 7000,
+                                color: "yellow",
+                            })
+
+                            setCharacter({ ...character, clan, disciplines: [] })
+                        } else {
+                            setCharacter({ ...character, clan })
+                        }
+
                         nextStep()
                     }}>
                     <Card.Section>

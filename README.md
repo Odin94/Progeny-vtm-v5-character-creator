@@ -25,7 +25,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 <!-- ## TODOs:
 
-* Add description / explanation to first page?
 * Add meaningful-ish error messages when things go wrong
 * Give people a way to give feedback
 

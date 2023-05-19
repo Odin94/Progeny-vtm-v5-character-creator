@@ -12,7 +12,7 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <MantineProvider theme={{ colorScheme: 'dark' }} withGlobalStyles withNormalizeCSS>
-      <Notifications position="top-right" />
+      <Notifications position="bottom-center" />
       <App />
     </MantineProvider>
   </React.StrictMode>
