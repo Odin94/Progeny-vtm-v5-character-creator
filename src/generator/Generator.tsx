@@ -41,9 +41,6 @@ export type GeneratorProps = {
 }
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fillableCharacterSheet, setFillableCharacterSheet }: GeneratorProps) => {
-    const [loadedFile, setLoadedFile] = useState<File | null>(null)
-    const [fileLoadingError, setFileLoadingError] = useState<string | null>(null)
-
     const getStepComponent = () => {
         switch (selectedStep) {
             case 0: return <ClanPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
@@ -62,34 +59,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fil
 
     return (
         <Center h={"100%"}>
-            {/* <Text>{JSON.stringify(character, null, 2)}</Text> */}
-            {fillableCharacterSheet !== null ? getStepComponent()
-                : <div>
-                    {fileLoadingError
-                        ? <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red">
-                            Loading the v5_charactersheet_fillable_v3.pdf failed:
-                        </Alert> : null
-                    }
-                    <FileInput
-                        placeholder="v5_charactersheet_fillable_v3"
-                        label="Upload v5_charactersheet_fillable_v3.pdf"
-                        value={loadedFile}
-                        onChange={async (payload: File | null) => {
-                            if (!payload) return
-
-                            const fileData = await getUploadFile(payload)
-                            const base64 = fileData.split(",")[1]
-                            const testResult = await testTemplate(base64)
-                            console.log(testResult)
-
-                            if (testResult.success) {
-                                setFillableCharacterSheet(base64)
-                                setFileLoadingError(null)
-                            }
-                        }}
-                    />
-                </div>
-            }
+            {getStepComponent()}
         </Center>
     )
 }
