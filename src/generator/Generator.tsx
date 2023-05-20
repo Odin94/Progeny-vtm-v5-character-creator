@@ -11,6 +11,7 @@ import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 import PredatorTypePicker from "./components/PredatorTypePicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
+import ErrorBoundary from "../components/ErrorBoundary"
 
 
 export type GeneratorProps = {
@@ -44,7 +45,9 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fil
 
     return (
         <Center h={"100%"}>
-            {getStepComponent()}
+            <ErrorBoundary key={selectedStep}>
+                {getStepComponent()}
+            </ErrorBoundary>
         </Center>
     )
 }

@@ -36,7 +36,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                     {(props) => <Button leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />} size="md" color="yellow" variant="light"  {...props}>Load from file</Button>}
                 </FileButton>
 
-                <Button component="a" href="https://github.com/Odin94/Vampire-v5-character-generator" target="_blank" leftIcon={<IconBrandGithub />} size="xs" color="gray" variant="filled">View Source Code</Button>
+                <Button component="a" href="https://github.com/Odin94/Vampire-v5-character-generator" target="_blank" rel="noreferrer" leftIcon={<IconBrandGithub />} size="xs" color="gray" variant="filled">View Source Code</Button>
             </Stack>
 
             <LoadModal loadedFile={loadedFile} setCharacter={setCharacter} loadModalOpened={loadModalOpened} closeLoadModal={closeLoadModal} />
