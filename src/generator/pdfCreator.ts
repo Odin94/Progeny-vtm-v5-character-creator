@@ -420,6 +420,7 @@ export const downloadCharacterSheet = async (character: Character) => {
         autoClose: 10000,
         color: "grape",
     })
+
     downloadPdf(`vtm_v5_${character.name}.pdf`, pdfBytes)
 }
 

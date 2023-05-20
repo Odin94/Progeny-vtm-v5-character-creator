@@ -21,7 +21,7 @@ export const isEmptyList = (maybeList: unknown) => {
     return false
 }
 
-export const downloadJson = (character: Character) => {
+export const downloadJson = async (character: Character) => {
     const blob = new Blob([JSON.stringify(character, null, 2)], { type: "application/json" })
     const link = document.createElement('a')
 

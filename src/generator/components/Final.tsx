@@ -8,6 +8,7 @@ import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { downloadCharacterSheet } from "../pdfCreator"
 import { downloadJson } from "../utils"
+import { useState } from "react"
 
 
 type FinalProps = {
@@ -17,7 +18,9 @@ type FinalProps = {
 }
 
 const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
+    const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
+    console.log("this is the download error: ", downloadError)
 
     return (
         <div style={{ maxWidth: "440px" }}>
@@ -29,11 +32,20 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             </div>
             <Stack align="center" spacing="xl">
 
-                <Button leftIcon={<FontAwesomeIcon icon={faFileExport} />} size="xl" color="grape" onClick={() => { downloadCharacterSheet(character) }}>Download PDF</Button>
-                <Button leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />} size="lg" color="yellow" variant="light" onClick={() => { downloadJson(character) }}>Download JSON</Button>
+                <Button leftIcon={<FontAwesomeIcon icon={faFileExport} />} size="xl" color="grape" onClick={() => { downloadCharacterSheet(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>Download PDF</Button>
+                <Button leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />} size="lg" color="yellow" variant="light" onClick={() => { downloadJson(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>Download JSON</Button>
                 <Button leftIcon={<FontAwesomeIcon icon={faTrash} />} size="md" color="red" variant="subtle" onClick={() => { openResetModal() }}>Reset</Button>
 
             </Stack>
+
+            {downloadError
+                ? <Alert mt={"50px"} icon={<IconAlertCircle size="1rem" />} color="red" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
+                    <Text fz={"xl"} ta={"center"}>There was a download-error: {downloadError.message}</Text>
+                    <Text fz={"lg"} ta={"center"} mb={"xl"}>Send a screenshot of this to me on <a target="_blank" rel="noreferrer" href="https://twitter.com/Odin68092534">Twitter</a> to help me fix it</Text>
+                    <Text fz={"xs"} ta={"center"}>{downloadError.stack}</Text>
+                </Alert>
+                : null
+            }
 
             <Alert mt={"50px"} icon={<IconAlertCircle size="1rem" />} color="violet" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
                 <Text fz={"lg"} ta={"center"}>You may need to refresh your browser to trigger multiple downloads!</Text>
