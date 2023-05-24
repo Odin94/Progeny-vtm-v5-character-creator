@@ -20,10 +20,10 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
     return (
         <Alert mt={"50px"} color="grape" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
 
-            <Text fz={"30px"} ta={"center"}>This is a 'Vampire: The Masquerade' v5 character creation tool for beginners</Text>
+            <Text fz={"30px"} ta={"center"}>This is a &apos;Vampire: The Masquerade&apos; v5 character creation tool for beginners</Text>
             <Text fz={"xl"} mb={"xs"}>It is intentionally streamlined and limited to creating a common type of character following the rules from the source book.</Text>
-            <Text fz={"xl"} mb={"xs"}>You can download your character into a printable PDF when you're done (PDF template kindly provided by <a href="https://linktr.ee/nerdbert">Nerdbert</a>) and also save it to a local file that you can load into this web app to continue editing.</Text>
-            <Text fz={"xl"} mb={"xl"}>Note that none of your data will be sent to or stored on a server and you may lose your character if you don't download it!</Text>
+            <Text fz={"xl"} mb={"xs"}>You can download your character into a printable PDF when you&apos;re done (PDF template kindly provided by <a href="https://linktr.ee/nerdbert">Nerdbert</a>) and also save it to a local file that you can load into this web app to continue editing.</Text>
+            <Text fz={"xl"} mb={"xl"}>Note that none of your data will be sent to or stored on a server and you may lose your character if you don&apos;t download it!</Text>
             <Stack align="center" spacing="xl">
                 <Button leftIcon={<FontAwesomeIcon icon={faPlay} />} size="xl" color="grape" onClick={nextStep}>Get Started!</Button>
 

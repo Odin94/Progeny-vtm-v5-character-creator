@@ -157,8 +157,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         if (!pickedDistribution) return (<h1>Pick your <b>Skill Distribution</b></h1>)
         if (pickedSkills.special.length < distr.special) return (<h1>Pick your <b>{distr.special} specialty</b> skill</h1>)
         if (pickedSkills.strongest.length < distr.strongest) return (<h1>Pick your <b>{distr.strongest} strongest</b> skills</h1>)
-        if (pickedSkills.decent.length < distr.decent) return (<h1>Pick <b>{distr.decent}</b> skills you're <b>decent</b> in</h1>)
-        return (<h1>Pick <b>{distr.acceptable}</b> skills you're <b>ok</b> in</h1>)
+        if (pickedSkills.decent.length < distr.decent) return (<h1>Pick <b>{distr.decent}</b> skills you&apos;re <b>decent</b> in</h1>)
+        return (<h1>Pick <b>{distr.acceptable}</b> skills you&apos;re <b>ok</b> in</h1>)
     })()
 
     const closeModalAndUndoLastPick = () => {

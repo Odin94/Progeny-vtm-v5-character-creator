@@ -1,5 +1,4 @@
 import { Accordion, Badge, Button, Card, Center, Grid, Group, List, Space, Stack, Text } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { ClanName } from "../../data/Clans"

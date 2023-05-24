@@ -20,12 +20,9 @@ export type GeneratorProps = {
 
     selectedStep: number,
     setSelectedStep: (step: number) => void
-
-    fillableCharacterSheet: string | null,
-    setFillableCharacterSheet: (sheet: string) => void
 }
 
-const Generator = ({ character, setCharacter, selectedStep, setSelectedStep, fillableCharacterSheet, setFillableCharacterSheet }: GeneratorProps) => {
+const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
     const getStepComponent = () => {
         switch (selectedStep) {
             case 0: return <Intro setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />

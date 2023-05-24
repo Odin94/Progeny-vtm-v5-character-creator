@@ -1,6 +1,6 @@
 import { faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Center, Divider, Group, Modal, Stack, Text } from "@mantine/core"
+import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { Character, getEmptyCharacter } from "../data/Character"
 
 export type ResetModalProps = {
