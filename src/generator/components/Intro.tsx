@@ -1,11 +1,11 @@
 import { faFileArrowUp, faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Alert, Button, FileButton, Group, Stack, Text } from "@mantine/core"
+import { Alert, Button, FileButton, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
+import { IconBrandGithub } from "@tabler/icons-react"
 import { useState } from "react"
 import LoadModal from "../../components/LoadModal"
 import { Character } from "../../data/Character"
-import { IconBrandGithub } from "@tabler/icons-react"
 
 
 type IntroProps = {

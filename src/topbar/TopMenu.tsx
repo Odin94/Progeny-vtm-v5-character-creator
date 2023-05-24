@@ -8,6 +8,7 @@ import ResetModal from "../components/ResetModal"
 import { Character } from "../data/Character"
 import { downloadCharacterSheet } from "../generator/pdfCreator"
 import { downloadJson } from "../generator/utils"
+import { notifications } from "@mantine/notifications"
 
 export type TopMenuProps = {
     character: Character
@@ -28,8 +29,35 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
             </Menu.Target>
 
             <Menu.Dropdown>
-                <Menu.Item icon={<FontAwesomeIcon icon={faFileExport} />} onClick={() => { downloadCharacterSheet(character) }}>Download PDF</Menu.Item>
-                <Menu.Item icon={<FontAwesomeIcon icon={faFloppyDisk} />} onClick={() => { downloadJson(character) }}>Download JSON</Menu.Item>
+                {/* TODO: test error handling */}
+                <Menu.Item icon={<FontAwesomeIcon icon={faFileExport} />}
+                    onClick={() => {
+                        downloadCharacterSheet(character).catch((e) => {
+                            console.error(e)
+                            notifications.show({
+                                title: "Error when downloading",
+                                message: e.message,
+                                autoClose: 6000,
+                                color: "red",
+                            })
+                        })
+                    }}>
+                    Download PDF
+                </Menu.Item>
+                <Menu.Item icon={<FontAwesomeIcon icon={faFloppyDisk} />}
+                    onClick={() => {
+                        downloadJson(character).catch((e) => {
+                            console.error(e)
+                            notifications.show({
+                                title: "Error when downloading",
+                                message: e.message,
+                                autoClose: 6000,
+                                color: "red",
+                            })
+                        })
+                    }}>
+                    Download JSON
+                </Menu.Item>
 
                 <Menu.Divider />
 

@@ -19,7 +19,7 @@ const getDisciplinesForClan = (clan: ClanName) => {
 
 // TODO: Fix background image size changing when opening a tab with 3 powers at one level (eg. Animalism/Cleaver)
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
-    const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
+    // const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
 

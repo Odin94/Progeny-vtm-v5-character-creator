@@ -1,6 +1,6 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Grid, Space, Stack, Text, useMantineTheme } from "@mantine/core"
+import { Button, Grid, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character, MeritFlaw } from "../../data/Character"
 

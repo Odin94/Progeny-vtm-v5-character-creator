@@ -32,9 +32,20 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             </div>
             <Stack align="center" spacing="xl">
 
-                <Button leftIcon={<FontAwesomeIcon icon={faFileExport} />} size="xl" color="grape" onClick={() => { downloadCharacterSheet(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>Download PDF</Button>
-                <Button leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />} size="lg" color="yellow" variant="light" onClick={() => { downloadJson(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>Download JSON</Button>
-                <Button leftIcon={<FontAwesomeIcon icon={faTrash} />} size="md" color="red" variant="subtle" onClick={() => { openResetModal() }}>Reset</Button>
+                <Button leftIcon={<FontAwesomeIcon icon={faFileExport} />} size="xl" color="grape"
+                    onClick={() => { downloadCharacterSheet(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>
+                    Download PDF
+                </Button>
+
+                <Button leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />} size="lg" color="yellow" variant="light"
+                    onClick={() => { downloadJson(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>
+                    Download JSON
+                </Button>
+
+                <Button leftIcon={<FontAwesomeIcon icon={faTrash} />} size="md" color="red" variant="subtle"
+                    onClick={() => { openResetModal() }}>
+                    Reset
+                </Button>
 
             </Stack>
 
