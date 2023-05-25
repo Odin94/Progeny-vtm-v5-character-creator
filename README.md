@@ -27,8 +27,9 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 * Add meaningful-ish error messages when things go wrong
 * Give people a way to give feedback
+* Link back to your personal website
 
-* Release and ask for feedback
+* Ask for feedback in VtM spaces
 
 * Add rituals for blood sorcery
 
@@ -42,6 +43,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * VtM is owned by https://www.worldofdarkness.com/dark-pack
 * The PDF template used for exporting is made by [Nerdbert](https://linktr.ee/nerdbert)
 * CheckSolid.base64 is converted from fontawesome
+* FavIcon provided by [Nerdbert](https://drive.google.com/drive/folders/166CN03nsT6VF-cjjttS0uBfvMZRoNqgK)
 * Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus Bellamy, Peter Scherbatykh, Thomas Le on [unsplash](unsplash.com)
 
 ![](readme_assets/darkpack_logo1.png)
