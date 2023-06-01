@@ -84,16 +84,24 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         )
     }
 
-    const header = (() => {
-        if (!pickedAttributes.strongest) return (<h1>Pick your <b>strongest</b> attribute!</h1>)
-        if (!pickedAttributes.weakest) return (<h1>Pick your <b>weakest</b> attribute!</h1>)
-        return (<h1>Pick <b>{3 - pickedAttributes.medium.length} medium</b> attribute{pickedAttributes.medium.length < 2 ? "s" : ""}!</h1>)
+    const toPick = (() => {
+        if (!pickedAttributes.strongest) return "strongest"
+        else if (!pickedAttributes.weakest) return "weakest"
+        else return "medium"
     })()
+
+    const strongestStyle = toPick === "strongest" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const weakestStyle = toPick === "weakest" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const mediumStyle = toPick === "medium" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+
     return (
         <div>
-            {header}
+            <Text style={strongestStyle} ta={"center"}>{toPick === "strongest" ? ">" : ""} Pick your <b>strongest</b> attribute! (lvl 4)</Text>
+            <Text style={weakestStyle} ta={"center"}>{toPick === "weakest" ? ">" : ""} Pick your < b > weakest</b > attribute! (lvl 1)</Text >
+            <Text style={mediumStyle} ta={"center"}>{toPick === "medium" ? ">" : ""} Pick <b>{3 - pickedAttributes.medium.length} medium</b> attribute{pickedAttributes.medium.length < 2 ? "s" : ""}! (lvl 3)</Text>
+            <Text style={{ fontSize: "14px", color: "grey" }} ta={"center"}>Remaining attributes will be lvl 2</Text>
 
-            <Text ta="center" fz="xl" fw={700} c="red">Attributes</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Attributes</Text>
 
             <hr color="#e03131" />
 
