@@ -25,6 +25,12 @@ type DistributionKey = "Jack of All Trades" | "Balanced" | "Specialist"
 
 type SkillDistribution = { strongest: number, decent: number, acceptable: number, special: number }
 
+const distributionDescriptions: Record<DistributionKey, string> = {
+    "Jack of All Trades": "Decent at many things, good at none (1/8/10)",
+    Balanced: "Best default choice (3/5/7)",
+    Specialist: "Uniquely great at one thing, bad at most (1/3/3/3)",
+}
+
 const distributionByType: Record<DistributionKey, SkillDistribution> = {
     "Jack of All Trades": {
         special: 0,
@@ -153,13 +159,17 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         )
     }
 
-    const header = (() => {
-        if (!pickedDistribution) return (<h1>Pick your <b>Skill Distribution</b></h1>)
-        if (pickedSkills.special.length < distr.special) return (<h1>Pick your <b>{distr.special} specialty</b> skill</h1>)
-        if (pickedSkills.strongest.length < distr.strongest) return (<h1>Pick your <b>{distr.strongest} strongest</b> skills</h1>)
-        if (pickedSkills.decent.length < distr.decent) return (<h1>Pick <b>{distr.decent}</b> skills you&apos;re <b>decent</b> in</h1>)
-        return (<h1>Pick <b>{distr.acceptable}</b> skills you&apos;re <b>ok</b> in</h1>)
+    const toPick = (() => {
+        if (pickedSkills.special.length < distr.special) return "special"
+        if (pickedSkills.strongest.length < distr.strongest) return "strongest"
+        if (pickedSkills.decent.length < distr.decent) return "decent"
+        else return "acceptable"
     })()
+
+    const specialStyle = toPick === "special" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const strongestStyle = toPick === "strongest" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const decentStyle = toPick === "decent" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const acceptableStyle = toPick === "acceptable" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
@@ -167,9 +177,16 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     }
     return (
         <div>
-            {header}
+            {!pickedDistribution ? <Text fz={"30px"} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
+                <>
+                    {pickedDistribution === "Specialist" ? <Text style={specialStyle} fz={"30px"} ta={"center"}>{toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill</Text> : null}
+                    <Text style={strongestStyle} fz={"30px"} ta={"center"}>{toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b> skills</Text>
+                    <Text style={decentStyle} fz={"30px"} ta={"center"}>{toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re <b>decent</b> in</Text>
+                    <Text style={acceptableStyle} fz={"30px"} ta={"center"}>{toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills you&apos;re <b>ok</b> in</Text>
+                </>
+            }
 
-            <Text ta="center" fz="xl" fw={700} c="red">Skills</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Skills</Text>
 
             <hr color="#e03131" />
 
@@ -178,7 +195,10 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                 {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
                     return (
                         <Grid.Col span={4} key={distribution}>
-                            <Button disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>{distribution}</Button>
+                            <Tooltip disabled={pickedDistribution !== null} label={distributionDescriptions[distribution]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
+                                <Button disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>{distribution}</Button>
+                            </Tooltip>
+
                         </Grid.Col>
                     )
                 })}
@@ -245,10 +265,16 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
     const pickedSpecialtySkills = intersection(specialtySkills, pickedSkillNames) as SpecialtySkill[]
     const pickedSkill = lowcase(pickedSkillDisplay)
     return (
-        <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>} centered>
+        <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={
+            <div>
+                <Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>
+                <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">A specialty should not be so broad that it applies to most uses of the skill</Text>
+            </div>}
+            centered>
+
             <Stack>
                 <Divider my="sm" />
-                <Text fw={700} fz={"xl"} ta="center">Select a skill specialty</Text>
+                <Text fw={700} fz={"xl"}>Select a skill</Text>
 
                 <Group position="apart">
                     <Select
@@ -258,12 +284,13 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                         onSearchChange={setPickedSkillDisplay}
                         searchValue={pickedSkillDisplay}
                         nothingFound="No options"
+                        dropdownPosition="bottom"
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
 
                     <TextInput value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
                 </Group>
-                <Divider my="sm" />
+                <Divider my="sm" variant="dotted" />
 
                 {pickedSpecialtySkills.map((s) => (
                     <div key={s}>
