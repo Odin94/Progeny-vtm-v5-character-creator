@@ -86,7 +86,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     // Skills
     const skills = character.skills;
-    (["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "survival", "leadership"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
+    (["athletics", "brawl", "craft", "drive", "melee", "larceny", "survival"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
             form.getCheckBox(`${upcase(skill).slice(0, 3)}-${i}`).check()
@@ -96,14 +96,45 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         if (specialty) form.getTextField(`spec${upcase(skill).slice(0, 3)}`).setText(specialty.name)
     });
 
-    const lvl = skills["animal ken"]
-    for (let i = 1; i <= lvl; i++) {
+    const aniKenLvl = skills["animal ken"]
+    for (let i = 1; i <= aniKenLvl; i++) {
         form.getCheckBox(`AniKen-${i}`).check()
     }
-    const specialty = character.specialties.find((s) => s.skill === "animal ken")
-    if (specialty) form.getTextField("specAniKen").setText(specialty.name);
+    const aniKenSpecialty = character.specialties.find((s) => s.skill === "animal ken")
+    if (aniKenSpecialty) form.getTextField("specAniKen").setText(aniKenSpecialty.name);
 
-    (["stealth", "etiquette", "insight", "intimidation", "performance", "persuasion", "streetwise", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
+    // PDF-issue: Lead-1, but specLea  (4 letters vs 3 letters)
+    const leadLvl = skills["leadership"]
+    for (let i = 1; i <= leadLvl; i++) {
+        form.getCheckBox(`Lead-${i}`).check()
+    }
+    const leadSpecialty = character.specialties.find((s) => s.skill === "leadership")
+    if (leadSpecialty) form.getTextField("specLea").setText(leadSpecialty.name);
+
+    const stealthLvl = skills["stealth"]
+    for (let i = 1; i <= stealthLvl; i++) {
+        form.getCheckBox(`Ste-${i}`).check()
+    }
+    const stealthSpecialty = character.specialties.find((s) => s.skill === "stealth")
+    if (stealthSpecialty) form.getTextField("specStea").setText(stealthSpecialty.name);
+
+    // PDF-issue: "Fri-1" instead of "Fir-1"
+    const fireLvl = skills["firearms"]
+    for (let i = 1; i <= fireLvl; i++) {
+        form.getCheckBox(`Fri-${i}`).check()
+    }
+    const fireSpecialty = character.specialties.find((s) => s.skill === "firearms")
+    if (fireSpecialty) form.getTextField("specFir").setText(fireSpecialty.name);
+
+    // PDF-issue: Stre-1-1, but specStree  (4 letters vs 5 letters)
+    const streeLvl = skills["streetwise"]
+    for (let i = 1; i <= streeLvl; i++) {
+        form.getCheckBox(`Stre-${i}`).check()
+    }
+    const streeSpecialty = character.specialties.find((s) => s.skill === "streetwise")
+    if (streeSpecialty) form.getTextField("specStree").setText(streeSpecialty.name);
+
+    (["etiquette", "insight", "intimidation", "performance", "persuasion", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
             form.getCheckBox(`${upcase(skill).slice(0, 4)}-${i}`).check()
