@@ -272,7 +272,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
             </div>}
             centered>
 
-            <Stack>
+            <Stack style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
                 <Divider my="sm" />
                 <Text fw={700} fz={"xl"}>Select a skill</Text>
 
@@ -302,7 +302,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     </div>
                 ))}
 
-                <Group position="apart">
+                <Group position="apart" style={{ marginTop: "auto" }}>
                     <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>Back</Button>
 
                     <Button color="grape" onClick={async () => {

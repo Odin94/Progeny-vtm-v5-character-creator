@@ -21,9 +21,10 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
 
     return (
         <div>
-            <h1>Pick your Touchstones & Convictions</h1>
+            <Text fw={700} fz={"30px"} ta="center">Pick your Touchstones & Convictions</Text>
+            <Text style={{ fontSize: "25px", color: "grey" }} ta={"center"}>Touchstones are humans in your life that tie you to your humanity<br />Connect a conviction to each relationship</Text>
 
-            <Text ta="center" fz="xl" fw={700} c="red">Touchstones</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Touchstones</Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 
@@ -53,7 +54,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                         style={{ width: "250px" }}
                                         value={touchstone.conviction}
                                         onChange={(event) => updateTouchstone(i, { conviction: event.currentTarget.value })}
-                                        placeholder="Never betray your friends and acquaintances"
+                                        placeholder="Never betray your friends"
                                         label="Conviction"
                                     />
                                 </Grid.Col>

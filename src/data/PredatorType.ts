@@ -53,7 +53,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
     },
     Extortionist: {
         name: "Extortionist",
-        summary: "Strongarm prey into giving you their blood",
+        summary: "Strong-arm prey into giving you their blood",
         specialtyOptions: [{
             skill: "intimidation",
             name: "Coercion",

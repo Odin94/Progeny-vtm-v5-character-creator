@@ -1,4 +1,4 @@
-import { Button, Stack, TextInput, Textarea } from "@mantine/core"
+import { Button, Stack, Text, TextInput, Textarea } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 
@@ -18,8 +18,9 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
 
     return (
         <div>
-            <h1>Come up with the basics</h1>
-            <Stack align="center" spacing="xl">
+            <Text fw={700} fz={"30px"} ta="center">Come up with the basics</Text>
+
+            <Stack mt={"xl"} align="center" spacing="xl">
                 <TextInput
                     style={{ width: "300px" }}
                     value={name}

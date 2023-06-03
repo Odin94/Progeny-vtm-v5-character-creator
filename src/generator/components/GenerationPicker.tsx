@@ -14,9 +14,11 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
     return (
         <div style={{ width: "100%" }}>
-            <h1>Pick your generation</h1>
+            <Text fz={"30px"} ta={"center"}>Pick your <b>Generation</b></Text>
+            <Text style={{ fontSize: "25px", color: "grey" }} ta={"center"}>Most common choice is &apos;13 - Neonate&apos;</Text>
 
-            <Text ta="center" fz="xl" fw={700} c="red">Generation</Text>
+
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Generation</Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 

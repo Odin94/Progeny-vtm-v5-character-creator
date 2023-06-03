@@ -31,7 +31,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
     const theme = useMantineTheme()
 
     const c1 = "rgba(26, 27, 30, 0.90)"
-    const c2 = theme.fn.rgba(theme.colors.grape[8], 0.90)//"rgba(156, 54, 181, 0.90)"  // grape
+    const c2 = theme.fn.rgba(theme.colors.grape[8], 0.90)  //"rgba(156, 54, 181, 0.90)"
     const bgColor = theme.fn.linearGradient(0, c1, c2)
 
     const createClanPick = (clan: ClanName) => {
@@ -72,7 +72,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         <Title p="md">{clan}</Title>
                     </Center>
 
-                    <Text h={55} size="sm" color="dimmed">
+                    <Text h={55} size="sm" color="dimmed" ta="center">
                         {Clans[clan].description}
                     </Text>
                 </Card>

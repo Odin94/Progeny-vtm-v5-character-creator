@@ -153,10 +153,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const powersSortedByDiscipline = pickedPowers.sort()
     let disciplineTitle = ""
     return (
-        <div>
-            <h1>Pick two powers in one discipline,<br /> One power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</h1>
+        <div style={{ width: "810px" }}>
+            <Text fw={700} fz={"30px"} ta="left">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
 
-            <Text ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 

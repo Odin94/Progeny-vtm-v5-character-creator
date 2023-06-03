@@ -40,9 +40,9 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
     return (
         <div style={{ width: "100%" }}>
-            <h1>How do you obtain blood?</h1>
+            <Text fz={"30px"} ta={"center"}>How do you <b>obtain blood?</b></Text>
 
-            <Text ta="center" fz="xl" fw={700} c="red">Predator Type</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Predator Type</Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 
@@ -106,8 +106,14 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
 
     const predatorType = PredatorTypes[pickedPredatorType]
 
+    const titleWidth = phoneSizedScreen ? "300px" : "750px"
     return (
-        <Modal withCloseButton={false} size="xl" opened={modalOpened} onClose={closeModal} title={<Text w={phoneSizedScreen ? "300px" : "750px"} fw={700} fz={"30px"} ta="center">{predatorType.name}</Text>} centered>
+        <Modal withCloseButton={false} size="xl" opened={modalOpened} onClose={closeModal} title={
+            <div style={{ width: titleWidth }}>
+                <Text fw={700} fz={"30px"} ta="center">{predatorType.name}</Text>
+                <Text style={{ fontSize: "25px", color: "grey" }} ta={"center"}>This predator type comes with the following benefits and banes</Text>
+            </div>
+        } centered>
             <Stack>
                 <Divider my="sm" />
 
@@ -115,7 +121,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     <div>
                         <Group position="apart">
                             <Text fw={700} fz={"xl"}>Blood Potency Change:</Text>
-                            <Text fz={"xl"}>{`${predatorType.bloodPotencyChange}`}</Text>
+                            <Text fz={"xl"}>{`${predatorType.bloodPotencyChange > 0 ? "+" : ""}${predatorType.bloodPotencyChange}`}</Text>
                         </Group>
                         <Divider my="sm" variant="dotted" />
                     </div>
@@ -125,16 +131,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     <div>
                         <Group position="apart">
                             <Text fw={700} fz={"xl"}>Humanity Change:</Text>
-                            <Text fz={"xl"}>{`${predatorType.humanityChange}`}</Text>
-                        </Group>
-                        <Divider my="sm" variant="dotted" />
-                    </div>
-                    : null}
-                {predatorType.disciplineOptions.length !== 0 ?
-                    <div>
-                        <Group position="apart">
-                            <Text fw={700} fz={"xl"}>Discipline Options:</Text>
-                            <Text fz={"xl"}>{`${predatorType.disciplineOptions.map((d) => upcase(d.name)).join(", ")}`}</Text>
+                            <Text fz={"xl"}>{`${predatorType.humanityChange > 0 ? "+" : ""}${predatorType.humanityChange}`}</Text>
                         </Group>
                         <Divider my="sm" variant="dotted" />
                     </div>
@@ -143,7 +140,14 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     <div>
                         <Group position="apart">
                             <Text fw={700} fz={"xl"}>Merits and Flaws:</Text>
-                            <Text fz={"xl"}>{`${predatorType.meritsAndFlaws.map((mf) => `${mf.name}: ${mf.level}`).join(", ")}`}</Text>
+                            <Stack>
+                                {predatorType.meritsAndFlaws.map((mf) => {
+                                    return <Group key={mf.name} position="apart">
+                                        <Text fz={"xl"}>{`${mf.name}:`}</Text>
+                                        <Text fz={"xl"}>{`lvl ${mf.level}`}</Text>
+                                    </Group>
+                                })}
+                            </Stack>
                         </Group>
                         <Divider my="sm" />
                     </div>
