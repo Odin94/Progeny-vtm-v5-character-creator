@@ -13,6 +13,8 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * `npm install`
 * `npm start`
 
+* (optional) create `.env` file and enter environment variables like `REACT_APP_VARIABLE_NAME = 'some value'`
+
 ## How to use
 
 
@@ -27,7 +29,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 * Add meaningful-ish error messages when things go wrong
 * Give people a way to give feedback
-* Link back to your personal website
 
 * Ask for feedback in VtM spaces
 

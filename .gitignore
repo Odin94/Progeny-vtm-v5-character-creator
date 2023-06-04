@@ -29,3 +29,5 @@ src/resources/charsheet_v5-own-alternative-formfillable-v2.pdf
 src/resources/charsheet_v5-own-alternative-formfillable-v2.base64
 
 ignored/
+
+.env
