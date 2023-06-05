@@ -13,7 +13,10 @@ const root = ReactDOM.createRoot(
 
 // Must be changed in host configs if deployed from github since .env is ignored
 const GA4_MEASUREMENT_ID = process.env.REACT_APP_GA4_MEASUREMENT_ID
-if (GA4_MEASUREMENT_ID) ReactGA.initialize(GA4_MEASUREMENT_ID)
+if (GA4_MEASUREMENT_ID) {
+  console.log(GA4_MEASUREMENT_ID)
+  ReactGA.initialize(GA4_MEASUREMENT_ID)
+}
 
 root.render(
   <React.StrictMode>
