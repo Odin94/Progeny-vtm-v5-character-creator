@@ -20,7 +20,6 @@ type FinalProps = {
 const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
-    console.log("this is the download error: ", downloadError)
 
     return (
         <div style={{ maxWidth: "440px" }}>

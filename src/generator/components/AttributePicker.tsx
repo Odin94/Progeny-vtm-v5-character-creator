@@ -1,8 +1,9 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
 import { useState } from "react"
+import ReactGA from "react-ga4"
+import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
 import { upcase } from "../utils"
-import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 
 type AttributePickerProps = {
     character: Character,
@@ -17,12 +18,14 @@ type AttributeSetting = {
 }
 
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
+    ReactGA.send({ hitType: "pageview", title: "Attribute Picker" })
+
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
 
     const createButton = (attribute: AttributesKey, i: number) => {
         const alreadyPicked = [pickedAttributes.strongest, pickedAttributes.weakest, ...pickedAttributes.medium].includes(attribute)
 
-        let onClick
+        let onClick: () => void
         if (alreadyPicked) {
             onClick = () => {
                 setPickedAttributes({
@@ -73,10 +76,18 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             return ""
         })()
 
+        const trackClick = () => {
+            ReactGA.event({
+                category: "attributes",
+                action: "attribute clicked",
+                label: attributeDescriptions[attribute],
+            })
+        }
+
         return (
             <Grid.Col key={attribute} span={4}>
                 <Tooltip disabled={alreadyPicked} label={attributeDescriptions[attribute]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                    <Button leftIcon={dots} variant={alreadyPicked ? "outline" : "filled"} color="grape" fullWidth onClick={onClick}>{upcase(attribute)}</Button>
+                    <Button leftIcon={dots} variant={alreadyPicked ? "outline" : "filled"} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>{upcase(attribute)}</Button>
                 </Tooltip>
 
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
