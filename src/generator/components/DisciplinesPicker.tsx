@@ -1,4 +1,4 @@
-import { Accordion, Badge, Button, Card, Center, Grid, Group, List, Space, Stack, Text } from "@mantine/core"
+import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { ClanName } from "../../data/Clans"
@@ -136,7 +136,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         return (
             <Accordion.Item key={disciplineName + isPredatorType} value={disciplineName + isPredatorType}>
-                <Accordion.Control>{upcase(disciplineName)}</Accordion.Control>
+                <Accordion.Control icon={<Image src={discipline.logo} />}>{upcase(disciplineName)}</Accordion.Control>
                 <Accordion.Panel>
                     <Stack>
                         <Grid>

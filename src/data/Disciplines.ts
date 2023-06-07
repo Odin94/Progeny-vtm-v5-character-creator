@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { clanNameSchema } from "./Clans";
 
+import animalismLogo from "../resources/Rombo_Disciplines/rombo_Animalism.svg";
+import auspexLogo from "../resources/Rombo_Disciplines/rombo_Auspex.svg";
+import celerityLogo from "../resources/Rombo_Disciplines/rombo_Celerity.svg";
+import dominateLogo from "../resources/Rombo_Disciplines/rombo_Dominate.svg";
+import fortitudeLogo from "../resources/Rombo_Disciplines/rombo_Fortitude.svg";
+import obfuscateLogo from "../resources/Rombo_Disciplines/rombo_Obfuscate.svg";
+import potenceLogo from "../resources/Rombo_Disciplines/rombo_Potence.svg";
+import presenceLogo from "../resources/Rombo_Disciplines/rombo_Presence.svg";
+import proteanLogo from "../resources/Rombo_Disciplines/rombo_Protean.svg";
+import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg";
+import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg";
+
+
 export const disciplineNameSchema = z.union([
     z.literal("animalism"),
     z.literal("auspex"),
@@ -42,6 +55,7 @@ export const disciplineSchema = z.object({
     clans: clanNameSchema.array(),
     summary: z.string(),
     powers: powerSchema.array(),
+    logo: z.string(),
 })
 export type Discipline = z.infer<typeof disciplineSchema>
 
@@ -50,6 +64,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     animalism: {
         clans: ["Nosferatu", "Gangrel", "Ravnos", "Tzimisce"],
         summary: "",
+        logo: animalismLogo,
         powers: [
             { name: "Bond Famulus", description: "", rouseChecks: 3, amalgamPrerequisites: [], summary: "bond an animal companion", dicePool: "Charisma + Animal Ken", level: 1, discipline: "animalism" },
             { name: "Sense the Beast", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "sense hostility and supernatural traits", dicePool: "Resolve + Animalism", level: 1, discipline: "animalism" },
@@ -64,6 +79,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     auspex: {
         clans: ["Toreador", "Tremere", "Malkavian", "Hecata", "Salubri"],
         summary: "",
+        logo: auspexLogo,
         powers: [
             { name: "Heightened Senses", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "add Auspex rating to perception rolls", dicePool: "", level: 1, discipline: "auspex" },
             { name: "Sense the Unseen", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "sense supernatural activity", dicePool: "Wits / Resolve + Auspex", level: 1, discipline: "auspex" },
@@ -79,6 +95,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     celerity: {
         clans: ["Toreador", "Brujah", "Banu Haqim"],
         summary: "",
+        logo: celerityLogo,
         powers: [
             { name: "Cat's Grace", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "automatically pass balance tests", dicePool: "", level: 1, discipline: "celerity" },
             { name: "Rapid Reflexes", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "faster reactions & free minor actions", dicePool: "", level: 1, discipline: "celerity" },
@@ -92,6 +109,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     dominate: {
         clans: ["Ventrue", "Malkavian", "Tremere", "Lasombra", "Tzimisce", "Salubri"],
         summary: "",
+        logo: dominateLogo,
         powers: [
             { name: "Cloud Memory", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "make a person forget the past minute", dicePool: "Charisma + Dominate", level: 1, discipline: "dominate" },
             { name: "Compel", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "a single, short command with an immediate effect", dicePool: "Charisma + Dominate", level: 1, discipline: "dominate" },
@@ -107,6 +125,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     fortitude: {
         clans: ["Ventrue", "Gangrel", "Hecata", "Salubri"],
         summary: "",
+        logo: fortitudeLogo,
         powers: [
             { name: "Resilience", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "add Fortitude rating to health track", dicePool: "", level: 1, discipline: "fortitude" },
             { name: "Unswayable Mind", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "add extra defense against mind-swaying", dicePool: "", level: 1, discipline: "fortitude" },
@@ -122,6 +141,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     obfuscate: {
         clans: ["Nosferatu", "Malkavian", "Banu Haqim", "Ministry", "Ravnos"],
         summary: "",
+        logo: obfuscateLogo,
         powers: [
             { name: "Cloak of Shadows", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "blend into surroundings while motionless", dicePool: "Wits + Obfuscate / Stealth", level: 1, discipline: "obfuscate" },
             { name: "Silence of Death", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "mute all sounds you make", dicePool: "", level: 1, discipline: "obfuscate" },
@@ -137,6 +157,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     potence: {
         clans: ["Nosferatu", "Brujah", "Lasombra"],
         summary: "",
+        logo: potenceLogo,
         powers: [
             { name: "Lethal Body", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "cause serious physical damage to a mortals", dicePool: "", level: 1, discipline: "potence" },
             { name: "Soaring Leap", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "jump over long distance", dicePool: "", level: 1, discipline: "potence" },
@@ -150,6 +171,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     presence: {
         clans: ["Toreador", "Brujah", "Ventrue", "Ministry", "Ravnos"],
         summary: "",
+        logo: presenceLogo,
         powers: [
             { name: "Awe", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "become attractive and charismatic; add Presence rating to Persuasion and Performance checks", dicePool: "", level: 1, discipline: "presence" },
             { name: "Daunt", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "push people away and intimidate; add Presence rating to Intimidation checks", dicePool: "", level: 1, discipline: "presence" },
@@ -163,6 +185,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     protean: {
         clans: ["Gangrel", "Ministry", "Tzimisce"],
         summary: "",
+        logo: proteanLogo,
         powers: [
             { name: "Eyes of the Beast", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "see in total darkness", dicePool: "", level: 1, discipline: "protean" },
             { name: "Weight of the Feather", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "become weightless", dicePool: "", level: 1, discipline: "protean" },
@@ -176,6 +199,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     "blood sorcery": {
         clans: ["Tremere", "Banu Haqim"],
         summary: "",
+        logo: bloodSorceryLogo,
         powers: [
             { name: "Corrosive Vitae", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "make your blood corrosive to dead substances", dicePool: "", level: 1, discipline: "blood sorcery" },
             { name: "A Taste for Blood", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "Discern traits about someone by tasting a drop of their blood", dicePool: "Resolve + Blood Sorcery", level: 1, discipline: "blood sorcery" },
@@ -191,6 +215,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     oblivion: {
         clans: ["Lasombra", "Hecata"],
         summary: "",
+        logo: oblivionLogo,
         powers: [
             { name: "Shadow Cloak", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "manipulate shadows for stealth or intimidation", dicePool: "", level: 1, discipline: "oblivion" },
             { name: "Oblivion's Sight", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "see in darkness and see ghosts", dicePool: "", level: 1, discipline: "oblivion" },
@@ -210,6 +235,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     "": {
         clans: [],
         summary: "",
+        logo: "",
         powers: []
     },
 }

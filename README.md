@@ -36,6 +36,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 
 <!-- ## TODOs:
+* Improve Merits-Section
 
 * Add meaningful-ish error messages when things go wrong
 * Give people a way to give feedback
@@ -44,8 +45,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 * Add rituals for blood sorcery
 
-* Add PredatorType icons (maybe find in Nerdberts' resources)
-* Add pretty VtM logos & images  (consider https://www.svgrepo.com)
+* Make website usable on mobile
 * Make things prettier in general
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones
 * -->
