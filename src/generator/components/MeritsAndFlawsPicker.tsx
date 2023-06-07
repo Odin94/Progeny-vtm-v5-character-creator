@@ -1,6 +1,6 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Grid, Space, Stack, Text } from "@mantine/core"
+import { Button, Divider, Grid, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character, MeritFlaw } from "../../data/Character"
 
@@ -21,7 +21,7 @@ type MeritsAndFlaws = {
 
 const meritsAndFlaws: MeritsAndFlaws[] = [
     {
-        title: "Looks",
+        title: "💄 Looks",
         merits: [
             { name: "Beautiful", cost: [2], summary: "+1 die in Social rolls" },
             { name: "Stunning", cost: [4], summary: "+2 dice in Social rolls" },
@@ -32,7 +32,7 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Haven",
+        title: "🏠 Haven",
         merits: [
             { name: "Haven", cost: [1, 2, 3], summary: "secure homebase" },
             { name: "Hidden Armory", cost: [1], summary: "weapons and armor in your haven" },
@@ -46,12 +46,12 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Resources",
+        title: "💰 Resources",
         merits: [{ name: "Resources", cost: [1, 2, 3, 4, 5], summary: "wealth & income" }],
         flaws: [{ name: "Destitute", cost: [1], summary: "poor & no income" }]
     },
     {
-        title: "Feeding",
+        title: "🩸 Feeding",
         merits: [
             { name: "Bloodhound", cost: [1], summary: "smell resonance in mortal blood" },
             { name: "Iron Gullet", cost: [3], summary: "able to feed on rancid blood" },
@@ -64,7 +64,7 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Keeping up with the times",
+        title: "🕰 Keeping up with the times",
         merits: [],
         flaws: [
             { name: "Living in the Past", cost: [1], summary: "you have outdated views" },
@@ -72,7 +72,7 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Mythic",
+        title: "🌙 Mythic",
         merits: [{ name: "Eat Food", cost: [1], summary: "can consume normal food" },],
         flaws: [
             { name: "Folkloric Bane", cost: [1], summary: "specific items damage you (eg. silver, garlic)" },
@@ -82,7 +82,7 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Mask",
+        title: "👺 Mask",
         merits: [{ name: "Mask", cost: [1, 2], summary: "fake identity with fake documents" },],
         flaws: [
             { name: "Known Corpse", cost: [1], summary: "others know you're dead" },
@@ -90,12 +90,12 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Linguistics",
+        title: "🗣 Linguistics",
         merits: [{ name: "Linguistics", cost: [1], summary: "fluently speak another language" },],
         flaws: [{ name: "Illiterate", cost: [1], summary: "can't read and write" },]
     },
     {
-        title: "Kindred",
+        title: "🧛 Kindred",
         merits: [
             { name: "Mawla", cost: [1, 2, 3, 4, 5], summary: "kindred mentor to advise or help you" },
             { name: "Status", cost: [1, 2, 3, 4, 5], summary: "positive reputation within a faction" },
@@ -107,7 +107,7 @@ const meritsAndFlaws: MeritsAndFlaws[] = [
         ]
     },
     {
-        title: "Mortals",
+        title: "👱 Mortals",
         merits: [
             { name: "Retainer", cost: [1, 3], summary: "loyal mortal servant" },
             { name: "Allies", cost: [1, 2, 3, 4, 5], summary: "group of mortals to advise or help you" },
@@ -164,7 +164,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         return (<>
             <Text style={{ ...bg, padding: "5px" }} key={meritOrFlaw.name}>
                 {icon} &nbsp;
-                {meritOrFlaw.name} - {meritOrFlaw.summary}
+                <b>{meritOrFlaw.name}</b> - {meritOrFlaw.summary}
 
                 <span>
                     &nbsp; {meritOrFlaw.cost.map((i) => createButton(i))}
@@ -178,15 +178,17 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     }
 
     return (
-        <Stack>
+        <Stack align="center">
             <h1>Spend 7 dots in Advantages and 2 dots in Flaws</h1>
             <h1>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws} </h1>
             <Grid>
                 {meritsAndFlaws.map((category, i) => {
                     return (
                         <Grid.Col span={6} key={category.title + i}>
-                            <Stack>
-                                <Text size={"xl"}>{category.title}</Text>
+                            <Stack spacing={"xs"}>
+                                <Text fw={700} size={"xl"}>{category.title}</Text>
+                                <Divider mt={0} w={"50%"} />
+
                                 {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
                                 {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
                             </Stack>
