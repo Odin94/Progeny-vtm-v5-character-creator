@@ -26,7 +26,7 @@ function App() {
 
   return (
     <AppShell
-      padding="md"
+      padding="0"
       navbar={phoneSizedScreen ? <></> : <Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
       header={<Header height={75} p="xs"><Topbar character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} /></Header>}
       aside={<AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />}
