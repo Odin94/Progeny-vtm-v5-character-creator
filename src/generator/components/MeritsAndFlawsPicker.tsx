@@ -1,8 +1,9 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, Space, Stack, Text } from "@mantine/core"
+import { Button, Divider, Grid, ScrollArea, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character, MeritFlaw } from "../../data/Character"
+import { globals } from "../../globals"
 
 
 type MeritsAndFlawsPickerProps = {
@@ -161,7 +162,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
         let bg = {}
         if (wasPickedLevel) bg = { background: type === "flaw" ? "rgba(255, 25, 25, 0.2)" : "rgba(50, 255, 100, 0.2)" }
-        return (<>
+        return (
             <Text style={{ ...bg, padding: "5px" }} key={meritOrFlaw.name}>
                 {icon} &nbsp;
                 <b>{meritOrFlaw.name}</b> - {meritOrFlaw.summary}
@@ -174,28 +175,33 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                     }} style={{ marginRight: "5px" }} compact variant="subtle" color={"yellow"}>Unpick</Button> : null}
                 </span>
             </Text>
-        </>)
+        )
     }
 
+    const height = globals.viewporHeightPx
     return (
         <Stack align="center">
             <Text fz={"30px"} ta={"center"}>Spend 7 dots in <b>Advantages</b> and 2 dots in <b>Flaws</b></Text>
             <Text fz={"30px"} ta={"center"}>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws}</Text>
-            <Grid>
-                {meritsAndFlaws.map((category, i) => {
-                    return (
-                        <Grid.Col span={6} key={category.title + i}>
-                            <Stack spacing={"xs"}>
-                                <Text fw={700} size={"xl"}>{category.title}</Text>
-                                <Divider mt={0} w={"50%"} />
 
-                                {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
-                                {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
-                            </Stack>
-                        </Grid.Col>
-                    )
-                })}
-            </Grid>
+            <ScrollArea h={height - 480} w={"100%"} p={20}>
+                <Grid m={0}>
+                    {meritsAndFlaws.map((category) => {
+                        return (
+                            <Grid.Col span={6} key={category.title}>
+                                <Stack spacing={"xs"}>
+                                    <Text fw={700} size={"xl"}>{category.title}</Text>
+                                    <Divider mt={0} w={"50%"} />
+
+                                    {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+                                    {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
+                                </Stack>
+                            </Grid.Col>
+                        )
+                    })}
+                </Grid>
+            </ScrollArea>
+
 
             <Space h={"xl"} />
 
@@ -207,8 +213,6 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 })
                 nextStep()
             }}>Confirm</Button>
-
-            <Space h={"xl"} />
 
         </Stack>
     )

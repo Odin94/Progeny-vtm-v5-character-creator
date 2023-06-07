@@ -1,9 +1,10 @@
-import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, Space, Stack, Text } from "@mantine/core"
+import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, ScrollArea, Space, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { ClanName } from "../../data/Clans"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { intersection, upcase } from "../utils"
+import { globals } from "../../globals"
 
 
 type DisciplinesPickerProps = {
@@ -16,7 +17,6 @@ const getDisciplinesForClan = (clan: ClanName) => {
     return Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(clan)))
 }
 
-// TODO: Fix background image size changing when opening a tab with 3 powers at one level (eg. Animalism/Cleaver)
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     // const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
@@ -152,6 +152,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
     const powersSortedByDiscipline = pickedPowers.sort()
     let disciplineTitle = ""
+    const height = globals.viewporHeightPx
     return (
         <div style={{ width: "810px" }}>
             <Text fw={700} fz={"30px"} ta="left">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
@@ -160,8 +161,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            <Stack align="center" spacing="xl">
-                <Grid style={{ width: "100%" }}>
+            <Stack align="center" spacing="xl" w={"100%"}>
+                <Grid w={"100%"}>
                     {/* Picked Powers */}
                     <Grid.Col span={2}>
                         <Center style={{ height: "100%" }}>
@@ -197,17 +198,22 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     </Grid.Col>
 
                     {/* Discipline-List */}
-                    <Grid.Col span={6} offset={1}>
-                        <Accordion style={{ width: "600px" }}>
-                            {
-                                Object.entries(disciplinesForClan).map(([name, discipline]) => getDisciplineAccordionItem(name, discipline))
-                            }
-                            <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>Predator Type Discipline</Text>
-                            <hr color="#e03131" />
-                            {
-                                getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)
-                            }
-                        </Accordion>
+
+                    <Grid.Col span={9} offset={1}>
+                        <ScrollArea h={height - 480} pb={40} w={"105%"}>
+
+                            <Accordion style={{ width: "600px" }}>
+                                {
+                                    Object.entries(disciplinesForClan).map(([name, discipline]) => getDisciplineAccordionItem(name, discipline))
+                                }
+                                <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>Predator Type Discipline</Text>
+                                <hr color="#e03131" />
+                                {
+                                    getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)
+                                }
+                            </Accordion>
+                        </ScrollArea>
+
                     </Grid.Col>
                 </Grid>
 
