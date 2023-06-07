@@ -179,8 +179,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     return (
         <Stack align="center">
-            <h1>Spend 7 dots in Advantages and 2 dots in Flaws</h1>
-            <h1>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws} </h1>
+            <Text fz={"30px"} ta={"center"}>Spend 7 dots in <b>Advantages</b> and 2 dots in <b>Flaws</b></Text>
+            <Text fz={"30px"} ta={"center"}>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws}</Text>
             <Grid>
                 {meritsAndFlaws.map((category, i) => {
                     return (

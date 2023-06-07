@@ -24,7 +24,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     return (
         <div style={{ maxWidth: "440px" }}>
             <Text ta={"center"} fz={"50px"}><FontAwesomeIcon icon={faCheckSquare} color="green" /></Text>
-            <h1>Character Creation Complete</h1>
+            <Text fz={"32px"} ta={"center"} fw={700} mb={20}>Character Creation Complete</Text>
 
             <div style={{ background: "rgba(0, 0, 0, 0.6)" }}>
                 <Text fz={"xl"} mb={"xl"}>You can now export to a printable PDF or download your character as JSON file, which you can later load again to continue editing</Text>

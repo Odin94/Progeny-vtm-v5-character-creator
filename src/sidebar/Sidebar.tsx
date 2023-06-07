@@ -1,5 +1,4 @@
 import { Center, ScrollArea, Stack, Text } from "@mantine/core"
-import { useViewportSize } from "@mantine/hooks"
 import { Character } from "../data/Character"
 import { notDefault } from "../generator/utils"
 import AttributesDisplay from "./components/AttributesDisplay"
@@ -8,6 +7,7 @@ import DisciplineDisplay from "./components/DisciplinesDisplay"
 import MeritsAndFlawsDisplay from "./components/MeritsAndFlawsDisplay"
 import SkillDisplay from "./components/SkillsDisplay"
 import TouchstoneDisplay from "./components/TouchstoneDisplay"
+import { globals } from "../globals"
 
 export type SidebarProps = {
     character: Character
@@ -16,7 +16,7 @@ export type SidebarProps = {
 
 
 const Sidebar = ({ character }: SidebarProps) => {
-    const { height } = useViewportSize();
+    const height = globals.viewporHeightPx
 
     return (
         // Subtracting header-height

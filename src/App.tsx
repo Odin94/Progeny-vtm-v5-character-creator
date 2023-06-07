@@ -8,6 +8,7 @@ import AsideBar from './sidebar/AsideBar';
 import Sidebar from './sidebar/Sidebar';
 import Topbar from './topbar/Topbar';
 
+import { useViewportSize } from "@mantine/hooks";
 import { rndInt } from './generator/utils';
 import club from './resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg';
 import brokenDoor from './resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg';
@@ -15,10 +16,14 @@ import city from './resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.
 import bloodGuy from './resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg';
 import batWoman from './resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg';
 import alley from './resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg';
+import { globals } from './globals';
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
+  const { height: viewportHeight } = useViewportSize()
+  globals.viewporHeightPx = viewportHeight  // TODO: Replace globals with a context or something..?
+
   const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
   const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
   const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
@@ -44,7 +49,7 @@ function App() {
         </BackgroundImage>
       }
     </AppShell>
-  );
+  )
 }
 
 export default App;

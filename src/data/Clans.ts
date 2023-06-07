@@ -106,14 +106,14 @@ export const Clans: Record<ClanName, Clan> = {
     },
     "Banu Haqim": {
         name: "Banu Haqim",
-        description: "Guardians, warriors, and scholars who seek to distance themselves from the Jyhad",
+        description: "Assassins and judges with a twisted passion for justice",
         logo: banuHaqimLogo,
         bane: "Blood Addiction: Drinking from another vampire provokes a Hunger Frenzy test of difficulty 2 + BANE_SEVERITY.",
         compulsion: "Judgment: Drink at least 1 hunger of blood from anyone who acts against on of your personal convictions. If you can't, take three-dice penalty to all rolls until compulsion is satisfied or scene ends."
     },
     Ministry: {
         name: "Ministry",
-        description: "Vampires who believe their founder was the Egyptian god Set",
+        description: "Cult-like clan that uses temptation as a weapon",
         logo: ministryLogo,
         bane: "If under bright light, take a BANE_SEVERITY penalty to all rolls. Take BANE_SEVERITY additional damage from sunlight.",
         compulsion: "Transgression: Take a two-dice penalty on all rolls not related to enticing someone (even themselves) to break a Chronicle Tenet or personal Conviction, causing at least one Stain and ending this Compulsion."

@@ -1,8 +1,9 @@
-import { Card, Center, Grid, Image, Space, Text, Title, useMantineTheme } from "@mantine/core";
+import { Card, Center, Grid, Image, ScrollArea, Text, Title, useMantineTheme } from "@mantine/core";
 import { Character } from "../../data/Character";
 import { ClanName, Clans, clanNameSchema } from "../../data/Clans";
 import { notDefault } from "../utils";
 import { notifications } from "@mantine/notifications";
+import { globals } from "../../globals";
 
 
 type ClanPickerProps = {
@@ -11,30 +12,15 @@ type ClanPickerProps = {
     nextStep: () => void
 }
 
-// const colorByClan: Record<Clan, string> = {
-//     "Brujah": "red",
-//     "Gangrel": "red",
-
-//     "Nosferatu": "gray",
-
-//     "Malkavian": "green",
-//     "Tremere": "green",
-
-//     "Ventrue": "blue",
-
-//     "Toreador": "grape",
-
-//     "": ""
-// }
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
     const theme = useMantineTheme()
 
     const c1 = "rgba(26, 27, 30, 0.90)"
-    const c2 = theme.fn.rgba(theme.colors.grape[8], 0.90)  //"rgba(156, 54, 181, 0.90)"
-    const bgColor = theme.fn.linearGradient(0, c1, c2)
 
-    const createClanPick = (clan: ClanName) => {
+    const createClanPick = (clan: ClanName, c2: string) => {
+        const bgColor = theme.fn.linearGradient(0, c1, c2)
+
         return (
             <Grid.Col key={clan} span={4}>
                 <Card className="hoverCard" shadow="sm" padding="lg" radius="md" h={275} style={{ background: bgColor, cursor: "pointer", }}
@@ -76,25 +62,57 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         {Clans[clan].description}
                     </Text>
                 </Card>
-            </Grid.Col >
+            </Grid.Col>
         )
     }
 
+    const height = globals.viewporHeightPx
     return (
-        <div>
-            <h1>Pick your clan</h1>
+        <div style={{ height: height - 250 }}>
+            <Text fz={"30px"} ta={"center"}>Pick your <b>Clan</b></Text>
+
 
             <Text ta="center" fz="xl" fw={700} c="red">Clan</Text>
             <hr color="#e03131" />
-            <Space h={"sm"} />
 
-            <Grid grow>
-                {
-                    ["Brujah", "Gangrel", "Nosferatu", "Malkavian", "Tremere", "Ventrue", "Toreador",
-                        "Lasombra", "Banu Haqim", "Ministry", "Ravnos", "Tzimisce", "Hecata", "Salubri"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan))
-                }
-            </Grid>
-        </div>
+            <ScrollArea h={height - 330} w={"100%"} p={20}>
+                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.blue[6]}>Rulers & Commanders</Text>
+                <Grid grow m={0}>
+                    {
+                        ["Ventrue", "Tzimisce", "Lasombra"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan, theme.fn.rgba(theme.colors.blue[8], 0.90)))
+                    }
+                </Grid>
+
+                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.red[8]}>Fighters & Protectors</Text>
+                <Grid grow m={0}>
+                    {
+                        ["Brujah", "Gangrel", "Banu Haqim"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan, theme.fn.rgba(theme.colors.red[8], 0.90)))
+                    }
+                </Grid>
+
+                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.grape[7]}>Seducers & Deceivers</Text>
+
+                <Grid grow m={0}>
+                    {
+                        ["Toreador", "Ravnos", "Ministry"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan, theme.fn.rgba(theme.colors.grape[8], 0.90)))
+                    }
+                </Grid>
+
+                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c="green">Investigators & Researchers</Text>
+                <Grid grow m={0}>
+                    {
+                        ["Malkavian", "Tremere", "Hecata"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan, theme.fn.rgba(theme.colors.green[9], 0.90)))
+                    }
+                </Grid>
+
+                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c="rgb(175,175,175)">Hidden Lurkers</Text>
+                <Grid grow m={0}>
+                    {
+                        ["Nosferatu", "Salubri"].map((c) => clanNameSchema.parse(c)).map((clan) => createClanPick(clan, theme.fn.rgba(theme.colors.gray[6], 0.90)))
+                    }
+                </Grid>
+            </ScrollArea>
+        </div >
     )
 }
 
