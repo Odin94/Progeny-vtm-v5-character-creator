@@ -44,7 +44,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
     const createPredatorTypeStack = () => (
         <Stack spacing="xl">
-            <Grid>
+            <Grid m={0}>
                 <Grid.Col span={4}><h1>Violent</h1></Grid.Col>
                 <Grid.Col span={4}>
                     <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
@@ -53,7 +53,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             <Divider color="grape" />
 
-            <Grid>
+            <Grid m={0}>
                 <Grid.Col span={4}><h1>Sociable</h1></Grid.Col>
                 <Grid.Col span={4}>
                     <Stack>{(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren",] as PredatorTypeName[]).map((clan) => createButton(clan, "grape"))}</Stack>
@@ -62,7 +62,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             <Divider color="gray" />
 
-            <Grid>
+            <Grid m={0}>
                 <Grid.Col span={4}><h1>Stealth</h1></Grid.Col>
                 <Grid.Col span={4}>
                     <Stack>{(["Sandman", "Graverobber",] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
@@ -71,7 +71,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             <Divider color="violet" />
 
-            <Grid>
+            <Grid m={0}>
                 <Grid.Col span={4}><h1>Excluding Mortals</h1></Grid.Col>
                 <Grid.Col span={4}>
                     <Stack>{(["Bagger", "Blood Leech", "Farmer",] as PredatorTypeName[]).map((clan) => createButton(clan, "violet"))}</Stack>

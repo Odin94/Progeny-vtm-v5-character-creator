@@ -1,4 +1,4 @@
-import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextInput, Tooltip } from "@mantine/core"
+import { Button, Divider, Grid, Group, Modal, ScrollArea, Select, Space, Stack, Text, TextInput, Tooltip } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import { intersection, lowcase, upcase } from "../utils"
@@ -180,6 +180,31 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
         closeModal()
     }
+
+    const createSkillButtons = () => (
+        <Group>
+            <Grid grow m={0}>
+                <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Physical</Text></Grid.Col>
+                <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
+                <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
+                {
+                    ["athletics", "animal ken", "academics",
+                        "brawl", "etiquette", "awareness",
+                        "craft", "insight", "finance",
+                        "drive", "intimidation", "investigation",
+                        "firearms", "leadership", "medicine",
+                        "melee", "performance", "occult",
+                        "larceny", "persuasion", "politics",
+                        "stealth", "streetwise", "science",
+                        "survival", "subterfuge", "technology"
+                    ].map((s) => skillsKeySchema.parse(s)).map((clan, i) => createButton(clan, i))
+                }
+            </Grid>
+        </Group>
+    )
+    const height = globals.viewporHeightPx
+    const heightBreakPoint = 930
+
     return (
         <div>
             {!pickedDistribution ? <Text fz={"30px"} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
@@ -196,40 +221,33 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             <hr color="#e03131" />
 
             <Space h="sm" />
-            <Grid grow>
-                {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
-                    return (
-                        <Grid.Col span={4} key={distribution}>
-                            <Tooltip disabled={pickedDistribution !== null} label={distributionDescriptions[distribution]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                                <Button disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>{distribution}</Button>
-                            </Tooltip>
 
-                        </Grid.Col>
-                    )
-                })}
-            </Grid>
-            <Space h="xl" />
-            <Space h="xl" />
+            {pickedDistribution !== null && height < heightBreakPoint
+                ? null
+                : <>
+                    <Grid grow>
+                        {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
+                            return (
+                                <Grid.Col span={4} key={distribution}>
+                                    <Tooltip disabled={pickedDistribution !== null} label={distributionDescriptions[distribution]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
+                                        <Button disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>{distribution}</Button>
+                                    </Tooltip>
+                                </Grid.Col>
+                            )
+                        })}
+                    </Grid>
+                    <Space h="xl" />
+                    <Space h="xl" />
+                </>
+            }
 
-            <Group>
-                <Grid grow>
-                    <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Physical</Text></Grid.Col>
-                    <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
-                    <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
-                    {
-                        ["athletics", "animal ken", "academics",
-                            "brawl", "etiquette", "awareness",
-                            "craft", "insight", "finance",
-                            "drive", "intimidation", "investigation",
-                            "firearms", "leadership", "medicine",
-                            "melee", "performance", "occult",
-                            "larceny", "persuasion", "politics",
-                            "stealth", "streetwise", "science",
-                            "survival", "subterfuge", "technology"
-                        ].map((s) => skillsKeySchema.parse(s)).map((clan, i) => createButton(clan, i))
-                    }
-                </Grid>
-            </Group>
+
+            {height < heightBreakPoint
+                ? <ScrollArea h={height - 500}>
+                    {createSkillButtons()}
+                </ScrollArea>
+                : createSkillButtons()
+            }
 
             <SpecialtyModal modalOpened={modalOpened} closeModal={closeModalAndUndoLastPick} setCharacter={setCharacter} nextStep={nextStep} character={character} pickedSkillNames={getAll(pickedSkills)} skills={skills} />
         </div>
@@ -273,13 +291,14 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
         <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={
             <div>
                 <Text w={smallScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>
+                <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">Specialties are additional abilities that apply to some uses of a skill (Eg. Performance: Dancing)</Text>
                 <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">A specialty should not be so broad that it applies to most uses of the skill</Text>
             </div>}
             centered>
 
             <Stack style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
                 <Divider my="sm" />
-                <Text fw={700} fz={"xl"}>Select a skill</Text>
+                <Text fw={700} fz={"xl"}>Select a Skill for a free Specialty</Text>
 
                 <Group position="apart">
                     <Select
