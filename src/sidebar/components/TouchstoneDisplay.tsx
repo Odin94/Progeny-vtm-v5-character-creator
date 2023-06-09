@@ -11,9 +11,9 @@ const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => {
         <Stack>
             <Title order={2}>Touchstones</Title>
             <List>
-                {touchstones.map((stone) => {
+                {touchstones.map((stone, i) => {
                     return (
-                        <List.Item key={stone.name}>
+                        <List.Item key={i}>
                             <Text><b>{stone.name}</b></Text>
                             <Text c="dimmed">{stone.conviction}</Text>
                         </List.Item>
