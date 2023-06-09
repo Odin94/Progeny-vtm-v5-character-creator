@@ -1,6 +1,6 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, Group, Modal, SegmentedControl, Space, Stack, Text, Tooltip } from "@mantine/core"
+import { Button, Divider, Grid, Group, Modal, ScrollArea, SegmentedControl, Space, Stack, Text, Tooltip } from "@mantine/core"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
@@ -42,6 +42,45 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
         )
     }
 
+    const createPredatorTypeStack = () => (
+        <Stack spacing="xl">
+            <Grid>
+                <Grid.Col span={4}><h1>Violent</h1></Grid.Col>
+                <Grid.Col span={4}>
+                    <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
+                </Grid.Col>
+            </Grid>
+
+            <Divider color="grape" />
+
+            <Grid>
+                <Grid.Col span={4}><h1>Sociable</h1></Grid.Col>
+                <Grid.Col span={4}>
+                    <Stack>{(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren",] as PredatorTypeName[]).map((clan) => createButton(clan, "grape"))}</Stack>
+                </Grid.Col>
+            </Grid>
+
+            <Divider color="gray" />
+
+            <Grid>
+                <Grid.Col span={4}><h1>Stealth</h1></Grid.Col>
+                <Grid.Col span={4}>
+                    <Stack>{(["Sandman", "Graverobber",] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
+                </Grid.Col>
+            </Grid>
+
+            <Divider color="violet" />
+
+            <Grid>
+                <Grid.Col span={4}><h1>Excluding Mortals</h1></Grid.Col>
+                <Grid.Col span={4}>
+                    <Stack>{(["Bagger", "Blood Leech", "Farmer",] as PredatorTypeName[]).map((clan) => createButton(clan, "violet"))}</Stack>
+                </Grid.Col>
+            </Grid>
+        </Stack>
+    )
+
+    const height = globals.viewporHeightPx
     return (
         <div style={{ width: "100%" }}>
             <Text fz={"30px"} ta={"center"}>How do you <b>obtain blood?</b></Text>
@@ -50,41 +89,13 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            <Stack spacing="xl">
-                <Grid>
-                    <Grid.Col span={4}><h1>Violent</h1></Grid.Col>
-                    <Grid.Col span={4}>
-                        <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
-                    </Grid.Col>
-                </Grid>
+            {height < 1075
+                ? <ScrollArea h={height - 400}>
+                    {createPredatorTypeStack()}
+                </ScrollArea>
+                : createPredatorTypeStack()
+            }
 
-                <Divider color="grape" />
-
-                <Grid>
-                    <Grid.Col span={4}><h1>Sociable</h1></Grid.Col>
-                    <Grid.Col span={4}>
-                        <Stack>{(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren",] as PredatorTypeName[]).map((clan) => createButton(clan, "grape"))}</Stack>
-                    </Grid.Col>
-                </Grid>
-
-                <Divider color="gray" />
-
-                <Grid>
-                    <Grid.Col span={4}><h1>Stealth</h1></Grid.Col>
-                    <Grid.Col span={4}>
-                        <Stack>{(["Sandman", "Graverobber",] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
-                    </Grid.Col>
-                </Grid>
-
-                <Divider color="violet" />
-
-                <Grid>
-                    <Grid.Col span={4}><h1>Excluding Mortals</h1></Grid.Col>
-                    <Grid.Col span={4}>
-                        <Stack>{(["Bagger", "Blood Leech", "Farmer",] as PredatorTypeName[]).map((clan) => createButton(clan, "violet"))}</Stack>
-                    </Grid.Col>
-                </Grid>
-            </Stack>
 
             <SpecialtyModal modalOpened={modalOpened} closeModal={closeModal} character={character} pickedPredatorType={pickedPredatorType}
                 setCharacter={setCharacter} nextStep={nextStep} specialty={specialty} setSpecialty={setSpecialty} discipline={discipline} setDiscipline={setDiscipline} />
