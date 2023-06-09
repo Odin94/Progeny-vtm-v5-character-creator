@@ -35,14 +35,26 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             <Stack align="center" spacing="xl">
 
                 <Button leftIcon={<FontAwesomeIcon icon={faFileExport} />} size="xl" color="grape"
-                    onClick={() => { downloadCharacterSheet(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>
+                    onClick={() => {
+                        downloadCharacterSheet(character).catch((e) => { console.error(e); setDownloadError(e as Error) })
+
+                        ReactGA.event({
+                            action: "PDF downloaded",
+                            category: "downloads",
+                            label: JSON.stringify(character),
+                        })
+                    }}>
                     Download PDF
                 </Button>
 
                 <Button leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />} size="lg" color="yellow" variant="light"
                     onClick={() => {
-                        downloadJson(character).catch((e) => {
-                            console.error(e); setDownloadError(e as Error); ReactGA.event({ category: "errors", action: "attribute clicked", label: "TODO", })
+                        downloadJson(character).catch((e) => { console.error(e); setDownloadError(e as Error); })
+
+                        ReactGA.event({
+                            action: "JSON downloaded",
+                            category: "downloads",
+                            label: JSON.stringify(character),
                         })
                     }}>
                     Download JSON

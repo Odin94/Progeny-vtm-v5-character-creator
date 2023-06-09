@@ -77,14 +77,9 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         })()
 
         const trackClick = () => {
-            ReactGA.ga("event", "select_content", {
-                content_type: "attribute",
-                content_id: attribute
-            })
-
             ReactGA.event({
-                category: "attributes",
                 action: "attribute clicked",
+                category: "attributes",
                 label: attribute,
             })
         }

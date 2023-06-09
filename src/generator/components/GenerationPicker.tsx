@@ -58,6 +58,11 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
                 <Button disabled={generation === null} color="grape" onClick={() => {
                     setCharacter({ ...character, generation: parseInt(generation ?? "0") })
+                    ReactGA.event({
+                        action: "generation submit clicked",
+                        category: "generation",
+                        label: generation ?? "0",
+                    })
                     nextStep()
                 }}>Confirm</Button>
             </Stack>

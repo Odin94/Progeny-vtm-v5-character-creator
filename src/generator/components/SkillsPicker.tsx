@@ -71,7 +71,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const createButton = (skill: SkillsKey, i: number) => {
         const alreadyPicked = [...pickedSkills.special, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill)
 
-        let onClick
+        let onClick: () => void
         if (alreadyPicked) {
             onClick = () => {
                 setPickedSkills({
@@ -153,10 +153,18 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             return ""
         })()
 
+        const trackClick = () => {
+            ReactGA.event({
+                action: "skill clicked",
+                category: "skills",
+                label: skill,
+            })
+        }
+
         return (
             <Grid.Col key={skill} span={4}>
                 <Tooltip disabled={alreadyPicked} label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                    <Button variant={alreadyPicked ? "outline" : "filled"} leftIcon={dots} disabled={pickedDistribution === null} color="grape" fullWidth onClick={onClick}>{upcase(skill)}</Button>
+                    <Button variant={alreadyPicked ? "outline" : "filled"} leftIcon={dots} disabled={pickedDistribution === null} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>{upcase(skill)}</Button>
                 </Tooltip>
 
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}

@@ -97,6 +97,13 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
 
                 <Button color="grape" onClick={() => {
                     setCharacter({ ...character, touchstones: touchstones })
+
+                    ReactGA.event({
+                        action: "touchstone confirm clicked",
+                        category: "touchstones",
+                        label: `${touchstones.length}`,
+                    })
+
                     nextStep()
                 }}>Confirm</Button>
             </Stack>

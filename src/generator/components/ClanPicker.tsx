@@ -43,6 +43,11 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                             setCharacter({ ...character, clan })
                         }
 
+                        ReactGA.event({
+                            action: "clan clicked",
+                            category: "clans",
+                            label: clan,
+                        })
                         nextStep()
                     }}>
                     <Card.Section>

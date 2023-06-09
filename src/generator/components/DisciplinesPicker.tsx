@@ -92,6 +92,13 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 || (!isForPredatorType && (alreadyPickedTwoPowers(power) || alreadyPickedTwoDisciplines(power) || allPowersPicked()))
                 || (isForPredatorType && pickedPredatorTypePower !== undefined)
 
+            const trackClick = () => {
+                ReactGA.event({
+                    action: "power clicked",
+                    category: "disciplines",
+                    label: power.name,
+                })
+            }
             const onClick = () => isForPredatorType ? setPickedPredatorTypePower(power) : setPickedPowers([...pickedPowers, power])
 
             const canReachLvl3 = power.discipline === character.predatorType.pickedDiscipline
@@ -118,7 +125,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         </div>
                         : <div style={{ height: 55 }}></div>}
 
-                    <Button disabled={isButtonDisabled} onClick={onClick} variant="light" color="blue" fullWidth mt="md" radius="md">
+                    <Button disabled={isButtonDisabled} onClick={() => { onClick(); trackClick() }} variant="light" color="blue" fullWidth mt="md" radius="md">
                         <Text truncate>Take {power.name}</Text>
                     </Button>
                 </Card >

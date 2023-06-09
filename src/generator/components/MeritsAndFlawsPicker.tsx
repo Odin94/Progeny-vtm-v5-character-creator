@@ -135,7 +135,6 @@ const meritIcon = () => {
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Merits-and-flaws Picker" }) }, [])
 
-
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([...(character.merits), ...(character.flaws)])
 
     const usedMeritsLevel = character.merits.reduce((acc, { level }) => acc + level, 0)
@@ -215,6 +214,13 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                     merits: pickedMeritsAndFlaws.filter((l) => l.type === "merit"),
                     flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw")
                 })
+
+                ReactGA.event({
+                    action: "merits confirm clicked",
+                    category: "merits",
+                    label: pickedMeritsAndFlaws.map((m) => `${m.name}: ${m.level}`).join(", "),
+                })
+
                 nextStep()
             }}>Confirm</Button>
 

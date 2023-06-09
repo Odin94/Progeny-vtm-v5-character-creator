@@ -205,6 +205,13 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                                 predatorType: { name: pickedPredatorType, pickedDiscipline: disciplineNameSchema.parse(discipline) },
                                 specialties: [...(character.specialties), pickedSpecialty]
                             })
+
+                            ReactGA.event({
+                                action: "predatortype confirm clicked",
+                                category: "predator type",
+                                label: pickedPredatorType,
+                            })
+
                             nextStep()
                         }
 
