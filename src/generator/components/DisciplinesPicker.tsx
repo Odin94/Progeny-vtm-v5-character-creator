@@ -34,21 +34,24 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const isPicked = (power: Power) => {
         return allPickedPowers.map((power) => power.name).includes(power.name)
     }
-    const missingPrerequisites = (power: Power) => {
-        const powersOfDiscipline = disciplines[power.discipline].powers
-
-        // lvl n powers require picking n-1 powers to access
-        if (intersection(powersOfDiscipline, allPickedPowers).length < power.level - 1) return true
-
-        // amalgam prerequisites; intentionally not counting pickedPredatorTypePower
+    const missingAmalgamPrereq = (power: Power) => {
         for (const { discipline, level } of power.amalgamPrerequisites) {
-            const pickedDisciplineLevel = pickedPowers
+            const pickedDisciplineLevel = allPickedPowers
                 .map((power) => power.discipline)
                 .filter((powerDisc) => powerDisc === discipline)
                 .length
 
             if (pickedDisciplineLevel < level) return true
         }
+        return false
+    }
+    const missingPrerequisites = (power: Power) => {
+        const powersOfDiscipline = disciplines[power.discipline].powers
+
+        // lvl n powers require picking n-1 powers to access
+        if (intersection(powersOfDiscipline, allPickedPowers).length < power.level - 1) return true
+
+        if (missingAmalgamPrereq(power)) return true
 
         return false
     }
@@ -109,11 +112,14 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                     return (<List.Item key={power.name + prereq.discipline}>{upcase(prereq.discipline)}: Lv {prereq.level}</List.Item>)
                                 })}
                             </List>
+                            {missingAmalgamPrereq(power)
+                                ? null
+                                : <Text size="xs" color="green">(requirements met)</Text>}
                         </div>
                         : <div style={{ height: 55 }}></div>}
 
                     <Button disabled={isButtonDisabled} onClick={onClick} variant="light" color="blue" fullWidth mt="md" radius="md">
-                        Take {power.name}
+                        <Text truncate>Take {power.name}</Text>
                     </Button>
                 </Card >
             )
