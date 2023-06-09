@@ -26,7 +26,7 @@ export const downloadJson = async (character: Character) => {
     const link = document.createElement('a')
 
     link.href = window.URL.createObjectURL(blob)
-    link.download = `vtm_v5_${character.name}.json`
+    link.download = `progeny_${character.name}.json`
     link.click()
 }
 

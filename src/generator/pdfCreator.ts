@@ -452,7 +452,7 @@ export const downloadCharacterSheet = async (character: Character) => {
         color: "grape",
     })
 
-    downloadPdf(`vtm_v5_${character.name}.pdf`, pdfBytes)
+    downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)
 }
 
 function base64ToArrayBuffer(base64: string) {
