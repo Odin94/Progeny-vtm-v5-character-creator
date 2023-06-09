@@ -4,6 +4,8 @@ import { ClanName, Clans, clanNameSchema } from "../../data/Clans";
 import { notDefault } from "../utils";
 import { notifications } from "@mantine/notifications";
 import { globals } from "../../globals";
+import ReactGA from "react-ga4"
+import { useEffect } from "react";
 
 
 type ClanPickerProps = {
@@ -14,6 +16,8 @@ type ClanPickerProps = {
 
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Clan Picker" }) }, [])
+
     const theme = useMantineTheme()
 
     const c1 = "rgba(26, 27, 30, 0.90)"

@@ -1,7 +1,7 @@
 import { Button, Stack, Text, TextInput, Textarea } from "@mantine/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
-
+import ReactGA from "react-ga4"
 
 type BasicsPickerProps = {
     character: Character,
@@ -10,6 +10,8 @@ type BasicsPickerProps = {
 }
 
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Basics Picker" }) }, [])
+
     const [name, setName] = useState(character.name)
     const [sire, setSire] = useState(character.sire)
     const [ambition, setAmbition] = useState(character.ambition)

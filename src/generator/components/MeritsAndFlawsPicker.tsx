@@ -1,9 +1,10 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, ScrollArea, Space, Stack, Text } from "@mantine/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Character, MeritFlaw } from "../../data/Character"
 import { globals } from "../../globals"
+import ReactGA from "react-ga4"
 
 
 type MeritsAndFlawsPickerProps = {
@@ -132,6 +133,9 @@ const meritIcon = () => {
 
 
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Merits-and-flaws Picker" }) }, [])
+
+
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([...(character.merits), ...(character.flaws)])
 
     const usedMeritsLevel = character.merits.reduce((acc, { level }) => acc + level, 0)

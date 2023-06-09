@@ -8,7 +8,8 @@ import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { downloadCharacterSheet } from "../pdfCreator"
 import { downloadJson } from "../utils"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import ReactGA from "react-ga4"
 
 
 type FinalProps = {
@@ -18,6 +19,8 @@ type FinalProps = {
 }
 
 const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Final" }) }, [])
+
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
 
@@ -37,7 +40,11 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Button>
 
                 <Button leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />} size="lg" color="yellow" variant="light"
-                    onClick={() => { downloadJson(character).catch((e) => { console.error(e); setDownloadError(e as Error) }) }}>
+                    onClick={() => {
+                        downloadJson(character).catch((e) => {
+                            console.error(e); setDownloadError(e as Error); ReactGA.event({ category: "errors", action: "attribute clicked", label: "TODO", })
+                        })
+                    }}>
                     Download JSON
                 </Button>
 

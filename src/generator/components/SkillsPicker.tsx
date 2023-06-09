@@ -1,5 +1,5 @@
 import { Button, Divider, Grid, Group, Modal, Select, Space, Stack, Text, TextInput, Tooltip } from "@mantine/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import { intersection, lowcase, upcase } from "../utils"
 import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } from "../../data/Skills"
@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { Specialty } from "../../data/Specialties"
 import { globals } from "../../globals"
+import ReactGA from "react-ga4"
+
 
 type SkillsPickerProps = {
     character: Character,
@@ -58,6 +60,8 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
 }
 
 const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Skills Picker" }) }, [])
+
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
     const [skills, setSkills] = useState(emptySkills)
     const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({ special: [], strongest: [], decent: [], acceptable: [] })

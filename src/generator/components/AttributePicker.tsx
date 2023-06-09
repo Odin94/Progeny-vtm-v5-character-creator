@@ -1,5 +1,5 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
@@ -18,7 +18,7 @@ type AttributeSetting = {
 }
 
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
-    ReactGA.send({ hitType: "pageview", title: "Attribute Picker" })
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Attribute Picker" }) }, [])
 
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
 
@@ -77,10 +77,15 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         })()
 
         const trackClick = () => {
+            ReactGA.ga("event", "select_content", {
+                content_type: "attribute",
+                content_id: attribute
+            })
+
             ReactGA.event({
                 category: "attributes",
                 action: "attribute clicked",
-                label: attributeDescriptions[attribute],
+                label: attribute,
             })
         }
 

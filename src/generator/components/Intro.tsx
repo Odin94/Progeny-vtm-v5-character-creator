@@ -3,9 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Alert, Button, FileButton, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { IconBrandGithub } from "@tabler/icons-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import LoadModal from "../../components/LoadModal"
 import { Character } from "../../data/Character"
+import ReactGA from "react-ga4"
 
 
 type IntroProps = {
@@ -14,6 +15,9 @@ type IntroProps = {
 }
 
 const Intro = ({ setCharacter, nextStep }: IntroProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Intro" }) }, [])
+
+
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
 

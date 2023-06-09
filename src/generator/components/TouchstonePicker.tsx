@@ -1,8 +1,9 @@
 import { Button, Center, Divider, Grid, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from "@fortawesome/free-regular-svg-icons"
+import ReactGA from "react-ga4"
 
 type TouchstonePickerProps = {
     character: Character,
@@ -11,6 +12,8 @@ type TouchstonePickerProps = {
 }
 
 const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Touchstone Picker" }) }, [])
+
     const [touchtones, setTouchstones] = useState<Touchstone[]>([{ name: "", description: "", conviction: "" }])
 
     const updateTouchstone = (i: number, updatedTouchstone: { name?: string, description?: string, conviction?: string }) => {

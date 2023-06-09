@@ -2,12 +2,13 @@ import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, Group, Modal, SegmentedControl, Space, Stack, Text, Tooltip } from "@mantine/core"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 import { upcase } from "../utils"
 import { disciplineNameSchema } from "../../data/Disciplines"
 import { globals } from "../../globals"
+import ReactGA from "react-ga4"
 
 
 type PredatorTypePickerProps = {
@@ -17,6 +18,8 @@ type PredatorTypePickerProps = {
 }
 
 const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypePickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Predator-Type Picker" }) }, [])
+
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
     const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
 

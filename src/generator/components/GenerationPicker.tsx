@@ -1,6 +1,7 @@
 import { Button, Select, Space, Stack, Text } from "@mantine/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
+import ReactGA from "react-ga4"
 
 
 type GenerationPickerProps = {
@@ -10,6 +11,9 @@ type GenerationPickerProps = {
 }
 
 const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPickerProps) => {
+    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Generation Picker" }) }, [])
+
+
     const [generation, setGeneration] = useState<string | null>("13");
 
     return (
