@@ -20,7 +20,6 @@ const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => {
                     )
                 })}
             </List>
-
         </Stack >
     )
 }

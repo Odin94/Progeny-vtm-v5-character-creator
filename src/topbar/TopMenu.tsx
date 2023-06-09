@@ -22,6 +22,9 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
 
+    const disabled = true
+    if (disabled) return (<></>)
+
     return (
         <Menu shadow="md" width={200} opened={menuOpened} onChange={setMenuOpened}>
             <Menu.Target>

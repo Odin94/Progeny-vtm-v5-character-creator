@@ -43,10 +43,8 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * Ask for feedback in VtM spaces
 
 * Add rituals for blood sorcery
-
-* Make website usable on mobile
-* Make things prettier in general
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones
+* Fix: Changing predator type should reset disciplines (like changing clan does, search "Because you changed your clan")
 * -->
 
 ## Credits & Acknowledgements
