@@ -1,9 +1,10 @@
-import { Button, Center, Divider, Grid, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
+import { Button, Center, Divider, Grid, Group, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser } from "@fortawesome/free-regular-svg-icons"
 import ReactGA from "react-ga4"
+import { faTrash } from "@fortawesome/free-solid-svg-icons"
 
 type TouchstonePickerProps = {
     character: Character,
@@ -14,11 +15,12 @@ type TouchstonePickerProps = {
 const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePickerProps) => {
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Touchstone Picker" }) }, [])
 
-    const [touchtones, setTouchstones] = useState<Touchstone[]>([{ name: "", description: "", conviction: "" }])
+    const initial = character.touchstones.length > 0 ? character.touchstones : [{ name: "", description: "", conviction: "" }]
+    const [touchstones, setTouchstones] = useState<Touchstone[]>(initial)
 
     const updateTouchstone = (i: number, updatedTouchstone: { name?: string, description?: string, conviction?: string }) => {
-        const newTouchstones = [...touchtones]
-        newTouchstones[i] = { ...touchtones[i], ...updatedTouchstone }
+        const newTouchstones = [...touchstones]
+        newTouchstones[i] = { ...touchstones[i], ...updatedTouchstone }
         setTouchstones(newTouchstones)
     }
 
@@ -33,58 +35,68 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
 
             <Stack align="center" spacing="xl">
                 {
-                    touchtones.map((touchstone, i) => {
+                    touchstones.map((touchstone, i) => {
                         return (
-                            <Grid key={i} style={{ width: "100%" }}>
-                                {i !== 0 ? <Divider style={{ width: "100%" }} /> : null}
+                            <Stack key={i}>
+                                <Grid style={{ width: "100%" }}>
+                                    {i !== 0 ? <Divider style={{ width: "100%" }} /> : null}
 
-                                <Grid.Col span={2}>
-                                    <Center style={{ height: "100%" }}>
-                                        <FontAwesomeIcon icon={faUser} className="fa-6x" />
-                                    </Center>
-                                </Grid.Col>
+                                    <Grid.Col span={2}>
+                                        <Center style={{ height: "100%" }}>
+                                            <FontAwesomeIcon icon={faUser} className="fa-6x" />
+                                        </Center>
+                                    </Grid.Col>
 
-                                <Grid.Col span={4}>
-                                    <TextInput
-                                        style={{ width: "250px" }}
-                                        value={touchstone.name}
-                                        onChange={(event) => updateTouchstone(i, { name: event.currentTarget.value })}
-                                        placeholder="Max Mustermann"
-                                        label="Full name"
-                                    />
+                                    <Grid.Col span={4}>
+                                        <TextInput
+                                            style={{ width: "250px" }}
+                                            value={touchstone.name}
+                                            onChange={(event) => updateTouchstone(i, { name: event.currentTarget.value })}
+                                            placeholder="Max Mustermann"
+                                            label="Touchstone name"
+                                        />
 
-                                    <TextInput
-                                        style={{ width: "250px" }}
-                                        value={touchstone.conviction}
-                                        onChange={(event) => updateTouchstone(i, { conviction: event.currentTarget.value })}
-                                        placeholder="Never betray your friends"
-                                        label="Conviction"
-                                    />
-                                </Grid.Col>
+                                        <TextInput
+                                            style={{ width: "250px" }}
+                                            value={touchstone.conviction}
+                                            onChange={(event) => updateTouchstone(i, { conviction: event.currentTarget.value })}
+                                            placeholder="Never betray your friends"
+                                            label="Conviction"
+                                        />
+                                    </Grid.Col>
 
-                                <Grid.Col span={4} offset={1}>
-                                    <Textarea
-                                        style={{ width: "300px" }}
-                                        value={touchstone.description}
-                                        onChange={(event) => updateTouchstone(i, { description: event.currentTarget.value })}
-                                        placeholder="Your childhoood friend to whom you have made a promise to always be there for each other"
-                                        label="Description"
-                                        autosize
-                                        minRows={4}
-                                    />
-                                </Grid.Col>
-
-                            </Grid>
+                                    <Grid.Col span={4} offset={1}>
+                                        <Textarea
+                                            style={{ width: "300px" }}
+                                            value={touchstone.description}
+                                            onChange={(event) => updateTouchstone(i, { description: event.currentTarget.value })}
+                                            placeholder="Your childhoood friend to whom you have made a promise to always be there for each other"
+                                            label="Description"
+                                            autosize
+                                            minRows={4}
+                                        />
+                                    </Grid.Col>
+                                </Grid>
+                                <Group>
+                                    <Button leftIcon={<FontAwesomeIcon icon={faTrash} />} compact color="red" variant="subtle" onClick={() => {
+                                        const newTouchstones = [...touchstones]
+                                        newTouchstones.splice(i, 1)
+                                        setTouchstones(newTouchstones)
+                                    }}>
+                                        Remove
+                                    </Button>
+                                </Group>
+                            </Stack>
                         )
                     })
                 }
 
                 <Button color="grape" onClick={() => {
-                    setTouchstones([...touchtones, { name: "", description: "", conviction: "" }])
+                    setTouchstones([...touchstones, { name: "", description: "", conviction: "" }])
                 }}>Add Touchstone</Button>
 
                 <Button color="grape" onClick={() => {
-                    setCharacter({ ...character, touchstones: touchtones })
+                    setCharacter({ ...character, touchstones: touchstones })
                     nextStep()
                 }}>Confirm</Button>
             </Stack>
