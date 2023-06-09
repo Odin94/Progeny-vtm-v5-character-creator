@@ -1,6 +1,6 @@
 import { AppShell, BackgroundImage, Container, Header, Navbar } from '@mantine/core';
 import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import './App.css';
 import { Character, getEmptyCharacter } from "./data/Character";
 import Generator from './generator/Generator';
@@ -24,17 +24,20 @@ function App() {
   const { height: viewportHeight } = useViewportSize()
   globals.viewporHeightPx = viewportHeight  // TODO: Replace globals with a context or something..?
 
-  const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
+  const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
   const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
   const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
   const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
 
+  const [showAsideBar, setShowAsideBar] = useState(!smallScreen)
+  useEffect(() => { setShowAsideBar(!smallScreen) }, [smallScreen])
+
   return (
     <AppShell
       padding="0"
-      navbar={phoneSizedScreen ? <></> : <Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
-      header={<Header height={75} p="xs"><Topbar character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} /></Header>}
-      aside={<AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />}
+      navbar={smallScreen ? <></> : <Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
+      header={<Header height={75} p="xs"><Topbar character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} setShowAsideBar={setShowAsideBar} /></Header>}
+      aside={showAsideBar ? <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} /> : <></>}
       styles={(theme) => ({
         main: { backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] },
       })}

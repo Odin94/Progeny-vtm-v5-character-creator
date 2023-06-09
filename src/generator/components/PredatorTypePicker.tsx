@@ -7,6 +7,7 @@ import { Character } from "../../data/Character"
 import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 import { upcase } from "../utils"
 import { disciplineNameSchema } from "../../data/Disciplines"
+import { globals } from "../../globals"
 
 
 type PredatorTypePickerProps = {
@@ -102,11 +103,11 @@ type SpecialtyModalProps = {
 }
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty, discipline, setDiscipline }: SpecialtyModalProps) => {
-    const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
+    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
 
     const predatorType = PredatorTypes[pickedPredatorType]
 
-    const titleWidth = phoneSizedScreen ? "300px" : "750px"
+    const titleWidth = smallScreen ? "300px" : "750px"
     return (
         <Modal withCloseButton={false} size="xl" opened={modalOpened} onClose={closeModal} title={
             <div style={{ width: titleWidth }}>

@@ -7,6 +7,7 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { Specialty } from "../../data/Specialties"
+import { globals } from "../../globals"
 
 type SkillsPickerProps = {
     character: Character,
@@ -244,7 +245,7 @@ type SpecialtyModalProps = {
 type SpecialtySkill = "academics" | "craft" | "performance" | "science"
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedSkillNames, skills }: SpecialtyModalProps) => {
-    const phoneSizedScreen = useMediaQuery('(max-width: 550px)')
+    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
     const [pickedSkillDisplay, setPickedSkillDisplay] = useState<string>(/*pickedSkillNames[0]*/"")  // Need to define this and set it in parent-component to automatically select the first one (see PredatorTypePicker)
     const [pickedSkillSpecialty, setPickedSkillSpecialty] = useState("")
 
@@ -267,7 +268,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
     return (
         <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={
             <div>
-                <Text w={phoneSizedScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>
+                <Text w={smallScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">Specialties</Text>
                 <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">A specialty should not be so broad that it applies to most uses of the skill</Text>
             </div>}
             centered>
