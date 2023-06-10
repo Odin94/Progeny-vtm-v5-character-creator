@@ -102,17 +102,23 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             const onClick = () => isForPredatorType ? setPickedPredatorTypePower(power) : setPickedPowers([...pickedPowers, power])
 
             const canReachLvl3 = power.discipline === character.predatorType.pickedDiscipline
+
+            let textHeight = 65
+            const amalgamHeight = 55
+            let cardHeight = 200
+            if (power.amalgamPrerequisites.length > 0) cardHeight += amalgamHeight
+            if (power.name.length > 16) { cardHeight += 25; textHeight += 10 }
             return (
-                <Card key={power.name} mb={20} h={255} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
+                <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                     <Group position="apart" mt="md" mb="xs">
                         <Text weight={500}>{power.name}</Text>
                         {/* FIXUP: Hide badges for small cards + long name to prevent badge being in new line and pushing button down */}
                         {canReachLvl3 && power.name.length > 10 ? null : <Badge color="pink" variant="light">lv {power.level}</Badge>}
                     </Group>
 
-                    <Text h={65} size="sm" color="dimmed">{power.summary}</Text>
+                    <Text h={textHeight} size="sm" color="dimmed">{power.summary}</Text>
                     {power.amalgamPrerequisites.length > 0 ?
-                        <div style={{ height: 55 }}>
+                        <div style={{ height: amalgamHeight }}>
                             <Text size="sm" color="red">Requires:</Text>
                             <List size="xs">
                                 {power.amalgamPrerequisites.map((prereq) => {
@@ -123,7 +129,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 ? null
                                 : <Text size="xs" color="green">(requirements met)</Text>}
                         </div>
-                        : <div style={{ height: 55 }}></div>}
+                        : null}
 
                     <Button disabled={isButtonDisabled} onClick={() => { onClick(); trackClick() }} variant="light" color="blue" fullWidth mt="md" radius="md">
                         <Text truncate>Take {power.name}</Text>
@@ -171,7 +177,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     let disciplineTitle = ""
     const height = globals.viewporHeightPx
     return (
-        <div style={{ width: smallScreen ? "393px" : "810px" }}>
+        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: "80px" }}>
             <Text fw={700} fz={smallScreen ? "16px" : "30px"} ta="center">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
@@ -220,7 +226,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     {/* Discipline-List */}
 
                     <Grid.Col span={9} offset={1}>
-                        <ScrollArea h={height - 480} pb={40} w={"105%"}>
+                        <ScrollArea h={height - 400} pb={20} w={"105%"}>
 
                             <Accordion style={{ width: smallScreen ? "260px" : "600px" }}>
                                 {
