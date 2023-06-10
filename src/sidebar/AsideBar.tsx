@@ -26,7 +26,6 @@ const isHigherLevelAccessible = (character: Character, key: keyof Character) => 
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
-    const height = globals.viewporHeightPx
     const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
 
     const getStepper = () => {
@@ -41,11 +40,13 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
         )
     }
 
+    const height = globals.viewporHeightPx
+    const scrollerHeight = 940
     return (
         <Aside p="md" hiddenBreakpoint="sm" width={{ xs: 200 }} style={{ zIndex: 0 }}>
             <Center h={"100%"}>
-                {smallScreen
-                    ? <ScrollArea h={height - 100} p={20}>
+                {height <= scrollerHeight
+                    ? <ScrollArea h={height - 100}>
                         {getStepper()}
                     </ScrollArea>
                     : <>{getStepper()}</>
