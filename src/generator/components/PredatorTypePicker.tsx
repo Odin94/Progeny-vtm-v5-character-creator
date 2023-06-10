@@ -81,16 +81,17 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     )
 
     const height = globals.viewporHeightPx
+    const heightBreakPoint = 1120
     return (
-        <div style={{ width: "100%" }}>
+        <div style={{ width: "100%", marginTop: height < heightBreakPoint ? "50px" : 0 }}>
             <Text fz={"30px"} ta={"center"}>How do you <b>obtain blood?</b></Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Predator Type</Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            {height < 1075
-                ? <ScrollArea h={height - 400}>
+            {height < heightBreakPoint
+                ? <ScrollArea h={height - 230}>
                     {createPredatorTypeStack()}
                 </ScrollArea>
                 : createPredatorTypeStack()
