@@ -183,11 +183,10 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const height = globals.viewporHeightPx
     return (
-        <Stack align="center">
-            <Text fz={"30px"} ta={"center"}>Spend 7 dots in <b>Advantages</b> and 2 dots in <b>Flaws</b></Text>
+        <Stack align="center" mt={100}>
             <Text fz={"30px"} ta={"center"}>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws}</Text>
 
-            <ScrollArea h={height - 480} w={"100%"} p={20}>
+            <ScrollArea h={height - 300} w={"100%"} p={20}>
                 <Grid m={0}>
                     {meritsAndFlaws.map((category) => {
                         return (
@@ -204,9 +203,6 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                     })}
                 </Grid>
             </ScrollArea>
-
-
-            <Space h={"xl"} />
 
             <Button color="grape" onClick={() => {
                 setCharacter({
