@@ -46,6 +46,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
   * It would be nice if the app recognized if I already had a merit from the predator type and mark it as such.
   * Randomized name, ambition, desire etc
   * Change BANE_SEVERITY to "1 (bane severity)" (otherwise people assume its a variable that failed to populate)
+  * Fix merits: The Retainer background is missing a button for 2 dots, Herd only has the option to take one dot, Adversary only has the option to take one, Obvious Predator is listed as a one dot flaw, it should be two.
 
 * Add rituals for blood sorcery
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones

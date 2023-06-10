@@ -214,7 +214,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const heightBreakPoint = 930
 
     return (
-        <div>
+        <div style={{ marginTop: height < heightBreakPoint ? "40px" : 0 }}>
             {!pickedDistribution ? <Text fz={"30px"} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
                 <>
                     {pickedDistribution === "Specialist" ? <Text style={specialStyle} fz={"30px"} ta={"center"}>{toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill</Text> : null}
@@ -251,7 +251,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
 
             {height < heightBreakPoint
-                ? <ScrollArea h={height - 500}>
+                ? <ScrollArea h={height - 340}>
                     {createSkillButtons()}
                 </ScrollArea>
                 : createSkillButtons()
