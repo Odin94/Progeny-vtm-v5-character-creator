@@ -7,7 +7,7 @@ import { skillsKeySchema } from '../data/Skills';
 import base64Check from '../resources/CheckSolid.base64';
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from '../data/Attributes';
-import { Power } from '../data/Disciplines';
+import { DisciplineName, Power } from '../data/Disciplines';
 import base64Pdf_nerdbert from '../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64';
 import { upcase } from './utils';
 
@@ -221,16 +221,25 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         return text
     }
 
-    form.getTextField("Disc1").setText(upcase(character.disciplines[0].discipline))
-    form.getTextField("Disc1_Ability1").setText(getDisciplineText(character.disciplines[0]))
-    form.getTextField("Disc1_Ability1").disableRichFormatting()
-    form.getTextField("Disc1_Ability2").setText(getDisciplineText(character.disciplines[1]))
-    form.getCheckBox("Disc1-1").check()
-    form.getCheckBox("Disc1-2").check()
+    const powersByDiscipline = character.disciplines.reduce((acc, p) => {
+        if (!acc[p.discipline]) acc[p.discipline] = []
+        acc[p.discipline].push(p)
+        return acc
+    }, {} as Record<DisciplineName, Power[]>)
+    let i = 1  // TODO: Clean up index logic here
+    for (const powers of Object.values(powersByDiscipline)) {
+        form.getTextField(`Disc${i}`).setText(upcase(powers[0].discipline))
+        let j = 1
+        for (const p of powers) {
+            form.getTextField(`Disc${i}_Ability${j}`).setText(getDisciplineText(p))
+            form.getTextField(`Disc${i}_Ability${j}`).disableRichFormatting()
+            form.getCheckBox(`Disc${i}-${j}`).check()
+            j++
+        }
+        i++
+        j = 0
+    }
 
-    form.getTextField("Disc2").setText(upcase(character.disciplines[2].discipline))
-    form.getTextField("Disc2_Ability1").setText(getDisciplineText(character.disciplines[2]))
-    form.getCheckBox("Disc2-1").check()
 
     // Merits & flaws
     const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws

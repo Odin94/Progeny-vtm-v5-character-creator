@@ -5,7 +5,7 @@
 </p>
 <h1 align="center">
   <div>⚰️ Progeny 🦇</div>
-  <div style="font-size: 20px;">A Vampire the Masquerade v5 Character Creator</div>
+  <div style="font-size: 20px;">A 'Vampire: the Masquerade' 5th Edition Character Creator</div>
 </h1>
 
 
@@ -41,6 +41,8 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * Give people a way to give feedback
 
 * Ask for feedback in VtM spaces
+  * Add more recent predator types
+
 
 * Add rituals for blood sorcery
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones

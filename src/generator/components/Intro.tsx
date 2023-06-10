@@ -40,7 +40,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                     {(props) => <Button leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />} size="md" color="yellow" variant="light"  {...props}>Load from file</Button>}
                 </FileButton>
 
-                <Button component="a" href="https://github.com/Odin94/Vampire-v5-character-generator" target="_blank" rel="noreferrer" leftIcon={<IconBrandGithub />} size="xs" color="gray" variant="filled">View Source Code</Button>
+                <Button component="a" href="https://github.com/Odin94/Progeny-vtm-v5-character-creator" target="_blank" rel="noreferrer" leftIcon={<IconBrandGithub />} size="xs" color="gray" variant="filled">View Source Code</Button>
                 <Button component="a" href="https://odin-matthias.de" target="_blank" rel="noreferrer" size="xs" color="gray" variant="subtle"><Text color="rgb(190,190,190)">View My Website</Text></Button>
             </Stack>
 
