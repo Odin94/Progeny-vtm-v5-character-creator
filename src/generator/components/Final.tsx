@@ -1,9 +1,9 @@
 import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
 import { faFileExport, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Alert, Button, Stack, Text } from "@mantine/core"
+import { ActionIcon, Alert, Button, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconAlertCircle } from "@tabler/icons-react"
+import { IconAlertCircle, IconBrandReddit, IconBrandTwitter } from "@tabler/icons-react"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { downloadCharacterSheet } from "../pdfCreator"
@@ -31,6 +31,11 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
 
             <div style={{ background: "rgba(0, 0, 0, 0.6)" }}>
                 <Text fz={"xl"} mb={"xl"}>You can now export to a printable PDF or download your character as JSON file, which you can later load again to continue editing</Text>
+                <Text fz={"xl"} mb={"xl"}>For feature requests, bug reports and general feedback, message me on:&nbsp;
+                    <ActionIcon display={"inline"} component="a" href="https://www.reddit.com/user/ProgenyDev/" variant="default" c={"#ff6314"}><IconBrandReddit /></ActionIcon>
+                    &nbsp;
+                    <ActionIcon display={"inline"} component="a" href="https://twitter.com/Odin68092534" variant="default" c={"#1DA1F2"}><IconBrandTwitter /></ActionIcon>
+                </Text>
             </div>
             <Stack align="center" spacing="xl">
 
