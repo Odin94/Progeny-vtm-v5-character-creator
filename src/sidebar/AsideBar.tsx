@@ -3,7 +3,6 @@ import { Aside, Center, ScrollArea, Stepper } from "@mantine/core"
 import { Character } from "../data/Character"
 import { isDefault, upcase } from "../generator/utils"
 import { globals } from "../globals"
-import { useMediaQuery } from "@mantine/hooks"
 
 
 
@@ -26,7 +25,7 @@ const isHigherLevelAccessible = (character: Character, key: keyof Character) => 
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
-    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    // const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
 
     const getStepper = () => {
         return (

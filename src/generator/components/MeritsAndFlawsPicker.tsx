@@ -1,10 +1,10 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, ScrollArea, Space, Stack, Text } from "@mantine/core"
+import { Button, Divider, Grid, ScrollArea, Stack, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
+import ReactGA from "react-ga4"
 import { Character, MeritFlaw } from "../../data/Character"
 import { globals } from "../../globals"
-import ReactGA from "react-ga4"
 
 
 type MeritsAndFlawsPickerProps = {
