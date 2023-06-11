@@ -84,7 +84,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
             <Text ta="center" fz="xl" fw={700} c="red">Clan</Text>
             <hr color="#e03131" />
 
-            <ScrollArea h={height - 330} w={"100%"} p={20}>
+            <ScrollArea h={height - 215} w={"100%"} p={20}>
                 <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.blue[6]}>Rulers & Commanders</Text>
                 <Grid grow m={0}>
                     {
