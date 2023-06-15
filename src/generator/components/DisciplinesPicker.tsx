@@ -1,12 +1,11 @@
 import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, ScrollArea, Space, Stack, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
+import ReactGA from "react-ga4"
 import { Character } from "../../data/Character"
 import { ClanName } from "../../data/Clans"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
-import { intersection, upcase } from "../utils"
 import { globals } from "../../globals"
-import { useMediaQuery } from "@mantine/hooks"
-import ReactGA from "react-ga4"
+import { intersection, upcase } from "../utils"
 
 
 type DisciplinesPickerProps = {
@@ -22,7 +21,7 @@ const getDisciplinesForClan = (clan: ClanName) => {
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Disciplines Picker" }) }, [])
 
-    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    const smallScreen = globals.isSmallScreen
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
 

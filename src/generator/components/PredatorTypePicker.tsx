@@ -1,14 +1,14 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, Group, Modal, ScrollArea, SegmentedControl, Space, Stack, Text, Tooltip } from "@mantine/core"
-import { useDisclosure, useMediaQuery } from "@mantine/hooks"
+import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
-import { Character } from "../../data/Character"
-import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
-import { upcase } from "../utils"
-import { disciplineNameSchema } from "../../data/Disciplines"
-import { globals } from "../../globals"
 import ReactGA from "react-ga4"
+import { Character } from "../../data/Character"
+import { disciplineNameSchema } from "../../data/Disciplines"
+import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
+import { globals } from "../../globals"
+import { upcase } from "../utils"
 
 
 type PredatorTypePickerProps = {
@@ -118,7 +118,7 @@ type SpecialtyModalProps = {
 }
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty, discipline, setDiscipline }: SpecialtyModalProps) => {
-    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    const smallScreen = globals.isSmallScreen
 
     const predatorType = PredatorTypes[pickedPredatorType]
 

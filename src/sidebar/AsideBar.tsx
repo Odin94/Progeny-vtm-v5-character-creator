@@ -25,7 +25,7 @@ const isHigherLevelAccessible = (character: Character, key: keyof Character) => 
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
-    // const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    // const smallScreen = globals.isSmallScreen
 
     const getStepper = () => {
         return (

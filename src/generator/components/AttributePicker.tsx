@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
+import { globals } from "../../globals"
 import { upcase } from "../utils"
 
 type AttributePickerProps = {
@@ -18,6 +19,8 @@ type AttributeSetting = {
 }
 
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
+    const phoneScreen = globals.isPhoneScreen
+
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Attribute Picker" }) }, [])
 
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
@@ -86,12 +89,14 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
 
         return (
             <Grid.Col key={attribute} span={4}>
-                <Tooltip disabled={alreadyPicked} label={attributeDescriptions[attribute]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                    <Button leftIcon={dots} variant={alreadyPicked ? "outline" : "filled"} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>{upcase(attribute)}</Button>
+                <Tooltip disabled={alreadyPicked} label={attributeDescriptions[attribute]} transitionProps={{ transition: 'slide-up', duration: 200 }} events={globals.tooltipTriggerEvents}>
+                    <Button p={phoneScreen ? 0 : "default"} leftIcon={dots} variant={alreadyPicked ? "outline" : "filled"} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>
+                        <Text fz={phoneScreen ? 12 : "inherit"}>{upcase(attribute)}</Text>
+                    </Button>
                 </Tooltip>
 
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
-            </Grid.Col>
+            </Grid.Col >
         )
     }
 
@@ -101,9 +106,12 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         else return "medium"
     })()
 
-    const strongestStyle = toPick === "strongest" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
-    const weakestStyle = toPick === "weakest" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
-    const mediumStyle = toPick === "medium" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const largeFontSize = phoneScreen ? "21px" : "30px"
+    const smallFontSize = phoneScreen ? "16px" : "25px"
+
+    const strongestStyle = toPick === "strongest" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const weakestStyle = toPick === "weakest" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const mediumStyle = toPick === "medium" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
 
     return (
         <div>

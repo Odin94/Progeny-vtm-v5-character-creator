@@ -1,8 +1,8 @@
 import { Burger, Center, Grid, Stack, Text, Title } from "@mantine/core"
-import { useDisclosure, useMediaQuery } from "@mantine/hooks"
+import { useDisclosure } from "@mantine/hooks"
 import { Character } from "../data/Character"
-import TopMenu from "./TopMenu"
 import { globals } from "../globals"
+import TopMenu from "./TopMenu"
 
 export type TopBarProps = {
     character: Character
@@ -12,7 +12,8 @@ export type TopBarProps = {
 }
 
 const Topbar = ({ character, setCharacter, setSelectedStep, setShowAsideBar }: TopBarProps) => {
-    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    const smallScreen = globals.isSmallScreen
+    const phoneScreen = globals.isPhoneScreen
     const [burgerOpened, { toggle: toggleBurger }] = useDisclosure(false);
 
     return (
@@ -28,10 +29,10 @@ const Topbar = ({ character, setCharacter, setSelectedStep, setShowAsideBar }: T
                         <Stack spacing={"0px"} ml={"80px"}>
                             <span style={{ textAlign: "center" }}>
                                 <Title style={{ display: "inline", marginLeft: "50px" }} order={smallScreen ? 3 : 1}>Progeny</Title>
-                                <Text style={{ display: "inline", verticalAlign: "top" }} c="dimmed" fz="xs">&nbsp; by Odin</Text>
+                                {phoneScreen ? null : <Text style={{ display: "inline", verticalAlign: "top" }} c="dimmed" fz="xs">&nbsp; by Odin</Text>}
                             </span>
 
-                            <Text c="dimmed" fz="sm" ta="center">A VtM v5 Character Creator</Text>
+                            {phoneScreen ? null : <Text c="dimmed" fz="sm" ta="center">A VtM v5 Character Creator</Text>}
                         </Stack>
                     </Center>
                 </Grid.Col>

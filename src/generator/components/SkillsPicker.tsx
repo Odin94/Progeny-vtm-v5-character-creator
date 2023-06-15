@@ -1,14 +1,14 @@
-import { Button, Divider, Grid, Group, Modal, ScrollArea, Select, Space, Stack, Text, TextInput, Tooltip } from "@mantine/core"
-import { useEffect, useState } from "react"
-import { Character } from "../../data/Character"
-import { intersection, lowcase, upcase } from "../utils"
-import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } from "../../data/Skills"
-import { useDisclosure, useMediaQuery } from "@mantine/hooks"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { Button, Divider, Grid, Group, Modal, ScrollArea, Select, Space, Stack, Text, TextInput, Tooltip } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
+import { useEffect, useState } from "react"
+import ReactGA from "react-ga4"
+import { Character } from "../../data/Character"
+import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
 import { globals } from "../../globals"
-import ReactGA from "react-ga4"
+import { intersection, lowcase, upcase } from "../utils"
 
 
 type SkillsPickerProps = {
@@ -60,6 +60,8 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
 }
 
 const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
+    const phoneScreen = globals.isPhoneScreen
+
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Skills Picker" }) }, [])
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
@@ -163,10 +165,11 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
         return (
             <Grid.Col key={skill} span={4}>
-                <Tooltip disabled={alreadyPicked} label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                    <Button variant={alreadyPicked ? "outline" : "filled"} leftIcon={dots} disabled={pickedDistribution === null} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>{upcase(skill)}</Button>
+                <Tooltip disabled={alreadyPicked} label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }} events={globals.tooltipTriggerEvents}>
+                    <Button p={phoneScreen ? 0 : "default"} variant={alreadyPicked ? "outline" : "filled"} leftIcon={dots} disabled={pickedDistribution === null} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>
+                        <Text fz={phoneScreen ? 12 : "inherit"}>{upcase(skill)}</Text>
+                    </Button>
                 </Tooltip>
-
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
             </Grid.Col>
         )
@@ -179,10 +182,13 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         else return "acceptable"
     })()
 
-    const specialStyle = toPick === "special" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
-    const strongestStyle = toPick === "strongest" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
-    const decentStyle = toPick === "decent" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
-    const acceptableStyle = toPick === "acceptable" ? { fontSize: "30px" } : { fontSize: "25px", color: "grey" }
+    const largeFontSize = phoneScreen ? "21px" : "30px"
+    const smallFontSize = phoneScreen ? "16px" : "25px"
+
+    const specialStyle = toPick === "special" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const strongestStyle = toPick === "strongest" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const decentStyle = toPick === "decent" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const acceptableStyle = toPick === "acceptable" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
@@ -215,12 +221,12 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
     return (
         <div style={{ marginTop: height < heightBreakPoint ? "40px" : 0 }}>
-            {!pickedDistribution ? <Text fz={"30px"} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
+            {!pickedDistribution ? <Text fz={largeFontSize} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
                 <>
                     {pickedDistribution === "Specialist" ? <Text style={specialStyle} fz={"30px"} ta={"center"}>{toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill</Text> : null}
-                    <Text style={strongestStyle} fz={"30px"} ta={"center"}>{toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b> skills</Text>
-                    <Text style={decentStyle} fz={"30px"} ta={"center"}>{toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re <b>decent</b> in</Text>
-                    <Text style={acceptableStyle} fz={"30px"} ta={"center"}>{toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills you&apos;re <b>ok</b> in</Text>
+                    <Text style={strongestStyle} ta={"center"}>{toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b> skills</Text>
+                    <Text style={decentStyle} ta={"center"}>{toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re <b>decent</b> in</Text>
+                    <Text style={acceptableStyle} ta={"center"}>{toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills you&apos;re <b>ok</b> in</Text>
                 </>
             }
 
@@ -237,8 +243,10 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                         {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
                             return (
                                 <Grid.Col span={4} key={distribution}>
-                                    <Tooltip disabled={pickedDistribution !== null} label={distributionDescriptions[distribution]} transitionProps={{ transition: 'slide-up', duration: 200 }}>
-                                        <Button disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>{distribution}</Button>
+                                    <Tooltip disabled={pickedDistribution !== null} label={distributionDescriptions[distribution]} transitionProps={{ transition: 'slide-up', duration: 200 }} events={globals.tooltipTriggerEvents}>
+                                        <Button p={phoneScreen ? 0 : "default"} disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>
+                                            <Text fz={phoneScreen ? 12 : "inherit"}>{distribution}</Text>
+                                        </Button>
                                     </Tooltip>
                                 </Grid.Col>
                             )
@@ -275,7 +283,9 @@ type SpecialtyModalProps = {
 type SpecialtySkill = "academics" | "craft" | "performance" | "science"
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedSkillNames, skills }: SpecialtyModalProps) => {
-    const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    const smallScreen = globals.isSmallScreen
+    const phoneScreen = globals.isPhoneScreen
+
     const [pickedSkillDisplay, setPickedSkillDisplay] = useState<string>(/*pickedSkillNames[0]*/"")  // Need to define this and set it in parent-component to automatically select the first one (see PredatorTypePicker)
     const [pickedSkillSpecialty, setPickedSkillSpecialty] = useState("")
 
@@ -310,6 +320,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
 
                 <Group position="apart">
                     <Select
+                        w={phoneScreen ? 140 : 185}
                         // label="Pick a free specialty"
                         placeholder="Pick one"
                         searchable
@@ -320,14 +331,14 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
 
-                    <TextInput value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
+                    <TextInput w={phoneScreen ? 140 : 185} value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
                 </Group>
                 <Divider my="sm" variant="dotted" />
 
                 {pickedSpecialtySkills.map((s) => (
                     <div key={s}>
                         <Group position="apart">
-                            <Text fw={700} fz={"xl"}>{upcase(s)}:</Text>
+                            <Text fw={700} fz={phoneScreen ? "sm" : "xl"}>{upcase(s)}:</Text>
                             <TextInput value={specialtyStates[s].value} onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)} />
                         </Group>
                         <Divider my="sm" variant="dotted" />

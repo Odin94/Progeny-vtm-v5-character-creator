@@ -10,32 +10,34 @@ import Topbar from './topbar/Topbar';
 
 import { useViewportSize } from "@mantine/hooks";
 import { rndInt } from './generator/utils';
+import { globals } from './globals';
 import club from './resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg';
 import brokenDoor from './resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg';
 import city from './resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg';
 import bloodGuy from './resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg';
 import batWoman from './resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg';
 import alley from './resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg';
-import { globals } from './globals';
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
   const { height: viewportHeight } = useViewportSize()
-  globals.viewporHeightPx = viewportHeight  // TODO: Replace globals with a context or something..?
+  // TODO: Replace globals with a context or something..?
+  globals.viewporHeightPx = viewportHeight
+  globals.isPhoneScreen = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
+  globals.isSmallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
 
-  const smallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
   const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
   const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
   const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
 
-  const [showAsideBar, setShowAsideBar] = useState(!smallScreen)
-  useEffect(() => { setShowAsideBar(!smallScreen) }, [smallScreen])
+  const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
+  useEffect(() => { setShowAsideBar(!globals.isSmallScreen) }, [globals.isSmallScreen])
 
   return (
     <AppShell
       padding="0"
-      navbar={smallScreen ? <></> : <Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
+      navbar={globals.isSmallScreen ? <></> : <Navbar width={{ base: 300 }} height={"100%"} p="xs">{<Sidebar character={character} />}</Navbar>}
       header={<Header height={75} p="xs"><Topbar character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} setShowAsideBar={setShowAsideBar} /></Header>}
       aside={showAsideBar ? <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} /> : <></>}
       styles={(theme) => ({
