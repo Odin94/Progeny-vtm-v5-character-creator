@@ -201,7 +201,8 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
-    form.getTextField("ClanBane").setText(Clans[character.clan].bane)
+    const baneText = Clans[character.clan].bane.replace("BANE_SEVERITY", `${effects.bane} (bane severity)`)
+    form.getTextField("ClanBane").setText(baneText)
     form.getTextField("ClanCompulsion").setText(Clans[character.clan].compulsion)
 
     form.getTextField("Sire").setText(character.sire)
