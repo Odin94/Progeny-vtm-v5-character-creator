@@ -75,7 +75,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         )
     }
 
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
     return (
         <div style={{ height: height - 250 }}>
             <Text fz={"30px"} ta={"center"}>Pick your <b>Clan</b></Text>

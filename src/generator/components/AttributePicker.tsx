@@ -106,12 +106,9 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         else return "medium"
     })()
 
-    const largeFontSize = phoneScreen ? "21px" : "30px"
-    const smallFontSize = phoneScreen ? "16px" : "25px"
-
-    const strongestStyle = toPick === "strongest" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
-    const weakestStyle = toPick === "weakest" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
-    const mediumStyle = toPick === "medium" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const strongestStyle = toPick === "strongest" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
+    const weakestStyle = toPick === "weakest" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
+    const mediumStyle = toPick === "medium" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
 
     return (
         <div>

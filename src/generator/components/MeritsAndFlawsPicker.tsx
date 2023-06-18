@@ -181,10 +181,10 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         )
     }
 
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
     return (
         <Stack align="center" mt={100}>
-            <Text fz={"30px"} ta={"center"}>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws}</Text>
+            <Text fz={globals.largeFontSize} ta={"center"}>Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws}</Text>
 
             <ScrollArea h={height - 300} w={"100%"} p={20}>
                 <Grid m={0}>

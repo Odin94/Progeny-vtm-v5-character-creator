@@ -39,7 +39,7 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
         )
     }
 
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
     const scrollerHeight = 940
     return (
         <Aside p="md" hiddenBreakpoint="sm" width={{ xs: 200 }} style={{ zIndex: 0 }}>

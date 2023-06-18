@@ -21,11 +21,18 @@ import alley from './resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg';
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
-  const { height: viewportHeight } = useViewportSize()
+  const { height: viewportHeight, width: viewportWidth } = useViewportSize()
   // TODO: Replace globals with a context or something..?
-  globals.viewporHeightPx = viewportHeight
+  globals.viewportHeightPx = viewportHeight
+  globals.viewportWidthPx = viewportWidth
   globals.isPhoneScreen = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
   globals.isSmallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+
+  useEffect(() => {
+    globals.largeFontSize = globals.isPhoneScreen ? "21px" : "30px"
+    globals.smallFontSize = globals.isPhoneScreen ? "16px" : "25px"
+    globals.smallerFontSize = globals.isPhoneScreen ? "14px" : "20px"
+  }, [globals.isPhoneScreen, globals.isSmallScreen])
 
   const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
   const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })

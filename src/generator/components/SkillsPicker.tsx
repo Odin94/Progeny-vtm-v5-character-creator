@@ -182,13 +182,10 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         else return "acceptable"
     })()
 
-    const largeFontSize = phoneScreen ? "21px" : "30px"
-    const smallFontSize = phoneScreen ? "16px" : "25px"
-
-    const specialStyle = toPick === "special" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
-    const strongestStyle = toPick === "strongest" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
-    const decentStyle = toPick === "decent" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
-    const acceptableStyle = toPick === "acceptable" ? { fontSize: largeFontSize } : { fontSize: smallFontSize, color: "grey" }
+    const specialStyle = toPick === "special" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
+    const strongestStyle = toPick === "strongest" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
+    const decentStyle = toPick === "decent" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
+    const acceptableStyle = toPick === "acceptable" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
@@ -216,12 +213,12 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             </Grid>
         </Group>
     )
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
     const heightBreakPoint = 930
 
     return (
         <div style={{ marginTop: height < heightBreakPoint ? "40px" : 0 }}>
-            {!pickedDistribution ? <Text fz={largeFontSize} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
+            {!pickedDistribution ? <Text fz={globals.largeFontSize} ta={"center"}>Pick your <b>Skill Distribution</b></Text> :
                 <>
                     {pickedDistribution === "Specialist" ? <Text style={specialStyle} fz={"30px"} ta={"center"}>{toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill</Text> : null}
                     <Text style={strongestStyle} ta={"center"}>{toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b> skills</Text>
@@ -305,6 +302,8 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
 
     const pickedSpecialtySkills = intersection(specialtySkills, pickedSkillNames) as SpecialtySkill[]
     const pickedSkill = lowcase(pickedSkillDisplay)
+
+    const inputW = phoneScreen ? 140 : 200
     return (
         <Modal withCloseButton={false} size="lg" opened={modalOpened} onClose={closeModal} title={
             <div>
@@ -320,7 +319,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
 
                 <Group position="apart">
                     <Select
-                        w={phoneScreen ? 140 : 185}
+                        w={inputW}
                         // label="Pick a free specialty"
                         placeholder="Pick one"
                         searchable
@@ -331,7 +330,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
 
-                    <TextInput w={phoneScreen ? 140 : 185} value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
+                    <TextInput w={inputW} value={pickedSkillSpecialty} onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)} />
                 </Group>
                 <Divider my="sm" variant="dotted" />
 
@@ -339,7 +338,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     <div key={s}>
                         <Group position="apart">
                             <Text fw={700} fz={phoneScreen ? "sm" : "xl"}>{upcase(s)}:</Text>
-                            <TextInput value={specialtyStates[s].value} onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)} />
+                            <TextInput w={inputW} value={specialtyStates[s].value} onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)} />
                         </Group>
                         <Divider my="sm" variant="dotted" />
                     </div>

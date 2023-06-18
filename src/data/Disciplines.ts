@@ -85,7 +85,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "Sense the Unseen", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "sense supernatural activity", dicePool: "Wits / Resolve + Auspex", level: 1, discipline: "auspex" },
             { name: "Premonition", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "gain visions of the future", dicePool: "", level: 2, discipline: "auspex" },
             { name: "Obeah", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "fortitude", level: 1 }], summary: "soothe a person's psychological turmoil", dicePool: "Composure + Auspex", level: 2, discipline: "auspex" },
-            { name: "Unerring Pursuit", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "dominate", level: 1 }], summary: "create a bond with a target to spy on them through glimpses in reflective surfaces", dicePool: "Resolve + Auspex", level: 2, discipline: "auspex" },
+            { name: "Unerring Pursuit", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "dominate", level: 1 }], summary: "create a bond with a target to spy on them", dicePool: "Resolve + Auspex", level: 2, discipline: "auspex" },
 
             { name: "Fatal Flaw", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "oblivion", level: 1 }], summary: "determine a target's weakness", dicePool: "Intelligence + Auspex", level: 3, discipline: "auspex" },
             { name: "Scry the Soul", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "see people's auras", dicePool: "Intelligence + Auspex", level: 3, discipline: "auspex" },

@@ -16,7 +16,7 @@ export type SidebarProps = {
 
 
 const Sidebar = ({ character }: SidebarProps) => {
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
 
     return (
         // Subtracting header-height

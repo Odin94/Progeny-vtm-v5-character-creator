@@ -5,7 +5,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { Character } from "../../data/Character"
-import { disciplineNameSchema } from "../../data/Disciplines"
+import { DisciplineName, disciplineNameSchema, disciplines } from "../../data/Disciplines"
 import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import { upcase } from "../utils"
@@ -18,6 +18,8 @@ type PredatorTypePickerProps = {
 }
 
 const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypePickerProps) => {
+    const phoneScreen = globals.isPhoneScreen
+
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Predator-Type Picker" }) }, [])
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
@@ -46,7 +48,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
         <Stack spacing="xl">
             <Grid m={0}>
                 <Grid.Col span={4}><h1>Violent</h1></Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
                 </Grid.Col>
             </Grid>
@@ -55,7 +57,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             <Grid m={0}>
                 <Grid.Col span={4}><h1>Sociable</h1></Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>{(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren",] as PredatorTypeName[]).map((clan) => createButton(clan, "grape"))}</Stack>
                 </Grid.Col>
             </Grid>
@@ -64,7 +66,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             <Grid m={0}>
                 <Grid.Col span={4}><h1>Stealth</h1></Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>{(["Sandman", "Graverobber",] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
                 </Grid.Col>
             </Grid>
@@ -73,18 +75,18 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             <Grid m={0}>
                 <Grid.Col span={4}><h1>Excluding Mortals</h1></Grid.Col>
-                <Grid.Col span={4}>
+                <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>{(["Bagger", "Blood Leech", "Farmer",] as PredatorTypeName[]).map((clan) => createButton(clan, "violet"))}</Stack>
                 </Grid.Col>
             </Grid>
         </Stack>
     )
 
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
     const heightBreakPoint = 1120
     return (
         <div style={{ width: "100%", marginTop: height < heightBreakPoint ? "50px" : 0 }}>
-            <Text fz={"30px"} ta={"center"}>How do you <b>obtain blood?</b></Text>
+            <Text fz={globals.largeFontSize} ta={"center"}>How do you <b>obtain blood?</b></Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Predator Type</Text>
             <hr color="#e03131" />
@@ -119,8 +121,10 @@ type SpecialtyModalProps = {
 
 const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, character, pickedPredatorType, specialty, setSpecialty, discipline, setDiscipline }: SpecialtyModalProps) => {
     const smallScreen = globals.isSmallScreen
+    const phoneScreen = globals.isPhoneScreen
 
     const predatorType = PredatorTypes[pickedPredatorType]
+    const pickedDiscipline = disciplines[(discipline as DisciplineName)]
 
     const titleWidth = smallScreen ? "300px" : "750px"
     return (
@@ -171,7 +175,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
 
                 <Text fw={700} fz={"xl"} ta="center">Select a skill specialty</Text>
                 <SegmentedControl
-                    size={"md"}
+                    size={phoneScreen ? "sm" : "md"}
                     color="red"
                     value={specialty}
                     onChange={setSpecialty}
@@ -180,13 +184,16 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                 <Divider my="sm" />
 
                 <Text fw={700} fz={"xl"} ta="center">Take a bonus level to a discipline</Text>
-                <SegmentedControl
-                    size={"md"}
-                    color="red"
-                    value={discipline}
-                    onChange={setDiscipline}
-                    data={predatorType.disciplineOptions.map((discipline) => ({ label: upcase(discipline.name), value: discipline.name }))}
-                />
+                <Tooltip label={`${upcase(discipline)}: ${pickedDiscipline.summary}`} transitionProps={{ transition: 'slide-up', duration: 200 }} events={globals.tooltipTriggerEvents}>
+                    <SegmentedControl
+                        size={phoneScreen ? "sm" : "md"}
+                        color="red"
+                        value={discipline}
+                        onChange={setDiscipline}
+                        data={predatorType.disciplineOptions.map((discipline) => ({ label: upcase(discipline.name), value: discipline.name }))}
+                    />
+                </Tooltip>
+
                 <Divider my="sm" />
 
                 <Group position="apart">

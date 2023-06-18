@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import LoadModal from "../../components/LoadModal"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
+import { globals } from "../../globals"
 
 
 type IntroProps = {
@@ -22,14 +23,14 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
 
     return (
-        <Alert mt={"50px"} color="grape" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
+        <Alert mt={globals.isPhoneScreen ? "75px" : "50px"} color="grape" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
 
-            <Text fz={"30px"} ta={"center"}>This is a &apos;Vampire: The Masquerade&apos; v5 character creation tool for beginners</Text>
-            <Text fz={"xl"} mb={"xs"}>It is intentionally streamlined and limited to creating a common type of character following the rules from the source book.</Text>
-            <Text fz={"xl"} mb={"xs"}>You can download your character into a printable PDF when you&apos;re done (PDF template kindly provided by <a href="https://linktr.ee/nerdbert">Nerdbert</a>) and also save it to a local file that you can load into this web app to continue editing.</Text>
-            <Text fz={"xl"} mb={"xl"}>Note that none of your data will be sent to or stored on a server and you may lose your character if you don&apos;t download it!</Text>
+            <Text fz={globals.largeFontSize} ta={"center"} mb={"lg"}>This is a &apos;Vampire: The Masquerade&apos; v5 character creation tool for beginners</Text>
+            <Text fz={globals.smallerFontSize} mb={"xs"}>It is intentionally streamlined and limited to creating a common type of character following the rules from the source book.</Text>
+            <Text fz={globals.smallerFontSize} mb={"xs"}>You can download your character into a printable PDF when you&apos;re done (PDF template kindly provided by <a href="https://linktr.ee/nerdbert">Nerdbert</a>) and also save it to a local file that you can load into this web app to continue editing.</Text>
+            <Text fz={globals.smallerFontSize} mb={"xl"}>Note that none of your data will be sent to or stored on a server and you may lose your character if you don&apos;t download it!</Text>
 
-            <Text fz={"xl"} mb={"xl"}>For feature requests, bug reports and general feedback, message me on:&nbsp;
+            <Text fz={globals.smallerFontSize} mb={"xl"}>For feature requests, bug reports and general feedback, message me on:&nbsp;
                 <ActionIcon display={"inline"} component="a" href="https://www.reddit.com/user/ProgenyDev/" variant="default" c={"#ff6314"}><IconBrandReddit /></ActionIcon>
                 &nbsp;
                 <ActionIcon display={"inline"} component="a" href="https://twitter.com/Odin68092534" variant="default" c={"#1DA1F2"}><IconBrandTwitter /></ActionIcon>

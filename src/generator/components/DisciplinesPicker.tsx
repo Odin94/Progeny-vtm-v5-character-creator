@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { Character } from "../../data/Character"
 import { ClanName } from "../../data/Clans"
-import { Discipline, Power, disciplines } from "../../data/Disciplines"
+import { Discipline, DisciplineName, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { intersection, upcase } from "../utils"
 
@@ -106,16 +106,16 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             const amalgamHeight = 55
             let cardHeight = 200
             if (power.amalgamPrerequisites.length > 0) cardHeight += amalgamHeight
-            if (power.name.length > 16) { cardHeight += 25; textHeight += 10 }
+            if (power.name.length > 15) { cardHeight += 25; textHeight += 10 }
             return (
                 <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                     <Group position="apart" mt="md" mb="xs">
-                        <Text weight={500}>{power.name}</Text>
+                        <Text fz={smallScreen ? "xs" : "sm"} weight={500}>{power.name}</Text>
                         {/* FIXUP: Hide badges for small cards + long name to prevent badge being in new line and pushing button down */}
                         {canReachLvl3 && power.name.length > 10 ? null : <Badge color="pink" variant="light">lv {power.level}</Badge>}
                     </Group>
 
-                    <Text h={textHeight} size="sm" color="dimmed">{power.summary}</Text>
+                    <Text fz={smallScreen ? "xs" : "sm"} h={textHeight} size="sm" color="dimmed">{power.summary}</Text>
                     {power.amalgamPrerequisites.length > 0 ?
                         <div style={{ height: amalgamHeight }}>
                             <Text size="sm" color="red">Requires:</Text>
@@ -147,6 +147,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             return true
         }
 
+        const clanHasDiscipline = (disciplineName: DisciplineName) => disciplinesForClan[disciplineName] !== undefined
+
         // Only show Amalgams that the clan can theoretically pick; using predator-type to get amalgams is intentionally impossible
         const eligiblePowers = discipline.powers.filter(clanHasPrereqDisciplines)
 
@@ -154,7 +156,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         const lvl2Powers = eligiblePowers.filter((power) => power.level === 2)
         const lvl3Powers = eligiblePowers.filter((power) => power.level === 3)
 
-        const canReachLvl3 = disciplineName === character.predatorType.pickedDiscipline
+        const canReachLvl3 = disciplineName === character.predatorType.pickedDiscipline && !(isPredatorType && !clanHasDiscipline(disciplineName))
 
         return (
             <Accordion.Item key={disciplineName + isPredatorType} value={disciplineName + isPredatorType}>
@@ -172,12 +174,49 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         )
     }
 
+    const getPickedPowersSection = () => {
+        return (
+            <Grid.Col span={smallScreen ? 12 : 2} mt={smallScreen ? "30px" : 0}>
+                <Center style={{ height: "100%" }}>
+                    <Stack>
+                        {powersSortedByDiscipline.map((power) => {
+                            if (power.discipline !== disciplineTitle) {
+                                disciplineTitle = power.discipline
+                                return (
+                                    <div key={power.name}>
+                                        <Text weight={700} size={"xl"}>{upcase(power.discipline)}</Text>
+                                        <Text> {power.name}</Text>
+                                    </div>
+                                )
+                            }
+                            return (<Text key={power.name}>{power.name}</Text>)
+                        })}
+                        {pickedPowers.length > 0 ? <Button variant="light" color="red" onClick={undoPick}>Undo last pick</Button> : null}
+
+                        {/* Predator Type Discipline pick */}
+                        {pickedPredatorTypePower ?
+                            <div>
+                                {powersSortedByDiscipline.length > 0 ? <hr style={{ width: "100%" }} color="#e03131" /> : null}
+
+                                <Text weight={700} size={"xl"}>{upcase(pickedPredatorTypePower.discipline)}</Text>
+                                <Text> {pickedPredatorTypePower.name}</Text>
+
+                                <Button variant="light" color="red" onClick={undoPredatorTypePick}>Undo pred pick</Button>
+                            </div>
+                            : null
+                        }
+                    </Stack>
+                </Center>
+            </Grid.Col>
+        )
+    }
+
     const powersSortedByDiscipline = pickedPowers.sort()
     let disciplineTitle = ""
-    const height = globals.viewporHeightPx
+    const height = globals.viewportHeightPx
     return (
-        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: "80px" }}>
-            <Text fw={700} fz={smallScreen ? "16px" : "30px"} ta="center">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
+        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: globals.isPhoneScreen ? "60px" : "80px" }} >
+            <Text fw={700} fz={smallScreen ? "14px" : "30px"} ta="center">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
             <hr color="#e03131" />
@@ -186,58 +225,29 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             <Stack align="center" spacing="xl" w={"100%"}>
                 <Grid w={"100%"}>
                     {/* Picked Powers */}
-                    {smallScreen ? null :
-                        <Grid.Col span={2}>
-                            <Center style={{ height: "100%" }}>
-                                <Stack>
-                                    {powersSortedByDiscipline.map((power) => {
-                                        if (power.discipline !== disciplineTitle) {
-                                            disciplineTitle = power.discipline
-                                            return (
-                                                <div key={power.name}>
-                                                    <Text weight={700} size={"xl"}>{upcase(power.discipline)}</Text>
-                                                    <Text> {power.name}</Text>
-                                                </div>
-                                            )
-                                        }
-                                        return (<Text key={power.name}>{power.name}</Text>)
-                                    })}
-                                    {pickedPowers.length > 0 ? <Button variant="light" color="red" onClick={undoPick}>Undo last pick</Button> : null}
-
-                                    {/* Predator Type Discipline pick */}
-                                    {pickedPredatorTypePower ?
-                                        <div>
-                                            {powersSortedByDiscipline.length > 0 ? <hr style={{ width: "100%" }} color="#e03131" /> : null}
-
-                                            <Text weight={700} size={"xl"}>{upcase(pickedPredatorTypePower.discipline)}</Text>
-                                            <Text> {pickedPredatorTypePower.name}</Text>
-
-                                            <Button variant="light" color="red" onClick={undoPredatorTypePick}>Undo pred pick</Button>
-                                        </div>
-                                        : null
-                                    }
-                                </Stack>
-                            </Center>
-                        </Grid.Col>
-                    }
+                    {smallScreen ? null : getPickedPowersSection()}
 
 
                     {/* Discipline-List */}
 
-                    <Grid.Col span={9} offset={1}>
-                        <ScrollArea h={height - 400} pb={20} w={"105%"}>
+                    <Grid.Col span={smallScreen ? 12 : 9} offset={smallScreen ? 0 : 1}>
+                        <ScrollArea h={height - 320} pb={20} w={"105%"}>
+                            <Center>
+                                <Accordion w={smallScreen ? "100%" : "600px"}>
+                                    {
+                                        Object.entries(disciplinesForClan).map(([name, discipline]) => getDisciplineAccordionItem(name, discipline))
+                                    }
 
-                            <Accordion style={{ width: smallScreen ? "260px" : "600px" }}>
-                                {
-                                    Object.entries(disciplinesForClan).map(([name, discipline]) => getDisciplineAccordionItem(name, discipline))
-                                }
+                                    <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>Predator Type Discipline</Text>
+                                    <hr color="#e03131" />
+                                    {
+                                        getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)
+                                    }
+                                </Accordion>
+                            </Center>
 
-                                <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>Predator Type Discipline</Text>
-                                <hr color="#e03131" />
-                                {
-                                    getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)
-                                }
-                            </Accordion>
+                            {/* Picked Powers */}
+                            {smallScreen ? getPickedPowersSection() : null}
                         </ScrollArea>
 
                     </Grid.Col>
