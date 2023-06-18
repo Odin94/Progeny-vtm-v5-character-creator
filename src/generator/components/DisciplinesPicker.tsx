@@ -216,7 +216,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const height = globals.viewportHeightPx
     return (
         <div style={{ width: smallScreen ? "393px" : "810px", marginTop: globals.isPhoneScreen ? "60px" : "80px" }} >
-            <Text fw={700} fz={smallScreen ? "14px" : "30px"} ta="center">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
+            <Text fw={700} fz={smallScreen ? "14px" : "28px"} ta="center">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
             <hr color="#e03131" />
@@ -231,7 +231,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     {/* Discipline-List */}
 
                     <Grid.Col span={smallScreen ? 12 : 9} offset={smallScreen ? 0 : 1}>
-                        <ScrollArea h={height - 320} pb={20} w={"105%"}>
+                        <ScrollArea h={smallScreen ? height - 320 : height - 400} pb={20} w={"105%"}>
                             <Center>
                                 <Accordion w={smallScreen ? "100%" : "600px"}>
                                     {
