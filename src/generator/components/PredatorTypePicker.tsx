@@ -49,7 +49,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
             <Grid m={0}>
                 <Grid.Col span={4}><h1>Violent</h1></Grid.Col>
                 <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
-                    <Stack>{(["Alleycat", "Extortionist", "Roadside Killer",] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
+                    <Stack>{(["Alleycat", "Extortionist", "Roadside Killer", "Montero"] as PredatorTypeName[]).map((clan) => createButton(clan, "red"))}</Stack>
                 </Grid.Col>
             </Grid>
 
@@ -67,7 +67,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
             <Grid m={0}>
                 <Grid.Col span={4}><h1>Stealth</h1></Grid.Col>
                 <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
-                    <Stack>{(["Sandman", "Graverobber",] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
+                    <Stack>{(["Sandman", "Graverobber", "Grim Reaper", "Pursuer", "Trapdoor"] as PredatorTypeName[]).map((clan) => createButton(clan, "gray"))}</Stack>
                 </Grid.Col>
             </Grid>
 
@@ -83,9 +83,9 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     )
 
     const height = globals.viewportHeightPx
-    const heightBreakPoint = 1120
+    const heightBreakPoint = 1250
     return (
-        <div style={{ width: "100%", marginTop: height < heightBreakPoint ? "50px" : 0 }}>
+        <div style={{ width: "100%", marginTop: height < heightBreakPoint ? "50px" : "55px" }}>
             <Text fz={globals.largeFontSize} ta={"center"}>How do you <b>obtain blood?</b></Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Predator Type</Text>
