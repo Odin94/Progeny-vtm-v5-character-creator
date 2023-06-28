@@ -25,26 +25,29 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
     {
         title: "🏠 Haven",
         merits: [
-            { name: "Haven", cost: [1, 2, 3], summary: "secure homebase" },
+            { name: "Haven", cost: [1, 2, 3], summary: "secure homebase, 1 - apartment, 3 - big building" },
             { name: "Hidden Armory", cost: [1], summary: "weapons and armor in your haven" },
+            { name: "Cell", cost: [1], summary: "you can imprison people in your haven" },
             { name: "Watchmen", cost: [1], summary: "mortal security guards" },
             { name: "Luxury", cost: [1], summary: "+2 Dice on Social rolls in your haven" },
         ],
         flaws: [
             { name: "No Haven", cost: [1], summary: "you don't have a home" },
             { name: "Haunted", cost: [1], summary: "ghostly presence in your haven" },
+            { name: "Creepy", cost: [1], summary: "your haven looks like the den of a serial killer, neighbors might phone in a tip to the police" },
             { name: "Compromised", cost: [2], summary: "your haven is on a watchlist" },
         ]
     },
     {
         title: "💰 Resources",
-        merits: [{ name: "Resources", cost: [1, 2, 3, 4, 5], summary: "wealth & income" }],
+        merits: [{ name: "Resources", cost: [1, 2, 3, 4, 5], summary: "wealth & income, 1 - you can afford basics, 5 - you can afford anything money can buy" }],
         flaws: [{ name: "Destitute", cost: [1], summary: "poor & no income" }]
     },
     {
         title: "🩸 Feeding",
         merits: [
             { name: "Bloodhound", cost: [1], summary: "smell resonance in mortal blood" },
+            { name: "High-functioning addict", cost: [1], summary: "add a die to one category of pool (choose once) when the last person you fed from was on your drug" },
             { name: "Iron Gullet", cost: [3], summary: "able to feed on rancid blood" },
         ],
         flaws: [
@@ -52,29 +55,36 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
             { name: "Methusela's Thirst", cost: [1], summary: "can't fully satiate on mortal blood" },
             { name: "Farmer", cost: [2], summary: "feeding on non-animal blood costs you 2 willpower" },
             { name: "Organovore", cost: [2], summary: "your hunger demands human flesh and organs" },
+            { name: "Addiction", cost: [1], summary: "-1 die on all pools if the last person you fed from wasn't on your drug" },
+            { name: "Hopeless Addiction", cost: [2], summary: "-2 dice on all pools if the last person you fed from wasn't on your drug" },
         ]
     },
     {
         title: "🕰 Keeping up with the times",
         merits: [],
         flaws: [
-            { name: "Living in the Past", cost: [1], summary: "you have outdated views" },
+            { name: "Living in the Past", cost: [1], summary: "you have outdated views & convictions" },
             { name: "Archaic", cost: [1], summary: "Technology skill stuck at 0" },
+            { name: "Illiterate", cost: [2], summary: "Can't read or write, Academics and Science capped at 1" },
         ]
     },
     {
         title: "🌙 Mythic",
-        merits: [{ name: "Eat Food", cost: [1], summary: "can consume normal food" },],
+        merits: [{ name: "Eat Food", cost: [2], summary: "can consume normal food" },],
         flaws: [
             { name: "Folkloric Bane", cost: [1], summary: "specific items damage you (eg. silver, garlic)" },
             { name: "Folkloric Block", cost: [1], summary: "must spend willpower to move past specific block (eg. running water, door uninvited)" },
             { name: "Stigmata", cost: [1], summary: "bleed from your hands, feet and forehead when at Hunger 4" },
-            { name: "Stake Bait", cost: [1], summary: "Final Death when staked" },
+            { name: "Stake Bait", cost: [2], summary: "Final Death when staked" },
         ]
     },
     {
         title: "👺 Mask",
-        merits: [{ name: "Mask", cost: [1, 2], summary: "fake identity with fake documents" },],
+        merits: [
+            { name: "Mask", cost: [1, 2], summary: "fake identity with fake documents, lv2 can pass background checks" },
+            { name: "Zeroed", cost: [1], summary: "all your real records are purged, you officially don't exist" },
+            { name: "Cobbler", cost: [1], summary: "You can make or source masks for others" },
+        ],
         flaws: [
             { name: "Known Corpse", cost: [1], summary: "others know you're dead" },
             { name: "Known Blankbody", cost: [2], summary: "Certain governments / organizations know you're a vampire" },
@@ -95,20 +105,32 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
             { name: "Adversary", cost: [1], summary: "kindred enemy" },
             { name: "Suspect", cost: [1], summary: "bad reputation within a faction, -2 on Social tests with them" },
             { name: "Shunned", cost: [2], summary: "despised by a faction" },
+            { name: "Dark Secret", cost: [1, 2], summary: "You have a dark secret, like owing a debt to bad people or having escaped a blood hunt for masquerade breaching in another city" },
+        ]
+    },
+    {
+        title: "⛓️ Bonding",
+        merits: [],
+        flaws: [
+            { name: "Long Bond", cost: [1], summary: "blood bonds on you take longer to wane" },
+            { name: "Bond Junkie", cost: [1], summary: "lose one die on all actions that go against your blood bond" },
+            { name: "Bondslave", cost: [2], summary: "blood bonds on you are created on the first drink" },
         ]
     },
     {
         title: "👱 Mortals",
         merits: [
-            { name: "Retainer", cost: [1, 3], summary: "loyal mortal servant" },
+            { name: "Retainer", cost: [1, 2, 3], summary: "loyal mortal servant, 1 - weak lowlife, 3 - skilled professional retainer" },
             { name: "Allies", cost: [1, 2, 3, 4, 5], summary: "group of mortals to advise or help you" },
             { name: "Contacts", cost: [1, 2, 3], summary: "mortals who provide information or valuable items" },
-            { name: "Herd", cost: [1], summary: "group of mortals who let you feed" },
+            { name: "Herd", cost: [1, 2, 3, 4, 5], summary: "group of mortals who let you feed, 1 - a couple of people, 5 - large group and you can freely pick desired resonances" },
+            { name: "Fame", cost: [1, 2, 3, 4, 5], summary: "1 - a select subculture loves you, 5 - you are well known and loved globally" },
         ],
         flaws: [
             { name: "Stalkers", cost: [1], summary: "unwanted mortal followers" },
             { name: "Enemy", cost: [1, 2], summary: "group of mortals that want to harm you" },
-            { name: "Obvious Predator", cost: [1], summary: "mortals are scared of you, can't keep Herd" },
+            { name: "Obvious Predator", cost: [2], summary: "mortals are scared of you, can't keep Herd" },
+            { name: "Infamy", cost: [1, 2, 3, 4, 5], summary: "1 - a select subculture despises you, 5 - you are well known and hated globally" },
         ]
     }
 ]
