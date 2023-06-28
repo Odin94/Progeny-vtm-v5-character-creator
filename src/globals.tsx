@@ -4,7 +4,7 @@ export const globals = {
     viewportWidthPx: 800,
     isPhoneScreen: false,
     isSmallScreen: false,
-    smallScreenW: 800,
+    smallScreenW: 1300,
     phoneScreenW: 440,
     tooltipTriggerEvents: { hover: true, focus: true, touch: true },  // TODO: How to make tooltips work for phone long-press..?
 
