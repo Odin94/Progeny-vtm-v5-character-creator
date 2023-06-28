@@ -243,8 +243,9 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
 
     // Merits & flaws
-    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws
-    const meritsAndFlaws = [...character.merits, ...predatorTypeMeritsFlaws, ...character.flaws]
+    const characterMeritsFlaws = [...character.merits, ...character.flaws]
+    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws.filter(m => !characterMeritsFlaws.map(cm => cm.name).includes(m.name))
+    const meritsAndFlaws = [...predatorTypeMeritsFlaws, ...characterMeritsFlaws]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
         form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)

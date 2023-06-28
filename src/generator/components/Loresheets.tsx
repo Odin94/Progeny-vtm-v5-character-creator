@@ -2,23 +2,25 @@ import { Button, Card, Grid, ScrollArea, Text } from "@mantine/core"
 import { useState } from "react"
 import { Loresheet, MeritOrFlaw, loresheets } from "../../data/MeritsAndFlaws"
 import { globals } from "../../globals"
+import { MeritFlaw } from "../../data/Character"
+import { intersection } from "../utils"
 
 
 type LoresheetProps = {
-    getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element
+    getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element,
+    pickedMeritsAndFlaws: MeritFlaw[]
 }
 
-// TODO: Create separate tab for loresheets
 // TODO: Create text-filter for loresheets?
-export const Loresheets = ({ getMeritOrFlawLine }: LoresheetProps) => {
+export const Loresheets = ({ getMeritOrFlawLine, pickedMeritsAndFlaws }: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
 
-    // TODO: Mark loresheets where you spent advantages
     const getLoresheetCol = (loresheet: Loresheet) => {
+        const sheetPicked = intersection(pickedMeritsAndFlaws.map(m => m.name), loresheet.merits.map(m => m.name)).length > 0
         return (
             <Grid.Col span={smallScreen ? 12 : 4} key={loresheet.title}>
-                <Card mb={20} h={280} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
+                <Card mb={20} h={280} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)", borderColor: sheetPicked ? "green" : "black" }} withBorder={sheetPicked}>
                     <Text mb={10} ta={"center"} fz={smallScreen ? "lg" : "xl"} weight={500}>{loresheet.title}</Text>
                     <Text h={160} fz={"sm"} >{loresheet.summary}</Text>
 
@@ -31,7 +33,7 @@ export const Loresheets = ({ getMeritOrFlawLine }: LoresheetProps) => {
     const smallScreen = globals.isSmallScreen
     const height = globals.viewportHeightPx
     return (
-        <ScrollArea h={height - 300} w={"100%"} p={20}>
+        <ScrollArea h={height - 330} w={"100%"} p={20}>
             <Grid w={"100%"}>
                 {openLoresheet
                     ? <OpenedLoresheet loresheet={openLoresheet} getMeritOrFlawLine={getMeritOrFlawLine} setOpenLoresheetTitle={setOpenLoresheetTitle} />

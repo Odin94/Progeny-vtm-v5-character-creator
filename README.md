@@ -41,14 +41,12 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * Give people a way to give feedback
 
 * Ask for feedback in VtM spaces
-  * Add more recent predator types
-  * It would be nice if the app recognized if I already had a merit from the predator type and mark it as such.
   * Randomized name, ambition, desire etc
-  * Fix merits: The Retainer background is missing a button for 2 dots, Herd only has the option to take one dot, Adversary only has the option to take one, Obvious Predator is listed as a one dot flaw, it should be two.
-  * Include loresheets!
   * Fix PDF template not showing overflowing text unless you click into it
   * Post and ask for feedback again once you have all these completed (v2 release)
 
+* Merge specialties that are custom-picked and provided by predatorType
+* Add more loresheets
 * Add rituals for blood sorcery
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones
 * Fix: Changing predator type should reset disciplines (like changing clan does, search "Because you changed your clan")
