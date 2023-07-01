@@ -48,6 +48,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * Merge specialties that are custom-picked and provided by predatorType
 * Add more loresheets
 * Add rituals for blood sorcery
+* Add free-text / select field where predator type says "pick XY"?
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones
 * Fix: Changing predator type should reset disciplines (like changing clan does, search "Because you changed your clan")
 * -->

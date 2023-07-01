@@ -160,10 +160,10 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                     <div>
                         <Group position="apart">
                             <Text fw={700} fz={"xl"}>Merits and Flaws:</Text>
-                            <Stack>
+                            <Stack w={"100%"}>
                                 {predatorType.meritsAndFlaws.map((mf) => {
                                     return <Group key={mf.name} position="apart">
-                                        <Text fz={"xl"}>{`${mf.name}:`}</Text>
+                                        <Text maw={"80%"} fz={"xl"}>{`${mf.name}: `}<Text fz={"xs"}>{mf.summary}</Text></Text>
                                         <Text fz={"xl"}>{`lvl ${mf.level}`}</Text>
                                     </Group>
                                 })}
