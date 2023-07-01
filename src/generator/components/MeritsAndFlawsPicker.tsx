@@ -86,8 +86,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
             <Tabs color="grape" value={activeTab} onTabChange={setActiveTab}>
                 <Tabs.List>
-                    <Tabs.Tab value="merits">Merits & Flaws</Tabs.Tab>
-                    <Tabs.Tab value="loresheets">Loresheets (optional & advanced)</Tabs.Tab>
+                    <Tabs.Tab maw={"30%"} value="merits">Merits & Flaws</Tabs.Tab>
+                    <Tabs.Tab maw={"70%"} value="loresheets">Loresheets (optional & advanced)</Tabs.Tab>
                 </Tabs.List>
 
                 {/* Merits & Flaws */}
