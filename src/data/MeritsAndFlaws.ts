@@ -266,49 +266,218 @@ export const loresheets: Loresheet[] = [
             { name: "Hardestadt's Heir", cost: [5], summary: "You have a signed document declaring you Hardestadt's heir. It says that when you take the name 'Hardestadt', the Camarilla will obey you and the Anarchs will swarm to take you down." },
         ]
     },
+    {
+        title: "Descendant of Helena",
+        summary: "Core V5 p391",
+        source: "Sample",
+        requirementFunctions: [isClan("Toreador")],
+        merits: [
+            { name: "Skin-Deep", cost: [1], summary: "SampleSummary" },
+            { name: "Real Talent", cost: [2], summary: "SampleSummary" },
+            { name: "Embrace the Stereotypes", cost: [3], summary: "SampleSummary" },
+            { name: "Divine Purity", cost: [4], summary: "SampleSummary" },
+            { name: "Succubus Club Franchise", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "Sect War Veteran",
+        summary: "Sample",
+        source: "Core V5 p392",
+        requirementFunctions: [],
+        merits: [
+            { name: "Survivor", cost: [1], summary: "SampleSummary" },
+            { name: "Active Participant", cost: [2], summary: "SampleSummary" },
+            { name: "Trophy Kill", cost: [3], summary: "SampleSummary" },
+            { name: "No Vampire's Land", cost: [4], summary: "SampleSummary" },
+            { name: "Sect Agitator", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "The Trinity",
+        summary: "Sample",
+        source: "Core V5 p393",
+        requirementFunctions: [],
+        merits: [
+            { name: "Constantinople", cost: [1], summary: "SampleSummary" },
+            { name: "Antonius' Architecture", cost: [2], summary: "SampleSummary" },
+            { name: "The Dream", cost: [3], summary: "SampleSummary" },
+            { name: "The Dracon", cost: [4], summary: "SampleSummary" },
+            { name: "The New Trinity", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "Jeanette / Therese Voerman",
+        summary: "Sample",
+        source: "Core V5 p394",
+        requirementFunctions: [],
+        merits: [
+            { name: "Asylum Membership", cost: [1], summary: "SampleSummary" },
+            { name: "Performing Monkey", cost: [2], summary: "SampleSummary" },
+            { name: "Jeanette's Favorite", cost: [3], summary: "SampleSummary" },
+            { name: "Therese's Favorite", cost: [4], summary: "SampleSummary" },
+            { name: "Asylum Operator", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "The Week of Nightmares",
+        summary: "Sample",
+        source: "Core V5 p395",
+        requirementFunctions: [],
+        merits: [
+            { name: "Oral History", cost: [1], summary: "SampleSummary" },
+            { name: "Ravnos Remains", cost: [2], summary: "SampleSummary" },
+            { name: "I Was There", cost: [3], summary: "SampleSummary" },
+            { name: "The Red Star", cost: [4], summary: "SampleSummary" },
+            { name: "Blood of Zapathasura", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "Rudi",
+        summary: "Sample",
+        source: "Core V5 p396",
+        requirementFunctions: [],
+        merits: [
+            { name: "Newfound Rights", cost: [1], summary: "SampleSummary" },
+            { name: "Them and Theirs", cost: [2], summary: "SampleSummary" },
+            { name: "Gangrel Advocate", cost: [3], summary: "SampleSummary" },
+            { name: "The Bear Pack", cost: [4], summary: "SampleSummary" },
+            { name: "Rudi's Army", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "Descendant of Tyler",
+        summary: "Sample",
+        source: "Core V5 p397",
+        requirementFunctions: [isClan("Brujah")],
+        merits: [
+            { name: "Instigator", cost: [1], summary: "SampleSummary" },
+            { name: "Champion of the Cause", cost: [2], summary: "SampleSummary" },
+            { name: "Tyler's Mercy", cost: [3], summary: "SampleSummary" },
+            { name: "The Furores", cost: [4], summary: "SampleSummary" },
+            { name: "Permanent Revolution", cost: [5], summary: "SampleSummary" },
+        ]
+    },
+    {
+        title: "Descendant of Zelios",
+        summary: "A great Nosferatu Architect and planner who disappeared beneath New York in 1990. He is responsible for many Nosferatu labyrinths, dungeons and prisons.",
+        source: "Core V5 p398",
+        requirementFunctions: [isClan("Nosferatu")],
+        merits: [
+            { name: "Sanctuary", cost: [1], summary: "Split 2 dots among Haven-Postern and Haven-Security System." },
+            { name: "Saboteur", cost: [2], summary: "Collapse a building with merely a hammer over the course of as many nights as the Storyteller sets. (4 for a family home, 9 for a skyscraper)" },
+            { name: "On Commission", cost: [3], summary: "Gain one minor boon per story from a Vampire who asks you for advice on building their Haven. You know where many powerful Vampires sleep." },
+            { name: "The Labyrinth", cost: [4], summary: "You have built a great maze beneath your domain. You can't use it as Haven as it terrifies you, but you can escape into it when chased and none can pursue you." },
+            { name: "Sense the Ley Lines", cost: [5], summary: "You can sense Ley Lines. Sleeping near them allows Vampires to roll 2 dice and pick the highest on their rouse check when awakening." },
+        ]
+    },
+    {
+        title: "Descendant of Vasantasena",
+        summary: "A free-will-enthusiast who preached against the Blood Bond and traditional Vampire hierarchy in the middle ages. She is a former member of the Camarilla and the Sabbat and wants to fight the Antediluvians.",
+        source: "Core V5 p399",
+        requirementFunctions: [isClan("Malkavian")],
+        merits: [
+            { name: "Agent of Chaos", cost: [1], summary: "Once per session, while in a chaotic situation, re-roll 1 die without spending Willpower." },
+            { name: "Hear My Words", cost: [2], summary: "Once per story, provide counsel to somebody in a chaotic situation. They may re-roll 1 die in a future test within the same situation." },
+            { name: "Scent the Bond", cost: [3], summary: "Once per story, roll Resolve + Awareness (Difficulty 4) to smell the Blood Bond on a bonded and bonding Vampire." },
+            { name: "Destroy the Bond", cost: [4], summary: "Drink a mouthful of a Vampires blood and ride out a frenzy to break a Blood Bond on them." },
+            { name: "Sabbat Becomes Camarilla", cost: [5], summary: "Once per story, deprogram a Vampire from their sect beliefs. To do so, completely isolate them in an atmosphere of perfumes. Once per 3 nights, roll Intelligence or Charisma + Insight. You win after achieving a number of total successes equal to twice the subject's Willpower." },
+        ]
+    },
+    {
+        title: "High Clan",
+        summary: "Even though 'High' and 'Low' clans were abolished with the formation of the Camarilla, in your domain these rules still hold to some degree. Historically, High Clans include the Lasombra, Toreador, Tzimisce and Ventrue, sometimes the Brujah and Hecata and rarely the Tremere. In other parts of the world, the Banu Haqim and Ministry are considered High Clans.",
+        source: "Core V5 p400",
+        requirementFunctions: [],
+        merits: [
+            { name: "Peacock", cost: [1], summary: "Once per session, reroll a single die when commanding deference from one non-titled vampire in your domain." },
+            { name: "Sway the Low", cost: [2], summary: "You have bullied Low Clan Vampires equivalent to 3 dots of Mawla into loyalty to you. Gain 3 extra dice to Intimidation or Leadership against those Vampires. If you ever roll a total failure on such a test you must compensate them or they turn on you." },
+            { name: "Elevate the Low", cost: [3], summary: "Once per chronicle, raise a Low Clan Vampire into High Clan status. Gain 1 die on Social tests against Low Clan Vampires when you allude to elevating them." },
+            { name: "Embraced to Rule", cost: [4], summary: "Add 1 die to Leadership tests involving High Clan Vampires. Once per story, other High Clan Vampires vote for you or allow you to take a position of power unless they have personal grievances with you." },
+            { name: "Blessed, not Cursed", cost: [5], summary: "Once per session, spend one Willpower to ignore your Clan Bane." },
+        ]
+    },
+    {
+        title: "Low Clan",
+        summary: "You're a member of a Clan that is considered lowly in your domain (typically those are one or more of the Gangrel, Malkavians and Nosferatu. Sometimes also Brujah and Tremere). This means many treat you as less-than, but you also have access to rebels and counter culture.",
+        source: "Core V5 p401",
+        requirementFunctions: [],
+        merits: [
+            { name: "Thick Hide", cost: [1], summary: "Once per story, ignore verbal attacks or provocations for a scene without rolling." },
+            { name: "Cursed with Pride", cost: [2], summary: "Once per story, gain an automatic success in a roll when incorporating your Clan Bane." },
+            { name: "Uncanny Kinship", cost: [3], summary: "Select 3 dots from Mawla or Statusfrom other Low Clans in the domain." },
+            { name: "Trade Among Equals", cost: [4], summary: "Select another Low Clan's Discipline. You can buy dots of that Discipline using experience points as if it was in-clan for you." },
+            { name: "Criticality Incident", cost: [5], summary: "Add 1 die to all rolls for projects undermining High Clans in your domain. Once per chronicle, sacrifice 10 of your Background dots to bring down the same number of High Clan Vampires in a coup." },
+        ]
+    },
+    {
+        title: "Ambrus Maropis",
+        summary: "A well liked trend-setter among Camarilla society. Many don't know he is a Nosferatu as he uses intermediaries to interact with Princes and Barons while remaining hidden himself. At heart, he is an introverted anime & gaming nerd and a skilled hacker and software developer.",
+        source: "Core V5 p402",
+        requirementFunctions: [],
+        merits: [
+            { name: "True Believer", cost: [1], summary: "Gain a 1 die bonus to tests for finding shared Kindred hiding places in your city." },
+            { name: "Clandestine Information", cost: [2], summary: "Once per story, get one piece of information stored online about a mortal within 2-20 hours." },
+            { name: "Taught by the Best", cost: [3], summary: "Consider Ambrus a 3 dot Mawla. He can set you up with your personal hacker for 'friend prices' or get intel on a wide array of topics like SI dealings or the current fashion trends in obscure subcultures." },
+            { name: "Back Door Panopticon", cost: [4], summary: "Once per story, log into a PRISM backdoor to get two automatic successes on any Investigation involving anyone's cell activity or online presence." },
+            { name: "On Another Grid Entirely", cost: [5], summary: "Gain two 2 dot Mask cover identities, gain the Zeroed merit, get 3 extra dice to resist attempts to discover your online activities or your undertakings in the mortal world." },
+        ]
+    },
+    {
+        title: "Carmelita Neillson",
+        summary: "A Vampire-journalist chronicling the stories of ancient vampires and recording the history of Kindred society. Carmelita has established many hidden libraries in hidden locations. Carmelita is hired to debrief recently awoken Methuselahs, investigate ruined temples and interpreting Sabbat scripture.",
+        source: "Core V5 p403",
+        requirementFunctions: [],
+        merits: [
+            { name: "The Art of Story", cost: [1], summary: "Toreadors always lend you their ear when you speak of historic lore or mythic tales." },
+            { name: "The Art of Will", cost: [2], summary: "Once per session, meditate before resting for the day and pass a Resolve + Academics test of difficulty 5 to awaken with an additional point of Willpower." },
+            { name: "Neillson Library", cost: [3], summary: "Serve as curator to a hidden library which serves as a 2 dot Haven with a 2 dot Library. Other Vampires meet there as well." },
+            { name: "Interview With the Methuselah", cost: [4], summary: "Once per story, ask the Storyteller to provide you a secret about one of the clans in your domain." },
+            { name: "Ancestor's Tomb", cost: [5], summary: "You are tasked with guarding the resting place of one of your ancestors. While you keep it safe, once per story, call upon Carmelita for a Major Boon. If you fail to guard the tomb, there will be consequences." },
+        ]
+    },
+    {
+        title: "Fiorenza Savona",
+        summary: "A relatively freshly turned Ventrue with massive sway among the Mortals of the political and business elite. She has her hands in NGOs, the UN and the Davos elite and likes to maintain rigid power structures.",
+        source: "Core V5 p404",
+        requirementFunctions: [],
+        merits: [
+            { name: "On Fiorenza's List", cost: [1], summary: "Gain a Gifted Mortal Retainer (Bodyguard, Driver, Butler..) who openly spies on you for Fiorenza." },
+            { name: "Breakfast with Fiorenza", cost: [2], summary: "Once per story, meet Fiorenza. This can be lucrative or informative, if you ask the right questions." },
+            { name: "Friendly Benefits", cost: [3], summary: "Gain Fiorenza as 3 dot Mawla who can provide you with insider trading tips, expensive cars or private planes or sweet-talk ruffled Ventrue for you. If you overuse or abuse this connection, she will cut you off." },
+            { name: "The Directorate", cost: [4], summary: "Become Blood Bound to a shadowy Ventrue Directorate that wants you to break Fiorenza to their will. They provide you with 6 dots to spend among Contacts, Mawla and Resources." },
+            { name: "Government Motion", cost: [5], summary: "Once per chronicle, Fiorenza will influence a Mortal political leader for you. This leads to you gaining 5 dice to distribute as you like among any roll involving government action." },
+        ]
+    },
+    {
+        title: "Descendant of Karl Schrekt",
+        summary: "Hardcore-traditionalist & former Camarilla Justicar. Karl was a Vampire hunter before his embrace in 1235 and has gained massive respect as ruthless and strong enforcer of the Camarilla, hunting supernatural threats.",
+        source: "Core V5 p405",
+        requirementFunctions: [isClan("Tremere")],
+        merits: [
+            { name: "Remember the House", cost: [1], summary: "Once per story, ask the Storyteller for one piece of information about House Tremere before the Pyramid fell." },
+            { name: "Hardliner", cost: [2], summary: "With the Storyteller's agreement, add 2 dice to any test to resist attempts to sway you from Schrekt's goals." },
+            { name: "Ritual Preparedness", cost: [3], summary: "Once per story, perform one of your rituals in five minutes & without preparation." },
+            { name: "Archon's Bane", cost: [4], summary: "Have a supernatural 4 dot Ally (Werewolf, Mage, Wraith, Changeling...) who is being hunted. Once per story, they come to your aid." },
+            { name: "Know the World", cost: [5], summary: "Gain 3 dots in Haven-Library and pick 3 Specialties in Occult. Once per story, ask the Storyteller a simple question about non-Vampire supernatural creatures." },
+        ]
+    },
+    {
+        title: "Descendant of Xaviar",
+        summary: "Former Gangrel Justicar who saw his cotery eaten by an Antediluvian. He left the Camarilla because they ignored his warnings and died mysteriously soon after.",
+        source: "Core V5 p406",
+        requirementFunctions: [isClan("Gangrel")],
+        merits: [
+            { name: "Martyred Ancestor", cost: [1], summary: "Gain 2 dots of Status with other Gangrel in your domain." },
+            { name: "Where the Bodies Are Buried", cost: [2], summary: "Make Resolve + Awareness check to detect Vampires merged or torpid in soil below you." },
+            { name: "Loyal Hound", cost: [3], summary: "Spend 4 dots among Domain, Herd and Status. Non-Camarilla Gangrel despise you for staying loyal to the Camarilla." },
+            { name: "Monstrous Bat", cost: [4], summary: "Once per story, turn into a man-sized bat. In this form, gain +1 to all Physical Attributes, glide in the air and do +1 Aggravated dmg with bites." },
+            { name: "Experienced the Antediluvian", cost: [5], summary: "Once per story, while touching open ground, sense another Gangrels location and drain some vitae from the to reset your Hunger to 2." },
+        ]
+    },
     // {
     //     title: "Sample",
     //     summary: "Sample",
-    //     source: "Sample",
-    //     requirementFunctions: [],
-    //     merits: [
-    //         { name: "Sample", cost: [1], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [2], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [3], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [4], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [5], summary: "SampleSummary" },
-    //     ]
-    // },
-    // {
-    //     title: "Sample",
-    //     summary: "Sample",
-    //     source: "Sample",
-    //     requirementFunctions: [],
-    //     merits: [
-    //         { name: "Sample", cost: [1], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [2], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [3], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [4], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [5], summary: "SampleSummary" },
-    //     ]
-    // },
-    // {
-    //     title: "Sample",
-    //     summary: "Sample",
-    //     source: "Sample",
-    //     requirementFunctions: [],
-    //     merits: [
-    //         { name: "Sample", cost: [1], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [2], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [3], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [4], summary: "SampleSummary" },
-    //         { name: "Sample", cost: [5], summary: "SampleSummary" },
-    //     ]
-    // },
-    // {
-    //     title: "Sample",
-    //     summary: "Sample",
-    //     source: "Sample",
+    //     source: "Core V5 p394",
     //     requirementFunctions: [],
     //     merits: [
     //         { name: "Sample", cost: [1], summary: "SampleSummary" },
