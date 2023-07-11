@@ -18,13 +18,14 @@ export const Loresheets = ({ getMeritOrFlawLine, pickedMeritsAndFlaws }: Loreshe
 
     const getLoresheetCol = (loresheet: Loresheet) => {
         const sheetPicked = intersection(pickedMeritsAndFlaws.map(m => m.name), loresheet.merits.map(m => m.name)).length > 0
+
         return (
             <Grid.Col span={smallScreen ? 12 : 4} key={loresheet.title}>
-                <Card mb={20} h={280} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)", borderColor: sheetPicked ? "green" : "black" }} withBorder={sheetPicked}>
+                <Card mb={20} h={350} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)", borderColor: sheetPicked ? "green" : "black" }} withBorder={sheetPicked}>
                     <Text mb={10} ta={"center"} fz={smallScreen ? "lg" : "xl"} weight={500}>{loresheet.title}</Text>
-                    <Text h={160} fz={"sm"} >{loresheet.summary}</Text>
+                    <Text fz={"sm"} >{loresheet.summary}</Text>
 
-                    <Button variant="light" color="blue" fullWidth mt="md" radius="md" onClick={() => setOpenLoresheetTitle(loresheet.title)}>Open</Button>
+                    <Button pos={"absolute"} bottom={"15px"} variant="light" color="blue" w={"90%"} mt="md" radius="md" onClick={() => setOpenLoresheetTitle(loresheet.title)}>Open</Button>
                 </Card>
             </Grid.Col>
         )
