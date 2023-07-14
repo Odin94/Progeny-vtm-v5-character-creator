@@ -101,21 +101,18 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             }
             const onClick = () => isForPredatorType ? setPickedPredatorTypePower(power) : setPickedPowers([...pickedPowers, power])
 
-            const canReachLvl3 = power.discipline === character.predatorType.pickedDiscipline
-
-            const amalgamHeight = 55
-            let cardHeight = 200
+            const amalgamHeight = 25
+            let cardHeight = phoneScreen ? 180 : 215
             if (power.amalgamPrerequisites.length > 0) cardHeight += amalgamHeight
             if (power.name.length > 15) cardHeight += 25
             return (
                 <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                     <Group position="apart" mt="0" mb="xs">
                         <Text fz={(smallScreen && !phoneScreen) ? "xs" : "sm"} weight={500}>{power.name}</Text>
-                        {/* FIXUP: Hide badges for small cards + long name to prevent badge being in new line and pushing button down */}
-                        {canReachLvl3 && power.name.length > 10 ? null : <Badge color="pink" variant="light">lv {power.level}</Badge>}
+                        <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">lv {power.level}</Badge>
                     </Group>
 
-                    <Text fz={(smallScreen && !phoneScreen) ? "xs" : "sm"} size="sm" color="dimmed">{power.summary}</Text>
+                    <Text fz={"sm"} size="sm" color="dimmed">{upcase(power.summary)}</Text>
                     {
                         power.amalgamPrerequisites.length > 0 ?
                             <div style={{ height: amalgamHeight }}>
@@ -162,15 +159,16 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         const canReachLvl3 = disciplineName === character.predatorType.pickedDiscipline && !(isPredatorType && !clanHasDiscipline(disciplineName))
 
+        const colSpan = smallScreen ? 12 : (canReachLvl3 ? 4 : 6)
         return (
             <Accordion.Item key={disciplineName + isPredatorType} value={disciplineName + isPredatorType}>
                 <Accordion.Control icon={<Image src={discipline.logo} />}>{upcase(disciplineName)}</Accordion.Control>
                 <Accordion.Panel>
                     <Stack>
                         <Grid>
-                            <Grid.Col sm={canReachLvl3 ? 4 : 6}>{getPowerCards(lvl1Powers, isPredatorType)}</Grid.Col>
-                            <Grid.Col sm={canReachLvl3 ? 4 : 6}>{getPowerCards(lvl2Powers, isPredatorType)}</Grid.Col>
-                            {canReachLvl3 ? <Grid.Col sm={4}>{getPowerCards(lvl3Powers, isPredatorType)}</Grid.Col> : null}
+                            <Grid.Col span={colSpan}>{getPowerCards(lvl1Powers, isPredatorType)}</Grid.Col>
+                            <Grid.Col span={colSpan}>{getPowerCards(lvl2Powers, isPredatorType)}</Grid.Col>
+                            {canReachLvl3 ? <Grid.Col span={colSpan}>{getPowerCards(lvl3Powers, isPredatorType)}</Grid.Col> : null}
                         </Grid>
                     </Stack>
                 </Accordion.Panel>
