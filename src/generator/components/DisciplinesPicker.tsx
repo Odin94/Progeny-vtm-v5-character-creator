@@ -22,6 +22,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Disciplines Picker" }) }, [])
 
     const smallScreen = globals.isSmallScreen
+    const phoneScreen = globals.isPhoneScreen
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
 
@@ -102,37 +103,40 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
             const canReachLvl3 = power.discipline === character.predatorType.pickedDiscipline
 
-            let textHeight = 65
             const amalgamHeight = 55
             let cardHeight = 200
             if (power.amalgamPrerequisites.length > 0) cardHeight += amalgamHeight
-            if (power.name.length > 15) { cardHeight += 25; textHeight += 10 }
+            if (power.name.length > 15) cardHeight += 25
             return (
                 <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
-                    <Group position="apart" mt="md" mb="xs">
-                        <Text fz={smallScreen ? "xs" : "sm"} weight={500}>{power.name}</Text>
+                    <Group position="apart" mt="0" mb="xs">
+                        <Text fz={(smallScreen && !phoneScreen) ? "xs" : "sm"} weight={500}>{power.name}</Text>
                         {/* FIXUP: Hide badges for small cards + long name to prevent badge being in new line and pushing button down */}
                         {canReachLvl3 && power.name.length > 10 ? null : <Badge color="pink" variant="light">lv {power.level}</Badge>}
                     </Group>
 
-                    <Text fz={smallScreen ? "xs" : "sm"} h={textHeight} size="sm" color="dimmed">{power.summary}</Text>
-                    {power.amalgamPrerequisites.length > 0 ?
-                        <div style={{ height: amalgamHeight }}>
-                            <Text size="sm" color="red">Requires:</Text>
-                            <List size="xs">
-                                {power.amalgamPrerequisites.map((prereq) => {
-                                    return (<List.Item key={power.name + prereq.discipline}>{upcase(prereq.discipline)}: Lv {prereq.level}</List.Item>)
-                                })}
-                            </List>
-                            {missingAmalgamPrereq(power)
-                                ? null
-                                : <Text size="xs" color="green">(requirements met)</Text>}
-                        </div>
-                        : null}
+                    <Text fz={(smallScreen && !phoneScreen) ? "xs" : "sm"} size="sm" color="dimmed">{power.summary}</Text>
+                    {
+                        power.amalgamPrerequisites.length > 0 ?
+                            <div style={{ height: amalgamHeight }}>
+                                <Text size="sm" color="red">Requires:</Text>
+                                <List size="xs">
+                                    {power.amalgamPrerequisites.map((prereq) => {
+                                        return (<List.Item key={power.name + prereq.discipline}>{upcase(prereq.discipline)}: Lv {prereq.level}</List.Item>)
+                                    })}
+                                </List>
+                                {missingAmalgamPrereq(power)
+                                    ? null
+                                    : <Text size="xs" color="green">(requirements met)</Text>}
+                            </div>
+                            : null
+                    }
 
-                    <Button disabled={isButtonDisabled} onClick={() => { onClick(); trackClick() }} variant="light" color="blue" fullWidth mt="md" radius="md">
-                        <Text truncate>Take {power.name}</Text>
-                    </Button>
+                    <div style={{ position: "absolute", bottom: "0", width: "100%", padding: "inherit", left: 0 }}>
+                        <Button disabled={isButtonDisabled} onClick={() => { onClick(); trackClick() }} variant="light" color="blue" fullWidth radius="md">
+                            <Text truncate>Take {power.name}</Text>
+                        </Button>
+                    </div>
                 </Card >
             )
         })
