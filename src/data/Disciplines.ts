@@ -66,12 +66,12 @@ export const disciplines: Record<DisciplineName, Discipline> = {
         summary: "Interact with and control animals",
         logo: animalismLogo,
         powers: [
-            { name: "Bond Famulus", description: "", rouseChecks: 3, amalgamPrerequisites: [], summary: "bond an animal companion", dicePool: "Charisma + Animal Ken", level: 1, discipline: "animalism" },
-            { name: "Sense the Beast", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "sense hostility and supernatural traits", dicePool: "Resolve + Animalism", level: 1, discipline: "animalism" },
-            { name: "Feral Whispers", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "communicate with animals", dicePool: "Manipulation / Charisma + Animalism", level: 2, discipline: "animalism" },
+            { name: "Bond Famulus", description: "", rouseChecks: 3, amalgamPrerequisites: [], summary: "bond an animal companion. It will listen to basic commands, but full communication is not possible (unless you have Feral Whispers)", dicePool: "Charisma + Animal Ken", level: 1, discipline: "animalism" },
+            { name: "Sense the Beast", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "sense hostility and supernatural traits in people", dicePool: "Resolve + Animalism", level: 1, discipline: "animalism" },
+            { name: "Feral Whispers", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "communicate with animals. You can also call for animals and if they are nearby, they will come.", dicePool: "Manipulation / Charisma + Animalism", level: 2, discipline: "animalism" },
             { name: "Atavism", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "make an animal enrage or flee", dicePool: "Composure + Animalism", level: 2, discipline: "animalism" },
 
-            { name: "Animal Succulence", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "Feed more effectively on animals", dicePool: "", level: 3, discipline: "animalism" },
+            { name: "Animal Succulence", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "Feed more effectively on animals. You can consume your famulus to temporarily gain their aspect", dicePool: "", level: 3, discipline: "animalism" },
             { name: "Scent of Prey", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "Detect Mortals who saw Masquerade breaches", dicePool: "Resolve + Animalism", level: 3, discipline: "animalism" },
             { name: "Quell the Beast", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "Shut down a target's drives and desires, pull vampires out of frenzy", dicePool: "Charisma + Animalism", level: 3, discipline: "animalism" },
         ],
@@ -81,7 +81,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
         summary: "Supernatural senses and premonitions",
         logo: auspexLogo,
         powers: [
-            { name: "Heightened Senses", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "add Auspex rating to perception rolls", dicePool: "", level: 1, discipline: "auspex" },
+            { name: "Heightened Senses", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "your senses become supernaturally sharp; add Auspex rating to perception rolls", dicePool: "", level: 1, discipline: "auspex" },
             { name: "Sense the Unseen", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "sense supernatural activity", dicePool: "Wits / Resolve + Auspex", level: 1, discipline: "auspex" },
             { name: "Premonition", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "gain visions of the future", dicePool: "", level: 2, discipline: "auspex" },
             { name: "Obeah", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "fortitude", level: 1 }], summary: "soothe a person's psychological turmoil", dicePool: "Composure + Auspex", level: 2, discipline: "auspex" },
@@ -114,6 +114,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             { name: "Cloud Memory", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "make a person forget the past minute", dicePool: "Charisma + Dominate", level: 1, discipline: "dominate" },
             { name: "Compel", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "a single, short command with an immediate effect", dicePool: "Charisma + Dominate", level: 1, discipline: "dominate" },
             { name: "Mesmerize", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "allow issuing more complex commands", dicePool: "Manipulation + Dominate", level: 2, discipline: "dominate" },
+
             { name: "Domitor's Favor", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "make it harder for thralls to resist you", dicePool: "", level: 2, discipline: "dominate" },
             { name: "Slavish Devotion", description: "", rouseChecks: 0, amalgamPrerequisites: [{ discipline: "presence", level: 1 }], summary: "strengthen the mind of your dominated victims against interference from other kindred", dicePool: "", level: 2, discipline: "dominate" },
             // { name: "Dementation", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "obfuscate", level: 2 }], summary: "trigger psychotic breaks or nervous breakdowns in others", dicePool: "Manipulation + Dominate", level: 2, discipline: "dominate" },
@@ -187,7 +188,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
         summary: "Shape your body to gain power",
         logo: proteanLogo,
         powers: [
-            { name: "Eyes of the Beast", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "see in total darkness", dicePool: "", level: 1, discipline: "protean" },
+            { name: "Eyes of the Beast", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "your eyes start glowing and you can see in total darkness", dicePool: "", level: 1, discipline: "protean" },
             { name: "Weight of the Feather", description: "", rouseChecks: 0, amalgamPrerequisites: [], summary: "become weightless", dicePool: "", level: 1, discipline: "protean" },
             { name: "Feral Weapons", description: "", rouseChecks: 1, amalgamPrerequisites: [], summary: "grow deadly claws", dicePool: "", level: 2, discipline: "protean" },
             { name: "Vicissitude", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "dominate", level: 2 }], summary: "reshape your own skin, muscles and bone at will", dicePool: "Resolve + Protean", level: 2, discipline: "protean" },
