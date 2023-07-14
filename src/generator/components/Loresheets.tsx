@@ -25,7 +25,9 @@ export const Loresheets = ({ getMeritOrFlawLine, pickedMeritsAndFlaws }: Loreshe
                     <Text mb={10} ta={"center"} fz={smallScreen ? "lg" : "xl"} weight={500}>{loresheet.title}</Text>
                     <Text fz={"sm"} >{loresheet.summary}</Text>
 
-                    <Button pos={"absolute"} bottom={"15px"} variant="light" color="blue" w={"90%"} mt="md" radius="md" onClick={() => setOpenLoresheetTitle(loresheet.title)}>Open</Button>
+                    <div style={{ position: "absolute", bottom: "0", width: "100%", padding: "inherit", left: 0 }}>
+                        <Button variant="light" color="blue" fullWidth radius="md" onClick={() => setOpenLoresheetTitle(loresheet.title)}>Open</Button>
+                    </div>
                 </Card>
             </Grid.Col>
         )
