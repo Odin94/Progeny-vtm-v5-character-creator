@@ -65,7 +65,6 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
         flaws: [
             { name: "Living in the Past", cost: [1], summary: "you have outdated views & convictions" },
             { name: "Archaic", cost: [1], summary: "Technology skill stuck at 0" },
-            { name: "Illiterate", cost: [2], summary: "Can't read or write, Academics and Science capped at 1" },
         ]
     },
     {
@@ -93,7 +92,7 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
     {
         title: "🗣 Linguistics",
         merits: [{ name: "Linguistics", cost: [1], summary: "fluently speak another language" },],
-        flaws: [{ name: "Illiterate", cost: [1], summary: "can't read and write" },]
+        flaws: [{ name: "Illiterate", cost: [2], summary: "Can't read or write, Academics and Science capped at 1" },],
     },
     {
         title: "🧛 Kindred",
