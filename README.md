@@ -38,14 +38,14 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 <!-- ## TODOs:
 * Add meaningful-ish error messages when things go wrong
-* Give people a way to give feedback
+* Make instruction-text prettier / styled (check out similar web apps for how they do it?)
+* Make merit/flaw picking prettier - maybe style it more like a character sheet (with the oooo)
 
 * Ask for feedback in VtM spaces
   * Randomized name, ambition, desire etc
   * Fix PDF template not showing overflowing text unless you click into it
   * Post and ask for feedback again once you have all these completed (v2 release)
 
-* Merge specialties that are custom-picked and provided by predatorType
 * Add more loresheets
 * Add rituals for blood sorcery
 * Add free-text / select field where predator type says "pick XY"?
@@ -53,12 +53,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * Fix: Changing predator type should reset disciplines (like changing clan does, search "Because you changed your clan")
 * -->
 
-<!-- Implemented improvements that people asked for
-  * Fix layout for mobile
-  * Change BANE_SEVERITY to "1 (bane severity)" (otherwise people assume its a variable that failed to populate)
-
-
- -->
 
 ## Credits & Acknowledgements
 * VtM is owned by https://www.worldofdarkness.com/dark-pack

@@ -210,8 +210,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                             closeModal()
                             setCharacter({
                                 ...character,
-                                predatorType: { name: pickedPredatorType, pickedDiscipline: disciplineNameSchema.parse(discipline) },
-                                specialties: [...(character.specialties), pickedSpecialty]
+                                predatorType: { name: pickedPredatorType, pickedDiscipline: disciplineNameSchema.parse(discipline), pickedSpecialties: [pickedSpecialty] },
                             })
 
                             ReactGA.event({

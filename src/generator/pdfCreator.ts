@@ -3,7 +3,7 @@ import { PDFDocument, PDFForm } from 'pdf-lib';
 import { Character, } from '../data/Character';
 import { Clans } from '../data/Clans';
 import { PredatorTypes } from '../data/PredatorType';
-import { skillsKeySchema } from '../data/Skills';
+import { SkillsKey, skillsKeySchema } from '../data/Skills';
 import base64Check from '../resources/CheckSolid.base64';
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from '../data/Attributes';
@@ -85,54 +85,54 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     })
 
     // Skills
+    const setSpecialty = (skillName: SkillsKey, textFieldKey: string) => {
+        const allSpecialties = [...character.skillSpecialties, ...character.predatorType.pickedSpecialties]
+        const specialties = allSpecialties.filter(s => s.skill === skillName).filter(s => s.name !== "").map(s => s.name)
+
+        if (specialties) form.getTextField(textFieldKey).setText(specialties.join(", "));
+    }
+
     const skills = character.skills;
     (["athletics", "brawl", "craft", "drive", "melee", "larceny", "survival"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
         for (let i = 1; i <= lvl; i++) {
             form.getCheckBox(`${upcase(skill).slice(0, 3)}-${i}`).check()
         }
-
-        const specialty = character.specialties.find((s) => s.skill === skill)
-        if (specialty) form.getTextField(`spec${upcase(skill).slice(0, 3)}`).setText(specialty.name)
+        setSpecialty(skill, `spec${upcase(skill).slice(0, 3)}`)
     });
 
     const aniKenLvl = skills["animal ken"]
     for (let i = 1; i <= aniKenLvl; i++) {
         form.getCheckBox(`AniKen-${i}`).check()
     }
-    const aniKenSpecialty = character.specialties.find((s) => s.skill === "animal ken")
-    if (aniKenSpecialty) form.getTextField("specAniKen").setText(aniKenSpecialty.name);
+    setSpecialty("animal ken", "specAniKen")
 
     // PDF-issue: Lead-1, but specLea  (4 letters vs 3 letters)
     const leadLvl = skills["leadership"]
     for (let i = 1; i <= leadLvl; i++) {
         form.getCheckBox(`Lead-${i}`).check()
     }
-    const leadSpecialty = character.specialties.find((s) => s.skill === "leadership")
-    if (leadSpecialty) form.getTextField("specLea").setText(leadSpecialty.name);
+    setSpecialty("leadership", "specLea")
 
     const stealthLvl = skills["stealth"]
     for (let i = 1; i <= stealthLvl; i++) {
         form.getCheckBox(`Ste-${i}`).check()
     }
-    const stealthSpecialty = character.specialties.find((s) => s.skill === "stealth")
-    if (stealthSpecialty) form.getTextField("specStea").setText(stealthSpecialty.name);
+    setSpecialty("stealth", "specStea")
 
     // PDF-issue: "Fri-1" instead of "Fir-1"
     const fireLvl = skills["firearms"]
     for (let i = 1; i <= fireLvl; i++) {
         form.getCheckBox(`Fri-${i}`).check()
     }
-    const fireSpecialty = character.specialties.find((s) => s.skill === "firearms")
-    if (fireSpecialty) form.getTextField("specFir").setText(fireSpecialty.name);
+    setSpecialty("firearms", "specFir")
 
     // PDF-issue: Stre-1-1, but specStree  (4 letters vs 5 letters)
     const streeLvl = skills["streetwise"]
     for (let i = 1; i <= streeLvl; i++) {
         form.getCheckBox(`Stre-${i}`).check()
     }
-    const streeSpecialty = character.specialties.find((s) => s.skill === "streetwise")
-    if (streeSpecialty) form.getTextField("specStree").setText(streeSpecialty.name);
+    setSpecialty("streetwise", "specStree");
 
     (["etiquette", "insight", "intimidation", "performance", "persuasion", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
         const lvl = skills[skill]
@@ -140,8 +140,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
             form.getCheckBox(`${upcase(skill).slice(0, 4)}-${i}`).check()
         }
 
-        const specialty = character.specialties.find((s) => s.skill === skill)
-        if (specialty) form.getTextField(`spec${upcase(skill).slice(0, 4)}`).setText(specialty.name)
+        setSpecialty(skill, `spec${upcase(skill).slice(0, 4)}`);
     });
 
     // Health
@@ -227,18 +226,15 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         acc[p.discipline].push(p)
         return acc
     }, {} as Record<DisciplineName, Power[]>)
-    let i = 1  // TODO: Clean up index logic here
-    for (const powers of Object.values(powersByDiscipline)) {
+    for (const [powersIndex, powers] of Object.values(powersByDiscipline).entries()) {
+        const i = powersIndex + 1
         form.getTextField(`Disc${i}`).setText(upcase(powers[0].discipline))
-        let j = 1
-        for (const p of powers) {
-            form.getTextField(`Disc${i}_Ability${j}`).setText(getDisciplineText(p))
+        for (const [powerIndex, power] of powers.entries()) {
+            const j = powerIndex + 1
+            form.getTextField(`Disc${i}_Ability${j}`).setText(getDisciplineText(power))
             form.getTextField(`Disc${i}_Ability${j}`).disableRichFormatting()
             form.getCheckBox(`Disc${i}-${j}`).check()
-            j++
         }
-        i++
-        j = 0
     }
 
 

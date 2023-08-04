@@ -354,7 +354,7 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                         pickedSpecialties = [...pickedSpecialties, { skill: skillsKeySchema.parse(pickedSkill), name: lowcase(pickedSkillSpecialty) }]
 
                         closeModal()
-                        setCharacter({ ...character, skills: skills, specialties: [...(character.specialties), ...pickedSpecialties] })
+                        setCharacter({ ...character, skills: skills, skillSpecialties: pickedSpecialties })
                         nextStep()
                     }}>Confirm</Button>
                 </Group>

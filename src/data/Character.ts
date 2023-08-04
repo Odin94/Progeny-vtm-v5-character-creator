@@ -32,6 +32,7 @@ export const characterSchema = z.object({
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
+        pickedSpecialties: specialtySchema.array(),
     }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
@@ -39,7 +40,7 @@ export const characterSchema = z.object({
 
     attributes: attributesSchema,
     skills: skillsSchema,
-    specialties: specialtySchema.array(),
+    skillSpecialties: specialtySchema.array(),
     disciplines: powerSchema.array(),
 
     bloodPotency: z.number().min(0).int(),
@@ -63,7 +64,7 @@ export const getEmptyCharacter = (): Character => {
         sire: "",
 
         clan: "",
-        predatorType: { name: "", pickedDiscipline: "" },
+        predatorType: { name: "", pickedDiscipline: "", pickedSpecialties: [] },
         touchstones: [],
         ambition: "",
         desire: "",
@@ -108,7 +109,7 @@ export const getEmptyCharacter = (): Character => {
             science: 0,
             technology: 0,
         },
-        specialties: [],
+        skillSpecialties: [],
         disciplines: [],
 
         bloodPotency: 0,
