@@ -43,7 +43,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 * Ask for feedback in VtM spaces
   * Randomized name, ambition, desire etc
-  * Fix PDF template not showing overflowing text unless you click into it
   * Post and ask for feedback again once you have all these completed (v2 release)
 
 * Add more loresheets

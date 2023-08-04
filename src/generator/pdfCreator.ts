@@ -1,5 +1,5 @@
 import { notifications } from '@mantine/notifications';
-import { PDFDocument, PDFForm } from 'pdf-lib';
+import { PDFBool, PDFDocument, PDFForm, PDFName } from 'pdf-lib';
 import { Character, } from '../data/Character';
 import { Clans } from '../data/Clans';
 import { PredatorTypes } from '../data/PredatorType';
@@ -271,6 +271,10 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         }
     })()
     form.getTextField("tEXP").setText(`${experience} XP`)
+
+    // Fixes bug where text that is too long for field doesn't show until clicked
+    // see https://github.com/Hopding/pdf-lib/issues/569#issuecomment-1087328416 and https://stackoverflow.com/questions/73058238/some-pdf-textfield-content-not-visible-until-clicked
+    form.acroForm.dict.set(PDFName.of('NeedAppearances'), PDFBool.True)
 
     return await pdfDoc.save()
 }
