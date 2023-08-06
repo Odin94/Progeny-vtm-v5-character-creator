@@ -252,8 +252,7 @@ export const ritualSchema = z.object({
 })
 export type Ritual = z.infer<typeof ritualSchema>
 
-// TODO: Let Tremere players pick one for free
-const Rituals: Ritual[] = [
+export const Rituals: Ritual[] = [
     {
         name: "Blood Walk",
         summary: "Use blood to learn about a subjects generation, name, sire and - on a crit - any active Blood Bonds.",
@@ -300,3 +299,7 @@ const Rituals: Ritual[] = [
         level: 1,
     },
 ]
+
+export const powerIsRitual = (p: Power | Ritual): p is Ritual => {
+    return (p as Ritual)["ingredients"] !== undefined
+}

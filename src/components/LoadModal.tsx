@@ -33,6 +33,8 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }
                         const parsed = JSON.parse(json)
                         console.log({ loadedCharacter: parsed })
 
+                        if (!parsed["rituals"]) parsed["rituals"] = []  // backwards compatibility for characters that were saved before rituals were added
+
                         setCharacter(characterSchema.parse(parsed))
                         closeLoadModal()
                     }}>Load/Overwrite character</Button>

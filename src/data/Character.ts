@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { clanNameSchema } from "./Clans";
-import { disciplineNameSchema, powerSchema } from "./Disciplines";
+import { Power, disciplineNameSchema, powerSchema, ritualSchema } from "./Disciplines";
 import { predatorTypeNameSchema } from "./PredatorType";
 import { specialtySchema } from "./Specialties";
 import { skillsSchema } from "./Skills";
@@ -42,6 +42,7 @@ export const characterSchema = z.object({
     skills: skillsSchema,
     skillSpecialties: specialtySchema.array(),
     disciplines: powerSchema.array(),
+    rituals: ritualSchema.array(),
 
     bloodPotency: z.number().min(0).int(),
     generation: z.number().min(0).int(),
@@ -111,6 +112,7 @@ export const getEmptyCharacter = (): Character => {
         },
         skillSpecialties: [],
         disciplines: [],
+        rituals: [],
 
         bloodPotency: 0,
         generation: 0,
@@ -124,3 +126,5 @@ export const getEmptyCharacter = (): Character => {
         flaws: [],
     }
 }
+
+export const containsBloodSorcery = (powers: Power[]) => powers.filter((power) => power.discipline === "blood sorcery").length > 0

@@ -1,7 +1,7 @@
 import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, ScrollArea, Space, Stack, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
-import { Character } from "../../data/Character"
+import { Character, containsBloodSorcery } from "../../data/Character"
 import { ClanName } from "../../data/Clans"
 import { Discipline, DisciplineName, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
@@ -256,7 +256,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 </Grid>
 
                 <Button disabled={!(allPowersPicked() && pickedPredatorTypePower)} color="grape" onClick={() => {
-                    setCharacter({ ...character, disciplines: allPickedPowers })
+                    setCharacter({ ...character, disciplines: allPickedPowers, rituals: containsBloodSorcery(allPickedPowers) ? character.rituals : [] })
                     nextStep()
                 }}>Confirm</Button>
             </Stack>

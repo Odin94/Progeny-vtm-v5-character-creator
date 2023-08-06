@@ -12,6 +12,7 @@ import PredatorTypePicker from "./components/PredatorTypePicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
 import ErrorBoundary from "../components/ErrorBoundary"
+import RitualsPicker from "./components/RitualsPicker"
 
 
 export type GeneratorProps = {
@@ -33,9 +34,10 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
             case 5: return <PredatorTypePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 6: return <BasicsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
             case 7: return <DisciplinesPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
-            case 8: return <TouchstonePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
-            case 9: return <MeritsAndFlawsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
-            case 10: return <Final character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
+            case 8: return <RitualsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            case 9: return <TouchstonePicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            case 10: return <MeritsAndFlawsPicker character={character} setCharacter={setCharacter} nextStep={() => { setSelectedStep(selectedStep + 1) }} />
+            case 11: return <Final character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
             default: return <Text size={"xl"}>{`Error: Step ${selectedStep} is not implemented`}</Text>
         }
     }

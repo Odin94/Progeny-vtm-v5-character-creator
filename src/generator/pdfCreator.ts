@@ -7,7 +7,7 @@ import { SkillsKey, skillsKeySchema } from '../data/Skills';
 import base64Check from '../resources/CheckSolid.base64';
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from '../data/Attributes';
-import { DisciplineName, Power } from '../data/Disciplines';
+import { DisciplineName, Power, Ritual, powerIsRitual } from '../data/Disciplines';
 import base64Pdf_nerdbert from '../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64';
 import { upcase } from './utils';
 
@@ -209,13 +209,17 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     form.getTextField("Title").setText(`${character.generation}`) // Yes, "Title" is the generation field
 
     // Disciplines
-    const getDisciplineText = (power: Power) => {
+    const getDisciplineText = (power: Power | Ritual) => {
         let text = power.name + ": " + power.summary
         if (power.dicePool !== "") {
             text += ` // ${power.dicePool}`
         }
         if (power.rouseChecks > 0) {
             text += ` // ${power.rouseChecks} rouse check${power.rouseChecks > 1 ? "s" : ""}`
+        }
+
+        if (powerIsRitual(power)) {
+            text += ` // requires: ${power.ingredients}; ${power.requiredTime}`
         }
 
         return text
@@ -226,14 +230,21 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         acc[p.discipline].push(p)
         return acc
     }, {} as Record<DisciplineName, Power[]>)
-    for (const [powersIndex, powers] of Object.values(powersByDiscipline).entries()) {
-        const i = powersIndex + 1
-        form.getTextField(`Disc${i}`).setText(upcase(powers[0].discipline))
+    for (const [disciplineIndex, powers] of Object.values(powersByDiscipline).entries()) {
+        const di = disciplineIndex + 1
+        form.getTextField(`Disc${di}`).setText(upcase(powers[0].discipline))
         for (const [powerIndex, power] of powers.entries()) {
-            const j = powerIndex + 1
-            form.getTextField(`Disc${i}_Ability${j}`).setText(getDisciplineText(power))
-            form.getTextField(`Disc${i}_Ability${j}`).disableRichFormatting()
-            form.getCheckBox(`Disc${i}-${j}`).check()
+            const pi = powerIndex + 1
+            form.getTextField(`Disc${di}_Ability${pi}`).setText(getDisciplineText(power))
+            form.getTextField(`Disc${di}_Ability${pi}`).disableRichFormatting()
+            form.getCheckBox(`Disc${di}-${pi}`).check()
+        }
+        if (powers[0].discipline === "blood sorcery") {
+            for (const [ritualIndex, ritual] of character.rituals.entries()) {
+                const ri = powers.length + ritualIndex + 1
+                form.getTextField(`Disc${di}_Ability${ri}`).setText(getDisciplineText(ritual))
+                form.getTextField(`Disc${di}_Ability${ri}`).disableRichFormatting()
+            }
         }
     }
 

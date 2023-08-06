@@ -1,12 +1,13 @@
 import { Grid, List, Stack, Title } from "@mantine/core"
-import { DisciplineName, Power } from "../../data/Disciplines"
+import { DisciplineName, Power, Ritual } from "../../data/Disciplines"
 import { upcase } from "../../generator/utils"
 
 export type DisciplinesProps = {
     powers: Power[]
+    rituals: Ritual[]
 }
 
-const DisciplineDisplay = ({ powers }: DisciplinesProps) => {
+const DisciplineDisplay = ({ powers, rituals }: DisciplinesProps) => {
     const powersByDisciplines = new Map<DisciplineName, Power[]>()
     powers.forEach((power) => {
         if (!powersByDisciplines.has(power.discipline)) {
@@ -28,6 +29,12 @@ const DisciplineDisplay = ({ powers }: DisciplinesProps) => {
                                 {powers.map((power) => {
                                     return (<List.Item key={power.name}>{power.name}</List.Item>)
                                 })}
+                                {disciplineName === "blood sorcery"
+                                    ? rituals.map((ritual) => {
+                                        return (<List.Item ml={"-3px"} icon={"⛤"} key={ritual.name}>{ritual.name}</List.Item>)
+                                    })
+                                    : null
+                                }
                             </List>
                         </Grid.Col>
                     )

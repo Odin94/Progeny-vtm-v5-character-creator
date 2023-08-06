@@ -28,7 +28,7 @@ const Sidebar = ({ character }: SidebarProps) => {
                 {notDefault(character, "skills") ? <SkillDisplay skills={character.skills} /> : null}
                 {notDefault(character, "generation") ? <Text><b>Generation:</b> {character.generation}</Text> : null}
                 {notDefault(character, "predatorType") ? <Text><b>Predator Type:</b> {character.predatorType.name}</Text> : null}
-                {notDefault(character, "disciplines") ? <DisciplineDisplay powers={character.disciplines} /> : null}
+                {notDefault(character, "disciplines") ? <DisciplineDisplay powers={character.disciplines} rituals={character.rituals} /> : null}
                 {notDefault(character, "touchstones") ? <TouchstoneDisplay touchstones={character.touchstones} /> : null}
                 {notDefault(character, "merits") || notDefault(character, "flaws") ? <MeritsAndFlawsDisplay merits={character.merits} flaws={character.flaws} /> : null}
             </Stack>
