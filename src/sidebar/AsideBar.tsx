@@ -1,6 +1,6 @@
 
 import { Aside, Center, ScrollArea, Stepper } from "@mantine/core"
-import { Character } from "../data/Character"
+import { Character, containsBloodSorcery } from "../data/Character"
 import { isDefault, upcase } from "../generator/utils"
 import { globals } from "../globals"
 
@@ -12,20 +12,19 @@ export type AsideBarProps = {
     character: Character
 }
 
-const stepperKeys = ["clan", "attributes", "skills", "generation", "predatorType", "name", "disciplines", "touchstones", "merits"] as (keyof Character)[]
-
-
-const isHigherLevelAccessible = (character: Character, key: keyof Character) => {
-    const index = Math.max(0, stepperKeys.indexOf(key) - 1)  // if n-1 is not default then we can jump to n
-
-    for (let i = index; i < stepperKeys.length; i++) {
-        if (!isDefault(character, stepperKeys[i])) return true
-    }
-    return false
-}
-
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
     // const smallScreen = globals.isSmallScreen
+    const maybeRituals = containsBloodSorcery(character.disciplines) ? ["rituals"] : []
+    const stepperKeys = ["clan", "attributes", "skills", "generation", "predatorType", "name", "disciplines", ...maybeRituals, "touchstones", "merits"] as (keyof Character)[]
+
+    const isHigherLevelAccessible = (character: Character, key: keyof Character) => {
+        const index = Math.max(0, stepperKeys.indexOf(key) - 1)  // if n-1 is not default then we can jump to n
+
+        for (let i = index; i < stepperKeys.length; i++) {
+            if (!isDefault(character, stepperKeys[i])) return true
+        }
+        return false
+    }
 
     const getStepper = () => {
         return (

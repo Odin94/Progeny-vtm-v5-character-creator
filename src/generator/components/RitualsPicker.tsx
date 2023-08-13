@@ -39,7 +39,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
             const onClick = () => {
                 setCharacter({
                     ...character,
-                    rituals: [...character.rituals, ritual]
+                    rituals: [ritual]  // TODO: turn this into "RitualPicker-ritual" attribute and add function to get all rituals from character
                 })
 
                 trackClick()

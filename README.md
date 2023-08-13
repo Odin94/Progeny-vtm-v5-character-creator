@@ -26,8 +26,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 * (optional) create `.env` file and enter environment variables like `REACT_APP_VARIABLE_NAME = 'some value'`
 
-## How to use
-
+<!-- ## How to use -->
 
 <!-- ## How to use your own fillable pdf
 * Convert your pdf to base64 (you can use `scripts/pdfToBase64.ts`)
@@ -37,7 +36,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 
 <!-- ## TODOs:
-* Add meaningful-ish error messages when things go wrong
 * Make instruction-text prettier / styled (check out similar web apps for how they do it?)
 * Make merit/flaw picking prettier - maybe style it more like a character sheet (with the oooo)
 
