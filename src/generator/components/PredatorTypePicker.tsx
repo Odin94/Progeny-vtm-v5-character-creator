@@ -4,7 +4,7 @@ import { Button, Divider, Grid, Group, Modal, ScrollArea, SegmentedControl, Spac
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
-import { Character } from "../../data/Character"
+import { Character, containsBloodSorcery } from "../../data/Character"
 import { DisciplineName, disciplineNameSchema, disciplines } from "../../data/Disciplines"
 import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
@@ -208,9 +208,14 @@ const SpecialtyModal = ({ modalOpened, closeModal, setCharacter, nextStep, chara
                             console.error(`Couldn't find discipline with name ${discipline}`)
                         } else {
                             closeModal()
+
+                            const pickedDiscipline = disciplineNameSchema.parse(discipline)
+                            const changedPickedDiscipline = pickedDiscipline !== character.predatorType.pickedDiscipline
                             setCharacter({
                                 ...character,
-                                predatorType: { name: pickedPredatorType, pickedDiscipline: disciplineNameSchema.parse(discipline), pickedSpecialties: [pickedSpecialty] },
+                                predatorType: { name: pickedPredatorType, pickedDiscipline, pickedSpecialties: [pickedSpecialty], },
+                                disciplines: changedPickedDiscipline ? [] : character.disciplines,
+                                rituals: changedPickedDiscipline ? [] : character.rituals
                             })
 
                             ReactGA.event({
