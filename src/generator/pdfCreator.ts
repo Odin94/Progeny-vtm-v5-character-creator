@@ -1,30 +1,27 @@
-import { notifications } from '@mantine/notifications';
-import { PDFBool, PDFDocument, PDFForm, PDFName } from 'pdf-lib';
-import { Character, } from '../data/Character';
-import { Clans } from '../data/Clans';
-import { PredatorTypes } from '../data/PredatorType';
-import { SkillsKey, skillsKeySchema } from '../data/Skills';
-import base64Check from '../resources/CheckSolid.base64';
+import { notifications } from "@mantine/notifications"
+import { PDFBool, PDFDocument, PDFForm, PDFName } from "pdf-lib"
+import { Character } from "../data/Character"
+import { Clans } from "../data/Clans"
+import { PredatorTypes } from "../data/PredatorType"
+import { SkillsKey, skillsKeySchema } from "../data/Skills"
+import base64Check from "../resources/CheckSolid.base64"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
-import { attributesKeySchema } from '../data/Attributes';
-import { DisciplineName, Power, Ritual, powerIsRitual } from '../data/Disciplines';
-import base64Pdf_nerdbert from '../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64';
-import { upcase } from './utils';
-
+import { attributesKeySchema } from "../data/Attributes"
+import { DisciplineName, Power, Ritual, powerIsRitual } from "../data/Disciplines"
+import base64Pdf_nerdbert from "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64"
+import { upcase } from "./utils"
 
 type BloodPotencyEffect = {
-    surge: number,
-    mend: string,
-    discBonus: string,
-    discRouse: string,
-    bane: number,
+    surge: number
+    mend: string
+    discBonus: string
+    discRouse: string
+    bane: number
     penalty: string
 }
 
-
 const loadTemplate = async (pdf = base64Pdf_nerdbert) => {
-    return fetch(pdf)
-        .then(r => r.text())
+    return fetch(pdf).then((r) => r.text())
 }
 
 export const testTemplate = async (basePdf: string) => {
@@ -34,7 +31,7 @@ export const testTemplate = async (basePdf: string) => {
         const bytes = base64ToArrayBuffer(basePdf)
 
         const pdfDoc = await PDFDocument.load(bytes)
-        form = pdfDoc.getForm();
+        form = pdfDoc.getForm()
     } catch (err) {
         return { success: false, error: new Error("Can't get form from pdf - is it a fillable pdf?") }
     }
@@ -44,28 +41,60 @@ export const testTemplate = async (basePdf: string) => {
         form.getTextField("Predator").setText("")
         form.getTextField("Ambition").setText("")
     } catch (err) {
-        return { success: false, error: new Error("PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?") }
+        return {
+            success: false,
+            error: new Error("PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?"),
+        }
     }
 
     return { success: true, error: null }
 }
 
 const downloadPdf = (fileName: string, bytes: Uint8Array) => {
-    const blob = new Blob([bytes], { type: "application/pdf" });
-    const link = document.createElement('a');
+    const blob = new Blob([bytes], { type: "application/pdf" })
+    const link = document.createElement("a")
 
-    link.href = window.URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
+    link.href = window.URL.createObjectURL(blob)
+    link.download = fileName
+    link.click()
 }
 
 const potencyEffects: Record<number, BloodPotencyEffect> = {
     0: { surge: 1, mend: "1 superficial", discBonus: "-", discRouse: "-", bane: 0, penalty: "-" },
     1: { surge: 2, mend: "1 superficial", discBonus: "-", discRouse: "Lvl 1", bane: 2, penalty: "-" },
-    2: { surge: 2, mend: "2 superficial", discBonus: "Add 1 die", discRouse: "Lvl 1", bane: 2, penalty: "Animal and bagged blood slake half Hunger" },
-    3: { surge: 3, mend: "2 superficial", discBonus: "Add 1 die", discRouse: "Lvl 2 and below", bane: 3, penalty: "Animal and bagged blood slake no Hunger" },
-    4: { surge: 3, mend: "3 superficial", discBonus: "Add 2 dice", discRouse: "Lvl 2 and below", bane: 3, penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human" },
-    5: { surge: 4, mend: "3 superficial", discBonus: "Add 2 dice", discRouse: "Lvl 3 and below", bane: 4, penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2" },
+    2: {
+        surge: 2,
+        mend: "2 superficial",
+        discBonus: "Add 1 die",
+        discRouse: "Lvl 1",
+        bane: 2,
+        penalty: "Animal and bagged blood slake half Hunger",
+    },
+    3: {
+        surge: 3,
+        mend: "2 superficial",
+        discBonus: "Add 1 die",
+        discRouse: "Lvl 2 and below",
+        bane: 3,
+        penalty: "Animal and bagged blood slake no Hunger",
+    },
+    4: {
+        surge: 3,
+        mend: "3 superficial",
+        discBonus: "Add 2 dice",
+        discRouse: "Lvl 2 and below",
+        bane: 3,
+        penalty: "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human",
+    },
+    5: {
+        surge: 4,
+        mend: "3 superficial",
+        discBonus: "Add 2 dice",
+        discRouse: "Lvl 3 and below",
+        bane: 4,
+        penalty:
+            "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2",
+    },
 }
 
 const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
@@ -73,33 +102,40 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     const bytes = base64ToArrayBuffer(basePdf)
 
     const pdfDoc = await PDFDocument.load(bytes)
-    const form = pdfDoc.getForm();
+    const form = pdfDoc.getForm()
 
     // Attributes
-    const attributes = character.attributes;
-    (["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"].map((a) => attributesKeySchema.parse(a))).forEach((attr) => {
-        const lvl = attributes[attr]
-        for (let i = 1; i <= lvl; i++) {
-            form.getCheckBox(`${upcase(attr).slice(0, 3)}-${i}`).check()
-        }
-    })
+    const attributes = character.attributes
+    ;["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"]
+        .map((a) => attributesKeySchema.parse(a))
+        .forEach((attr) => {
+            const lvl = attributes[attr]
+            for (let i = 1; i <= lvl; i++) {
+                form.getCheckBox(`${upcase(attr).slice(0, 3)}-${i}`).check()
+            }
+        })
 
     // Skills
     const setSpecialty = (skillName: SkillsKey, textFieldKey: string) => {
         const allSpecialties = [...character.skillSpecialties, ...character.predatorType.pickedSpecialties]
-        const specialties = allSpecialties.filter(s => s.skill === skillName).filter(s => s.name !== "").map(s => s.name)
+        const specialties = allSpecialties
+            .filter((s) => s.skill === skillName)
+            .filter((s) => s.name !== "")
+            .map((s) => s.name)
 
-        if (specialties) form.getTextField(textFieldKey).setText(specialties.join(", "));
+        if (specialties) form.getTextField(textFieldKey).setText(specialties.join(", "))
     }
 
-    const skills = character.skills;
-    (["athletics", "brawl", "craft", "drive", "melee", "larceny", "survival"].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
-        const lvl = skills[skill]
-        for (let i = 1; i <= lvl; i++) {
-            form.getCheckBox(`${upcase(skill).slice(0, 3)}-${i}`).check()
-        }
-        setSpecialty(skill, `spec${upcase(skill).slice(0, 3)}`)
-    });
+    const skills = character.skills
+    ;["athletics", "brawl", "craft", "drive", "melee", "larceny", "survival"]
+        .map((s) => skillsKeySchema.parse(s))
+        .forEach((skill) => {
+            const lvl = skills[skill]
+            for (let i = 1; i <= lvl; i++) {
+                form.getCheckBox(`${upcase(skill).slice(0, 3)}-${i}`).check()
+            }
+            setSpecialty(skill, `spec${upcase(skill).slice(0, 3)}`)
+        })
 
     const aniKenLvl = skills["animal ken"]
     for (let i = 1; i <= aniKenLvl; i++) {
@@ -132,16 +168,33 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     for (let i = 1; i <= streeLvl; i++) {
         form.getCheckBox(`Stre-${i}`).check()
     }
-    setSpecialty("streetwise", "specStree");
+    setSpecialty("streetwise", "specStree")
+    ;[
+        "etiquette",
+        "insight",
+        "intimidation",
+        "performance",
+        "persuasion",
+        "subterfuge",
+        "academics",
+        "awareness",
+        "finance",
+        "investigation",
+        "medicine",
+        "occult",
+        "politics",
+        "science",
+        "technology",
+    ]
+        .map((s) => skillsKeySchema.parse(s))
+        .forEach((skill) => {
+            const lvl = skills[skill]
+            for (let i = 1; i <= lvl; i++) {
+                form.getCheckBox(`${upcase(skill).slice(0, 4)}-${i}`).check()
+            }
 
-    (["etiquette", "insight", "intimidation", "performance", "persuasion", "subterfuge", "academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology",].map((s) => skillsKeySchema.parse(s))).forEach((skill) => {
-        const lvl = skills[skill]
-        for (let i = 1; i <= lvl; i++) {
-            form.getCheckBox(`${upcase(skill).slice(0, 4)}-${i}`).check()
-        }
-
-        setSpecialty(skill, `spec${upcase(skill).slice(0, 4)}`);
-    });
+            setSpecialty(skill, `spec${upcase(skill).slice(0, 4)}`)
+        })
 
     // Health
     let health = 3 + character.attributes["stamina"]
@@ -164,12 +217,16 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         switch (character.generation) {
             case 16:
             case 15:
-            case 14: return 0
+            case 14:
+                return 0
             case 13:
-            case 12: return 1
+            case 12:
+                return 1
             case 11:
-            case 10: return 2
-            default: return 1
+            case 10:
+                return 2
+            default:
+                return 1
         }
     })()
     bloodPotency += PredatorTypes[character.predatorType.name].bloodPotencyChange
@@ -187,7 +244,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     //Humanity
     const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
-    const checkImageBytes = await fetch(base64Check).then(res => res.text())
+    const checkImageBytes = await fetch(base64Check).then((res) => res.text())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
     for (let i = 1; i <= humanity; i++) {
         form.getButton(`Humanity-${i}`).setImage(checkImage)
@@ -248,11 +305,13 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         }
     }
 
-
     // Merits & flaws
     const characterMeritsFlaws = [...character.merits, ...character.flaws]
-    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws.filter(m => !characterMeritsFlaws.map(cm => cm.name).includes(m.name))
-    const meritsAndFlaws = [...predatorTypeMeritsFlaws, ...characterMeritsFlaws]
+    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws.filter(
+        (m) => !characterMeritsFlaws.map((cm) => cm.name).includes(m.name)
+    )
+    const pickedPredatorTypeMeritsFlaws = character.predatorType.pickedMeritsAndFlaws
+    const meritsAndFlaws = [...predatorTypeMeritsFlaws, ...pickedPredatorTypeMeritsFlaws, ...characterMeritsFlaws]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
         form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)
@@ -263,9 +322,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     // Touchstones & Convictions
     form.getTextField("Convictions").setText(
-        character.touchstones
-            .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
-            .join("\n\n")
+        character.touchstones.map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`).join("\n\n")
     )
 
     // Experience
@@ -273,23 +330,26 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         switch (character.generation) {
             case 16:
             case 15:
-            case 14: return 0
+            case 14:
+                return 0
             case 13:
-            case 12: return 15
+            case 12:
+                return 15
             case 11:
-            case 10: return 35
-            default: return 0
+            case 10:
+                return 35
+            default:
+                return 0
         }
     })()
     form.getTextField("tEXP").setText(`${experience} XP`)
 
     // Fixes bug where text that is too long for field doesn't show until clicked
     // see https://github.com/Hopding/pdf-lib/issues/569#issuecomment-1087328416 and https://stackoverflow.com/questions/73058238/some-pdf-textfield-content-not-visible-until-clicked
-    form.acroForm.dict.set(PDFName.of('NeedAppearances'), PDFBool.True)
+    form.acroForm.dict.set(PDFName.of("NeedAppearances"), PDFBool.True)
 
     return await pdfDoc.save()
 }
-
 
 export const downloadCharacterSheet = async (character: Character) => {
     const pdfBytes = await createPdf_nerdbert(character)
@@ -304,21 +364,20 @@ export const downloadCharacterSheet = async (character: Character) => {
 }
 
 function base64ToArrayBuffer(base64: string) {
-    const binary_string = window.atob(base64);
-    const len = binary_string.length;
-    const bytes = new Uint8Array(len);
+    const binary_string = window.atob(base64)
+    const len = binary_string.length
+    const bytes = new Uint8Array(len)
     for (let i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
+        bytes[i] = binary_string.charCodeAt(i)
     }
-    return bytes.buffer;
+    return bytes.buffer
 }
-
 
 const getFields = (form: PDFForm): Record<string, string> => {
     const fields = form.getFields()
 
     const outFields: Record<string, string> = {}
-    fields.forEach(field => {
+    fields.forEach((field) => {
         const type = field.constructor.name
         const name = field.getName()
 
@@ -337,7 +396,5 @@ export const printFieldNames = async () => {
 
     console.log(JSON.stringify(getFields(form), null, 2))
 }
-
-
 
 // export default createPdf_renegade

@@ -36,6 +36,8 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 
 <!-- ## TODOs:
+* Add free-text / select field where predator type says "pick XY"?
+
 * Make instruction-text prettier / styled (check out similar web apps for how they do it?)
 * Make merit/flaw picking prettier - maybe style it more like a character sheet (with the oooo)
 
@@ -44,7 +46,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
   * Post and ask for feedback again once you have all these completed (v2 release)
 
 * Add more loresheets
-* Add free-text / select field where predator type says "pick XY"?
 * Fix: Setting Specialites, then going back and setting new specialties keeps the old ones
 * Fix: Changing predator type should reset disciplines (like changing clan does, search "Because you changed your clan")
 * -->

@@ -1,20 +1,18 @@
-import { z } from "zod";
-import { clanNameSchema } from "./Clans";
-import { Power, disciplineNameSchema, powerSchema, ritualSchema } from "./Disciplines";
-import { predatorTypeNameSchema } from "./PredatorType";
-import { specialtySchema } from "./Specialties";
-import { skillsSchema } from "./Skills";
-import { attributesSchema } from "./Attributes";
-
+import { z } from "zod"
+import { clanNameSchema } from "./Clans"
+import { Power, disciplineNameSchema, powerSchema, ritualSchema } from "./Disciplines"
+import { predatorTypeNameSchema } from "./PredatorType"
+import { specialtySchema } from "./Specialties"
+import { skillsSchema } from "./Skills"
+import { attributesSchema } from "./Attributes"
 
 export const meritFlawSchema = z.object({
     name: z.string(),
     level: z.number().min(1).int(),
     summary: z.string(),
-    type: z.union([z.literal("merit"), z.literal("flaw")])
+    type: z.union([z.literal("merit"), z.literal("flaw")]),
 })
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
-
 
 export const touchstoneSchema = z.object({
     name: z.string(),
@@ -33,6 +31,7 @@ export const characterSchema = z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
         pickedSpecialties: specialtySchema.array(),
+        pickedMeritsAndFlaws: meritFlawSchema.array(),
     }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
@@ -57,7 +56,6 @@ export const characterSchema = z.object({
 })
 export type Character = z.infer<typeof characterSchema>
 
-
 export const getEmptyCharacter = (): Character => {
     return {
         name: "",
@@ -65,7 +63,7 @@ export const getEmptyCharacter = (): Character => {
         sire: "",
 
         clan: "",
-        predatorType: { name: "", pickedDiscipline: "", pickedSpecialties: [] },
+        predatorType: { name: "", pickedDiscipline: "", pickedSpecialties: [], pickedMeritsAndFlaws: [] },
         touchstones: [],
         ambition: "",
         desire: "",
