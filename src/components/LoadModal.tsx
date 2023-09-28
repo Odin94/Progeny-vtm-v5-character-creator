@@ -39,6 +39,7 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }
                             console.log({ loadedCharacter: parsed })
 
                             if (!parsed["rituals"]) parsed["rituals"] = [] // backwards compatibility for characters that were saved before rituals were added
+                            if (!parsed["predatorType"]["pickedMeritsAndFlaws"]) parsed["predatorType"]["pickedMeritsAndFlaws"] = [] // backwards compatibility for characters that were saved before pickedMeritsAndFlaws were added
 
                             setCharacter(characterSchema.parse(parsed))
                             closeLoadModal()
