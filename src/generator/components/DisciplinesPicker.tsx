@@ -7,9 +7,8 @@ import { Discipline, DisciplineName, Power, disciplines } from "../../data/Disci
 import { globals } from "../../globals"
 import { intersection, upcase } from "../utils"
 
-
 type DisciplinesPickerProps = {
-    character: Character,
+    character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
@@ -19,7 +18,9 @@ const getDisciplinesForClan = (clan: ClanName) => {
 }
 
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
-    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Disciplines Picker" }) }, [])
+    useEffect(() => {
+        ReactGA.send({ hitType: "pageview", title: "Disciplines Picker" })
+    }, [])
 
     const smallScreen = globals.isSmallScreen
     const phoneScreen = globals.isPhoneScreen
@@ -38,8 +39,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         for (const { discipline, level } of power.amalgamPrerequisites) {
             const pickedDisciplineLevel = allPickedPowers
                 .map((power) => power.discipline)
-                .filter((powerDisc) => powerDisc === discipline)
-                .length
+                .filter((powerDisc) => powerDisc === discipline).length
 
             if (pickedDisciplineLevel < level) return true
         }
@@ -80,17 +80,18 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         // Prepare allPickedPowers to check if pickedPowers still meet prerequisites
         allPickedPowers = allPickedPowers
             .filter((p) => p.name !== pickedPredatorTypePower?.name)
-            .filter((p) => !(p.discipline === pickedPredatorTypePower?.discipline && p.level > (pickedPredatorTypePower?.level ?? 0)))  // remove powers of same discipline with higher level
+            .filter((p) => !(p.discipline === pickedPredatorTypePower?.discipline && p.level > (pickedPredatorTypePower?.level ?? 0))) // remove powers of same discipline with higher level
         setPickedPredatorTypePower(undefined)
         setPickedPowers(pickedPowers.filter((p) => !missingPrerequisites(p)))
     }
 
     const getPowerCards = (powers: Power[], isForPredatorType = false) => {
         return powers.map((power) => {
-            const isButtonDisabled = isPicked(power)
-                || missingPrerequisites(power)
-                || (!isForPredatorType && (alreadyPickedTwoPowers(power) || alreadyPickedTwoDisciplines(power) || allPowersPicked()))
-                || (isForPredatorType && pickedPredatorTypePower !== undefined)
+            const isButtonDisabled =
+                isPicked(power) ||
+                missingPrerequisites(power) ||
+                (!isForPredatorType && (alreadyPickedTwoPowers(power) || alreadyPickedTwoDisciplines(power) || allPowersPicked())) ||
+                (isForPredatorType && pickedPredatorTypePower !== undefined)
 
             const trackClick = () => {
                 ReactGA.event({
@@ -99,7 +100,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     label: power.name,
                 })
             }
-            const onClick = () => isForPredatorType ? setPickedPredatorTypePower(power) : setPickedPowers([...pickedPowers, power])
+            const onClick = () => (isForPredatorType ? setPickedPredatorTypePower(power) : setPickedPowers([...pickedPowers, power]))
 
             const amalgamHeight = 25
             let cardHeight = phoneScreen ? 180 : 215
@@ -108,33 +109,55 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             return (
                 <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                     <Group position="apart" mt="0" mb="xs">
-                        <Text fz={(smallScreen && !phoneScreen) ? "xs" : "sm"} weight={500}>{power.name}</Text>
-                        <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">lv {power.level}</Badge>
+                        <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} weight={500}>
+                            {power.name}
+                        </Text>
+                        <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">
+                            lv {power.level}
+                        </Badge>
                     </Group>
 
-                    <Text fz={"sm"} size="sm" color="dimmed">{upcase(power.summary)}</Text>
-                    {
-                        power.amalgamPrerequisites.length > 0 ?
-                            <div style={{ height: amalgamHeight }}>
-                                <Text size="sm" color="red">Requires:</Text>
-                                <List size="xs">
-                                    {power.amalgamPrerequisites.map((prereq) => {
-                                        return (<List.Item key={power.name + prereq.discipline}>{upcase(prereq.discipline)}: Lv {prereq.level}</List.Item>)
-                                    })}
-                                </List>
-                                {missingAmalgamPrereq(power)
-                                    ? null
-                                    : <Text size="xs" color="green">(requirements met)</Text>}
-                            </div>
-                            : null
-                    }
+                    <Text fz={"sm"} size="sm" color="dimmed">
+                        {upcase(power.summary)}
+                    </Text>
+                    {power.amalgamPrerequisites.length > 0 ? (
+                        <div style={{ height: amalgamHeight }}>
+                            <Text size="sm" color="red">
+                                Requires:
+                            </Text>
+                            <List size="xs">
+                                {power.amalgamPrerequisites.map((prereq) => {
+                                    return (
+                                        <List.Item key={power.name + prereq.discipline}>
+                                            {upcase(prereq.discipline)}: Lv {prereq.level}
+                                        </List.Item>
+                                    )
+                                })}
+                            </List>
+                            {missingAmalgamPrereq(power) ? null : (
+                                <Text size="xs" color="green">
+                                    (requirements met)
+                                </Text>
+                            )}
+                        </div>
+                    ) : null}
 
                     <div style={{ position: "absolute", bottom: "0", width: "100%", padding: "inherit", left: 0 }}>
-                        <Button disabled={isButtonDisabled} onClick={() => { onClick(); trackClick() }} variant="light" color="blue" fullWidth radius="md">
+                        <Button
+                            disabled={isButtonDisabled}
+                            onClick={() => {
+                                onClick()
+                                trackClick()
+                            }}
+                            variant="light"
+                            color="blue"
+                            fullWidth
+                            radius="md"
+                        >
                             <Text truncate>Take {power.name}</Text>
                         </Button>
                     </div>
-                </Card >
+                </Card>
             )
         })
     }
@@ -157,9 +180,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         const lvl2Powers = eligiblePowers.filter((power) => power.level === 2)
         const lvl3Powers = eligiblePowers.filter((power) => power.level === 3)
 
-        const canReachLvl3 = disciplineName === character.predatorType.pickedDiscipline && !(isPredatorType && !clanHasDiscipline(disciplineName))
+        const canReachLvl3 =
+            disciplineName === character.predatorType.pickedDiscipline && !(isPredatorType && !clanHasDiscipline(disciplineName))
 
-        const colSpan = smallScreen ? 12 : (canReachLvl3 ? 4 : 6)
+        const colSpan = smallScreen ? 12 : canReachLvl3 ? 4 : 6
         return (
             <Accordion.Item key={disciplineName + isPredatorType} value={disciplineName + isPredatorType}>
                 <Accordion.Control icon={<Image src={discipline.logo} />}>{upcase(disciplineName)}</Accordion.Control>
@@ -186,27 +210,36 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 disciplineTitle = power.discipline
                                 return (
                                     <div key={power.name}>
-                                        <Text weight={700} size={"xl"}>{upcase(power.discipline)}</Text>
+                                        <Text weight={700} size={"xl"}>
+                                            {upcase(power.discipline)}
+                                        </Text>
                                         <Text> {power.name}</Text>
                                     </div>
                                 )
                             }
-                            return (<Text key={power.name}>{power.name}</Text>)
+                            return <Text key={power.name}>{power.name}</Text>
                         })}
-                        {pickedPowers.length > 0 ? <Button variant="light" color="red" onClick={undoPick}>Undo last pick</Button> : null}
+                        {pickedPowers.length > 0 ? (
+                            <Button variant="light" color="red" onClick={undoPick}>
+                                Undo last pick
+                            </Button>
+                        ) : null}
 
                         {/* Predator Type Discipline pick */}
-                        {pickedPredatorTypePower ?
+                        {pickedPredatorTypePower ? (
                             <div>
                                 {powersSortedByDiscipline.length > 0 ? <hr style={{ width: "100%" }} color="#e03131" /> : null}
 
-                                <Text weight={700} size={"xl"}>{upcase(pickedPredatorTypePower.discipline)}</Text>
+                                <Text weight={700} size={"xl"}>
+                                    {upcase(pickedPredatorTypePower.discipline)}
+                                </Text>
                                 <Text> {pickedPredatorTypePower.name}</Text>
 
-                                <Button variant="light" color="red" onClick={undoPredatorTypePick}>Undo pred pick</Button>
+                                <Button variant="light" color="red" onClick={undoPredatorTypePick}>
+                                    Undo pred pick
+                                </Button>
                             </div>
-                            : null
-                        }
+                        ) : null}
                     </Stack>
                 </Center>
             </Grid.Col>
@@ -217,10 +250,16 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     let disciplineTitle = ""
     const height = globals.viewportHeightPx
     return (
-        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: globals.isPhoneScreen ? "60px" : "80px" }} >
-            <Text fw={700} fz={smallScreen ? "14px" : "28px"} ta="center">Pick 2 powers in one discipline,<br /> 1 power in another,<br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type</Text>
+        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: globals.isPhoneScreen ? "60px" : "80px" }}>
+            <Text fw={700} fz={smallScreen ? "14px" : "28px"} ta="center">
+                Pick 2 powers in one discipline,
+                <br /> 1 power in another,
+                <br /> And 1 power in {upcase(character.predatorType.pickedDiscipline)} from your Predator Type
+            </Text>
 
-            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Disciplines</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
+                Disciplines
+            </Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 
@@ -229,38 +268,46 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     {/* Picked Powers */}
                     {smallScreen ? null : getPickedPowersSection()}
 
-
                     {/* Discipline-List */}
 
                     <Grid.Col span={smallScreen ? 12 : 9} offset={smallScreen ? 0 : 1}>
                         <ScrollArea h={smallScreen ? height - 320 : height - 400} pb={20} w={"105%"}>
                             <Center>
                                 <Accordion w={smallScreen ? "100%" : "600px"}>
-                                    {
-                                        Object.entries(disciplinesForClan).map(([name, discipline]) => getDisciplineAccordionItem(name, discipline))
-                                    }
+                                    {Object.entries(disciplinesForClan).map(([name, discipline]) =>
+                                        getDisciplineAccordionItem(name, discipline)
+                                    )}
 
-                                    <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>Predator Type Discipline</Text>
+                                    <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>
+                                        Predator Type Discipline
+                                    </Text>
                                     <hr color="#e03131" />
-                                    {
-                                        getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)
-                                    }
+                                    {getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)}
                                 </Accordion>
                             </Center>
 
                             {/* Picked Powers */}
                             {smallScreen ? getPickedPowersSection() : null}
                         </ScrollArea>
-
                     </Grid.Col>
                 </Grid>
 
-                <Button disabled={!(allPowersPicked() && pickedPredatorTypePower)} color="grape" onClick={() => {
-                    setCharacter({ ...character, disciplines: allPickedPowers, rituals: containsBloodSorcery(allPickedPowers) ? character.rituals : [] })
-                    nextStep()
-                }}>Confirm</Button>
+                <Button
+                    disabled={!(allPowersPicked() && pickedPredatorTypePower)}
+                    color="grape"
+                    onClick={() => {
+                        setCharacter({
+                            ...character,
+                            disciplines: allPickedPowers,
+                            rituals: containsBloodSorcery(allPickedPowers) ? character.rituals : [],
+                        })
+                        nextStep()
+                    }}
+                >
+                    Confirm
+                </Button>
             </Stack>
-        </div >
+        </div>
     )
 }
 

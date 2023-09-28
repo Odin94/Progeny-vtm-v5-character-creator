@@ -1,5 +1,4 @@
-import { z } from "zod";
-
+import { z } from "zod"
 
 export const attributesSchema = z.object({
     strength: z.number().min(1).max(5).int(),

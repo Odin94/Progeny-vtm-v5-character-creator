@@ -1,1 +1,1 @@
-declare module '*.base64';
+declare module "*.base64"

@@ -9,7 +9,7 @@ export type AttributesProps = {
 
 const AttributesDisplay = ({ attributes }: AttributesProps) => {
     const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New"
+        fontFamily: "Courier New",
     }
 
     return (
@@ -17,28 +17,44 @@ const AttributesDisplay = ({ attributes }: AttributesProps) => {
             <Title order={2}>Attributes</Title>
 
             <Grid>
-
                 <Grid.Col span={4}>
                     <Title order={4}>Physical</Title>
-                    {["strength", "dexterity", "stamina"].map((a) => attributesKeySchema.parse(a)).map((attribute) => {
-                        return (<Text style={textStyle} key={attribute}>{upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} /></Text>)
-                    })}
+                    {["strength", "dexterity", "stamina"]
+                        .map((a) => attributesKeySchema.parse(a))
+                        .map((attribute) => {
+                            return (
+                                <Text style={textStyle} key={attribute}>
+                                    {upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} />
+                                </Text>
+                            )
+                        })}
                 </Grid.Col>
 
                 <Grid.Col span={4}>
                     <Title order={4}>Social</Title>
-                    {["charisma", "manipulation", "composure"].map((a) => attributesKeySchema.parse(a)).map((attribute) => {
-                        return (<Text style={textStyle} key={attribute}>{upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} /></Text>)
-                    })}
+                    {["charisma", "manipulation", "composure"]
+                        .map((a) => attributesKeySchema.parse(a))
+                        .map((attribute) => {
+                            return (
+                                <Text style={textStyle} key={attribute}>
+                                    {upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} />
+                                </Text>
+                            )
+                        })}
                 </Grid.Col>
 
                 <Grid.Col span={4}>
                     <Title order={4}>Mental</Title>
-                    {["intelligence", "wits", "resolve"].map((a) => attributesKeySchema.parse(a)).map((attribute) => {
-                        return (<Text style={textStyle} key={attribute}>{upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} /></Text>)
-                    })}
+                    {["intelligence", "wits", "resolve"]
+                        .map((a) => attributesKeySchema.parse(a))
+                        .map((attribute) => {
+                            return (
+                                <Text style={textStyle} key={attribute}>
+                                    {upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} />
+                                </Text>
+                            )
+                        })}
                 </Grid.Col>
-
             </Grid>
         </Stack>
     )

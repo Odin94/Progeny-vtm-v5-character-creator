@@ -31,9 +31,19 @@ class ErrorBoundary extends Component<Props, State> {
             return (
                 <Center>
                     <Alert mt={"50px"} icon={<IconAlertCircle size="1rem" />} color="red" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
-                        <Text fz={"xl"} ta={"center"}>There was an error: {this.state.error?.message}</Text>
-                        <Text fz={"lg"} ta={"center"} mb={"xl"}>Send a screenshot of this to me on <a target="_blank" rel="noreferrer" href="https://twitter.com/Odin68092534">Twitter</a> to help me fix it</Text>
-                        <Text fz={"xs"} ta={"center"}>{this.state.error?.stack}</Text>
+                        <Text fz={"xl"} ta={"center"}>
+                            There was an error: {this.state.error?.message}
+                        </Text>
+                        <Text fz={"lg"} ta={"center"} mb={"xl"}>
+                            Send a screenshot of this to me on{" "}
+                            <a target="_blank" rel="noreferrer" href="https://twitter.com/Odin68092534">
+                                Twitter
+                            </a>{" "}
+                            to help me fix it
+                        </Text>
+                        <Text fz={"xs"} ta={"center"}>
+                            {this.state.error?.stack}
+                        </Text>
                     </Alert>
                 </Center>
             )

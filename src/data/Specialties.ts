@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { skillsKeySchema } from "./Skills";
+import { z } from "zod"
+import { skillsKeySchema } from "./Skills"
 
 export const specialtySchema = z.object({
     skill: skillsKeySchema,

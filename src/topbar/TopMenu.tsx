@@ -13,7 +13,7 @@ import { notifications } from "@mantine/notifications"
 export type TopMenuProps = {
     character: Character
     setCharacter: (character: Character) => void
-    setSelectedStep: (step: number) => void,
+    setSelectedStep: (step: number) => void
 }
 
 const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => {
@@ -23,17 +23,20 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
 
     const disabled = true
-    if (disabled) return (<></>)
+    if (disabled) return <></>
 
     return (
         <Menu shadow="md" width={200} opened={menuOpened} onChange={setMenuOpened}>
             <Menu.Target>
-                <Button color="grape" variant="light" leftIcon={<FontAwesomeIcon icon={faAnkh} />}>(Down)load</Button>
+                <Button color="grape" variant="light" leftIcon={<FontAwesomeIcon icon={faAnkh} />}>
+                    (Down)load
+                </Button>
             </Menu.Target>
 
             <Menu.Dropdown>
                 {/* TODO: test error handling */}
-                <Menu.Item icon={<FontAwesomeIcon icon={faFileExport} />}
+                <Menu.Item
+                    icon={<FontAwesomeIcon icon={faFileExport} />}
                     onClick={() => {
                         downloadCharacterSheet(character).catch((e) => {
                             console.error(e)
@@ -44,10 +47,12 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
                                 color: "red",
                             })
                         })
-                    }}>
+                    }}
+                >
                     Download PDF
                 </Menu.Item>
-                <Menu.Item icon={<FontAwesomeIcon icon={faFloppyDisk} />}
+                <Menu.Item
+                    icon={<FontAwesomeIcon icon={faFloppyDisk} />}
                     onClick={() => {
                         downloadJson(character).catch((e) => {
                             console.error(e)
@@ -58,29 +63,61 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
                                 color: "red",
                             })
                         })
-                    }}>
+                    }}
+                >
                     Download JSON
                 </Menu.Item>
 
                 <Menu.Divider />
 
-                <FileButton onChange={async (payload: File | null) => {
-                    if (!payload) return
+                <FileButton
+                    onChange={async (payload: File | null) => {
+                        if (!payload) return
 
-                    setLoadedFile(payload)
-                    openLoadModal()
-                }} accept="application/json">
-                    {(props) => <Button leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />} ml={"11px"} fw={400} size="s" color="dark" variant="subtle"  {...props}>Load from file</Button>}
+                        setLoadedFile(payload)
+                        openLoadModal()
+                    }}
+                    accept="application/json"
+                >
+                    {(props) => (
+                        <Button
+                            leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />}
+                            ml={"11px"}
+                            fw={400}
+                            size="s"
+                            color="dark"
+                            variant="subtle"
+                            {...props}
+                        >
+                            Load from file
+                        </Button>
+                    )}
                 </FileButton>
 
                 <Menu.Divider />
 
-                <Menu.Item icon={<FontAwesomeIcon icon={faTrash} />} onClick={() => { openResetModal() }}>Reset</Menu.Item>
-
+                <Menu.Item
+                    icon={<FontAwesomeIcon icon={faTrash} />}
+                    onClick={() => {
+                        openResetModal()
+                    }}
+                >
+                    Reset
+                </Menu.Item>
             </Menu.Dropdown>
 
-            <LoadModal loadedFile={loadedFile} setCharacter={setCharacter} loadModalOpened={loadModalOpened} closeLoadModal={closeLoadModal} />
-            <ResetModal setCharacter={setCharacter} setSelectedStep={setSelectedStep} resetModalOpened={resetModalOpened} closeResetModal={closeResetModal} />
+            <LoadModal
+                loadedFile={loadedFile}
+                setCharacter={setCharacter}
+                loadModalOpened={loadModalOpened}
+                closeLoadModal={closeLoadModal}
+            />
+            <ResetModal
+                setCharacter={setCharacter}
+                setSelectedStep={setSelectedStep}
+                resetModalOpened={resetModalOpened}
+                closeResetModal={closeResetModal}
+            />
         </Menu>
     )
 }

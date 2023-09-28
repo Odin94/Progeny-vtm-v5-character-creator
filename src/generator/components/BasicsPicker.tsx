@@ -4,13 +4,15 @@ import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
 
 type BasicsPickerProps = {
-    character: Character,
+    character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
 
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
-    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Basics Picker" }) }, [])
+    useEffect(() => {
+        ReactGA.send({ hitType: "pageview", title: "Basics Picker" })
+    }, [])
 
     const [name, setName] = useState(character.name)
     const [sire, setSire] = useState(character.sire)
@@ -20,7 +22,9 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
 
     return (
         <div>
-            <Text fw={700} fz={"30px"} ta="center">Come up with the basics</Text>
+            <Text fw={700} fz={"30px"} ta="center">
+                Come up with the basics
+            </Text>
 
             <Stack mt={"xl"} align="center" spacing="xl">
                 <TextInput
@@ -66,10 +70,15 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     minRows={4}
                 />
 
-                <Button color="grape" onClick={() => {
-                    setCharacter({ ...character, name, sire, ambition, desire, description })
-                    nextStep()
-                }}>Confirm</Button>
+                <Button
+                    color="grape"
+                    onClick={() => {
+                        setCharacter({ ...character, name, sire, ambition, desire, description })
+                        nextStep()
+                    }}
+                >
+                    Confirm
+                </Button>
             </Stack>
         </div>
     )

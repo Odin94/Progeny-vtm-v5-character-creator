@@ -5,7 +5,6 @@ export type TouchstoneProps = {
     touchstones: Touchstone[]
 }
 
-
 const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => {
     return (
         <Stack>
@@ -14,13 +13,15 @@ const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => {
                 {touchstones.map((stone, i) => {
                     return (
                         <List.Item key={i}>
-                            <Text><b>{stone.name}</b></Text>
+                            <Text>
+                                <b>{stone.name}</b>
+                            </Text>
                             <Text c="dimmed">{stone.conviction}</Text>
                         </List.Item>
                     )
                 })}
             </List>
-        </Stack >
+        </Stack>
     )
 }
 

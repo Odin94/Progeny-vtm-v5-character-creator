@@ -3,14 +3,13 @@ import { MeritFlaw } from "../../data/Character"
 import Tally from "../../components/Tally"
 
 export type MeritsAndFlawsProps = {
-    merits: MeritFlaw[],
+    merits: MeritFlaw[]
     flaws: MeritFlaw[]
 }
 
-
 const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
     const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New"
+        fontFamily: "Courier New",
     }
 
     return (
@@ -22,7 +21,9 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
                         {merits.map((merit) => {
                             return (
                                 <List.Item key={merit.name}>
-                                    <Text c="green" style={textStyle}>{merit.name.slice(0, 7)}: <Tally n={merit.level} /></Text>
+                                    <Text c="green" style={textStyle}>
+                                        {merit.name.slice(0, 7)}: <Tally n={merit.level} />
+                                    </Text>
                                 </List.Item>
                             )
                         })}
@@ -34,14 +35,16 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
                         {flaws.map((flaw) => {
                             return (
                                 <List.Item key={flaw.name}>
-                                    <Text c="red" style={textStyle}>{flaw.name.slice(0, 7)}: <Tally n={flaw.level} /></Text>
+                                    <Text c="red" style={textStyle}>
+                                        {flaw.name.slice(0, 7)}: <Tally n={flaw.level} />
+                                    </Text>
                                 </List.Item>
                             )
                         })}
                     </List>
                 </Grid.Col>
             </Grid>
-        </Stack >
+        </Stack>
     )
 }
 

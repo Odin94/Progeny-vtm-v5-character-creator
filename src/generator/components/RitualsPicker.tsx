@@ -6,15 +6,16 @@ import { Rituals } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { upcase } from "../utils"
 
-
 type RitualsPickerProps = {
-    character: Character,
+    character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
 
 const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps) => {
-    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Rituals Picker" }) }, [])
+    useEffect(() => {
+        ReactGA.send({ hitType: "pageview", title: "Rituals Picker" })
+    }, [])
     useEffect(() => {
         if (!containsBloodSorcery(character.disciplines)) {
             nextStep()
@@ -39,7 +40,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
             const onClick = () => {
                 setCharacter({
                     ...character,
-                    rituals: [ritual]  // TODO: turn this into "RitualPicker-ritual" attribute and add function to get all rituals from character
+                    rituals: [ritual], // TODO: turn this into "RitualPicker-ritual" attribute and add function to get all rituals from character
                 })
 
                 trackClick()
@@ -53,18 +54,24 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                 <Grid.Col key={ritual.name} span={smallScreen ? 12 : 6}>
                     <Card mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                         <Group position="apart" mt="0" mb="xs">
-                            <Text fz={(smallScreen && !phoneScreen) ? "xs" : "sm"} weight={500}>{ritual.name}</Text>
-                            <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">lv {ritual.level}</Badge>
+                            <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} weight={500}>
+                                {ritual.name}
+                            </Text>
+                            <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">
+                                lv {ritual.level}
+                            </Badge>
                         </Group>
 
-                        <Text fz={"sm"} size="sm" color="dimmed">{upcase(ritual.summary)}</Text>
+                        <Text fz={"sm"} size="sm" color="dimmed">
+                            {upcase(ritual.summary)}
+                        </Text>
 
                         <div style={{ position: "absolute", bottom: "0", width: "100%", padding: "inherit", left: 0 }}>
                             <Button onClick={onClick} variant="light" color="blue" fullWidth radius="md">
                                 <Text truncate>Take {ritual.name}</Text>
                             </Button>
                         </div>
-                    </Card >
+                    </Card>
                 </Grid.Col>
             )
         })
@@ -72,10 +79,14 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
 
     const height = globals.viewportHeightPx
     return (
-        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: phoneScreen ? "60px" : "80px" }} >
-            <Text fw={700} fz={smallScreen ? "14px" : "28px"} ta="center">⛤ Pick 1 free Ritual ⛤</Text>
+        <div style={{ width: smallScreen ? "393px" : "810px", marginTop: phoneScreen ? "60px" : "80px" }}>
+            <Text fw={700} fz={smallScreen ? "14px" : "28px"} ta="center">
+                ⛤ Pick 1 free Ritual ⛤
+            </Text>
 
-            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Rituals</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
+                Rituals
+            </Text>
             <hr color="#e03131" />
             <Space h={"sm"} />
 
@@ -83,14 +94,12 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                 <ScrollArea h={smallScreen ? height - 320 : height - 400} pb={20} w={"105%"}>
                     <Center>
                         <Stack>
-                            <Grid w={"100%"}>
-                                {getRitualCardCols()}
-                            </Grid>
+                            <Grid w={"100%"}>{getRitualCardCols()}</Grid>
                         </Stack>
                     </Center>
                 </ScrollArea>
             </Stack>
-        </div >
+        </div>
     )
 }
 

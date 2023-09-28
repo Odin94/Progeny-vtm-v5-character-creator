@@ -1,5 +1,4 @@
-import { z } from "zod";
-
+import { z } from "zod"
 
 export const skillsSchema = z.object({
     athletics: z.number().min(0).max(5).int(),

@@ -8,23 +8,22 @@ import { globals } from "../../globals"
 import { upcase } from "../utils"
 import { SpecialtyModal } from "./SkillSpecialtyModal"
 
-
 type SkillsPickerProps = {
-    character: Character,
+    character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
 
 type SkillsSetting = {
-    special: SkillsKey[],
-    strongest: SkillsKey[],
-    decent: SkillsKey[],
-    acceptable: SkillsKey[],
+    special: SkillsKey[]
+    strongest: SkillsKey[]
+    decent: SkillsKey[]
+    acceptable: SkillsKey[]
 }
 
 type DistributionKey = "Jack of All Trades" | "Balanced" | "Specialist"
 
-type SkillDistribution = { strongest: number, decent: number, acceptable: number, special: number }
+type SkillDistribution = { strongest: number; decent: number; acceptable: number; special: number }
 
 const distributionDescriptions: Record<DistributionKey, string> = {
     "Jack of All Trades": "Decent at many things, good at none (1/8/10)",
@@ -37,19 +36,19 @@ const distributionByType: Record<DistributionKey, SkillDistribution> = {
         special: 0,
         strongest: 1,
         decent: 8,
-        acceptable: 10
+        acceptable: 10,
     },
     Balanced: {
         special: 0,
         strongest: 3,
         decent: 5,
-        acceptable: 7
+        acceptable: 7,
     },
     Specialist: {
         special: 1,
         strongest: 3,
         decent: 3,
-        acceptable: 3
+        acceptable: 3,
     },
 }
 
@@ -60,7 +59,9 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
 const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
-    useEffect(() => { ReactGA.send({ hitType: "pageview", title: "Skills Picker" }) }, [])
+    useEffect(() => {
+        ReactGA.send({ hitType: "pageview", title: "Skills Picker" })
+    }, [])
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
     const [skills, setSkills] = useState(emptySkills)
@@ -69,7 +70,12 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const distr = pickedDistribution ? distributionByType[pickedDistribution] : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: SkillsKey, i: number) => {
-        const alreadyPicked = [...pickedSkills.special, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill)
+        const alreadyPicked = [
+            ...pickedSkills.special,
+            ...pickedSkills.strongest,
+            ...pickedSkills.decent,
+            ...pickedSkills.acceptable,
+        ].includes(skill)
 
         let onClick: () => void
         if (alreadyPicked) {
@@ -81,13 +87,11 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     acceptable: pickedSkills.acceptable.filter((it) => it !== skill),
                 })
             }
-        }
-        else if (pickedSkills.special.length < distr.special) {
+        } else if (pickedSkills.special.length < distr.special) {
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, special: [...pickedSkills.special, skill] })
             }
-        }
-        else if (pickedSkills.strongest.length < distr.strongest) {
+        } else if (pickedSkills.strongest.length < distr.strongest) {
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, strongest: [...pickedSkills.strongest, skill] })
             }
@@ -95,7 +99,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
-        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {  // -1 so the very last pick opens modal
+        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {
+            // -1 so the very last pick opens modal
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] })
             }
@@ -133,10 +138,10 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     science: 0,
                     technology: 0,
                 }
-                finalPick.special.forEach((special) => skills[special] = 4)
-                finalPick.strongest.forEach((strongest) => skills[strongest] = 3)
-                finalPick.decent.forEach((decent) => skills[decent] = 2)
-                finalPick.acceptable.forEach((acceptable) => skills[acceptable] = 1)
+                finalPick.special.forEach((special) => (skills[special] = 4))
+                finalPick.strongest.forEach((strongest) => (skills[strongest] = 3))
+                finalPick.decent.forEach((decent) => (skills[decent] = 2))
+                finalPick.acceptable.forEach((acceptable) => (skills[acceptable] = 1))
 
                 setPickedSkills(finalPick)
                 setSkills(skills)
@@ -163,8 +168,24 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
         return (
             <Grid.Col key={skill} span={4}>
-                <Tooltip disabled={alreadyPicked} label={skillsDescriptions[skill]} transitionProps={{ transition: 'slide-up', duration: 200 }} events={globals.tooltipTriggerEvents}>
-                    <Button p={phoneScreen ? 0 : "default"} variant={alreadyPicked ? "outline" : "filled"} leftIcon={dots} disabled={pickedDistribution === null} color="grape" fullWidth onClick={() => { trackClick(); onClick() }}>
+                <Tooltip
+                    disabled={alreadyPicked}
+                    label={skillsDescriptions[skill]}
+                    transitionProps={{ transition: "slide-up", duration: 200 }}
+                    events={globals.tooltipTriggerEvents}
+                >
+                    <Button
+                        p={phoneScreen ? 0 : "default"}
+                        variant={alreadyPicked ? "outline" : "filled"}
+                        leftIcon={dots}
+                        disabled={pickedDistribution === null}
+                        color="grape"
+                        fullWidth
+                        onClick={() => {
+                            trackClick()
+                            onClick()
+                        }}
+                    >
                         <Text fz={phoneScreen ? 12 : "inherit"}>{upcase(skill)}</Text>
                     </Button>
                 </Tooltip>
@@ -183,7 +204,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const specialStyle = toPick === "special" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
     const strongestStyle = toPick === "strongest" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
     const decentStyle = toPick === "decent" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const acceptableStyle = toPick === "acceptable" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
+    const acceptableStyle =
+        toPick === "acceptable" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
@@ -193,21 +215,52 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const createSkillButtons = () => (
         <Group>
             <Grid grow m={0}>
-                <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Physical</Text></Grid.Col>
-                <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Social</Text></Grid.Col>
-                <Grid.Col span={4}><Text fs="italic" fw={700} ta="center">Mental</Text></Grid.Col>
-                {
-                    ["athletics", "animal ken", "academics",
-                        "brawl", "etiquette", "awareness",
-                        "craft", "insight", "finance",
-                        "drive", "intimidation", "investigation",
-                        "firearms", "leadership", "medicine",
-                        "melee", "performance", "occult",
-                        "larceny", "persuasion", "politics",
-                        "stealth", "streetwise", "science",
-                        "survival", "subterfuge", "technology"
-                    ].map((s) => skillsKeySchema.parse(s)).map((clan, i) => createButton(clan, i))
-                }
+                <Grid.Col span={4}>
+                    <Text fs="italic" fw={700} ta="center">
+                        Physical
+                    </Text>
+                </Grid.Col>
+                <Grid.Col span={4}>
+                    <Text fs="italic" fw={700} ta="center">
+                        Social
+                    </Text>
+                </Grid.Col>
+                <Grid.Col span={4}>
+                    <Text fs="italic" fw={700} ta="center">
+                        Mental
+                    </Text>
+                </Grid.Col>
+                {[
+                    "athletics",
+                    "animal ken",
+                    "academics",
+                    "brawl",
+                    "etiquette",
+                    "awareness",
+                    "craft",
+                    "insight",
+                    "finance",
+                    "drive",
+                    "intimidation",
+                    "investigation",
+                    "firearms",
+                    "leadership",
+                    "medicine",
+                    "melee",
+                    "performance",
+                    "occult",
+                    "larceny",
+                    "persuasion",
+                    "politics",
+                    "stealth",
+                    "streetwise",
+                    "science",
+                    "survival",
+                    "subterfuge",
+                    "technology",
+                ]
+                    .map((s) => skillsKeySchema.parse(s))
+                    .map((clan, i) => createButton(clan, i))}
             </Grid>
         </Group>
     )
@@ -216,27 +269,57 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
     return (
         <div style={{ marginTop: height < heightBreakPoint ? "40px" : 0 }}>
-            {!pickedDistribution
-                ? <Text fz={globals.largeFontSize} ta={"center"}>Pick your <b>Skill Distribution</b></Text>
-                : <>
-                    <Text style={{ fontSize: globals.smallerFontSize, color: "grey" }} ta={"center"}>{pickedDistribution}</Text>
-                    {pickedDistribution === "Specialist" ? <Text style={specialStyle} fz={"30px"} ta={"center"}>{toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill</Text> : null}
-                    <Text style={strongestStyle} ta={"center"}>{toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b> skills</Text>
-                    <Text style={decentStyle} ta={"center"}>{toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re <b>decent</b> in</Text>
-                    <Text style={acceptableStyle} ta={"center"}>{toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills you&apos;re <b>ok</b> in</Text>
+            {!pickedDistribution ? (
+                <Text fz={globals.largeFontSize} ta={"center"}>
+                    Pick your <b>Skill Distribution</b>
+                </Text>
+            ) : (
+                <>
+                    <Text style={{ fontSize: globals.smallerFontSize, color: "grey" }} ta={"center"}>
+                        {pickedDistribution}
+                    </Text>
+                    {pickedDistribution === "Specialist" ? (
+                        <Text style={specialStyle} fz={"30px"} ta={"center"}>
+                            {toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill
+                        </Text>
+                    ) : null}
+                    <Text style={strongestStyle} ta={"center"}>
+                        {toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b>{" "}
+                        skills
+                    </Text>
+                    <Text style={decentStyle} ta={"center"}>
+                        {toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re{" "}
+                        <b>decent</b> in
+                    </Text>
+                    <Text style={acceptableStyle} ta={"center"}>
+                        {toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills
+                        you&apos;re <b>ok</b> in
+                    </Text>
                 </>
-            }
+            )}
 
-            {pickedDistribution !== null
-                ? null
-                : <>
+            {pickedDistribution !== null ? null : (
+                <>
                     <Space h="xl" />
                     <Grid grow>
                         {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
                             return (
                                 <Grid.Col span={4} key={distribution}>
-                                    <Tooltip disabled={pickedDistribution !== null} label={distributionDescriptions[distribution]} transitionProps={{ transition: 'slide-up', duration: 200 }} events={globals.tooltipTriggerEvents}>
-                                        <Button p={phoneScreen ? 0 : "default"} disabled={pickedDistribution !== null} color="red" fullWidth onClick={() => { setPickedDistribution(distribution) }}>
+                                    <Tooltip
+                                        disabled={pickedDistribution !== null}
+                                        label={distributionDescriptions[distribution]}
+                                        transitionProps={{ transition: "slide-up", duration: 200 }}
+                                        events={globals.tooltipTriggerEvents}
+                                    >
+                                        <Button
+                                            p={phoneScreen ? 0 : "default"}
+                                            disabled={pickedDistribution !== null}
+                                            color="red"
+                                            fullWidth
+                                            onClick={() => {
+                                                setPickedDistribution(distribution)
+                                            }}
+                                        >
                                             <Text fz={phoneScreen ? 12 : "inherit"}>{distribution}</Text>
                                         </Button>
                                     </Tooltip>
@@ -247,22 +330,26 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Space h="xl" />
                     <Space h="xl" />
                 </>
-            }
+            )}
 
-            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">Skills</Text>
+            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
+                Skills
+            </Text>
             <hr color="#e03131" />
 
             <Space h="sm" />
 
+            {height < heightBreakPoint ? <ScrollArea h={height - 340}>{createSkillButtons()}</ScrollArea> : createSkillButtons()}
 
-            {height < heightBreakPoint
-                ? <ScrollArea h={height - 340}>
-                    {createSkillButtons()}
-                </ScrollArea>
-                : createSkillButtons()
-            }
-
-            <SpecialtyModal modalOpened={modalOpened} closeModal={closeModalAndUndoLastPick} setCharacter={setCharacter} nextStep={nextStep} character={character} pickedSkillNames={getAll(pickedSkills)} skills={skills} />
+            <SpecialtyModal
+                modalOpened={modalOpened}
+                closeModal={closeModalAndUndoLastPick}
+                setCharacter={setCharacter}
+                nextStep={nextStep}
+                character={character}
+                pickedSkillNames={getAll(pickedSkills)}
+                skills={skills}
+            />
         </div>
     )
 }
