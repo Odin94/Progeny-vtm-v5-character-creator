@@ -194,7 +194,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
             {
                 options: [
-                    { name: "Enemy", summary: "group of mortals that want to harm you", maxLevel: 3 },
+                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 3 },
                     { name: "Folkloric Bane", summary: "specific items damage you (eg. silver, garlic)", maxLevel: 1 },
                     {
                         name: "Folkloric Block",
@@ -205,7 +205,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
                     // TODO: Only exists at level 2 - change system to include possible levels..? Maybe I have to write my own "Rating" component after all...
                     { name: "Stake Bait", summary: "Final Death when staked", maxLevel: 2 },
                 ],
-                totalPoints: 3,
+                totalPoints: 2,
             },
         ],
         humanityChange: 0,
