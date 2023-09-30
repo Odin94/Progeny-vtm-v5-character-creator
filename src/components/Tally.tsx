@@ -3,10 +3,13 @@ import { IconTallymark1, IconTallymark2, IconTallymark3, IconTallymark4, IconTal
 
 export type TallyProps = {
     n: number
+    style?: React.CSSProperties
+    size?: string | number
 }
 
-const Tally = ({ n }: TallyProps) => {
-    const style: React.CSSProperties = {
+const Tally = ({ n, style, size }: TallyProps) => {
+    const tallyStyle: React.CSSProperties = {
+        ...style,
         verticalAlign: "middle",
     }
 
@@ -14,15 +17,15 @@ const Tally = ({ n }: TallyProps) => {
         case 0:
             return <></>
         case 1:
-            return <IconTallymark1 style={style} />
+            return <IconTallymark1 style={tallyStyle} size={size} />
         case 2:
-            return <IconTallymark2 style={style} />
+            return <IconTallymark2 style={tallyStyle} size={size} />
         case 3:
-            return <IconTallymark3 style={style} />
+            return <IconTallymark3 style={tallyStyle} size={size} />
         case 4:
-            return <IconTallymark4 style={style} />
+            return <IconTallymark4 style={tallyStyle} size={size} />
         case 5:
-            return <IconTallymarks style={style} />
+            return <IconTallymarks style={tallyStyle} size={size} />
         default:
             return <Text color="red">{`Invalid tally number: ${n}`}</Text>
     }

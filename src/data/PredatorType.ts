@@ -29,6 +29,7 @@ const selectableMeritsAndFlawsSchema = z.object({
     totalPoints: z.number().int(),
     // TODO: Consider adding type merit/flaw?
 })
+export type SelectableMeritsAndFlaws = z.infer<typeof selectableMeritsAndFlawsSchema>
 
 export const predatorTypeSchema = z.object({
     name: z.string(),
@@ -76,11 +77,24 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "potence" }],
-        meritsAndFlaws: [
-            { name: "Spend between Contacts and Resources", level: 3, summary: "" },
-            { name: "Enemy", level: 2, summary: "(Police or Victim)" },
+        meritsAndFlaws: [{ name: "Enemy", level: 2, summary: "(Police or Victim)" }],
+        selectableMeritsAndFlaws: [
+            {
+                options: [
+                    {
+                        name: "Contacts",
+                        summary: "mortals who provide information or valuable items",
+                        maxLevel: 3,
+                    },
+                    {
+                        name: "Resources",
+                        summary: "wealth & income",
+                        maxLevel: 3,
+                    },
+                ],
+                totalPoints: 3,
+            },
         ],
-        selectableMeritsAndFlaws: [],
         humanityChange: 0,
         bloodPotencyChange: 0,
     },
