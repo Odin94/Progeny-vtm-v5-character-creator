@@ -16,11 +16,6 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Rituals Picker" })
     }, [])
-    useEffect(() => {
-        if (!containsBloodSorcery(character.disciplines)) {
-            nextStep()
-        }
-    }, [])
     if (!containsBloodSorcery(character.disciplines)) {
         return <></>
     }

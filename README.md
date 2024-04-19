@@ -36,7 +36,9 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 
 <!-- ## TODOs:
+* Fix: pdf-lib fonts only support latin charaters by default. Use embedFont and/or pdf-lib/fontkit to select a font that supports all unicode characters
 * Add free-text / select field where predator type says "pick XY"?
+* Add free-text custom merit/flaw field(s) for users to input their own stuff
 
 * Make instruction-text prettier / styled (check out similar web apps for how they do it?)
 * Make merit/flaw picking prettier - maybe style it more like a character sheet (with the oooo)

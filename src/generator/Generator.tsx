@@ -1,5 +1,5 @@
 import { Center, Text } from "@mantine/core"
-import { Character } from "../data/Character"
+import { Character, containsBloodSorcery } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
 import ClanPicker from "./components/ClanPicker"
@@ -24,7 +24,9 @@ export type GeneratorProps = {
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
     const getStepComponent = () => {
-        switch (selectedStep) {
+        // Unclean solution: Stepper in AsideBar only gives us an index to use here and if we don't have a blood-sorcery step (at 8) it breaks alignment of the steps. Ideally we'd get a string from the stepper rather than a number and then we wouldn't have to map things here
+        const patchedSelectedStep = !containsBloodSorcery(character.disciplines) && selectedStep >= 8 ? selectedStep + 1 : selectedStep
+        switch (patchedSelectedStep) {
             case 0:
                 return (
                     <Intro

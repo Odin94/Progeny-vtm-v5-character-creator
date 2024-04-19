@@ -36,7 +36,16 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
 
     const getStepper = () => {
         return (
-            <Stepper color="grape" orientation="vertical" active={selectedStep} onStepClick={setSelectedStep} breakpoint="sm">
+            <Stepper
+                color="grape"
+                orientation="vertical"
+                active={selectedStep}
+                onStepClick={(x) => {
+                    console.log(x)
+                    setSelectedStep(x)
+                }}
+                breakpoint="sm"
+            >
                 <Stepper.Step key={"Intro"} label={"Intro"} description="">
                     {" "}
                 </Stepper.Step>
