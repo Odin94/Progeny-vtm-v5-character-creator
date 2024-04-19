@@ -1,5 +1,6 @@
 import { notifications } from "@mantine/notifications"
-import { PDFBool, PDFDocument, PDFForm, PDFName } from "pdf-lib"
+import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFName } from "pdf-lib"
+import fontkit from "@pdf-lib/fontkit"
 import { Character } from "../data/Character"
 import { Clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
@@ -20,8 +21,20 @@ type BloodPotencyEffect = {
     penalty: string
 }
 
+let customFont: PDFFont
+
 const loadTemplate = async (pdf = base64Pdf_nerdbert) => {
     return fetch(pdf).then((r) => r.text())
+}
+
+const initPDFDocument = async (bytes: ArrayBufferLike): Promise<PDFDocument> => {
+    const pdfDoc = await PDFDocument.load(bytes)
+
+    pdfDoc.registerFontkit(fontkit)
+    const fontBytes = await fetch("fonts/Roboto-Regular.ttf").then((res) => res.arrayBuffer())
+    customFont = await pdfDoc.embedFont(fontBytes) // TODO: Somehow it's not using this font..?
+
+    return pdfDoc
 }
 
 export const testTemplate = async (basePdf: string) => {
@@ -29,8 +42,8 @@ export const testTemplate = async (basePdf: string) => {
     try {
         // const basePdf = await loadTemplate(pdf)
         const bytes = base64ToArrayBuffer(basePdf)
+        const pdfDoc = await initPDFDocument(bytes)
 
-        const pdfDoc = await PDFDocument.load(bytes)
         form = pdfDoc.getForm()
     } catch (err) {
         return { success: false, error: new Error("Can't get form from pdf - is it a fillable pdf?") }
@@ -101,7 +114,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     const basePdf = await loadTemplate(base64Pdf_nerdbert)
     const bytes = base64ToArrayBuffer(basePdf)
 
-    const pdfDoc = await PDFDocument.load(bytes)
+    const pdfDoc = await initPDFDocument(bytes)
     const form = pdfDoc.getForm()
 
     // Attributes
@@ -252,6 +265,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     // Top fields
     form.getTextField("Name").setText(character.name)
+    // form.getTextField("Name").updateAppearances(customFont)
     form.getTextField("pcDescription").setText(character.description)
     form.getTextField("Predator type").setText(character.predatorType.name)
     form.getTextField("Ambition").setText(character.ambition)
@@ -348,6 +362,9 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     // see https://github.com/Hopding/pdf-lib/issues/569#issuecomment-1087328416 and https://stackoverflow.com/questions/73058238/some-pdf-textfield-content-not-visible-until-clicked
     form.acroForm.dict.set(PDFName.of("NeedAppearances"), PDFBool.True)
 
+    // Fixes embedded font not being applied on form fields
+    form.updateFieldAppearances(customFont)
+
     return await pdfDoc.save()
 }
 
@@ -391,7 +408,7 @@ export const printFieldNames = async () => {
     const basePdf = await loadTemplate()
     const bytes = base64ToArrayBuffer(basePdf)
 
-    const pdfDoc = await PDFDocument.load(bytes)
+    const pdfDoc = await initPDFDocument(bytes)
     const form = pdfDoc.getForm()
 
     console.log(JSON.stringify(getFields(form), null, 2))

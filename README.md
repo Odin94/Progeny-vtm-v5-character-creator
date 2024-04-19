@@ -36,7 +36,6 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 
 <!-- ## TODOs:
-* Fix: pdf-lib fonts only support latin charaters by default. Use embedFont and/or pdf-lib/fontkit to select a font that supports all unicode characters
 * Add free-text / select field where predator type says "pick XY"?
 * Add free-text custom merit/flaw field(s) for users to input their own stuff
 
@@ -59,6 +58,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * CheckSolid.base64 is converted from fontawesome
 * FavIcon, Discipline-Icons provided by [Nerdbert](https://drive.google.com/drive/folders/166CN03nsT6VF-cjjttS0uBfvMZRoNqgK)
 * Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus Bellamy, Peter Scherbatykh, Thomas Le on [unsplash](unsplash.com)
+* Roboto font from https://fonts.google.com/specimen/Roboto
 
 <p align="center">
 <img src="./readme_assets/darkpack_logo1.png" height="400">
