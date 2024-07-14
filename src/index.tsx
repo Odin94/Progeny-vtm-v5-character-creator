@@ -10,7 +10,7 @@ import reportWebVitals from "./reportWebVitals"
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 
 // Must be changed in host configs if deployed from github since .env is ignored
-const GA4_MEASUREMENT_ID = process.env.REACT_APP_GA4_MEASUREMENT_ID
+const GA4_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID
 if (GA4_MEASUREMENT_ID) {
     ReactGA.initialize(GA4_MEASUREMENT_ID)
 }
