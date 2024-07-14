@@ -1,15 +1,15 @@
 import { notifications } from "@mantine/notifications"
-import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFName } from "pdf-lib"
 import fontkit from "@pdf-lib/fontkit"
+import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
 import { Clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
 import { SkillsKey, skillsKeySchema } from "../data/Skills"
-import base64Check from "../resources/CheckSolid.base64"
+import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from "../data/Attributes"
 import { DisciplineName, Power, Ritual, powerIsRitual } from "../data/Disciplines"
-import base64Pdf_nerdbert from "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64"
+import base64Pdf_nerdbert from "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw"
 import { upcase } from "./utils"
 
 type BloodPotencyEffect = {
@@ -23,16 +23,12 @@ type BloodPotencyEffect = {
 
 let customFont: PDFFont
 
-const loadTemplate = async (pdf = base64Pdf_nerdbert) => {
-    return fetch(pdf).then((r) => r.text())
-}
-
 const initPDFDocument = async (bytes: ArrayBufferLike): Promise<PDFDocument> => {
     const pdfDoc = await PDFDocument.load(bytes)
 
     pdfDoc.registerFontkit(fontkit)
     const fontBytes = await fetch("fonts/Roboto-Regular.ttf").then((res) => res.arrayBuffer())
-    customFont = await pdfDoc.embedFont(fontBytes) // TODO: Somehow it's not using this font..?
+    customFont = await pdfDoc.embedFont(fontBytes) // enables writing characters like "старый"
 
     return pdfDoc
 }
@@ -40,7 +36,6 @@ const initPDFDocument = async (bytes: ArrayBufferLike): Promise<PDFDocument> => 
 export const testTemplate = async (basePdf: string) => {
     let form
     try {
-        // const basePdf = await loadTemplate(pdf)
         const bytes = base64ToArrayBuffer(basePdf)
         const pdfDoc = await initPDFDocument(bytes)
 
@@ -111,8 +106,7 @@ const potencyEffects: Record<number, BloodPotencyEffect> = {
 }
 
 const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
-    const basePdf = await loadTemplate(base64Pdf_nerdbert)
-    const bytes = base64ToArrayBuffer(basePdf)
+    const bytes = base64ToArrayBuffer(base64Pdf_nerdbert)
 
     const pdfDoc = await initPDFDocument(bytes)
     const form = pdfDoc.getForm()
@@ -257,9 +251,10 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     //Humanity
     const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
-    const checkImageBytes = await fetch(base64Check).then((res) => res.text())
+    const checkImageBytes = await fetch(checkPng).then((res) => res.arrayBuffer())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
     for (let i = 1; i <= humanity; i++) {
+        // Broken by setting "NeedAppearances" to true
         form.getButton(`Humanity-${i}`).setImage(checkImage)
     }
 
@@ -360,6 +355,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
 
     // Fixes bug where text that is too long for field doesn't show until clicked
     // see https://github.com/Hopding/pdf-lib/issues/569#issuecomment-1087328416 and https://stackoverflow.com/questions/73058238/some-pdf-textfield-content-not-visible-until-clicked
+    // TODO: This breaks embedding the png in humanity-tracker!
     form.acroForm.dict.set(PDFName.of("NeedAppearances"), PDFBool.True)
 
     // Fixes embedded font not being applied on form fields
@@ -405,7 +401,7 @@ const getFields = (form: PDFForm): Record<string, string> => {
 }
 
 export const printFieldNames = async () => {
-    const basePdf = await loadTemplate()
+    const basePdf = base64Pdf_nerdbert
     const bytes = base64ToArrayBuffer(basePdf)
 
     const pdfDoc = await initPDFDocument(bytes)
@@ -413,5 +409,3 @@ export const printFieldNames = async () => {
 
     console.log(JSON.stringify(getFields(form), null, 2))
 }
-
-// export default createPdf_renegade

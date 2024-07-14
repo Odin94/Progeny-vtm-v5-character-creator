@@ -41,7 +41,6 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                 orientation="vertical"
                 active={selectedStep}
                 onStepClick={(x) => {
-                    console.log(x)
                     setSelectedStep(x)
                 }}
                 breakpoint="sm"
