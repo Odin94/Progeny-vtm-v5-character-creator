@@ -634,6 +634,16 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 2,
                 discipline: "presence",
             },
+            {
+                name: "Melpominee",
+                description: "",
+                rouseChecks: 0,
+                amalgamPrerequisites: [],
+                summary: "use Presence powers against targets that can't see, but only hear you.",
+                dicePool: "",
+                level: 2,
+                discipline: "presence",
+            },
 
             {
                 name: "Dread Gaze",
