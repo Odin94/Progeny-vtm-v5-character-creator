@@ -9,6 +9,8 @@ import ministryLogo from "../resources/clanIcons/Ministry.webp"
 import nosferatuLogo from "../resources/clanIcons/Nosferatu.webp"
 import ravnosLogo from "../resources/clanIcons/Ravnos.webp"
 import salubriLogo from "../resources/clanIcons/Salubri.webp"
+import caitiffLogo from "../resources/clanIcons/logoCaitiff.png"
+import thinbloodLogo from "../resources/clanIcons/logoThinblood.svg"
 import toreadorLogo from "../resources/clanIcons/Toreador.webp"
 import tremereLogo from "../resources/clanIcons/Tremere.webp"
 import tzimisceLogo from "../resources/clanIcons/Tzimisce.webp"
@@ -154,6 +156,26 @@ export const clans: Record<ClanName, Clan> = {
         compulsion:
             "Affective Empathy: Become overwhelmed with somebody's personal problem. Suffer a two-dice penalty to all actions that don't got towards solving the problem. Lasts until the problem is eased, an immediate crisis supersedes it or the scene ends.",
         nativeDisciplines: ["auspex", "dominate", "fortitude"],
+    },
+    Caitiff: {
+        name: "Caitiff",
+        description: "Clanless vampires, often distrusted",
+        logo: caitiffLogo,
+        bane: "Outcast: Increasing discipline levels costs XP equal to 6x the new level. (instead of 5x)",
+        compulsion: "Caitiffs have no compulsion",
+        nativeDisciplines: [
+            "animalism",
+            "auspex",
+            "celerity",
+            "dominate",
+            "fortitude",
+            "obfuscate",
+            "potence",
+            "presence",
+            "protean",
+            "blood sorcery",
+            "oblivion",
+        ],
     },
 
     "": {
