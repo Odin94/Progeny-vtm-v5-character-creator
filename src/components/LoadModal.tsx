@@ -1,11 +1,13 @@
 import { faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
+import { notifications } from "@mantine/notifications"
 import { Buffer } from "buffer"
+import { z } from "zod"
+import { clans } from "~/data/Clans"
+import { clanNameSchema } from "~/data/NameSchemas"
 import { Character, characterSchema } from "../data/Character"
 import { getUploadFile } from "../generator/utils"
-import { notifications } from "@mantine/notifications"
-import { z } from "zod"
 
 export type LoadModalProps = {
     setCharacter: (character: Character) => void
@@ -43,7 +45,13 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }
 
                                 if (!parsed["rituals"]) parsed["rituals"] = [] // backwards compatibility for characters that were saved before rituals were added
                                 if (!parsed["predatorType"]["pickedMeritsAndFlaws"]) parsed["predatorType"]["pickedMeritsAndFlaws"] = [] // backwards compatibility for characters that were saved before pickedMeritsAndFlaws were added
+                                if (!parsed["availableDisciplineNames"]) {
+                                    // backwards compatibility for characters that were saved before Caitiff were added
+                                    const clan = clanNameSchema.parse(parsed["clan"])
+                                    const clanDisciplines = clans[clan].nativeDisciplines
 
+                                    parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
+                                }
                                 setCharacter(characterSchema.parse(parsed))
                                 closeLoadModal()
                             } catch (e) {

@@ -1,28 +1,6 @@
 import { z } from "zod"
-import { disciplineNameSchema } from "./Disciplines"
 import { specialtySchema } from "./Specialties"
-
-export const predatorTypeNameSchema = z.union([
-    z.literal("Alleycat"),
-    z.literal("Extortionist"),
-    z.literal("Roadside Killer"),
-    z.literal("Montero"),
-    z.literal("Cleaver"),
-    z.literal("Consensualist"),
-    z.literal("Osiris"),
-    z.literal("Scene Queen"),
-    z.literal("Siren"),
-    z.literal("Sandman"),
-    z.literal("Grim Reaper"),
-    z.literal("Graverobber"),
-    z.literal("Pursuer"),
-    z.literal("Trapdoor"),
-    z.literal("Bagger"),
-    z.literal("Blood Leech"),
-    z.literal("Farmer"),
-    z.literal(""),
-])
-export type PredatorTypeName = z.infer<typeof predatorTypeNameSchema>
+import { disciplineNameSchema, PredatorTypeName } from "./NameSchemas"
 
 const selectableMeritsAndFlawsSchema = z.object({
     options: z.object({ name: z.string(), summary: z.string(), maxLevel: z.number() }).array(),

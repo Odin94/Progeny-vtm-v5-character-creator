@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { clanNameSchema } from "./Clans"
 
 import animalismLogo from "../resources/Rombo_Disciplines/rombo_Animalism.svg"
 import auspexLogo from "../resources/Rombo_Disciplines/rombo_Auspex.svg"
@@ -12,24 +11,7 @@ import presenceLogo from "../resources/Rombo_Disciplines/rombo_Presence.svg"
 import proteanLogo from "../resources/Rombo_Disciplines/rombo_Protean.svg"
 import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg"
 import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg"
-
-export const disciplineNameSchema = z.union([
-    z.literal("animalism"),
-    z.literal("auspex"),
-    z.literal("celerity"),
-    z.literal("dominate"),
-    z.literal("fortitude"),
-    z.literal("obfuscate"),
-    z.literal("potence"),
-    z.literal("presence"),
-    z.literal("protean"),
-    z.literal("blood sorcery"),
-
-    z.literal("oblivion"),
-
-    z.literal(""),
-])
-export type DisciplineName = z.infer<typeof disciplineNameSchema>
+import { clanNameSchema, DisciplineName, disciplineNameSchema } from "./NameSchemas"
 
 export const amalgamPrerequisiteSchema = z.object({
     discipline: disciplineNameSchema,

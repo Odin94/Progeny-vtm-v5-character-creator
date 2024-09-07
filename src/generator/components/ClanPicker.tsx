@@ -1,11 +1,12 @@
 import { Card, Center, Grid, Image, ScrollArea, Text, Title, useMantineTheme } from "@mantine/core"
 import { Character } from "../../data/Character"
-import { ClanName, Clans, clanNameSchema } from "../../data/Clans"
+import { clans } from "../../data/Clans"
 import { notDefault } from "../utils"
 import { notifications } from "@mantine/notifications"
 import { globals } from "../../globals"
 import ReactGA from "react-ga4"
 import { useEffect } from "react"
+import { ClanName, clanNameSchema } from "~/data/NameSchemas"
 
 type ClanPickerProps = {
     character: Character
@@ -43,9 +44,9 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 color: "yellow",
                             })
 
-                            setCharacter({ ...character, clan, disciplines: [] })
+                            setCharacter({ ...character, clan, disciplines: [], availableDisciplineNames: clans[clan].nativeDisciplines })
                         } else {
-                            setCharacter({ ...character, clan })
+                            setCharacter({ ...character, clan, availableDisciplineNames: clans[clan].nativeDisciplines })
                         }
 
                         ReactGA.event({
@@ -58,7 +59,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                 >
                     <Card.Section>
                         <Center pt={10}>
-                            <Image fit="contain" withPlaceholder src={Clans[clan].logo} height={120} width={120} alt="Norway" />
+                            <Image fit="contain" withPlaceholder src={clans[clan].logo} height={120} width={120} alt="Norway" />
                         </Center>
                     </Card.Section>
 
@@ -67,7 +68,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     </Center>
 
                     <Text h={55} size="sm" color="dimmed" ta="center">
-                        {Clans[clan].description}
+                        {clans[clan].description}
                     </Text>
                 </Card>
             </Grid.Col>

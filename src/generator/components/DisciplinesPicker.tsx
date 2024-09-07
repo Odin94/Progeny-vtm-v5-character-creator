@@ -2,10 +2,10 @@ import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, Scrol
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { Character, containsBloodSorcery } from "../../data/Character"
-import { ClanName } from "../../data/Clans"
-import { Discipline, DisciplineName, Power, disciplines } from "../../data/Disciplines"
+import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { intersection, upcase } from "../utils"
+import { DisciplineName } from "~/data/NameSchemas"
 
 type DisciplinesPickerProps = {
     character: Character
@@ -13,8 +13,13 @@ type DisciplinesPickerProps = {
     nextStep: () => void
 }
 
-const getDisciplinesForClan = (clan: ClanName) => {
-    return Object.fromEntries(Object.entries(disciplines).filter(([, value]) => value.clans.includes(clan)))
+const getAvailableDisciplines = (character: Character): Record<DisciplineName, Discipline> => {
+    const availableDisciplines: Record<string, Discipline> = {}
+    for (const n of character.availableDisciplineNames) {
+        availableDisciplines[n] = disciplines[n]
+    }
+
+    return availableDisciplines
 }
 
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
@@ -29,7 +34,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
     let allPickedPowers = pickedPredatorTypePower ? [...pickedPowers, pickedPredatorTypePower] : pickedPowers
 
-    const disciplinesForClan = getDisciplinesForClan(character.clan)
+    const disciplinesForClan = getAvailableDisciplines(character)
     const predatorTypeDiscipline = disciplines[character.predatorType.pickedDiscipline]
 
     const isPicked = (power: Power) => {

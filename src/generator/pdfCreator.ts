@@ -2,7 +2,7 @@ import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
 import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
-import { Clans } from "../data/Clans"
+import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
 import { SkillsKey, skillsKeySchema } from "../data/Skills"
 import checkPng from "../resources/CheckSolid.png"
@@ -266,9 +266,9 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
-    const baneText = Clans[character.clan].bane.replace("BANE_SEVERITY", `${effects.bane} (bane severity)`)
+    const baneText = clans[character.clan].bane.replace("BANE_SEVERITY", `${effects.bane} (bane severity)`)
     form.getTextField("ClanBane").setText(baneText)
-    form.getTextField("ClanCompulsion").setText(Clans[character.clan].compulsion)
+    form.getTextField("ClanCompulsion").setText(clans[character.clan].compulsion)
 
     form.getTextField("Sire").setText(character.sire)
     form.getTextField("Desire").setText(character.desire)
@@ -361,7 +361,7 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
     // Fixes embedded font not being applied on form fields
     form.updateFieldAppearances(customFont)
 
-    return await pdfDoc.save()
+    return await pdfDoc.save({ updateFieldAppearances: true })
 }
 
 export const downloadCharacterSheet = async (character: Character) => {

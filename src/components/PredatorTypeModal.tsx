@@ -3,14 +3,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, Group, Modal, SegmentedControl, Stack, Text, Title, Tooltip, useMantineTheme } from "@mantine/core"
 import ReactGA from "react-ga4"
 import { Character, meritFlawSchema } from "../data/Character"
-import { DisciplineName, disciplineNameSchema, disciplines } from "../data/Disciplines"
-import { PredatorTypeName, PredatorTypes } from "../data/PredatorType"
+import { disciplines } from "../data/Disciplines"
+import { PredatorTypes } from "../data/PredatorType"
 import { upcase } from "../generator/utils"
 import { globals } from "../globals"
 import usePointStates from "../hooks/usePointStates"
 import PointPicker from "./PointPicker"
 import Tally from "./Tally"
 import { useEffect } from "react"
+import { DisciplineName, disciplineNameSchema, PredatorTypeName } from "~/data/NameSchemas"
 
 type PredatorTypeModalProps = {
     modalOpened: boolean
@@ -167,7 +168,7 @@ const PredatorTypeModal = ({
                                                     {options.map((option, j) => {
                                                         const { selectedPoints, maxLevel } = subPointStates[j]
                                                         return (
-                                                            <Group key={option.name}>
+                                                            <Group key={predatorType.name + "/" + option.name + j}>
                                                                 <Tooltip
                                                                     disabled={option.summary === ""}
                                                                     label={`${upcase(option.summary)}`}

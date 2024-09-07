@@ -1,10 +1,9 @@
 import { z } from "zod"
-import { clanNameSchema } from "./Clans"
-import { Power, disciplineNameSchema, powerSchema, ritualSchema } from "./Disciplines"
-import { predatorTypeNameSchema } from "./PredatorType"
+import { Power, powerSchema, ritualSchema } from "./Disciplines"
 import { specialtySchema } from "./Specialties"
 import { skillsSchema } from "./Skills"
 import { attributesSchema } from "./Attributes"
+import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas"
 
 export const meritFlawSchema = z.object({
     name: z.string(),
@@ -27,6 +26,7 @@ export const characterSchema = z.object({
     sire: z.string(),
 
     clan: clanNameSchema,
+    // clanDisciplines:
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
@@ -40,6 +40,7 @@ export const characterSchema = z.object({
     attributes: attributesSchema,
     skills: skillsSchema,
     skillSpecialties: specialtySchema.array(),
+    availableDisciplineNames: disciplineNameSchema.array(),
     disciplines: powerSchema.array(),
     rituals: ritualSchema.array(),
 
@@ -109,6 +110,7 @@ export const getEmptyCharacter = (): Character => {
             technology: 0,
         },
         skillSpecialties: [],
+        availableDisciplineNames: [],
         disciplines: [],
         rituals: [],
 

@@ -3,9 +3,10 @@ import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { Character } from "../../data/Character"
-import { PredatorTypeName, PredatorTypes } from "../../data/PredatorType"
+import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
+import { PredatorTypeName } from "~/data/NameSchemas"
 
 type PredatorTypePickerProps = {
     character: Character
