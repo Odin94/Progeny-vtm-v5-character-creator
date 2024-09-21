@@ -20,6 +20,7 @@ export const clanNameSchema = z.union([
     z.literal("Salubri"),
 
     z.literal("Caitiff"),
+    z.literal("Thin-blood"),
 
     z.literal(""),
 ])
@@ -38,6 +39,7 @@ export const disciplineNameSchema = z.union([
     z.literal("blood sorcery"),
 
     z.literal("oblivion"),
+    z.literal("thin-blood alchemy"),
 
     z.literal(""),
 ])

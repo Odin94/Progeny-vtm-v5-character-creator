@@ -24,7 +24,7 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 * `npm install`
 * `npm start`
 
-* (optional) create `.env` file and enter environment variables like `REACT_APP_VARIABLE_NAME = 'some value'`
+* (optional) create `.env` file and enter environment variables like `VITE_VARIABLE_NAME = 'some value'`
 
 <!-- ## How to use -->
 

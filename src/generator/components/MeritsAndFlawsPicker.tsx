@@ -1,13 +1,13 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, ScrollArea, Stack, Tabs, Text } from "@mantine/core"
+import { Button, Divider, Grid, ScrollArea, Stack, Tabs, Text, useMantineTheme } from "@mantine/core"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { Character, MeritFlaw } from "../../data/Character"
-import { globals } from "../../globals"
-import { MeritOrFlaw, meritsAndFlaws } from "../../data/MeritsAndFlaws"
-import { Loresheets } from "./Loresheets"
+import { isThinbloodFlaw, isThinbloodMerit, MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "../../data/MeritsAndFlaws"
 import { PredatorTypes } from "../../data/PredatorType"
+import { globals } from "../../globals"
+import { Loresheets } from "./Loresheets"
 
 type MeritsAndFlawsPickerProps = {
     character: Character
@@ -26,6 +26,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Merits-and-flaws Picker" })
     }, [])
+    const theme = useMantineTheme()
+
     const [activeTab, setActiveTab] = useState<string | null>("merits")
 
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([...character.merits, ...character.flaws])
@@ -35,6 +37,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const [remainingMerits, setRemainingMerits] = useState(7 - usedMeritsLevel)
     const [remainingFlaws, setRemainingFlaws] = useState(2 - usedFLawsLevel)
+
+    const isThinBlood = character.clan === "Thin-blood"
+    const tbMeritCount = character.merits.filter((m) => isThinbloodMerit(m.name)).length
+    const tbFlawCount = character.flaws.filter((f) => isThinbloodFlaw(f.name)).length
+    const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(tbFlawCount - tbMeritCount)
 
     const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => {
         const buttonColor = type === "flaw" ? "red" : "green"
@@ -54,7 +61,12 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                     key={meritOrFlaw.name + level}
                     disabled={(meritInPredatorType && meritInPredatorType.level >= level) || (!!wasPickedLevel && wasPickedLevel >= level)}
                     onClick={() => {
-                        if (type === "flaw") {
+                        if (isThinbloodFlaw(meritOrFlaw.name)) {
+                            setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints + 1)
+                        } else if (isThinbloodMerit(meritOrFlaw.name)) {
+                            if (remainingThinbloodMeritPoints < cost) return
+                            setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints - 1)
+                        } else if (type === "flaw") {
                             if (remainingFlaws + wasPickedLevel < cost) return
                             setRemainingFlaws(remainingFlaws + wasPickedLevel - cost)
                         } else {
@@ -88,7 +100,13 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                         <Button
                             onClick={() => {
                                 setPickedMeritsAndFlaws([...pickedMeritsAndFlaws.filter((m) => m.name !== alreadyPickedItem?.name)])
-                                type === "flaw" ? setRemainingFlaws(remainingFlaws + cost) : setRemainingMerits(remainingMerits + cost)
+                                if (isThinbloodFlaw(meritOrFlaw.name)) {
+                                    setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints - 1)
+                                } else if (isThinbloodMerit(meritOrFlaw.name)) {
+                                    setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints + 1)
+                                } else {
+                                    type === "flaw" ? setRemainingFlaws(remainingFlaws + cost) : setRemainingMerits(remainingMerits + cost)
+                                }
                             }}
                             style={{ marginRight: "5px" }}
                             compact
@@ -104,6 +122,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     }
 
     const height = globals.viewportHeightPx
+    const isConfirmDisabled = isThinBlood && remainingThinbloodMeritPoints < 0
     return (
         <Stack align="center" mt={100}>
             <Text fz={globals.largeFontSize} ta={"center"}>
@@ -123,7 +142,20 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 {/* Merits & Flaws */}
                 <Tabs.Panel value="merits" pt="xs">
                     <ScrollArea h={height - 330} w={"100%"} p={20}>
+                        {isThinBlood ? (
+                            <>
+                                <Text fz={globals.largeFontSize} ta={"center"} c={theme.colors.grape[6]}>
+                                    Pick Thin-blood flaws to gain Thin-blood merit points
+                                </Text>
+                                <Text fz={globals.smallFontSize} ta={"center"} c={theme.colors.grape[6]}>
+                                    Points: {remainingThinbloodMeritPoints}
+                                </Text>
+                            </>
+                        ) : null}
                         <Grid m={0}>
+                            {/* Thinbloods */}
+                            {isThinBlood ? thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine) : null}
+
                             {meritsAndFlaws.map((category) => {
                                 return (
                                     <Grid.Col span={6} key={category.title}>
@@ -149,8 +181,10 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 </Tabs.Panel>
             </Tabs>
 
+            {isConfirmDisabled ? <Text c={theme.colors.red[9]}>Need to balance Thin-blood merit points</Text> : null}
             <Button
                 color="grape"
+                disabled={isConfirmDisabled}
                 onClick={() => {
                     setCharacter({
                         ...character,
@@ -170,6 +204,35 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 Confirm
             </Button>
         </Stack>
+    )
+}
+
+function thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element) {
+    return (
+        <>
+            <Grid.Col span={6}>
+                <Stack spacing={"xs"}>
+                    <Text fw={700} size={"xl"}>
+                        Thin-blood merits
+                    </Text>
+                    <Divider mt={0} w={"50%"} />
+
+                    {thinbloodMeritsAndFlaws.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+                </Stack>
+            </Grid.Col>
+            <Grid.Col span={6}>
+                <Stack spacing={"xs"}>
+                    <Text fw={700} size={"xl"}>
+                        Thin-blood flaws
+                    </Text>
+                    <Divider mt={0} w={"50%"} />
+
+                    {thinbloodMeritsAndFlaws.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
+                </Stack>
+            </Grid.Col>
+
+            <Divider mt={0} w={"100%"} my={"lg"} />
+        </>
     )
 }
 

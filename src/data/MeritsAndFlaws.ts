@@ -1,5 +1,5 @@
 import { Character } from "./Character"
-import { ClanName } from "./Clans"
+import { ClanName } from "./NameSchemas"
 
 export type MeritOrFlaw = { name: string; cost: number[]; summary: string }
 
@@ -8,6 +8,41 @@ export type MeritsAndFlaws = {
     merits: MeritOrFlaw[]
     flaws: MeritOrFlaw[]
 }
+
+export const thinbloodMeritsAndFlaws: MeritsAndFlaws = {
+    title: "◐ Thin-blood specific",
+    merits: [
+        { name: "Anarch Comrades", cost: [1], summary: "A coterie of Anarchs considers you their pet" },
+        {
+            name: "Camarilla Contact",
+            cost: [1],
+            summary: "A Camarilla recruiter promises you admittance, but treats you badly and asks you to do tasks",
+        },
+        { name: "Catenating Blood", cost: [1], summary: "You can create blood bonds and embrace new Vampires" },
+        {
+            name: "Day Drinker",
+            cost: [1],
+            summary: "Walking in the sun doesn't damage you, but removes all your Vampiric abilities and halves your health",
+        },
+        { name: "Discipline Affinity", cost: [1], summary: "Pick a Discipline (lv1) that you can increase like a normal Vampire" },
+        { name: "Lifelike", cost: [1], summary: "Your body appears fully human, with a beating heart and a working stomach" },
+        { name: "Thin-blood Alchemist", cost: [1], summary: "Gain one dot and one formula in Thin-blood Alchemy" },
+        { name: "Vampiric Resilience", cost: [1], summary: "Suffer only superficial damage from most sources, like a normal Vampire" },
+    ],
+    flaws: [
+        { name: "Baby Teeth", cost: [1], summary: "Your teeth are useless for feeding, you need to cut your victims" },
+        { name: "Bestial Temper", cost: [1], summary: "Be weak to frenzy like a normal vampire" },
+        { name: "Branded by the Camarilla", cost: [1], summary: "The Camarilla have their eyes peeled on you" },
+        { name: "Shunned by the Anarchs", cost: [1], summary: "Anarchs shun you" },
+        { name: "Clan Curse", cost: [1], summary: "Pick a Clan Curse (severity 1)" },
+        { name: "Dead Flesh", cost: [1], summary: "Your flesh slowly rots, -1 to social tests with Mortals" },
+        { name: "Mortal Frailty", cost: [1], summary: "Cannot rouse your blood to heal yourself" },
+        { name: "Vitae Dependency", cost: [1], summary: "Need to drink Vampire vitae once a week to use Disciplines" },
+    ],
+}
+export const isThinbloodMerit = (m: string) => !!thinbloodMeritsAndFlaws.merits.find((tbm) => tbm.name === m)
+export const isThinbloodFlaw = (f: string) => !!thinbloodMeritsAndFlaws.flaws.find((tbf) => tbf.name === f)
+export const isThinbloodMeritOrFlaw = (mf: string) => isThinbloodMerit(mf) || isThinbloodFlaw(mf)
 
 export const meritsAndFlaws: MeritsAndFlaws[] = [
     {

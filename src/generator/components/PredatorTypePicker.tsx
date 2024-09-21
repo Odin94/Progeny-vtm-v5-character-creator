@@ -20,6 +20,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Predator-Type Picker" })
     }, [])
+    const isThinBlood = character.clan === "Thin-blood"
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
     const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
@@ -28,6 +29,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const [discipline, setDiscipline] = useState("")
 
     const createButton = (predatorTypeName: PredatorTypeName, color: string) => {
+        const ventrueDisabled = character.clan === "Ventrue" && ["Bagger", "Farmer"].includes(predatorTypeName)
+
         return (
             <Tooltip
                 label={PredatorTypes[predatorTypeName].summary}
@@ -35,7 +38,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 transitionProps={{ transition: "slide-up", duration: 200 }}
             >
                 <Button
-                    disabled={character.clan === "Ventrue" && ["Bagger", "Farmer"].includes(predatorTypeName)}
+                    disabled={ventrueDisabled || isThinBlood}
                     color={color}
                     onClick={() => {
                         const firstSpecialtyOption = PredatorTypes[predatorTypeName].specialtyOptions[0]
@@ -61,8 +64,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 </Grid.Col>
                 <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>
-                        {(["Alleycat", "Extortionist", "Roadside Killer", "Montero"] as PredatorTypeName[]).map((clan) =>
-                            createButton(clan, "red")
+                        {(["Alleycat", "Extortionist", "Roadside Killer", "Montero"] as PredatorTypeName[]).map((predatorTypeName) =>
+                            createButton(predatorTypeName, "red")
                         )}
                     </Stack>
                 </Grid.Col>
@@ -76,8 +79,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 </Grid.Col>
                 <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>
-                        {(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren"] as PredatorTypeName[]).map((clan) =>
-                            createButton(clan, "grape")
+                        {(["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren"] as PredatorTypeName[]).map((predatorTypeName) =>
+                            createButton(predatorTypeName, "grape")
                         )}
                     </Stack>
                 </Grid.Col>
@@ -91,8 +94,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 </Grid.Col>
                 <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
                     <Stack>
-                        {(["Sandman", "Graverobber", "Grim Reaper", "Pursuer", "Trapdoor"] as PredatorTypeName[]).map((clan) =>
-                            createButton(clan, "gray")
+                        {(["Sandman", "Graverobber", "Grim Reaper", "Pursuer", "Trapdoor"] as PredatorTypeName[]).map((predatorTypeName) =>
+                            createButton(predatorTypeName, "gray")
                         )}
                     </Stack>
                 </Grid.Col>
@@ -105,7 +108,11 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     <h1>Excluding Mortals</h1>
                 </Grid.Col>
                 <Grid.Col offset={phoneScreen ? 1 : 0} span={phoneScreen ? 6 : 4}>
-                    <Stack>{(["Bagger", "Blood Leech", "Farmer"] as PredatorTypeName[]).map((clan) => createButton(clan, "violet"))}</Stack>
+                    <Stack>
+                        {(["Bagger", "Blood Leech", "Farmer"] as PredatorTypeName[]).map((predatorTypeName) =>
+                            createButton(predatorTypeName, "violet")
+                        )}
+                    </Stack>
                 </Grid.Col>
             </Grid>
         </Stack>
@@ -116,7 +123,32 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     return (
         <div style={{ width: "100%", marginTop: height < heightBreakPoint ? "50px" : "55px" }}>
             <Text fz={globals.largeFontSize} ta={"center"}>
-                How do you <b>obtain blood?</b>
+                {isThinBlood ? (
+                    <div>
+                        <b>Thin-bloods</b> do not have a predator type
+                        {
+                            <Button
+                                ml={"20px"}
+                                color={"red"}
+                                onClick={() => {
+                                    ReactGA.event({
+                                        action: "predatortype confirm clicked",
+                                        category: "predator type",
+                                        label: "thin-blood - no predator type",
+                                    })
+
+                                    nextStep()
+                                }}
+                            >
+                                Continue
+                            </Button>
+                        }
+                    </div>
+                ) : (
+                    <div>
+                        How do you <b>obtain blood?</b>
+                    </div>
+                )}
             </Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">

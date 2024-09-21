@@ -626,7 +626,6 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 2,
                 discipline: "presence",
             },
-
             {
                 name: "Dread Gaze",
                 description: "",

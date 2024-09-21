@@ -254,6 +254,36 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const powersSortedByDiscipline = pickedPowers.sort()
     let disciplineTitle = ""
     const height = globals.viewportHeightPx
+
+    const isThinBlood = character.clan === "Thin-blood"
+    if (isThinBlood) {
+        return (
+            <div style={{ width: smallScreen ? "393px" : "810px", marginTop: globals.isPhoneScreen ? "60px" : "80px" }}>
+                <Text fw={500} fz={smallScreen ? "14px" : "28px"} ta="center">
+                    <b>Thin-bloods</b> do not pick disciplines
+                    <br /> you gain them from blood resonance
+                </Text>
+
+                <Center mt={"lg"}>
+                    <Button
+                        color={"red"}
+                        onClick={() => {
+                            ReactGA.event({
+                                action: "power clicked",
+                                category: "disciplines",
+                                label: "thin-blood - no disciplines",
+                            })
+
+                            nextStep()
+                        }}
+                    >
+                        Continue
+                    </Button>
+                </Center>
+            </div>
+        )
+    }
+
     return (
         <div style={{ width: smallScreen ? "393px" : "810px", marginTop: globals.isPhoneScreen ? "60px" : "80px" }}>
             <Text fw={700} fz={smallScreen ? "14px" : "28px"} ta="center">

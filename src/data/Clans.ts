@@ -177,6 +177,14 @@ export const clans: Record<ClanName, Clan> = {
             "oblivion",
         ],
     },
+    "Thin-blood": {
+        name: "Thin-blood",
+        description: "Half Vampire, half Human. Despised by all.",
+        logo: thinbloodLogo,
+        bane: "Outcast: Increasing discipline levels costs XP equal to 6x the new level. (instead of 5x)",
+        compulsion: "Caitiffs have no compulsion",
+        nativeDisciplines: ["thin-blood alchemy"],
+    },
 
     "": {
         name: "",

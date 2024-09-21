@@ -14,7 +14,9 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
         ReactGA.send({ hitType: "pageview", title: "Generation Picker" })
     }, [])
 
-    const [generation, setGeneration] = useState<string | null>("13")
+    const isThinBlood = character.clan === "Thin-blood"
+
+    const [generation, setGeneration] = useState<string | null>(isThinBlood ? "14" : "13")
 
     return (
         <div style={{ width: "100%" }}>
@@ -22,7 +24,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                 Pick your <b>Generation</b>
             </Text>
             <Text style={{ fontSize: "25px", color: "grey" }} ta={"center"}>
-                Most common choice is &apos;13 - Neonate&apos;
+                {isThinBlood ? "Thin-bloods are of high generation, so you have to pick 14" : "Most common choice is '13 - Neonate'"}
             </Text>
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
@@ -52,13 +54,17 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                     onChange={setGeneration}
                     label="When were you turned?"
                     placeholder="Pick one"
-                    data={[
-                        { value: "14", label: "14: Childer - Recently" },
-                        { value: "13", label: "13: Neonate - Been a while" },
-                        { value: "12", label: "12: Neonate - Been a while" },
-                        { value: "11", label: "11: Ancillae - I barely remember" },
-                        { value: "10", label: "10: Ancillae - I barely remember" },
-                    ]}
+                    data={
+                        isThinBlood
+                            ? [{ value: "14", label: "14: Childer - Recently" }]
+                            : [
+                                  { value: "14", label: "14: Childer - Recently" },
+                                  { value: "13", label: "13: Neonate - Been a while" },
+                                  { value: "12", label: "12: Neonate - Been a while" },
+                                  { value: "11", label: "11: Ancillae - I barely remember" },
+                                  { value: "10", label: "10: Ancillae - I barely remember" },
+                              ]
+                    }
                 />
 
                 <Button

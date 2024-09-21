@@ -138,7 +138,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     Advanced & special Clans
                 </Text>
                 <Grid grow m={0}>
-                    {["Caitiff"]
+                    {["Caitiff", "Thin-blood"]
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, theme.fn.rgba(theme.colors.teal[8], 0.9)))}
                 </Grid>
