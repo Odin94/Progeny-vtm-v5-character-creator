@@ -32,8 +32,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([...character.merits, ...character.flaws])
 
-    const usedMeritsLevel = character.merits.reduce((acc, { level }) => acc + level, 0)
-    const usedFLawsLevel = character.flaws.reduce((acc, { level }) => acc + level, 0)
+    const usedMeritsLevel = character.merits.filter((m) => !isThinbloodMerit(m.name)).reduce((acc, { level }) => acc + level, 0)
+    const usedFLawsLevel = character.flaws.filter((f) => !isThinbloodFlaw(f.name)).reduce((acc, { level }) => acc + level, 0)
 
     const [remainingMerits, setRemainingMerits] = useState(7 - usedMeritsLevel)
     const [remainingFlaws, setRemainingFlaws] = useState(2 - usedFLawsLevel)
