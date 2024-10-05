@@ -1,12 +1,13 @@
 import { Card, Center, Grid, Image, ScrollArea, Text, Title, useMantineTheme } from "@mantine/core"
-import { Character } from "../../data/Character"
-import { clans } from "../../data/Clans"
-import { notDefault } from "../utils"
 import { notifications } from "@mantine/notifications"
-import { globals } from "../../globals"
-import ReactGA from "react-ga4"
 import { useEffect } from "react"
+import ReactGA from "react-ga4"
+import { isThinbloodFlaw, isThinbloodMerit } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema } from "~/data/NameSchemas"
+import { Character, MeritFlaw } from "../../data/Character"
+import { clans } from "../../data/Clans"
+import { globals } from "../../globals"
+import { notDefault } from "../utils"
 
 type ClanPickerProps = {
     character: Character
@@ -36,6 +37,9 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     h={275}
                     style={{ background: bgColor, cursor: "pointer" }}
                     onClick={() => {
+                        const newMerits = clan === "Thin-blood" ? character.merits : meritsWithoutThinbloodMerits(character.merits)
+                        const newFlaws = clan === "Thin-blood" ? character.flaws : flawsWithoutThinbloodFlaws(character.flaws)
+                        console.log(newMerits)
                         if ((notDefault(character, "disciplines") || notDefault(character, "predatorType")) && clan !== character.clan) {
                             notifications.show({
                                 title: "Reset Disciplines",
@@ -44,9 +48,22 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 color: "yellow",
                             })
 
-                            setCharacter({ ...character, clan, disciplines: [], availableDisciplineNames: clans[clan].nativeDisciplines })
+                            setCharacter({
+                                ...character,
+                                clan,
+                                disciplines: [],
+                                availableDisciplineNames: clans[clan].nativeDisciplines,
+                                merits: newMerits,
+                                flaws: newFlaws,
+                            })
                         } else {
-                            setCharacter({ ...character, clan, availableDisciplineNames: clans[clan].nativeDisciplines })
+                            setCharacter({
+                                ...character,
+                                clan,
+                                availableDisciplineNames: clans[clan].nativeDisciplines,
+                                merits: newMerits,
+                                flaws: newFlaws,
+                            })
                         }
 
                         ReactGA.event({
@@ -146,5 +163,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         </div>
     )
 }
+
+const meritsWithoutThinbloodMerits = (merits: MeritFlaw[]) => merits.filter((m) => !isThinbloodMerit(m.name))
+const flawsWithoutThinbloodFlaws = (flaws: MeritFlaw[]) => flaws.filter((f) => !isThinbloodFlaw(f.name))
 
 export default ClanPicker
