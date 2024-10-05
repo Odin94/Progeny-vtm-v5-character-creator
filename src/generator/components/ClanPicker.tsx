@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import ReactGA from "react-ga4"
 import { isThinbloodFlaw, isThinbloodMerit } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema } from "~/data/NameSchemas"
-import { Character, MeritFlaw } from "../../data/Character"
+import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import { globals } from "../../globals"
 import { notDefault } from "../utils"
@@ -53,6 +53,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 clan,
                                 disciplines: [],
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
+                                predatorType: clan === "Thin-blood" ? getEmptyCharacter().predatorType : character.predatorType,
                                 merits: newMerits,
                                 flaws: newFlaws,
                             })
