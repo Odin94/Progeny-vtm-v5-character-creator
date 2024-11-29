@@ -470,6 +470,16 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "obfuscate",
             },
             {
+                name: "Chimerstry",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [{ discipline: "presence", level: 1 }],
+                summary: "create brief sensory hallucinations",
+                dicePool: "Manipulation + Obfuscate",
+                level: 2,
+                discipline: "obfuscate",
+            },
+            {
                 name: "Ghost's Passing",
                 description: "",
                 rouseChecks: 1,
