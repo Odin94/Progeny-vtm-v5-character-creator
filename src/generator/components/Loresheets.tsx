@@ -2,16 +2,17 @@ import { Button, Card, Grid, ScrollArea, Text } from "@mantine/core"
 import { useState } from "react"
 import { Loresheet, MeritOrFlaw, loresheets } from "../../data/MeritsAndFlaws"
 import { globals } from "../../globals"
-import { MeritFlaw } from "../../data/Character"
+import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
 
 type LoresheetProps = {
+    character: Character
     getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element
     pickedMeritsAndFlaws: MeritFlaw[]
 }
 
 // TODO: Create text-filter for loresheets?
-export const Loresheets = ({ getMeritOrFlawLine, pickedMeritsAndFlaws }: LoresheetProps) => {
+export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws }: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
 
@@ -21,6 +22,9 @@ export const Loresheets = ({ getMeritOrFlawLine, pickedMeritsAndFlaws }: Loreshe
                 pickedMeritsAndFlaws.map((m) => m.name),
                 loresheet.merits.map((m) => m.name)
             ).length > 0
+
+        const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
+        if (!requirementsMet) return <></>
 
         return (
             <Grid.Col span={smallScreen ? 12 : 4} key={loresheet.title}>

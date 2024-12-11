@@ -1071,6 +1071,115 @@ export const loresheets: Loresheet[] = [
             },
         ],
     },
+    {
+        title: "Descendant of Roger de Camden",
+        summary:
+            "Roger is an ancient and shadowy Cappadocian Vampire who currently rules as Prince of Edinburgh. He is known as a scholar of the boundaries between life and death, a martyr and a survivor.",
+        source: "Ash and Bone p171",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            {
+                name: "Proud Childe",
+                cost: [1],
+                summary: "Gain 2 points to status while in a Hecata-controlled environment.",
+            },
+            {
+                name: "Corpsense",
+                cost: [2],
+                summary:
+                    "Gain 2 dice to any pool for investigating the cause of injury or death of a body. Wraiths can communicate with you more easily.",
+            },
+            {
+                name: "Eye to Eye",
+                cost: [3],
+                summary: "Gain 2 dice to any Persuasion or Intimidation when talking to Ventrue.",
+            },
+            {
+                name: "The Way of all Flesh",
+                cost: [4],
+                summary: "You can embrace old corpses unless they're rotted beyond recognition.",
+            },
+            {
+                name: "Perchance to Dream",
+                cost: [5],
+                summary: "You can wander the Shadowlands while resting or while in torpor.",
+            },
+        ],
+    },
+    {
+        title: "Children of Tenochtitlan",
+        summary:
+            "Originally Aztec Vampires that were oppressed by the Giovanni and are now looking for a new leader and planning their revenge.",
+        source: "Blood Gods p221",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            {
+                name: "Hiding from the Wolf",
+                cost: [1],
+                summary: "Gain 1 die to any roll to hide.",
+            },
+            {
+                name: "Ghostly Instincts",
+                cost: [2],
+                summary: "Gain 2 dice on any Oblivion Ceremony roll involving summoning, control or destruction of ghosts.",
+            },
+            {
+                name: "Forward Thinking",
+                cost: [3],
+                summary:
+                    "Once per story, you can reroll any Skill roll. Once per scene, you can reroll a skill roll against another Hecata, with +1 success if they're a Harbinger of Skulls.",
+            },
+            {
+                name: "Necromantic Prodigy",
+                cost: [4],
+                summary: "Get +2 successes on any roll necessary for activating a necromantic Oblivion Ceremony.",
+            },
+            {
+                name: "Next in Line",
+                cost: [5],
+                summary:
+                    "Get 2 points of Status with Hecata, gain an Ally among the Anziani who acts as 5 dot Mawla once every other story.",
+            },
+        ],
+    },
+    {
+        title: "Flesh-Eaters",
+        summary: "The Nagaraja are flesh-eating Vampires. They are feared by many and often sadistic killers.",
+        source: "Blood Gods p223",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            {
+                name: "Viscus",
+                cost: [1],
+                summary:
+                    "Biting mortals and causing wounds acts like drinking blood for you, slaking your hunger. You can also eat fresh corpses.",
+            },
+            {
+                name: "Unseen Spirit",
+                cost: [2],
+                summary:
+                    "Gain the 'Cloak of Shadows' Discipline, but it only works against ghosts. If you already have Obfuscate, all your Obfuscate abilities work against ghosts as well.",
+            },
+            {
+                name: "The Perfect Murder",
+                cost: [3],
+                summary:
+                    "If you have at least one night to plan, gain +1 success on any roll during an intentional murder scene (can be negated by 'Send a Murderer')",
+            },
+            {
+                name: "Send a Murderer",
+                cost: [4],
+                summary:
+                    "Get +2 dice to rolls for studying murder scenes of tracking killers. Spend 3 dots among Contacts with mortal police, vampire investigators and Status.",
+            },
+            {
+                name: "Monstrous Bite",
+                cost: [5],
+                summary:
+                    "Your fangs can grow into daggers, giving you +1 success on Intimidation rolls, 3 bite damage and removes the 'called shot penalty' from bite attacks.",
+            },
+        ],
+    },
     // {
     //     title: "Sample",
     //     summary: "Sample",

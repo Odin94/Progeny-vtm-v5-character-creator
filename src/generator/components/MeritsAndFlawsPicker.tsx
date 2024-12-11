@@ -177,7 +177,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
                 {/* Loresheets */}
                 <Tabs.Panel value="loresheets" pt="xs">
-                    <Loresheets getMeritOrFlawLine={getMeritOrFlawLine} pickedMeritsAndFlaws={pickedMeritsAndFlaws} />
+                    <Loresheets character={character} getMeritOrFlawLine={getMeritOrFlawLine} pickedMeritsAndFlaws={pickedMeritsAndFlaws} />
                 </Tabs.Panel>
             </Tabs>
 

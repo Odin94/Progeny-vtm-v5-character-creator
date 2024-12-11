@@ -558,7 +558,6 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 2,
                 discipline: "potence",
             },
-
             {
                 name: "Brutal Feed",
                 description: "",
@@ -924,7 +923,12 @@ export const disciplines: Record<DisciplineName, Discipline> = {
             },
         ],
     },
-
+    "thin-blood alchemy": {
+        clans: [],
+        summary: "",
+        logo: "",
+        powers: [],
+    },
     "": {
         clans: [],
         summary: "",
