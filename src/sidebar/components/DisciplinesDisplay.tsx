@@ -1,6 +1,7 @@
 import { Grid, List, Stack, Title } from "@mantine/core"
-import { DisciplineName, Power, Ritual } from "../../data/Disciplines"
+import { Power, Ritual } from "../../data/Disciplines"
 import { upcase } from "../../generator/utils"
+import { DisciplineName } from "~/data/NameSchemas"
 
 export type DisciplinesProps = {
     powers: Power[]

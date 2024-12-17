@@ -8,9 +8,10 @@ import { SkillsKey, skillsKeySchema } from "../data/Skills"
 import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from "../data/Attributes"
-import { DisciplineName, Power, Ritual, powerIsRitual } from "../data/Disciplines"
+import { Power, Ritual, powerIsRitual } from "../data/Disciplines"
 import base64Pdf_nerdbert from "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw"
 import { upcase } from "./utils"
+import { DisciplineName } from "~/data/NameSchemas"
 
 type BloodPotencyEffect = {
     surge: number
@@ -24,7 +25,7 @@ type BloodPotencyEffect = {
 let customFont: PDFFont
 
 const initPDFDocument = async (bytes: ArrayBufferLike): Promise<PDFDocument> => {
-    const pdfDoc = await PDFDocument.load(bytes)
+    const pdfDoc = await PDFDocument.load(bytes as ArrayBuffer)
 
     pdfDoc.registerFontkit(fontkit)
     const fontBytes = await fetch("fonts/Roboto-Regular.ttf").then((res) => res.arrayBuffer())
@@ -291,11 +292,14 @@ const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => 
         return text
     }
 
-    const powersByDiscipline = character.disciplines.reduce((acc, p) => {
-        if (!acc[p.discipline]) acc[p.discipline] = []
-        acc[p.discipline].push(p)
-        return acc
-    }, {} as Record<DisciplineName, Power[]>)
+    const powersByDiscipline = character.disciplines.reduce(
+        (acc, p) => {
+            if (!acc[p.discipline]) acc[p.discipline] = []
+            acc[p.discipline].push(p)
+            return acc
+        },
+        {} as Record<DisciplineName, Power[]>
+    )
     for (const [disciplineIndex, powers] of Object.values(powersByDiscipline).entries()) {
         const di = disciplineIndex + 1
         form.getTextField(`Disc${di}`).setText(upcase(powers[0].discipline))
