@@ -1180,6 +1180,43 @@ export const loresheets: Loresheet[] = [
             },
         ],
     },
+    {
+        title: "La Famiglia Giovanni",
+        summary:
+            "The Giovanni are an ancient and respected mafioso family of Vampires. They are the most powerful part of the Hecata clan, and they'll do everything to keep it that way.",
+        source: "Blood Gods p225",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            {
+                name: "A Cousin's Ear",
+                cost: [1],
+                summary:
+                    "Once per session, ask another Giovanni a direct question and get a direct answer. You'll have to honestly answer a question in return. Once per story, get a favor from a mortal member of the family.",
+            },
+            {
+                name: "Faded Glamour",
+                cost: [2],
+                summary: "Once per session, add an automatic success to a social roll against another Hecata or their servants.",
+            },
+            {
+                name: "Petty Cash",
+                cost: [3],
+                summary:
+                    "Spend four dots among 'Resources' and 'Retainers'. Elder members of the family can take these from you at any time.",
+            },
+            {
+                name: "Spectre Servant",
+                cost: [4],
+                summary:
+                    "You gain a spectre to act as your servant (4 dot 'Ally', use stats from Core book p. 377) that you can summon once per session. It will arrive within 10 hours.",
+            },
+            {
+                name: "Aspiring Anziani",
+                cost: [5],
+                summary: "Gain 5 dots of 'Status' among Hecata, and get a private audience with the Capuchin every few stories.",
+            },
+        ],
+    },
     // {
     //     title: "Sample",
     //     summary: "Sample",
