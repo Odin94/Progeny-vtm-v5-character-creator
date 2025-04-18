@@ -4,6 +4,7 @@ import { Loresheet, MeritOrFlaw, loresheets } from "../../data/MeritsAndFlaws"
 import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
+import React from "react"
 
 type LoresheetProps = {
     character: Character
@@ -24,7 +25,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
             ).length > 0
 
         const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
-        if (!requirementsMet) return <></>
+        if (!requirementsMet) return <React.Fragment key={loresheet.title}></React.Fragment>
 
         return (
             <Grid.Col span={smallScreen ? 12 : 4} key={loresheet.title}>

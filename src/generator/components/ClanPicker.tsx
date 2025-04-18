@@ -2,7 +2,7 @@ import { Card, Center, Grid, Image, ScrollArea, Text, Title, useMantineTheme } f
 import { notifications } from "@mantine/notifications"
 import { useEffect } from "react"
 import ReactGA from "react-ga4"
-import { isThinbloodFlaw, isThinbloodMerit } from "~/data/MeritsAndFlaws"
+import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema } from "~/data/NameSchemas"
 import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
@@ -37,9 +37,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     h={275}
                     style={{ background: bgColor, cursor: "pointer" }}
                     onClick={() => {
-                        const newMerits = clan === "Thin-blood" ? character.merits : meritsWithoutThinbloodMerits(character.merits)
+                        const newMerits = clan === character.clan ? character.merits : getNewMerits(clan, character)
                         const newFlaws = clan === "Thin-blood" ? character.flaws : flawsWithoutThinbloodFlaws(character.flaws)
-                        console.log(newMerits)
                         if ((notDefault(character, "disciplines") || notDefault(character, "predatorType")) && clan !== character.clan) {
                             notifications.show({
                                 title: "Reset Disciplines",
@@ -167,5 +166,37 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
 
 const meritsWithoutThinbloodMerits = (merits: MeritFlaw[]) => merits.filter((m) => !isThinbloodMerit(m.name))
 const flawsWithoutThinbloodFlaws = (flaws: MeritFlaw[]) => flaws.filter((f) => !isThinbloodFlaw(f.name))
+const meritsWithoutInvalidLoreSheets = (newClan: ClanName, character: Character) => {
+    const { merits } = character
+    const loresheetMerits = loresheets.flatMap((loresheet) =>
+        loresheet.merits.map((lsMerit) => {
+            return { loresheet, meritName: lsMerit.name }
+        })
+    )
+
+    return merits.filter((m) => {
+        const loresheetMerit = loresheetMerits.find((lsMerit) => m.name === lsMerit.meritName)
+        if (!loresheetMerit) return true
+
+        const requirementsMet = loresheetMerit.loresheet.requirementFunctions.every((fun) => fun({ ...character, clan: newClan }))
+        return requirementsMet
+    })
+}
+
+const getNewMerits = (newClan: ClanName, character: Character) => {
+    let newMerits = meritsWithoutInvalidLoreSheets(newClan, character)
+    newMerits = newClan === "Thin-blood" ? newMerits : meritsWithoutThinbloodMerits(newMerits)
+
+    if (newMerits.length < character.merits.length) {
+        notifications.show({
+            title: "Reset (some) Merits",
+            message: "Because you changed your clan",
+            autoClose: 7000,
+            color: "yellow",
+        })
+    }
+
+    return newMerits
+}
 
 export default ClanPicker
