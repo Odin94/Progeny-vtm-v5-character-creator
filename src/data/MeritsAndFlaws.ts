@@ -1217,6 +1217,44 @@ export const loresheets: Loresheet[] = [
             },
         ],
     },
+    {
+        title: "The Nation of Blood / Descendants of the Baron",
+        summary:
+            "Vampires formerly known as the Samedi. They commonly work as mercenary spies and necromancers, or run secret religious circles practicing vodou magic. The clan curse rots their flesh or, in some cases, exposes raw bone, giving them an even more corpse-like appearance than most vampires.",
+        source: "Blood Gods p222",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            {
+                name: "CSI Shit",
+                cost: [1],
+                summary: "You can easily identify the cause of death when inspecting a corpse (roll if it's magically concealed)",
+            },
+            {
+                name: "Pound of Flesh",
+                cost: [2],
+                summary:
+                    "If you accept a freely given gift, you and the giver receive a dice penalty based on each character's Bane Severity for one night.",
+            },
+            {
+                name: "Treat Yourself",
+                cost: [3],
+                summary:
+                    "Once per night, you can indulge in a vice just like a human would, without any of the usual vampiric downsides (eg. a meal, drinks, sex, a cigar)",
+            },
+            {
+                name: "My Setite Friend",
+                cost: [4],
+                summary:
+                    "You have a friend in the Ministry. Once per story, you can ask a favor that is as powerful as 3 dots in the appropriate Merits (Alles, Influence, Resources...)",
+            },
+            {
+                name: "The Silk Hat",
+                cost: [5],
+                summary:
+                    "You are next in the line of succession of the Baron. Before you step up into his position, you have him as a 5 dot Mawla (his help comes in cryptic and mysterious ways). If you take his place, it might just be a job, or maybe you gain his mystical powers. Either way, you certainly gain his enemies.",
+            },
+        ],
+    },
     // {
     //     title: "Sample",
     //     summary: "Sample",
