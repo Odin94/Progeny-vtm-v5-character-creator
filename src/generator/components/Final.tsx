@@ -99,6 +99,19 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Button>
 
                 <Button
+                    component="a"
+                    href="https://ko-fi.com/odin_dev"
+                    target="_blank"
+                    rel="noreferrer"
+                    leftIcon={<span>☕</span>}
+                    size="xs"
+                    color="gray"
+                    variant="light"
+                >
+                    Support me on Ko-Fi
+                </Button>
+
+                <Button
                     leftIcon={<FontAwesomeIcon icon={faTrash} />}
                     size="md"
                     color="red"

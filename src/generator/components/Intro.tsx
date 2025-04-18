@@ -85,6 +85,18 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                 </Button>
                 <Button
                     component="a"
+                    href="https://ko-fi.com/odin_dev"
+                    target="_blank"
+                    rel="noreferrer"
+                    leftIcon={<span>☕</span>}
+                    size="xs"
+                    color="gray"
+                    variant="light"
+                >
+                    Support me on Ko-Fi
+                </Button>
+                <Button
+                    component="a"
                     href="https://odin-matthias.de"
                     target="_blank"
                     rel="noreferrer"
