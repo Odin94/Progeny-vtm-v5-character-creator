@@ -84,6 +84,11 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
                 cost: [1, 2, 3, 4, 5],
                 summary: "wealth & income, 1 - you can afford basics, 5 - you can afford anything money can buy",
             },
+            {
+                name: "Check the Trunk",
+                cost: [1],
+                summary: "Get easy access to an armory or tools; none of the items can be more valuable than Resources 2",
+            },
         ],
         flaws: [{ name: "Destitute", cost: [1], summary: "poor & no income" }],
     },
