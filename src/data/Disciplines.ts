@@ -616,6 +616,16 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "presence",
             },
             {
+                name: "Eyes of the Serpent",
+                description: "",
+                rouseChecks: 0,
+                amalgamPrerequisites: [{ discipline: "protean", level: 1 }],
+                summary: "Immobilize someone with eye contact",
+                dicePool: "Charisma + Presence",
+                level: 1,
+                discipline: "presence",
+            },
+            {
                 name: "Lingering Kiss",
                 description: "",
                 rouseChecks: 0,
