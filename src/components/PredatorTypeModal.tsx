@@ -255,12 +255,11 @@ const PredatorTypeModal = ({
                                     const pickedMerits = selectable.options.flatMap((option, j) => {
                                         const { selectedPoints } = subPointStates[j]
                                         if (selectedPoints === 0) return []
-                                        // TODO: Not all are merits! Add type in data!
                                         return meritFlawSchema.parse({
                                             name: option.name,
                                             summary: option.summary,
                                             level: selectedPoints,
-                                            type: "merit",
+                                            type: option.type,
                                         })
                                     })
 

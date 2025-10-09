@@ -3,9 +3,10 @@ import { specialtySchema } from "./Specialties"
 import { disciplineNameSchema, PredatorTypeName } from "./NameSchemas"
 
 const selectableMeritsAndFlawsSchema = z.object({
-    options: z.object({ name: z.string(), summary: z.string(), maxLevel: z.number() }).array(),
+    options: z
+        .object({ name: z.string(), summary: z.string(), maxLevel: z.number(), type: z.union([z.literal("merit"), z.literal("flaw")]) })
+        .array(),
     totalPoints: z.number().int(),
-    // TODO: Consider adding type merit/flaw?
 })
 export type SelectableMeritsAndFlaws = z.infer<typeof selectableMeritsAndFlawsSchema>
 
@@ -63,11 +64,13 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
                         name: "Contacts",
                         summary: "mortals who provide information or valuable items",
                         maxLevel: 3,
+                        type: "merit",
                     },
                     {
                         name: "Resources",
                         summary: "wealth & income",
                         maxLevel: 3,
+                        type: "merit",
                     },
                 ],
                 totalPoints: 3,
@@ -179,23 +182,24 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Fame", summary: "", maxLevel: 3 },
-                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 3 },
+                    { name: "Fame", summary: "", maxLevel: 3, type: "merit" },
+                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 3, type: "merit" },
                 ],
                 totalPoints: 3,
             },
             {
                 options: [
-                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 3 },
-                    { name: "Folkloric Bane", summary: "specific items damage you (eg. silver, garlic)", maxLevel: 1 },
+                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 3, type: "flaw" },
+                    { name: "Folkloric Bane", summary: "specific items damage you (eg. silver, garlic)", maxLevel: 1, type: "flaw" },
                     {
                         name: "Folkloric Block",
                         summary: "must spend willpower to move past specific block (eg. running water, door uninvited)",
                         maxLevel: 1,
+                        type: "flaw",
                     },
-                    { name: "Stigmata", summary: "bleed from your hands, feet and forehead when at Hunger 4", maxLevel: 1 },
+                    { name: "Stigmata", summary: "bleed from your hands, feet and forehead when at Hunger 4", maxLevel: 1, type: "flaw" },
                     // TODO: Only exists at level 2 - change system to include possible levels..? Maybe I have to write my own "Rating" component after all...
-                    { name: "Stake Bait", summary: "Final Death when staked", maxLevel: 2 },
+                    { name: "Stake Bait", summary: "Final Death when staked", maxLevel: 2, type: "flaw" },
                 ],
                 totalPoints: 2,
             },
@@ -228,8 +232,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Disliked", summary: "A subculture dislikes you", maxLevel: 1 },
-                    { name: "Prey Exclusion (another scene)", summary: "Can't feed from excluded prey", maxLevel: 1 },
+                    { name: "Disliked", summary: "A subculture dislikes you", maxLevel: 1, type: "flaw" },
+                    { name: "Prey Exclusion (another scene)", summary: "Can't feed from excluded prey", maxLevel: 1, type: "flaw" },
                 ],
                 totalPoints: 1,
             },
@@ -363,16 +367,16 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Retainer", summary: "Weak mortal servant", maxLevel: 1 },
-                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 1 },
-                    { name: "Haven", summary: "A secure aparment", maxLevel: 1 },
+                    { name: "Retainer", summary: "Weak mortal servant", maxLevel: 1, type: "merit" },
+                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 1, type: "merit" },
+                    { name: "Haven", summary: "A secure aparment", maxLevel: 1, type: "merit" },
                 ],
                 totalPoints: 1,
             },
             {
                 options: [
-                    { name: "Creepy", summary: "People are wary of your home", maxLevel: 1 },
-                    { name: "Haunted", summary: "Ghostly presence in your haven", maxLevel: 1 },
+                    { name: "Creepy", summary: "People are wary of your home", maxLevel: 1, type: "flaw" },
+                    { name: "Haunted", summary: "Ghostly presence in your haven", maxLevel: 1, type: "flaw" },
                 ],
                 totalPoints: 1,
             },
@@ -420,8 +424,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Diablerist", summary: "Somebody knows you drink from Kindred", maxLevel: 3 },
-                    { name: "Shunned", summary: "Despised by a faction", maxLevel: 3 },
+                    { name: "Diablerist", summary: "Somebody knows you drink from Kindred", maxLevel: 3, type: "merit" },
+                    { name: "Shunned", summary: "Despised by a faction", maxLevel: 3, type: "flaw" },
                 ],
                 totalPoints: 3,
             },
