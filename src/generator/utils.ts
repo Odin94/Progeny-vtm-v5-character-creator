@@ -1,3 +1,4 @@
+import { PredatorTypes } from "~/data/PredatorType"
 import { Attributes } from "../data/Attributes"
 import { Character, getEmptyCharacter } from "../data/Character"
 import { Skills } from "../data/Skills"
@@ -21,13 +22,58 @@ export const isEmptyList = (maybeList: unknown) => {
     return false
 }
 
+export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Character) => {
+    // TODOdin: Set health, willpower and bloodPotency earlier in character creation & use those values in pdf/json creation?
+    // Health
+    let health = 3 + character.attributes["stamina"]
+    if (character.disciplines.find((power) => power.name === "Resilience")) {
+        const fortitudeLevel = character.disciplines.filter((power) => power.discipline === "fortitude").length
+        health += fortitudeLevel
+    }
+
+    // Willpower
+    const willpower = character.attributes["composure"] + character.attributes["resolve"]
+
+    // Blood Potency
+    let bloodPotency = (() => {
+        switch (character.generation) {
+            case 16:
+            case 15:
+            case 14:
+                return 0
+            case 13:
+            case 12:
+                return 1
+            case 11:
+            case 10:
+                return 2
+            default:
+                return 1
+        }
+    })()
+    bloodPotency += PredatorTypes[character.predatorType.name].bloodPotencyChange
+
+    const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
+
+    character.maxHealth = health
+    character.willpower = willpower
+    character.bloodPotency = bloodPotency
+    character.humanity = humanity
+}
+
 export const downloadJson = async (character: Character) => {
-    const blob = new Blob([JSON.stringify(character, null, 2)], { type: "application/json" })
+    // TODOdin: Start supporting multiple versions & write automated tests for loading from json
+    const json = JSON.stringify({ ...character, version: "progeny_1.0.0" }, null, 2)
+    const blob = new Blob([json], { type: "application/json" })
     const link = document.createElement("a")
 
     link.href = window.URL.createObjectURL(blob)
     link.download = `progeny_${character.name}.json`
     link.click()
+    // Clean up the object URL to prevent memory leaks
+    setTimeout(() => {
+        window.URL.revokeObjectURL(link.href)
+    }, 100)
 }
 
 export const getUploadFile = async (file: File): Promise<string> => {

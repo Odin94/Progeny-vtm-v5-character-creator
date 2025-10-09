@@ -1,13 +1,14 @@
 import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
-import { faFileExport, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faFileExport, faFloppyDisk, faFilePdf, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { ActionIcon, Alert, Button, Stack, Text } from "@mantine/core"
+import { ActionIcon, Alert, Button, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconAlertCircle, IconBrandReddit, IconBrandTwitter } from "@tabler/icons-react"
+import { IconAlertCircle, IconBrandReddit, IconBrandTwitter, IconButterfly } from "@tabler/icons-react"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { downloadCharacterSheet } from "../pdfCreator"
-import { downloadJson } from "../utils"
+import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 
@@ -24,6 +25,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
 
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
+    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
 
     return (
         <div style={{ maxWidth: "440px" }}>
@@ -34,12 +36,12 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 Character Creation Complete
             </Text>
 
-            <div style={{ background: "rgba(0, 0, 0, 0.6)" }}>
+            <div style={{ background: "rgba(0, 0, 0, 0.6)", padding: "10px", borderRadius: "8px", marginBottom: "20px" }}>
                 <Text fz={"xl"} mb={"xl"}>
                     You can now export to a printable PDF or download your character as JSON file, which you can later load again to
                     continue editing
                 </Text>
-                <Text fz={"xl"} mb={"xl"}>
+                <Text fz={"xl"}>
                     For feature requests, bug reports and general feedback, message me on:&nbsp;
                     <ActionIcon
                         display={"inline"}
@@ -47,18 +49,40 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         href="https://www.reddit.com/user/ProgenyDev/"
                         variant="default"
                         c={"#ff6314"}
+                        target="_blank"
+                        rel="noreferrer"
                     >
                         <IconBrandReddit />
                     </ActionIcon>
                     &nbsp;
-                    <ActionIcon display={"inline"} component="a" href="https://twitter.com/Odin68092534" variant="default" c={"#1DA1F2"}>
+                    <ActionIcon
+                        display={"inline"}
+                        component="a"
+                        href="https://twitter.com/Odin68092534"
+                        variant="default"
+                        c={"#1DA1F2"}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
                         <IconBrandTwitter />
+                    </ActionIcon>
+                    &nbsp;
+                    <ActionIcon
+                        display={"inline"}
+                        component="a"
+                        href="https://bsky.app/profile/odinmatthias.bsky.social"
+                        variant="default"
+                        c={"#208BFE"}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        <IconButterfly />
                     </ActionIcon>
                 </Text>
             </div>
             <Stack align="center" spacing="xl">
                 <Button
-                    leftIcon={<FontAwesomeIcon icon={faFileExport} />}
+                    leftIcon={<FontAwesomeIcon icon={faFilePdf} />}
                     size="xl"
                     color="grape"
                     onClick={() => {
@@ -83,19 +107,27 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     color="yellow"
                     variant="light"
                     onClick={() => {
+                        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                         downloadJson(character).catch((e) => {
                             console.error(e)
                             setDownloadError(e as Error)
                         })
-
-                        ReactGA.event({
-                            action: "JSON downloaded",
-                            category: "downloads",
-                            label: JSON.stringify(character),
-                        })
+                        ReactGA.event({ action: "JSON downloaded (progeny)", category: "downloads", label: JSON.stringify(character) })
                     }}
                 >
                     Download JSON
+                </Button>
+
+                <Button
+                    leftIcon={<FontAwesomeIcon icon={faFileExport} />}
+                    size="lg"
+                    color="blue"
+                    variant="light"
+                    onClick={() => {
+                        openExportModal()
+                    }}
+                >
+                    Export to ...
                 </Button>
 
                 <Button
@@ -154,6 +186,73 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 resetModalOpened={resetModalOpened}
                 closeResetModal={closeResetModal}
             />
+
+            <Modal opened={exportModalOpened} onClose={closeExportModal} title="Export to other platforms" centered withCloseButton={true}>
+                <Stack>
+                    <Text fz={"lg"} mb="md">
+                        Progeny can export file formats compatible with the following platforms:
+                    </Text>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            backgroundColor: "rgba(0, 0, 0, 0.4)",
+                        }}
+                    >
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px", maxWidth: "60%" }}>
+                            <Text fw={600} size="md">
+                                <a
+                                    href="https://foundryvtt.com/packages/vtm5e"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: "#1976d2", textDecoration: "underline" }}
+                                >
+                                    Foundry WoD5E VTT
+                                </a>
+                            </Text>
+                            <Text fz={"sm"} c="dimmed">
+                                Use your character in the foundry virtual tabletop
+                            </Text>
+                        </div>
+                        <Button
+                            color="grape"
+                            size="sm"
+                            onClick={() => {
+                                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+                                try {
+                                    const vtt = createWoD5EVttJson(character)
+                                    const blob = new Blob([JSON.stringify(vtt, null, 2)], { type: "application/json" })
+                                    const link = document.createElement("a")
+                                    link.href = window.URL.createObjectURL(blob)
+                                    link.download = `foundry_wod5e_${character.name}.json`
+                                    link.click()
+
+                                    // Clean up the object URL to prevent memory leaks
+                                    setTimeout(() => {
+                                        window.URL.revokeObjectURL(link.href)
+                                    }, 100)
+
+                                    ReactGA.event({
+                                        action: "JSON downloaded (foundry_wod5e vtt)",
+                                        category: "downloads",
+                                        label: JSON.stringify(character),
+                                    })
+                                    closeExportModal()
+                                } catch (e) {
+                                    console.error(e)
+                                    setDownloadError(e as Error)
+                                }
+                            }}
+                        >
+                            Export JSON
+                        </Button>
+                    </div>
+                </Stack>
+            </Modal>
         </div>
     )
 }

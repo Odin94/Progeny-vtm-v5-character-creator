@@ -60,12 +60,17 @@ export const testTemplate = async (basePdf: string) => {
 }
 
 const downloadPdf = (fileName: string, bytes: Uint8Array) => {
-    const blob = new Blob([bytes], { type: "application/pdf" })
+    const blob = new Blob([bytes as BlobPart], { type: "application/pdf" })
     const link = document.createElement("a")
 
     link.href = window.URL.createObjectURL(blob)
     link.download = fileName
     link.click()
+
+    // Clean up the object URL to prevent memory leaks
+    setTimeout(() => {
+        window.URL.revokeObjectURL(link.href)
+    }, 100)
 }
 
 const potencyEffects: Record<number, BloodPotencyEffect> = {
