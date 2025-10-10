@@ -26,6 +26,12 @@ If you want to buy me a coffee, you can toss me some coins over here: https://ko
 
 * (optional) create `.env` file and enter environment variables like `VITE_VARIABLE_NAME = 'some value'`
 
+
+## How to manually create a loadable json character / fix a broken json file
+Check the `characterSchema` in `src/data/Character.ts` to get an idea for the expected format. If you can't make it work, feel free to create an issue on Github or contact me.
+
+<!-- TODOdin: Add example json file -->
+
 <!-- ## How to use -->
 
 <!-- ## How to use your own fillable pdf
