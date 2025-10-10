@@ -1,8 +1,14 @@
 // https://github.com/WoD5E-Developers/wod5e/issues/235#issuecomment-3372866896
 
+import { AttributesKey } from "~/data/Attributes"
+import { DisciplineName } from "~/data/NameSchemas"
+import { SkillsKey } from "~/data/Skills"
 import { Character } from "../data/Character"
 import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
+import { getValueForKey } from "./utils"
+
+// TODOdin: Consider adding a schema for your output & unit tests
 
 type WoD5EVtt_DisciplineKey =
     | "animalism"
@@ -16,8 +22,11 @@ type WoD5EVtt_DisciplineKey =
     | "protean"
     | "sorcery"
     | "oblivion"
+    | "alchemy"
+    | "rituals"
+    | "ceremonies"
 
-const disciplineNameTo_WoD5EVtt_Key: Record<string, WoD5EVtt_DisciplineKey | undefined> = {
+export const disciplineNameTo_WoD5EVtt_Key: Record<DisciplineName, WoD5EVtt_DisciplineKey | undefined> = {
     animalism: "animalism",
     auspex: "auspex",
     celerity: "celerity",
@@ -29,6 +38,155 @@ const disciplineNameTo_WoD5EVtt_Key: Record<string, WoD5EVtt_DisciplineKey | und
     protean: "protean",
     "blood sorcery": "sorcery",
     oblivion: "oblivion",
+    "thin-blood alchemy": "alchemy",
+    "": undefined,
+}
+
+type WoD5EVtt_AttributesKey =
+    | "strength"
+    | "dexterity"
+    | "stamina"
+    | "charisma"
+    | "manipulation"
+    | "composure"
+    | "intelligence"
+    | "wits"
+    | "resolve"
+
+export const attributeNameTo_WoD5EVtt_Key: Record<AttributesKey, WoD5EVtt_AttributesKey | undefined> = {
+    strength: "strength",
+    dexterity: "dexterity",
+    stamina: "stamina",
+    charisma: "charisma",
+    manipulation: "manipulation",
+    composure: "composure",
+    intelligence: "intelligence",
+    wits: "wits",
+    resolve: "resolve",
+}
+
+type WoD5EVtt_SkillsKey =
+    | "athletics"
+    | "animalken"
+    | "academics"
+    | "brawl"
+    | "etiquette"
+    | "awareness"
+    | "craft"
+    | "insight"
+    | "finance"
+    | "drive"
+    | "intimidation"
+    | "investigation"
+    | "firearms"
+    | "leadership"
+    | "medicine"
+    | "larceny"
+    | "performance"
+    | "occult"
+    | "melee"
+    | "persuasion"
+    | "politics"
+    | "stealth"
+    | "streetwise"
+    | "science"
+    | "survival"
+    | "subterfuge"
+    | "technology"
+
+export const skillNameTo_WoD5EVtt_Key: Record<SkillsKey, WoD5EVtt_SkillsKey | undefined> = {
+    athletics: "athletics",
+    "animal ken": "animalken",
+    academics: "academics",
+    brawl: "brawl",
+    etiquette: "etiquette",
+    awareness: "awareness",
+    craft: "craft",
+    science: "science",
+    survival: "survival",
+    subterfuge: "subterfuge",
+    technology: "technology",
+    drive: "drive",
+    stealth: "stealth",
+    politics: "politics",
+    streetwise: "streetwise",
+    investigation: "investigation",
+    medicine: "medicine",
+    occult: "occult",
+    performance: "performance",
+    persuasion: "persuasion",
+    insight: "insight",
+    intimidation: "intimidation",
+    leadership: "leadership",
+    larceny: "larceny",
+    melee: "melee",
+    firearms: "firearms",
+    finance: "finance",
+}
+
+const parseDicePool = (dicePoolString: string, character: Character): Record<string, { path: string }> => {
+    // This assumes that dicePoolStrings are in one of these formats:
+    // "Thing [ / Thing]"
+    // "Thing [ / Thing] + Thing [ / Thing]"
+
+    if (!dicePoolString || dicePoolString.trim() === "") {
+        return {}
+    }
+
+    const dicePool: Record<string, { path: string }> = {}
+
+    const components = dicePoolString.split("+").map((comp) => comp.trim())
+
+    for (const component of components) {
+        // Handle alternatives (e.g., "Charisma / Manipulation")
+        const alternatives = component.split("/").map((alt) => alt.trim())
+
+        if (alternatives.length === 1) {
+            const key = alternatives[0].toLowerCase()
+            const path = findPathForKey(key)
+            if (path) {
+                dicePool[alternatives[0]] = { path }
+            }
+        } else {
+            // Multiple alternatives - pick the one with higher value
+            let bestAlternative = alternatives[0]
+            let bestValue = getValueForKey(alternatives[0].toLowerCase(), character)
+
+            for (let i = 1; i < alternatives.length; i++) {
+                const value = getValueForKey(alternatives[i].toLowerCase(), character)
+                if (value > bestValue) {
+                    bestAlternative = alternatives[i]
+                    bestValue = value
+                }
+            }
+
+            const path = findPathForKey(bestAlternative.toLowerCase())
+            if (path) {
+                dicePool[bestAlternative] = { path }
+            }
+        }
+    }
+
+    return dicePool
+}
+
+const findPathForKey = (key: string): string | null => {
+    const attribute = attributeNameTo_WoD5EVtt_Key[key as AttributesKey]
+    if (attribute) {
+        return `attributes.${attribute}`
+    }
+
+    const skill = skillNameTo_WoD5EVtt_Key[key as SkillsKey]
+    if (skill) {
+        return `skills.${skill}`
+    }
+
+    const discipline = disciplineNameTo_WoD5EVtt_Key[key as DisciplineName]
+    if (discipline) {
+        return `disciplines.${discipline}`
+    }
+
+    return null
 }
 
 export const createWoD5EVttJson = (character: Character) => {
@@ -46,13 +204,16 @@ export const createWoD5EVttJson = (character: Character) => {
         protean: { value: 0, powers: [] },
         sorcery: { value: 0, powers: [] },
         oblivion: { value: 0, powers: [] },
+        alchemy: { value: 0, powers: [] },
+        rituals: { value: 0, powers: [] },
+        ceremonies: { value: 0, powers: [] },
     }
 
-    for (const p of character.disciplines) {
-        const key = disciplineNameTo_WoD5EVtt_Key[p.discipline]
+    for (const disc of character.disciplines) {
+        const key = disciplineNameTo_WoD5EVtt_Key[disc.discipline]
         if (!key) continue
-        disciplineValues[key].powers.push(p.name)
-        disciplineValues[key].value = Math.max(disciplineValues[key].value, p.level)
+        disciplineValues[key].powers.push(disc.name)
+        disciplineValues[key].value = Math.max(disciplineValues[key].value, disc.level)
     }
 
     const skills: Record<string, { value: number; bonuses: Record<string, unknown>[] }> = {}
@@ -124,14 +285,13 @@ export const createWoD5EVttJson = (character: Character) => {
                 level: p.level,
                 duration: "",
                 cost: "",
-                dicepool: { path: "", value: 0 },
+                dicepool: parseDicePool(p.dicePool, character),
                 bonuses: [],
                 uses: { max: 0, current: 0, enabled: false },
             },
         })
     }
 
-    // TODOdin: Double check this
     // Merit items
     const allMerits = [
         ...(character.merits || []),
@@ -175,7 +335,7 @@ export const createWoD5EVttJson = (character: Character) => {
             system: {
                 description: ritual.summary || "",
                 gamesystem: "vampire",
-                discipline: "sorcery",
+                discipline: "rituals",
                 level: ritual.level,
                 duration: "",
                 cost: ritual.rouseChecks > 0 ? `${ritual.rouseChecks} Rouse Check${ritual.rouseChecks > 1 ? "s" : ""}` : "Free",

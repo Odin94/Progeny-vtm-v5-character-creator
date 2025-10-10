@@ -1,7 +1,9 @@
 import { PredatorTypes } from "~/data/PredatorType"
-import { Attributes } from "../data/Attributes"
+import { Attributes, AttributesKey } from "../data/Attributes"
 import { Character, getEmptyCharacter } from "../data/Character"
-import { Skills } from "../data/Skills"
+import { Skills, SkillsKey } from "../data/Skills"
+import { DisciplineName } from "~/data/NameSchemas"
+import { attributeNameTo_WoD5EVtt_Key, skillNameTo_WoD5EVtt_Key, disciplineNameTo_WoD5EVtt_Key } from "./foundryWoDJsonCreator"
 
 // The maximum is exclusive and the minimum is inclusive
 export const rndInt = (min: number, max: number) => {
@@ -103,3 +105,19 @@ export const notDefault = (character: Character, attribute: keyof Character) => 
     return character[attribute] !== emptyCharacter[attribute]
 }
 export const isDefault = (character: Character, attribute: keyof Character) => !notDefault(character, attribute)
+export const getValueForKey = (key: string, character: Character): number => {
+    if (attributeNameTo_WoD5EVtt_Key[key as AttributesKey]) {
+        return character.attributes[key as AttributesKey] || 0
+    }
+
+    if (skillNameTo_WoD5EVtt_Key[key as SkillsKey]) {
+        return character.skills[key as SkillsKey] || 0
+    }
+
+    if (disciplineNameTo_WoD5EVtt_Key[key as DisciplineName]) {
+        const disciplinePowers = character.disciplines.filter((p) => p.discipline === key)
+        return disciplinePowers.length > 0 ? Math.max(...disciplinePowers.map((p) => p.level)) : 0
+    }
+
+    return 0
+}
