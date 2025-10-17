@@ -331,8 +331,16 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 2,
                 discipline: "dominate",
             },
-            // { name: "Dementation", description: "", rouseChecks: 1, amalgamPrerequisites: [{ discipline: "obfuscate", level: 2 }], summary: "trigger psychotic breaks or nervous breakdowns in others", dicePool: "Manipulation + Dominate", level: 2, discipline: "dominate" },
-
+            {
+                name: "Dementation",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [{ discipline: "obfuscate", level: 2 }],
+                summary: "trigger psychotic breaks or nervous breakdowns in others",
+                dicePool: "Manipulation + Dominate",
+                level: 2,
+                discipline: "dominate",
+            },
             {
                 name: "Forgetful Mind",
                 description: "",
