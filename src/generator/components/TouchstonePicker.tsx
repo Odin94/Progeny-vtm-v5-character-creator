@@ -4,6 +4,7 @@ import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUser } from "@fortawesome/free-regular-svg-icons"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { faTrash } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
 
@@ -124,7 +125,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                     onClick={() => {
                         setCharacter({ ...character, touchstones: touchstones })
 
-                        ReactGA.event({
+                        trackEvent({
                             action: "touchstone confirm clicked",
                             category: "touchstones",
                             label: `${touchstones.length}`,

@@ -1,7 +1,7 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, Group, Modal, SegmentedControl, Stack, Text, Title, Tooltip, useMantineTheme } from "@mantine/core"
-import ReactGA from "react-ga4"
+import { trackEvent } from "../utils/analytics"
 import { Character, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
 import { PredatorTypes } from "../data/PredatorType"
@@ -280,7 +280,7 @@ const PredatorTypeModal = ({
                                     rituals: changedPickedDiscipline ? [] : character.rituals,
                                 })
 
-                                ReactGA.event({
+                                trackEvent({
                                     action: "predatortype confirm clicked",
                                     category: "predator type",
                                     label: pickedPredatorType,

@@ -3,6 +3,7 @@ import { Notifications } from "@mantine/notifications"
 import React from "react"
 import ReactDOM from "react-dom/client"
 import ReactGA from "react-ga4"
+import { PostHogProvider } from "posthog-js/react"
 import App from "./App"
 import "./index.css"
 import reportWebVitals from "./reportWebVitals"
@@ -20,10 +21,20 @@ if (GA4_MEASUREMENT_ID) {
 
 root.render(
     <React.StrictMode>
-        <MantineProvider theme={{ colorScheme: "dark" }} withGlobalStyles withNormalizeCSS>
-            <Notifications position="bottom-center" />
-            <App />
-        </MantineProvider>
+        <PostHogProvider
+            apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+            options={{
+                api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+                defaults: "2025-05-24",
+                capture_exceptions: true,
+                debug: import.meta.env.MODE === "development",
+            }}
+        >
+            <MantineProvider theme={{ colorScheme: "dark" }} withGlobalStyles withNormalizeCSS>
+                <Notifications position="bottom-center" />
+                <App />
+            </MantineProvider>
+        </PostHogProvider>
     </React.StrictMode>
 )
 

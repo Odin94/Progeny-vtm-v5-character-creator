@@ -2,6 +2,7 @@ import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } from "../../data/Skills"
 import { globals } from "../../globals"
@@ -159,7 +160,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         })()
 
         const trackClick = () => {
-            ReactGA.event({
+            trackEvent({
                 action: "skill clicked",
                 category: "skills",
                 label: skill,

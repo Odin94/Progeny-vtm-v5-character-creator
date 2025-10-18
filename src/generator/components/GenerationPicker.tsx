@@ -2,6 +2,7 @@ import { Button, Select, Space, Stack, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 
 type GenerationPickerProps = {
     character: Character
@@ -72,7 +73,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                     color="grape"
                     onClick={() => {
                         setCharacter({ ...character, generation: parseInt(generation ?? "0") })
-                        ReactGA.event({
+                        trackEvent({
                             action: "generation submit clicked",
                             category: "generation",
                             label: generation ?? "0",

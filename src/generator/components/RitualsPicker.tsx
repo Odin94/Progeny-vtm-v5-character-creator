@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Center, Grid, Group, ScrollArea, Space, Stack, Text } from "@mantine/core"
 import { useEffect } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
 import { Rituals } from "../../data/Disciplines"
 import { globals } from "../../globals"
@@ -26,7 +27,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
     const getRitualCardCols = () => {
         return Rituals.map((ritual) => {
             const trackClick = () => {
-                ReactGA.event({
+                trackEvent({
                     action: "ritual clicked",
                     category: "rituals",
                     label: ritual.name,

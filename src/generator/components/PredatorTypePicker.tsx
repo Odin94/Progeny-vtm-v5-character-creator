@@ -2,6 +2,7 @@ import { Button, Divider, Grid, ScrollArea, Space, Stack, Text, Tooltip } from "
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
@@ -131,7 +132,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                                 ml={"20px"}
                                 color={"red"}
                                 onClick={() => {
-                                    ReactGA.event({
+                                    trackEvent({
                                         action: "predatortype confirm clicked",
                                         category: "predator type",
                                         label: "thin-blood - no predator type",

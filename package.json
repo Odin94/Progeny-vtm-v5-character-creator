@@ -8,7 +8,9 @@
         "build": "vite build",
         "serve": "vite preview",
         "lint": "eslint src/**/*.ts src/**/*.tsx",
-        "pdf-to-base64": "npx ts-node --project ./scripts/tsconfig.json ./scripts/pdfToBase64.ts"
+        "pdf-to-base64": "npx ts-node --project ./scripts/tsconfig.json ./scripts/pdfToBase64.ts",
+        "test": "vitest",
+        "test:run": "vitest run"
     },
     "eslintConfig": {
         "extends": [
@@ -42,12 +44,12 @@
         "@testing-library/jest-dom": "^5.16.5",
         "@testing-library/react": "^13.4.0",
         "@testing-library/user-event": "^13.5.0",
-        "@types/jest": "^27.5.2",
         "@types/node": "^22.5.4",
         "@types/react": "^18.0.33",
         "@types/react-dom": "^18.0.11",
         "buffer": "^6.0.3",
         "pdf-lib": "^1.17.1",
+        "posthog-js": "^1.276.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-ga4": "^2.1.0",
@@ -59,11 +61,14 @@
         "@typescript-eslint/eslint-plugin": "^5.59.7",
         "@typescript-eslint/parser": "^5.59.7",
         "@vitejs/plugin-react": "^4.3.1",
+        "@vitest/ui": "^3.2.4",
         "eslint": "^8.41.0",
         "eslint-plugin-prettier": "^4.2.1",
         "eslint-plugin-react": "^7.32.2",
+        "jsdom": "^27.0.0",
         "ts-node": "^10.9.1",
         "vite": "^5.3.3",
-        "vite-plugin-svgr": "^4.2.0"
+        "vite-plugin-svgr": "^4.2.0",
+        "vitest": "^3.2.4"
     }
 }

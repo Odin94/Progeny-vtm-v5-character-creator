@@ -1,6 +1,7 @@
 import { Accordion, Badge, Button, Card, Center, Grid, Group, Image, List, ScrollArea, Space, Stack, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
@@ -99,7 +100,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 (isForPredatorType && pickedPredatorTypePower !== undefined)
 
             const trackClick = () => {
-                ReactGA.event({
+                trackEvent({
                     action: "power clicked",
                     category: "disciplines",
                     label: power.name,
@@ -268,12 +269,11 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     <Button
                         color={"red"}
                         onClick={() => {
-                            ReactGA.event({
+                            trackEvent({
                                 action: "power clicked",
                                 category: "disciplines",
                                 label: "thin-blood - no disciplines",
                             })
-
                             nextStep()
                         }}
                     >

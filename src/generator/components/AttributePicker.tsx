@@ -1,6 +1,7 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
@@ -81,7 +82,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         })()
 
         const trackClick = () => {
-            ReactGA.event({
+            trackEvent({
                 action: "attribute clicked",
                 category: "attributes",
                 label: attribute,

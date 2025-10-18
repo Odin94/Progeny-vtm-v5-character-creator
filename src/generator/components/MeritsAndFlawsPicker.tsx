@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Grid, ScrollArea, Stack, Tabs, Text, useMantineTheme } from "@mantine/core"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
 import { isThinbloodFlaw, isThinbloodMerit, MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "../../data/MeritsAndFlaws"
 import { PredatorTypes } from "../../data/PredatorType"
@@ -192,7 +193,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                         flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw"),
                     })
 
-                    ReactGA.event({
+                    trackEvent({
                         action: "merits confirm clicked",
                         category: "merits",
                         label: pickedMeritsAndFlaws.map((m) => `${m.name}: ${m.level}`).join(", "),

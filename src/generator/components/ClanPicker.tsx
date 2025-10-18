@@ -2,6 +2,7 @@ import { Card, Center, Grid, Image, ScrollArea, Text, Title, useMantineTheme } f
 import { notifications } from "@mantine/notifications"
 import { useEffect } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema } from "~/data/NameSchemas"
 import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
@@ -66,7 +67,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                             })
                         }
 
-                        ReactGA.event({
+                        trackEvent({
                             action: "clan clicked",
                             category: "clans",
                             label: clan,
