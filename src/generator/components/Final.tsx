@@ -3,6 +3,7 @@ import { faFileExport, faFloppyDisk, faFilePdf, faTrash } from "@fortawesome/fre
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { ActionIcon, Alert, Button, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
 import { IconAlertCircle, IconBrandReddit, IconBrandTwitter, IconButterfly } from "@tabler/icons-react"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
@@ -11,6 +12,7 @@ import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { trackEvent } from "../../utils/analytics"
 
 type FinalProps = {
     character: Character
@@ -91,7 +93,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             setDownloadError(e as Error)
                         })
 
-                        ReactGA.event({
+                        trackEvent({
                             action: "PDF downloaded",
                             category: "downloads",
                             label: JSON.stringify(character),
@@ -112,7 +114,11 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             console.error(e)
                             setDownloadError(e as Error)
                         })
-                        ReactGA.event({ action: "JSON downloaded (progeny)", category: "downloads", label: JSON.stringify(character) })
+                        trackEvent({
+                            action: "JSON downloaded (progeny)",
+                            category: "downloads",
+                            label: JSON.stringify(character),
+                        })
                     }}
                 >
                     Download JSON
@@ -224,7 +230,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             onClick={() => {
                                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                 try {
-                                    const vtt = createWoD5EVttJson(character)
+                                    const { json: vtt, validationErrors } = createWoD5EVttJson(character)
                                     const blob = new Blob([JSON.stringify(vtt, null, 2)], { type: "application/json" })
                                     const link = document.createElement("a")
                                     link.href = window.URL.createObjectURL(blob)
@@ -236,7 +242,24 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                                         window.URL.revokeObjectURL(link.href)
                                     }, 100)
 
-                                    ReactGA.event({
+                                    // Show warning toast if validation failed
+                                    if (validationErrors.length > 0) {
+                                        const errorCount = validationErrors.length
+                                        const firstError = validationErrors[0]
+                                        const message =
+                                            errorCount === 1
+                                                ? `Validation error: ${firstError}`
+                                                : `${errorCount} validation errors found. First error: ${firstError}`
+
+                                        notifications.show({
+                                            title: "Validation Warning",
+                                            message: `The exported JSON may not be fully compatible with Foundry VTT. ${message}`,
+                                            color: "orange",
+                                            autoClose: 10000,
+                                        })
+                                    }
+
+                                    trackEvent({
                                         action: "JSON downloaded (foundry_wod5e vtt)",
                                         category: "downloads",
                                         label: JSON.stringify(character),

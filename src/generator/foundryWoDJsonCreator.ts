@@ -1,5 +1,6 @@
 // https://github.com/WoD5E-Developers/wod5e/issues/235#issuecomment-3372866896
 
+import { z } from "zod"
 import { AttributesKey } from "~/data/Attributes"
 import { DisciplineName } from "~/data/NameSchemas"
 import { SkillsKey } from "~/data/Skills"
@@ -8,7 +9,115 @@ import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
 import { getValueForKey } from "./utils"
 
-// TODOdin: Consider adding a schema for your output & unit tests
+const WoD5EVttJsonSchema = z.object({
+    name: z.string(),
+    type: z.literal("vampire"),
+    system: z.object({
+        locked: z.boolean(),
+        hasSkillAttributeData: z.boolean(),
+        group: z.string(),
+        biography: z.string(),
+        appearance: z.string(),
+        equipment: z.string(),
+        notes: z.string(),
+        privatenotes: z.string(),
+        bio: z.object({
+            age: z.object({
+                trueage: z.string(),
+                apparent: z.string(),
+            }),
+            dateof: z.object({
+                birth: z.string(),
+                death: z.string(),
+            }),
+            history: z.string(),
+        }),
+        headers: z.object({
+            concept: z.string(),
+            chronicle: z.string(),
+            ambition: z.string(),
+            desire: z.string(),
+            touchstones: z.string(),
+            tenets: z.string(),
+            sire: z.string(),
+            generation: z.string(),
+        }),
+        exp: z.object({
+            value: z.number(),
+            max: z.number(),
+        }),
+        humanity: z.object({
+            value: z.number(),
+            stains: z.number(),
+        }),
+        hunger: z.object({
+            value: z.number(),
+            max: z.number(),
+        }),
+        health: z.object({
+            aggravated: z.number(),
+            superficial: z.number(),
+            max: z.number(),
+            value: z.number(),
+        }),
+        willpower: z.object({
+            aggravated: z.number(),
+            superficial: z.number(),
+            max: z.number(),
+            value: z.number(),
+        }),
+        blood: z.object({
+            potency: z.number(),
+            resonance: z.string(),
+        }),
+        attributes: z.object({
+            strength: z.object({ value: z.number() }),
+            charisma: z.object({ value: z.number() }),
+            intelligence: z.object({ value: z.number() }),
+            dexterity: z.object({ value: z.number() }),
+            manipulation: z.object({ value: z.number() }),
+            wits: z.object({ value: z.number() }),
+            stamina: z.object({ value: z.number() }),
+            composure: z.object({ value: z.number() }),
+            resolve: z.object({ value: z.number() }),
+        }),
+        skills: z.record(
+            z.string(),
+            z.object({
+                value: z.number(),
+                bonuses: z.array(z.record(z.string(), z.unknown())),
+            })
+        ),
+        disciplines: z.object({
+            animalism: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            auspex: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            celerity: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            dominate: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            fortitude: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            obfuscate: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            potence: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            presence: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            protean: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            sorcery: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            oblivion: z.object({ value: z.number(), powers: z.array(z.string()) }),
+        }),
+        settings: z.object({
+            headerbg: z.string(),
+            background: z.string(),
+            limited: z.object({
+                biography: z.boolean(),
+                appearance: z.boolean(),
+                touchstones: z.boolean(),
+                tenets: z.boolean(),
+            }),
+            skillAttributeInputs: z.boolean(),
+        }),
+    }),
+    items: z.array(z.record(z.string(), z.unknown())),
+})
+
+// TypeScript type derived from the Zod schema
+export type WoD5EVttJson = z.infer<typeof WoD5EVttJsonSchema>
 
 type WoD5EVtt_DisciplineKey =
     | "animalism"
@@ -135,14 +244,14 @@ const parseDicePool = (dicePoolString: string, character: Character): Record<str
 
     const dicePool: Record<string, { path: string }> = {}
 
-    const components = dicePoolString.split("+").map((comp) => comp.trim())
+    const components = dicePoolString.split("+").map((comp) => comp.trim().toLowerCase())
 
     for (const component of components) {
         // Handle alternatives (e.g., "Charisma / Manipulation")
         const alternatives = component.split("/").map((alt) => alt.trim())
 
         if (alternatives.length === 1) {
-            const key = alternatives[0].toLowerCase()
+            const key = alternatives[0]
             const path = findPathForKey(key)
             if (path) {
                 dicePool[alternatives[0]] = { path }
@@ -150,17 +259,17 @@ const parseDicePool = (dicePoolString: string, character: Character): Record<str
         } else {
             // Multiple alternatives - pick the one with higher value
             let bestAlternative = alternatives[0]
-            let bestValue = getValueForKey(alternatives[0].toLowerCase(), character)
+            let bestValue = getValueForKey(alternatives[0], character)
 
             for (let i = 1; i < alternatives.length; i++) {
-                const value = getValueForKey(alternatives[i].toLowerCase(), character)
+                const value = getValueForKey(alternatives[i], character)
                 if (value > bestValue) {
                     bestAlternative = alternatives[i]
                     bestValue = value
                 }
             }
 
-            const path = findPathForKey(bestAlternative.toLowerCase())
+            const path = findPathForKey(bestAlternative)
             if (path) {
                 dicePool[bestAlternative] = { path }
             }
@@ -189,7 +298,7 @@ const findPathForKey = (key: string): string | null => {
     return null
 }
 
-export const createWoD5EVttJson = (character: Character) => {
+export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; validationErrors: string[] } => {
     // JSON for https://foundryvtt.com/packages/vtm5e
     // Based on template at https://github.com/WoD5E-Developers/wod5e/blob/main/template.json (commit 5e35fc1 / Version 5.2.2)
     const disciplineValues: Record<WoD5EVtt_DisciplineKey, { value: number; powers: string[] }> = {
@@ -436,7 +545,24 @@ export const createWoD5EVttJson = (character: Character) => {
         items,
     }
 
-    return foundry_WoD5E_json
-}
+    try {
+        const validatedJson = WoD5EVttJsonSchema.parse(foundry_WoD5E_json)
+        return { json: validatedJson, validationErrors: [] }
+    } catch (validationError) {
+        console.error("WoD5E VTT JSON validation failed:", validationError)
+        console.error("Generated JSON that failed validation:", foundry_WoD5E_json)
 
-export type VttJson = ReturnType<typeof createWoD5EVttJson>
+        const validationErrors: string[] = []
+        if (validationError && typeof validationError === "object" && "issues" in validationError) {
+            const zodError = validationError as { issues: Array<{ path: string[]; message: string }> }
+            validationErrors.push(...zodError.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`))
+        } else {
+            const errorMessage = validationError instanceof Error ? validationError.message : String(validationError)
+            validationErrors.push(errorMessage)
+        }
+
+        console.error("Validation errors:", validationErrors)
+
+        return { json: foundry_WoD5E_json as WoD5EVttJson, validationErrors }
+    }
+}
