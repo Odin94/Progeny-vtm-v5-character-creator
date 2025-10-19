@@ -36,8 +36,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const usedMeritsLevel = character.merits.filter((m) => !isThinbloodMerit(m.name)).reduce((acc, { level }) => acc + level, 0)
     const usedFLawsLevel = character.flaws.filter((f) => !isThinbloodFlaw(f.name)).reduce((acc, { level }) => acc + level, 0)
 
-    const [remainingMerits, setRemainingMerits] = useState(7 - usedMeritsLevel)
-    const [remainingFlaws, setRemainingFlaws] = useState(2 - usedFLawsLevel)
+    const meritPoints = character.generation === 10 || character.generation === 11 ? 9 : 7
+    const flawPoints = character.generation === 10 || character.generation === 11 ? 4 : 2
+
+    const [remainingMerits, setRemainingMerits] = useState(meritPoints - usedMeritsLevel)
+    const [remainingFlaws, setRemainingFlaws] = useState(flawPoints - usedFLawsLevel)
 
     const isThinBlood = character.clan === "Thin-blood"
     const tbMeritCount = character.merits.filter((m) => isThinbloodMerit(m.name)).length
