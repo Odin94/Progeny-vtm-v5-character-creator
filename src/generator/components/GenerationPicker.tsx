@@ -1,6 +1,6 @@
 import { Button, Select, Space, Stack, Text } from "@mantine/core"
 import { useEffect, useState } from "react"
-import { Character } from "../../data/Character"
+import { Character, getEmptyCharacter } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 
@@ -16,8 +16,10 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
     }, [])
 
     const isThinBlood = character.clan === "Thin-blood"
+    const defaultGeneration = isThinBlood ? "14" : "13"
+    const initialGeneration = character.generation !== getEmptyCharacter().generation ? character.generation.toString() : defaultGeneration
 
-    const [generation, setGeneration] = useState<string | null>(isThinBlood ? "14" : "13")
+    const [generation, setGeneration] = useState<string | null>(initialGeneration)
 
     return (
         <div style={{ width: "100%" }}>
