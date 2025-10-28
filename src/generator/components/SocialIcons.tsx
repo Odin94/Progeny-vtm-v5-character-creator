@@ -20,18 +20,6 @@ export const SocialIcons = () => {
             <ActionIcon
                 display={"inline"}
                 component="a"
-                href="https://twitter.com/Odin68092534"
-                variant="default"
-                c={"#1DA1F2"}
-                target="_blank"
-                rel="noreferrer"
-            >
-                <IconBrandTwitter />
-            </ActionIcon>
-            &nbsp;
-            <ActionIcon
-                display={"inline"}
-                component="a"
                 href="https://bsky.app/profile/odinmatthias.bsky.social"
                 variant="default"
                 c={"#208BFE"}
