@@ -1,18 +1,19 @@
 import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
-import { faFileExport, faFloppyDisk, faFilePdf, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faFileExport, faFilePdf, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { ActionIcon, Alert, Button, Modal, Stack, Text } from "@mantine/core"
+import { Alert, Button, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconAlertCircle, IconBrandReddit, IconBrandTwitter, IconButterfly } from "@tabler/icons-react"
-import ResetModal from "../../components/ResetModal"
-import { Character } from "../../data/Character"
-import { downloadCharacterSheet } from "../pdfCreator"
-import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
-import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
+import { IconAlertCircle } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import ResetModal from "../../components/ResetModal"
+import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
+import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
+import { downloadCharacterSheet } from "../pdfCreator"
+import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { SocialIcons } from "./SocialIcons"
 
 type FinalProps = {
     character: Character
@@ -43,44 +44,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     You can now export to a printable PDF or download your character as JSON file, which you can later load again to
                     continue editing
                 </Text>
-                <Text fz={"xl"}>
-                    For feature requests, bug reports and general feedback, message me on:&nbsp;
-                    <ActionIcon
-                        display={"inline"}
-                        component="a"
-                        href="https://www.reddit.com/user/ProgenyDev/"
-                        variant="default"
-                        c={"#ff6314"}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <IconBrandReddit />
-                    </ActionIcon>
-                    &nbsp;
-                    <ActionIcon
-                        display={"inline"}
-                        component="a"
-                        href="https://twitter.com/Odin68092534"
-                        variant="default"
-                        c={"#1DA1F2"}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <IconBrandTwitter />
-                    </ActionIcon>
-                    &nbsp;
-                    <ActionIcon
-                        display={"inline"}
-                        component="a"
-                        href="https://bsky.app/profile/odinmatthias.bsky.social"
-                        variant="default"
-                        c={"#208BFE"}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <IconButterfly />
-                    </ActionIcon>
-                </Text>
+                <SocialIcons />
             </div>
             <Stack align="center" spacing="xl">
                 <Button

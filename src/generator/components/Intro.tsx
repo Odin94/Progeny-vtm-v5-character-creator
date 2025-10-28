@@ -8,6 +8,7 @@ import LoadModal from "../../components/LoadModal"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { globals } from "../../globals"
+import { SocialIcons } from "./SocialIcons"
 
 type IntroProps = {
     setCharacter: (character: Character) => void
@@ -40,32 +41,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                 it!
             </Text>
 
-            <Text fz={globals.smallerFontSize} mb={"xl"}>
-                For feature requests, bug reports and general feedback, message me on:&nbsp;
-                <ActionIcon
-                    display={"inline"}
-                    component="a"
-                    href="https://www.reddit.com/user/ProgenyDev/"
-                    variant="default"
-                    c={"#ff6314"}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    <IconBrandReddit />
-                </ActionIcon>
-                &nbsp;
-                <ActionIcon
-                    display={"inline"}
-                    component="a"
-                    href="https://twitter.com/Odin68092534"
-                    variant="default"
-                    c={"#1DA1F2"}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    <IconBrandTwitter />
-                </ActionIcon>
-            </Text>
+            <SocialIcons />
             <Stack align="center" spacing="xl">
                 <Button leftIcon={<FontAwesomeIcon icon={faPlay} />} size="xl" color="grape" onClick={nextStep}>
                     Get Started!
