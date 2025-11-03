@@ -1,10 +1,10 @@
 import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
 import { faFileExport, faFilePdf, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Alert, Button, Modal, Stack, Text } from "@mantine/core"
+import { Alert, Button, Modal, Popover, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconAlertCircle } from "@tabler/icons-react"
+import { IconAlertCircle, IconHelpHexagon } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import ResetModal from "../../components/ResetModal"
@@ -29,6 +29,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
+    const [popoverOpened, { open: openPopover, close: closePopover }] = useDisclosure(false)
 
     return (
         <div style={{ maxWidth: "440px" }}>
@@ -174,16 +175,44 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         }}
                     >
                         <div style={{ display: "flex", flexDirection: "column", gap: "4px", maxWidth: "60%" }}>
-                            <Text fw={600} size="md">
-                                <a
-                                    href="https://foundryvtt.com/packages/vtm5e"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ color: "#1976d2", textDecoration: "underline" }}
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <Text fw={600} size="md">
+                                    <a
+                                        href="https://foundryvtt.com/packages/vtm5e"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: "#1976d2", textDecoration: "underline" }}
+                                    >
+                                        Foundry WoD5E VTT
+                                    </a>
+                                </Text>
+                                <Popover
+                                    width={220}
+                                    position="top"
+                                    withArrow
+                                    shadow="md"
+                                    withinPortal
+                                    opened={popoverOpened}
+                                    onClose={closePopover}
                                 >
-                                    Foundry WoD5E VTT
-                                </a>
-                            </Text>
+                                    <Popover.Target>
+                                        <div
+                                            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+                                            onClick={() => (popoverOpened ? closePopover() : openPopover())}
+                                        >
+                                            <IconHelpHexagon size={22} color="#9c36b5" stroke={2} />
+                                        </div>
+                                    </Popover.Target>
+                                    <Popover.Dropdown>
+                                        <Stack spacing="xs">
+                                            <Text size="sm">1. Export to JSON</Text>
+                                            <Text size="sm">2. Create Vampire character in Foundry</Text>
+                                            <Text size="sm">3. Right click that character in &quot;Actors&quot;</Text>
+                                            <Text size="sm">4. Select &quot;Import Data&quot; and upload JSON</Text>
+                                        </Stack>
+                                    </Popover.Dropdown>
+                                </Popover>
+                            </div>
                             <Text fz={"sm"} c="dimmed">
                                 Use your character in the foundry virtual tabletop
                             </Text>
