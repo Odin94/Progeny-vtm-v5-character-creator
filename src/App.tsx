@@ -22,7 +22,6 @@ const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
     const { height: viewportHeight, width: viewportWidth } = useViewportSize()
-    // TODO: Replace globals with a context or something..?
     globals.viewportHeightPx = viewportHeight
     globals.viewportWidthPx = viewportWidth
     globals.isPhoneScreen = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
@@ -50,7 +49,7 @@ function App() {
                 globals.isSmallScreen ? (
                     <></>
                 ) : (
-                    <Navbar width={{ base: 300 }} height={"100%"} p="xs">
+                    <Navbar width={{ base: 250, xl: 300 }} height={"100%"} p="xs">
                         {<Sidebar character={character} />}
                     </Navbar>
                 )
@@ -73,7 +72,7 @@ function App() {
             {
                 <BackgroundImage h={"99%"} src={backgrounds[backgroundIndex]}>
                     <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%" }}>
-                        <Container h={"100%"}>
+                        <Container h={"100%"} style={{ width: "100%" }}>
                             <Generator
                                 character={character}
                                 setCharacter={setCharacter}

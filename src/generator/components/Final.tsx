@@ -1,7 +1,7 @@
 import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
 import { faFileExport, faFilePdf, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Alert, Button, Modal, Popover, Stack, Text } from "@mantine/core"
+import { Alert, Button, Modal, Popover, ScrollArea, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { IconAlertCircle, IconHelpHexagon } from "@tabler/icons-react"
@@ -14,6 +14,7 @@ import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { downloadCharacterSheet } from "../pdfCreator"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { SocialIcons } from "./SocialIcons"
+import { globals } from "~/globals"
 
 type FinalProps = {
     character: Character
@@ -31,11 +32,15 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
     const [popoverOpened, { open: openPopover, close: closePopover }] = useDisclosure(false)
 
+    const height = globals.viewportHeightPx
+
     return (
-        <div style={{ maxWidth: "440px" }}>
-            <Text ta={"center"} fz={"50px"}>
-                <FontAwesomeIcon icon={faCheckSquare} color="green" />
-            </Text>
+        <div style={{ maxWidth: height < globals.heightBreakPoint ? "730px" : "440px" }}>
+            {height >= globals.heightBreakPoint ? (
+                <Text ta={"center"} fz={"50px"}>
+                    <FontAwesomeIcon icon={faCheckSquare} color="green" />
+                </Text>
+            ) : null}
             <Text fz={"32px"} ta={"center"} fw={700} mb={20}>
                 Character Creation Complete
             </Text>

@@ -7,6 +7,7 @@ import { PostHogProvider } from "posthog-js/react"
 import App from "./App"
 import "./index.css"
 import reportWebVitals from "./reportWebVitals"
+import { globals } from "./globals"
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 
@@ -30,7 +31,20 @@ root.render(
                 debug: import.meta.env.MODE === "development",
             }}
         >
-            <MantineProvider theme={{ colorScheme: "dark" }} withGlobalStyles withNormalizeCSS>
+            <MantineProvider
+                theme={{
+                    colorScheme: "dark",
+                    breakpoints: {
+                        xs: "576px",
+                        sm: "768px",
+                        md: "992px",
+                        lg: `${globals.smallScreenW}px`,
+                        xl: `${globals.largeScreenW}px`,
+                    },
+                }}
+                withGlobalStyles
+                withNormalizeCSS
+            >
                 <Notifications position="bottom-center" />
                 <App />
             </MantineProvider>
