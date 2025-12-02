@@ -1,11 +1,12 @@
-import { Button, Center, Divider, Grid, Group, ScrollArea, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
+import { Button, Center, Divider, Grid, Group, Modal, ScrollArea, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUser } from "@fortawesome/free-regular-svg-icons"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
-import { faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
 
 type TouchstonePickerProps = {
@@ -21,6 +22,8 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
 
     const initial = character.touchstones.length > 0 ? character.touchstones : [{ name: "", description: "", conviction: "" }]
     const [touchstones, setTouchstones] = useState<Touchstone[]>(initial)
+    const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false)
+    const [touchstoneToDelete, setTouchstoneToDelete] = useState<number | null>(null)
 
     const updateTouchstone = (i: number, updatedTouchstone: { name?: string; description?: string; conviction?: string }) => {
         const newTouchstones = [...touchstones]
@@ -98,9 +101,18 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                         color="red"
                                         variant="subtle"
                                         onClick={() => {
-                                            const newTouchstones = [...touchstones]
-                                            newTouchstones.splice(i, 1)
-                                            setTouchstones(newTouchstones)
+                                            const hasContent =
+                                                touchstone.name.trim() !== "" ||
+                                                touchstone.description.trim() !== "" ||
+                                                touchstone.conviction.trim() !== ""
+                                            if (hasContent) {
+                                                setTouchstoneToDelete(i)
+                                                openDeleteModal()
+                                            } else {
+                                                const newTouchstones = [...touchstones]
+                                                newTouchstones.splice(i, 1)
+                                                setTouchstones(newTouchstones)
+                                            }
                                         }}
                                     >
                                         Remove
@@ -137,6 +149,41 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                     Confirm
                 </Button>
             </Stack>
+
+            <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="" centered withCloseButton={false}>
+                <Stack>
+                    <Text fz={"xl"} ta="center">
+                        Delete this touchstone?
+                    </Text>
+                    {touchstoneToDelete !== null && touchstones[touchstoneToDelete]?.name && (
+                        <Text fz={"md"} ta="center" c="dimmed">
+                            {touchstones[touchstoneToDelete].name}
+                        </Text>
+                    )}
+                    <Divider my="sm" />
+                    <Group position="apart">
+                        <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeDeleteModal}>
+                            Cancel
+                        </Button>
+
+                        <Button
+                            color="red"
+                            leftIcon={<FontAwesomeIcon icon={faTrash} />}
+                            onClick={() => {
+                                if (touchstoneToDelete !== null) {
+                                    const newTouchstones = [...touchstones]
+                                    newTouchstones.splice(touchstoneToDelete, 1)
+                                    setTouchstones(newTouchstones)
+                                }
+                                setTouchstoneToDelete(null)
+                                closeDeleteModal()
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         </div>
     )
 }
