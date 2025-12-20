@@ -155,9 +155,9 @@ const PredatorTypeModal = ({
                                         return acc + cur.selectedPoints
                                     }, 0)
                                     return (
-                                        <>
+                                        <div key={i}>
                                             <Divider my="sm" />
-                                            <Group key={i} position="apart">
+                                            <Group position="apart">
                                                 <Text maw={"80%"} fz={"xl"}>
                                                     {`Pick ${totalPoints} point(s) from: `}
                                                 </Text>
@@ -189,7 +189,7 @@ const PredatorTypeModal = ({
                                                     })}
                                                 </Stack>
                                             </Group>
-                                        </>
+                                        </div>
                                     )
                                 })}
                             </Stack>

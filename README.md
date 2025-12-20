@@ -49,6 +49,7 @@ Progeny lets you export your character to several formats:
 
 
 <!-- ## TODOs:
+* Get a cheap Hetzner VPS, free tier auth0 or clerk
 * Add free-text / select field where predator type says "pick XY"?
 * Add free-text custom merit/flaw field(s) for users to input their own stuff
 
