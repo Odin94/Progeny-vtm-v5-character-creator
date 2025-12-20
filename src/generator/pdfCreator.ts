@@ -111,7 +111,7 @@ const potencyEffects: Record<number, BloodPotencyEffect> = {
     },
 }
 
-const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
+export const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
     const bytes = base64ToArrayBuffer(base64Pdf_nerdbert)
 
     const pdfDoc = await initPDFDocument(bytes)
