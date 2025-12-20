@@ -58,7 +58,7 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }
                                 if (e instanceof z.ZodError) {
                                     notifications.show({
                                         title: "JSON content error loading character",
-                                        message: JSON.stringify(e.formErrors.fieldErrors),
+                                        message: z.prettifyError(e),
                                         color: "red",
                                         autoClose: false,
                                     })
