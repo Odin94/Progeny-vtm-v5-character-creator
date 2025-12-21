@@ -58,7 +58,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     }
 
     const createPredatorTypeStack = () => (
-        <Stack spacing="xl">
+        <Stack gap="xl">
             <Grid m={0}>
                 <Grid.Col span={4}>
                     <h1>Violent</h1>
@@ -123,34 +123,32 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const heightBreakPoint = 1250
     return (
         <div style={{ width: "100%", marginTop: height < heightBreakPoint ? "50px" : "55px" }}>
-            <Text fz={globals.largeFontSize} ta={"center"}>
-                {isThinBlood ? (
-                    <div>
+            {isThinBlood ? (
+                <div style={{ fontSize: globals.largeFontSize, textAlign: "center" }}>
+                    <Text fz={globals.largeFontSize} ta={"center"} component="span">
                         <b>Thin-bloods</b> do not have a predator type
-                        {
-                            <Button
-                                ml={"20px"}
-                                color={"red"}
-                                onClick={() => {
-                                    trackEvent({
-                                        action: "predatortype confirm clicked",
-                                        category: "predator type",
-                                        label: "thin-blood - no predator type",
-                                    })
+                    </Text>
+                    <Button
+                        ml={"20px"}
+                        color={"red"}
+                        onClick={() => {
+                            trackEvent({
+                                action: "predatortype confirm clicked",
+                                category: "predator type",
+                                label: "thin-blood - no predator type",
+                            })
 
-                                    nextStep()
-                                }}
-                            >
-                                Continue
-                            </Button>
-                        }
-                    </div>
-                ) : (
-                    <div>
-                        How do you <b>obtain blood?</b>
-                    </div>
-                )}
-            </Text>
+                            nextStep()
+                        }}
+                    >
+                        Continue
+                    </Button>
+                </div>
+            ) : (
+                <Text fz={globals.largeFontSize} ta={"center"}>
+                    How do you <b>obtain blood?</b>
+                </Text>
+            )}
 
             <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
                 Predator Type

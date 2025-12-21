@@ -18,8 +18,8 @@ const ResetModal = ({ resetModalOpened, closeResetModal, setCharacter, setSelect
                     Reset current character?
                 </Text>
                 <Divider my="sm" />
-                <Group position="apart">
-                    <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeResetModal}>
+                <Group justify="space-between">
+                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeResetModal}>
                         Cancel
                     </Button>
 

@@ -1,4 +1,4 @@
-import { Aside, Center, ScrollArea, Stepper } from "@mantine/core"
+import { Center, ScrollArea, Stepper } from "@mantine/core"
 import { Character, containsBloodSorcery } from "../data/Character"
 import { isDefault, upcase } from "../generator/utils"
 import { globals } from "../globals"
@@ -70,11 +70,9 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     const height = globals.viewportHeightPx
     const scrollerHeight = 940
     return (
-        <Aside p="md" hiddenBreakpoint="sm" width={{ xs: 200 }} style={{ zIndex: 0 }}>
-            <Center h={"100%"}>
-                {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStepper()}</ScrollArea> : <>{getStepper()}</>}
-            </Center>
-        </Aside>
+        <div style={{ padding: "1rem", zIndex: 0, height: "100%", display: "flex", alignItems: "center" }}>
+            {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStepper()}</ScrollArea> : <>{getStepper()}</>}
+        </div>
     )
 }
 

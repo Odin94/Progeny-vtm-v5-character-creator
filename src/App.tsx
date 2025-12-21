@@ -1,4 +1,4 @@
-import { AppShell, BackgroundImage, Container, Header, Navbar } from "@mantine/core"
+import { AppShell, BackgroundImage, Container, useComputedColorScheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import "./App.css"
@@ -26,6 +26,7 @@ function App() {
     globals.viewportWidthPx = viewportWidth
     globals.isPhoneScreen = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     globals.isSmallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
+    const computedColorScheme = useComputedColorScheme("dark", { getInitialValueInEffect: true })
 
     useEffect(() => {
         globals.largeFontSize = globals.isPhoneScreen ? "21px" : "30px"
@@ -45,44 +46,49 @@ function App() {
     return (
         <AppShell
             padding="0"
-            navbar={
-                globals.isSmallScreen ? (
-                    <></>
-                ) : (
-                    <Navbar width={{ base: 250, xl: 300 }} height={"100%"} p="xs">
-                        {<Sidebar character={character} />}
-                    </Navbar>
-                )
-            }
-            header={
-                <Header height={75} p="xs">
-                    <Topbar
-                        character={character}
-                        setCharacter={setCharacter}
-                        setSelectedStep={setSelectedStep}
-                        setShowAsideBar={setShowAsideBar}
-                    />
-                </Header>
-            }
-            aside={showAsideBar ? <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} /> : <></>}
             styles={(theme) => ({
-                main: { backgroundColor: theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0] },
+                root: {
+                    height: "100vh",
+                },
+                main: {
+                    backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                },
             })}
         >
-            {
-                <BackgroundImage h={"99%"} src={backgrounds[backgroundIndex]}>
-                    <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%" }}>
-                        <Container h={"100%"} style={{ width: "100%" }}>
-                            <Generator
-                                character={character}
-                                setCharacter={setCharacter}
-                                selectedStep={selectedStep}
-                                setSelectedStep={setSelectedStep}
-                            />
-                        </Container>
-                    </div>
-                </BackgroundImage>
-            }
+            {!globals.isSmallScreen && (
+                <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
+                    <Sidebar character={character} />
+                </AppShell.Navbar>
+            )}
+            <AppShell.Header p="xs" h={75}>
+                <Topbar
+                    character={character}
+                    setCharacter={setCharacter}
+                    setSelectedStep={setSelectedStep}
+                    setShowAsideBar={setShowAsideBar}
+                />
+            </AppShell.Header>
+            {showAsideBar && (
+                <AppShell.Aside p="md" w={{ xs: 200 }} style={{ display: "flex", flexDirection: "column" }}>
+                    <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />
+                </AppShell.Aside>
+            )}
+            <BackgroundImage h={"100%"} src={backgrounds[backgroundIndex]} style={{ flex: 1, minHeight: 0 }}>
+                <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
+                    <Container h={"100%"} style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                        <Generator
+                            character={character}
+                            setCharacter={setCharacter}
+                            selectedStep={selectedStep}
+                            setSelectedStep={setSelectedStep}
+                        />
+                    </Container>
+                </div>
+            </BackgroundImage>
         </AppShell>
     )
 }

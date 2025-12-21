@@ -99,7 +99,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                 >
                     <Button
                         p={phoneScreen ? 0 : "default"}
-                        leftIcon={dots}
+                        leftSection={dots}
                         variant={alreadyPicked ? "outline" : "filled"}
                         color="grape"
                         fullWidth

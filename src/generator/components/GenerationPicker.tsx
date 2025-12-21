@@ -36,7 +36,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            <Stack align="center" spacing="xl">
+            <Stack align="center" gap="xl">
                 <Select
                     styles={(theme) => ({
                         item: {
@@ -49,7 +49,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                             },
 
                             // applies styles to hovered item (with mouse or keyboard)
-                            "&[data-hovered]": {},
+                            "&:hover, &:focus": {},
                         },
                     })}
                     style={{ width: "100%" }}

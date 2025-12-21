@@ -24,8 +24,8 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }
                     Overwrite current character and load from selected file?
                 </Text>
                 <Divider my="sm" />
-                <Group position="apart">
-                    <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>
+                <Group justify="space-between">
+                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>
                         Cancel
                     </Button>
 

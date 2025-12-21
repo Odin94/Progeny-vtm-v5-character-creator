@@ -121,7 +121,7 @@ const PredatorTypeModal = ({
                 ) : null}
                 {predatorType.meritsAndFlaws.length !== 0 || predatorType.selectableMeritsAndFlaws.length !== 0 ? (
                     <div>
-                        <Group position="apart">
+                        <Group justify="space-between">
                             <Text fw={700} fz={"xl"}>
                                 Merits and Flaws:
                             </Text>
@@ -157,13 +157,13 @@ const PredatorTypeModal = ({
                                     return (
                                         <div key={i}>
                                             <Divider my="sm" />
-                                            <Group position="apart">
+                                            <Group justify="space-between">
                                                 <Text maw={"80%"} fz={"xl"}>
                                                     {`Pick ${totalPoints} point(s) from: `}
                                                 </Text>
-                                                <Text>
+                                                <div>
                                                     Remaining: <Title ta={"center"} c={"red"}>{`${totalPoints - spentPoints}`}</Title>
-                                                </Text>
+                                                </div>
                                                 <Stack>
                                                     {options.map((option, j) => {
                                                         const { selectedPoints, maxLevel } = subPointStates[j]
@@ -235,8 +235,8 @@ const PredatorTypeModal = ({
 
                 <Divider my="sm" />
 
-                <Group position="apart">
-                    <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>
+                <Group justify="space-between">
+                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>
                         Back
                     </Button>
 

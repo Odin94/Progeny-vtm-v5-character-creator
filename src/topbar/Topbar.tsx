@@ -33,7 +33,7 @@ const Topbar = ({ character, setCharacter, setSelectedStep, setShowAsideBar }: T
                 ) : null}
                 <Grid.Col offset={smallScreen ? 0 : 4} span={smallScreen ? 6 : 4}>
                     <Center>
-                        <Stack spacing={"0px"} ml={"80px"}>
+                        <Stack gap={"0px"} ml={"80px"}>
                             <span style={{ textAlign: "center" }}>
                                 <Title style={{ display: "inline", marginLeft: "50px" }} order={smallScreen ? 3 : 1}>
                                     Progeny

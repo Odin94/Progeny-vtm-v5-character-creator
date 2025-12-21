@@ -21,9 +21,9 @@ const Sidebar = ({ character }: SidebarProps) => {
         <ScrollArea h={height - 60} type="never">
             <Stack>
                 {notDefault(character, "clan") ? (
-                    <Text fz="xl">
-                        <Center>{character.clan}</Center>
-                    </Text>
+                    <Center>
+                        <Text fz="xl">{character.clan}</Text>
+                    </Center>
                 ) : null}
                 {notDefault(character, "name") ? <BasicsDisplay character={character} /> : null}
                 {notDefault(character, "attributes") ? <AttributesDisplay attributes={character.attributes} /> : null}

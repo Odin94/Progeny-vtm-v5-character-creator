@@ -49,7 +49,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
             return (
                 <Grid.Col key={ritual.name} span={smallScreen ? 12 : 6}>
                     <Card mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
-                        <Group position="apart" mt="0" mb="xs">
+                        <Group justify="space-between" mt="0" mb="xs">
                             <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} weight={500}>
                                 {ritual.name}
                             </Text>
@@ -86,7 +86,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            <Stack align="center" spacing="xl" w={"100%"}>
+            <Stack align="center" gap="xl" w={"100%"}>
                 <ScrollArea h={smallScreen ? height - 320 : height - 400} pb={20} w={"105%"}>
                     <Center>
                         <Stack>

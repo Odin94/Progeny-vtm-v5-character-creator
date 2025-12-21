@@ -48,7 +48,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            <Stack align="center" spacing={globals.isPhoneScreen ? "xs" : "xl"}>
+            <Stack align="center" gap={globals.isPhoneScreen ? "xs" : "xl"}>
                 <ScrollArea h={globals.viewportHeightPx - 420} w={globals.isSmallScreen ? "100%" : "110%"}>
                     {touchstones.map((touchstone, i) => {
                         return (
@@ -96,8 +96,8 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                 </Grid>
                                 <Group>
                                     <Button
-                                        leftIcon={<FontAwesomeIcon icon={faTrash} />}
-                                        compact
+                                        leftSection={<FontAwesomeIcon icon={faTrash} />}
+                                        size="xs"
                                         color="red"
                                         variant="subtle"
                                         onClick={() => {
@@ -161,14 +161,14 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                         </Text>
                     )}
                     <Divider my="sm" />
-                    <Group position="apart">
-                        <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faXmark} />} onClick={closeDeleteModal}>
+                    <Group justify="space-between">
+                        <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeDeleteModal}>
                             Cancel
                         </Button>
 
                         <Button
                             color="red"
-                            leftIcon={<FontAwesomeIcon icon={faTrash} />}
+                            leftSection={<FontAwesomeIcon icon={faTrash} />}
                             onClick={() => {
                                 if (touchstoneToDelete !== null) {
                                     const newTouchstones = [...touchstones]

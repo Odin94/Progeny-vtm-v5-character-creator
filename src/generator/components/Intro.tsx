@@ -42,8 +42,8 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
             </Text>
 
             <SocialIcons />
-            <Stack align="center" spacing="xl">
-                <Button leftIcon={<FontAwesomeIcon icon={faPlay} />} size="xl" color="grape" onClick={nextStep}>
+            <Stack align="center" gap="xl">
+                <Button leftSection={<FontAwesomeIcon icon={faPlay} />} size="xl" color="grape" onClick={nextStep}>
                     Get Started!
                 </Button>
 
@@ -57,7 +57,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                     accept="application/json"
                 >
                     {(props) => (
-                        <Button leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />} size="md" color="yellow" variant="light" {...props}>
+                        <Button leftSection={<FontAwesomeIcon icon={faFileArrowUp} />} size="md" color="yellow" variant="light" {...props}>
                             Load from file
                         </Button>
                     )}
@@ -68,7 +68,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                     href="https://github.com/Odin94/Progeny-vtm-v5-character-creator"
                     target="_blank"
                     rel="noreferrer"
-                    leftIcon={<IconBrandGithub />}
+                    leftSection={<IconBrandGithub />}
                     size="xs"
                     color="gray"
                     variant="filled"
@@ -80,7 +80,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                     href="https://ko-fi.com/odin_dev"
                     target="_blank"
                     rel="noreferrer"
-                    leftIcon={<span>☕</span>}
+                    leftSection={<span>☕</span>}
                     size="xs"
                     color="gray"
                     variant="light"

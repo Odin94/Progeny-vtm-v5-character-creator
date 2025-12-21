@@ -83,7 +83,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                         ])
                     }}
                     style={{ marginRight: "5px" }}
-                    compact
+                    size="xs"
                     variant="outline"
                     color={buttonColor}
                 >
@@ -113,7 +113,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 }
                             }}
                             style={{ marginRight: "5px" }}
-                            compact
+                            size="xs"
                             variant="subtle"
                             color={"yellow"}
                         >
@@ -133,7 +133,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 Remaining Advantage points: {remainingMerits} <br /> Remaining Flaw points: {remainingFlaws}
             </Text>
 
-            <Tabs color="grape" value={activeTab} onTabChange={setActiveTab}>
+            <Tabs color="grape" value={activeTab} onChange={setActiveTab}>
                 <Tabs.List>
                     <Tabs.Tab maw={"30%"} value="merits">
                         Merits & Flaws
@@ -163,7 +163,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                             {meritsAndFlaws.map((category) => {
                                 return (
                                     <Grid.Col span={6} key={category.title}>
-                                        <Stack spacing={"xs"}>
+                                        <Stack gap={"xs"}>
                                             <Text fw={700} size={"xl"}>
                                                 {category.title}
                                             </Text>
@@ -215,7 +215,7 @@ function thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine: (meritOrFlaw: Meri
     return (
         <>
             <Grid.Col span={6}>
-                <Stack spacing={"xs"}>
+                <Stack gap={"xs"}>
                     <Text fw={700} size={"xl"}>
                         Thin-blood merits
                     </Text>
@@ -225,7 +225,7 @@ function thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine: (meritOrFlaw: Meri
                 </Stack>
             </Grid.Col>
             <Grid.Col span={6}>
-                <Stack spacing={"xs"}>
+                <Stack gap={"xs"}>
                     <Text fw={700} size={"xl"}>
                         Thin-blood flaws
                     </Text>

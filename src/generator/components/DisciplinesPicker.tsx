@@ -114,7 +114,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             if (power.name.length > 15) cardHeight += 25
             return (
                 <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
-                    <Group position="apart" mt="0" mb="xs">
+                    <Group justify="space-between" mt="0" mb="xs">
                         <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} weight={500}>
                             {power.name}
                         </Text>
@@ -298,7 +298,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             <hr color="#e03131" />
             <Space h={"sm"} />
 
-            <Stack align="center" spacing="xl" w={"100%"}>
+            <Stack align="center" gap="xl" w={"100%"}>
                 <Grid w={"100%"}>
                     {/* Picked Powers */}
                     {smallScreen ? null : getPickedPowersSection()}

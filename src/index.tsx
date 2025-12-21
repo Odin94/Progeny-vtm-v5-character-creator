@@ -1,3 +1,4 @@
+import "@mantine/core/styles.css"
 import { MantineProvider } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import React from "react"
@@ -33,7 +34,6 @@ root.render(
         >
             <MantineProvider
                 theme={{
-                    colorScheme: "dark",
                     breakpoints: {
                         xs: "576px",
                         sm: "768px",
@@ -42,6 +42,7 @@ root.render(
                         xl: `${globals.largeScreenW}px`,
                     },
                 }}
+                defaultColorScheme="dark"
                 withGlobalStyles
                 withNormalizeCSS
             >

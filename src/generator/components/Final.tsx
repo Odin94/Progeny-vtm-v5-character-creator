@@ -52,9 +52,9 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Text>
                 <SocialIcons />
             </div>
-            <Stack align="center" spacing="xl">
+            <Stack align="center" gap="xl">
                 <Button
-                    leftIcon={<FontAwesomeIcon icon={faFilePdf} />}
+                    leftSection={<FontAwesomeIcon icon={faFilePdf} />}
                     size="xl"
                     color="grape"
                     onClick={() => {
@@ -74,7 +74,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Button>
 
                 <Button
-                    leftIcon={<FontAwesomeIcon icon={faFloppyDisk} />}
+                    leftSection={<FontAwesomeIcon icon={faFloppyDisk} />}
                     size="lg"
                     color="yellow"
                     variant="light"
@@ -95,7 +95,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Button>
 
                 <Button
-                    leftIcon={<FontAwesomeIcon icon={faFileExport} />}
+                    leftSection={<FontAwesomeIcon icon={faFileExport} />}
                     size="lg"
                     color="blue"
                     variant="light"
@@ -111,7 +111,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     href="https://ko-fi.com/odin_dev"
                     target="_blank"
                     rel="noreferrer"
-                    leftIcon={<span>☕</span>}
+                    leftSection={<span>☕</span>}
                     size="xs"
                     color="gray"
                     variant="light"
@@ -120,7 +120,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Button>
 
                 <Button
-                    leftIcon={<FontAwesomeIcon icon={faTrash} />}
+                    leftSection={<FontAwesomeIcon icon={faTrash} />}
                     size="md"
                     color="red"
                     variant="subtle"
@@ -209,7 +209,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                                         </div>
                                     </Popover.Target>
                                     <Popover.Dropdown>
-                                        <Stack spacing="xs">
+                                        <Stack gap="xs">
                                             <Text size="sm">1. Export to JSON</Text>
                                             <Text size="sm">2. Create Vampire character in Foundry</Text>
                                             <Text size="sm">3. Right click that character in &quot;Actors&quot;</Text>

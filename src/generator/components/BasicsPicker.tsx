@@ -26,7 +26,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                 Come up with the basics
             </Text>
 
-            <Stack mt={"xl"} align="center" spacing="xl">
+            <Stack mt={"xl"} align="center" gap="xl">
                 <TextInput
                     style={{ width: "300px" }}
                     value={name}

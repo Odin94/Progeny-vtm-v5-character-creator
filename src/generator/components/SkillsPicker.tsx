@@ -178,7 +178,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Button
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
-                        leftIcon={dots}
+                        leftSection={dots}
                         disabled={pickedDistribution === null}
                         color="grape"
                         fullWidth

@@ -80,7 +80,7 @@ export const SpecialtyModal = ({
                     Select a Skill for a free Specialty
                 </Text>
 
-                <Group position="apart">
+                <Group justify="space-between">
                     <Select
                         w={inputW}
                         // label="Pick a free specialty"
@@ -88,8 +88,6 @@ export const SpecialtyModal = ({
                         searchable
                         onSearchChange={setPickedSkillDisplay}
                         searchValue={pickedSkillDisplay}
-                        nothingFound="No options"
-                        dropdownPosition="bottom"
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
 
@@ -103,7 +101,7 @@ export const SpecialtyModal = ({
 
                 {pickedSpecialtySkills.map((s) => (
                     <div key={s}>
-                        <Group position="apart">
+                        <Group justify="space-between">
                             <Text fw={700} fz={phoneScreen ? "sm" : "xl"}>
                                 {upcase(s)}:
                             </Text>
@@ -117,8 +115,8 @@ export const SpecialtyModal = ({
                     </div>
                 ))}
 
-                <Group position="apart" style={{ marginTop: "auto" }}>
-                    <Button color="yellow" variant="subtle" leftIcon={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>
+                <Group justify="space-between" style={{ marginTop: "auto" }}>
+                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>
                         Back
                     </Button>
 

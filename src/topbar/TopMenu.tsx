@@ -28,7 +28,7 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
     return (
         <Menu shadow="md" width={200} opened={menuOpened} onChange={setMenuOpened}>
             <Menu.Target>
-                <Button color="grape" variant="light" leftIcon={<FontAwesomeIcon icon={faAnkh} />}>
+                <Button color="grape" variant="light" leftSection={<FontAwesomeIcon icon={faAnkh} />}>
                     (Down)load
                 </Button>
             </Menu.Target>
@@ -81,7 +81,7 @@ const TopMenu = ({ character, setCharacter, setSelectedStep }: TopMenuProps) => 
                 >
                     {(props) => (
                         <Button
-                            leftIcon={<FontAwesomeIcon icon={faFileArrowUp} />}
+                            leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
                             ml={"11px"}
                             fw={400}
                             size="s"
