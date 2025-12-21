@@ -38,7 +38,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
             <Stack align="center" gap="xl">
                 <Select
-                    styles={(theme) => ({})}
+                    styles={(_theme) => ({})}
                     style={{ width: "100%" }}
                     value={generation}
                     onChange={setGeneration}

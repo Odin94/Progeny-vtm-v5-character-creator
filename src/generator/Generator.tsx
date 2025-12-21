@@ -1,4 +1,5 @@
-import { Center, Text } from "@mantine/core"
+import { Text } from "@mantine/core"
+import ErrorBoundary from "../components/ErrorBoundary"
 import { Character, containsBloodSorcery } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
@@ -9,10 +10,9 @@ import GenerationPicker from "./components/GenerationPicker"
 import Intro from "./components/Intro"
 import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 import PredatorTypePicker from "./components/PredatorTypePicker"
+import RitualsPicker from "./components/RitualsPicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
-import ErrorBoundary from "../components/ErrorBoundary"
-import RitualsPicker from "./components/RitualsPicker"
 
 export type GeneratorProps = {
     character: Character

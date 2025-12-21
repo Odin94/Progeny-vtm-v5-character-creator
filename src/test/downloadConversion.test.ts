@@ -334,21 +334,6 @@ describe("Download Conversion Logic", () => {
             expect(typeof result.success).toBe("boolean")
         })
 
-        it("should handle base64 to ArrayBuffer conversion", () => {
-            // Test the base64ToArrayBuffer function indirectly through testTemplate
-            const mockBase64 = "SGVsbG8gV29ybGQ=" // "Hello World" in base64
-
-            // Mock window.atob
-            const mockAtob = vi.fn().mockReturnValue("Hello World")
-            Object.defineProperty(window, "atob", {
-                writable: true,
-                value: mockAtob,
-            })
-
-            // This tests the base64 conversion logic
-            expect(mockAtob).toBeDefined()
-        })
-
         it("should handle PDF form field operations", async () => {
             // Mock form operations
             const mockForm = {
@@ -384,29 +369,6 @@ describe("Download Conversion Logic", () => {
                 // Expected in test environment
                 expect(error).toBeDefined()
             }
-        })
-
-        it("should handle download functionality", () => {
-            // Test download functionality by checking if URL methods are called
-            const mockBlob = new Blob(["test"], { type: "application/pdf" })
-
-            // Mock URL.createObjectURL
-            const mockCreateObjectURL = vi.fn().mockReturnValue("mock-url")
-            Object.defineProperty(URL, "createObjectURL", {
-                writable: true,
-                value: mockCreateObjectURL,
-            })
-
-            // Mock URL.revokeObjectURL
-            const mockRevokeObjectURL = vi.fn()
-            Object.defineProperty(URL, "revokeObjectURL", {
-                writable: true,
-                value: mockRevokeObjectURL,
-            })
-
-            // Test that URL methods are available
-            expect(mockCreateObjectURL).toBeDefined()
-            expect(mockRevokeObjectURL).toBeDefined()
         })
     })
 

@@ -1,12 +1,13 @@
 import { faCheckSquare } from "@fortawesome/free-regular-svg-icons"
 import { faFileExport, faFilePdf, faFloppyDisk, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Alert, Button, Modal, Popover, ScrollArea, Stack, Text } from "@mantine/core"
+import { Alert, Button, Modal, Popover, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { IconAlertCircle, IconHelpHexagon } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { globals } from "~/globals"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
@@ -14,7 +15,6 @@ import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { downloadCharacterSheet } from "../pdfCreator"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { SocialIcons } from "./SocialIcons"
-import { globals } from "~/globals"
 
 type FinalProps = {
     character: Character

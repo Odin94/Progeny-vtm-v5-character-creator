@@ -41,7 +41,7 @@ export const testTemplate = async (basePdf: string) => {
         const pdfDoc = await initPDFDocument(bytes)
 
         form = pdfDoc.getForm()
-    } catch (err) {
+    } catch (_err) {
         return { success: false, error: new Error("Can't get form from pdf - is it a fillable pdf?") }
     }
     try {
@@ -49,7 +49,7 @@ export const testTemplate = async (basePdf: string) => {
         form.getTextField("Concept").setText("")
         form.getTextField("Predator").setText("")
         form.getTextField("Ambition").setText("")
-    } catch (err) {
+    } catch (_err) {
         return {
             success: false,
             error: new Error("PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?"),
