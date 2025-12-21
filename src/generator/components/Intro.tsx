@@ -13,9 +13,10 @@ import { SocialIcons } from "./SocialIcons"
 type IntroProps = {
     setCharacter: (character: Character) => void
     nextStep: () => void
+    setSelectedStep: (step: number) => void
 }
 
-const Intro = ({ setCharacter, nextStep }: IntroProps) => {
+const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Intro" })
     }, [])
@@ -105,6 +106,7 @@ const Intro = ({ setCharacter, nextStep }: IntroProps) => {
                 setCharacter={setCharacter}
                 loadModalOpened={loadModalOpened}
                 closeLoadModal={closeLoadModal}
+                setSelectedStep={setSelectedStep}
             />
         </Alert>
     )

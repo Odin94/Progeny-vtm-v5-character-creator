@@ -34,6 +34,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         nextStep={() => {
                             setSelectedStep(selectedStep + 1)
                         }}
+                        setSelectedStep={setSelectedStep}
                     />
                 )
             case 1:
@@ -144,7 +145,17 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     }
 
     return (
-        <div style={{ height: "100%", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", flex: 1, minHeight: 0 }}>
+        <div
+            style={{
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                minHeight: 0,
+            }}
+        >
             <ErrorBoundary key={selectedStep}>{getStepComponent()}</ErrorBoundary>
         </div>
     )

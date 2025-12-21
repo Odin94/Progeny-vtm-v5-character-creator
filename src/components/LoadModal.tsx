@@ -6,7 +6,7 @@ import { Buffer } from "buffer"
 import { z } from "zod"
 import { clans } from "~/data/Clans"
 import { clanNameSchema } from "~/data/NameSchemas"
-import { Character, characterSchema } from "../data/Character"
+import { Character, characterSchema, containsBloodSorcery } from "../data/Character"
 import { getUploadFile } from "../generator/utils"
 
 export type LoadModalProps = {
@@ -14,9 +14,10 @@ export type LoadModalProps = {
     loadModalOpened: boolean
     closeLoadModal: () => void
     loadedFile: File | null
+    setSelectedStep: (step: number) => void
 }
 
-const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }: LoadModalProps) => {
+const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, setSelectedStep }: LoadModalProps) => {
     return (
         <Modal opened={loadModalOpened} onClose={closeLoadModal} title="" centered withCloseButton={false}>
             <Stack>
@@ -52,7 +53,14 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile }
 
                                     parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
                                 }
-                                setCharacter(characterSchema.parse(parsed))
+                                const loadedCharacter = characterSchema.parse(parsed)
+                                setCharacter(loadedCharacter)
+                                // Navigate to Final step
+                                // Final is at case 11, but due to patching logic:
+                                // - If character has blood sorcery: step 11 → case 11 (Final)
+                                // - If character doesn't have blood sorcery: step 10 → case 11 (Final) after patching
+                                const finalStep = containsBloodSorcery(loadedCharacter.disciplines) ? 11 : 10
+                                setSelectedStep(finalStep)
                                 closeLoadModal()
                             } catch (e) {
                                 if (e instanceof z.ZodError) {
