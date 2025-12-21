@@ -1,19 +1,25 @@
 import { Burger, Center, Grid, Stack, Text, Title } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { Character } from "../data/Character"
+import { useEffect } from "react"
 import { globals } from "../globals"
 
 export type TopBarProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    setSelectedStep: (step: number) => void
     setShowAsideBar: (v: boolean) => void
+    showAsideBar: boolean
 }
 
-const Topbar = ({ character, setCharacter, setSelectedStep, setShowAsideBar }: TopBarProps) => {
+const Topbar = ({ setShowAsideBar, showAsideBar }: TopBarProps) => {
     const smallScreen = globals.isSmallScreen
     const phoneScreen = globals.isPhoneScreen
-    const [burgerOpened, { toggle: toggleBurger }] = useDisclosure(false)
+    const [burgerOpened, { close: closeBurger, open: openBurger }] = useDisclosure(false)
+
+    useEffect(() => {
+        if (showAsideBar) {
+            openBurger()
+        } else {
+            closeBurger()
+        }
+    }, [showAsideBar, openBurger, closeBurger])
 
     return (
         <>
@@ -23,8 +29,7 @@ const Topbar = ({ character, setCharacter, setSelectedStep, setShowAsideBar }: T
                         <Burger
                             opened={burgerOpened}
                             onClick={() => {
-                                setShowAsideBar(!burgerOpened)
-                                toggleBurger()
+                                setShowAsideBar(!showAsideBar)
                             }}
                             aria-label={burgerOpened ? "Close side bar" : "Open side bar"}
                         />

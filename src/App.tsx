@@ -65,19 +65,28 @@ function App() {
                 </AppShell.Navbar>
             )}
             <AppShell.Header p="xs" h={75}>
-                <Topbar
-                    character={character}
-                    setCharacter={setCharacter}
-                    setSelectedStep={setSelectedStep}
-                    setShowAsideBar={setShowAsideBar}
-                />
+                <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
             </AppShell.Header>
             {showAsideBar && (
-                <AppShell.Aside p="md" w={{ xs: 200 }} style={{ display: "flex", flexDirection: "column" }}>
+                <AppShell.Aside
+                    p="md"
+                    w={{ xs: 200 }}
+                    style={{ display: "flex", flexDirection: "column" }}
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />
                 </AppShell.Aside>
             )}
-            <BackgroundImage h={"100%"} src={backgrounds[backgroundIndex]} style={{ flex: 1, minHeight: 0 }}>
+            <BackgroundImage
+                h={"100%"}
+                src={backgrounds[backgroundIndex]}
+                style={{ flex: 1, minHeight: 0 }}
+                onClick={() => {
+                    if (globals.isSmallScreen && showAsideBar) {
+                        setShowAsideBar(false)
+                    }
+                }}
+            >
                 <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
                     <Container h={"100%"} style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                         <Generator
