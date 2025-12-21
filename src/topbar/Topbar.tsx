@@ -2,7 +2,6 @@ import { Burger, Center, Grid, Stack, Text, Title } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { Character } from "../data/Character"
 import { globals } from "../globals"
-import TopMenu from "./TopMenu"
 
 export type TopBarProps = {
     character: Character
@@ -52,12 +51,6 @@ const Topbar = ({ character, setCharacter, setSelectedStep, setShowAsideBar }: T
                             )}
                         </Stack>
                     </Center>
-                </Grid.Col>
-
-                <Grid.Col offset={smallScreen ? 3 : 2} span={2}>
-                    <span style={{ float: "right" }}>
-                        <TopMenu character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
-                    </span>
                 </Grid.Col>
             </Grid>
         </>
