@@ -43,8 +43,6 @@ root.render(
                     },
                 }}
                 defaultColorScheme="dark"
-                withGlobalStyles
-                withNormalizeCSS
             >
                 <Notifications position="bottom-center" />
                 <App />

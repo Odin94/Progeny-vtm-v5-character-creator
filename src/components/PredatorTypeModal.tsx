@@ -132,7 +132,9 @@ const PredatorTypeModal = ({
                                             <Grid.Col span={smallScreen ? 8 : 4}>
                                                 <Text miw={"220px"} maw={"80%"} fz={"xl"}>
                                                     {`${mf.name}: `}
-                                                    <Text fz={"xs"}>{mf.summary}</Text>
+                                                    <Text fz={"xs"} component="span">
+                                                        {mf.summary}
+                                                    </Text>
                                                 </Text>
                                             </Grid.Col>
                                             <Grid.Col span={4}>

@@ -52,7 +52,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </Text>
                 <SocialIcons />
             </div>
-            <Stack align="center" gap="xl">
+            <Stack align="center" gap="lg">
                 <Button
                     leftSection={<FontAwesomeIcon icon={faFilePdf} />}
                     size="xl"

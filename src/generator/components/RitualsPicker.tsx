@@ -50,7 +50,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                 <Grid.Col key={ritual.name} span={smallScreen ? 12 : 6}>
                     <Card mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                         <Group justify="space-between" mt="0" mb="xs">
-                            <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} weight={500}>
+                            <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} fw={500}>
                                 {ritual.name}
                             </Text>
                             <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">

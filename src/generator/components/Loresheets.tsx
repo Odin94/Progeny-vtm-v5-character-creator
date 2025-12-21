@@ -35,7 +35,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                     style={{ backgroundColor: "rgba(26, 27, 30, 0.90)", borderColor: sheetPicked ? "green" : "black" }}
                     withBorder={sheetPicked}
                 >
-                    <Text mb={10} ta={"center"} fz={smallScreen ? "lg" : "xl"} weight={500}>
+                    <Text mb={10} ta={"center"} fz={smallScreen ? "lg" : "xl"} fw={500}>
                         {loresheet.title}
                     </Text>
                     <Text fz={"sm"}>{loresheet.summary}</Text>

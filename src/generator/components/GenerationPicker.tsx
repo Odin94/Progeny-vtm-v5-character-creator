@@ -38,20 +38,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
             <Stack align="center" gap="xl">
                 <Select
-                    styles={(theme) => ({
-                        item: {
-                            // applies styles to selected item
-                            "&[data-selected]": {
-                                "&, &:hover": {
-                                    backgroundColor: theme.colors.grape,
-                                    color: theme.colors.white,
-                                },
-                            },
-
-                            // applies styles to hovered item (with mouse or keyboard)
-                            "&:hover, &:focus": {},
-                        },
-                    })}
+                    styles={(theme) => ({})}
                     style={{ width: "100%" }}
                     value={generation}
                     onChange={setGeneration}

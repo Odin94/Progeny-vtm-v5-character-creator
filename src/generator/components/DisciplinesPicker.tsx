@@ -115,7 +115,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             return (
                 <Card key={power.name} mb={20} h={cardHeight} style={{ backgroundColor: "rgba(26, 27, 30, 0.90)" }}>
                     <Group justify="space-between" mt="0" mb="xs">
-                        <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} weight={500}>
+                        <Text fz={smallScreen && !phoneScreen ? "xs" : "sm"} fw={500}>
                             {power.name}
                         </Text>
                         <Badge pos={"absolute"} top={0} right={0} radius={"xs"} color="pink" variant="light">
@@ -216,7 +216,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 disciplineTitle = power.discipline
                                 return (
                                     <div key={power.name}>
-                                        <Text weight={700} size={"xl"}>
+                                        <Text fw={700} size={"xl"}>
                                             {upcase(power.discipline)}
                                         </Text>
                                         <Text> {power.name}</Text>
@@ -236,7 +236,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             <div>
                                 {powersSortedByDiscipline.length > 0 ? <hr style={{ width: "100%" }} color="#e03131" /> : null}
 
-                                <Text weight={700} size={"xl"}>
+                                <Text fw={700} size={"xl"}>
                                     {upcase(pickedPredatorTypePower.discipline)}
                                 </Text>
                                 <Text> {pickedPredatorTypePower.name}</Text>

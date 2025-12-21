@@ -43,7 +43,6 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                 onStepClick={(x) => {
                     setSelectedStep(x)
                 }}
-                breakpoint="sm"
             >
                 <Stepper.Step key={"Intro"} label={"Intro"} description="">
                     {" "}
