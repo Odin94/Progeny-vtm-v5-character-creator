@@ -7,7 +7,17 @@
     "rules": {
         "react/react-in-jsx-scope": "off",
         "no-undef": "off",
+        "@typescript-eslint/no-unused-expressions": "off",
+        "no-unused-vars": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "caughtErrorsIgnorePattern": "^_"
+            }
+        ]
     },
     "parserOptions": {
         "sourceType": "module",
@@ -17,5 +27,18 @@
     "env": {
         "browser": true,
         "node": true
-    }
+    },
+    "overrides": [
+        {
+            "files": [
+                "**/*.test.ts",
+                "**/*.test.tsx",
+                "**/test/**/*.ts",
+                "**/test/**/*.tsx"
+            ],
+            "rules": {
+                "@typescript-eslint/no-explicit-any": "off"
+            }
+        }
+    ]
 }
