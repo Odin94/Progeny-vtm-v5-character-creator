@@ -54,6 +54,17 @@ export const characterSchema = z.object({
 
     merits: meritFlawSchema.array(),
     flaws: meritFlawSchema.array(),
+
+    ephemeral: z.object({
+        hunger: z.number().min(0).int(),
+        superficialDamage: z.number().min(0).int(),
+        aggravatedDamage: z.number().min(0).int(),
+        superficialWillpowerDamage: z.number().min(0).int(),
+        aggravatedWillpowerDamage: z.number().min(0).int(),
+        humanityStains: z.number().min(0).int(),
+        experienceSpent: z.number().min(0).int(),
+    }),
+    version: z.number().int().positive().optional().default(1),
 })
 export type Character = z.infer<typeof characterSchema>
 
@@ -124,6 +135,17 @@ export const getEmptyCharacter = (): Character => {
 
         merits: [],
         flaws: [],
+
+        ephemeral: {
+            hunger: 0,
+            superficialDamage: 0,
+            aggravatedDamage: 0,
+            superficialWillpowerDamage: 0,
+            aggravatedWillpowerDamage: 0,
+            humanityStains: 0,
+            experienceSpent: 0,
+        },
+        version: 1,
     }
 }
 

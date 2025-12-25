@@ -17,6 +17,49 @@ export type LoadModalProps = {
     setSelectedStep: (step: number) => void
 }
 
+export const loadCharacterFromJson = async (json: string): Promise<Character> => {
+    const parsed = JSON.parse(json)
+    console.log({ loadedCharacter: parsed })
+
+    if (!parsed["rituals"]) parsed["rituals"] = [] // backwards compatibility for characters that were saved before rituals were added
+    if (!parsed["predatorType"]["pickedMeritsAndFlaws"]) parsed["predatorType"]["pickedMeritsAndFlaws"] = [] // backwards compatibility for characters that were saved before pickedMeritsAndFlaws were added
+    if (!parsed["availableDisciplineNames"]) {
+        // backwards compatibility for characters that were saved before Caitiff were added
+        const clan = clanNameSchema.parse(parsed["clan"])
+        const clanDisciplines = clans[clan].nativeDisciplines
+
+        parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
+    }
+    if (!parsed["ephemeral"]) {
+        // backwards compatibility for characters that were saved before ephemeral was added
+        parsed["ephemeral"] = {
+            hunger: 0,
+            superficialDamage: 0,
+            aggravatedDamage: 0,
+            superficialWillpowerDamage: 0,
+            aggravatedWillpowerDamage: 0,
+            humanityStains: 0,
+            experienceSpent: 0,
+        }
+    } else {
+        // Ensure all ephemeral fields exist, defaulting to 0 if missing
+        parsed["ephemeral"] = {
+            hunger: parsed["ephemeral"]["hunger"] ?? 0,
+            superficialDamage: parsed["ephemeral"]["superficialDamage"] ?? 0,
+            aggravatedDamage: parsed["ephemeral"]["aggravatedDamage"] ?? 0,
+            superficialWillpowerDamage: parsed["ephemeral"]["superficialWillpowerDamage"] ?? 0,
+            aggravatedWillpowerDamage: parsed["ephemeral"]["aggravatedWillpowerDamage"] ?? 0,
+            humanityStains: parsed["ephemeral"]["humanityStains"] ?? 0,
+            experienceSpent: parsed["ephemeral"]["experienceSpent"] ?? 0,
+        }
+    }
+    if (parsed["version"] && typeof parsed["version"] === "string") {
+        delete parsed["version"]
+    }
+    const loadedCharacter = characterSchema.parse(parsed)
+    return loadedCharacter
+}
+
 const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, setSelectedStep }: LoadModalProps) => {
     return (
         <Modal opened={loadModalOpened} onClose={closeLoadModal} title="" centered withCloseButton={false}>
@@ -41,19 +84,7 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, 
                                 const fileData = await getUploadFile(loadedFile)
                                 const base64 = fileData.split(",")[1]
                                 const json = Buffer.from(base64, "base64").toString()
-                                const parsed = JSON.parse(json)
-                                console.log({ loadedCharacter: parsed })
-
-                                if (!parsed["rituals"]) parsed["rituals"] = [] // backwards compatibility for characters that were saved before rituals were added
-                                if (!parsed["predatorType"]["pickedMeritsAndFlaws"]) parsed["predatorType"]["pickedMeritsAndFlaws"] = [] // backwards compatibility for characters that were saved before pickedMeritsAndFlaws were added
-                                if (!parsed["availableDisciplineNames"]) {
-                                    // backwards compatibility for characters that were saved before Caitiff were added
-                                    const clan = clanNameSchema.parse(parsed["clan"])
-                                    const clanDisciplines = clans[clan].nativeDisciplines
-
-                                    parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
-                                }
-                                const loadedCharacter = characterSchema.parse(parsed)
+                                const loadedCharacter = await loadCharacterFromJson(json)
                                 setCharacter(loadedCharacter)
                                 // Navigate to Final step
                                 // Final is at case 11, but due to patching logic:

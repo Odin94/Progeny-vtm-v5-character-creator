@@ -1,0 +1,187 @@
+{
+  "name": "Guya",
+  "description": "",
+  "sire": "Siya",
+  "clan": "Tremere",
+  "predatorType": {
+    "name": "Roadside Killer",
+    "pickedDiscipline": "fortitude",
+    "pickedSpecialties": [
+      {
+        "skill": "survival",
+        "name": "The Road"
+      }
+    ],
+    "pickedMeritsAndFlaws": []
+  },
+  "touchstones": [
+    {
+      "name": "Some dude",
+      "description": "",
+      "conviction": ""
+    },
+    {
+      "name": "",
+      "description": "",
+      "conviction": ""
+    },
+    {
+      "name": "",
+      "description": "",
+      "conviction": ""
+    }
+  ],
+  "ambition": "test ambition",
+  "desire": "test desire",
+  "attributes": {
+    "strength": 2,
+    "charisma": 4,
+    "intelligence": 2,
+    "dexterity": 3,
+    "manipulation": 1,
+    "wits": 2,
+    "stamina": 3,
+    "composure": 3,
+    "resolve": 2
+  },
+  "skills": {
+    "athletics": 1,
+    "brawl": 1,
+    "craft": 2,
+    "drive": 2,
+    "firearms": 2,
+    "melee": 0,
+    "larceny": 0,
+    "stealth": 0,
+    "survival": 0,
+    "animal ken": 1,
+    "etiquette": 4,
+    "insight": 3,
+    "intimidation": 3,
+    "leadership": 3,
+    "performance": 0,
+    "persuasion": 0,
+    "streetwise": 0,
+    "subterfuge": 0,
+    "academics": 0,
+    "awareness": 0,
+    "finance": 0,
+    "investigation": 0,
+    "medicine": 0,
+    "occult": 0,
+    "politics": 0,
+    "science": 0,
+    "technology": 0
+  },
+  "skillSpecialties": [
+    {
+      "skill": "academics",
+      "name": "Literature"
+    },
+    {
+      "skill": "craft",
+      "name": "McGuivering"
+    },
+    {
+      "skill": "performance",
+      "name": "Dance"
+    },
+    {
+      "skill": "science",
+      "name": "Chemistry"
+    }
+  ],
+  "availableDisciplineNames": [
+    "auspex",
+    "dominate",
+    "blood sorcery"
+  ],
+  "disciplines": [
+    {
+      "name": "Corrosive Vitae",
+      "description": "",
+      "rouseChecks": 1,
+      "amalgamPrerequisites": [],
+      "summary": "make your blood corrosive to dead substances",
+      "dicePool": "",
+      "level": 1,
+      "discipline": "blood sorcery"
+    },
+    {
+      "name": "A Taste for Blood",
+      "description": "",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": [],
+      "summary": "Discern traits about someone by tasting a drop of their blood",
+      "dicePool": "Resolve + Blood Sorcery",
+      "level": 1,
+      "discipline": "blood sorcery"
+    },
+    {
+      "name": "Cloud Memory",
+      "description": "",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": [],
+      "summary": "make a person forget the past minute",
+      "dicePool": "Charisma + Dominate",
+      "level": 1,
+      "discipline": "dominate"
+    },
+    {
+      "name": "Resilience",
+      "description": "",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": [],
+      "summary": "add Fortitude rating to health track",
+      "dicePool": "",
+      "level": 1,
+      "discipline": "fortitude"
+    }
+  ],
+  "rituals": [
+    {
+      "name": "Clinging of the Insect",
+      "summary": "Drink blood mixed with a freshly crushed spider to cling to walls like an insect.",
+      "rouseChecks": 1,
+      "requiredTime": "5min",
+      "dicePool": "Intelligence + Blood Sorcery",
+      "ingredients": "Living spider, your own blood",
+      "level": 1
+    }
+  ],
+  "bloodPotency": 1,
+  "generation": 13,
+  "maxHealth": 7,
+  "willpower": 5,
+  "experience": 0,
+  "humanity": 7,
+  "merits": [
+    {
+      "name": "Stunning",
+      "level": 4,
+      "type": "merit",
+      "summary": "+2 dice in Social rolls"
+    },
+    {
+      "name": "Seeds of Golconda",
+      "level": 1,
+      "type": "merit",
+      "summary": "Once per session, ask the Storyteller if an action will jeopardize the chance of pursuing Golconda."
+    }
+  ],
+  "flaws": [
+    {
+      "name": "Ugly",
+      "level": 1,
+      "type": "flaw",
+      "summary": "-1 die in Social rolls"
+    },
+    {
+      "name": "Creepy",
+      "level": 1,
+      "type": "flaw",
+      "summary": "your haven looks like the den of a serial killer, neighbors might phone in a tip to the police"
+    }
+  ],
+  "version": "progeny_1.0.0"
+}

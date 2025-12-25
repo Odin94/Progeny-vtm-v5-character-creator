@@ -2,11 +2,11 @@ import { Alert, Center, Text } from "@mantine/core"
 import { IconAlertCircle } from "@tabler/icons-react"
 import { Component, ErrorInfo, ReactNode } from "react"
 
-interface Props {
+type Props = {
     children?: ReactNode
 }
 
-interface State {
+type State = {
     hasError: boolean
     error?: Error
 }
