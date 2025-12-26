@@ -20,6 +20,7 @@ export const touchstoneSchema = z.object({
 })
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
+export const schemaVersion = 1
 export const characterSchema = z.object({
     name: z.string(),
     description: z.string(),
@@ -55,6 +56,8 @@ export const characterSchema = z.object({
     merits: meritFlawSchema.array(),
     flaws: meritFlawSchema.array(),
 
+    notes: z.string().optional().default(""),
+
     ephemeral: z.object({
         hunger: z.number().min(0).int(),
         superficialDamage: z.number().min(0).int(),
@@ -64,7 +67,7 @@ export const characterSchema = z.object({
         humanityStains: z.number().min(0).int(),
         experienceSpent: z.number().min(0).int(),
     }),
-    version: z.number().int().positive().optional().default(1),
+    version: z.number().int().positive().optional().default(schemaVersion),
 })
 export type Character = z.infer<typeof characterSchema>
 
@@ -135,6 +138,8 @@ export const getEmptyCharacter = (): Character => {
 
         merits: [],
         flaws: [],
+
+        notes: "",
 
         ephemeral: {
             hunger: 0,

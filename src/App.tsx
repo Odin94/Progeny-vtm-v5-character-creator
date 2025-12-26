@@ -2,11 +2,12 @@ import { AppShell, BackgroundImage, Container, useComputedColorScheme } from "@m
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import "./App.css"
-import { Character, getEmptyCharacter } from "./data/Character"
 import Generator from "./generator/Generator"
 import AsideBar from "./sidebar/AsideBar"
 import Sidebar from "./sidebar/Sidebar"
 import Topbar from "./topbar/Topbar"
+// import CharacterSheet from "./character_sheet/CharacterSheet"
+import BrokenSaveModal from "./components/BrokenSaveModal"
 
 import { useViewportSize } from "@mantine/hooks"
 import { rndInt } from "./generator/utils"
@@ -17,10 +18,21 @@ import city from "./resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.
 import bloodGuy from "./resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg"
 import batWoman from "./resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
 import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
+import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
+    const [pathname, setPathname] = useState(window.location.pathname)
+
+    useEffect(() => {
+        const handleLocationChange = () => {
+            setPathname(window.location.pathname)
+        }
+        window.addEventListener("popstate", handleLocationChange)
+        return () => window.removeEventListener("popstate", handleLocationChange)
+    }, [])
+
     const { height: viewportHeight, width: viewportWidth } = useViewportSize()
     globals.viewportHeightPx = viewportHeight
     globals.viewportWidthPx = viewportWidth
@@ -34,7 +46,7 @@ function App() {
         globals.smallerFontSize = globals.isPhoneScreen ? "14px" : "20px"
     }, [globals.isPhoneScreen, globals.isSmallScreen])
 
-    const [character, setCharacter] = useLocalStorage<Character>({ key: "character", defaultValue: getEmptyCharacter() })
+    const [character, setCharacter] = useCharacterLocalStorage()
     const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
 
@@ -43,62 +55,74 @@ function App() {
         setShowAsideBar(!globals.isSmallScreen)
     }, [globals.isSmallScreen])
 
+    // if (pathname === "/sheet") {
+    //     return (
+    //         <>
+    //             <CharacterSheet character={character} setCharacter={setCharacter} />
+    //             <BrokenSaveModal />
+    //         </>
+    //     )
+    // }
+
     return (
-        <AppShell
-            padding="0"
-            styles={(theme) => ({
-                root: {
-                    height: "100vh",
-                },
-                main: {
-                    backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden",
-                },
-            })}
-        >
-            {!globals.isSmallScreen && (
-                <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
-                    <Sidebar character={character} />
-                </AppShell.Navbar>
-            )}
-            <AppShell.Header p="xs" h={75}>
-                <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
-            </AppShell.Header>
-            {showAsideBar && (
-                <AppShell.Aside
-                    p="md"
-                    w={{ xs: 200 }}
-                    style={{ display: "flex", flexDirection: "column" }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />
-                </AppShell.Aside>
-            )}
-            <BackgroundImage
-                h={"100%"}
-                src={backgrounds[backgroundIndex]}
-                style={{ flex: 1, minHeight: 0 }}
-                onClick={() => {
-                    if (globals.isSmallScreen && showAsideBar) {
-                        setShowAsideBar(false)
-                    }
-                }}
+        <>
+            <BrokenSaveModal />
+            <AppShell
+                padding="0"
+                styles={(theme) => ({
+                    root: {
+                        height: "100vh",
+                    },
+                    main: {
+                        backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden",
+                    },
+                })}
             >
-                <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
-                    <Container h={"100%"} style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-                        <Generator
-                            character={character}
-                            setCharacter={setCharacter}
-                            selectedStep={selectedStep}
-                            setSelectedStep={setSelectedStep}
-                        />
-                    </Container>
-                </div>
-            </BackgroundImage>
-        </AppShell>
+                {!globals.isSmallScreen && (
+                    <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
+                        <Sidebar character={character} />
+                    </AppShell.Navbar>
+                )}
+                <AppShell.Header p="xs" h={75}>
+                    <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
+                </AppShell.Header>
+                {showAsideBar && (
+                    <AppShell.Aside
+                        p="md"
+                        w={{ xs: 200 }}
+                        style={{ display: "flex", flexDirection: "column" }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />
+                    </AppShell.Aside>
+                )}
+                <BackgroundImage
+                    h={"100%"}
+                    src={backgrounds[backgroundIndex]}
+                    style={{ flex: 1, minHeight: 0 }}
+                    onClick={() => {
+                        if (globals.isSmallScreen && showAsideBar) {
+                            setShowAsideBar(false)
+                        }
+                    }}
+                >
+                    <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
+                        <Container h={"100%"} style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                            <Generator
+                                character={character}
+                                setCharacter={setCharacter}
+                                selectedStep={selectedStep}
+                                setSelectedStep={setSelectedStep}
+                            />
+                        </Container>
+                    </div>
+                </BackgroundImage>
+            </AppShell>
+        </>
     )
 }
 

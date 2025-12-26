@@ -64,7 +64,6 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
 }
 
 export const downloadJson = async (character: Character) => {
-    // TODOdin: Start supporting multiple versions & write automated tests for loading from json
     const json = JSON.stringify(character, null, 2)
     const blob = new Blob([json], { type: "application/json" })
     const link = document.createElement("a")

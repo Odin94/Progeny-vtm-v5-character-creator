@@ -6,7 +6,7 @@ import { Buffer } from "buffer"
 import { z } from "zod"
 import { clans } from "~/data/Clans"
 import { clanNameSchema } from "~/data/NameSchemas"
-import { Character, characterSchema, containsBloodSorcery } from "../data/Character"
+import { Character, characterSchema, containsBloodSorcery, schemaVersion } from "../data/Character"
 import { getUploadFile } from "../generator/utils"
 
 export type LoadModalProps = {
@@ -17,12 +17,14 @@ export type LoadModalProps = {
     setSelectedStep: (step: number) => void
 }
 
-export const loadCharacterFromJson = async (json: string): Promise<Character> => {
-    const parsed = JSON.parse(json)
-    console.log({ loadedCharacter: parsed })
-
-    if (!parsed["rituals"]) parsed["rituals"] = [] // backwards compatibility for characters that were saved before rituals were added
-    if (!parsed["predatorType"]["pickedMeritsAndFlaws"]) parsed["predatorType"]["pickedMeritsAndFlaws"] = [] // backwards compatibility for characters that were saved before pickedMeritsAndFlaws were added
+export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
+    if (!parsed["rituals"]) parsed["rituals"] = []
+    if (parsed["predatorType"]) {
+        const predatorType = parsed["predatorType"] as Record<string, unknown>
+        if (!predatorType["pickedMeritsAndFlaws"]) {
+            predatorType["pickedMeritsAndFlaws"] = []
+        }
+    }
     if (!parsed["availableDisciplineNames"]) {
         // backwards compatibility for characters that were saved before Caitiff were added
         const clan = clanNameSchema.parse(parsed["clan"])
@@ -30,6 +32,7 @@ export const loadCharacterFromJson = async (json: string): Promise<Character> =>
 
         parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
     }
+    if (!parsed["notes"]) parsed["notes"] = ""
     if (!parsed["ephemeral"]) {
         // backwards compatibility for characters that were saved before ephemeral was added
         parsed["ephemeral"] = {
@@ -43,19 +46,28 @@ export const loadCharacterFromJson = async (json: string): Promise<Character> =>
         }
     } else {
         // Ensure all ephemeral fields exist, defaulting to 0 if missing
+        const ephemeral = parsed["ephemeral"] as Record<string, unknown>
         parsed["ephemeral"] = {
-            hunger: parsed["ephemeral"]["hunger"] ?? 0,
-            superficialDamage: parsed["ephemeral"]["superficialDamage"] ?? 0,
-            aggravatedDamage: parsed["ephemeral"]["aggravatedDamage"] ?? 0,
-            superficialWillpowerDamage: parsed["ephemeral"]["superficialWillpowerDamage"] ?? 0,
-            aggravatedWillpowerDamage: parsed["ephemeral"]["aggravatedWillpowerDamage"] ?? 0,
-            humanityStains: parsed["ephemeral"]["humanityStains"] ?? 0,
-            experienceSpent: parsed["ephemeral"]["experienceSpent"] ?? 0,
+            hunger: ephemeral["hunger"] ?? 0,
+            superficialDamage: ephemeral["superficialDamage"] ?? 0,
+            aggravatedDamage: ephemeral["aggravatedDamage"] ?? 0,
+            superficialWillpowerDamage: ephemeral["superficialWillpowerDamage"] ?? 0,
+            aggravatedWillpowerDamage: ephemeral["aggravatedWillpowerDamage"] ?? 0,
+            humanityStains: ephemeral["humanityStains"] ?? 0,
+            experienceSpent: ephemeral["experienceSpent"] ?? 0,
         }
     }
     if (parsed["version"] && typeof parsed["version"] === "string") {
         delete parsed["version"]
     }
+    parsed["version"] = schemaVersion
+}
+
+export const loadCharacterFromJson = async (json: string): Promise<Character> => {
+    const parsed = JSON.parse(json)
+    console.log({ loadedCharacter: parsed })
+
+    applyCharacterCompatibilityPatches(parsed)
     const loadedCharacter = characterSchema.parse(parsed)
     return loadedCharacter
 }
