@@ -5,7 +5,7 @@ import { trackEvent } from "../utils/analytics"
 import { Character, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
 import { PredatorTypes } from "../data/PredatorType"
-import { upcase } from "../generator/utils"
+import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../generator/utils"
 import { globals } from "../globals"
 import usePointStates from "../hooks/usePointStates"
 import PointPicker from "./PointPicker"
@@ -270,6 +270,7 @@ const PredatorTypeModal = ({
 
                                 const pickedDiscipline = disciplineNameSchema.parse(discipline)
                                 const changedPickedDiscipline = pickedDiscipline !== character.predatorType.pickedDiscipline
+                                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                 setCharacter({
                                     ...character,
                                     predatorType: {

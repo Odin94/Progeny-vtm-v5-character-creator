@@ -25,7 +25,6 @@ export const isEmptyList = (maybeList: unknown) => {
 }
 
 export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Character) => {
-    // TODOdin: Set health, willpower and bloodPotency earlier in character creation & use those values in pdf/json creation?
     // Health
     let health = 3 + character.attributes["stamina"]
     if (character.disciplines.find((power) => power.name === "Resilience")) {

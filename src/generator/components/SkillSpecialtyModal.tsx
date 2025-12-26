@@ -29,6 +29,7 @@ export const SpecialtyModal = ({
     pickedSkillNames,
     skills,
 }: SpecialtyModalProps) => {
+    // TODOdin: Does changing skills reset your specialties? I think it might keep the old ones but as empty strings.
     const smallScreen = globals.isSmallScreen
     const phoneScreen = globals.isPhoneScreen
 

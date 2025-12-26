@@ -9,6 +9,7 @@ import { isThinbloodFlaw, isThinbloodMerit, MeritOrFlaw, meritsAndFlaws, thinblo
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import { Loresheets } from "./Loresheets"
+import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 
 type MeritsAndFlawsPickerProps = {
     character: Character
@@ -190,6 +191,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 color="grape"
                 disabled={isConfirmDisabled}
                 onClick={() => {
+                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                     setCharacter({
                         ...character,
                         merits: pickedMeritsAndFlaws.filter((l) => l.type === "merit"),

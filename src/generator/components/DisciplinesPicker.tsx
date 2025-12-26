@@ -5,7 +5,7 @@ import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
-import { intersection, upcase } from "../utils"
+import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
 
 type DisciplinesPickerProps = {
@@ -331,6 +331,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     disabled={!(allPowersPicked() && pickedPredatorTypePower)}
                     color="grape"
                     onClick={() => {
+                        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                         setCharacter({
                             ...character,
                             disciplines: allPickedPowers,

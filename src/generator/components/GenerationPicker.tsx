@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
+import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 
 type GenerationPickerProps = {
     character: Character
@@ -61,6 +62,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                     disabled={generation === null}
                     color="grape"
                     onClick={() => {
+                        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                         setCharacter({ ...character, generation: parseInt(generation ?? "0") })
                         trackEvent({
                             action: "generation submit clicked",

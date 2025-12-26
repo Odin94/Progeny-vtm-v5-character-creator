@@ -5,7 +5,7 @@ import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
-import { upcase } from "../utils"
+import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 
 type AttributePickerProps = {
     character: Character
@@ -69,6 +69,8 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                 attributes[finalPick.strongest!] = 4
                 attributes[finalPick.weakest!] = 1
                 finalPick.medium.forEach((medium) => (attributes[medium] = 3))
+
+                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                 setCharacter({ ...character, attributes })
                 nextStep()
             }
