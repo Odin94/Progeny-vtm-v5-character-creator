@@ -1,9 +1,9 @@
 import { ActionIcon, useMantineTheme } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
-import classes from "./PipButton.module.css"
+import classes from "./SquarePipButton.module.css"
 
-type PipButtonProps = {
+type SimpleSquarePipButtonProps = {
     filled?: boolean
     onClick?: () => void
     style?: React.CSSProperties
@@ -12,14 +12,14 @@ type PipButtonProps = {
     isFilling?: boolean
 }
 
-const PipButton = ({
+const SimpleSquarePipButton = ({
     filled = false,
     onClick,
     style,
     index = 0,
     firstChangingIndex = null,
     isFilling: isFillingProp = false,
-}: PipButtonProps) => {
+}: SimpleSquarePipButtonProps) => {
     const theme = useMantineTheme()
     const prevFilledRef = useRef(filled)
 
@@ -42,7 +42,6 @@ const PipButton = ({
         return { delay }
     }, [filled, index, firstChangingIndex, isFillingProp])
 
-    // Update the ref AFTER the render is complete (needed for delay to work)
     useEffect(() => {
         prevFilledRef.current = filled
     }, [filled])
@@ -68,11 +67,11 @@ const PipButton = ({
                     position: "absolute",
                     inset: 0,
                     backgroundColor: theme.colors.grape[6],
-                    borderRadius: "50%",
+                    borderRadius: "4px",
                 }}
             />
         </ActionIcon>
     )
 }
 
-export default PipButton
+export default SimpleSquarePipButton

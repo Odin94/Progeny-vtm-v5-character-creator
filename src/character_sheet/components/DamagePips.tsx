@@ -49,11 +49,13 @@ const DamagePips = ({ maxValue, superficial, aggravated, onChange }: DamagePipsP
         <Group gap={4}>
             {Array.from({ length: maxValue }, (_, index) => {
                 const pipState = getPipState(index)
+                const filled = pipState !== "none"
                 return (
                     <SquarePipButton
                         key={index}
                         onClick={() => handlePipClick(index)}
                         damageState={pipState}
+                        filled={filled}
                         style={(index + 1) % 5 === 0 && index < maxValue - 1 ? { marginRight: 8 } : undefined}
                     />
                 )

@@ -9,6 +9,7 @@ type SquarePipButtonProps = {
     damageState?: "none" | "superficial" | "aggravated"
 }
 
+// TODOdin: Consider highlighting clickable buttons or low-lighting non-clickable buttons
 const SquarePipButton = ({ onClick, style, damageState = "none", filled = false }: SquarePipButtonProps) => {
     const theme = useMantineTheme()
     const prevState = useRef(damageState)

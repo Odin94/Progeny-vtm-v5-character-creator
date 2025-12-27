@@ -9,7 +9,7 @@
     }
 }
 
-@keyframes emptyDiagonal {
+@keyframes emptyCenter {
     from {
         transform: scale(1.3);
         transform-origin: center;
@@ -52,5 +52,5 @@
     inset: 0;
     background-color: var(--mantine-color-grape-6);
     border-radius: 50%;
-    animation: emptyDiagonal 0.3s ease-out forwards;
+    animation: emptyCenter 0.3s ease-out forwards;
 }
