@@ -1,7 +1,6 @@
 import { Grid, Group, Stack, Text, Title, Box } from "@mantine/core"
 import { Character } from "~/data/Character"
 import { clans } from "~/data/Clans"
-import Tally from "~/components/Tally"
 import classes from "./TopData.module.css"
 
 type TopDataProps = {
@@ -47,10 +46,6 @@ const TopData = ({ character }: TopDataProps) => {
                             <Text fw={700}>Sire:</Text>
                             <Text>{character.sire || "—"}</Text>
                         </Group>
-                        <Group gap="xs">
-                            <Text fw={700}>Predator Type:</Text>
-                            <Text>{character.predatorType.name || "—"}</Text>
-                        </Group>
                     </Stack>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -64,8 +59,8 @@ const TopData = ({ character }: TopDataProps) => {
                             <Text>{character.desire || "—"}</Text>
                         </Group>
                         <Group gap="xs">
-                            <Text fw={700}>Blood Potency:</Text>
-                            <Tally n={character.bloodPotency} />
+                            <Text fw={700}>Predator Type:</Text>
+                            <Text>{character.predatorType.name || "—"}</Text>
                         </Group>
                     </Stack>
                 </Grid.Col>

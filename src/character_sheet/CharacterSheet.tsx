@@ -5,6 +5,7 @@ import Attributes from "./parts/Attributes"
 import Skills from "./parts/Skills"
 import Disciplines from "./parts/Disciplines"
 import BottomData from "./parts/BottomData"
+import TheBlood from "./parts/TheBlood"
 import Touchstones from "./parts/Touchstones"
 import MeritsAndFlaws from "./parts/MeritsAndFlaws"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
@@ -21,7 +22,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             <Box className={classes.overlay} />
             <Container size="xl" className={classes.container}>
                 <Box className={classes.contentBox}>
-                    <Paper p="lg" shadow="md" radius="md" className={classes.paper}>
+                    <Paper p="lg" radius="md" className={classes.paper}>
                         <Stack gap="lg">
                             <TopData character={character} setCharacter={setCharacter} />
 
@@ -40,6 +41,10 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             <Divider />
 
                             <BottomData character={character} setCharacter={setCharacter} />
+
+                            <Divider />
+
+                            <TheBlood character={character} setCharacter={setCharacter} />
 
                             {character.touchstones.length > 0 ? <Divider /> : null}
 

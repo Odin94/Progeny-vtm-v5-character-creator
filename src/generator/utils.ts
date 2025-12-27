@@ -4,6 +4,7 @@ import { Character, getEmptyCharacter } from "../data/Character"
 import { Skills, SkillsKey } from "../data/Skills"
 import { DisciplineName } from "~/data/NameSchemas"
 import { attributeNameTo_WoD5EVtt_Key, skillNameTo_WoD5EVtt_Key, disciplineNameTo_WoD5EVtt_Key } from "./foundryWoDJsonCreator"
+import { calculateBloodPotency } from "~/data/BloodPotency"
 
 // The maximum is exclusive and the minimum is inclusive
 export const rndInt = (min: number, max: number) => {
@@ -36,23 +37,7 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     const willpower = character.attributes["composure"] + character.attributes["resolve"]
 
     // Blood Potency
-    let bloodPotency = (() => {
-        switch (character.generation) {
-            case 16:
-            case 15:
-            case 14:
-                return 0
-            case 13:
-            case 12:
-                return 1
-            case 11:
-            case 10:
-                return 2
-            default:
-                return 1
-        }
-    })()
-    bloodPotency += PredatorTypes[character.predatorType.name].bloodPotencyChange
+    const bloodPotency = calculateBloodPotency(character)
 
     const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
 
