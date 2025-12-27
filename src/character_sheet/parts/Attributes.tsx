@@ -7,22 +7,23 @@ import Pips from "~/character_sheet/components/Pips"
 type AttributesProps = {
     character: Character
     setCharacter: (character: Character) => void
+    primaryColor: string
 }
 
-const Attributes = ({ character, setCharacter }: AttributesProps) => {
+const Attributes = ({ character, setCharacter, primaryColor }: AttributesProps) => {
     const textStyle = {
         fontFamily: "Courier New",
     }
 
     return (
         <Box>
-            <Title order={2} mb="md">
+            <Title order={2} mb="md" c={primaryColor}>
                 Attributes
             </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm">
-                        Physical
+                    <Title order={4} mb="sm" c="dimmed">
+                        PHYSICAL
                     </Title>
                     {["strength", "dexterity", "stamina"]
                         .map((a) => attributesKeySchema.parse(a))
@@ -38,13 +39,14 @@ const Attributes = ({ character, setCharacter }: AttributesProps) => {
                                             attributes: { ...character.attributes, [attribute]: level },
                                         })
                                     }
+                                    color={primaryColor}
                                 />
                             </Group>
                         ))}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm">
-                        Social
+                    <Title order={4} mb="sm" c="dimmed">
+                        SOCIAL
                     </Title>
                     {["charisma", "manipulation", "composure"]
                         .map((a) => attributesKeySchema.parse(a))
@@ -60,13 +62,14 @@ const Attributes = ({ character, setCharacter }: AttributesProps) => {
                                             attributes: { ...character.attributes, [attribute]: level },
                                         })
                                     }
+                                    color={primaryColor}
                                 />
                             </Group>
                         ))}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm">
-                        Mental
+                    <Title order={4} mb="sm" c="dimmed">
+                        MENTAL
                     </Title>
                     {["intelligence", "wits", "resolve"]
                         .map((a) => attributesKeySchema.parse(a))
@@ -82,6 +85,7 @@ const Attributes = ({ character, setCharacter }: AttributesProps) => {
                                             attributes: { ...character.attributes, [attribute]: level },
                                         })
                                     }
+                                    color={primaryColor}
                                 />
                             </Group>
                         ))}

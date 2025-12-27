@@ -9,7 +9,7 @@ import TheBlood from "./parts/TheBlood"
 import Touchstones from "./parts/Touchstones"
 import MeritsAndFlaws from "./parts/MeritsAndFlaws"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
-import classes from "./CharacterSheet.module.css"
+import { getPrimaryColor } from "./constants"
 
 type CharacterSheetProps = {
     character: Character
@@ -17,42 +17,80 @@ type CharacterSheetProps = {
 }
 
 const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
+    const primaryColor = getPrimaryColor(character.clan)
+
     return (
-        <BackgroundImage src={backgroundImage} className={classes.background}>
-            <Box className={classes.overlay} />
-            <Container size="xl" className={classes.container}>
-                <Box className={classes.contentBox}>
-                    <Paper p="lg" radius="md" className={classes.paper}>
+        <BackgroundImage
+            src={backgroundImage}
+            style={{
+                minHeight: "100vh",
+                width: "100%",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                padding: "2rem 0",
+                position: "relative",
+            }}
+        >
+            <Box
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    zIndex: 0,
+                }}
+            />
+            <Container
+                size="xl"
+                style={{
+                    width: "100%",
+                    position: "relative",
+                    zIndex: 1,
+                }}
+            >
+                <Box
+                    style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        backdropFilter: "blur(7px)",
+                        borderRadius: "8px",
+                        padding: "1.5rem",
+                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                    }}
+                >
+                    <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
                         <Stack gap="lg">
-                            <TopData character={character} setCharacter={setCharacter} />
+                            <TopData character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             <Divider />
 
-                            <Attributes character={character} setCharacter={setCharacter} />
+                            <Attributes character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             <Divider />
 
-                            <Skills character={character} setCharacter={setCharacter} />
+                            <Skills character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             {character.disciplines.length > 0 || character.rituals.length > 0 ? <Divider /> : null}
 
-                            <Disciplines character={character} setCharacter={setCharacter} />
+                            <Disciplines character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             <Divider />
 
-                            <BottomData character={character} setCharacter={setCharacter} />
+                            <BottomData character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             <Divider />
 
-                            <TheBlood character={character} setCharacter={setCharacter} />
+                            <TheBlood character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             {character.touchstones.length > 0 ? <Divider /> : null}
 
-                            <Touchstones character={character} setCharacter={setCharacter} />
+                            <Touchstones character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
 
                             {character.merits.length > 0 || character.flaws.length > 0 ? <Divider /> : null}
 
-                            <MeritsAndFlaws character={character} setCharacter={setCharacter} />
+                            <MeritsAndFlaws character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
                         </Stack>
                     </Paper>
                 </Box>

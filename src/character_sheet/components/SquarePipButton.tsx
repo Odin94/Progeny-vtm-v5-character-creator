@@ -1,21 +1,20 @@
 import { ActionIcon, useMantineTheme } from "@mantine/core"
 import { useRef, useMemo } from "react"
-import classes from "./SquarePipButton.module.css"
+import { motion } from "framer-motion"
 
 type SquarePipButtonProps = {
-    filled?: boolean
     onClick?: () => void
     style?: React.CSSProperties
     damageState?: "none" | "superficial" | "aggravated"
+    color?: string
 }
 
 // TODOdin: Consider highlighting clickable buttons or low-lighting non-clickable buttons
-const SquarePipButton = ({ onClick, style, damageState = "none", filled = false }: SquarePipButtonProps) => {
+const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape" }: SquarePipButtonProps) => {
     const theme = useMantineTheme()
     const prevState = useRef(damageState)
     const keyCounter = useRef(0)
-    const lineLength = Math.sqrt(Math.pow(22 - 2, 2) + Math.pow(22 - 2, 2))
-    const strokeColor = theme.colors.grape[6]
+    const strokeColor = theme.colors[color][6]
 
     const { superficialKey, aggravatedKey } = useMemo(() => {
         const isNewSuperficial = damageState !== "none" && prevState.current === "none"
@@ -33,25 +32,33 @@ const SquarePipButton = ({ onClick, style, damageState = "none", filled = false 
         }
     }, [damageState])
 
-    const buttonClassName = onClick
-        ? filled
-            ? `${classes.button} ${classes.buttonFilled}`
-            : classes.button
-        : `${classes.button} ${classes.buttonDisabled}`
+    const buttonStyle: React.CSSProperties = {
+        padding: 0,
+        border: `2px solid ${theme.colors[color][6]}`,
+        borderRadius: "4px",
+        backgroundColor: "transparent",
+        cursor: onClick ? "pointer" : "default",
+        transition: "transform 0.2s ease",
+        position: "relative",
+        overflow: "visible",
+        ...style,
+    }
 
     return (
         <ActionIcon
             variant="subtle"
-            color="grape"
+            color={color}
             onClick={onClick}
             size="xs"
-            className={buttonClassName}
-            style={
-                {
-                    ...style,
-                    "--line-length": `${lineLength}px`,
-                } as React.CSSProperties & { "--line-length": string }
-            }
+            style={buttonStyle}
+            onMouseEnter={(e) => {
+                if (onClick) {
+                    e.currentTarget.style.transform = "scale(1.15)"
+                }
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)"
+            }}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -60,12 +67,49 @@ const SquarePipButton = ({ onClick, style, damageState = "none", filled = false 
                 stroke={strokeColor}
                 strokeWidth="3"
                 strokeLinecap="round"
-                className={classes.svg}
+                style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                }}
             >
                 {(damageState === "superficial" || damageState === "aggravated") && (
-                    <line key={superficialKey} x1="22" y1="2" x2="2" y2="22" className={classes.drawingLine} />
+                    <motion.line
+                        key={superficialKey}
+                        x1="22"
+                        y1="2"
+                        x2="2"
+                        y2="22"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{
+                            duration: 0.2,
+                            ease: "easeOut",
+                        }}
+                        stroke={strokeColor}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                    />
                 )}
-                {damageState === "aggravated" && <line key={aggravatedKey} x1="2" y1="2" x2="22" y2="22" className={classes.drawingLine} />}
+                {damageState === "aggravated" && (
+                    <motion.line
+                        key={aggravatedKey}
+                        x1="2"
+                        y1="2"
+                        x2="22"
+                        y2="22"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{
+                            duration: 0.2,
+                            ease: "easeOut",
+                        }}
+                        stroke={strokeColor}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                    />
+                )}
             </svg>
         </ActionIcon>
     )

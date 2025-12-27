@@ -7,9 +7,10 @@ import DamagePips from "~/character_sheet/components/DamagePips"
 type BottomDataProps = {
     character: Character
     setCharacter: (character: Character) => void
+    primaryColor: string
 }
 
-const BottomData = ({ character, setCharacter }: BottomDataProps) => {
+const BottomData = ({ character, setCharacter, primaryColor }: BottomDataProps) => {
     const { superficialDamage, aggravatedDamage, superficialWillpowerDamage, aggravatedWillpowerDamage, hunger } = character.ephemeral
 
     return (
@@ -25,6 +26,7 @@ const BottomData = ({ character, setCharacter }: BottomDataProps) => {
                                 level={character.maxHealth}
                                 maxLevel={10}
                                 onLevelChange={(level) => setCharacter({ ...character, maxHealth: level })}
+                                color={primaryColor}
                             />
                         </Group>
                         <DamagePips
@@ -41,6 +43,7 @@ const BottomData = ({ character, setCharacter }: BottomDataProps) => {
                                     },
                                 })
                             }
+                            color={primaryColor}
                         />
                     </Stack>
                 </Paper>
@@ -56,6 +59,7 @@ const BottomData = ({ character, setCharacter }: BottomDataProps) => {
                                 level={character.willpower}
                                 maxLevel={10}
                                 onLevelChange={(level) => setCharacter({ ...character, willpower: level })}
+                                color={primaryColor}
                             />
                         </Group>
                         <DamagePips
@@ -72,6 +76,7 @@ const BottomData = ({ character, setCharacter }: BottomDataProps) => {
                                     },
                                 })
                             }
+                            color={primaryColor}
                         />
                     </Stack>
                 </Paper>
@@ -86,6 +91,7 @@ const BottomData = ({ character, setCharacter }: BottomDataProps) => {
                         setValue={(value) => setCharacter({ ...character, humanity: value })}
                         maxLevel={10}
                         groupSize={5}
+                        color={primaryColor}
                     />
                 </Paper>
             </Grid.Col>
@@ -107,6 +113,7 @@ const BottomData = ({ character, setCharacter }: BottomDataProps) => {
                             })
                         }
                         maxLevel={5}
+                        color={primaryColor}
                     />
                 </Paper>
             </Grid.Col>

@@ -1,7 +1,6 @@
 import { ActionIcon, useMantineTheme } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
-import classes from "./PipButton.module.css"
 
 type PipButtonProps = {
     filled?: boolean
@@ -10,6 +9,7 @@ type PipButtonProps = {
     index?: number
     firstChangingIndex?: number | null
     isFilling?: boolean
+    color?: string
 }
 
 const PipButton = ({
@@ -19,6 +19,7 @@ const PipButton = ({
     index = 0,
     firstChangingIndex = null,
     isFilling: isFillingProp = false,
+    color = "grape",
 }: PipButtonProps) => {
     const theme = useMantineTheme()
     const prevFilledRef = useRef(filled)
@@ -47,14 +48,33 @@ const PipButton = ({
         prevFilledRef.current = filled
     }, [filled])
 
+    const buttonStyle: React.CSSProperties = {
+        padding: 0,
+        border: `2px solid ${theme.colors[color][6]}`,
+        borderRadius: "50%",
+        backgroundColor: "transparent",
+        cursor: onClick ? "pointer" : "default",
+        transition: "transform 0.2s ease",
+        position: "relative",
+        overflow: "visible",
+        ...style,
+    }
+
     return (
         <ActionIcon
             variant="subtle"
-            color="grape"
+            color={color}
             onClick={onClick}
             size="xs"
-            className={onClick ? classes.button : `${classes.button} ${classes.buttonDisabled}`}
-            style={style}
+            style={buttonStyle}
+            onMouseEnter={(e) => {
+                if (onClick) {
+                    e.currentTarget.style.transform = "scale(1.15)"
+                }
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)"
+            }}
         >
             <motion.div
                 initial={false}
@@ -67,7 +87,7 @@ const PipButton = ({
                 style={{
                     position: "absolute",
                     inset: 0,
-                    backgroundColor: theme.colors.grape[6],
+                    backgroundColor: theme.colors[color][6],
                     borderRadius: "50%",
                 }}
             />

@@ -4,16 +4,17 @@ import { Character } from "~/data/Character"
 type TouchstonesProps = {
     character: Character
     setCharacter: (character: Character) => void
+    primaryColor: string
 }
 
-const Touchstones = ({ character, setCharacter }: TouchstonesProps) => {
+const Touchstones = ({ character, setCharacter, primaryColor }: TouchstonesProps) => {
     if (character.touchstones.length === 0) {
         return null
     }
 
     return (
         <Box>
-            <Title order={2} mb="md">
+            <Title order={2} mb="md" c={primaryColor}>
                 Touchstones
             </Title>
             <Grid>
@@ -43,4 +44,3 @@ const Touchstones = ({ character, setCharacter }: TouchstonesProps) => {
 }
 
 export default Touchstones
-

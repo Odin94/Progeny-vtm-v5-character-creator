@@ -1,20 +1,20 @@
 import { Grid, Group, Stack, Text, Title, Box } from "@mantine/core"
 import { Character } from "~/data/Character"
 import { clans } from "~/data/Clans"
-import classes from "./TopData.module.css"
 
 type TopDataProps = {
     character: Character
     setCharacter: (character: Character) => void
+    primaryColor: string
 }
 
-const TopData = ({ character }: TopDataProps) => {
+const TopData = ({ character, primaryColor }: TopDataProps) => {
     const clan = character.clan ? clans[character.clan] : null
 
     return (
         <>
             <Box>
-                <Title order={1} ta="center" mb="md">
+                <Title order={1} ta="center" mb="md" c={primaryColor}>
                     {character.name || "Unnamed Character"}
                 </Title>
                 {character.description ? (
@@ -32,7 +32,16 @@ const TopData = ({ character }: TopDataProps) => {
                             {clan ? (
                                 <Group gap="xs">
                                     <Text>{clan.name}</Text>
-                                    {clan.logo ? <img src={clan.logo} alt={clan.name} className={classes.image} /> : null}
+                                    {clan.logo ? (
+                                        <img
+                                            src={clan.logo}
+                                            alt={clan.name}
+                                            style={{
+                                                width: "24px",
+                                                height: "24px",
+                                            }}
+                                        />
+                                    ) : null}
                                 </Group>
                             ) : (
                                 <Text c="dimmed">—</Text>

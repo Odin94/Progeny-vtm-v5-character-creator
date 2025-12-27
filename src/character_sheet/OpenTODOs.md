@@ -6,4 +6,4 @@
 * Dice-roller popup
 * Links from creator to sheet and vice versa
 * More bg images?
-  
+* Add more Disciplines

@@ -8,9 +8,10 @@ import Pips from "~/character_sheet/components/Pips"
 type SkillsProps = {
     character: Character
     setCharacter: (character: Character) => void
+    primaryColor: string
 }
 
-const Skills = ({ character, setCharacter }: SkillsProps) => {
+const Skills = ({ character, setCharacter, primaryColor }: SkillsProps) => {
     const textStyle = {
         fontFamily: "Courier New",
     }
@@ -36,7 +37,7 @@ const Skills = ({ character, setCharacter }: SkillsProps) => {
                         {specialties.length > 0 ? (
                             <Group gap="xs" wrap="wrap">
                                 {specialties.map((specialtyName, index) => (
-                                    <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color="grape">
+                                    <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
                                         {specialtyName}
                                     </Badge>
                                 ))}
@@ -47,7 +48,7 @@ const Skills = ({ character, setCharacter }: SkillsProps) => {
                     <Group gap="xs" wrap="nowrap">
                         <Text style={textStyle}>{upcase(skill)}</Text>
                         {specialties.map((specialtyName, index) => (
-                            <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color="grape">
+                            <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
                                 {specialtyName}
                             </Badge>
                         ))}
@@ -56,6 +57,7 @@ const Skills = ({ character, setCharacter }: SkillsProps) => {
                 <Pips
                     level={character.skills[skill]}
                     onLevelChange={(level) => setCharacter({ ...character, skills: { ...character.skills, [skill]: level } })}
+                    color={primaryColor}
                 />
             </Group>
         )
@@ -63,21 +65,21 @@ const Skills = ({ character, setCharacter }: SkillsProps) => {
 
     return (
         <Box>
-            <Title order={2} mb="md">
+            <Title order={2} mb="md" c={primaryColor}>
                 Skills
             </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm">
-                        Physical
+                    <Title order={4} mb="sm" c="dimmed">
+                        PHYSICAL
                     </Title>
                     {["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"]
                         .map((s) => skillsKeySchema.parse(s))
                         .map(renderSkillRow)}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm">
-                        Social
+                    <Title order={4} mb="sm" c="dimmed">
+                        SOCIAL
                     </Title>
                     {[
                         "animal ken",
@@ -94,8 +96,8 @@ const Skills = ({ character, setCharacter }: SkillsProps) => {
                         .map(renderSkillRow)}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm">
-                        Mental
+                    <Title order={4} mb="sm" c="dimmed">
+                        MENTAL
                     </Title>
                     {["academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology"]
                         .map((s) => skillsKeySchema.parse(s))

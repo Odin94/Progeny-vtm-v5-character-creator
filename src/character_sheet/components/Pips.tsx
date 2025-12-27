@@ -7,9 +7,10 @@ type PipsProps = {
     maxLevel?: number
     minLevel?: number
     onLevelChange?: (level: number) => void
+    color?: string
 }
 
-const Pips = ({ level, maxLevel = 5, minLevel = 0, onLevelChange }: PipsProps) => {
+const Pips = ({ level, maxLevel = 5, minLevel = 0, onLevelChange, color = "grape" }: PipsProps) => {
     const prevLevelRef = useRef(level)
 
     const { firstChangingIndex, isFilling } = useMemo(() => {
@@ -48,6 +49,7 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, onLevelChange }: PipsProps) =
                     isFilling={isFilling}
                     onClick={onLevelChange ? () => handlePipClick(index) : undefined}
                     style={(index + 1) % 5 === 0 && index < maxLevel - 1 ? { marginRight: 8 } : undefined}
+                    color={color}
                 />
             ))}
         </Group>

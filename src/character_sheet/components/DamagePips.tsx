@@ -6,9 +6,10 @@ type DamagePipsProps = {
     superficial: number
     aggravated: number
     onChange: (superficial: number, aggravated: number) => void
+    color?: string
 }
 
-const DamagePips = ({ maxValue, superficial, aggravated, onChange }: DamagePipsProps) => {
+const DamagePips = ({ maxValue, superficial, aggravated, onChange, color = "grape" }: DamagePipsProps) => {
     const getPipState = (pipIndex: number): "none" | "superficial" | "aggravated" => {
         const pipNumber = pipIndex + 1
         if (pipNumber <= aggravated) {
@@ -49,14 +50,13 @@ const DamagePips = ({ maxValue, superficial, aggravated, onChange }: DamagePipsP
         <Group gap={4}>
             {Array.from({ length: maxValue }, (_, index) => {
                 const pipState = getPipState(index)
-                const filled = pipState !== "none"
                 return (
                     <SquarePipButton
                         key={index}
                         onClick={() => handlePipClick(index)}
                         damageState={pipState}
-                        filled={filled}
                         style={(index + 1) % 5 === 0 && index < maxValue - 1 ? { marginRight: 8 } : undefined}
+                        color={color}
                     />
                 )
             })}
