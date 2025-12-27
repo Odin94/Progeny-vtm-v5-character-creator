@@ -1,4 +1,4 @@
-import { Grid, Group, Stack, Text, Title, Box } from "@mantine/core"
+import { Grid, Group, Stack, Text, Title, Box, useMantineTheme } from "@mantine/core"
 import { Character } from "~/data/Character"
 import { clans } from "~/data/Clans"
 
@@ -9,14 +9,35 @@ type TopDataProps = {
 }
 
 const TopData = ({ character, primaryColor }: TopDataProps) => {
+    const theme = useMantineTheme()
     const clan = character.clan ? clans[character.clan] : null
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
 
     return (
         <>
             <Box>
-                <Title order={1} ta="center" mb="md" c={primaryColor}>
-                    {character.name || "Unnamed Character"}
-                </Title>
+                <Group gap="md" justify="center" align="center" mb="md">
+                    <Title order={1} c={primaryColor} style={{ margin: 0 }}>
+                        {character.name || "Unnamed Character"}
+                    </Title>
+                    {clan?.logo ? (
+                        <Box
+                            style={{
+                                width: "56px",
+                                height: "56px",
+                                backgroundColor: colorValue,
+                                maskImage: `url(${clan.logo})`,
+                                maskSize: "contain",
+                                maskRepeat: "no-repeat",
+                                maskPosition: "center",
+                                WebkitMaskImage: `url(${clan.logo})`,
+                                WebkitMaskSize: "contain",
+                                WebkitMaskRepeat: "no-repeat",
+                                WebkitMaskPosition: "center",
+                            }}
+                        />
+                    ) : null}
+                </Group>
                 {character.description ? (
                     <Text c="dimmed" ta="center" mb="lg">
                         {character.description}
