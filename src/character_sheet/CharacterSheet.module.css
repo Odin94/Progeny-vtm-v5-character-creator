@@ -1,0 +1,38 @@
+.background {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 0;
+    position: relative;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+}
+
+.container {
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.contentBox {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(7px);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.paper {
+    background-color: transparent;
+}
+

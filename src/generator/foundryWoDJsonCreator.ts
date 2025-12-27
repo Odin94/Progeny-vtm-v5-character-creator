@@ -330,7 +330,6 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
         skills[k] = { value: v as number, bonuses: [] }
     })
 
-    // TODOdin: Double check this
     const specialtySources = [
         ...(character.skillSpecialties || []),
         ...((character.predatorType?.pickedSpecialties as unknown as { skill?: string; name?: string }[]) || []),

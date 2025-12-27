@@ -6,7 +6,7 @@ import Generator from "./generator/Generator"
 import AsideBar from "./sidebar/AsideBar"
 import Sidebar from "./sidebar/Sidebar"
 import Topbar from "./topbar/Topbar"
-// import CharacterSheet from "./character_sheet/CharacterSheet"
+import CharacterSheet from "./character_sheet/CharacterSheet"
 import BrokenSaveModal from "./components/BrokenSaveModal"
 
 import { useViewportSize } from "@mantine/hooks"
@@ -55,14 +55,14 @@ function App() {
         setShowAsideBar(!globals.isSmallScreen)
     }, [globals.isSmallScreen])
 
-    // if (pathname === "/sheet") {
-    //     return (
-    //         <>
-    //             <CharacterSheet character={character} setCharacter={setCharacter} />
-    //             <BrokenSaveModal />
-    //         </>
-    //     )
-    // }
+    if (pathname === "/sheet") {
+        return (
+            <>
+                <CharacterSheet character={character} setCharacter={setCharacter} />
+                <BrokenSaveModal />
+            </>
+        )
+    }
 
     return (
         <>
