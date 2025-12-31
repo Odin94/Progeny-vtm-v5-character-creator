@@ -12,22 +12,35 @@ const __dirname = resolve(__filename, "..")
 const fontPath = resolve(__dirname, "../../public/fonts/Roboto-Regular.ttf")
 const imagePath = resolve(__dirname, "../../src/resources/CheckSolid.png")
 
-const fontBuffer = readFileSync(fontPath)
-const fontBytes = new Uint8Array(fontBuffer)
+let fontBytes: Uint8Array | null = null
+let imageBytes: Uint8Array | null = null
 
-const imageBuffer = readFileSync(imagePath)
-const imageBytes = new Uint8Array(imageBuffer)
+const getFontBytes = () => {
+    if (!fontBytes) {
+        const fontBuffer = readFileSync(fontPath)
+        fontBytes = new Uint8Array(fontBuffer)
+    }
+    return fontBytes
+}
+
+const getImageBytes = () => {
+    if (!imageBytes) {
+        const imageBuffer = readFileSync(imagePath)
+        imageBytes = new Uint8Array(imageBuffer)
+    }
+    return imageBytes
+}
 
 global.fetch = vi.fn((url: string | Request | URL) => {
     if (typeof url === "string") {
         if (url.includes("Roboto-Regular.ttf")) {
             return Promise.resolve({
-                arrayBuffer: () => Promise.resolve(fontBytes.buffer),
+                arrayBuffer: () => Promise.resolve(getFontBytes().buffer),
             } as Response)
         }
         if (url.includes("CheckSolid.png")) {
             return Promise.resolve({
-                arrayBuffer: () => Promise.resolve(imageBytes.buffer),
+                arrayBuffer: () => Promise.resolve(getImageBytes().buffer),
             } as Response)
         }
     }
