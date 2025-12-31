@@ -12,6 +12,7 @@ import proteanLogo from "../resources/Rombo_Disciplines/rombo_Protean.svg"
 import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg"
 import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg"
 import { clanNameSchema, DisciplineName, disciplineNameSchema } from "./NameSchemas"
+import { Character } from "./Character"
 
 export const amalgamPrerequisiteSchema = z.object({
     discipline: disciplineNameSchema,
@@ -902,7 +903,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
                 summary: "find places where ghosts can cross between worlds",
-                dicePool: "Wits + Oblivion",
+                dicePool: "Intelligence + Oblivion",
                 level: 2,
                 discipline: "oblivion",
             },
@@ -1017,4 +1018,13 @@ export const Rituals: Ritual[] = [
 
 export const powerIsRitual = (p: Power | Ritual): p is Ritual => {
     return (p as Ritual)["ingredients"] !== undefined
+}
+
+export const getAvailableDisciplines = (character: Character): Record<DisciplineName, Discipline> => {
+    const availableDisciplines: Record<string, Discipline> = {}
+    for (const n of character.availableDisciplineNames) {
+        availableDisciplines[n] = disciplines[n]
+    }
+
+    return availableDisciplines
 }

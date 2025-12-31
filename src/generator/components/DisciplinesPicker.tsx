@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
-import { Discipline, Power, disciplines } from "../../data/Disciplines"
+import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -12,15 +12,6 @@ type DisciplinesPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
-}
-
-const getAvailableDisciplines = (character: Character): Record<DisciplineName, Discipline> => {
-    const availableDisciplines: Record<string, Discipline> = {}
-    for (const n of character.availableDisciplineNames) {
-        availableDisciplines[n] = disciplines[n]
-    }
-
-    return availableDisciplines
 }
 
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
@@ -91,7 +82,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         setPickedPowers(pickedPowers.filter((p) => !missingPrerequisites(p)))
     }
 
-    const getPowerCards = (powers: Power[], isForPredatorType = false) => {
+    const renderPowerCards = (powers: Power[], isForPredatorType = false) => {
         return powers.map((power) => {
             const isButtonDisabled =
                 isPicked(power) ||
@@ -168,7 +159,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         })
     }
 
-    const getDisciplineAccordionItem = (disciplineName: string, discipline: Discipline, isPredatorType = false) => {
+    const renderDisciplineAccordionItem = (disciplineName: string, discipline: Discipline, isPredatorType = false) => {
         const clanHasPrereqDisciplines = (power: Power) => {
             const prereqDisciplines = power.amalgamPrerequisites.map((prereq) => prereq.discipline)
             for (const disc of prereqDisciplines) {
@@ -196,9 +187,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 <Accordion.Panel>
                     <Stack>
                         <Grid>
-                            <Grid.Col span={colSpan}>{getPowerCards(lvl1Powers, isPredatorType)}</Grid.Col>
-                            <Grid.Col span={colSpan}>{getPowerCards(lvl2Powers, isPredatorType)}</Grid.Col>
-                            {canReachLvl3 ? <Grid.Col span={colSpan}>{getPowerCards(lvl3Powers, isPredatorType)}</Grid.Col> : null}
+                            <Grid.Col span={colSpan}>{renderPowerCards(lvl1Powers, isPredatorType)}</Grid.Col>
+                            <Grid.Col span={colSpan}>{renderPowerCards(lvl2Powers, isPredatorType)}</Grid.Col>
+                            {canReachLvl3 ? <Grid.Col span={colSpan}>{renderPowerCards(lvl3Powers, isPredatorType)}</Grid.Col> : null}
                         </Grid>
                     </Stack>
                 </Accordion.Panel>
@@ -206,7 +197,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         )
     }
 
-    const getPickedPowersSection = () => {
+    const renderPickedPowersSection = () => {
         return (
             <Grid.Col span={smallScreen ? 12 : 2} mt={smallScreen ? "30px" : 0}>
                 <Center style={{ height: "100%" }}>
@@ -301,7 +292,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             <Stack align="center" gap="xl" w={"100%"}>
                 <Grid w={"100%"}>
                     {/* Picked Powers */}
-                    {smallScreen ? null : getPickedPowersSection()}
+                    {smallScreen ? null : renderPickedPowersSection()}
 
                     {/* Discipline-List */}
 
@@ -310,19 +301,19 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             <Center>
                                 <Accordion w={smallScreen ? "100%" : "600px"}>
                                     {Object.entries(disciplinesForClan).map(([name, discipline]) =>
-                                        getDisciplineAccordionItem(name, discipline)
+                                        renderDisciplineAccordionItem(name, discipline)
                                     )}
 
                                     <Text fw={700} mt={"lg"} c={"red"} ta={"center"}>
                                         Predator Type Discipline
                                     </Text>
                                     <hr color="#e03131" />
-                                    {getDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)}
+                                    {renderDisciplineAccordionItem(character.predatorType.pickedDiscipline, predatorTypeDiscipline, true)}
                                 </Accordion>
                             </Center>
 
                             {/* Picked Powers */}
-                            {smallScreen ? getPickedPowersSection() : null}
+                            {smallScreen ? renderPickedPowersSection() : null}
                         </ScrollArea>
                     </Grid.Col>
                 </Grid>
