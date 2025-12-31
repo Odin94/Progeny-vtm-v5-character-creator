@@ -4,6 +4,7 @@ import PipButton from "./PipButton"
 import { SheetOptions } from "../constants"
 import { Character } from "~/data/Character"
 import { getAvailableXP, canAffordUpgrade, getAttributeCost, getSkillCost, getBloodPotencyCost } from "../utils/xp"
+import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 
 type PipsProps = {
     level: number
@@ -55,6 +56,11 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         const { mode, character } = options
         const clickedLevel = index + 1
         const wouldDecrease = clickedLevel <= level
+
+        // Health and willpower are not editable in play or XP mode
+        if ((field === "maxHealth" || field === "willpower") && (mode === "play" || mode === "xp")) {
+            return "Health and Willpower are automatically calculated from attributes"
+        }
 
         if (mode === "play") {
             return "Editing is disabled in Play mode"
@@ -114,14 +120,19 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             } else {
                 update[field as keyof Character] = clampedLevel as never
             }
-            setCharacter({
+            const updatedCharacter = {
                 ...character,
                 ...update,
                 ephemeral: {
                     ...character.ephemeral,
                     experienceSpent: character.ephemeral.experienceSpent + cost,
                 },
-            })
+            }
+            // Update health, willpower, blood potency, and humanity when attributes change
+            if (field.startsWith("attributes.")) {
+                updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+            }
+            setCharacter(updatedCharacter)
             return
         }
 
@@ -137,10 +148,15 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         } else {
             update[field as keyof Character] = clampedLevel as never
         }
-        setCharacter({
+        const updatedCharacter = {
             ...character,
             ...update,
-        })
+        }
+        // Update health, willpower, blood potency, and humanity when attributes change
+        if (field.startsWith("attributes.")) {
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+        }
+        setCharacter(updatedCharacter)
     }
 
     return (

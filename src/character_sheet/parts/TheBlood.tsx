@@ -1,4 +1,4 @@
-import { Badge, Box, Divider, Grid, Group, Paper, Stack, Text, Title } from "@mantine/core"
+import { Badge, Box, Divider, Grid, Group, NumberInput, Paper, Stack, Text, Title, useMantineTheme } from "@mantine/core"
 import { clans } from "~/data/Clans"
 import { potencyEffects } from "~/data/BloodPotency"
 import Pips from "~/character_sheet/components/Pips"
@@ -9,10 +9,15 @@ type TheBloodProps = {
 }
 
 const TheBlood = ({ options }: TheBloodProps) => {
-    const { character, primaryColor } = options
+    const { character, primaryColor, mode, setCharacter } = options
+    const theme = useMantineTheme()
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const effects = potencyEffects[Math.min(character.bloodPotency, 5)] || potencyEffects[0]
     const clan = clans[character.clan] || clans[""]
     const baneText = clan.bane ? clan.bane.replace(/BANE_SEVERITY/g, `${effects.bane} (bane severity)`) : ""
+
+    const isExperienceEditable = mode === "xp" || mode === "free"
+    const isExperienceSpentEditable = mode === "free"
 
     return (
         <Paper p="lg" withBorder>
@@ -60,14 +65,78 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                     </Badge>
                                 </Group>
                             </Group>
-                            <Text size="sm" fw={600}>
-                                <Text span c="white">
+                            <Group gap="xs" align="center">
+                                <Text size="sm" fw={600} c="white">
                                     XP:{" "}
                                 </Text>
-                                <Text span size="lg" c={primaryColor} fw={700}>
-                                    {character.ephemeral.experienceSpent} / {character.experience}
-                                </Text>
-                            </Text>
+                                {isExperienceSpentEditable ? (
+                                    <>
+                                        <NumberInput
+                                            value={character.ephemeral.experienceSpent}
+                                            onChange={(value) => {
+                                                const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
+                                                setCharacter({
+                                                    ...character,
+                                                    ephemeral: {
+                                                        ...character.ephemeral,
+                                                        experienceSpent: Math.max(0, numValue),
+                                                    },
+                                                })
+                                            }}
+                                            min={0}
+                                            size="sm"
+                                            style={{ width: "80px" }}
+                                            styles={{
+                                                input: {
+                                                    fontSize: "1.125rem",
+                                                    fontWeight: 700,
+                                                    color: colorValue,
+                                                    textAlign: "center",
+                                                },
+                                            }}
+                                        />
+                                        <Text size="lg" c={primaryColor} fw={700}>
+                                            /
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text span size="lg" c={primaryColor} fw={700}>
+                                            {character.ephemeral.experienceSpent}
+                                        </Text>
+                                        <Text span size="lg" c={primaryColor} fw={700}>
+                                            {" / "}
+                                        </Text>
+                                    </>
+                                )}
+                                {isExperienceEditable ? (
+                                    <NumberInput
+                                        value={character.experience}
+                                        onChange={(value) => {
+                                            const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
+                                            setCharacter({
+                                                ...character,
+                                                experience: Math.max(0, numValue),
+                                            })
+                                        }}
+                                        min={0}
+                                        size="sm"
+                                        style={{ width: "80px" }}
+                                        styles={{
+                                            input: {
+                                                fontSize: "1.125rem",
+                                                fontWeight: 700,
+                                                color: `var(--mantine-color-${primaryColor}-6)`,
+                                                textAlign: "center",
+                                            },
+                                        }}
+                                    />
+                                ) : (
+                                    <Text span size="lg" c={primaryColor} fw={700}>
+                                        {character.experience}
+                                    </Text>
+                                )}
+                            </Group>
                         </Stack>
                     </Paper>
                 </Grid.Col>
