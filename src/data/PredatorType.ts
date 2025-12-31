@@ -420,14 +420,14 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "celerity" }, { name: "protean" }],
-        meritsAndFlaws: [],
+        meritsAndFlaws: [{ name: "Prey Exclusion", level: 2, summary: "Can't feed on mortals" }],
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Diablerist", summary: "Somebody knows you drink from Kindred", maxLevel: 3, type: "merit" },
-                    { name: "Shunned", summary: "Despised by a faction", maxLevel: 3, type: "flaw" },
+                    { name: "Diablerist", summary: "Somebody knows you drink from Kindred", maxLevel: 2, type: "merit" },
+                    { name: "Shunned", summary: "Despised by a faction", maxLevel: 2, type: "flaw" },
                 ],
-                totalPoints: 3,
+                totalPoints: 2,
             },
         ],
         humanityChange: -1,
