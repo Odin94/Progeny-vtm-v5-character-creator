@@ -1,5 +1,5 @@
 import { Box, Grid, Group, Text, Title, Badge, Stack } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { useRef, useEffect, useState } from "react"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
@@ -14,7 +14,6 @@ const Skills = ({ options }: SkillsProps) => {
     const textStyle = {
         fontFamily: "Courier New",
     }
-    const isMobile = useMediaQuery("(max-width: 768px)")
 
     const specialtiesBySkill = new Map<string, string[]>()
     character.skillSpecialties
@@ -26,11 +25,75 @@ const Skills = ({ options }: SkillsProps) => {
             specialtiesBySkill.get(specialty.skill)!.push(specialty.name)
         })
 
-    const renderSkillRow = (skill: SkillsKey) => {
+    const SkillRow = ({ skill }: { skill: SkillsKey }) => {
         const specialties = specialtiesBySkill.get(skill) || []
+        const containerRef = useRef<HTMLDivElement>(null)
+        const testContentRef = useRef<HTMLDivElement>(null)
+        // TODOdin: Can we get this flow without fancy useState and fake-renders?
+        // Maybe we just add some space under each skill and always render there?
+        const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
+
+        useEffect(() => {
+            const checkOverflow = () => {
+                if (!containerRef.current || !testContentRef.current || specialties.length === 0) {
+                    setShowSpecialtiesBelow(false)
+                    return
+                }
+
+                // Use requestAnimationFrame to ensure DOM is fully rendered
+                requestAnimationFrame(() => {
+                    if (!containerRef.current || !testContentRef.current) return
+
+                    const containerWidth = containerRef.current.offsetWidth
+                    const testContentWidth = testContentRef.current.scrollWidth
+
+                    // Get the pips width (they're always rendered)
+                    const pipsElement = containerRef.current.querySelector('[class*="Group"]:last-child')
+                    const pipsWidth = pipsElement ? (pipsElement as HTMLElement).offsetWidth : 200
+
+                    // Available width is container minus pips minus some margin
+                    const availableWidth = containerWidth - pipsWidth - 20
+
+                    // Only show below if content would overflow
+                    setShowSpecialtiesBelow(testContentWidth > availableWidth)
+                })
+            }
+
+            // Initial check with delays to ensure DOM is ready
+            const timeoutId1 = setTimeout(checkOverflow, 10)
+            const timeoutId2 = setTimeout(checkOverflow, 100)
+            window.addEventListener("resize", checkOverflow)
+
+            return () => {
+                clearTimeout(timeoutId1)
+                clearTimeout(timeoutId2)
+                window.removeEventListener("resize", checkOverflow)
+            }
+        }, [specialties.length, skill, character.skills[skill]])
+
         return (
-            <Group key={skill} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
-                {isMobile ? (
+            <Group ref={containerRef} key={skill} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
+                {/* Hidden test element to measure width */}
+                <Group
+                    ref={testContentRef}
+                    gap="xs"
+                    wrap="nowrap"
+                    style={{
+                        position: "absolute",
+                        visibility: "hidden",
+                        whiteSpace: "nowrap",
+                        pointerEvents: "none",
+                    }}
+                >
+                    <Text style={textStyle}>{upcase(skill)}</Text>
+                    {specialties.map((specialtyName, index) => (
+                        <Badge key={`test-${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
+                            {specialtyName}
+                        </Badge>
+                    ))}
+                </Group>
+
+                {showSpecialtiesBelow ? (
                     <Stack gap="xs" style={{ flex: 1 }}>
                         <Text style={textStyle}>{upcase(skill)}</Text>
                         {specialties.length > 0 ? (
@@ -44,7 +107,7 @@ const Skills = ({ options }: SkillsProps) => {
                         ) : null}
                     </Stack>
                 ) : (
-                    <Group gap="xs" wrap="nowrap">
+                    <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
                         <Text style={textStyle}>{upcase(skill)}</Text>
                         {specialties.map((specialtyName, index) => (
                             <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
@@ -56,6 +119,10 @@ const Skills = ({ options }: SkillsProps) => {
                 <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
             </Group>
         )
+    }
+
+    const renderSkillRow = (skill: SkillsKey) => {
+        return <SkillRow key={skill} skill={skill} />
     }
 
     return (
