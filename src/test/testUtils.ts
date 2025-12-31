@@ -2,9 +2,13 @@ import { Character } from "~/data/Character"
 
 export const getBasicTestCharacter = (): Character => {
     return {
+        id: "",
         name: "Test Vampire",
         description: "A test vampire character",
         sire: "Test Sire",
+        player: "",
+        chronicle: "",
+        sect: "",
         clan: "Brujah",
         predatorType: {
             name: "Sandman",
@@ -128,5 +132,16 @@ export const getBasicTestCharacter = (): Character => {
                 type: "flaw",
             },
         ],
+        notes: "",
+        ephemeral: {
+            hunger: 0,
+            superficialDamage: 0,
+            aggravatedDamage: 0,
+            superficialWillpowerDamage: 0,
+            aggravatedWillpowerDamage: 0,
+            humanityStains: 0,
+            experienceSpent: 0,
+        },
+        version: 1,
     }
 }

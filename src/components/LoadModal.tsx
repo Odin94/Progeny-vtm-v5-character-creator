@@ -33,6 +33,10 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
         parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
     }
     if (!parsed["notes"]) parsed["notes"] = ""
+    if (!parsed["id"]) parsed["id"] = ""
+    if (!parsed["player"]) parsed["player"] = ""
+    if (!parsed["chronicle"]) parsed["chronicle"] = ""
+    if (!parsed["sect"]) parsed["sect"] = ""
     if (!parsed["ephemeral"]) {
         // backwards compatibility for characters that were saved before ephemeral was added
         parsed["ephemeral"] = {

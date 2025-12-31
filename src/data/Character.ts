@@ -1,9 +1,9 @@
 import { z } from "zod"
-import { Power, powerSchema, ritualSchema } from "./Disciplines"
-import { specialtySchema } from "./Specialties"
-import { skillsSchema } from "./Skills"
 import { attributesSchema } from "./Attributes"
+import { Power, powerSchema, ritualSchema } from "./Disciplines"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas"
+import { skillsSchema } from "./Skills"
+import { specialtySchema } from "./Specialties"
 
 export const meritFlawSchema = z.object({
     name: z.string(),
@@ -20,11 +20,15 @@ export const touchstoneSchema = z.object({
 })
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 1
+export const schemaVersion = 2
 export const characterSchema = z.object({
+    id: z.string().optional().default(""),
     name: z.string(),
     description: z.string(),
     sire: z.string(),
+    player: z.string().optional().default(""),
+    chronicle: z.string().optional().default(""),
+    sect: z.string().optional().default(""),
 
     clan: clanNameSchema,
     // clanDisciplines:
@@ -73,9 +77,13 @@ export type Character = z.infer<typeof characterSchema>
 
 export const getEmptyCharacter = (): Character => {
     return {
+        id: "",
         name: "",
         description: "",
         sire: "",
+        player: "",
+        chronicle: "",
+        sect: "",
 
         clan: "",
         predatorType: { name: "", pickedDiscipline: "", pickedSpecialties: [], pickedMeritsAndFlaws: [] },

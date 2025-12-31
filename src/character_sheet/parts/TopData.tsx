@@ -53,16 +53,6 @@ const TopData = ({ character, primaryColor }: TopDataProps) => {
                             {clan ? (
                                 <Group gap="xs">
                                     <Text>{clan.name}</Text>
-                                    {clan.logo ? (
-                                        <img
-                                            src={clan.logo}
-                                            alt={clan.name}
-                                            style={{
-                                                width: "24px",
-                                                height: "24px",
-                                            }}
-                                        />
-                                    ) : null}
                                 </Group>
                             ) : (
                                 <Text c="dimmed">—</Text>
@@ -89,7 +79,7 @@ const TopData = ({ character, primaryColor }: TopDataProps) => {
                             <Text>{character.desire || "—"}</Text>
                         </Group>
                         <Group gap="xs">
-                            <Text fw={700}>Predator Type:</Text>
+                            <Text fw={700}>Player:</Text>
                             <Text>{character.predatorType.name || "—"}</Text>
                         </Group>
                     </Stack>
