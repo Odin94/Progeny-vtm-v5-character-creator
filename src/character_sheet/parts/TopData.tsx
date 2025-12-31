@@ -1,38 +1,10 @@
 import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput, useMantineTheme } from "@mantine/core"
-import { ReactNode } from "react"
 import { clans } from "~/data/Clans"
 import { SheetOptions } from "../constants"
+import FocusBorderWrapper from "../components/FocusBorderWrapper"
 
 type TopDataProps = {
     options: SheetOptions
-}
-
-type FocusBorderWrapperProps = {
-    children: ReactNode
-    colorValue: string
-    style?: React.CSSProperties
-}
-
-const FocusBorderWrapper = ({ children, colorValue, style }: FocusBorderWrapperProps) => {
-    return (
-        <Box
-            style={style}
-            onFocusCapture={(e) => {
-                const input = e.currentTarget.querySelector("input, textarea") as HTMLElement | null
-                if (input) {
-                    input.style.setProperty("--input-bd", colorValue)
-                }
-            }}
-            onBlurCapture={(e) => {
-                const input = e.currentTarget.querySelector("input, textarea") as HTMLElement | null
-                if (input) {
-                    input.style.setProperty("--input-bd", "transparent")
-                }
-            }}
-        >
-            {children}
-        </Box>
-    )
 }
 
 const TopData = ({ options }: TopDataProps) => {

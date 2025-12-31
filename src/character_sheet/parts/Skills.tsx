@@ -1,29 +1,95 @@
-import { Box, Grid, Group, Text, Title, Badge, Stack } from "@mantine/core"
+import { Box, Grid, Group, Text, Title, Badge, Stack, TextInput, Tooltip, useMantineTheme } from "@mantine/core"
 import { useRef, useEffect, useState } from "react"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
+import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import { SheetOptions } from "../constants"
+import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
 
 type SkillsProps = {
     options: SheetOptions
 }
 
+// TODOdin: Refund XP when a newly created specialty is removed
 const Skills = ({ options }: SkillsProps) => {
-    const { character, primaryColor } = options
+    const { character, primaryColor, mode, setCharacter } = options
+    const theme = useMantineTheme()
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const textStyle = {
         fontFamily: "Courier New",
     }
+    const isEditable = mode === "xp" || mode === "free"
 
-    const specialtiesBySkill = new Map<string, string[]>()
-    character.skillSpecialties
-        .filter((specialty) => specialty.name !== "")
-        .forEach((specialty) => {
-            if (!specialtiesBySkill.has(specialty.skill)) {
-                specialtiesBySkill.set(specialty.skill, [])
+    // Map skill to array of specialty objects (not just names) for editing
+    const specialtiesBySkill = new Map<string, typeof character.skillSpecialties>()
+    character.skillSpecialties.forEach((specialty) => {
+        if (!specialtiesBySkill.has(specialty.skill)) {
+            specialtiesBySkill.set(specialty.skill, [])
+        }
+        specialtiesBySkill.get(specialty.skill)!.push(specialty)
+    })
+
+    const addSpecialty = (skill: SkillsKey) => {
+        if (mode === "xp") {
+            const cost = getSpecialtyCost()
+            const availableXP = getAvailableXP(character)
+            if (!canAffordUpgrade(availableXP, cost)) {
+                return
             }
-            specialtiesBySkill.get(specialty.skill)!.push(specialty.name)
-        })
+            setCharacter({
+                ...character,
+                skillSpecialties: [...character.skillSpecialties, { skill, name: "" }],
+                ephemeral: {
+                    ...character.ephemeral,
+                    experienceSpent: character.ephemeral.experienceSpent + cost,
+                },
+            })
+        } else {
+            setCharacter({
+                ...character,
+                skillSpecialties: [...character.skillSpecialties, { skill, name: "" }],
+            })
+        }
+    }
+
+    const getAddSpecialtyDisabledReason = (): string | undefined => {
+        if (mode !== "xp") return undefined
+        const cost = getSpecialtyCost()
+        const availableXP = getAvailableXP(character)
+        if (!canAffordUpgrade(availableXP, cost)) {
+            return `Insufficient XP. Need ${cost}, have ${availableXP}`
+        }
+        return undefined
+    }
+
+    const updateSpecialty = (skill: SkillsKey, index: number, newName: string) => {
+        const skillSpecialties = [...character.skillSpecialties]
+        const skillSpecialtiesForThisSkill = skillSpecialties.filter((s) => s.skill === skill)
+        const specialtyToUpdate = skillSpecialtiesForThisSkill[index]
+        if (specialtyToUpdate) {
+            const globalIndex = skillSpecialties.indexOf(specialtyToUpdate)
+            if (globalIndex !== -1) {
+                skillSpecialties[globalIndex] = { skill, name: newName }
+                setCharacter({
+                    ...character,
+                    skillSpecialties,
+                })
+            }
+        }
+    }
+
+    const removeSpecialty = (skill: SkillsKey, index: number) => {
+        const skillSpecialtiesForThisSkill = character.skillSpecialties.filter((s) => s.skill === skill)
+        const specialtyToRemove = skillSpecialtiesForThisSkill[index]
+        if (specialtyToRemove) {
+            const skillSpecialties = character.skillSpecialties.filter((s) => s !== specialtyToRemove)
+            setCharacter({
+                ...character,
+                skillSpecialties,
+            })
+        }
+    }
 
     const SkillRow = ({ skill }: { skill: SkillsKey }) => {
         const specialties = specialtiesBySkill.get(skill) || []
@@ -32,6 +98,8 @@ const Skills = ({ options }: SkillsProps) => {
         // TODOdin: Can we get this flow without fancy useState and fake-renders?
         // Maybe we just add some space under each skill and always render there?
         const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
+        const [editingSpecialty, setEditingSpecialty] = useState<{ skill: SkillsKey; index: number } | null>(null)
+        const [editingValue, setEditingValue] = useState<string>("")
 
         useEffect(() => {
             const checkOverflow = () => {
@@ -71,6 +139,33 @@ const Skills = ({ options }: SkillsProps) => {
             }
         }, [specialties.length, skill, character.skills[skill]])
 
+        const renderAddSpecialtyBadge = () => {
+            const disabledReason = getAddSpecialtyDisabledReason()
+            const cost = mode === "xp" ? getSpecialtyCost() : undefined
+            const tooltipLabel = disabledReason || (cost !== undefined ? `${cost} XP` : undefined)
+            const badge = (
+                <Badge
+                    variant="light"
+                    size="sm"
+                    color={primaryColor}
+                    style={{
+                        cursor: disabledReason ? "default" : "pointer",
+                        opacity: disabledReason ? 0.6 : 1,
+                    }}
+                    onClick={disabledReason ? undefined : () => addSpecialty(skill)}
+                >
+                    +
+                </Badge>
+            )
+            return tooltipLabel ? (
+                <Tooltip label={tooltipLabel} withArrow>
+                    <span style={{ display: "inline-block" }}>{badge}</span>
+                </Tooltip>
+            ) : (
+                badge
+            )
+        }
+
         return (
             <Group ref={containerRef} key={skill} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
                 {/* Hidden test element to measure width */}
@@ -86,34 +181,136 @@ const Skills = ({ options }: SkillsProps) => {
                     }}
                 >
                     <Text style={textStyle}>{upcase(skill)}</Text>
-                    {specialties.map((specialtyName, index) => (
-                        <Badge key={`test-${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
-                            {specialtyName}
+                    {specialties.map((specialty, index) => (
+                        <Badge key={`test-${skill}-${specialty.name}-${index}`} variant="light" size="sm" color={primaryColor}>
+                            {specialty.name || "New Specialty"}
                         </Badge>
                     ))}
                 </Group>
 
                 {showSpecialtiesBelow ? (
                     <Stack gap="xs" style={{ flex: 1 }}>
-                        <Text style={textStyle}>{upcase(skill)}</Text>
+                        <Group gap="xs" wrap="nowrap">
+                            <Text style={textStyle}>{upcase(skill)}</Text>
+                            {isEditable && renderAddSpecialtyBadge()}
+                        </Group>
                         {specialties.length > 0 ? (
                             <Group gap="xs" wrap="wrap">
-                                {specialties.map((specialtyName, index) => (
-                                    <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
-                                        {specialtyName}
-                                    </Badge>
-                                ))}
+                                {specialties.map((specialty, index) => {
+                                    const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
+                                    return isEditing ? (
+                                        <FocusBorderWrapper
+                                            key={`${skill}-${index}-edit`}
+                                            colorValue={colorValue}
+                                            style={{ width: "100px" }}
+                                        >
+                                            <TextInput
+                                                value={editingValue}
+                                                onChange={(e) => setEditingValue(e.target.value)}
+                                                onBlur={() => {
+                                                    if (editingValue.trim() === "") {
+                                                        removeSpecialty(skill, index)
+                                                    } else {
+                                                        updateSpecialty(skill, index, editingValue)
+                                                    }
+                                                    setEditingSpecialty(null)
+                                                    setEditingValue("")
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        if (editingValue.trim() === "") {
+                                                            removeSpecialty(skill, index)
+                                                        } else {
+                                                            updateSpecialty(skill, index, editingValue)
+                                                        }
+                                                        setEditingSpecialty(null)
+                                                        setEditingValue("")
+                                                    }
+                                                }}
+                                                size="xs"
+                                                autoFocus
+                                                style={{ width: "100%" }}
+                                            />
+                                        </FocusBorderWrapper>
+                                    ) : (
+                                        <Badge
+                                            key={`${skill}-${specialty.name}-${index}`}
+                                            variant="light"
+                                            size="sm"
+                                            color={primaryColor}
+                                            style={isEditable ? { cursor: "pointer" } : undefined}
+                                            onClick={
+                                                isEditable
+                                                    ? () => {
+                                                          setEditingSpecialty({ skill, index })
+                                                          setEditingValue(specialty.name)
+                                                      }
+                                                    : undefined
+                                            }
+                                        >
+                                            {specialty.name || "New Specialty"}
+                                        </Badge>
+                                    )
+                                })}
                             </Group>
                         ) : null}
                     </Stack>
                 ) : (
                     <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
                         <Text style={textStyle}>{upcase(skill)}</Text>
-                        {specialties.map((specialtyName, index) => (
-                            <Badge key={`${skill}-${specialtyName}-${index}`} variant="light" size="sm" color={primaryColor}>
-                                {specialtyName}
-                            </Badge>
-                        ))}
+                        {specialties.map((specialty, index) => {
+                            const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
+                            return isEditing ? (
+                                <FocusBorderWrapper key={`${skill}-${index}-edit`} colorValue={colorValue} style={{ width: "100px" }}>
+                                    <TextInput
+                                        value={editingValue}
+                                        onChange={(e) => setEditingValue(e.target.value)}
+                                        onBlur={() => {
+                                            if (editingValue.trim() === "") {
+                                                removeSpecialty(skill, index)
+                                            } else {
+                                                updateSpecialty(skill, index, editingValue)
+                                            }
+                                            setEditingSpecialty(null)
+                                            setEditingValue("")
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                if (editingValue.trim() === "") {
+                                                    removeSpecialty(skill, index)
+                                                } else {
+                                                    updateSpecialty(skill, index, editingValue)
+                                                }
+                                                setEditingSpecialty(null)
+                                                setEditingValue("")
+                                            }
+                                        }}
+                                        size="xs"
+                                        autoFocus
+                                        style={{ width: "100%" }}
+                                    />
+                                </FocusBorderWrapper>
+                            ) : (
+                                <Badge
+                                    key={`${skill}-${specialty.name}-${index}`}
+                                    variant="light"
+                                    size="sm"
+                                    color={primaryColor}
+                                    style={isEditable ? { cursor: "pointer" } : undefined}
+                                    onClick={
+                                        isEditable
+                                            ? () => {
+                                                  setEditingSpecialty({ skill, index })
+                                                  setEditingValue(specialty.name)
+                                              }
+                                            : undefined
+                                    }
+                                >
+                                    {specialty.name || "New Specialty"}
+                                </Badge>
+                            )
+                        })}
+                        {isEditable && renderAddSpecialtyBadge()}
                     </Group>
                 )}
                 <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
