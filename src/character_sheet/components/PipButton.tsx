@@ -12,6 +12,7 @@ type PipButtonProps = {
     isFilling?: boolean
     options?: SheetOptions
     disabledReason?: string
+    xpCost?: number
 }
 
 const PipButton = ({
@@ -23,6 +24,7 @@ const PipButton = ({
     isFilling: isFillingProp = false,
     options,
     disabledReason,
+    xpCost,
 }: PipButtonProps) => {
     const theme = useMantineTheme()
     const color = options?.primaryColor || "grape"
@@ -118,9 +120,11 @@ const PipButton = ({
 
     const button = actionIcon
 
-    if (disabledReason) {
+    const tooltipLabel = disabledReason || (xpCost !== undefined ? `${xpCost} XP` : undefined)
+
+    if (tooltipLabel) {
         return (
-            <Tooltip label={disabledReason} withArrow>
+            <Tooltip label={tooltipLabel} withArrow>
                 {button}
             </Tooltip>
         )

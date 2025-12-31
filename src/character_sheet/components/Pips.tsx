@@ -50,6 +50,32 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         return null
     }
 
+    const getXPCost = (index: number): number | undefined => {
+        if (!options || !field || options.mode !== "xp") return undefined
+
+        const clickedLevel = index + 1
+        const wouldDecrease = clickedLevel <= level
+
+        // Health and willpower are not editable in XP mode
+        if (field === "maxHealth" || field === "willpower") {
+            return undefined
+        }
+
+        if (wouldDecrease) {
+            return undefined
+        }
+
+        const newLevel = clickedLevel
+        const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
+        const currentLevel = level
+        if (clampedLevel !== currentLevel + 1) {
+            return undefined
+        }
+
+        const costFunction = getCostFunction()
+        return costFunction ? costFunction(clampedLevel) : 0
+    }
+
     const getDisabledReason = (index: number): string | undefined => {
         if (!options || !field) return "No options or field provided"
 
@@ -172,6 +198,7 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                     style={(index + 1) % 5 === 0 && index < maxLevel - 1 ? { marginRight: 8 } : undefined}
                     options={options}
                     disabledReason={getDisabledReason(index)}
+                    xpCost={getXPCost(index)}
                 />
             ))}
         </Group>
