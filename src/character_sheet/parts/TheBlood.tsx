@@ -42,22 +42,39 @@ const TheBlood = ({ character, setCharacter, primaryColor }: TheBloodProps) => {
                 <Grid.Col span={{ base: 12, md: 6 }}>
                     <Paper p="sm" withBorder style={{ height: "100%" }}>
                         <Stack gap="xs">
-                            <Group justify="space-between" align="center">
-                                <Text fw={600} size="sm">
-                                    Blood Surge
-                                </Text>
-                                <Badge size="lg" variant="light" color={primaryColor} circle>
-                                    {effects.surge}
-                                </Badge>
+                            <Group gap="md" align="center">
+                                <Group gap="xs" align="center">
+                                    <Text fw={600} size="sm">
+                                        Blood Surge
+                                    </Text>
+                                    <Badge size="lg" variant="light" color={primaryColor} circle>
+                                        {effects.surge}
+                                    </Badge>
+                                </Group>
+                                <Box
+                                    style={{
+                                        width: "1px",
+                                        height: "1.5rem",
+                                        backgroundColor: "var(--mantine-color-gray-3)",
+                                    }}
+                                />
+                                <Group gap="xs" align="center">
+                                    <Text fw={600} size="sm">
+                                        Bane Severity
+                                    </Text>
+                                    <Badge size="lg" variant="light" color={primaryColor} circle>
+                                        {effects.bane}
+                                    </Badge>
+                                </Group>
                             </Group>
-                            <Group justify="space-between" align="center">
-                                <Text fw={600} size="sm">
-                                    Bane Severity
+                            <Text size="sm" fw={600}>
+                                <Text span c="white">
+                                    XP:{" "}
                                 </Text>
-                                <Badge size="lg" variant="light" color={primaryColor} circle>
-                                    {effects.bane}
-                                </Badge>
-                            </Group>
+                                <Text span size="lg" c={primaryColor} fw={700}>
+                                    {character.ephemeral.experienceSpent} / {character.experience}
+                                </Text>
+                            </Text>
                         </Stack>
                     </Paper>
                 </Grid.Col>
@@ -65,9 +82,6 @@ const TheBlood = ({ character, setCharacter, primaryColor }: TheBloodProps) => {
                 <Grid.Col span={{ base: 12, md: 6 }}>
                     <Paper p="sm" withBorder style={{ height: "100%" }}>
                         <Stack gap="xs">
-                            <Text fw={600} size="sm" c="dimmed" mb="xs">
-                                Discipline Effects
-                            </Text>
                             <Text size="sm">
                                 <Text span fw={600}>
                                     Power Bonus:
@@ -119,14 +133,16 @@ const TheBlood = ({ character, setCharacter, primaryColor }: TheBloodProps) => {
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Clan Traits
                             </Text>
+                            <Group gap="xs" align="center" wrap="nowrap">
+                                <Text size="sm">
+                                    <Text span fw={600} c={primaryColor}>
+                                        Clan Bane:
+                                    </Text>{" "}
+                                    {baneText}
+                                </Text>
+                            </Group>
                             <Text size="sm">
-                                <Text span fw={600}>
-                                    Clan Bane:
-                                </Text>{" "}
-                                {baneText}
-                            </Text>
-                            <Text size="sm">
-                                <Text span fw={600}>
+                                <Text span fw={600} c={primaryColor}>
                                     Clan Compulsion:
                                 </Text>{" "}
                                 {clan.compulsion}
