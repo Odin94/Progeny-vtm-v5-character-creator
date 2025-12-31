@@ -203,7 +203,7 @@ type WoD5EVtt_SkillsKey =
     | "subterfuge"
     | "technology"
 
-export const skillNameTo_WoD5EVtt_Key: Record<SkillsKey, WoD5EVtt_SkillsKey | undefined> = {
+export const skillNameTo_WoD5EVtt_Key: Record<SkillsKey, WoD5EVtt_SkillsKey> = {
     athletics: "athletics",
     "animal ken": "animalken",
     academics: "academics",
@@ -325,26 +325,31 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
         disciplineValues[key].value = Math.max(disciplineValues[key].value, disc.level)
     }
 
-    const skills: Record<string, { value: number; bonuses: Record<string, unknown>[] }> = {}
-    Object.entries(character.skills).forEach(([k, v]) => {
-        skills[k] = { value: v as number, bonuses: [] }
-    })
+    const skills = Object.entries(character.skills).reduce(
+        (acc, [k, value]) => {
+            const foundrySkillKey = skillNameTo_WoD5EVtt_Key[k as SkillsKey]
+            acc[foundrySkillKey] = { value, bonuses: [] }
+
+            return acc
+        },
+        {} as Record<WoD5EVtt_SkillsKey, { value: number; bonuses: Record<string, unknown>[] }>
+    )
 
     const specialtySources = [
         ...(character.skillSpecialties || []),
         ...((character.predatorType?.pickedSpecialties as unknown as { skill?: string; name?: string }[]) || []),
     ]
     for (const spec of specialtySources) {
-        const skillKey = spec && spec.skill ? String(spec.skill) : ""
-        if (!skillKey || !skills[skillKey]) continue
-        const modifiedSpecialty = {
+        const foundrySkillKey = skillNameTo_WoD5EVtt_Key[spec.skill as SkillsKey]
+
+        const foundrySpecialty = {
             source: `${spec.name ?? ""}`,
             value: 1,
-            paths: [`skills.${skillKey}`],
+            paths: [`skills.${foundrySkillKey}`],
             displayWhenInactive: true,
             activeWhen: { check: "never" },
         }
-        skills[skillKey].bonuses.push(modifiedSpecialty)
+        skills[foundrySkillKey].bonuses.push(foundrySpecialty)
     }
 
     const items: Record<string, unknown>[] = []
@@ -477,7 +482,7 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 chronicle: "",
                 ambition: character.ambition ?? "",
                 desire: character.desire ?? "",
-                touchstones: character.touchstones.map((t) => t.name).join(", "),
+                touchstones: character.touchstones.map((t) => `${t.name} (${t.conviction})`).join(", "),
                 tenets: "",
                 sire: character.sire ?? "",
                 generation: String(character.generation ?? ""),

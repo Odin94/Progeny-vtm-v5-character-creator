@@ -29,7 +29,7 @@ describe("createWoD5EVttJson", () => {
         expect(json.system.headers.concept).toBe("A test vampire character")
         expect(json.system.headers.ambition).toBe("Test ambition")
         expect(json.system.headers.desire).toBe("Test desire")
-        expect(json.system.headers.touchstones).toBe("Test Touchstone")
+        expect(json.system.headers.touchstones).toBe("Test Touchstone (Test conviction)")
         expect(json.system.headers.sire).toBe("Test Sire")
         expect(json.system.headers.generation).toBe("13")
 
@@ -50,6 +50,7 @@ describe("createWoD5EVttJson", () => {
         expect(json.system.skills.intimidation.value).toBe(2)
         expect(json.system.skills.streetwise.value).toBe(2)
         expect(json.system.skills.medicine.value).toBe(0)
+        expect(json.system.skills.animalken.value).toBe(1)
 
         // Test skill specialties
         expect(json.system.skills.intimidation.bonuses).toHaveLength(1)

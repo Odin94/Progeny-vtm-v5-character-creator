@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { Character } from "~/data/Character"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet, testTemplate } from "~/generator/pdfCreator"
-import { Character } from "~/data/Character"
+import { getBasicTestCharacter } from "./testUtils"
 
 // Mock the notifications module
 vi.mock("@mantine/notifications", () => ({
@@ -61,94 +62,9 @@ describe("Download Conversion Logic", () => {
     let mockCharacter: Character
 
     beforeEach(() => {
-        // Reset all mocks
         vi.clearAllMocks()
 
-        // Create a mock character for testing
-        mockCharacter = {
-            name: "Test Vampire",
-            description: "A test vampire character",
-            sire: "Test Sire",
-            clan: "Brujah",
-            predatorType: {
-                name: "Alleycat",
-                pickedDiscipline: "potence",
-                pickedSpecialties: [],
-                pickedMeritsAndFlaws: [],
-            },
-            touchstones: [
-                {
-                    name: "Test Touchstone",
-                    description: "A test touchstone",
-                    conviction: "Test conviction",
-                },
-            ],
-            ambition: "Test ambition",
-            desire: "Test desire",
-            attributes: {
-                strength: 3,
-                dexterity: 2,
-                stamina: 2,
-                charisma: 2,
-                manipulation: 1,
-                composure: 2,
-                intelligence: 2,
-                wits: 2,
-                resolve: 2,
-            },
-            skills: {
-                athletics: 2,
-                brawl: 1,
-                craft: 0,
-                drive: 1,
-                firearms: 0,
-                melee: 1,
-                larceny: 0,
-                stealth: 1,
-                survival: 0,
-                "animal ken": 0,
-                etiquette: 0,
-                insight: 1,
-                intimidation: 2,
-                leadership: 0,
-                performance: 0,
-                persuasion: 1,
-                streetwise: 2,
-                subterfuge: 0,
-                academics: 1,
-                awareness: 2,
-                finance: 0,
-                investigation: 1,
-                medicine: 0,
-                occult: 0,
-                politics: 0,
-                science: 0,
-                technology: 1,
-            },
-            skillSpecialties: [],
-            availableDisciplineNames: ["potence"],
-            disciplines: [
-                {
-                    name: "Prowess",
-                    discipline: "potence",
-                    level: 1,
-                    summary: "Test prowess power",
-                    description: "A test prowess power description",
-                    dicePool: "Strength + Brawl",
-                    rouseChecks: 0,
-                    amalgamPrerequisites: [],
-                },
-            ],
-            rituals: [],
-            bloodPotency: 1,
-            generation: 12,
-            maxHealth: 5,
-            willpower: 5,
-            experience: 0,
-            humanity: 7,
-            merits: [],
-            flaws: [],
-        }
+        mockCharacter = getBasicTestCharacter()
     })
 
     afterEach(() => {
@@ -177,9 +93,9 @@ describe("Download Conversion Logic", () => {
             expect(json.system.headers.concept).toBe("A test vampire character")
             expect(json.system.headers.ambition).toBe("Test ambition")
             expect(json.system.headers.desire).toBe("Test desire")
-            expect(json.system.headers.touchstones).toBe("Test Touchstone")
+            expect(json.system.headers.touchstones).toBe("Test Touchstone (Test conviction)")
             expect(json.system.headers.sire).toBe("Test Sire")
-            expect(json.system.headers.generation).toBe("12")
+            expect(json.system.headers.generation).toBe("13")
 
             // Test attributes
             expect(json.system.attributes.strength.value).toBe(3)
@@ -204,7 +120,7 @@ describe("Download Conversion Logic", () => {
 
             const predatorItem = json.items.find((item: any) => item.type === "predatorType")
             expect(predatorItem).toBeDefined()
-            expect(predatorItem?.name).toBe("Alleycat")
+            expect(predatorItem?.name).toBe("Sandman")
 
             const powerItem = json.items.find((item: any) => item.type === "power")
             expect(powerItem).toBeDefined()

@@ -51,7 +51,7 @@ export const getBasicTestCharacter = (): Character => {
             larceny: 0,
             stealth: 1,
             survival: 0,
-            "animal ken": 0,
+            "animal ken": 1,
             etiquette: 0,
             insight: 1,
             intimidation: 2,
