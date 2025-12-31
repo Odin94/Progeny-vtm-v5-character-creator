@@ -1,13 +1,12 @@
 import { Box, Grid, Paper, Text, Title } from "@mantine/core"
-import { Character } from "~/data/Character"
+import { SheetOptions } from "../constants"
 
 type TouchstonesProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const Touchstones = ({ character, setCharacter, primaryColor }: TouchstonesProps) => {
+const Touchstones = ({ options }: TouchstonesProps) => {
+    const { character, primaryColor } = options
     if (character.touchstones.length === 0) {
         return null
     }

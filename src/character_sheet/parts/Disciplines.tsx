@@ -1,17 +1,16 @@
 import { Badge, Box, Divider, Grid, Group, Stack, Text, Title, Paper } from "@mantine/core"
-import { Character } from "~/data/Character"
 import { DisciplineName } from "~/data/NameSchemas"
 import { upcase } from "~/generator/utils"
 import { disciplines } from "~/data/Disciplines"
 import Tally from "~/components/Tally"
+import { SheetOptions } from "../constants"
 
 type DisciplinesProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const Disciplines = ({ character, setCharacter, primaryColor }: DisciplinesProps) => {
+const Disciplines = ({ options }: DisciplinesProps) => {
+    const { character, primaryColor } = options
     if (character.disciplines.length === 0 && character.rituals.length === 0) {
         return null
     }

@@ -1,15 +1,19 @@
-import { Container, Paper, Stack, Divider, BackgroundImage, Box } from "@mantine/core"
+import { BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
+import { useLocalStorage } from "@mantine/hooks"
+import { useMemo } from "react"
 import { Character } from "~/data/Character"
-import TopData from "./parts/TopData"
+import { getPrimaryColor, SheetOptions } from "./constants"
 import Attributes from "./parts/Attributes"
-import Skills from "./parts/Skills"
-import Disciplines from "./parts/Disciplines"
 import BottomData from "./parts/BottomData"
-import TheBlood from "./parts/TheBlood"
-import Touchstones from "./parts/Touchstones"
+import Disciplines from "./parts/Disciplines"
 import MeritsAndFlaws from "./parts/MeritsAndFlaws"
+import Skills from "./parts/Skills"
+import TheBlood from "./parts/TheBlood"
+import TopData from "./parts/TopData"
+import Touchstones from "./parts/Touchstones"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
-import { getPrimaryColor } from "./constants"
+
+export type CharacterSheetMode = "play" | "xp" | "free"
 
 type CharacterSheetProps = {
     character: Character
@@ -17,7 +21,18 @@ type CharacterSheetProps = {
 }
 
 const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
+    const [mode, setMode] = useLocalStorage<CharacterSheetMode>({ key: "characterSheetMode", defaultValue: "play" })
     const primaryColor = getPrimaryColor(character.clan)
+
+    const sheetOptions: SheetOptions = useMemo(
+        () => ({
+            mode,
+            primaryColor,
+            character,
+            setCharacter,
+        }),
+        [mode, primaryColor, character, setCharacter]
+    )
 
     return (
         <BackgroundImage
@@ -58,39 +73,61 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                         borderRadius: "8px",
                         padding: "1.5rem",
                         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                        position: "relative",
                     }}
                 >
+                    <Box
+                        style={{
+                            position: "absolute",
+                            top: "1rem",
+                            right: "1rem",
+                            zIndex: 10,
+                        }}
+                    >
+                        <SegmentedControl
+                            value={mode}
+                            onChange={(value) => setMode(value as CharacterSheetMode)}
+                            data={[
+                                { label: "Play", value: "play" },
+                                { label: "XP", value: "xp" },
+                                { label: "Free", value: "free" },
+                            ]}
+                            color={primaryColor}
+                            orientation="vertical"
+                        />
+                    </Box>
+
                     <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
                         <Stack gap="lg">
-                            <TopData character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <TopData options={sheetOptions} />
 
                             <Divider />
 
-                            <Attributes character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <Attributes options={sheetOptions} />
 
                             <Divider />
 
-                            <Skills character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <Skills options={sheetOptions} />
 
                             {character.disciplines.length > 0 || character.rituals.length > 0 ? <Divider /> : null}
 
-                            <Disciplines character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <Disciplines options={sheetOptions} />
 
                             <Divider />
 
-                            <BottomData character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <BottomData options={sheetOptions} />
 
                             <Divider />
 
-                            <TheBlood character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <TheBlood options={sheetOptions} />
 
                             {character.touchstones.length > 0 ? <Divider /> : null}
 
-                            <Touchstones character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <Touchstones options={sheetOptions} />
 
                             {character.merits.length > 0 || character.flaws.length > 0 ? <Divider /> : null}
 
-                            <MeritsAndFlaws character={character} setCharacter={setCharacter} primaryColor={primaryColor} />
+                            <MeritsAndFlaws options={sheetOptions} />
                         </Stack>
                     </Paper>
                 </Box>

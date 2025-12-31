@@ -1,23 +1,22 @@
 import { Box, Grid, Group, Text, Title } from "@mantine/core"
-import { Character } from "~/data/Character"
 import { attributesKeySchema } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
+import { SheetOptions } from "../constants"
 
 type AttributesProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const Attributes = ({ character, setCharacter, primaryColor }: AttributesProps) => {
+const Attributes = ({ options }: AttributesProps) => {
+    const { character } = options
     const textStyle = {
         fontFamily: "Courier New",
     }
 
     return (
         <Box>
-            <Title order={2} mb="md" c={primaryColor}>
+            <Title order={2} mb="md" c={options.primaryColor}>
                 Attributes
             </Title>
             <Grid>
@@ -33,13 +32,8 @@ const Attributes = ({ character, setCharacter, primaryColor }: AttributesProps) 
                                 <Pips
                                     level={character.attributes[attribute]}
                                     minLevel={1}
-                                    onLevelChange={(level) =>
-                                        setCharacter({
-                                            ...character,
-                                            attributes: { ...character.attributes, [attribute]: level },
-                                        })
-                                    }
-                                    color={primaryColor}
+                                    options={options}
+                                    field={`attributes.${attribute}`}
                                 />
                             </Group>
                         ))}
@@ -56,13 +50,8 @@ const Attributes = ({ character, setCharacter, primaryColor }: AttributesProps) 
                                 <Pips
                                     level={character.attributes[attribute]}
                                     minLevel={1}
-                                    onLevelChange={(level) =>
-                                        setCharacter({
-                                            ...character,
-                                            attributes: { ...character.attributes, [attribute]: level },
-                                        })
-                                    }
-                                    color={primaryColor}
+                                    options={options}
+                                    field={`attributes.${attribute}`}
                                 />
                             </Group>
                         ))}
@@ -79,13 +68,8 @@ const Attributes = ({ character, setCharacter, primaryColor }: AttributesProps) 
                                 <Pips
                                     level={character.attributes[attribute]}
                                     minLevel={1}
-                                    onLevelChange={(level) =>
-                                        setCharacter({
-                                            ...character,
-                                            attributes: { ...character.attributes, [attribute]: level },
-                                        })
-                                    }
-                                    color={primaryColor}
+                                    options={options}
+                                    field={`attributes.${attribute}`}
                                 />
                             </Group>
                         ))}

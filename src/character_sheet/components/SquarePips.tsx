@@ -1,16 +1,19 @@
 import { Group } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import SimpleSquarePipButton from "./SimpleSquarePipButton"
+import { SheetOptions } from "../constants"
+import { Character } from "~/data/Character"
 
 type SquarePipsProps = {
     value: number
-    setValue: (value: number) => void
+    setValue?: (value: number) => void
     maxLevel?: number
     groupSize?: number
-    color?: string
+    options?: SheetOptions
+    field?: string
 }
 
-const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, color = "grape" }: SquarePipsProps) => {
+const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, options, field }: SquarePipsProps) => {
     const prevValueRef = useRef(value)
 
     const { firstChangingIndex, isFilling } = useMemo(() => {
@@ -31,9 +34,53 @@ const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, color = "grape" 
         prevValueRef.current = value
     }, [value])
 
+    const getDisabledReason = (_index: number): string | undefined => {
+        if (!options || !field) {
+            if (!setValue) return "No options or field provided"
+            return undefined
+        }
+
+        const { mode } = options
+        if (mode === "play" && field !== "ephemeral.hunger") {
+            return "Editing is disabled in Play mode"
+        }
+
+        return undefined
+    }
+
     const handlePipClick = (index: number) => {
         const newValue = index + 1 === value ? index : index + 1
-        setValue(Math.min(Math.max(0, newValue), maxLevel))
+        const clampedValue = Math.min(Math.max(0, newValue), maxLevel)
+
+        // TODOdin: All of this is terrible and needs refactoring
+        if (setValue) {
+            setValue(clampedValue)
+            return
+        }
+
+        if (!options || !field) return
+
+        const { mode, character, setCharacter } = options
+
+        if (mode === "play" && field !== "ephemeral.hunger") {
+            return
+        }
+
+        const update: Partial<Character> = {}
+        if (field === "humanity") {
+            update.humanity = clampedValue
+        } else if (field === "ephemeral.hunger") {
+            update.ephemeral = {
+                ...character.ephemeral,
+                hunger: clampedValue,
+            }
+        } else if (field) {
+            update[field as keyof Character] = clampedValue as never
+        }
+        setCharacter({
+            ...character,
+            ...update,
+        })
     }
 
     return (
@@ -47,7 +94,8 @@ const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, color = "grape" 
                     isFilling={isFilling}
                     onClick={() => handlePipClick(index)}
                     style={groupSize && (index + 1) % groupSize === 0 && index < maxLevel - 1 ? { marginRight: 8 } : undefined}
-                    color={color}
+                    options={options}
+                    disabledReason={getDisabledReason(index)}
                 />
             ))}
         </Group>

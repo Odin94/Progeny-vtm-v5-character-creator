@@ -1,16 +1,15 @@
 import { Badge, Box, Divider, Grid, Group, Paper, Stack, Text, Title } from "@mantine/core"
-import { Character } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import { potencyEffects } from "~/data/BloodPotency"
 import Pips from "~/character_sheet/components/Pips"
+import { SheetOptions } from "../constants"
 
 type TheBloodProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const TheBlood = ({ character, setCharacter, primaryColor }: TheBloodProps) => {
+const TheBlood = ({ options }: TheBloodProps) => {
+    const { character, primaryColor } = options
     const effects = potencyEffects[Math.min(character.bloodPotency, 5)] || potencyEffects[0]
     const clan = clans[character.clan] || clans[""]
     const baneText = clan.bane ? clan.bane.replace(/BANE_SEVERITY/g, `${effects.bane} (bane severity)`) : ""
@@ -26,13 +25,7 @@ const TheBlood = ({ character, setCharacter, primaryColor }: TheBloodProps) => {
                     <Text fw={700} size="lg" style={{ minWidth: "fit-content" }}>
                         Blood Potency:
                     </Text>
-                    <Pips
-                        level={character.bloodPotency}
-                        maxLevel={10}
-                        minLevel={0}
-                        onLevelChange={(level) => setCharacter({ ...character, bloodPotency: level })}
-                        color={primaryColor}
-                    />
+                    <Pips level={character.bloodPotency} maxLevel={10} minLevel={0} options={options} field="bloodPotency" />
                 </Group>
             </Box>
 

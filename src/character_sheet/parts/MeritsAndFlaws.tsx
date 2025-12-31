@@ -1,13 +1,12 @@
 import { Box, Grid, Group, Paper, Stack, Text, Title, Badge } from "@mantine/core"
-import { Character } from "~/data/Character"
+import { SheetOptions } from "../constants"
 
 type MeritsAndFlawsProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const MeritsAndFlaws = ({ character, setCharacter: _setCharacter, primaryColor }: MeritsAndFlawsProps) => {
+const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
+    const { character, primaryColor } = options
     if (character.merits.length === 0 && character.flaws.length === 0) {
         return null
     }

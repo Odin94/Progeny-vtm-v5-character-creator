@@ -1,17 +1,16 @@
 import { Box, Grid, Group, Text, Title, Badge, Stack } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
-import { Character } from "~/data/Character"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
+import { SheetOptions } from "../constants"
 
 type SkillsProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const Skills = ({ character, setCharacter, primaryColor }: SkillsProps) => {
+const Skills = ({ options }: SkillsProps) => {
+    const { character, primaryColor } = options
     const textStyle = {
         fontFamily: "Courier New",
     }
@@ -54,11 +53,7 @@ const Skills = ({ character, setCharacter, primaryColor }: SkillsProps) => {
                         ))}
                     </Group>
                 )}
-                <Pips
-                    level={character.skills[skill]}
-                    onLevelChange={(level) => setCharacter({ ...character, skills: { ...character.skills, [skill]: level } })}
-                    color={primaryColor}
-                />
+                <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
             </Group>
         )
     }

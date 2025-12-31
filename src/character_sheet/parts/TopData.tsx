@@ -1,14 +1,13 @@
 import { Grid, Group, Stack, Text, Title, Box, useMantineTheme } from "@mantine/core"
-import { Character } from "~/data/Character"
 import { clans } from "~/data/Clans"
+import { SheetOptions } from "../constants"
 
 type TopDataProps = {
-    character: Character
-    setCharacter: (character: Character) => void
-    primaryColor: string
+    options: SheetOptions
 }
 
-const TopData = ({ character, primaryColor }: TopDataProps) => {
+const TopData = ({ options }: TopDataProps) => {
+    const { character, primaryColor } = options
     const theme = useMantineTheme()
     const clan = character.clan ? clans[character.clan] : null
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
