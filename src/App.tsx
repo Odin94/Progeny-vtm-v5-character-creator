@@ -19,6 +19,8 @@ import bloodGuy from "./resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplas
 import batWoman from "./resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
 import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
+import posthog from "posthog-js"
+import { getEmptyCharacter } from "./data/Character"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
@@ -54,6 +56,33 @@ function App() {
     useEffect(() => {
         setShowAsideBar(!globals.isSmallScreen)
     }, [globals.isSmallScreen])
+
+    useEffect(() => {
+        if (pathname === "/sheet") {
+            try {
+                const emptyChar = getEmptyCharacter()
+                const isEmpty =
+                    character.name === emptyChar.name &&
+                    character.clan === emptyChar.clan &&
+                    character.sire === emptyChar.sire &&
+                    character.disciplines.length === 0 &&
+                    character.merits.length === 0 &&
+                    character.flaws.length === 0
+
+                if (isEmpty) {
+                    posthog.capture("sheet-page-visit-empty", {
+                        page: "/sheet",
+                    })
+                } else {
+                    posthog.capture("sheet-page-visit-non-empty", {
+                        page: "/sheet",
+                    })
+                }
+            } catch (error) {
+                console.warn("PostHog sheet page visit tracking failed:", error)
+            }
+        }
+    }, [pathname, character])
 
     if (pathname === "/sheet") {
         return (

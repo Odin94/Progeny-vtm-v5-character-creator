@@ -5,6 +5,7 @@ import { MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/Mer
 import { SheetOptions } from "../utils/constants"
 import { getMeritCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
 import PipButton from "./PipButton"
+import posthog from "posthog-js"
 
 type MeritFlawSelectModalProps = {
     opened: boolean
@@ -108,6 +109,17 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     })
                 }
             }
+        }
+
+        try {
+            posthog.capture("sheet-merit-flaw-pick", {
+                name: meritFlaw.name,
+                type: type,
+                level: level,
+                mode: mode,
+            })
+        } catch (error) {
+            console.warn("PostHog sheet-merit-flaw-pick tracking failed:", error)
         }
 
         onClose()

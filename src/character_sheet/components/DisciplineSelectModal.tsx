@@ -8,6 +8,7 @@ import { Character } from "~/data/Character"
 import { SheetOptions } from "../utils/constants"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import { getDisciplineCost } from "../utils/xp"
+import posthog from "posthog-js"
 
 type DisciplineSelectModalProps = {
     opened: boolean
@@ -88,6 +89,17 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
         }
 
         setCharacter(updatedCharacter)
+
+        try {
+            posthog.capture("sheet-power-pick", {
+                power_name: power.name,
+                discipline: power.discipline,
+                level: power.level,
+                mode: options.mode,
+            })
+        } catch (error) {
+            console.warn("PostHog sheet-power-pick tracking failed:", error)
+        }
 
         onClose()
         setSelectedDiscipline(null)
