@@ -1,12 +1,10 @@
 ## Character Sheet TODOs
-
-* XP-spend-mode (show available XP at mouse, float out spent xp numbers, show cost on hover), free-edit-mode, play-mode
+* Links from creator to sheet and vice versa
 * Notes popup with big text editor
 * Dice-roller popup
-* Links from creator to sheet and vice versa
 * More bg images?
-* Add more Disciplines
 * Make performance less terrible when editing character sheet
+* Make tooltips prettier, add floaty XP spend animations (can build something with framer motion or use a library..?)
 
 ### Disciplines
 * Add more powers
@@ -20,3 +18,9 @@
 * Allow upgrading (if you have resources 1, you should be able to upgrade to 2,3,4...)
 * Make merit cards even height maybe?
 * Long-term: Analyse your metrics and allow users to show only popular merit/flaw options?
+* Add Loresheets
+
+
+### BottomData
+* Ensure damage fields aren't confusing to use
+* Do something for adding humanity stains

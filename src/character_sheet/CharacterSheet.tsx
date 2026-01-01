@@ -12,6 +12,7 @@ import TheBlood from "./parts/TheBlood"
 import TopData from "./parts/TopData"
 import Touchstones from "./parts/Touchstones"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
+import CharacterSheetMenu from "./components/CharacterSheetMenu"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
 
@@ -132,6 +133,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                     </Paper>
                 </Box>
             </Container>
+            <CharacterSheetMenu options={sheetOptions} />
         </BackgroundImage>
     )
 }
