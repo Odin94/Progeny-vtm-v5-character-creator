@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { globals } from "~/globals"
 import ResetModal from "../../components/ResetModal"
+import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
 import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
@@ -53,6 +54,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 <SocialIcons />
             </div>
             <Stack align="center" gap="lg">
+                <CharacterSheetLinkButton />
                 <Button
                     leftSection={<FontAwesomeIcon icon={faFilePdf} />}
                     size="xl"

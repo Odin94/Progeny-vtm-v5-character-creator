@@ -1,7 +1,7 @@
 import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput, useMantineTheme, Select } from "@mantine/core"
 import { clans } from "~/data/Clans"
 import { ClanName } from "~/data/NameSchemas"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import FocusBorderWrapper from "../components/FocusBorderWrapper"
 import { hexToRgba, inputAlpha } from "../utils/style"
 

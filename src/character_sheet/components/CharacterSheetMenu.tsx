@@ -12,7 +12,7 @@ import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions
@@ -67,7 +67,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 const errorCount = validationErrors.length
                 const firstError = validationErrors[0]
                 const message =
-                    errorCount === 1 ? `Validation error: ${firstError}` : `${errorCount} validation errors found. First error: ${firstError}`
+                    errorCount === 1
+                        ? `Validation error: ${firstError}`
+                        : `${errorCount} validation errors found. First error: ${firstError}`
 
                 notifications.show({
                     title: "Validation Warning",
@@ -242,7 +244,12 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         Progeny can export file formats compatible with the following platforms:
                     </Text>
 
-                    <Group justify="space-between" align="center" p="md" style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: "8px" }}>
+                    <Group
+                        justify="space-between"
+                        align="center"
+                        p="md"
+                        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: "8px" }}
+                    >
                         <Stack gap="xs" style={{ flex: 1 }}>
                             <Text fw={600} size="md">
                                 <a
@@ -268,19 +275,22 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             <Modal opened={disclaimerOpened} onClose={closeDisclaimer} title="Disclaimer" centered size="lg">
                 <Stack gap="md">
                     <Text>
-                        This is an independent production and is not affiliated with or endorsed by World of Darkness, Paradox Interactive, or
-                        any of their subsidiaries.
+                        This is an independent production and is not affiliated with or endorsed by World of Darkness, Paradox Interactive,
+                        or any of their subsidiaries.
                     </Text>
                     <Text>
                         This tool is created under the{" "}
-                        <a href="https://www.worldofdarkness.com/dark-pack" target="_blank" rel="noopener noreferrer" style={{ color: "#9c36b5" }}>
+                        <a
+                            href="https://www.worldofdarkness.com/dark-pack"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#9c36b5" }}
+                        >
                             Dark Pack License
                         </a>
                         .
                     </Text>
-                    <Text>
-                        Vampire: The Masquerade and World of Darkness are trademarks of Paradox Interactive. All rights reserved.
-                    </Text>
+                    <Text>Vampire: The Masquerade and World of Darkness are trademarks of Paradox Interactive. All rights reserved.</Text>
                     <Text c="dimmed" size="sm">
                         The PDF template used for exporting is kindly provided by{" "}
                         <a href="https://linktr.ee/nerdbert" target="_blank" rel="noopener noreferrer" style={{ color: "#9c36b5" }}>
@@ -298,12 +308,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     </Text>
                     <Divider my="sm" />
                     <Group justify="space-between">
-                        <Button
-                            color="yellow"
-                            variant="subtle"
-                            leftSection={<FontAwesomeIcon icon={faXmark} />}
-                            onClick={closeLoadModal}
-                        >
+                        <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>
                             Cancel
                         </Button>
                         <Button color="red" onClick={handleConfirmLoad}>
@@ -337,4 +342,3 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 }
 
 export default CharacterSheetMenu
-

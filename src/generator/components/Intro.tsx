@@ -6,6 +6,7 @@ import { IconBrandGithub } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import LoadModal from "../../components/LoadModal"
+import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
 import { SocialIcons } from "./SocialIcons"
@@ -44,6 +45,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
 
             <SocialIcons />
             <Stack align="center" gap="xl">
+                <CharacterSheetLinkButton />
                 <Button leftSection={<FontAwesomeIcon icon={faPlay} />} size="xl" color="grape" onClick={nextStep}>
                     Get Started!
                 </Button>

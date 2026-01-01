@@ -4,11 +4,253 @@ import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
 
 type SkillsProps = {
     options: SheetOptions
+}
+
+type SkillRowProps = {
+    skill: SkillsKey
+    specialties: Array<{ skill: string; name: string }>
+    character: SheetOptions["character"]
+    options: SheetOptions
+    primaryColor: string
+    colorValue: string
+    textStyle: React.CSSProperties
+    isEditable: boolean
+    addSpecialty: (skill: SkillsKey) => void
+    getAddSpecialtyDisabledReason: () => string | undefined
+    updateSpecialty: (skill: SkillsKey, index: number, newName: string) => void
+    removeSpecialty: (skill: SkillsKey, index: number) => void
+}
+
+const SkillRow = ({
+    skill,
+    specialties,
+    character,
+    options,
+    primaryColor,
+    colorValue,
+    textStyle,
+    isEditable,
+    addSpecialty,
+    getAddSpecialtyDisabledReason,
+    updateSpecialty,
+    removeSpecialty,
+}: SkillRowProps) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const testContentRef = useRef<HTMLDivElement>(null)
+    const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
+    const [editingSpecialty, setEditingSpecialty] = useState<{ skill: SkillsKey; index: number } | null>(null)
+    const [editingValue, setEditingValue] = useState<string>("")
+
+    useEffect(() => {
+        const checkOverflow = () => {
+            if (!containerRef.current || !testContentRef.current || specialties.length === 0) {
+                setShowSpecialtiesBelow(false)
+                return
+            }
+
+            requestAnimationFrame(() => {
+                if (!containerRef.current || !testContentRef.current) return
+
+                const containerWidth = containerRef.current.offsetWidth
+                const testContentWidth = testContentRef.current.scrollWidth
+
+                const pipsElement = containerRef.current.querySelector('[class*="Group"]:last-child')
+                const pipsWidth = pipsElement ? (pipsElement as HTMLElement).offsetWidth : 200
+
+                const availableWidth = containerWidth - pipsWidth - 20
+
+                setShowSpecialtiesBelow(testContentWidth > availableWidth)
+            })
+        }
+
+        const timeoutId1 = setTimeout(checkOverflow, 10)
+        const timeoutId2 = setTimeout(checkOverflow, 100)
+        window.addEventListener("resize", checkOverflow)
+
+        return () => {
+            clearTimeout(timeoutId1)
+            clearTimeout(timeoutId2)
+            window.removeEventListener("resize", checkOverflow)
+        }
+    }, [specialties.length, skill, character.skills[skill]])
+
+    const renderAddSpecialtyBadge = () => {
+        const disabledReason = getAddSpecialtyDisabledReason()
+        const cost = options.mode === "xp" ? getSpecialtyCost() : undefined
+        const tooltipLabel = disabledReason || (cost !== undefined ? `${cost} XP` : undefined)
+        const badge = (
+            <Badge
+                variant="light"
+                size="sm"
+                color={primaryColor}
+                style={{
+                    cursor: disabledReason ? "default" : "pointer",
+                    opacity: disabledReason ? 0.6 : 1,
+                }}
+                onClick={disabledReason ? undefined : () => addSpecialty(skill)}
+            >
+                +
+            </Badge>
+        )
+        return tooltipLabel ? (
+            <Tooltip label={tooltipLabel} withArrow>
+                <span style={{ display: "inline-block" }}>{badge}</span>
+            </Tooltip>
+        ) : (
+            badge
+        )
+    }
+
+    return (
+        <Group ref={containerRef} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
+            <Group
+                ref={testContentRef}
+                gap="xs"
+                wrap="nowrap"
+                style={{
+                    position: "absolute",
+                    visibility: "hidden",
+                    whiteSpace: "nowrap",
+                    pointerEvents: "none",
+                }}
+            >
+                <Text style={textStyle}>{upcase(skill)}</Text>
+                {specialties.map((specialty, index) => (
+                    <Badge key={`test-${skill}-${specialty.name}-${index}`} variant="light" size="sm" color={primaryColor}>
+                        {specialty.name || "New Specialty"}
+                    </Badge>
+                ))}
+            </Group>
+
+            {showSpecialtiesBelow ? (
+                <Stack gap="xs" style={{ flex: 1 }}>
+                    <Group gap="xs" wrap="nowrap">
+                        <Text style={textStyle}>{upcase(skill)}</Text>
+                        {isEditable && renderAddSpecialtyBadge()}
+                    </Group>
+                    {specialties.length > 0 ? (
+                        <Group gap="xs" wrap="wrap">
+                            {specialties.map((specialty, index) => {
+                                const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
+                                return isEditing ? (
+                                    <FocusBorderWrapper key={`${skill}-${index}-edit`} colorValue={colorValue} style={{ width: "100px" }}>
+                                        <TextInput
+                                            value={editingValue}
+                                            onChange={(e) => setEditingValue(e.target.value)}
+                                            onBlur={() => {
+                                                if (editingValue.trim() === "") {
+                                                    removeSpecialty(skill, index)
+                                                } else {
+                                                    updateSpecialty(skill, index, editingValue)
+                                                }
+                                                setEditingSpecialty(null)
+                                                setEditingValue("")
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    if (editingValue.trim() === "") {
+                                                        removeSpecialty(skill, index)
+                                                    } else {
+                                                        updateSpecialty(skill, index, editingValue)
+                                                    }
+                                                    setEditingSpecialty(null)
+                                                    setEditingValue("")
+                                                }
+                                            }}
+                                            size="xs"
+                                            autoFocus
+                                            style={{ width: "100%" }}
+                                        />
+                                    </FocusBorderWrapper>
+                                ) : (
+                                    <Badge
+                                        key={`${skill}-${specialty.name}-${index}`}
+                                        variant="light"
+                                        size="sm"
+                                        color={primaryColor}
+                                        style={isEditable ? { cursor: "pointer" } : undefined}
+                                        onClick={
+                                            isEditable
+                                                ? () => {
+                                                      setEditingSpecialty({ skill, index })
+                                                      setEditingValue(specialty.name)
+                                                  }
+                                                : undefined
+                                        }
+                                    >
+                                        {specialty.name || "New Specialty"}
+                                    </Badge>
+                                )
+                            })}
+                        </Group>
+                    ) : null}
+                </Stack>
+            ) : (
+                <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
+                    <Text style={textStyle}>{upcase(skill)}</Text>
+                    {specialties.map((specialty, index) => {
+                        const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
+                        return isEditing ? (
+                            <FocusBorderWrapper key={`${skill}-${index}-edit`} colorValue={colorValue} style={{ width: "100px" }}>
+                                <TextInput
+                                    value={editingValue}
+                                    onChange={(e) => setEditingValue(e.target.value)}
+                                    onBlur={() => {
+                                        if (editingValue.trim() === "") {
+                                            removeSpecialty(skill, index)
+                                        } else {
+                                            updateSpecialty(skill, index, editingValue)
+                                        }
+                                        setEditingSpecialty(null)
+                                        setEditingValue("")
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            if (editingValue.trim() === "") {
+                                                removeSpecialty(skill, index)
+                                            } else {
+                                                updateSpecialty(skill, index, editingValue)
+                                            }
+                                            setEditingSpecialty(null)
+                                            setEditingValue("")
+                                        }
+                                    }}
+                                    size="xs"
+                                    autoFocus
+                                    style={{ width: "100%" }}
+                                />
+                            </FocusBorderWrapper>
+                        ) : (
+                            <Badge
+                                key={`${skill}-${specialty.name}-${index}`}
+                                variant="light"
+                                size="sm"
+                                color={primaryColor}
+                                style={isEditable ? { cursor: "pointer" } : undefined}
+                                onClick={
+                                    isEditable
+                                        ? () => {
+                                              setEditingSpecialty({ skill, index })
+                                              setEditingValue(specialty.name)
+                                          }
+                                        : undefined
+                                }
+                            >
+                                {specialty.name || "New Specialty"}
+                            </Badge>
+                        )
+                    })}
+                    {isEditable && renderAddSpecialtyBadge()}
+                </Group>
+            )}
+            <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
+        </Group>
+    )
 }
 
 // TODOdin: Refund XP when a newly created specialty is removed
@@ -91,235 +333,25 @@ const Skills = ({ options }: SkillsProps) => {
         }
     }
 
-    const SkillRow = ({ skill }: { skill: SkillsKey }) => {
-        const specialties = specialtiesBySkill.get(skill) || []
-        const containerRef = useRef<HTMLDivElement>(null)
-        const testContentRef = useRef<HTMLDivElement>(null)
-        // TODOdin: Can we get this flow without fancy useState and fake-renders?
-        // Maybe we just add some space under each skill and always render there?
-        const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
-        const [editingSpecialty, setEditingSpecialty] = useState<{ skill: SkillsKey; index: number } | null>(null)
-        const [editingValue, setEditingValue] = useState<string>("")
-
-        useEffect(() => {
-            const checkOverflow = () => {
-                if (!containerRef.current || !testContentRef.current || specialties.length === 0) {
-                    setShowSpecialtiesBelow(false)
-                    return
-                }
-
-                // Use requestAnimationFrame to ensure DOM is fully rendered
-                requestAnimationFrame(() => {
-                    if (!containerRef.current || !testContentRef.current) return
-
-                    const containerWidth = containerRef.current.offsetWidth
-                    const testContentWidth = testContentRef.current.scrollWidth
-
-                    // Get the pips width (they're always rendered)
-                    const pipsElement = containerRef.current.querySelector('[class*="Group"]:last-child')
-                    const pipsWidth = pipsElement ? (pipsElement as HTMLElement).offsetWidth : 200
-
-                    // Available width is container minus pips minus some margin
-                    const availableWidth = containerWidth - pipsWidth - 20
-
-                    // Only show below if content would overflow
-                    setShowSpecialtiesBelow(testContentWidth > availableWidth)
-                })
-            }
-
-            // Initial check with delays to ensure DOM is ready
-            const timeoutId1 = setTimeout(checkOverflow, 10)
-            const timeoutId2 = setTimeout(checkOverflow, 100)
-            window.addEventListener("resize", checkOverflow)
-
-            return () => {
-                clearTimeout(timeoutId1)
-                clearTimeout(timeoutId2)
-                window.removeEventListener("resize", checkOverflow)
-            }
-        }, [specialties.length, skill, character.skills[skill]])
-
-        const renderAddSpecialtyBadge = () => {
-            const disabledReason = getAddSpecialtyDisabledReason()
-            const cost = mode === "xp" ? getSpecialtyCost() : undefined
-            const tooltipLabel = disabledReason || (cost !== undefined ? `${cost} XP` : undefined)
-            const badge = (
-                <Badge
-                    variant="light"
-                    size="sm"
-                    color={primaryColor}
-                    style={{
-                        cursor: disabledReason ? "default" : "pointer",
-                        opacity: disabledReason ? 0.6 : 1,
-                    }}
-                    onClick={disabledReason ? undefined : () => addSpecialty(skill)}
-                >
-                    +
-                </Badge>
-            )
-            return tooltipLabel ? (
-                <Tooltip label={tooltipLabel} withArrow>
-                    <span style={{ display: "inline-block" }}>{badge}</span>
-                </Tooltip>
-            ) : (
-                badge
-            )
-        }
-
-        return (
-            <Group ref={containerRef} key={skill} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
-                {/* Hidden test element to measure width */}
-                <Group
-                    ref={testContentRef}
-                    gap="xs"
-                    wrap="nowrap"
-                    style={{
-                        position: "absolute",
-                        visibility: "hidden",
-                        whiteSpace: "nowrap",
-                        pointerEvents: "none",
-                    }}
-                >
-                    <Text style={textStyle}>{upcase(skill)}</Text>
-                    {specialties.map((specialty, index) => (
-                        <Badge key={`test-${skill}-${specialty.name}-${index}`} variant="light" size="sm" color={primaryColor}>
-                            {specialty.name || "New Specialty"}
-                        </Badge>
-                    ))}
-                </Group>
-
-                {showSpecialtiesBelow ? (
-                    <Stack gap="xs" style={{ flex: 1 }}>
-                        <Group gap="xs" wrap="nowrap">
-                            <Text style={textStyle}>{upcase(skill)}</Text>
-                            {isEditable && renderAddSpecialtyBadge()}
-                        </Group>
-                        {specialties.length > 0 ? (
-                            <Group gap="xs" wrap="wrap">
-                                {specialties.map((specialty, index) => {
-                                    const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
-                                    return isEditing ? (
-                                        <FocusBorderWrapper
-                                            key={`${skill}-${index}-edit`}
-                                            colorValue={colorValue}
-                                            style={{ width: "100px" }}
-                                        >
-                                            <TextInput
-                                                value={editingValue}
-                                                onChange={(e) => setEditingValue(e.target.value)}
-                                                onBlur={() => {
-                                                    if (editingValue.trim() === "") {
-                                                        removeSpecialty(skill, index)
-                                                    } else {
-                                                        updateSpecialty(skill, index, editingValue)
-                                                    }
-                                                    setEditingSpecialty(null)
-                                                    setEditingValue("")
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter") {
-                                                        if (editingValue.trim() === "") {
-                                                            removeSpecialty(skill, index)
-                                                        } else {
-                                                            updateSpecialty(skill, index, editingValue)
-                                                        }
-                                                        setEditingSpecialty(null)
-                                                        setEditingValue("")
-                                                    }
-                                                }}
-                                                size="xs"
-                                                autoFocus
-                                                style={{ width: "100%" }}
-                                            />
-                                        </FocusBorderWrapper>
-                                    ) : (
-                                        <Badge
-                                            key={`${skill}-${specialty.name}-${index}`}
-                                            variant="light"
-                                            size="sm"
-                                            color={primaryColor}
-                                            style={isEditable ? { cursor: "pointer" } : undefined}
-                                            onClick={
-                                                isEditable
-                                                    ? () => {
-                                                          setEditingSpecialty({ skill, index })
-                                                          setEditingValue(specialty.name)
-                                                      }
-                                                    : undefined
-                                            }
-                                        >
-                                            {specialty.name || "New Specialty"}
-                                        </Badge>
-                                    )
-                                })}
-                            </Group>
-                        ) : null}
-                    </Stack>
-                ) : (
-                    <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
-                        <Text style={textStyle}>{upcase(skill)}</Text>
-                        {specialties.map((specialty, index) => {
-                            const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
-                            return isEditing ? (
-                                <FocusBorderWrapper key={`${skill}-${index}-edit`} colorValue={colorValue} style={{ width: "100px" }}>
-                                    <TextInput
-                                        value={editingValue}
-                                        onChange={(e) => setEditingValue(e.target.value)}
-                                        onBlur={() => {
-                                            if (editingValue.trim() === "") {
-                                                removeSpecialty(skill, index)
-                                            } else {
-                                                updateSpecialty(skill, index, editingValue)
-                                            }
-                                            setEditingSpecialty(null)
-                                            setEditingValue("")
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                if (editingValue.trim() === "") {
-                                                    removeSpecialty(skill, index)
-                                                } else {
-                                                    updateSpecialty(skill, index, editingValue)
-                                                }
-                                                setEditingSpecialty(null)
-                                                setEditingValue("")
-                                            }
-                                        }}
-                                        size="xs"
-                                        autoFocus
-                                        style={{ width: "100%" }}
-                                    />
-                                </FocusBorderWrapper>
-                            ) : (
-                                <Badge
-                                    key={`${skill}-${specialty.name}-${index}`}
-                                    variant="light"
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={isEditable ? { cursor: "pointer" } : undefined}
-                                    onClick={
-                                        isEditable
-                                            ? () => {
-                                                  setEditingSpecialty({ skill, index })
-                                                  setEditingValue(specialty.name)
-                                              }
-                                            : undefined
-                                    }
-                                >
-                                    {specialty.name || "New Specialty"}
-                                </Badge>
-                            )
-                        })}
-                        {isEditable && renderAddSpecialtyBadge()}
-                    </Group>
-                )}
-                <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
-            </Group>
-        )
-    }
-
     const renderSkillRow = (skill: SkillsKey) => {
-        return <SkillRow key={skill} skill={skill} />
+        const specialties = specialtiesBySkill.get(skill) || []
+        return (
+            <SkillRow
+                key={skill}
+                skill={skill}
+                specialties={specialties}
+                character={character}
+                options={options}
+                primaryColor={primaryColor}
+                colorValue={colorValue}
+                textStyle={textStyle}
+                isEditable={isEditable}
+                addSpecialty={addSpecialty}
+                getAddSpecialtyDisabledReason={getAddSpecialtyDisabledReason}
+                updateSpecialty={updateSpecialty}
+                removeSpecialty={removeSpecialty}
+            />
+        )
     }
 
     return (

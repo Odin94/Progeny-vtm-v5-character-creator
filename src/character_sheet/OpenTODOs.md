@@ -6,6 +6,8 @@
 * Make performance less terrible when editing character sheet
 * Make tooltips prettier, add floaty XP spend animations (can build something with framer motion or use a library..?)
 
+* Handpick fitting theme colors per clan
+
 ### Disciplines
 * Add more powers
 * Add thinblood alchemy

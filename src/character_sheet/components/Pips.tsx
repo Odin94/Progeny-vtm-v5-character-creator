@@ -1,7 +1,7 @@
 import { Group } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import PipButton from "./PipButton"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import { Character } from "~/data/Character"
 import { getAvailableXP, canAffordUpgrade, getAttributeCost, getSkillCost, getBloodPotencyCost } from "../utils/xp"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"

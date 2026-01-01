@@ -1,6 +1,6 @@
 import { Character } from "~/data/Character"
 import { ClanName } from "~/data/NameSchemas"
-import { CharacterSheetMode } from "./CharacterSheet"
+import { CharacterSheetMode } from "../CharacterSheet"
 
 export const getPrimaryColor = (clan: ClanName): string => {
     const clanColorMap: Record<ClanName, string> = {
@@ -22,7 +22,7 @@ export const getPrimaryColor = (clan: ClanName): string => {
         "Thin-blood": "grape",
         "": "grape",
     }
-    return clanColorMap[clan] || "grape"
+    return clanColorMap[clan] || "red"
 }
 
 export type SheetOptions = {

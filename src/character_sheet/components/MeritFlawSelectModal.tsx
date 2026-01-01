@@ -2,7 +2,7 @@ import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } f
 import { useState, useEffect } from "react"
 import { MeritFlaw } from "~/data/Character"
 import { MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import { getMeritCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
 import PipButton from "./PipButton"
 

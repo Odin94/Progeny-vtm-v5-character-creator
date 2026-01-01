@@ -1,7 +1,7 @@
 import { Group } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import SimpleSquarePipButton from "./SimpleSquarePipButton"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import { Character } from "~/data/Character"
 
 type SquarePipsProps = {

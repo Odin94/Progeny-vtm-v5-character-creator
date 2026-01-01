@@ -2,7 +2,7 @@ import { Badge, Box, Divider, Grid, Group, NumberInput, Paper, Stack, Text, Titl
 import { clans } from "~/data/Clans"
 import { potencyEffects } from "~/data/BloodPotency"
 import Pips from "~/character_sheet/components/Pips"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import { bgAlpha, hexToRgba } from "../utils/style"
 
 type TheBloodProps = {

@@ -2,7 +2,7 @@ import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
 import Pips from "~/character_sheet/components/Pips"
 import SquarePips from "~/character_sheet/components/SquarePips"
 import DamagePips from "~/character_sheet/components/DamagePips"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import { bgAlpha, hexToRgba } from "../utils/style"
 
 type BottomDataProps = {

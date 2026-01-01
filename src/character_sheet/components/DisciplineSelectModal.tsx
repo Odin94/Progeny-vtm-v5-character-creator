@@ -5,7 +5,7 @@ import { disciplines, Power } from "~/data/Disciplines"
 import { clans } from "~/data/Clans"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { Character } from "~/data/Character"
-import { SheetOptions } from "../constants"
+import { SheetOptions } from "../utils/constants"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import { getDisciplineCost } from "../utils/xp"
 
