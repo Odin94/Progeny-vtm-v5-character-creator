@@ -35,8 +35,8 @@ export const getDisciplineCost = (character: Character, disciplineName: Discipli
     }
 }
 
-export const getMeritFlawCost = (newLevel: number): number => {
-    return newLevel * 3
+export const getMeritCost = (level: number, previousLevel: number): number => {
+    return (level - previousLevel) * 3
 }
 
 export const canAffordUpgrade = (availableXP: number, cost: number): boolean => {
@@ -48,8 +48,6 @@ export const costFunctionByFieldName: Partial<Record<keyof Character, (newLevel:
     attributes: getAttributeCost,
     skills: getSkillCost,
     skillSpecialties: getSpecialtyCost,
-    merits: getMeritFlawCost,
-    flaws: getMeritFlawCost,
 }
 
 // Rituals & formulas cost 3 x level

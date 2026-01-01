@@ -41,7 +41,10 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
 
         if (initialTouchstone) {
             const index = character.touchstones.findIndex(
-                (t) => t.name === initialTouchstone.name && t.description === initialTouchstone.description && t.conviction === initialTouchstone.conviction
+                (t) =>
+                    t.name === initialTouchstone.name &&
+                    t.description === initialTouchstone.description &&
+                    t.conviction === initialTouchstone.conviction
             )
             if (index !== -1) {
                 const updatedTouchstones = [...character.touchstones]
@@ -81,4 +84,3 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
 }
 
 export default TouchstoneModal
-
