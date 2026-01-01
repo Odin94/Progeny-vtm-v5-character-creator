@@ -20,7 +20,7 @@ export const getPrimaryColor = (clan: ClanName): string => {
         Salubri: "teal",
         Caitiff: "grape",
         "Thin-blood": "grape",
-        "": "grape",
+        "": "red",
     }
     return clanColorMap[clan] || "red"
 }
