@@ -1,7 +1,9 @@
-import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput, useMantineTheme } from "@mantine/core"
+import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput, useMantineTheme, Select } from "@mantine/core"
 import { clans } from "~/data/Clans"
+import { ClanName } from "~/data/NameSchemas"
 import { SheetOptions } from "../constants"
 import FocusBorderWrapper from "../components/FocusBorderWrapper"
+import { hexToRgba, inputAlpha } from "../utils/style"
 
 type TopDataProps = {
     options: SheetOptions
@@ -40,6 +42,7 @@ const TopData = ({ options }: TopDataProps) => {
                                         borderBottom: `2px solid transparent`,
                                         borderRadius: 0,
                                         padding: "0.5rem",
+                                        backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
                                     },
                                 }}
                                 style={{ width: "100%" }}
@@ -86,6 +89,7 @@ const TopData = ({ options }: TopDataProps) => {
                                 input: {
                                     textAlign: "center",
                                     color: "var(--mantine-color-dimmed)",
+                                    backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
                                 },
                             }}
                             mb="lg"
@@ -103,12 +107,41 @@ const TopData = ({ options }: TopDataProps) => {
                     <Stack gap="xs">
                         <Group gap="xs">
                             <Text fw={700}>Clan:</Text>
-                            {clan ? (
+                            {isFreeMode || !clan ? (
+                                <FocusBorderWrapper colorValue={colorValue}>
+                                    <Select
+                                        placeholder="Select a clan"
+                                        data={Object.keys(clans)
+                                            .filter((clanName) => clanName !== "")
+                                            .map((clanName) => ({
+                                                value: clanName,
+                                                label: clanName,
+                                            }))}
+                                        value={character.clan || null}
+                                        onChange={(value) => {
+                                            if (value) {
+                                                const selectedClan = value as ClanName
+                                                setCharacter({
+                                                    ...character,
+                                                    clan: selectedClan,
+                                                    availableDisciplineNames: clans[selectedClan].nativeDisciplines,
+                                                })
+                                            }
+                                        }}
+                                        size="sm"
+                                        color={primaryColor}
+                                        style={{ width: "200px" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
+                                    />
+                                </FocusBorderWrapper>
+                            ) : (
                                 <Group gap="xs">
                                     <Text>{clan.name}</Text>
                                 </Group>
-                            ) : (
-                                <Text c="dimmed">—</Text>
                             )}
                         </Group>
                         <Group gap="xs">
@@ -128,6 +161,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         size="sm"
                                         color={primaryColor}
                                         style={{ width: "100px" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
                                     />
                                 </FocusBorderWrapper>
                             ) : (
@@ -150,6 +188,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         size="sm"
                                         color={primaryColor}
                                         style={{ width: "50%" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
                                     />
                                 </FocusBorderWrapper>
                             ) : (
@@ -176,6 +219,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         size="sm"
                                         color={primaryColor}
                                         style={{ width: "100%" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
                                     />
                                 </FocusBorderWrapper>
                             ) : (
@@ -198,6 +246,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         size="sm"
                                         color={primaryColor}
                                         style={{ width: "100%" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
                                     />
                                 </FocusBorderWrapper>
                             ) : (
@@ -220,6 +273,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         size="sm"
                                         color={primaryColor}
                                         style={{ width: "100%" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
                                     />
                                 </FocusBorderWrapper>
                             ) : (
