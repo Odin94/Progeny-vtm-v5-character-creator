@@ -1,6 +1,6 @@
 import { BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { getPrimaryColor, SheetOptions } from "./utils/constants"
 import Attributes from "./parts/Attributes"
@@ -22,10 +22,6 @@ type CharacterSheetProps = {
 }
 
 const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
-    const [mode, setMode] = useLocalStorage<CharacterSheetMode>({ key: "characterSheetMode", defaultValue: "play" })
-    const primaryColor = getPrimaryColor(character.clan)
-
-    // Check if character is empty/default
     const isEmptyCharacter = useMemo(() => {
         const emptyChar = getEmptyCharacter()
         return (
@@ -38,12 +34,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         )
     }, [character])
 
-    // Set mode to "free" if character is empty
-    useEffect(() => {
-        if (isEmptyCharacter && mode !== "free") {
-            setMode("free")
-        }
-    }, [isEmptyCharacter, mode, setMode])
+    const [mode, setMode] = useLocalStorage<CharacterSheetMode>({
+        key: "characterSheetMode",
+        defaultValue: isEmptyCharacter ? "free" : "play",
+    })
+    const primaryColor = getPrimaryColor(character.clan)
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
