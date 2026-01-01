@@ -11,6 +11,7 @@ import presenceLogo from "../resources/Rombo_Disciplines/rombo_Presence.svg"
 import proteanLogo from "../resources/Rombo_Disciplines/rombo_Protean.svg"
 import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg"
 import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg"
+import alchemyLogo from "../resources/Rombo_Disciplines/rombo_Alchemy.svg"
 import { clanNameSchema, DisciplineName, disciplineNameSchema } from "./NameSchemas"
 import { Character } from "./Character"
 
@@ -944,8 +945,8 @@ export const disciplines: Record<DisciplineName, Discipline> = {
     },
     "thin-blood alchemy": {
         clans: [],
-        summary: "",
-        logo: "",
+        summary: "Craft potions and tinctures from blood and other ingredients",
+        logo: alchemyLogo,
         powers: [],
     },
     "": {

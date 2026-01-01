@@ -21,7 +21,9 @@ export const getBloodPotencyCost = (newLevel: number): number => {
     return newLevel * 10
 }
 
-export const getDisciplineCost = (newLevel: number, character: Character, disciplineName: DisciplineName): number => {
+export const getDisciplineCost = (character: Character, disciplineName: DisciplineName): number => {
+    const newLevel = character.disciplines.filter((p) => p.discipline === disciplineName).length + 1
+
     if (character.clan === "Caitiff") {
         return newLevel * 6
     }

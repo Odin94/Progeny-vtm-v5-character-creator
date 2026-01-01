@@ -1,17 +1,30 @@
-import { Badge, Box, Divider, Grid, Group, Stack, Text, Title, Paper } from "@mantine/core"
+import { Badge, Box, Divider, Grid, Group, Stack, Text, Title, Paper, Center, ActionIcon, Modal, Button, Tooltip } from "@mantine/core"
+import { useState } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
-import { upcase } from "~/generator/utils"
+import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines } from "~/data/Disciplines"
-import Tally from "~/components/Tally"
 import { SheetOptions } from "../constants"
+import DisciplineSelectModal from "../components/DisciplineSelectModal"
+import DisciplinePowerCard from "../components/DisciplinePowerCard"
+import { IconPlus, IconX } from "@tabler/icons-react"
+import { Power } from "~/data/Disciplines"
+import { getDisciplineCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
 
 type DisciplinesProps = {
     options: SheetOptions
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
-    const { character, primaryColor } = options
-    if (character.disciplines.length === 0 && character.rituals.length === 0) {
+    const { character, primaryColor, mode, setCharacter } = options
+    const [modalOpened, setModalOpened] = useState(false)
+    const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
+    const [itemToDelete, setItemToDelete] = useState<
+        { type: "power"; power: Power } | { type: "discipline"; disciplineName: DisciplineName } | null
+    >(null)
+    const isEditable = mode === "xp" || mode === "free"
+    const isFreeMode = mode === "free"
+
+    if (character.disciplines.length === 0 && character.rituals.length === 0 && !isEditable) {
         return null
     }
 
@@ -24,9 +37,38 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         }
     })
 
+    const handleDeletePower = (power: Power) => {
+        setItemToDelete({ type: "power", power })
+    }
+
+    const handleDeleteDiscipline = (disciplineName: DisciplineName) => {
+        setItemToDelete({ type: "discipline", disciplineName })
+    }
+
+    const confirmDelete = () => {
+        if (!itemToDelete) return
+
+        let updatedCharacter
+        if (itemToDelete.type === "power") {
+            updatedCharacter = {
+                ...character,
+                disciplines: character.disciplines.filter((p) => p !== itemToDelete.power),
+            }
+        } else {
+            updatedCharacter = {
+                ...character,
+                disciplines: character.disciplines.filter((p) => p.discipline !== itemToDelete.disciplineName),
+            }
+        }
+
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+        setCharacter(updatedCharacter)
+        setItemToDelete(null)
+    }
+
     return (
         <>
-            {character.disciplines.length > 0 ? (
+            {character.disciplines.length > 0 || isEditable ? (
                 <Box>
                     <Title order={2} mb="lg" c={primaryColor}>
                         Disciplines
@@ -56,9 +98,21 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 <Title order={4} style={{ margin: 0 }}>
                                                     {upcase(disciplineName)}
                                                 </Title>
-                                                <Badge size="lg" variant="light" color={primaryColor} circle>
-                                                    {maxLevel}
-                                                </Badge>
+                                                <Group gap="xs" align="center">
+                                                    <Badge size="lg" variant="light" color={primaryColor} circle>
+                                                        {maxLevel}
+                                                    </Badge>
+                                                    {isFreeMode && powers.length === 0 ? (
+                                                        <ActionIcon
+                                                            size="sm"
+                                                            variant="subtle"
+                                                            color="red"
+                                                            onClick={() => handleDeleteDiscipline(disciplineName)}
+                                                        >
+                                                            <IconX size={16} />
+                                                        </ActionIcon>
+                                                    ) : null}
+                                                </Group>
                                             </Group>
                                         </Group>
                                         <Divider mb="sm" />
@@ -66,55 +120,164 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             {powers
                                                 .sort((a, b) => a.level - b.level)
                                                 .map((power) => (
-                                                    <Box
+                                                    <DisciplinePowerCard
                                                         key={power.name}
-                                                        p="xs"
-                                                        style={{
-                                                            border: "1px solid var(--mantine-color-gray-3)",
-                                                            borderRadius: "var(--mantine-radius-sm)",
-                                                        }}
-                                                    >
-                                                        <Stack gap="xs">
-                                                            <Group justify="space-between" align="flex-start">
-                                                                <Stack gap={2} style={{ flex: 1 }}>
-                                                                    <Text fw={600} size="sm">
-                                                                        {power.name}
-                                                                    </Text>
-                                                                    {power.summary ? (
-                                                                        <Text size="xs" c="dimmed" lineClamp={2}>
-                                                                            {power.summary}
-                                                                        </Text>
-                                                                    ) : null}
-                                                                </Stack>
-                                                                <Badge size="sm" variant="dot" color={primaryColor}>
-                                                                    Lv.{power.level}
-                                                                </Badge>
-                                                            </Group>
-                                                            <Stack gap={2} mt={4}>
-                                                                {power.dicePool && power.dicePool !== "-" ? (
-                                                                    <Text size="xs">{power.dicePool.toUpperCase()}</Text>
-                                                                ) : null}
-                                                                <Group gap="xs" align="center">
-                                                                    <Text size="xs">Rouses:</Text>
-                                                                    {power.rouseChecks > 0 ? (
-                                                                        <Tally
-                                                                            n={power.rouseChecks}
-                                                                            size={16}
-                                                                            style={{ color: "var(--mantine-color-red-6)" }}
-                                                                        />
-                                                                    ) : (
-                                                                        <Text size="xs">FREE</Text>
-                                                                    )}
-                                                                </Group>
-                                                            </Stack>
-                                                        </Stack>
-                                                    </Box>
+                                                        power={power}
+                                                        primaryColor={primaryColor}
+                                                        inModal={false}
+                                                        renderActions={
+                                                            isFreeMode
+                                                                ? () => (
+                                                                      <ActionIcon
+                                                                          size="sm"
+                                                                          variant="subtle"
+                                                                          color="red"
+                                                                          onClick={() => handleDeletePower(power)}
+                                                                      >
+                                                                          <IconX size={16} />
+                                                                      </ActionIcon>
+                                                                  )
+                                                                : undefined
+                                                        }
+                                                    />
                                                 ))}
+                                            {isEditable ? (
+                                                <Center mt="xs">
+                                                    {mode === "xp" ? (
+                                                        (() => {
+                                                            const cost = getDisciplineCost(character, disciplineName)
+                                                            const availableXP = getAvailableXP(character)
+                                                            const canAfford = canAffordUpgrade(availableXP, cost)
+                                                            const tooltipLabel = canAfford
+                                                                ? `${cost} XP`
+                                                                : `Insufficient XP. Need ${cost}, have ${availableXP}`
+
+                                                            return (
+                                                                <Tooltip label={tooltipLabel}>
+                                                                    <span style={{ display: "inline-block" }}>
+                                                                        <ActionIcon
+                                                                            size="lg"
+                                                                            radius="xl"
+                                                                            variant="light"
+                                                                            color={primaryColor}
+                                                                            disabled={!canAfford}
+                                                                            onClick={() => {
+                                                                                setInitialDiscipline(disciplineName)
+                                                                                setModalOpened(true)
+                                                                            }}
+                                                                            style={{
+                                                                                cursor: canAfford ? "pointer" : "default",
+                                                                            }}
+                                                                        >
+                                                                            <IconPlus size={18} />
+                                                                        </ActionIcon>
+                                                                    </span>
+                                                                </Tooltip>
+                                                            )
+                                                        })()
+                                                    ) : (
+                                                        <ActionIcon
+                                                            size="lg"
+                                                            radius="xl"
+                                                            variant="light"
+                                                            color={primaryColor}
+                                                            onClick={() => {
+                                                                setInitialDiscipline(disciplineName)
+                                                                setModalOpened(true)
+                                                            }}
+                                                        >
+                                                            <IconPlus size={18} />
+                                                        </ActionIcon>
+                                                    )}
+                                                </Center>
+                                            ) : null}
                                         </Stack>
                                     </Paper>
                                 </Grid.Col>
                             )
                         })}
+                        {isEditable ? (
+                            <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
+                                <Paper
+                                    p="md"
+                                    withBorder
+                                    style={{
+                                        height: "100%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <Center style={{ height: "100%" }}>
+                                        {mode === "xp" ? (
+                                            (() => {
+                                                const disciplinesAlreadyHave = new Set(
+                                                    character.disciplines.map((power) => power.discipline)
+                                                )
+                                                const allDisciplines = Object.keys(disciplines) as DisciplineName[]
+                                                const availableDisciplines = allDisciplines.filter(
+                                                    (disciplineName) => disciplineName !== "" && !disciplinesAlreadyHave.has(disciplineName)
+                                                )
+
+                                                const costs = availableDisciplines.map((disciplineName) =>
+                                                    getDisciplineCost(character, disciplineName)
+                                                )
+                                                const minCost = costs.length > 0 ? Math.min(...costs) : 0
+                                                const availableXP = getAvailableXP(character)
+                                                const canAfford = canAffordUpgrade(availableXP, minCost)
+                                                const tooltipLabel = canAfford
+                                                    ? `${minCost} XP`
+                                                    : `Insufficient XP. Need ${minCost}, have ${availableXP}`
+
+                                                return (
+                                                    <Tooltip label={tooltipLabel}>
+                                                        <span style={{ display: "inline-block" }}>
+                                                            <ActionIcon
+                                                                size="xl"
+                                                                variant="light"
+                                                                color={primaryColor}
+                                                                radius="xl"
+                                                                disabled={!canAfford}
+                                                                onClick={() => {
+                                                                    setInitialDiscipline(null)
+                                                                    setModalOpened(true)
+                                                                }}
+                                                                style={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    cursor: canAfford ? "pointer" : "default",
+                                                                }}
+                                                            >
+                                                                <IconPlus size={24} />
+                                                            </ActionIcon>
+                                                        </span>
+                                                    </Tooltip>
+                                                )
+                                            })()
+                                        ) : (
+                                            <ActionIcon
+                                                size="xl"
+                                                variant="light"
+                                                color={primaryColor}
+                                                radius="xl"
+                                                onClick={() => {
+                                                    setInitialDiscipline(null)
+                                                    setModalOpened(true)
+                                                }}
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                }}
+                                            >
+                                                <IconPlus size={24} />
+                                            </ActionIcon>
+                                        )}
+                                    </Center>
+                                </Paper>
+                            </Grid.Col>
+                        ) : null}
                     </Grid>
                 </Box>
             ) : null}
@@ -148,6 +311,48 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     </Grid>
                 </Box>
             ) : null}
+            <DisciplineSelectModal
+                opened={modalOpened}
+                onClose={() => {
+                    setModalOpened(false)
+                    setInitialDiscipline(null)
+                }}
+                options={options}
+                initialDiscipline={initialDiscipline}
+                hideBackButton={initialDiscipline !== null}
+            />
+            <Modal
+                opened={!!itemToDelete}
+                onClose={() => {
+                    setItemToDelete(null)
+                }}
+                title=""
+                centered
+                withCloseButton={false}
+            >
+                <Stack>
+                    <Text fz="xl" ta="center">
+                        {itemToDelete?.type === "power"
+                            ? `Delete power "${itemToDelete.power.name}"?`
+                            : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
+                    </Text>
+                    <Divider my="sm" />
+                    <Group justify="space-between">
+                        <Button
+                            color="yellow"
+                            variant="subtle"
+                            onClick={() => {
+                                setItemToDelete(null)
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button color="red" onClick={confirmDelete}>
+                            Delete
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         </>
     )
 }
