@@ -4,6 +4,7 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
 import { clans } from "~/data/Clans"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
+import { Character } from "~/data/Character"
 import { SheetOptions } from "../constants"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import { getDisciplineCost } from "../utils/xp"
@@ -116,6 +117,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                         onSelectPower={handleSelectPower}
                         onBack={handleBack}
                         hideBackButton={hideBackButton}
+                        character={character}
                     />
                 ) : opened ? (
                     <>
@@ -214,9 +216,10 @@ type PowerPickerProps = {
     onSelectPower: (power: Power) => void
     onBack: () => void
     hideBackButton?: boolean
+    character: Character
 }
 
-const PowerPicker = ({ availablePowers, primaryColor, onSelectPower, onBack, hideBackButton }: PowerPickerProps) => {
+const PowerPicker = ({ availablePowers, primaryColor, onSelectPower, onBack, hideBackButton, character }: PowerPickerProps) => {
     const powersByLevel = new Map<number, Power[]>()
     availablePowers.forEach((power) => {
         const level = power.level
@@ -258,6 +261,7 @@ const PowerPicker = ({ availablePowers, primaryColor, onSelectPower, onBack, hid
                                                 primaryColor={primaryColor}
                                                 onClick={() => onSelectPower(power)}
                                                 inModal={true}
+                                                character={character}
                                             />
                                         </Grid.Col>
                                     ))}

@@ -1,6 +1,8 @@
-import { Badge, Box, Group, Stack, Text } from "@mantine/core"
+import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core"
 import { Power } from "~/data/Disciplines"
+import { Character } from "~/data/Character"
 import Tally from "~/components/Tally"
+import { getValueForKey } from "~/generator/utils"
 
 type DisciplinePowerCardProps = {
     power: Power
@@ -8,22 +10,46 @@ type DisciplinePowerCardProps = {
     onClick?: () => void
     inModal: boolean
     renderActions?: () => React.ReactNode
+    character?: Character
 }
 
-const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActions }: DisciplinePowerCardProps) => {
+export const calculateDicePoolValues = (dicePoolString: string, character: Character): string | null => {
+    if (!dicePoolString || dicePoolString.trim() === "" || dicePoolString === "-") {
+        return null
+    }
+
+    const components = dicePoolString.split("+").map((comp) => comp.trim())
+
+    const values: number[] = []
+
+    for (const component of components) {
+        const alternatives = component.split("/").map((alt) => alt.trim())
+
+        if (alternatives.length === 1) {
+            const value = getValueForKey(alternatives[0].toLowerCase(), character)
+            values.push(value)
+        } else {
+            let bestValue = getValueForKey(alternatives[0].toLowerCase(), character)
+            for (let i = 1; i < alternatives.length; i++) {
+                const value = getValueForKey(alternatives[i].toLowerCase(), character)
+                if (value > bestValue) {
+                    bestValue = value
+                }
+            }
+            values.push(bestValue)
+        }
+    }
+
+    return values.join(" + ")
+}
+
+const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActions, character }: DisciplinePowerCardProps) => {
     const content = (
-        <Stack gap="xs">
+        <Stack gap="xs" style={{ height: "100%", minHeight: "140px" }}>
             <Group justify="space-between" align="flex-start">
-                <Stack gap={2} style={{ flex: 1 }}>
-                    <Text fw={600} size="sm">
-                        {power.name}
-                    </Text>
-                    {power.summary ? (
-                        <Text size="xs" c="dimmed" lineClamp={4} style={{ minHeight: "68px" }}>
-                            {power.summary}
-                        </Text>
-                    ) : null}
-                </Stack>
+                <Text fw={600} size="sm" style={{ flex: 1 }}>
+                    {power.name}
+                </Text>
                 <Group gap="xs" align="center">
                     <Badge size="sm" variant="dot" color={primaryColor}>
                         Lv.{power.level}
@@ -31,8 +57,32 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
                     {renderActions ? renderActions() : null}
                 </Group>
             </Group>
-            <Stack gap={2} mt={4}>
-                {power.dicePool && power.dicePool !== "-" ? <Text size="xs">{power.dicePool.toUpperCase()}</Text> : null}
+            {power.summary ? (
+                <Text size="xs" c="dimmed" lineClamp={4} style={{ flex: 1 }}>
+                    {power.summary}
+                </Text>
+            ) : (
+                <Box style={{ flex: 1 }} />
+            )}
+            <Stack gap={2} mt="auto">
+                {power.dicePool && power.dicePool !== "-" ? (
+                    character ? (
+                        (() => {
+                            const tooltipValue = calculateDicePoolValues(power.dicePool, character)
+                            return tooltipValue ? (
+                                <Tooltip label={tooltipValue}>
+                                    <Text size="xs" style={{ cursor: "help" }}>
+                                        {power.dicePool.toUpperCase()}
+                                    </Text>
+                                </Tooltip>
+                            ) : (
+                                <Text size="xs">{power.dicePool.toUpperCase()}</Text>
+                            )
+                        })()
+                    ) : (
+                        <Text size="xs">{power.dicePool.toUpperCase()}</Text>
+                    )
+                ) : null}
                 <Group gap="xs" align="center">
                     <Text size="xs">Rouses:</Text>
                     {power.rouseChecks > 0 ? (
@@ -55,6 +105,8 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
                     borderRadius: "var(--mantine-radius-sm)",
                     cursor: "pointer",
                     transition: "background-color 0.2s",
+                    minHeight: "140px",
+                    display: "flex",
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
@@ -75,6 +127,8 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
             style={{
                 border: "1px solid var(--mantine-color-gray-3)",
                 borderRadius: "var(--mantine-radius-sm)",
+                minHeight: "140px",
+                display: "flex",
             }}
         >
             {content}

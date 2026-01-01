@@ -125,6 +125,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         power={power}
                                                         primaryColor={primaryColor}
                                                         inModal={false}
+                                                        character={character}
                                                         renderActions={
                                                             isFreeMode
                                                                 ? () => (
