@@ -1,5 +1,6 @@
-import { Box, Grid, Group, Paper, Stack, Text, Title, Badge } from "@mantine/core"
+import { Box, Grid, Group, Paper, Stack, Text, Title, Badge, useMantineTheme } from "@mantine/core"
 import { SheetOptions } from "../constants"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type MeritsAndFlawsProps = {
     options: SheetOptions
@@ -7,6 +8,8 @@ type MeritsAndFlawsProps = {
 
 const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     const { character, primaryColor } = options
+    const theme = useMantineTheme()
+    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     if (character.merits.length === 0 && character.flaws.length === 0) {
         return null
     }
@@ -24,7 +27,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                         </Title>
                         <Stack gap="xs">
                             {character.merits.map((merit, index) => (
-                                <Paper key={index} p="sm" withBorder>
+                                <Paper key={index} p="sm" withBorder style={{ backgroundColor: paperBg }}>
                                     <Group justify="space-between">
                                         <Text fw={700}>{merit.name}</Text>
                                         <Badge color={primaryColor} circle>
@@ -48,7 +51,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                         </Title>
                         <Stack gap="xs">
                             {character.flaws.map((flaw, index) => (
-                                <Paper key={index} p="sm" withBorder>
+                                <Paper key={index} p="sm" withBorder style={{ backgroundColor: paperBg }}>
                                     <Group justify="space-between">
                                         <Text fw={700}>{flaw.name}</Text>
                                         <Badge color="red" circle>

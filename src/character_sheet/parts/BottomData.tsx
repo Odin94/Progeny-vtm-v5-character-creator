@@ -1,8 +1,9 @@
-import { Grid, Group, Paper, Stack, Text } from "@mantine/core"
+import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
 import Pips from "~/character_sheet/components/Pips"
 import SquarePips from "~/character_sheet/components/SquarePips"
 import DamagePips from "~/character_sheet/components/DamagePips"
 import { SheetOptions } from "../constants"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type BottomDataProps = {
     options: SheetOptions
@@ -10,12 +11,14 @@ type BottomDataProps = {
 
 const BottomData = ({ options }: BottomDataProps) => {
     const { character } = options
+    const theme = useMantineTheme()
     const { superficialDamage, aggravatedDamage, superficialWillpowerDamage, aggravatedWillpowerDamage, hunger } = character.ephemeral
+    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     return (
         <Grid justify="space-between">
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder>
+                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
                     <Text fw={700} mb="xs">
                         Health
                     </Text>
@@ -43,7 +46,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder>
+                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
                     <Text fw={700} mb="xs">
                         Willpower
                     </Text>
@@ -71,7 +74,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder>
+                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
                     <Text fw={700} mb="xs">
                         Humanity
                     </Text>
@@ -80,7 +83,7 @@ const BottomData = ({ options }: BottomDataProps) => {
             </Grid.Col>
 
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder>
+                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
                     <Text fw={700} mb="xs">
                         Hunger
                     </Text>

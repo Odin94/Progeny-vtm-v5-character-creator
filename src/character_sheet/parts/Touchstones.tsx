@@ -1,5 +1,6 @@
-import { Box, Grid, Paper, Text, Title } from "@mantine/core"
+import { Box, Grid, Paper, Text, Title, useMantineTheme } from "@mantine/core"
 import { SheetOptions } from "../constants"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type TouchstonesProps = {
     options: SheetOptions
@@ -7,6 +8,8 @@ type TouchstonesProps = {
 
 const Touchstones = ({ options }: TouchstonesProps) => {
     const { character, primaryColor } = options
+    const theme = useMantineTheme()
+    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     if (character.touchstones.length === 0) {
         return null
     }
@@ -19,7 +22,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
             <Grid>
                 {character.touchstones.map((touchstone, index) => (
                     <Grid.Col key={index} span={{ base: 12, md: 6 }}>
-                        <Paper p="sm" withBorder>
+                        <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
                             <Text fw={700}>{touchstone.name}</Text>
                             {touchstone.description ? (
                                 <Text size="sm" c="dimmed" mt="xs">

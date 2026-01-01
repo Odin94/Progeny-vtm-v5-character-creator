@@ -1,4 +1,20 @@
-import { Badge, Box, Divider, Grid, Group, Stack, Text, Title, Paper, Center, ActionIcon, Modal, Button, Tooltip } from "@mantine/core"
+import {
+    Badge,
+    Box,
+    Divider,
+    Grid,
+    Group,
+    Stack,
+    Text,
+    Title,
+    Paper,
+    Center,
+    ActionIcon,
+    Modal,
+    Button,
+    Tooltip,
+    useMantineTheme,
+} from "@mantine/core"
 import { useState } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
@@ -9,6 +25,7 @@ import DisciplinePowerCard from "../components/DisciplinePowerCard"
 import { IconPlus, IconX } from "@tabler/icons-react"
 import { Power } from "~/data/Disciplines"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type DisciplinesProps = {
     options: SheetOptions
@@ -16,6 +33,7 @@ type DisciplinesProps = {
 
 const Disciplines = ({ options }: DisciplinesProps) => {
     const { character, primaryColor, mode, setCharacter } = options
+    const theme = useMantineTheme()
     const [modalOpened, setModalOpened] = useState(false)
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
@@ -23,6 +41,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
+    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     if (character.disciplines.length === 0 && character.rituals.length === 0 && !isEditable) {
         return null
@@ -81,7 +100,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
 
                             return (
                                 <Grid.Col key={disciplineName} span={{ base: 12, md: 6, lg: 4 }}>
-                                    <Paper p="md" withBorder style={{ height: "100%" }}>
+                                    <Paper p="md" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
                                         <Group gap="md" mb="md" align="center">
                                             {logo ? (
                                                 <img
@@ -207,6 +226,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        backgroundColor: paperBg,
                                     }}
                                 >
                                     <Center style={{ height: "100%" }}>

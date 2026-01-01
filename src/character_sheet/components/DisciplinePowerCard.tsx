@@ -1,8 +1,9 @@
-import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core"
+import { Badge, Box, Group, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core"
 import { Power } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import Tally from "~/components/Tally"
 import { getValueForKey } from "~/generator/utils"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type DisciplinePowerCardProps = {
     power: Power
@@ -44,26 +45,19 @@ export const calculateDicePoolValues = (dicePoolString: string, character: Chara
 }
 
 const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActions, character }: DisciplinePowerCardProps) => {
+    const theme = useMantineTheme()
+    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const content = (
-        <Stack gap="xs" style={{ height: "100%", minHeight: "140px" }}>
-            <Group justify="space-between" align="flex-start">
-                <Text fw={600} size="sm" style={{ flex: 1 }}>
-                    {power.name}
-                </Text>
-                <Group gap="xs" align="center">
-                    <Badge size="sm" variant="dot" color={primaryColor}>
-                        Lv.{power.level}
-                    </Badge>
-                    {renderActions ? renderActions() : null}
-                </Group>
-            </Group>
+        <Stack gap="xs" style={{ height: "100%", minHeight: "135px" }}>
+            <Text fw={600} size="sm" style={{ paddingRight: renderActions || !inModal ? "60px" : "0" }}>
+                {power.name}
+            </Text>
             {power.summary ? (
-                <Text size="xs" c="dimmed" lineClamp={4} style={{ flex: 1 }}>
+                <Text size="xs" c="dimmed" lineClamp={4}>
                     {power.summary}
                 </Text>
-            ) : (
-                <Box style={{ flex: 1 }} />
-            )}
+            ) : null}
+            <Box style={{ flex: 1 }} />
             <Stack gap={2} mt="auto">
                 {power.dicePool && power.dicePool !== "-" ? (
                     character ? (
@@ -95,6 +89,17 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
         </Stack>
     )
 
+    const topRightActions = (
+        <Group gap="xs" align="center" style={{ position: "absolute", top: "8px", right: "8px" }}>
+            {!inModal ? (
+                <Badge size="sm" variant="dot" color={primaryColor}>
+                    Lv.{power.level}
+                </Badge>
+            ) : null}
+            {renderActions ? renderActions() : null}
+        </Group>
+    )
+
     if (inModal) {
         return (
             <Box
@@ -107,6 +112,7 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
                     transition: "background-color 0.2s",
                     minHeight: "140px",
                     display: "flex",
+                    position: "relative",
                 }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
@@ -116,6 +122,7 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
                 }}
             >
                 {content}
+                {topRightActions}
             </Box>
         )
     }
@@ -129,9 +136,12 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
                 borderRadius: "var(--mantine-radius-sm)",
                 minHeight: "140px",
                 display: "flex",
+                backgroundColor: paperBg,
+                position: "relative",
             }}
         >
             {content}
+            {topRightActions}
         </Box>
     )
 }

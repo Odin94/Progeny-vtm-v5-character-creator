@@ -3,6 +3,7 @@ import { clans } from "~/data/Clans"
 import { potencyEffects } from "~/data/BloodPotency"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../constants"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type TheBloodProps = {
     options: SheetOptions
@@ -15,12 +16,13 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const effects = potencyEffects[Math.min(character.bloodPotency, 5)] || potencyEffects[0]
     const clan = clans[character.clan] || clans[""]
     const baneText = clan.bane ? clan.bane.replace(/BANE_SEVERITY/g, `${effects.bane} (bane severity)`) : ""
+    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     const isExperienceEditable = mode === "xp" || mode === "free"
     const isExperienceSpentEditable = mode === "free"
 
     return (
-        <Paper p="lg" withBorder>
+        <Paper p="lg" withBorder style={{ backgroundColor: paperBg }}>
             <Title order={2} mb="md" c={primaryColor}>
                 The Blood
             </Title>
@@ -38,7 +40,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
             <Grid gutter="md">
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%" }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
                         <Stack gap="xs">
                             <Group gap="md" align="center">
                                 <Group gap="xs" align="center">
@@ -142,7 +144,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%" }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
                         <Stack gap="xs">
                             <Text size="sm">
                                 <Text span fw={600}>
@@ -167,7 +169,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%" }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
                         <Stack gap="xs">
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Feeding Penalty
@@ -190,7 +192,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%" }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
                         <Stack gap="xs">
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Clan Traits
