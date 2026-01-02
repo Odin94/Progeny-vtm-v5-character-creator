@@ -1,6 +1,7 @@
 import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput, useMantineTheme, Select } from "@mantine/core"
 import { clans } from "~/data/Clans"
-import { ClanName } from "~/data/NameSchemas"
+import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
+import { PredatorTypes } from "~/data/PredatorType"
 import { SheetOptions } from "../utils/constants"
 import FocusBorderWrapper from "../components/FocusBorderWrapper"
 import { hexToRgba, inputAlpha } from "../utils/style"
@@ -103,7 +104,7 @@ const TopData = ({ options }: TopDataProps) => {
             </Box>
 
             <Grid>
-                <Grid.Col span={{ base: 12, md: 6 }}>
+                <Grid.Col span={{ base: 12, md: 4 }}>
                     <Stack gap="xs">
                         <Group gap="xs">
                             <Text fw={700}>Clan:</Text>
@@ -145,22 +146,33 @@ const TopData = ({ options }: TopDataProps) => {
                             )}
                         </Group>
                         <Group gap="xs">
-                            <Text fw={700}>Generation:</Text>
+                            <Text fw={700}>Predator Type:</Text>
                             {isFreeMode ? (
                                 <FocusBorderWrapper colorValue={colorValue}>
-                                    <NumberInput
-                                        value={character.generation || 0}
+                                    <Select
+                                        placeholder="Select a predator type"
+                                        data={Object.keys(PredatorTypes)
+                                            .filter((predatorTypeName) => predatorTypeName !== "")
+                                            .map((predatorTypeName) => ({
+                                                value: predatorTypeName,
+                                                label: predatorTypeName,
+                                            }))}
+                                        value={character.predatorType.name || null}
                                         onChange={(value) => {
-                                            const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
-                                            setCharacter({
-                                                ...character,
-                                                generation: Math.max(0, numValue),
-                                            })
+                                            if (value) {
+                                                const selectedPredatorType = value as PredatorTypeName
+                                                setCharacter({
+                                                    ...character,
+                                                    predatorType: {
+                                                        ...character.predatorType,
+                                                        name: selectedPredatorType,
+                                                    },
+                                                })
+                                            }
                                         }}
-                                        min={0}
                                         size="sm"
                                         color={primaryColor}
-                                        style={{ width: "100px" }}
+                                        style={{ width: "200px" }}
                                         styles={{
                                             input: {
                                                 backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
@@ -169,39 +181,12 @@ const TopData = ({ options }: TopDataProps) => {
                                     />
                                 </FocusBorderWrapper>
                             ) : (
-                                <Text>{character.generation || "—"}</Text>
-                            )}
-                        </Group>
-                        <Group gap="xs">
-                            <Text fw={700}>Sire:</Text>
-                            {isFreeMode ? (
-                                <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
-                                    <TextInput
-                                        value={character.sire || ""}
-                                        onChange={(e) =>
-                                            setCharacter({
-                                                ...character,
-                                                sire: e.target.value,
-                                            })
-                                        }
-                                        placeholder="—"
-                                        size="sm"
-                                        color={primaryColor}
-                                        style={{ width: "50%" }}
-                                        styles={{
-                                            input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
-                                        }}
-                                    />
-                                </FocusBorderWrapper>
-                            ) : (
-                                <Text>{character.sire || "—"}</Text>
+                                <Text>{character.predatorType.name || "—"}</Text>
                             )}
                         </Group>
                     </Stack>
                 </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
+                <Grid.Col span={{ base: 12, md: 4 }}>
                     <Stack gap="xs">
                         <Group gap="xs">
                             <Text fw={700}>Ambition:</Text>
@@ -282,6 +267,65 @@ const TopData = ({ options }: TopDataProps) => {
                                 </FocusBorderWrapper>
                             ) : (
                                 <Text>{character.player || "—"}</Text>
+                            )}
+                        </Group>
+                    </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Stack gap="xs">
+                        <Group gap="xs">
+                            <Text fw={700}>Generation:</Text>
+                            {isFreeMode ? (
+                                <FocusBorderWrapper colorValue={colorValue}>
+                                    <NumberInput
+                                        value={character.generation || 0}
+                                        onChange={(value) => {
+                                            const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
+                                            setCharacter({
+                                                ...character,
+                                                generation: Math.max(0, numValue),
+                                            })
+                                        }}
+                                        min={0}
+                                        size="sm"
+                                        color={primaryColor}
+                                        style={{ width: "100px" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
+                                    />
+                                </FocusBorderWrapper>
+                            ) : (
+                                <Text>{character.generation || "—"}</Text>
+                            )}
+                        </Group>
+                        <Group gap="xs">
+                            <Text fw={700}>Sire:</Text>
+                            {isFreeMode ? (
+                                <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
+                                    <TextInput
+                                        value={character.sire || ""}
+                                        onChange={(e) =>
+                                            setCharacter({
+                                                ...character,
+                                                sire: e.target.value,
+                                            })
+                                        }
+                                        placeholder="—"
+                                        size="sm"
+                                        color={primaryColor}
+                                        style={{ width: "50%" }}
+                                        styles={{
+                                            input: {
+                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
+                                            },
+                                        }}
+                                    />
+                                </FocusBorderWrapper>
+                            ) : (
+                                <Text>{character.sire || "—"}</Text>
                             )}
                         </Group>
                     </Stack>
