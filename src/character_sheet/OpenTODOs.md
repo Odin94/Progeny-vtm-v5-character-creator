@@ -34,3 +34,4 @@
 * Show toast when loading from json fails
 * Fix toast display when loading in sheet
 * Do not add an empty specialty to Academics, Craft etc. if the skill is not picked  (visible in sheet)
+* Editing predator type in sheet

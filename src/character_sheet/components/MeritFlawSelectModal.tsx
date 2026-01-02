@@ -2,6 +2,7 @@ import { Badge, Box, Button, Card, Grid, Group, Modal, ScrollArea, Stack, Tabs, 
 import posthog from "posthog-js"
 import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
+import { clans } from "~/data/Clans"
 import { MeritOrFlaw, loresheets, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
 import { intersection } from "~/generator/utils"
@@ -72,8 +73,17 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 })
             })
         }
+        const clan = clans[character.clan]
+        if (clan?.excludedMeritsAndFlaws) {
+            clan.excludedMeritsAndFlaws.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(`${character.clan} clan`)
+            })
+        }
         return map
-    }, [character.merits, character.flaws, character.predatorType.pickedMeritsAndFlaws, character.predatorType.name])
+    }, [character.merits, character.flaws, character.predatorType.pickedMeritsAndFlaws, character.predatorType.name, character.clan])
 
     useEffect(() => {
         if (selectedMeritFlaw) {

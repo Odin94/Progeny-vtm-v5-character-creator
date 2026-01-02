@@ -24,6 +24,8 @@ export const clanSchema = z.object({
     bane: z.string(),
     compulsion: z.string(),
     nativeDisciplines: disciplineNameSchema.array(),
+    excludedPredatorTypes: z.array(z.string()).default([]).optional(),
+    excludedMeritsAndFlaws: z.array(z.string()).default([]).optional(),
 })
 export type Clan = z.infer<typeof clanSchema>
 export const clanKeySchema = clanSchema.keyof()
@@ -56,6 +58,7 @@ export const clans: Record<ClanName, Clan> = {
         compulsion:
             "Cryptophilia: Become obsessed with obtaining secrets. Refuse to share secrets with others, except in strict trade for greater secrets.",
         nativeDisciplines: ["animalism", "obfuscate", "potence"],
+        excludedMeritsAndFlaws: ["Beautiful", "Stunning"],
     },
     Malkavian: {
         name: "Malkavian",
@@ -83,6 +86,8 @@ export const clans: Record<ClanName, Clan> = {
         compulsion:
             "Arrogance: Until somebody obeys an order from you (not forced by Dominate), you take a two-dice penalty on all rolls not related to leadership.",
         nativeDisciplines: ["dominate", "fortitude", "presence"],
+        excludedPredatorTypes: ["Bagger", "Farmer"],
+        excludedMeritsAndFlaws: ["Farmer"],
     },
     Toreador: {
         name: "Toreador",

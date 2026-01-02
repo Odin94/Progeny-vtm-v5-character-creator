@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
+import { clans } from "../../data/Clans"
 import { isThinbloodFlaw, isThinbloodMerit, MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "../../data/MeritsAndFlaws"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
@@ -73,8 +74,17 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 })
             })
         }
+        const clan = clans[character.clan]
+        if (clan?.excludedMeritsAndFlaws) {
+            clan.excludedMeritsAndFlaws.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(`${character.clan} clan`)
+            })
+        }
         return map
-    }, [pickedMeritsAndFlaws, character.predatorType.name])
+    }, [pickedMeritsAndFlaws, character.predatorType.name, character.clan])
 
     const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => {
         const buttonColor = type === "flaw" ? "red" : "green"

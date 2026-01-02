@@ -8,6 +8,7 @@ import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
+import { clans } from "~/data/Clans"
 
 type PredatorTypePickerProps = {
     character: Character
@@ -30,16 +31,16 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const [discipline, setDiscipline] = useState("")
 
     const createButton = (predatorTypeName: PredatorTypeName, color: string) => {
-        const ventrueDisabled = character.clan === "Ventrue" && ["Bagger", "Farmer"].includes(predatorTypeName)
+        const clanDisabled = clans[character.clan]?.excludedPredatorTypes?.includes(predatorTypeName) ?? false
 
         return (
             <Tooltip
-                label={PredatorTypes[predatorTypeName].summary}
+                label={clanDisabled ? `This predator type is excluded for ${character.clan}` : PredatorTypes[predatorTypeName].summary}
                 key={predatorTypeName}
                 transitionProps={{ transition: "slide-up", duration: 200 }}
             >
                 <Button
-                    disabled={ventrueDisabled || isThinBlood}
+                    disabled={clanDisabled || isThinBlood}
                     color={color}
                     onClick={() => {
                         const firstSpecialtyOption = PredatorTypes[predatorTypeName].specialtyOptions[0]
