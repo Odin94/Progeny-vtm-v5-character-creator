@@ -62,8 +62,19 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                     disabled={generation === null}
                     color="grape"
                     onClick={() => {
+                        const genValue = parseInt(generation ?? "0")
+                        let experience = 0
+                        if (character.experience === 0) {
+                            if (genValue === 14) {
+                                experience = 0
+                            } else if (genValue === 13) {
+                                experience = 15
+                            } else if (genValue <= 12) {
+                                experience = 35
+                            }
+                        }
                         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                        setCharacter({ ...character, generation: parseInt(generation ?? "0") })
+                        setCharacter({ ...character, generation: genValue, experience })
                         trackEvent({
                             action: "generation submit clicked",
                             category: "generation",
