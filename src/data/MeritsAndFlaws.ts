@@ -148,7 +148,7 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
         merits: [],
         flaws: [
             { name: "Living in the Past", cost: [1], summary: "you have outdated views & convictions", excludes: [] },
-            { name: "Archaic", cost: [1], summary: "Technology skill stuck at 0", excludes: [] },
+            { name: "Archaic", cost: [2], summary: "Can't use computers, technology skill stuck at 0", excludes: [] },
         ],
     },
     {

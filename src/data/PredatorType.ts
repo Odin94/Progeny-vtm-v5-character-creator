@@ -191,7 +191,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
             {
                 options: [
-                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 3, excludes: [], type: "flaw" },
+                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 2, excludes: [], type: "flaw" },
                     {
                         name: "Folkloric Bane",
                         summary: "specific items damage you (eg. silver, garlic)",
