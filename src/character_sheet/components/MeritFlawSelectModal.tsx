@@ -1,11 +1,12 @@
-import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } from "@mantine/core"
-import { useState, useEffect } from "react"
-import { MeritFlaw } from "~/data/Character"
-import { MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
-import { SheetOptions } from "../utils/constants"
-import { getMeritCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
-import PipButton from "./PipButton"
+import { Badge, Box, Button, Card, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core"
 import posthog from "posthog-js"
+import { useEffect, useState } from "react"
+import { MeritFlaw } from "~/data/Character"
+import { MeritOrFlaw, loresheets, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
+import { intersection } from "~/generator/utils"
+import { SheetOptions } from "../utils/constants"
+import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
+import PipButton from "./PipButton"
 
 type MeritFlawSelectModalProps = {
     opened: boolean
@@ -18,6 +19,17 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const { character, primaryColor, mode, setCharacter } = options
     const [selectedMeritFlaw, setSelectedMeritFlaw] = useState<MeritOrFlaw | null>(null)
     const [selectedLevel, setSelectedLevel] = useState<number>(1)
+    const [activeTab, setActiveTab] = useState<string | null>("regular")
+    const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
+
+    useEffect(() => {
+        if (!opened) {
+            setSelectedMeritFlaw(null)
+            setSelectedLevel(1)
+            setActiveTab("regular")
+            setOpenLoresheetTitle("")
+        }
+    }, [opened])
 
     const allMeritsAndFlaws = character.clan === "Thin-blood" ? [thinbloodMeritsAndFlaws, ...meritsAndFlaws] : meritsAndFlaws
     const characterMeritFlawNames = new Set(type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name))
@@ -162,6 +174,175 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         return getMeritCost(level, previousLevel)
     }
 
+    const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const pickedMeritsAndFlaws = [...character.merits, ...character.flaws]
+
+    const renderLoresheetsContent = () => {
+        if (openLoresheet) {
+            const availableMerits = openLoresheet.merits.filter((merit) => !characterMeritFlawNames.has(merit.name))
+
+            return (
+                <Stack gap="md">
+                    <Group justify="space-between" align="flex-start">
+                        <Box style={{ flex: 1 }}>
+                            <Title order={4} mb="sm" c={primaryColor}>
+                                {openLoresheet.title}
+                            </Title>
+                            <Text size="sm" c="dimmed" mb="md">
+                                {openLoresheet.summary}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                                Source: {openLoresheet.source}
+                            </Text>
+                        </Box>
+                        <Button variant="subtle" onClick={() => setOpenLoresheetTitle("")} color={primaryColor}>
+                            Back
+                        </Button>
+                    </Group>
+                    {availableMerits.length === 0 ? (
+                        <Text c="dimmed" ta="center" py="xl">
+                            All merits from this loresheet have been added.
+                        </Text>
+                    ) : (
+                        <Grid gutter="md">
+                            {availableMerits.map((merit) => {
+                                const lowestLevel = merit.cost[0]
+                                const lowestCost = mode === "xp" ? getCostForItem(merit, lowestLevel) : 0
+                                const availableXP = getAvailableXP(character)
+                                const canAffordLowest = mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
+                                const tooltipLabel =
+                                    mode === "xp" && !canAffordLowest
+                                        ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+                                        : undefined
+
+                                const boxContent = (
+                                    <Box
+                                        p="xs"
+                                        onClick={() => handleItemClick(merit)}
+                                        style={{
+                                            border: "1px solid var(--mantine-color-gray-8)",
+                                            borderRadius: "var(--mantine-radius-sm)",
+                                            cursor: canAffordLowest ? "pointer" : "default",
+                                            transition: "background-color 0.2s",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (canAffordLowest) {
+                                                e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = "transparent"
+                                        }}
+                                    >
+                                        <Stack gap="xs">
+                                            <Group justify="space-between" align="flex-start">
+                                                <Text fw={600} size="sm" style={{ flex: 1 }}>
+                                                    {merit.name}
+                                                </Text>
+                                                <Badge size="sm" variant="dot" color={primaryColor}>
+                                                    {merit.cost.join("/")}
+                                                </Badge>
+                                            </Group>
+                                            {merit.summary ? (
+                                                <Text size="xs" c="dimmed" lineClamp={3}>
+                                                    {merit.summary}
+                                                </Text>
+                                            ) : null}
+                                        </Stack>
+                                    </Box>
+                                )
+
+                                if (tooltipLabel) {
+                                    return (
+                                        <Grid.Col key={merit.name} span={{ base: 12, sm: 6 }}>
+                                            <Tooltip label={tooltipLabel} withArrow>
+                                                {boxContent}
+                                            </Tooltip>
+                                        </Grid.Col>
+                                    )
+                                }
+
+                                return (
+                                    <Grid.Col key={merit.name} span={{ base: 12, sm: 6 }}>
+                                        {boxContent}
+                                    </Grid.Col>
+                                )
+                            })}
+                        </Grid>
+                    )}
+                </Stack>
+            )
+        }
+
+        const availableLoresheets = loresheets.filter((loresheet) => {
+            const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
+            if (!requirementsMet) return false
+            const sheetPicked =
+                intersection(
+                    pickedMeritsAndFlaws.map((m) => m.name),
+                    loresheet.merits.map((m) => m.name)
+                ).length > 0
+            const hasAvailableMerits = loresheet.merits.some((merit) => !characterMeritFlawNames.has(merit.name))
+            return hasAvailableMerits || sheetPicked
+        })
+
+        if (availableLoresheets.length === 0) {
+            return (
+                <Text c="dimmed" ta="center" py="xl">
+                    No available loresheets.
+                </Text>
+            )
+        }
+
+        return (
+            <ScrollArea h={400}>
+                <Grid gutter="md">
+                    {availableLoresheets.map((loresheet) => {
+                        const sheetPicked =
+                            intersection(
+                                pickedMeritsAndFlaws.map((m) => m.name),
+                                loresheet.merits.map((m) => m.name)
+                            ).length > 0
+
+                        return (
+                            <Grid.Col key={loresheet.title} span={{ base: 12, sm: 6, md: 4 }}>
+                                <Card
+                                    h={250}
+                                    style={{
+                                        backgroundColor: "rgba(26, 27, 30, 0.90)",
+                                        borderColor: sheetPicked ? "green" : "black",
+                                    }}
+                                    withBorder={sheetPicked}
+                                >
+                                    <Stack gap="xs" h="100%">
+                                        <Text fw={600} size="sm" ta="center">
+                                            {loresheet.title}
+                                        </Text>
+                                        <Text size="xs" c="dimmed" lineClamp={4} style={{ flex: 1 }}>
+                                            {loresheet.summary}
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
+                                            {loresheet.source}
+                                        </Text>
+                                        <Button
+                                            variant="light"
+                                            color="blue"
+                                            fullWidth
+                                            size="xs"
+                                            onClick={() => setOpenLoresheetTitle(loresheet.title)}
+                                        >
+                                            Open
+                                        </Button>
+                                    </Stack>
+                                </Card>
+                            </Grid.Col>
+                        )
+                    })}
+                </Grid>
+            </ScrollArea>
+        )
+    }
+
     return (
         <Modal opened={opened} onClose={onClose} title={`Select a ${type === "merit" ? "Merit" : "Flaw"}`} size="lg">
             <Stack gap="md">
@@ -221,101 +402,114 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                         </Group>
                     </>
                 ) : (
-                    <>
-                        {availableItems.length === 0 ? (
-                            <Text c="dimmed" ta="center" py="xl">
-                                No available {type === "merit" ? "merits" : "flaws"} to add.
-                            </Text>
-                        ) : (
-                            <Stack gap="lg">
-                                {allMeritsAndFlaws.map((category) => {
-                                    const items = type === "merit" ? category.merits : category.flaws
-                                    const availableCategoryItems = items.filter((item) => !characterMeritFlawNames.has(item.name))
+                    <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
+                        <Tabs.List>
+                            <Tabs.Tab value="regular">{type === "merit" ? "Merits" : "Flaws"}</Tabs.Tab>
+                            {type === "merit" ? <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab> : null}
+                        </Tabs.List>
 
-                                    if (availableCategoryItems.length === 0) return null
+                        <Tabs.Panel value="regular" pt="md">
+                            {availableItems.length === 0 ? (
+                                <Text c="dimmed" ta="center" py="xl">
+                                    No available {type === "merit" ? "merits" : "flaws"} to add.
+                                </Text>
+                            ) : (
+                                <Stack gap="lg">
+                                    {allMeritsAndFlaws.map((category) => {
+                                        const items = type === "merit" ? category.merits : category.flaws
+                                        const availableCategoryItems = items.filter((item) => !characterMeritFlawNames.has(item.name))
 
-                                    return (
-                                        <Stack key={category.title} gap="md">
-                                            <Title order={4} c={primaryColor}>
-                                                {category.title}
-                                            </Title>
-                                            <Grid gutter="md">
-                                                {availableCategoryItems.map((item) => {
-                                                    const lowestLevel = item.cost[0]
-                                                    const lowestCost =
-                                                        mode === "xp" && type === "merit" ? getCostForItem(item, lowestLevel) : 0
-                                                    const availableXP = getAvailableXP(character)
-                                                    const canAffordLowest =
-                                                        type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
-                                                    const tooltipLabel =
-                                                        mode === "xp" && type === "merit" && !canAffordLowest
-                                                            ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                                            : undefined
+                                        if (availableCategoryItems.length === 0) return null
 
-                                                    const boxContent = (
-                                                        <Box
-                                                            p="xs"
-                                                            onClick={() => handleItemClick(item)}
-                                                            style={{
-                                                                border: "1px solid var(--mantine-color-gray-8)",
-                                                                borderRadius: "var(--mantine-radius-sm)",
-                                                                cursor: canAffordLowest ? "pointer" : "default",
-                                                                transition: "background-color 0.2s",
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                if (canAffordLowest) {
-                                                                    e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
-                                                                }
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = "transparent"
-                                                            }}
-                                                        >
-                                                            <Stack gap="xs">
-                                                                <Group justify="space-between" align="flex-start">
-                                                                    <Text fw={600} size="sm" style={{ flex: 1 }}>
-                                                                        {item.name}
-                                                                    </Text>
-                                                                    <Badge
-                                                                        size="sm"
-                                                                        variant="dot"
-                                                                        color={type === "flaw" ? "red" : primaryColor}
-                                                                    >
-                                                                        {item.cost.join("/")}
-                                                                    </Badge>
-                                                                </Group>
-                                                                {item.summary ? (
-                                                                    <Text size="xs" c="dimmed" lineClamp={3}>
-                                                                        {item.summary}
-                                                                    </Text>
-                                                                ) : null}
-                                                            </Stack>
-                                                        </Box>
-                                                    )
+                                        return (
+                                            <Stack key={category.title} gap="md">
+                                                <Title order={4} c={primaryColor}>
+                                                    {category.title}
+                                                </Title>
+                                                <Grid gutter="md">
+                                                    {availableCategoryItems.map((item) => {
+                                                        const lowestLevel = item.cost[0]
+                                                        const lowestCost =
+                                                            mode === "xp" && type === "merit" ? getCostForItem(item, lowestLevel) : 0
+                                                        const availableXP = getAvailableXP(character)
+                                                        const canAffordLowest =
+                                                            type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
+                                                        const tooltipLabel =
+                                                            mode === "xp" && type === "merit" && !canAffordLowest
+                                                                ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+                                                                : undefined
 
-                                                    if (tooltipLabel) {
+                                                        const boxContent = (
+                                                            <Box
+                                                                p="xs"
+                                                                onClick={() => handleItemClick(item)}
+                                                                style={{
+                                                                    border: "1px solid var(--mantine-color-gray-8)",
+                                                                    borderRadius: "var(--mantine-radius-sm)",
+                                                                    cursor: canAffordLowest ? "pointer" : "default",
+                                                                    transition: "background-color 0.2s",
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    if (canAffordLowest) {
+                                                                        e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    e.currentTarget.style.backgroundColor = "transparent"
+                                                                }}
+                                                            >
+                                                                <Stack gap="xs">
+                                                                    <Group justify="space-between" align="flex-start">
+                                                                        <Text fw={600} size="sm" style={{ flex: 1 }}>
+                                                                            {item.name}
+                                                                        </Text>
+                                                                        <Badge
+                                                                            size="sm"
+                                                                            variant="dot"
+                                                                            color={type === "flaw" ? "red" : primaryColor}
+                                                                        >
+                                                                            {item.cost.join("/")}
+                                                                        </Badge>
+                                                                    </Group>
+                                                                    {item.summary ? (
+                                                                        <Text size="xs" c="dimmed" lineClamp={3}>
+                                                                            {item.summary}
+                                                                        </Text>
+                                                                    ) : null}
+                                                                </Stack>
+                                                            </Box>
+                                                        )
+
+                                                        if (tooltipLabel) {
+                                                            return (
+                                                                <Grid.Col key={item.name} span={{ base: 12, sm: 6 }}>
+                                                                    <Tooltip label={tooltipLabel} withArrow>
+                                                                        {boxContent}
+                                                                    </Tooltip>
+                                                                </Grid.Col>
+                                                            )
+                                                        }
+
                                                         return (
                                                             <Grid.Col key={item.name} span={{ base: 12, sm: 6 }}>
-                                                                <Tooltip label={tooltipLabel} withArrow>
-                                                                    {boxContent}
-                                                                </Tooltip>
+                                                                {boxContent}
                                                             </Grid.Col>
                                                         )
-                                                    }
+                                                    })}
+                                                </Grid>
+                                            </Stack>
+                                        )
+                                    })}
+                                </Stack>
+                            )}
+                        </Tabs.Panel>
 
-                                                    return (
-                                                        <Grid.Col key={item.name} span={{ base: 12, sm: 6 }}>
-                                                            {boxContent}
-                                                        </Grid.Col>
-                                                    )
-                                                })}
-                                            </Grid>
-                                        </Stack>
-                                    )
-                                })}
-                            </Stack>
-                        )}
-                    </>
+                        {type === "merit" ? (
+                            <Tabs.Panel value="loresheets" pt="md">
+                                {renderLoresheetsContent()}
+                            </Tabs.Panel>
+                        ) : null}
+                    </Tabs>
                 )}
             </Stack>
         </Modal>
