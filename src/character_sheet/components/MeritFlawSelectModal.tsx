@@ -1,8 +1,9 @@
 import { Badge, Box, Button, Card, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core"
 import posthog from "posthog-js"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
 import { MeritOrFlaw, loresheets, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
+import { PredatorTypes } from "~/data/PredatorType"
 import { intersection } from "~/generator/utils"
 import { SheetOptions } from "../utils/constants"
 import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
@@ -34,6 +35,46 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const allMeritsAndFlaws = character.clan === "Thin-blood" ? [thinbloodMeritsAndFlaws, ...meritsAndFlaws] : meritsAndFlaws
     const characterMeritFlawNames = new Set(type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name))
 
+    const exclusionMap = useMemo(() => {
+        const map = new Map<string, string[]>()
+        character.merits.forEach((merit) => {
+            merit.excludes.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(merit.name)
+            })
+        })
+        character.flaws.forEach((flaw) => {
+            flaw.excludes.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(flaw.name)
+            })
+        })
+        character.predatorType.pickedMeritsAndFlaws.forEach((meritFlaw) => {
+            meritFlaw.excludes.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(meritFlaw.name)
+            })
+        })
+        const predatorType = PredatorTypes[character.predatorType.name]
+        if (predatorType) {
+            predatorType.meritsAndFlaws.forEach((meritFlaw) => {
+                meritFlaw.excludes.forEach((excludedName) => {
+                    if (!map.has(excludedName)) {
+                        map.set(excludedName, [])
+                    }
+                    map.get(excludedName)?.push(meritFlaw.name)
+                })
+            })
+        }
+        return map
+    }, [character.merits, character.flaws, character.predatorType.pickedMeritsAndFlaws, character.predatorType.name])
+
     useEffect(() => {
         if (selectedMeritFlaw) {
             setSelectedLevel(1)
@@ -60,6 +101,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             name: meritFlaw.name,
             level: level,
             summary: meritFlaw.summary,
+            excludes: meritFlaw.excludes,
             type,
         }
 
@@ -152,6 +194,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     }
 
     const handleItemClick = (item: MeritOrFlaw) => {
+        if (exclusionMap.has(item.name)) {
+            return
+        }
         if (item.cost.length === 1) {
             addMeritFlaw(item, item.cost[0])
         } else {
@@ -206,14 +251,18 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     ) : (
                         <Grid gutter="md">
                             {availableMerits.map((merit) => {
+                                const excludingItems = exclusionMap.get(merit.name) ?? []
+                                const isExcluded = excludingItems.length > 0
                                 const lowestLevel = merit.cost[0]
                                 const lowestCost = mode === "xp" ? getCostForItem(merit, lowestLevel) : 0
                                 const availableXP = getAvailableXP(character)
                                 const canAffordLowest = mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
-                                const tooltipLabel =
-                                    mode === "xp" && !canAffordLowest
-                                        ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                        : undefined
+                                const canClick = !isExcluded && canAffordLowest
+                                const tooltipLabel = isExcluded
+                                    ? `Excluded by: ${excludingItems.join(", ")}`
+                                    : mode === "xp" && !canAffordLowest
+                                      ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+                                      : undefined
 
                                 const boxContent = (
                                     <Box
@@ -222,11 +271,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                         style={{
                                             border: "1px solid var(--mantine-color-gray-8)",
                                             borderRadius: "var(--mantine-radius-sm)",
-                                            cursor: canAffordLowest ? "pointer" : "default",
+                                            cursor: canClick ? "pointer" : "default",
                                             transition: "background-color 0.2s",
+                                            opacity: isExcluded ? 0.5 : 1,
                                         }}
                                         onMouseEnter={(e) => {
-                                            if (canAffordLowest) {
+                                            if (canClick) {
                                                 e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
                                             }
                                         }}
@@ -236,7 +286,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     >
                                         <Stack gap="xs">
                                             <Group justify="space-between" align="flex-start">
-                                                <Text fw={600} size="sm" style={{ flex: 1 }}>
+                                                <Text fw={600} size="sm" style={{ flex: 1 }} c={isExcluded ? "dimmed" : undefined}>
                                                     {merit.name}
                                                 </Text>
                                                 <Badge size="sm" variant="dot" color={primaryColor}>
@@ -428,16 +478,20 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                 </Title>
                                                 <Grid gutter="md">
                                                     {availableCategoryItems.map((item) => {
+                                                        const excludingItems = exclusionMap.get(item.name) ?? []
+                                                        const isExcluded = excludingItems.length > 0
                                                         const lowestLevel = item.cost[0]
                                                         const lowestCost =
                                                             mode === "xp" && type === "merit" ? getCostForItem(item, lowestLevel) : 0
                                                         const availableXP = getAvailableXP(character)
                                                         const canAffordLowest =
                                                             type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
-                                                        const tooltipLabel =
-                                                            mode === "xp" && type === "merit" && !canAffordLowest
-                                                                ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                                                : undefined
+                                                        const canClick = !isExcluded && canAffordLowest
+                                                        const tooltipLabel = isExcluded
+                                                            ? `Excluded by: ${excludingItems.join(", ")}`
+                                                            : mode === "xp" && type === "merit" && !canAffordLowest
+                                                              ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+                                                              : undefined
 
                                                         const boxContent = (
                                                             <Box
@@ -446,11 +500,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                                 style={{
                                                                     border: "1px solid var(--mantine-color-gray-8)",
                                                                     borderRadius: "var(--mantine-radius-sm)",
-                                                                    cursor: canAffordLowest ? "pointer" : "default",
+                                                                    cursor: canClick ? "pointer" : "default",
                                                                     transition: "background-color 0.2s",
+                                                                    opacity: isExcluded ? 0.5 : 1,
                                                                 }}
                                                                 onMouseEnter={(e) => {
-                                                                    if (canAffordLowest) {
+                                                                    if (canClick) {
                                                                         e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
                                                                     }
                                                                 }}
@@ -460,7 +515,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                             >
                                                                 <Stack gap="xs">
                                                                     <Group justify="space-between" align="flex-start">
-                                                                        <Text fw={600} size="sm" style={{ flex: 1 }}>
+                                                                        <Text
+                                                                            fw={600}
+                                                                            size="sm"
+                                                                            style={{ flex: 1 }}
+                                                                            c={isExcluded ? "dimmed" : undefined}
+                                                                        >
                                                                             {item.name}
                                                                         </Text>
                                                                         <Badge

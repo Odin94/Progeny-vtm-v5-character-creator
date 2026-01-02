@@ -4,11 +4,14 @@ import { Power, powerSchema, ritualSchema } from "./Disciplines"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas"
 import { skillsSchema } from "./Skills"
 import { specialtySchema } from "./Specialties"
+import { clans } from "./Clans"
+import { getAllKnownMeritsAndFlaws } from "./MeritsAndFlaws"
 
 export const meritFlawSchema = z.object({
     name: z.string(),
     level: z.number().min(1).int(),
     summary: z.string(),
+    excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
 })
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
@@ -20,7 +23,7 @@ export const touchstoneSchema = z.object({
 })
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 2
+export const schemaVersion = 3
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
     name: z.string(),
@@ -163,3 +166,92 @@ export const getEmptyCharacter = (): Character => {
 }
 
 export const containsBloodSorcery = (powers: Power[]) => powers.filter((power) => power.discipline === "blood sorcery").length > 0
+
+export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
+    if (!parsed["rituals"]) parsed["rituals"] = []
+    if (parsed["predatorType"]) {
+        const predatorType = parsed["predatorType"] as Record<string, unknown>
+        if (!predatorType["pickedMeritsAndFlaws"]) {
+            predatorType["pickedMeritsAndFlaws"] = []
+        }
+    }
+    if (!parsed["availableDisciplineNames"]) {
+        // backwards compatibility for characters that were saved before Caitiff were added
+        const clan = clanNameSchema.parse(parsed["clan"])
+        const clanDisciplines = clans[clan].nativeDisciplines
+
+        parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
+    }
+    if (!parsed["notes"]) parsed["notes"] = ""
+    if (!parsed["id"]) parsed["id"] = ""
+    if (!parsed["player"]) parsed["player"] = ""
+    if (!parsed["chronicle"]) parsed["chronicle"] = ""
+    if (!parsed["sect"]) parsed["sect"] = ""
+    if (!parsed["ephemeral"]) {
+        // backwards compatibility for characters that were saved before ephemeral was added
+        parsed["ephemeral"] = {
+            hunger: 0,
+            superficialDamage: 0,
+            aggravatedDamage: 0,
+            superficialWillpowerDamage: 0,
+            aggravatedWillpowerDamage: 0,
+            humanityStains: 0,
+            experienceSpent: 0,
+        }
+    } else {
+        // Ensure all ephemeral fields exist, defaulting to 0 if missing
+        const ephemeral = parsed["ephemeral"] as Record<string, unknown>
+        parsed["ephemeral"] = {
+            hunger: ephemeral["hunger"] ?? 0,
+            superficialDamage: ephemeral["superficialDamage"] ?? 0,
+            aggravatedDamage: ephemeral["aggravatedDamage"] ?? 0,
+            superficialWillpowerDamage: ephemeral["superficialWillpowerDamage"] ?? 0,
+            aggravatedWillpowerDamage: ephemeral["aggravatedWillpowerDamage"] ?? 0,
+            humanityStains: ephemeral["humanityStains"] ?? 0,
+            experienceSpent: ephemeral["experienceSpent"] ?? 0,
+        }
+    }
+
+    patchV2ToV3Compatibility(parsed)
+
+    parsed["version"] = schemaVersion
+}
+
+export const patchV2ToV3Compatibility = (parsed: Record<string, unknown>): void => {
+    const knownMeritsAndFlaws = getAllKnownMeritsAndFlaws()
+
+    const updateMeritFlawExcludes = (meritFlaw: Record<string, unknown>) => {
+        const name = meritFlaw["name"]
+        if (typeof name === "string") {
+            const known = knownMeritsAndFlaws.get(name)
+            meritFlaw["excludes"] = known?.excludes ?? []
+        }
+    }
+
+    if (Array.isArray(parsed["merits"])) {
+        parsed["merits"].forEach((merit: unknown) => {
+            if (merit && typeof merit === "object") {
+                updateMeritFlawExcludes(merit as Record<string, unknown>)
+            }
+        })
+    }
+
+    if (Array.isArray(parsed["flaws"])) {
+        parsed["flaws"].forEach((flaw: unknown) => {
+            if (flaw && typeof flaw === "object") {
+                updateMeritFlawExcludes(flaw as Record<string, unknown>)
+            }
+        })
+    }
+
+    if (parsed["predatorType"]) {
+        const predatorType = parsed["predatorType"] as Record<string, unknown>
+        if (Array.isArray(predatorType["pickedMeritsAndFlaws"])) {
+            predatorType["pickedMeritsAndFlaws"].forEach((meritFlaw: unknown) => {
+                if (meritFlaw && typeof meritFlaw === "object") {
+                    updateMeritFlawExcludes(meritFlaw as Record<string, unknown>)
+                }
+            })
+        }
+    }
+}

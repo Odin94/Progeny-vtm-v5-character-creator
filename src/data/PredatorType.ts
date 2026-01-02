@@ -1,11 +1,10 @@
 import { z } from "zod"
 import { specialtySchema } from "./Specialties"
 import { disciplineNameSchema, PredatorTypeName } from "./NameSchemas"
+import { meritFlawSchema } from "./Character"
 
 const selectableMeritsAndFlawsSchema = z.object({
-    options: z
-        .object({ name: z.string(), summary: z.string(), maxLevel: z.number(), type: z.union([z.literal("merit"), z.literal("flaw")]) })
-        .array(),
+    options: meritFlawSchema.extend({ maxLevel: z.number().int() }).omit({ level: true }).array(),
     totalPoints: z.number().int(),
 })
 export type SelectableMeritsAndFlaws = z.infer<typeof selectableMeritsAndFlawsSchema>
@@ -15,13 +14,14 @@ export const predatorTypeSchema = z.object({
     summary: z.string(),
     specialtyOptions: specialtySchema.array(),
     disciplineOptions: z.object({ name: disciplineNameSchema }).array(),
-    meritsAndFlaws: z.object({ name: z.string(), level: z.number().int(), summary: z.string() }).array(),
+    meritsAndFlaws: meritFlawSchema.array(),
     selectableMeritsAndFlaws: selectableMeritsAndFlawsSchema.array(),
     humanityChange: z.number().int(),
     bloodPotencyChange: z.number().int(),
 })
 export type PredatorType = z.infer<typeof predatorTypeSchema>
 
+// TODO: consider referencing merits&flaws from the list instead of duplicating their definitions here
 export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
     Alleycat: {
         name: "Alleycat",
@@ -37,7 +37,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "celerity" }, { name: "potence" }],
-        meritsAndFlaws: [{ name: "Criminal Contacts", level: 3, summary: "" }],
+        meritsAndFlaws: [{ name: "Criminal Contacts", level: 3, summary: "", excludes: [], type: "merit" }],
         selectableMeritsAndFlaws: [],
         humanityChange: -1,
         bloodPotencyChange: 0,
@@ -56,7 +56,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "potence" }],
-        meritsAndFlaws: [{ name: "Enemy", level: 2, summary: "(Police or Victim)" }],
+        meritsAndFlaws: [{ name: "Enemy", level: 2, summary: "(Police or Victim)", excludes: [], type: "flaw" }],
         selectableMeritsAndFlaws: [
             {
                 options: [
@@ -64,12 +64,14 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
                         name: "Contacts",
                         summary: "mortals who provide information or valuable items",
                         maxLevel: 3,
+                        excludes: [],
                         type: "merit",
                     },
                     {
                         name: "Resources",
                         summary: "wealth & income",
                         maxLevel: 3,
+                        excludes: ["Destitute"],
                         type: "merit",
                     },
                 ],
@@ -94,8 +96,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "fortitude" }, { name: "protean" }],
         meritsAndFlaws: [
-            { name: "Herd", level: 2, summary: "Migrating herd, always on the road" },
-            { name: "Prey Exclusion", level: 1, summary: "Can't feed on locals" },
+            { name: "Herd", level: 2, summary: "Migrating herd, always on the road", excludes: [], type: "merit" },
+            { name: "Prey Exclusion", level: 1, summary: "Can't feed on locals", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 0,
@@ -115,7 +117,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "obfuscate" }],
-        meritsAndFlaws: [{ name: "Retainers", level: 2, summary: "Mortals that help you hunt" }],
+        meritsAndFlaws: [{ name: "Retainers", level: 2, summary: "Mortals that help you hunt", excludes: [], type: "merit" }],
         selectableMeritsAndFlaws: [],
         humanityChange: -1,
         bloodPotencyChange: 0,
@@ -135,8 +137,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "animalism" }],
         meritsAndFlaws: [
-            { name: "Herd", level: 2, summary: "Group of mortals who let you feed" },
-            { name: "Dark Secret", level: 1, summary: "Cleaver" },
+            { name: "Herd", level: 2, summary: "Group of mortals who let you feed", excludes: [], type: "merit" },
+            { name: "Dark Secret", level: 1, summary: "Cleaver", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 0,
@@ -157,8 +159,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "auspex" }, { name: "fortitude" }],
         meritsAndFlaws: [
-            { name: "Masquerade Breacher", level: 1, summary: "" },
-            { name: "Prey Exclusion", level: 1, summary: "Can't feed on the non-consenting" },
+            { name: "Masquerade Breacher", level: 1, summary: "", excludes: [], type: "flaw" },
+            { name: "Prey Exclusion", level: 1, summary: "Can't feed on the non-consenting", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 1,
@@ -182,24 +184,37 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Fame", summary: "", maxLevel: 3, type: "merit" },
-                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 3, type: "merit" },
+                    { name: "Fame", summary: "", maxLevel: 3, excludes: [], type: "merit" },
+                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 3, excludes: [], type: "merit" },
                 ],
                 totalPoints: 3,
             },
             {
                 options: [
-                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 3, type: "flaw" },
-                    { name: "Folkloric Bane", summary: "specific items damage you (eg. silver, garlic)", maxLevel: 1, type: "flaw" },
+                    { name: "Enemies", summary: "group of mortals that want to harm you", maxLevel: 3, excludes: [], type: "flaw" },
+                    {
+                        name: "Folkloric Bane",
+                        summary: "specific items damage you (eg. silver, garlic)",
+                        maxLevel: 1,
+                        excludes: [],
+                        type: "flaw",
+                    },
                     {
                         name: "Folkloric Block",
                         summary: "must spend willpower to move past specific block (eg. running water, door uninvited)",
                         maxLevel: 1,
+                        excludes: [],
                         type: "flaw",
                     },
-                    { name: "Stigmata", summary: "bleed from your hands, feet and forehead when at Hunger 4", maxLevel: 1, type: "flaw" },
+                    {
+                        name: "Stigmata",
+                        summary: "bleed from your hands, feet and forehead when at Hunger 4",
+                        maxLevel: 1,
+                        excludes: [],
+                        type: "flaw",
+                    },
                     // TODO: Only exists at level 2 - change system to include possible levels..? Maybe I have to write my own "Rating" component after all...
-                    { name: "Stake Bait", summary: "Final Death when staked", maxLevel: 2, type: "flaw" },
+                    { name: "Stake Bait", summary: "Final Death when staked", maxLevel: 2, excludes: [], type: "flaw" },
                 ],
                 totalPoints: 2,
             },
@@ -226,14 +241,20 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "potence" }],
         meritsAndFlaws: [
-            { name: "Fame", level: 1, summary: "a select subculture loves you" },
-            { name: "Contact", level: 1, summary: "" },
+            { name: "Fame", level: 1, summary: "a select subculture loves you", excludes: [], type: "merit" },
+            { name: "Contact", level: 1, summary: "", excludes: [], type: "merit" },
         ],
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Disliked", summary: "A subculture dislikes you", maxLevel: 1, type: "flaw" },
-                    { name: "Prey Exclusion (another scene)", summary: "Can't feed from excluded prey", maxLevel: 1, type: "flaw" },
+                    { name: "Disliked", summary: "A subculture dislikes you", maxLevel: 1, excludes: [], type: "flaw" },
+                    {
+                        name: "Prey Exclusion (another scene)",
+                        summary: "Can't feed from excluded prey",
+                        maxLevel: 1,
+                        excludes: [],
+                        type: "flaw",
+                    },
                 ],
                 totalPoints: 1,
             },
@@ -256,8 +277,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "fortitude" }, { name: "presence" }],
         meritsAndFlaws: [
-            { name: "Beautiful", level: 2, summary: "+1 die in Social rolls" },
-            { name: "Enemy", level: 1, summary: "(spurned lover or jealous partner)" },
+            { name: "Beautiful", level: 2, summary: "+1 die in Social rolls", excludes: ["Stunning", "Ugly", "Repulsive"], type: "merit" },
+            { name: "Enemy", level: 1, summary: "(spurned lover or jealous partner)", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 0,
@@ -277,7 +298,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "auspex" }, { name: "obfuscate" }],
-        meritsAndFlaws: [{ name: "Resources", level: 1, summary: "" }],
+        meritsAndFlaws: [{ name: "Resources", level: 1, summary: "", excludes: [], type: "merit" }],
         selectableMeritsAndFlaws: [],
         humanityChange: 0,
         bloodPotencyChange: 0,
@@ -297,9 +318,9 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "fortitude" }, { name: "oblivion" }],
         meritsAndFlaws: [
-            { name: "Iron Gullet", level: 3, summary: "able to feed on rancid blood" },
-            { name: "Haven", level: 1, summary: "" },
-            { name: "Obvious Predator", level: 2, summary: "mortals are scared of you, can't keep Herd" },
+            { name: "Iron Gullet", level: 3, summary: "able to feed on rancid blood", excludes: [], type: "merit" },
+            { name: "Haven", level: 1, summary: "", excludes: ["No Haven"], type: "merit" },
+            { name: "Obvious Predator", level: 2, summary: "mortals are scared of you, can't keep Herd", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 0,
@@ -320,8 +341,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "auspex" }, { name: "oblivion" }],
         meritsAndFlaws: [
-            { name: "Allies", level: 1, summary: "medical community" },
-            { name: "Prey Exclusion", level: 1, summary: "Can't feed on the healthy" },
+            { name: "Allies", level: 1, summary: "medical community", excludes: [], type: "merit" },
+            { name: "Prey Exclusion", level: 1, summary: "Can't feed on the healthy", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 1,
@@ -342,8 +363,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "animalism" }, { name: "auspex" }],
         meritsAndFlaws: [
-            { name: "Bloodhound", level: 1, summary: "smell resonance in mortal blood" },
-            { name: "Contacts", level: 1, summary: "Unethical person in your hunting habitués" },
+            { name: "Bloodhound", level: 1, summary: "smell resonance in mortal blood", excludes: [], type: "merit" },
+            { name: "Contacts", level: 1, summary: "Unethical person in your hunting habitués", excludes: [], type: "merit" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: -1,
@@ -363,20 +384,21 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "protean" }, { name: "obfuscate" }],
-        meritsAndFlaws: [{ name: "Haven", level: 1, summary: "smell resonance in mortal blood" }],
+        meritsAndFlaws: [{ name: "Haven", level: 1, summary: "Secure Apartment", excludes: ["No Haven"], type: "merit" }],
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Retainer", summary: "Weak mortal servant", maxLevel: 1, type: "merit" },
-                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 1, type: "merit" },
-                    { name: "Haven", summary: "A secure aparment", maxLevel: 1, type: "merit" },
+                    { name: "Retainer", summary: "Weak mortal servant", maxLevel: 1, excludes: [], type: "merit" },
+                    { name: "Herd", summary: "group of mortals who let you feed", maxLevel: 1, excludes: [], type: "merit" },
+                    // TODOdin: This should update the lvl1 haven you get above to lvl2
+                    { name: "Haven", summary: "A secure aparment", maxLevel: 1, excludes: ["No Haven"], type: "merit" },
                 ],
                 totalPoints: 1,
             },
             {
                 options: [
-                    { name: "Creepy", summary: "People are wary of your home", maxLevel: 1, type: "flaw" },
-                    { name: "Haunted", summary: "Ghostly presence in your haven", maxLevel: 1, type: "flaw" },
+                    { name: "Creepy", summary: "People are wary of your home", maxLevel: 1, excludes: ["No Haven"], type: "flaw" },
+                    { name: "Haunted", summary: "Ghostly presence in your haven", maxLevel: 1, excludes: ["No Haven"], type: "flaw" },
                 ],
                 totalPoints: 1,
             },
@@ -399,8 +421,8 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         ],
         disciplineOptions: [{ name: "obfuscate" }, { name: "oblivion" }, { name: "blood sorcery" }],
         meritsAndFlaws: [
-            { name: "Iron Gullet", level: 3, summary: "able to feed on rancid blood" },
-            { name: "Enemy", level: 2, summary: "Someone believes you owe them" },
+            { name: "Iron Gullet", level: 3, summary: "able to feed on rancid blood", excludes: [], type: "merit" },
+            { name: "Enemy", level: 2, summary: "Someone believes you owe them", excludes: [], type: "flaw" },
         ],
         selectableMeritsAndFlaws: [],
         humanityChange: 0,
@@ -420,12 +442,12 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "celerity" }, { name: "protean" }],
-        meritsAndFlaws: [{ name: "Prey Exclusion", level: 2, summary: "Can't feed on mortals" }],
+        meritsAndFlaws: [{ name: "Prey Exclusion", level: 2, summary: "Can't feed on mortals", excludes: [], type: "flaw" }],
         selectableMeritsAndFlaws: [
             {
                 options: [
-                    { name: "Diablerist", summary: "Somebody knows you drink from Kindred", maxLevel: 2, type: "merit" },
-                    { name: "Shunned", summary: "Despised by a faction", maxLevel: 2, type: "flaw" },
+                    { name: "Diablerist", summary: "Somebody knows you drink from Kindred", maxLevel: 2, excludes: [], type: "merit" },
+                    { name: "Shunned", summary: "Despised by a faction", maxLevel: 2, excludes: [], type: "flaw" },
                 ],
                 totalPoints: 2,
             },
@@ -447,7 +469,9 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "animalism" }, { name: "protean" }],
-        meritsAndFlaws: [{ name: "Farmer", level: 2, summary: "feeding on non-animal blood costs you 2 willpower" }],
+        meritsAndFlaws: [
+            { name: "Farmer", level: 2, summary: "feeding on non-animal blood costs you 2 willpower", excludes: [], type: "flaw" },
+        ],
         selectableMeritsAndFlaws: [],
         humanityChange: 1,
         bloodPotencyChange: 0,

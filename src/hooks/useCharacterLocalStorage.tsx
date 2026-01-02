@@ -1,7 +1,7 @@
 import { useLocalStorage } from "@mantine/hooks"
 import { z } from "zod"
 import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
-import { applyCharacterCompatibilityPatches } from "~/components/LoadModal"
+import { applyCharacterCompatibilityPatches } from "~/data/Character"
 import { useBrokenCharacter } from "./useBrokenCharacter"
 
 export const useCharacterLocalStorage = () => {

@@ -1,7 +1,7 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, ScrollArea, Stack, Tabs, Text, useMantineTheme } from "@mantine/core"
-import { useEffect, useState } from "react"
+import { Button, Divider, Grid, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import { useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
@@ -32,7 +32,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const [activeTab, setActiveTab] = useState<string | null>("merits")
 
-    const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([...character.merits, ...character.flaws])
+    const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([
+        ...character.merits,
+        ...character.flaws,
+        ...character.predatorType.pickedMeritsAndFlaws,
+    ])
 
     const usedMeritsLevel = character.merits.filter((m) => !isThinbloodMerit(m.name)).reduce((acc, { level }) => acc + level, 0)
     const usedFLawsLevel = character.flaws.filter((f) => !isThinbloodFlaw(f.name)).reduce((acc, { level }) => acc + level, 0)
@@ -48,12 +52,38 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const tbFlawCount = character.flaws.filter((f) => isThinbloodFlaw(f.name)).length
     const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(tbFlawCount - tbMeritCount)
 
+    const exclusionMap = useMemo(() => {
+        const map = new Map<string, string[]>()
+        pickedMeritsAndFlaws.forEach((meritFlaw) => {
+            meritFlaw.excludes.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(meritFlaw.name)
+            })
+        })
+        const predatorType = PredatorTypes[character.predatorType.name]
+        if (predatorType) {
+            predatorType.meritsAndFlaws.forEach((meritFlaw) => {
+                meritFlaw.excludes.forEach((excludedName) => {
+                    if (!map.has(excludedName)) {
+                        map.set(excludedName, [])
+                    }
+                    map.get(excludedName)?.push(meritFlaw.name)
+                })
+            })
+        }
+        return map
+    }, [pickedMeritsAndFlaws, character.predatorType.name])
+
     const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => {
         const buttonColor = type === "flaw" ? "red" : "green"
         const icon = type === "flaw" ? flawIcon() : meritIcon()
 
         const alreadyPickedItem = pickedMeritsAndFlaws.find((l) => l.name === meritOrFlaw.name)
         const wasPickedLevel = alreadyPickedItem?.level ?? 0
+        const excludingItems = exclusionMap.get(meritOrFlaw.name) ?? []
+        const isExcluded = excludingItems.length > 0
 
         const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws
         const meritInPredatorType = predatorTypeMeritsFlaws.find((m) => m.name === meritOrFlaw.name)
@@ -64,7 +94,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             return (
                 <Button
                     key={meritOrFlaw.name + level}
-                    disabled={(meritInPredatorType && meritInPredatorType.level >= level) || (!!wasPickedLevel && wasPickedLevel >= level)}
+                    disabled={
+                        isExcluded ||
+                        (meritInPredatorType && meritInPredatorType.level >= level) ||
+                        (!!wasPickedLevel && wasPickedLevel >= level)
+                    }
                     onClick={() => {
                         if (isThinbloodFlaw(meritOrFlaw.name)) {
                             setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints + 1)
@@ -80,7 +114,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                         }
                         setPickedMeritsAndFlaws([
                             ...pickedMeritsAndFlaws.filter((m) => m.name !== alreadyPickedItem?.name),
-                            { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary },
+                            { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary, excludes: meritOrFlaw.excludes },
                         ])
                     }}
                     style={{ marginRight: "5px" }}
@@ -95,10 +129,17 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
         const bg = alreadyPickedItem ? { background: type === "flaw" ? "rgba(255, 25, 25, 0.2)" : "rgba(50, 255, 100, 0.2)" } : {}
         const cost = wasPickedLevel - meritInPredatorTypeLevel
-        return (
-            <Text style={{ ...bg, padding: "5px" }} key={meritOrFlaw.name}>
+        const textStyle = isExcluded ? { ...bg, padding: "5px", opacity: 0.5, color: "grey" } : { ...bg, padding: "5px" }
+        const summaryText = meritInPredatorType
+            ? "Already picked in Predator Type"
+            : isExcluded
+              ? `Excluded by: ${excludingItems.join(", ")}`
+              : meritOrFlaw.summary
+
+        const textContent = (
+            <Text style={textStyle} key={meritOrFlaw.name}>
                 {icon} &nbsp;
-                <b>{meritOrFlaw.name}</b> - {meritInPredatorType ? "Already picked in Predator Type" : meritOrFlaw.summary}
+                <b>{meritOrFlaw.name}</b> - {summaryText}
                 <span>
                     &nbsp; {meritOrFlaw.cost.map((i) => createButton(i))}
                     {alreadyPickedItem ? (
@@ -124,6 +165,16 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 </span>
             </Text>
         )
+
+        if (isExcluded) {
+            return (
+                <Tooltip label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`} withArrow>
+                    {textContent}
+                </Tooltip>
+            )
+        }
+
+        return textContent
     }
 
     const height = globals.viewportHeightPx

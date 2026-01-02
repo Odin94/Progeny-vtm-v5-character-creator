@@ -258,10 +258,8 @@ const PredatorTypeModal = ({
                                         const { selectedPoints } = subPointStates[j]
                                         if (selectedPoints === 0) return []
                                         return meritFlawSchema.parse({
-                                            name: option.name,
-                                            summary: option.summary,
+                                            ...option,
                                             level: selectedPoints,
-                                            type: option.type,
                                         })
                                     })
 
@@ -281,6 +279,8 @@ const PredatorTypeModal = ({
                                     },
                                     disciplines: changedPickedDiscipline ? [] : character.disciplines,
                                     rituals: changedPickedDiscipline ? [] : character.rituals,
+                                    // TODOdin: Consider updating merits and flaws here with predatorType.meritsAndFlaws so we don't have to
+                                    // remember to query those every time
                                 })
 
                                 trackEvent({

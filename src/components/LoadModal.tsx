@@ -4,9 +4,7 @@ import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { Buffer } from "buffer"
 import { z } from "zod"
-import { clans } from "~/data/Clans"
-import { clanNameSchema } from "~/data/NameSchemas"
-import { Character, characterSchema, containsBloodSorcery, schemaVersion } from "../data/Character"
+import { applyCharacterCompatibilityPatches, Character, characterSchema, containsBloodSorcery } from "../data/Character"
 import { getUploadFile } from "../generator/utils"
 
 export type LoadModalProps = {
@@ -15,56 +13,6 @@ export type LoadModalProps = {
     closeLoadModal: () => void
     loadedFile: File | null
     setSelectedStep: (step: number) => void
-}
-
-export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
-    if (!parsed["rituals"]) parsed["rituals"] = []
-    if (parsed["predatorType"]) {
-        const predatorType = parsed["predatorType"] as Record<string, unknown>
-        if (!predatorType["pickedMeritsAndFlaws"]) {
-            predatorType["pickedMeritsAndFlaws"] = []
-        }
-    }
-    if (!parsed["availableDisciplineNames"]) {
-        // backwards compatibility for characters that were saved before Caitiff were added
-        const clan = clanNameSchema.parse(parsed["clan"])
-        const clanDisciplines = clans[clan].nativeDisciplines
-
-        parsed["availableDisciplineNames"] = Array.from(new Set(clanDisciplines))
-    }
-    if (!parsed["notes"]) parsed["notes"] = ""
-    if (!parsed["id"]) parsed["id"] = ""
-    if (!parsed["player"]) parsed["player"] = ""
-    if (!parsed["chronicle"]) parsed["chronicle"] = ""
-    if (!parsed["sect"]) parsed["sect"] = ""
-    if (!parsed["ephemeral"]) {
-        // backwards compatibility for characters that were saved before ephemeral was added
-        parsed["ephemeral"] = {
-            hunger: 0,
-            superficialDamage: 0,
-            aggravatedDamage: 0,
-            superficialWillpowerDamage: 0,
-            aggravatedWillpowerDamage: 0,
-            humanityStains: 0,
-            experienceSpent: 0,
-        }
-    } else {
-        // Ensure all ephemeral fields exist, defaulting to 0 if missing
-        const ephemeral = parsed["ephemeral"] as Record<string, unknown>
-        parsed["ephemeral"] = {
-            hunger: ephemeral["hunger"] ?? 0,
-            superficialDamage: ephemeral["superficialDamage"] ?? 0,
-            aggravatedDamage: ephemeral["aggravatedDamage"] ?? 0,
-            superficialWillpowerDamage: ephemeral["superficialWillpowerDamage"] ?? 0,
-            aggravatedWillpowerDamage: ephemeral["aggravatedWillpowerDamage"] ?? 0,
-            humanityStains: ephemeral["humanityStains"] ?? 0,
-            experienceSpent: ephemeral["experienceSpent"] ?? 0,
-        }
-    }
-    if (parsed["version"] && typeof parsed["version"] === "string") {
-        delete parsed["version"]
-    }
-    parsed["version"] = schemaVersion
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
