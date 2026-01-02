@@ -80,8 +80,9 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         if (!options || !field) return "No options or field provided"
 
         const { mode, character } = options
-        const clickedLevel = index + 1
-        const wouldDecrease = clickedLevel <= level
+        const isFilled = index < level
+        const newLevel = isFilled ? index : index + 1
+        const wouldDecrease = newLevel < level
 
         // Health and willpower are not editable in play or XP mode
         if ((field === "maxHealth" || field === "willpower") && (mode === "play" || mode === "xp")) {
@@ -96,7 +97,6 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             if (wouldDecrease) {
                 return "Cannot decrease in XP mode"
             }
-            const newLevel = clickedLevel
             const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
             const currentLevel = level
             if (clampedLevel !== currentLevel + 1) {
@@ -117,7 +117,9 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         if (!options || !field) return
 
         const { mode, character, setCharacter } = options
-        const clampedLevel = Math.min(Math.max(minLevel, index + 1), maxLevel)
+        const isFilled = index < level
+        const newLevel = isFilled ? index : index + 1
+        const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
         if (mode === "play") {
             return
