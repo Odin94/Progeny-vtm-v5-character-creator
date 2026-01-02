@@ -21,6 +21,19 @@ if (GA4_MEASUREMENT_ID) {
     console.error("Failed to load GA4 measurement id!")
 }
 
+const getCharacterFromStorage = () => {
+    try {
+        const characterData = localStorage.getItem("character")
+        if (characterData) {
+            const parsed = JSON.parse(characterData)
+            return parsed
+        }
+    } catch (_error) {
+        // Silently fail if we can't read character data
+    }
+    return null
+}
+
 root.render(
     <React.StrictMode>
         <PostHogProvider
@@ -30,6 +43,16 @@ root.render(
                 defaults: "2025-05-24",
                 capture_exceptions: true,
                 debug: import.meta.env.MODE === "development",
+                before_send: (event) => {
+                    if (event && event.event === "$exception") {
+                        const character = getCharacterFromStorage()
+                        if (character) {
+                            event.properties = event.properties || {}
+                            event.properties.character = character
+                        }
+                    }
+                    return event
+                },
             }}
         >
             <MantineProvider

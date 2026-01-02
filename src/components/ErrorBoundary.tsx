@@ -1,6 +1,7 @@
 import { Alert, Center, Text } from "@mantine/core"
 import { IconAlertCircle } from "@tabler/icons-react"
 import { Component, ErrorInfo, ReactNode } from "react"
+import posthog from "posthog-js"
 
 type Props = {
     children?: ReactNode
@@ -9,6 +10,19 @@ type Props = {
 type State = {
     hasError: boolean
     error?: Error
+}
+
+const getCharacterFromStorage = () => {
+    try {
+        const characterData = localStorage.getItem("character")
+        if (characterData) {
+            const parsed = JSON.parse(characterData)
+            return parsed
+        }
+    } catch (_error) {
+        // Silently fail if we can't read character data
+    }
+    return null
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -24,6 +38,19 @@ class ErrorBoundary extends Component<Props, State> {
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error("Uncaught error:", error, errorInfo)
+
+        try {
+            const character = getCharacterFromStorage()
+            posthog.capture("$exception", {
+                $exception_message: error.message,
+                $exception_type: error.name,
+                $exception_stack_trace_raw: error.stack,
+                $exception_stack_trace: errorInfo.componentStack,
+                character: character,
+            })
+        } catch (posthogError) {
+            console.warn("Failed to capture error in PostHog:", posthogError)
+        }
     }
 
     public render() {

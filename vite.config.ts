@@ -6,6 +6,7 @@ import * as path from "path"
 export default defineConfig({
     build: {
         outDir: "build",
+        sourcemap: true,
     },
     server: {
         port: 3000,
