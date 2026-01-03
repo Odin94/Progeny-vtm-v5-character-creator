@@ -94,7 +94,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     </Title>
                     <Grid gutter="md">
                         {Array.from(powersByDiscipline.entries()).map(([disciplineName, powers]) => {
-                            const maxLevel = Math.max(...powers.map((p) => p.level))
                             const discipline = disciplines[disciplineName]
                             const logo = discipline?.logo
 
@@ -119,7 +118,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 </Title>
                                                 <Group gap="xs" align="center">
                                                     <Badge size="lg" variant="light" color={primaryColor} circle>
-                                                        {maxLevel}
+                                                        {powers.length}
                                                     </Badge>
                                                     {isFreeMode && powers.length === 0 ? (
                                                         <ActionIcon
