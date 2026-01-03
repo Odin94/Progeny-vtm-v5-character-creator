@@ -5,6 +5,7 @@ import { PredatorTypes } from "~/data/PredatorType"
 import { SheetOptions } from "../utils/constants"
 import FocusBorderWrapper from "../components/FocusBorderWrapper"
 import { hexToRgba, inputAlpha } from "../utils/style"
+import { useDebouncedUncontrolledStringField, useDebouncedUncontrolledNumberField } from "../utils/useDebouncedUncontrolledField"
 
 type TopDataProps = {
     options: SheetOptions
@@ -17,6 +18,14 @@ const TopData = ({ options }: TopDataProps) => {
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isFreeMode = mode === "free"
 
+    const nameField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "name" })
+    const descriptionField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "description" })
+    const ambitionField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "ambition" })
+    const desireField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "desire" })
+    const playerField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "player" })
+    const generationField = useDebouncedUncontrolledNumberField({ character, setCharacter, field: "generation" })
+    const sireField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "sire" })
+
     return (
         <>
             <Box>
@@ -24,13 +33,9 @@ const TopData = ({ options }: TopDataProps) => {
                     {isFreeMode ? (
                         <FocusBorderWrapper colorValue={colorValue} style={{ width: "100%", maxWidth: "600px" }}>
                             <TextInput
-                                value={character.name || ""}
-                                onChange={(e) =>
-                                    setCharacter({
-                                        ...character,
-                                        name: e.target.value,
-                                    })
-                                }
+                                key={nameField.key}
+                                defaultValue={nameField.defaultValue}
+                                onChange={(e) => nameField.onChange(e.target.value)}
                                 placeholder="Unnamed Character"
                                 color={primaryColor}
                                 styles={{
@@ -75,13 +80,9 @@ const TopData = ({ options }: TopDataProps) => {
                 {isFreeMode ? (
                     <FocusBorderWrapper colorValue={colorValue}>
                         <Textarea
-                            value={character.description || ""}
-                            onChange={(e) =>
-                                setCharacter({
-                                    ...character,
-                                    description: e.target.value,
-                                })
-                            }
+                            key={descriptionField.key}
+                            defaultValue={descriptionField.defaultValue}
+                            onChange={(e) => descriptionField.onChange(e.target.value)}
                             placeholder="Character description..."
                             minRows={2}
                             maxRows={4}
@@ -193,13 +194,9 @@ const TopData = ({ options }: TopDataProps) => {
                             {isFreeMode ? (
                                 <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
                                     <TextInput
-                                        value={character.ambition || ""}
-                                        onChange={(e) =>
-                                            setCharacter({
-                                                ...character,
-                                                ambition: e.target.value,
-                                            })
-                                        }
+                                        key={ambitionField.key}
+                                        defaultValue={ambitionField.defaultValue}
+                                        onChange={(e) => ambitionField.onChange(e.target.value)}
                                         placeholder="—"
                                         size="sm"
                                         color={primaryColor}
@@ -220,13 +217,9 @@ const TopData = ({ options }: TopDataProps) => {
                             {isFreeMode ? (
                                 <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
                                     <TextInput
-                                        value={character.desire || ""}
-                                        onChange={(e) =>
-                                            setCharacter({
-                                                ...character,
-                                                desire: e.target.value,
-                                            })
-                                        }
+                                        key={desireField.key}
+                                        defaultValue={desireField.defaultValue}
+                                        onChange={(e) => desireField.onChange(e.target.value)}
                                         placeholder="—"
                                         size="sm"
                                         color={primaryColor}
@@ -247,13 +240,9 @@ const TopData = ({ options }: TopDataProps) => {
                             {isFreeMode ? (
                                 <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
                                     <TextInput
-                                        value={character.player || ""}
-                                        onChange={(e) =>
-                                            setCharacter({
-                                                ...character,
-                                                player: e.target.value,
-                                            })
-                                        }
+                                        key={playerField.key}
+                                        defaultValue={playerField.defaultValue}
+                                        onChange={(e) => playerField.onChange(e.target.value)}
                                         placeholder="—"
                                         size="sm"
                                         color={primaryColor}
@@ -278,13 +267,11 @@ const TopData = ({ options }: TopDataProps) => {
                             {isFreeMode ? (
                                 <FocusBorderWrapper colorValue={colorValue}>
                                     <NumberInput
-                                        value={character.generation || 0}
+                                        key={generationField.key}
+                                        defaultValue={generationField.defaultValue}
                                         onChange={(value) => {
                                             const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
-                                            setCharacter({
-                                                ...character,
-                                                generation: Math.max(0, numValue),
-                                            })
+                                            generationField.onChange(numValue)
                                         }}
                                         min={0}
                                         size="sm"
@@ -306,13 +293,9 @@ const TopData = ({ options }: TopDataProps) => {
                             {isFreeMode ? (
                                 <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
                                     <TextInput
-                                        value={character.sire || ""}
-                                        onChange={(e) =>
-                                            setCharacter({
-                                                ...character,
-                                                sire: e.target.value,
-                                            })
-                                        }
+                                        key={sireField.key}
+                                        defaultValue={sireField.defaultValue}
+                                        onChange={(e) => sireField.onChange(e.target.value)}
                                         placeholder="—"
                                         size="sm"
                                         color={primaryColor}

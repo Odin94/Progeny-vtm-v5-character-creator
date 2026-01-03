@@ -4,6 +4,7 @@ import { potencyEffects } from "~/data/BloodPotency"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../utils/constants"
 import { bgAlpha, hexToRgba } from "../utils/style"
+import { useDebouncedUncontrolledNumberField } from "../utils/useDebouncedUncontrolledField"
 
 type TheBloodProps = {
     options: SheetOptions
@@ -20,6 +21,27 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
     const isExperienceEditable = mode === "xp" || mode === "free"
     const isExperienceSpentEditable = mode === "free"
+
+    const experienceSpentField = useDebouncedUncontrolledNumberField({
+        character,
+        setCharacter,
+        field: "ephemeral.experienceSpent",
+        getValue: (char) => char.ephemeral.experienceSpent,
+        updateFn: (char, value) => ({
+            ...char,
+            ephemeral: {
+                ...char.ephemeral,
+                experienceSpent: value,
+            },
+        }),
+    })
+
+    const experienceField = useDebouncedUncontrolledNumberField({
+        character,
+        setCharacter,
+        field: "experience",
+        getValue: (char) => char.experience,
+    })
 
     return (
         <Paper p="lg" withBorder style={{ backgroundColor: paperBg }}>
@@ -74,17 +96,9 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                 {isExperienceSpentEditable ? (
                                     <>
                                         <NumberInput
-                                            value={character.ephemeral.experienceSpent}
-                                            onChange={(value) => {
-                                                const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
-                                                setCharacter({
-                                                    ...character,
-                                                    ephemeral: {
-                                                        ...character.ephemeral,
-                                                        experienceSpent: Math.max(0, numValue),
-                                                    },
-                                                })
-                                            }}
+                                            key={experienceSpentField.key}
+                                            defaultValue={experienceSpentField.defaultValue}
+                                            onChange={experienceSpentField.onChange}
                                             min={0}
                                             size="sm"
                                             style={{ width: "80px" }}
@@ -113,14 +127,9 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                 )}
                                 {isExperienceEditable ? (
                                     <NumberInput
-                                        value={character.experience}
-                                        onChange={(value) => {
-                                            const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
-                                            setCharacter({
-                                                ...character,
-                                                experience: Math.max(0, numValue),
-                                            })
-                                        }}
+                                        key={experienceField.key}
+                                        defaultValue={experienceField.defaultValue}
+                                        onChange={experienceField.onChange}
                                         min={0}
                                         size="sm"
                                         style={{ width: "80px" }}
