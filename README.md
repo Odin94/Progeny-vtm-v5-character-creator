@@ -36,7 +36,7 @@ npm start
 ```bash
 cd backend
 npm install
-npm start
+npm run dev
 ```
 
 ## How to manually create a loadable json character / fix a broken json file

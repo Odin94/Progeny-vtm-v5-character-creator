@@ -1,6 +1,7 @@
 import Fastify from "fastify"
 import cors from "@fastify/cors"
 import websocket from "@fastify/websocket"
+import cookie from "@fastify/cookie"
 import { characterRoutes } from "./routes/characters.js"
 import { coterieRoutes } from "./routes/coteries.js"
 import { shareRoutes } from "./routes/shares.js"
@@ -17,6 +18,10 @@ const fastify = Fastify({
 await fastify.register(cors, {
     origin: true,
     credentials: true,
+})
+
+await fastify.register(cookie, {
+    secret: env.WORKOS_COOKIE_PASSWORD,
 })
 
 await fastify.register(websocket)

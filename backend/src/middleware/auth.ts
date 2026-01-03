@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify"
 import { workos } from "../config/workos.js"
+import { env } from "../config/env.js"
 
 export interface AuthenticatedRequest extends FastifyRequest {
     user?: {
@@ -11,36 +12,66 @@ export interface AuthenticatedRequest extends FastifyRequest {
 }
 
 export async function authenticateUser(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
-    const authHeader = request.headers.authorization
+    const cookiePassword = env.WORKOS_COOKIE_PASSWORD
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        reply.code(401).send({ error: "Unauthorized: Missing or invalid authorization header" })
+    const sessionData = request.cookies["wos-session"]
+
+    if (!sessionData) {
+        reply.code(401).send({ error: "Unauthorized: No session cookie provided" })
         return
     }
 
-    const token = authHeader.substring(7)
-
     try {
-        // For WorkOS, decode the JWT token to get user ID, then fetch user
-        // WorkOS tokens are JWTs that contain the user_id in the payload
-        const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
-        const userId = payload.sub || payload.user_id
+        const session = workos.userManagement.loadSealedSession({
+            sessionData,
+            cookiePassword,
+        })
 
-        if (!userId) {
-            reply.code(401).send({ error: "Unauthorized: Invalid token format" })
+        const authResult = await session.authenticate()
+
+        if (!authResult.authenticated || !("user" in authResult)) {
+            // Try to refresh the session
+            try {
+                const refreshResult = await session.refresh()
+                if (
+                    refreshResult.authenticated &&
+                    "sealedSession" in refreshResult &&
+                    "user" in refreshResult &&
+                    refreshResult.sealedSession
+                ) {
+                    // Update the cookie with the new session
+                    reply.setCookie("wos-session", refreshResult.sealedSession, {
+                        path: "/",
+                        httpOnly: true,
+                        secure: env.NODE_ENV === "production",
+                        sameSite: "lax",
+                    })
+
+                    request.user = {
+                        id: refreshResult.user.id,
+                        email: refreshResult.user.email,
+                        firstName: refreshResult.user.firstName || undefined,
+                        lastName: refreshResult.user.lastName || undefined,
+                    }
+                    return
+                }
+            } catch (_refreshError) {
+                // Refresh failed, continue to error
+            }
+
+            reply.code(401).send({ error: "Unauthorized: Invalid or expired session" })
             return
         }
 
-        const user = await workos.userManagement.getUser(userId)
-
         request.user = {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName || undefined,
-            lastName: user.lastName || undefined,
+            id: authResult.user.id,
+            email: authResult.user.email,
+            firstName: authResult.user.firstName || undefined,
+            lastName: authResult.user.lastName || undefined,
         }
-    } catch (_error) {
-        reply.code(401).send({ error: "Unauthorized: Invalid token" })
+    } catch (error) {
+        request.log.error({ err: error }, "Authentication error")
+        reply.code(401).send({ error: "Unauthorized: Failed to authenticate session" })
         return
     }
 }

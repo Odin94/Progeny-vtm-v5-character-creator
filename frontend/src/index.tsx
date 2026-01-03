@@ -5,10 +5,21 @@ import React from "react"
 import ReactDOM from "react-dom/client"
 import ReactGA from "react-ga4"
 import { PostHogProvider } from "posthog-js/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import App from "./App"
 import "./index.css"
 import reportWebVitals from "./reportWebVitals"
 import { globals } from "./globals"
+
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            retry: 1,
+            refetchOnWindowFocus: false,
+        },
+    },
+})
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 
@@ -36,41 +47,43 @@ const getCharacterFromStorage = () => {
 
 root.render(
     <React.StrictMode>
-        <PostHogProvider
-            apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
-            options={{
-                api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-                defaults: "2025-05-24",
-                capture_exceptions: true,
-                debug: import.meta.env.MODE === "development",
-                before_send: (event) => {
-                    if (event && event.event === "$exception") {
-                        const character = getCharacterFromStorage()
-                        if (character) {
-                            event.properties = event.properties || {}
-                            event.properties.character = character
+        <QueryClientProvider client={queryClient}>
+            <PostHogProvider
+                apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+                options={{
+                    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+                    defaults: "2025-05-24",
+                    capture_exceptions: true,
+                    debug: import.meta.env.MODE === "development",
+                    before_send: (event) => {
+                        if (event && event.event === "$exception") {
+                            const character = getCharacterFromStorage()
+                            if (character) {
+                                event.properties = event.properties || {}
+                                event.properties.character = character
+                            }
                         }
-                    }
-                    return event
-                },
-            }}
-        >
-            <MantineProvider
-                theme={{
-                    breakpoints: {
-                        xs: "576px",
-                        sm: "768px",
-                        md: "992px",
-                        lg: `${globals.smallScreenW}px`,
-                        xl: `${globals.largeScreenW}px`,
+                        return event
                     },
                 }}
-                defaultColorScheme="dark"
             >
-                <Notifications position="bottom-center" />
-                <App />
-            </MantineProvider>
-        </PostHogProvider>
+                <MantineProvider
+                    theme={{
+                        breakpoints: {
+                            xs: "576px",
+                            sm: "768px",
+                            md: "992px",
+                            lg: `${globals.smallScreenW}px`,
+                            xl: `${globals.largeScreenW}px`,
+                        },
+                    }}
+                    defaultColorScheme="dark"
+                >
+                    <Notifications position="bottom-center" />
+                    <App />
+                </MantineProvider>
+            </PostHogProvider>
+        </QueryClientProvider>
     </React.StrictMode>
 )
 

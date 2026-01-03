@@ -1,7 +1,8 @@
-import { Burger, Center, Grid, Stack, Text, Title } from "@mantine/core"
+import { Burger, Center, Grid, Group, Stack, Text, Title } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect } from "react"
 import { globals } from "../globals"
+import { AuthButton } from "../components/AuthButton"
 
 export type TopBarProps = {
     setShowAsideBar: (v: boolean) => void
@@ -56,6 +57,11 @@ const Topbar = ({ setShowAsideBar, showAsideBar }: TopBarProps) => {
                             )}
                         </Stack>
                     </Center>
+                </Grid.Col>
+                <Grid.Col span={smallScreen ? 5 : 4}>
+                    <Group justify="flex-end">
+                        <AuthButton />
+                    </Group>
                 </Grid.Col>
             </Grid>
         </>

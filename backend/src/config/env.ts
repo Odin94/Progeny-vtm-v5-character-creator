@@ -22,6 +22,9 @@ const envSchema = z.object({
     // PostHog (optional)
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_HOST: z.string().url().default("https://app.posthog.com").optional(),
+
+    // WorkOS AuthKit Session
+    WORKOS_COOKIE_PASSWORD: z.string().min(32, "WORKOS_COOKIE_PASSWORD must be at least 32 characters"),
 })
 
 export type Env = z.infer<typeof envSchema>

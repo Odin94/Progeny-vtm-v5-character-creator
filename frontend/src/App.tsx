@@ -21,11 +21,24 @@ import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import { getEmptyCharacter } from "./data/Character"
+import { useAuth } from "./hooks/useAuth"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
     const [pathname, setPathname] = useState(window.location.pathname)
+    const { refreshAuth } = useAuth()
+
+    // Handle auth callback - refresh auth state after redirect
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search)
+        if (urlParams.has("code") || urlParams.has("state")) {
+            // We're coming back from auth callback, refresh auth state
+            refreshAuth()
+            // Clean up URL
+            window.history.replaceState({}, "", window.location.pathname)
+        }
+    }, [refreshAuth])
 
     useEffect(() => {
         const handleLocationChange = () => {
