@@ -38,24 +38,6 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
         }
     }, [opened])
 
-    const disciplinesAlreadyHave = new Set(character.disciplines.map((power) => power.discipline))
-    const clanDisciplines = new Set(clans[character.clan]?.nativeDisciplines || [])
-
-    const allDisciplines = Object.keys(disciplines) as DisciplineName[]
-    const availableDisciplines = allDisciplines
-        .filter((disciplineName) => disciplineName !== "" && !disciplinesAlreadyHave.has(disciplineName))
-        .sort((a, b) => {
-            const aIsClan = clanDisciplines.has(a)
-            const bIsClan = clanDisciplines.has(b)
-            if (aIsClan && !bIsClan) return -1
-            if (!aIsClan && bIsClan) return 1
-            return a.localeCompare(b)
-        })
-
-    const handleSelectDiscipline = (disciplineName: DisciplineName) => {
-        setSelectedDiscipline(disciplineName)
-    }
-
     const getCurrentDisciplineLevel = (disciplineName: DisciplineName): number => {
         const disciplinePowers = character.disciplines.filter((p) => p.discipline === disciplineName)
         if (disciplinePowers.length === 0) return 0
@@ -71,6 +53,29 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
         const characterPowerNames = new Set(character.disciplines.map((p) => p.name))
 
         return discipline.powers.filter((power) => !characterPowerNames.has(power.name) && power.level <= maxLevel)
+    }
+
+    const clanDisciplines = new Set(clans[character.clan]?.nativeDisciplines || [])
+
+    const allDisciplines = Object.keys(disciplines) as DisciplineName[]
+    const availableDisciplines = allDisciplines
+        .filter((disciplineName) => {
+            if (disciplineName === "") return false
+            const discipline = disciplines[disciplineName]
+            if (!discipline) return false
+            const hasAvailablePowers = getAvailablePowers(disciplineName).length > 0
+            return hasAvailablePowers
+        })
+        .sort((a, b) => {
+            const aIsClan = clanDisciplines.has(a)
+            const bIsClan = clanDisciplines.has(b)
+            if (aIsClan && !bIsClan) return -1
+            if (!aIsClan && bIsClan) return 1
+            return a.localeCompare(b)
+        })
+
+    const handleSelectDiscipline = (disciplineName: DisciplineName) => {
+        setSelectedDiscipline(disciplineName)
     }
 
     const handleSelectPower = (power: Power) => {
