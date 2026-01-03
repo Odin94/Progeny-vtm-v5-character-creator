@@ -1,6 +1,6 @@
 import { Box, Grid, Paper, Text, Title, useMantineTheme, Center, ActionIcon, Modal, Button, Group, Divider, Stack } from "@mantine/core"
 import { useState } from "react"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import TouchstoneModal from "../components/TouchstoneModal"
 import { Touchstone } from "~/data/Character"

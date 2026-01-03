@@ -2,7 +2,7 @@ import { BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stac
 import { useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
-import { getPrimaryColor, SheetOptions } from "./utils/constants"
+import { getPrimaryColor } from "./utils/style"
 import Attributes from "./parts/Attributes"
 import BottomData from "./parts/BottomData"
 import Disciplines from "./parts/Disciplines"
@@ -15,6 +15,13 @@ import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-212
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
+
+export type SheetOptions = {
+    mode: CharacterSheetMode
+    primaryColor: string
+    character: Character
+    setCharacter: (character: Character) => void
+}
 
 type CharacterSheetProps = {
     character: Character

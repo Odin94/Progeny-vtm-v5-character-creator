@@ -6,7 +6,7 @@ import { clans } from "~/data/Clans"
 import { MeritOrFlaw, loresheets, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
 import { intersection } from "~/generator/utils"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
 import PipButton from "./PipButton"
 

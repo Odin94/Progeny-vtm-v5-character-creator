@@ -15,7 +15,7 @@ import {
     Divider,
 } from "@mantine/core"
 import { useState } from "react"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
 import { MeritFlaw } from "~/data/Character"

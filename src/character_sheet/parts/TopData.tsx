@@ -2,7 +2,7 @@ import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput,
 import { clans } from "~/data/Clans"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
 import { PredatorTypes } from "~/data/PredatorType"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 import FocusBorderWrapper from "../components/FocusBorderWrapper"
 import { hexToRgba, inputAlpha } from "../utils/style"
 import { useDebouncedUncontrolledStringField, useDebouncedUncontrolledNumberField } from "../utils/useDebouncedUncontrolledField"

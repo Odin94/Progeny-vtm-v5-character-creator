@@ -1,7 +1,7 @@
 import { ActionIcon, Tooltip, useMantineTheme } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 
 type SimpleSquarePipButtonProps = {
     filled?: boolean

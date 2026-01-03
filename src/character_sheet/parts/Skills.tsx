@@ -4,7 +4,7 @@ import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
 
 type SkillsProps = {

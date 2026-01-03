@@ -11,7 +11,7 @@ import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions

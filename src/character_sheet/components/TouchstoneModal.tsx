@@ -1,7 +1,7 @@
 import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { Touchstone } from "~/data/Character"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 
 type TouchstoneModalProps = {
     opened: boolean

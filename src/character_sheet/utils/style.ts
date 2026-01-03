@@ -1,3 +1,5 @@
+import { ClanName } from "~/data/NameSchemas"
+
 export const bgAlpha = 0.9
 
 export const inputAlpha = 0.7
@@ -11,4 +13,26 @@ export const hexToRgba = (hex: string, alpha: number): string => {
     const rgb = hexToRgb(hex)
     if (!rgb) return hex
     return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
+}
+export const getPrimaryColor = (clan: ClanName): string => {
+    const clanColorMap: Record<ClanName, string> = {
+        Brujah: "red",
+        Gangrel: "orange",
+        Nosferatu: "gray",
+        Malkavian: "violet",
+        Tremere: "grape",
+        Ventrue: "blue",
+        Toreador: "pink",
+        Lasombra: "violet",
+        "Banu Haqim": "cyan",
+        Ministry: "lime",
+        Ravnos: "yellow",
+        Tzimisce: "grape",
+        Hecata: "gray",
+        Salubri: "teal",
+        Caitiff: "grape",
+        "Thin-blood": "grape",
+        "": "red",
+    }
+    return clanColorMap[clan] || "red"
 }

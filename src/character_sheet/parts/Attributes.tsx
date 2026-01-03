@@ -2,7 +2,7 @@ import { Box, Grid, Group, Text, Title } from "@mantine/core"
 import { attributesKeySchema } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 
 type AttributesProps = {
     options: SheetOptions

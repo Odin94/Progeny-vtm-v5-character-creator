@@ -1,7 +1,7 @@
 import { Group } from "@mantine/core"
 import { useRef, useMemo, useEffect } from "react"
 import PipButton from "./PipButton"
-import { SheetOptions } from "../utils/constants"
+import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
 import { getAvailableXP, canAffordUpgrade, getAttributeCost, getSkillCost, getBloodPotencyCost } from "../utils/xp"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
@@ -80,8 +80,12 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         if (!options || !field) return "No options or field provided"
 
         const { mode, character } = options
-        const isFilled = index < level
-        const newLevel = isFilled ? index : index + 1
+        let newLevel: number
+        if (level === 1 && index === 0) {
+            newLevel = 0
+        } else {
+            newLevel = index + 1
+        }
         const wouldDecrease = newLevel < level
 
         // Health and willpower are not editable in play or XP mode
@@ -117,8 +121,12 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         if (!options || !field) return
 
         const { mode, character, setCharacter } = options
-        const isFilled = index < level
-        const newLevel = isFilled ? index : index + 1
+        let newLevel: number
+        if (level === 1 && index === 0) {
+            newLevel = 0
+        } else {
+            newLevel = index + 1
+        }
         const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
         if (mode === "play") {
