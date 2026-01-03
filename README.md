@@ -20,15 +20,27 @@ This is a 'Vampire: The Masquerade' character creation tool for beginners. It is
 
 If you want to buy me a coffee, you can toss me some coins over here: https://ko-fi.com/odin_dev
 
+
 ## How to run
-* `npm install`
-* `npm start`
 
-* (optional) create `.env` file and enter environment variables like `VITE_VARIABLE_NAME = 'some value'`
+### Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
 
+* (optional) create `frontend/.env` file and enter environment variables like `VITE_VARIABLE_NAME = 'some value'`
+
+### Backend
+```bash
+cd backend
+npm install
+npm start
+```
 
 ## How to manually create a loadable json character / fix a broken json file
-Check the `characterSchema` in `src/data/Character.ts` to get an idea for the expected format. If you can't make it work, feel free to create an issue on Github or contact me.
+Check the `characterSchema` in `shared/src/schemas/Character.ts` to get an idea for the expected format. If you can't make it work, feel free to create an issue on Github or contact me.
 
 
 ## Exports to other systems
