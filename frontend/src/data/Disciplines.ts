@@ -1,32 +1,52 @@
 import { z } from "zod"
 
+import alchemyLogo from "../resources/Rombo_Disciplines/rombo_Alchemy.svg"
 import animalismLogo from "../resources/Rombo_Disciplines/rombo_Animalism.svg"
 import auspexLogo from "../resources/Rombo_Disciplines/rombo_Auspex.svg"
+import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg"
 import celerityLogo from "../resources/Rombo_Disciplines/rombo_Celerity.svg"
 import dominateLogo from "../resources/Rombo_Disciplines/rombo_Dominate.svg"
 import fortitudeLogo from "../resources/Rombo_Disciplines/rombo_Fortitude.svg"
 import obfuscateLogo from "../resources/Rombo_Disciplines/rombo_Obfuscate.svg"
+import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg"
 import potenceLogo from "../resources/Rombo_Disciplines/rombo_Potence.svg"
 import presenceLogo from "../resources/Rombo_Disciplines/rombo_Presence.svg"
 import proteanLogo from "../resources/Rombo_Disciplines/rombo_Protean.svg"
-import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg"
-import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg"
-import alchemyLogo from "../resources/Rombo_Disciplines/rombo_Alchemy.svg"
-import {
-    clanNameSchema,
-    DisciplineName,
-    disciplineNameSchema,
-    powerSchema,
-    ritualSchema,
-    amalgamPrerequisiteSchema,
-    type Power,
-    type AmalgamPrerequisite,
-    type Ritual,
-} from "@progeny/shared"
 import { Character } from "./Character"
+import { clanNameSchema, DisciplineName, disciplineNameSchema } from "./NameSchemas"
 
-// Re-export from shared for backwards compatibility
-export { powerSchema, ritualSchema, amalgamPrerequisiteSchema, type Power, type AmalgamPrerequisite, type Ritual } from "@progeny/shared"
+export const amalgamPrerequisiteSchema = z.object({
+    discipline: disciplineNameSchema,
+    level: z.number().min(1).int(),
+})
+
+export type AmalgamPrerequisite = z.infer<typeof amalgamPrerequisiteSchema>
+
+export const powerSchema = z.object({
+    name: z.string(),
+    description: z.string(),
+    summary: z.string(),
+    dicePool: z.string(),
+    level: z.number().min(1).int(),
+    discipline: disciplineNameSchema,
+    rouseChecks: z.number().min(0).int(),
+    amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
+})
+
+export type Power = z.infer<typeof powerSchema>
+
+export const ritualSchema = z.object({
+    name: z.string(),
+    summary: z.string(),
+    rouseChecks: z.number().min(0).int(),
+    requiredTime: z.string(),
+    dicePool: z.string(),
+    ingredients: z.string(),
+    level: z.number().min(1).int(),
+    discipline: disciplineNameSchema.optional(),
+})
+
+export type Ritual = z.infer<typeof ritualSchema>
 
 export const disciplineSchema = z.object({
     clans: clanNameSchema.array(),
