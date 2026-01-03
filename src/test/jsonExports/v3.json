@@ -1,0 +1,188 @@
+{
+  "id": "",
+  "name": "Alan Cadd",
+  "description": "Rough looking young man in dark clothes",
+  "sire": "Georgius",
+  "player": "Odin",
+  "chronicle": "",
+  "sect": "",
+  "clan": "Brujah",
+  "predatorType": {
+    "name": "Alleycat",
+    "pickedDiscipline": "celerity",
+    "pickedSpecialties": [
+      {
+        "skill": "brawl",
+        "name": "Grappling"
+      }
+    ],
+    "pickedMeritsAndFlaws": []
+  },
+  "touchstones": [
+    {
+      "name": "Milly",
+      "description": "Childhood friend who fell in with the wrong crowd",
+      "conviction": "Stick to the street code"
+    }
+  ],
+  "ambition": "Win my freedom",
+  "desire": "Steal a car",
+  "attributes": {
+    "strength": 4,
+    "dexterity": 2,
+    "stamina": 3,
+    "charisma": 2,
+    "manipulation": 2,
+    "composure": 1,
+    "intelligence": 2,
+    "wits": 3,
+    "resolve": 3
+  },
+  "skills": {
+    "athletics": 4,
+    "brawl": 3,
+    "craft": 0,
+    "drive": 0,
+    "firearms": 3,
+    "melee": 0,
+    "larceny": 0,
+    "stealth": 0,
+    "survival": 0,
+    "animal ken": 0,
+    "etiquette": 0,
+    "insight": 1,
+    "intimidation": 1,
+    "leadership": 1,
+    "performance": 0,
+    "persuasion": 3,
+    "streetwise": 2,
+    "subterfuge": 0,
+    "academics": 0,
+    "awareness": 2,
+    "finance": 0,
+    "investigation": 2,
+    "medicine": 0,
+    "occult": 0,
+    "politics": 0,
+    "science": 0,
+    "technology": 0
+  },
+  "skillSpecialties": [
+    {
+      "skill": "intimidation",
+      "name": "shakedowns"
+    }
+  ],
+  "availableDisciplineNames": [
+    "celerity",
+    "potence",
+    "presence"
+  ],
+  "disciplines": [
+    {
+      "name": "Rapid Reflexes",
+      "description": "",
+      "summary": "faster reactions & free minor actions",
+      "dicePool": "",
+      "level": 1,
+      "discipline": "celerity",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": []
+    },
+    {
+      "name": "Fleetness",
+      "description": "",
+      "summary": "add Celerity rating for defense and Dexterity rolls",
+      "dicePool": "",
+      "level": 2,
+      "discipline": "celerity",
+      "rouseChecks": 1,
+      "amalgamPrerequisites": []
+    },
+    {
+      "name": "Lethal Body",
+      "description": "",
+      "summary": "cause serious physical damage to a mortals",
+      "dicePool": "",
+      "level": 1,
+      "discipline": "potence",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": []
+    },
+    {
+      "name": "Blink",
+      "description": "",
+      "summary": "dash up to 50m at supernatural speed",
+      "dicePool": "Dexterity + Athletics",
+      "level": 3,
+      "discipline": "celerity",
+      "rouseChecks": 1,
+      "amalgamPrerequisites": []
+    }
+  ],
+  "rituals": [],
+  "bloodPotency": 1,
+  "generation": 13,
+  "maxHealth": 6,
+  "willpower": 4,
+  "experience": 15,
+  "humanity": 6,
+  "merits": [
+    {
+      "name": "Haven",
+      "level": 1,
+      "summary": "secure homebase, 1 - apartment, 3 - big building",
+      "excludes": [
+        "No Haven"
+      ],
+      "type": "merit"
+    },
+    {
+      "name": "Stunning",
+      "level": 4,
+      "summary": "+2 dice in Social rolls",
+      "excludes": [
+        "Beautiful",
+        "Ugly",
+        "Repulsive"
+      ],
+      "type": "merit"
+    },
+    {
+      "name": "Resources",
+      "level": 1,
+      "summary": "wealth & income, 1 - you can afford basics, 5 - you can afford anything money can buy",
+      "excludes": [
+        "Destitute"
+      ],
+      "type": "merit"
+    },
+    {
+      "name": "Check the Trunk",
+      "level": 1,
+      "summary": "Get easy access to an armory or tools; none of the items can be more valuable than Resources 2",
+      "excludes": [],
+      "type": "merit"
+    }
+  ],
+  "flaws": [
+    {
+      "name": "Known Blankbody",
+      "level": 2,
+      "summary": "Certain governments / organizations know you're a vampire",
+      "excludes": [],
+      "type": "flaw"
+    }
+  ],
+  "notes": "",
+  "ephemeral": {
+    "hunger": 3,
+    "superficialDamage": 0,
+    "aggravatedDamage": 0,
+    "superficialWillpowerDamage": 0,
+    "aggravatedWillpowerDamage": 0,
+    "humanityStains": 0,
+    "experienceSpent": 0
+  },
+  "version": 3
+}
