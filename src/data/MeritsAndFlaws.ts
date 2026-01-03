@@ -82,7 +82,7 @@ export const meritsAndFlaws: MeritsAndFlaws[] = [
                 name: "No Haven",
                 cost: [1],
                 summary: "you don't have a home",
-                excludes: ["Haven", "Hidden Armory", "Cell", "Watchmen", "Luxury"],
+                excludes: ["Haven", "Hidden Armory", "Cell", "Watchmen", "Luxury", "Haunted", "Creepy"],
             },
             { name: "Haunted", cost: [1], summary: "ghostly presence in your haven", excludes: ["No Haven"] },
             {
