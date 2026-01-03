@@ -3,225 +3,222 @@ import { eq, and } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
-  createCharacterSchema,
-  updateCharacterSchema,
-  characterParamsSchema,
+    createCharacterSchema,
+    updateCharacterSchema,
+    characterParamsSchema,
+    CreateCharacterInput,
+    CharacterParams,
+    UpdateCharacterInput,
 } from "../schemas/character.js"
 import { nanoid } from "nanoid"
 
 export async function characterRoutes(fastify: FastifyInstance) {
-  // Create character
-  fastify.post<{ Body: typeof createCharacterSchema._type }>(
-    "/characters",
-    {
-      preHandler: authenticateUser,
-      schema: {
-        body: createCharacterSchema,
-      },
-    },
-    async (request: AuthenticatedRequest, reply) => {
-      const userId = request.user!.id
-      const { name, data, version } = request.body
-
-      // Ensure user exists in database
-      const user = await db.query.users.findFirst({
-        where: eq(schema.users.id, userId),
-      })
-
-      if (!user) {
-        // Create user if doesn't exist
-        await db.insert(schema.users).values({
-          id: userId,
-          email: request.user!.email,
-          firstName: request.user!.firstName,
-          lastName: request.user!.lastName,
-        })
-      }
-
-      const characterId = nanoid()
-
-      const [character] = await db
-        .insert(schema.characters)
-        .values({
-          id: characterId,
-          userId,
-          name,
-          data: JSON.stringify(data),
-          version,
-        })
-        .returning()
-
-      reply.code(201).send({
-        ...character,
-        data: JSON.parse(character.data),
-      })
-    }
-  )
-
-  // Get all characters for user (owned + shared)
-  fastify.get(
-    "/characters",
-    {
-      preHandler: authenticateUser,
-    },
-    async (request: AuthenticatedRequest, reply) => {
-      const userId = request.user!.id
-
-      // Get owned characters
-      const ownedCharacters = await db.query.characters.findMany({
-        where: eq(schema.characters.userId, userId),
-      })
-
-      // Get shared characters
-      const sharedShares = await db.query.characterShares.findMany({
-        where: eq(schema.characterShares.sharedWithUserId, userId),
-        with: {
-          character: true,
+    // Create character
+    fastify.post<{ Body: CreateCharacterInput }>(
+        "/characters",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                body: createCharacterSchema.toJSONSchema(),
+            },
         },
-      })
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { name, data, version } = request.body as CreateCharacterInput
 
-      const sharedCharacters = sharedShares.map((share) => ({
-        ...share.character,
-        shared: true,
-        sharedBy: share.sharedById,
-      }))
+            // Ensure user exists in database
+            const user = await db.query.users.findFirst({
+                where: eq(schema.users.id, userId),
+            })
 
-      const allCharacters = [
-        ...ownedCharacters.map((c) => ({ ...c, shared: false })),
-        ...sharedCharacters,
-      ].map((c) => ({
-        ...c,
-        data: JSON.parse(c.data),
-      }))
+            if (!user) {
+                // Create user if doesn't exist
+                await db.insert(schema.users).values({
+                    id: userId,
+                    email: request.user!.email,
+                    firstName: request.user!.firstName,
+                    lastName: request.user!.lastName,
+                })
+            }
 
-      reply.send(allCharacters)
-    }
-  )
+            const characterId = nanoid()
 
-  // Get single character
-  fastify.get<{ Params: typeof characterParamsSchema._type }>(
-    "/characters/:id",
-    {
-      preHandler: authenticateUser,
-      schema: {
-        params: characterParamsSchema,
-      },
-    },
-    async (request: AuthenticatedRequest, reply) => {
-      const userId = request.user!.id
-      const { id } = request.params
+            const [character] = await db
+                .insert(schema.characters)
+                .values({
+                    id: characterId,
+                    userId,
+                    name,
+                    data: JSON.stringify(data),
+                    version,
+                })
+                .returning()
 
-      const character = await db.query.characters.findFirst({
-        where: eq(schema.characters.id, id),
-      })
+            reply.code(201).send({
+                ...character,
+                data: JSON.parse(character.data),
+            })
+        }
+    )
 
-      if (!character) {
-        reply.code(404).send({ error: "Character not found" })
-        return
-      }
+    // Get all characters for user (owned + shared)
+    fastify.get(
+        "/characters",
+        {
+            preHandler: authenticateUser,
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
 
-      // Check if user owns or has access to character
-      const isOwner = character.userId === userId
-      const isShared = await db.query.characterShares.findFirst({
-        where: and(
-          eq(schema.characterShares.characterId, id),
-          eq(schema.characterShares.sharedWithUserId, userId)
-        ),
-      })
+            // Get owned characters
+            const ownedCharacters = await db.query.characters.findMany({
+                where: eq(schema.characters.userId, userId),
+            })
 
-      if (!isOwner && !isShared) {
-        reply.code(403).send({ error: "Forbidden: You don't have access to this character" })
-        return
-      }
+            // Get shared characters
+            const sharedShares = await db.query.characterShares.findMany({
+                where: eq(schema.characterShares.sharedWithUserId, userId),
+                with: {
+                    character: true,
+                },
+            })
 
-      reply.send({
-        ...character,
-        data: JSON.parse(character.data),
-        canEdit: isOwner,
-      })
-    }
-  )
+            const sharedCharacters = sharedShares.map((share) => ({
+                ...share.character,
+                shared: true,
+                sharedBy: share.sharedById,
+            }))
 
-  // Update character
-  fastify.put<{
-    Params: typeof characterParamsSchema._type
-    Body: typeof updateCharacterSchema._type
-  }>(
-    "/characters/:id",
-    {
-      preHandler: authenticateUser,
-      schema: {
-        params: characterParamsSchema,
-        body: updateCharacterSchema,
-      },
-    },
-    async (request: AuthenticatedRequest, reply) => {
-      const userId = request.user!.id
-      const { id } = request.params
-      const updateData = request.body
+            const allCharacters = [...ownedCharacters.map((c) => ({ ...c, shared: false })), ...sharedCharacters].map((c) => ({
+                ...c,
+                data: JSON.parse(c.data),
+            }))
 
-      const character = await db.query.characters.findFirst({
-        where: eq(schema.characters.id, id),
-      })
+            reply.send(allCharacters)
+        }
+    )
 
-      if (!character) {
-        reply.code(404).send({ error: "Character not found" })
-        return
-      }
+    // Get single character
+    fastify.get<{ Params: CharacterParams }>(
+        "/characters/:id",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: characterParamsSchema.toJSONSchema(),
+            },
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { id } = request.params as CharacterParams
 
-      if (character.userId !== userId) {
-        reply.code(403).send({ error: "Forbidden: You can only edit your own characters" })
-        return
-      }
+            const character = await db.query.characters.findFirst({
+                where: eq(schema.characters.id, id),
+            })
 
-      const [updated] = await db
-        .update(schema.characters)
-        .set({
-          ...(updateData.name && { name: updateData.name }),
-          ...(updateData.data && { data: JSON.stringify(updateData.data) }),
-          ...(updateData.version && { version: updateData.version }),
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.characters.id, id))
-        .returning()
+            if (!character) {
+                reply.code(404).send({ error: "Character not found" })
+                return
+            }
 
-      reply.send({
-        ...updated,
-        data: JSON.parse(updated.data),
-      })
-    }
-  )
+            // Check if user owns or has access to character
+            const isOwner = character.userId === userId
+            const isShared = await db.query.characterShares.findFirst({
+                where: and(eq(schema.characterShares.characterId, id), eq(schema.characterShares.sharedWithUserId, userId)),
+            })
 
-  // Delete character
-  fastify.delete<{ Params: typeof characterParamsSchema._type }>(
-    "/characters/:id",
-    {
-      preHandler: authenticateUser,
-      schema: {
-        params: characterParamsSchema,
-      },
-    },
-    async (request: AuthenticatedRequest, reply) => {
-      const userId = request.user!.id
-      const { id } = request.params
+            if (!isOwner && !isShared) {
+                reply.code(403).send({ error: "Forbidden: You don't have access to this character" })
+                return
+            }
 
-      const character = await db.query.characters.findFirst({
-        where: eq(schema.characters.id, id),
-      })
+            reply.send({
+                ...character,
+                data: JSON.parse(character.data),
+                canEdit: isOwner,
+            })
+        }
+    )
 
-      if (!character) {
-        reply.code(404).send({ error: "Character not found" })
-        return
-      }
+    // Update character
+    fastify.put<{
+        Params: CharacterParams
+        Body: UpdateCharacterInput
+    }>(
+        "/characters/:id",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: characterParamsSchema.toJSONSchema(),
+                body: updateCharacterSchema.toJSONSchema(),
+            },
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { id } = request.params as CharacterParams
+            const updateData = request.body as UpdateCharacterInput
 
-      if (character.userId !== userId) {
-        reply.code(403).send({ error: "Forbidden: You can only delete your own characters" })
-        return
-      }
+            const character = await db.query.characters.findFirst({
+                where: eq(schema.characters.id, id),
+            })
 
-      await db.delete(schema.characters).where(eq(schema.characters.id, id))
+            if (!character) {
+                reply.code(404).send({ error: "Character not found" })
+                return
+            }
 
-      reply.code(204).send()
-    }
-  )
+            if (character.userId !== userId) {
+                reply.code(403).send({ error: "Forbidden: You can only edit your own characters" })
+                return
+            }
+
+            const [updated] = await db
+                .update(schema.characters)
+                .set({
+                    ...(updateData.name && { name: updateData.name }),
+                    ...(updateData.data && { data: JSON.stringify(updateData.data) }),
+                    ...(updateData.version && { version: updateData.version }),
+                    updatedAt: new Date(),
+                })
+                .where(eq(schema.characters.id, id))
+                .returning()
+
+            reply.send({
+                ...updated,
+                data: JSON.parse(updated.data),
+            })
+        }
+    )
+
+    // Delete character
+    fastify.delete<{ Params: CharacterParams }>(
+        "/characters/:id",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: characterParamsSchema.toJSONSchema(),
+            },
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { id } = request.params as CharacterParams
+
+            const character = await db.query.characters.findFirst({
+                where: eq(schema.characters.id, id),
+            })
+
+            if (!character) {
+                reply.code(404).send({ error: "Character not found" })
+                return
+            }
+
+            if (character.userId !== userId) {
+                reply.code(403).send({ error: "Forbidden: You can only delete your own characters" })
+                return
+            }
+
+            await db.delete(schema.characters).where(eq(schema.characters.id, id))
+
+            reply.code(204).send()
+        }
+    )
 }

@@ -19,3 +19,4 @@ export const characterParamsSchema = z.object({
 
 export type CreateCharacterInput = z.infer<typeof createCharacterSchema>
 export type UpdateCharacterInput = z.infer<typeof updateCharacterSchema>
+export type CharacterParams = z.infer<typeof characterParamsSchema>
