@@ -23,7 +23,10 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: "Unknown error" }))
-        throw new Error(error.message || error.error || `HTTP ${response.status}`)
+        const errorMessage = error.message || error.error || `HTTP ${response.status}`
+        const httpError = new Error(errorMessage) as Error & { status?: number }
+        httpError.status = response.status
+        throw httpError
     }
 
     // Handle 204 No Content

@@ -19,9 +19,12 @@ export const useAuth = () => {
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
-        enabled: !isBackendDisabled(), // Disable query if backend is disabled
+        enabled: !isBackendDisabled(),
         retry: (failureCount, error) => {
-            // Retry up to 2 times for network/auth errors
+            const status = (error as Error & { status?: number })?.status
+            if (status && status >= 400 && status < 500) {
+                return false
+            }
             if (failureCount < 2) {
                 return true
             }
