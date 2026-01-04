@@ -44,7 +44,7 @@ export async function authenticateUser(request: AuthenticatedRequest, reply: Fas
                         path: "/",
                         httpOnly: true,
                         secure: env.NODE_ENV === "production",
-                        sameSite: "lax",
+                        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
                     })
 
                     request.user = {

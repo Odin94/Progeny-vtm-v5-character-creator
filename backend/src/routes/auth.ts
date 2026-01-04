@@ -117,16 +117,14 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             // Store the sealed session in a cookie
-            // Note: sameSite: "lax" means cookies won't be sent on cross-origin requests
-            // For development with different ports, we need to either:
-            // 1. Use a proxy (recommended - configure Vite to proxy /api to backend)
-            // 2. Use HTTPS with sameSite: "none" and secure: true
-            // For now, we'll set it and the user can check if it's actually being set
+            // For cross-origin requests (frontend on different subdomain), we need:
+            // - sameSite: "none" (allows cross-origin cookies)
+            // - secure: true (required when sameSite is "none")
             const cookieOptions = {
                 path: "/",
                 httpOnly: true,
                 secure: env.NODE_ENV === "production",
-                sameSite: "lax" as const,
+                sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
             }
 
             reply.setCookie("wos-session", sealedSession, cookieOptions)
@@ -205,7 +203,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 path: "/",
                 httpOnly: true,
                 secure: env.NODE_ENV === "production",
-                sameSite: "lax",
+                sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
             })
 
             // Return the logout URL as JSON instead of redirecting
@@ -221,7 +219,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 path: "/",
                 httpOnly: true,
                 secure: env.NODE_ENV === "production",
-                sameSite: "lax",
+                sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
             })
             reply.send({
                 success: true,
@@ -274,7 +272,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                             path: "/",
                             httpOnly: true,
                             secure: env.NODE_ENV === "production",
-                            sameSite: "lax",
+                            sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
                         })
 
                         reply.send({

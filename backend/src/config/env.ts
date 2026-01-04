@@ -27,6 +27,10 @@ const envSchema = z.object({
 
     // WorkOS AuthKit Session
     WORKOS_COOKIE_PASSWORD: z.string().min(32, "WORKOS_COOKIE_PASSWORD must be at least 32 characters"),
+
+    // SSL (optional, for HTTPS)
+    SSL_CERT_PATH: z.string().optional(),
+    SSL_KEY_PATH: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
