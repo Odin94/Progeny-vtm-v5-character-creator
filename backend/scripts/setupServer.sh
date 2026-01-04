@@ -3,6 +3,14 @@
 # Setup script for Progeny Backend on Ubuntu Hetzner Server
 # This script prepares an Ubuntu server for running the Fastify backend
 
+# NOTE: You can NOT just paste this as hetzner init script, those follow a yaml format
+# Copy over with scp, fix line endings and run
+# scp backend/scripts/setupServer.sh root@IPHERE:/tmp/setupServer.sh
+# sudo apt install dos2unix
+# dos2unix /tmp/setupServer.sh
+# chmod +x /tmp/setupServer.sh
+# /tmp/setupServer.sh
+
 set -e  # Exit on error
 
 echo "🚀 Starting Progeny Backend server setup..."
@@ -93,33 +101,34 @@ LOG_DIR="/var/log/progeny-backend"
 mkdir -p "$LOG_DIR"
 chown -R "$APP_USER:$APP_USER" "$LOG_DIR"
 
-# Clone repository
-echo -e "${YELLOW}📥 Cloning repository...${NC}"
+# Clone or update repository
+echo -e "${YELLOW}📥 Setting up repository...${NC}"
 if [ -d "$APP_DIR/.git" ]; then
     echo -e "${YELLOW}Repository already exists, pulling latest changes...${NC}"
-    sudo -u "$APP_USER" git -C "$APP_DIR" pull
+    runuser -u "$APP_USER" -- git -C "$APP_DIR" pull
 else
-    sudo -u "$APP_USER" git clone https://github.com/Odin94/Progeny-vtm-v5-character-creator.git "$APP_DIR"
+    echo -e "${YELLOW}Cloning repository...${NC}"
+    runuser -u "$APP_USER" -- git clone https://github.com/Odin94/Progeny-vtm-v5-character-creator.git "$APP_DIR"
 fi
 
 # Install dependencies
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
 echo -e "${YELLOW}  Installing shared dependencies...${NC}"
-sudo -u "$APP_USER" bash -c "cd $APP_DIR/shared && npm install"
+runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/shared && npm install"
 echo -e "${YELLOW}  Installing backend dependencies...${NC}"
-sudo -u "$APP_USER" bash -c "cd $APP_DIR/backend && npm install"
+runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm install"
 
 # Build backend
 echo -e "${YELLOW}🔨 Building backend...${NC}"
-sudo -u "$APP_USER" bash -c "cd $APP_DIR/backend && npm run build"
+runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm run build"
 
 # Create PM2 ecosystem file
 echo -e "${YELLOW}⚙️  Creating PM2 ecosystem file...${NC}"
-cat > "$APP_DIR/backend/ecosystem.config.js" << 'EOF'
+cat > "$APP_DIR/backend/ecosystem.config.cjs" << 'EOF'
 module.exports = {
   apps: [{
     name: 'progeny-backend',
-    script: './dist/index.js',
+    script: './dist/backend/src/index.js',
     cwd: '/opt/progeny-backend/backend',
     instances: 1,
     exec_mode: 'fork',
@@ -140,30 +149,34 @@ module.exports = {
 };
 EOF
 
-chown "$APP_USER:$APP_USER" "$APP_DIR/backend/ecosystem.config.js"
+chown "$APP_USER:$APP_USER" "$APP_DIR/backend/ecosystem.config.cjs"
 
 # Create systemd service for PM2
 echo -e "${YELLOW}⚙️  Setting up PM2 startup script...${NC}"
-PM2_STARTUP=$(sudo -u "$APP_USER" pm2 startup systemd -u "$APP_USER" --hp "$APP_DIR" | grep -v "PM2" | tail -n 1)
+PM2_STARTUP=$(runuser -u "$APP_USER" -- pm2 startup systemd -u "$APP_USER" --hp "$APP_DIR" | grep -v "PM2" | tail -n 1)
 eval "$PM2_STARTUP"
 
 # Install and configure PM2 log rotation
 echo -e "${YELLOW}📦 Installing PM2 log rotation...${NC}"
-sudo -u "$APP_USER" pm2 install pm2-logrotate 2>/dev/null || {
+runuser -u "$APP_USER" -- pm2 install pm2-logrotate 2>/dev/null || {
     echo -e "${YELLOW}Note: PM2 log rotation will be configured when PM2 is first started${NC}"
 }
 
 # Configure log rotation to keep logs for 1 month (30 days)
 echo -e "${YELLOW}⚙️  Configuring log rotation (30 days retention, 20M max size)...${NC}"
-sudo -u "$APP_USER" pm2 set pm2-logrotate:max_size 20M 2>/dev/null || true
-sudo -u "$APP_USER" pm2 set pm2-logrotate:retain 30 2>/dev/null || true
-sudo -u "$APP_USER" pm2 set pm2-logrotate:rotateInterval '0 0 * * *' 2>/dev/null || true
-sudo -u "$APP_USER" pm2 set pm2-logrotate:workerInterval 30 2>/dev/null || true
-sudo -u "$APP_USER" pm2 save 2>/dev/null || true
+runuser -u "$APP_USER" -- pm2 set pm2-logrotate:max_size 20M 2>/dev/null || true
+runuser -u "$APP_USER" -- pm2 set pm2-logrotate:retain 30 2>/dev/null || true
+runuser -u "$APP_USER" -- pm2 set pm2-logrotate:rotateInterval '0 0 * * *' 2>/dev/null || true
+runuser -u "$APP_USER" -- pm2 set pm2-logrotate:workerInterval 30 2>/dev/null || true
+runuser -u "$APP_USER" -- pm2 save 2>/dev/null || true
 
 # Create environment file template
 echo -e "${YELLOW}📝 Creating environment file template...${NC}"
 cat > "$APP_DIR/backend/.env" << 'EOF'
+# PostHog Configuration
+POSTHOG_API_KEY=your_posthog_api_key_here
+POSTHOG_HOST=https://eu.i.posthog.com
+
 # WorkOS Configuration
 WORKOS_API_KEY=your_workos_api_key_here
 WORKOS_CLIENT_ID=your_workos_client_id_here
@@ -189,7 +202,7 @@ EOF
 chown "$APP_USER:$APP_USER" "$APP_DIR/backend/.env"
 
 # Create setup completion script
-cat > "$APP_DIR/backend/README-SETUP.md" << 'EOF'
+cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
 # Server Setup Complete!
 
 ## Next Steps:
@@ -197,7 +210,7 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'EOF'
 1. **SSH into the server and switch to the application user:**
    ```bash
    ssh your-server
-   sudo su - $APP_USER
+   sudo su - progeny
    cd /opt/progeny-backend/backend
    ```
 
@@ -233,7 +246,7 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'EOF'
 
 5. **Start with PM2:**
    ```bash
-   pm2 start ecosystem.config.js
+   pm2 start ecosystem.config.cjs
    pm2 save
    ```
 
@@ -249,8 +262,8 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'EOF'
 - Restart: `pm2 restart progeny-backend`
 - Stop: `pm2 stop progeny-backend`
 - Monitor: `pm2 monit`
-- Update code: `./updateCode.sh`
-EOF
+- Update code: `./scripts/updateCode.sh`
+HEREDOC_EOF
 
 chown "$APP_USER:$APP_USER" "$APP_DIR/backend/README-SETUP.md"
 

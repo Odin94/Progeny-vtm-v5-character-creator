@@ -7,7 +7,11 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schemas": "./src/schemas/index.ts"
+    "./schemas": "./src/schemas/index.ts",
+    "./schemas/*": {
+      "types": "./src/schemas/*.ts",
+      "default": "./src/schemas/*.ts"
+    }
   },
   "dependencies": {
     "zod": "^4.2.1"
