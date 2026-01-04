@@ -13,6 +13,7 @@ import {
     AddCharacterToCoterieInput,
 } from "../schemas/coterie.js"
 import { nanoid } from "nanoid"
+import { zodToFastifySchema } from "../utils/schema.js"
 
 export async function coterieRoutes(fastify: FastifyInstance) {
     // Create coterie
@@ -21,7 +22,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                body: createCoterieSchema.toJSONSchema(),
+                body: zodToFastifySchema(createCoterieSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -114,7 +115,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: coterieParamsSchema.toJSONSchema(),
+                params: zodToFastifySchema(coterieParamsSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -180,8 +181,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: coterieParamsSchema.toJSONSchema(),
-                body: updateCoterieSchema.toJSONSchema(),
+                params: zodToFastifySchema(coterieParamsSchema),
+                body: zodToFastifySchema(updateCoterieSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -222,7 +223,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: coterieParamsSchema.toJSONSchema(),
+                params: zodToFastifySchema(coterieParamsSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -258,8 +259,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: coterieParamsSchema.toJSONSchema(),
-                body: addCharacterToCoterieSchema.toJSONSchema(),
+                params: zodToFastifySchema(coterieParamsSchema),
+                body: zodToFastifySchema(addCharacterToCoterieSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {

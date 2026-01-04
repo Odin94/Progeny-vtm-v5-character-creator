@@ -4,6 +4,7 @@ import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import { ShareCharacterInput, shareCharacterSchema, ShareParams, shareParamsSchema } from "../schemas/share.js"
 import { nanoid } from "nanoid"
+import { zodToFastifySchema } from "../utils/schema.js"
 
 export async function shareRoutes(fastify: FastifyInstance) {
     // Share character with user
@@ -15,8 +16,8 @@ export async function shareRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: shareParamsSchema.toJSONSchema(),
-                body: shareCharacterSchema.toJSONSchema(),
+                params: zodToFastifySchema(shareParamsSchema),
+                body: zodToFastifySchema(shareCharacterSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -124,7 +125,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: shareParamsSchema.toJSONSchema(),
+                params: zodToFastifySchema(shareParamsSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {

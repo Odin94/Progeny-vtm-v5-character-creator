@@ -11,6 +11,7 @@ import {
     UpdateCharacterInput,
 } from "../schemas/character.js"
 import { nanoid } from "nanoid"
+import { zodToFastifySchema } from "../utils/schema.js"
 
 export async function characterRoutes(fastify: FastifyInstance) {
     // Create character
@@ -19,7 +20,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                body: createCharacterSchema.toJSONSchema(),
+                body: zodToFastifySchema(createCharacterSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -104,7 +105,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: characterParamsSchema.toJSONSchema(),
+                params: zodToFastifySchema(characterParamsSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -148,8 +149,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: characterParamsSchema.toJSONSchema(),
-                body: updateCharacterSchema.toJSONSchema(),
+                params: zodToFastifySchema(characterParamsSchema),
+                body: zodToFastifySchema(updateCharacterSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -195,7 +196,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: characterParamsSchema.toJSONSchema(),
+                params: zodToFastifySchema(characterParamsSchema),
             },
         },
         async (request: AuthenticatedRequest, reply) => {
