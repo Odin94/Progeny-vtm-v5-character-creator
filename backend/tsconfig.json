@@ -14,11 +14,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["node"],
-    "paths": {
-      "@progeny/shared": ["../shared/src"],
-      "@progeny/shared/*": ["../shared/src/*"]
-    }
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

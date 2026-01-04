@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { characterDataSchema } from "@progeny/shared/schemas"
+import { characterDataSchema } from "./CharacterSchema.js"
 
 export const createCharacterSchema = z.object({
     name: z.string().min(1).max(255),

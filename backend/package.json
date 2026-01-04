@@ -18,7 +18,6 @@
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^10.0.1",
     "@fastify/websocket": "^11.0.1",
-    "@progeny/shared": "file:../shared",
     "@workos-inc/node": "^7.79.3",
     "better-sqlite3": "^11.7.0",
     "dotenv": "^17.2.3",

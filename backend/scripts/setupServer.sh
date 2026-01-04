@@ -113,9 +113,6 @@ fi
 
 # Install dependencies
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-echo -e "${YELLOW}  Installing shared dependencies...${NC}"
-runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/shared && npm install"
-echo -e "${YELLOW}  Installing backend dependencies...${NC}"
 runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm install"
 
 # Build backend
