@@ -11,6 +11,8 @@
 # chmod +x /tmp/setupServer.sh
 # /tmp/setupServer.sh
 
+# TODOdin: Consider just writing a script that builds & scps the backend to the server for deployments
+
 set -e  # Exit on error
 
 echo "🚀 Starting Progeny Backend server setup..."

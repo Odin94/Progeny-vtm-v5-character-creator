@@ -1,5 +1,4 @@
-// In development, use the proxy path so cookies work (same origin)
-// In production, use the full API URL
+// Use VITE_API_URL if provided, otherwise fallback to proxy in dev or localhost in production
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
 
 type RequestOptions = {
