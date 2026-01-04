@@ -164,6 +164,12 @@ class MetricsCollector {
     }
 
     private async sendToPostHog(metrics: SystemMetrics) {
+        // Don't send metrics in development mode
+        if (env.NODE_ENV === "development") {
+            this.fastify.log.debug("Skipping PostHog metrics in development mode")
+            return
+        }
+
         if (!env.POSTHOG_API_KEY) {
             this.fastify.log.debug("PostHog not configured, skipping metrics")
             return // PostHog not configured
