@@ -14,9 +14,27 @@ export async function authRoutes(fastify: FastifyInstance) {
     // Sign-in endpoint - redirects to WorkOS AuthKit
     fastify.get("/auth/login", async (request, reply) => {
         try {
-            const host = request.hostname || "localhost"
-            const port = request.url.includes(":") ? `:${env.PORT}` : ""
-            const redirectUri = `${request.protocol}://${host}${port}/auth/callback`
+            // Construct the backend URL for the callback
+            // Prefer BACKEND_URL env var if set, otherwise construct from request
+            let redirectUri: string
+            if (env.BACKEND_URL) {
+                redirectUri = `${env.BACKEND_URL}/auth/callback`
+            } else {
+                const protocol = request.protocol || (env.NODE_ENV === "production" ? "https" : "http")
+                // Try to get host with port from Host header, fallback to hostname
+                const hostHeader = request.headers.host
+                const host = hostHeader || `${request.hostname || "localhost"}:${env.PORT}`
+
+                // Ensure we have the port for localhost
+                if (host.includes(":")) {
+                    redirectUri = `${protocol}://${host}/auth/callback`
+                } else if (host === "localhost" || host === "127.0.0.1") {
+                    redirectUri = `${protocol}://${host}:${env.PORT}/auth/callback`
+                } else {
+                    // In production, use the hostname without port (assuming standard ports)
+                    redirectUri = `${protocol}://${host}/auth/callback`
+                }
+            }
 
             const authorizationUrl = workos.userManagement.getAuthorizationUrl({
                 provider: "authkit",

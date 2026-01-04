@@ -11,7 +11,19 @@ import { env } from "./config/env.js"
 import { initializeMetrics } from "./utils/metrics.js"
 
 const fastify = Fastify({
-    logger: true,
+    logger:
+        env.NODE_ENV === "development"
+            ? {
+                  transport: {
+                      target: "pino-pretty",
+                      options: {
+                          colorize: true,
+                          translateTime: "HH:MM:ss Z",
+                          ignore: "pid,hostname",
+                      },
+                  },
+              }
+            : true,
 })
 
 // Register plugins

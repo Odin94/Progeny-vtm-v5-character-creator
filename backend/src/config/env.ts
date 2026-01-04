@@ -18,10 +18,11 @@ const envSchema = z.object({
     PORT: z.string().regex(/^\d+$/).transform(Number).default(3001),
     HOST: z.string().default("0.0.0.0"),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    BACKEND_URL: z.url().optional(),
 
     // PostHog (optional)
     POSTHOG_API_KEY: z.string().optional(),
-    POSTHOG_HOST: z.string().url().default("https://app.posthog.com").optional(),
+    POSTHOG_HOST: z.url().default("https://app.posthog.com").optional(),
 
     // WorkOS AuthKit Session
     WORKOS_COOKIE_PASSWORD: z.string().min(32, "WORKOS_COOKIE_PASSWORD must be at least 32 characters"),

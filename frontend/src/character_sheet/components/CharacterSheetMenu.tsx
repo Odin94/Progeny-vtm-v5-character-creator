@@ -12,6 +12,7 @@ import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
+import { useAuth } from "~/hooks/useAuth"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions
@@ -19,6 +20,7 @@ type CharacterSheetMenuProps = {
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const { character, setCharacter, primaryColor } = options
+    const { user, loading: authLoading, isAuthenticated, signIn, signOut } = useAuth()
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
     const [disclaimerOpened, { open: openDisclaimer, close: closeDisclaimer }] = useDisclosure(false)
@@ -219,6 +221,40 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     <Button size="lg" color="grape" variant="light" onClick={handleGoBack} fullWidth>
                         Go back to Progeny Generator
                     </Button>
+
+                    <Divider />
+
+                    {authLoading ? (
+                        <Button size="lg" color="gray" variant="light" loading fullWidth>
+                            Loading...
+                        </Button>
+                    ) : isAuthenticated && user ? (
+                        <Button
+                            size="lg"
+                            color="red"
+                            variant="light"
+                            onClick={() => {
+                                signOut()
+                                closeMenu()
+                            }}
+                            fullWidth
+                        >
+                            Sign Out {user.firstName ? `(${user.firstName})` : ""}
+                        </Button>
+                    ) : (
+                        <Button
+                            size="lg"
+                            color="blue"
+                            variant="light"
+                            onClick={() => {
+                                signIn()
+                                closeMenu()
+                            }}
+                            fullWidth
+                        >
+                            Sign In
+                        </Button>
+                    )}
 
                     <Divider />
 
