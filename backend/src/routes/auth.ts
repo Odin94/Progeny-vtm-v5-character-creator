@@ -117,16 +117,41 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             // Store the sealed session in a cookie
-            reply.setCookie("wos-session", sealedSession, {
+            // Note: sameSite: "lax" means cookies won't be sent on cross-origin requests
+            // For development with different ports, we need to either:
+            // 1. Use a proxy (recommended - configure Vite to proxy /api to backend)
+            // 2. Use HTTPS with sameSite: "none" and secure: true
+            // For now, we'll set it and the user can check if it's actually being set
+            const cookieOptions = {
                 path: "/",
                 httpOnly: true,
                 secure: env.NODE_ENV === "production",
-                sameSite: "lax",
-            })
+                sameSite: "lax" as const,
+            }
 
-            // Redirect to frontend
-            const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
-            reply.redirect(`${frontendUrl}${state ? `?state=${encodeURIComponent(state)}` : ""}`)
+            reply.setCookie("wos-session", sealedSession, cookieOptions)
+
+            if (env.NODE_ENV === "development") {
+                fastify.log.info(
+                    {
+                        hasSealedSession: !!sealedSession,
+                        sessionLength: sealedSession?.length,
+                    },
+                    "Cookie set in /auth/callback"
+                )
+            }
+
+            // Return success response instead of redirecting
+            // The frontend will handle the redirect
+            reply.send({
+                success: true,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                },
+            })
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to process SSO callback"
             fastify.log.error({ err: error }, "SSO callback error")
@@ -150,30 +175,45 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             const sessionData = request.cookies["wos-session"]
+            let logoutUrl: string | null = null
 
             if (sessionData) {
-                const session = workos.userManagement.loadSealedSession({
-                    sessionData,
-                    cookiePassword,
-                })
+                try {
+                    const session = workos.userManagement.loadSealedSession({
+                        sessionData,
+                        cookiePassword,
+                    })
 
-                const logoutUrl = await session.getLogoutUrl()
+                    // Authenticate to get the session ID
+                    const authResult = await session.authenticate()
 
-                // Clear the session cookie
-                reply.clearCookie("wos-session", {
-                    path: "/",
-                    httpOnly: true,
-                    secure: env.NODE_ENV === "production",
-                    sameSite: "lax",
-                })
-
-                // Redirect to WorkOS logout URL
-                reply.redirect(logoutUrl)
-            } else {
-                // No session, redirect to frontend
-                const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
-                reply.redirect(frontendUrl)
+                    if (authResult.authenticated && "sessionId" in authResult) {
+                        // Get logout URL using the session ID directly
+                        logoutUrl = workos.userManagement.getLogoutUrl({
+                            sessionId: authResult.sessionId,
+                            returnTo: env.FRONTEND_URL,
+                        })
+                    }
+                } catch (error) {
+                    // If we can't get the logout URL, that's okay - we'll still clear the cookie
+                    fastify.log.warn({ err: error }, "Failed to get WorkOS logout URL")
+                }
             }
+
+            // Clear the session cookie
+            reply.clearCookie("wos-session", {
+                path: "/",
+                httpOnly: true,
+                secure: env.NODE_ENV === "production",
+                sameSite: "lax",
+            })
+
+            // Return the logout URL as JSON instead of redirecting
+            // The frontend will navigate to it if provided, otherwise just redirect to home
+            reply.send({
+                success: true,
+                logoutUrl: logoutUrl || null,
+            })
         } catch (error) {
             fastify.log.error({ err: error }, "Logout error")
             // Clear cookie even on error
@@ -183,8 +223,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                 secure: env.NODE_ENV === "production",
                 sameSite: "lax",
             })
-            const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"
-            reply.redirect(frontendUrl)
+            reply.send({
+                success: true,
+                logoutUrl: null,
+            })
         }
     })
 

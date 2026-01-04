@@ -18,22 +18,49 @@ export const useAuth = () => {
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
-        retry: false,
+        retry: (failureCount, error) => {
+            // Retry up to 2 times for network/auth errors
+            if (failureCount < 2) {
+                return true
+            }
+            return false
+        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff
         staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    const refreshAuth = () => {
-        refetch()
+    const refreshAuth = async () => {
+        // Invalidate the query cache first to force a fresh fetch
+        queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+        // Then refetch
+        return refetch()
     }
 
     const logoutMutation = useMutation({
         mutationFn: () => api.logout(),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.setQueryData(["auth", "me"], null)
-            window.location.href = "/"
+            // If WorkOS provided a logout URL, navigate to it, otherwise go home
+            if (data.logoutUrl) {
+                window.location.href = data.logoutUrl
+            } else {
+                window.location.href = "/"
+            }
         },
         onError: () => {
             queryClient.setQueryData(["auth", "me"], null)
+            // Even on error, try to go home
+            window.location.href = "/"
+        },
+    })
+
+    const handleCallbackMutation = useMutation({
+        mutationFn: ({ code, state }: { code: string; state?: string }) => api.handleAuthCallback(code, state),
+        onSuccess: (data) => {
+            // Update the auth query cache with the user data
+            queryClient.setQueryData(["auth", "me"], data.user)
+            // Invalidate to ensure fresh data
+            queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
         },
     })
 
@@ -52,5 +79,8 @@ export const useAuth = () => {
         signIn,
         signOut,
         refreshAuth,
+        handleCallback: handleCallbackMutation.mutate,
+        isHandlingCallback: handleCallbackMutation.isPending,
+        callbackError: handleCallbackMutation.error,
     }
 }

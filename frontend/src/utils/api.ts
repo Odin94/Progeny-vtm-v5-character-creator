@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001"
+// In development, use the proxy path so cookies work (same origin)
+// In production, use the full API URL
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "DELETE"
@@ -35,7 +37,11 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
 export const api = {
     // Auth
     getCurrentUser: () => apiRequest<{ id: string; email: string; firstName?: string; lastName?: string }>("/auth/me"),
-    logout: () => apiRequest<void>("/auth/logout"),
+    handleAuthCallback: (code: string, state?: string) =>
+        apiRequest<{ success: true; user: { id: string; email: string; firstName?: string; lastName?: string } }>(
+            `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`
+        ),
+    logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
 
     // Characters
     getCharacters: () => apiRequest<Array<unknown>>("/characters"),

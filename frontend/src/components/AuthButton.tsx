@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core"
+import { Button, Group } from "@mantine/core"
 import { useAuth } from "../hooks/useAuth"
 
 export const AuthButton = () => {
@@ -10,9 +10,19 @@ export const AuthButton = () => {
 
     if (isAuthenticated && user) {
         return (
-            <Button onClick={signOut} variant="outline">
-                Sign Out {user.firstName ? `(${user.firstName})` : ""}
-            </Button>
+            <Group gap="xs">
+                <Button
+                    onClick={() => {
+                        window.location.href = "/me"
+                    }}
+                    variant="subtle"
+                >
+                    {user.firstName || user.email}
+                </Button>
+                <Button onClick={signOut} variant="outline">
+                    Sign Out
+                </Button>
+            </Group>
         )
     }
 

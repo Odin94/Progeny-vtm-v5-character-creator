@@ -8,6 +8,7 @@ import Sidebar from "./sidebar/Sidebar"
 import Topbar from "./topbar/Topbar"
 import CharacterSheet from "./character_sheet/CharacterSheet"
 import BrokenSaveModal from "./components/BrokenSaveModal"
+import MePage from "./pages/MePage"
 
 import { useViewportSize } from "@mantine/hooks"
 import { rndInt } from "./generator/utils"
@@ -27,18 +28,33 @@ const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
     const [pathname, setPathname] = useState(window.location.pathname)
-    const { refreshAuth } = useAuth()
+    const { handleCallback, isHandlingCallback } = useAuth()
 
-    // Handle auth callback - refresh auth state after redirect
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search)
-        if (urlParams.has("code") || urlParams.has("state")) {
-            // We're coming back from auth callback, refresh auth state
-            refreshAuth()
-            // Clean up URL
-            window.history.replaceState({}, "", window.location.pathname)
+        const code = urlParams.get("code")
+        const state = urlParams.get("state")
+
+        if (code && !isHandlingCallback) {
+            // We received the callback, call the backend via React Query
+            handleCallback(
+                { code, state: state || undefined },
+                {
+                    onSuccess: () => {
+                        // Clean up URL and redirect to /me
+                        window.history.replaceState({}, "", "/me")
+                        setPathname("/me")
+                    },
+                    onError: (error) => {
+                        console.error("Auth callback error:", error)
+                        // Clean up URL even on error
+                        window.history.replaceState({}, "", "/")
+                        setPathname("/")
+                    },
+                }
+            )
         }
-    }, [refreshAuth])
+    }, [handleCallback, isHandlingCallback])
 
     useEffect(() => {
         const handleLocationChange = () => {
@@ -101,6 +117,15 @@ function App() {
         return (
             <>
                 <CharacterSheet character={character} setCharacter={setCharacter} />
+                <BrokenSaveModal />
+            </>
+        )
+    }
+
+    if (pathname === "/me") {
+        return (
+            <>
+                <MePage />
                 <BrokenSaveModal />
             </>
         )

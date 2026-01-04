@@ -19,6 +19,7 @@ const envSchema = z.object({
     HOST: z.string().default("0.0.0.0"),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     BACKEND_URL: z.url().optional(),
+    FRONTEND_URL: z.url().default("http://localhost:3000"),
 
     // PostHog (optional)
     POSTHOG_API_KEY: z.string().optional(),
