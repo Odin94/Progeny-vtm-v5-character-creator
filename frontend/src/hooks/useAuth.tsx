@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { api, API_URL } from "../utils/api"
 import { isBackendDisabled } from "../utils/backend"
+import posthog from "posthog-js"
 
 type User = {
     id: string
@@ -34,6 +36,21 @@ export const useAuth = () => {
         staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
+    // Identify user in PostHog when query succeeds (for already-authenticated users)
+    useEffect(() => {
+        if (user) {
+            try {
+                posthog.identify(user.id, {
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                })
+            } catch (error) {
+                console.warn("PostHog identify failed:", error)
+            }
+        }
+    }, [user])
+
     const refreshAuth = async () => {
         // Invalidate the query cache first to force a fresh fetch
         queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
@@ -45,6 +62,14 @@ export const useAuth = () => {
         mutationFn: () => api.logout(),
         onSuccess: (data) => {
             queryClient.setQueryData(["auth", "me"], null)
+
+            // Reset PostHog user identification on logout
+            try {
+                posthog.reset()
+            } catch (error) {
+                console.warn("PostHog reset failed:", error)
+            }
+
             // If WorkOS provided a logout URL, navigate to it, otherwise go home
             if (data.logoutUrl) {
                 window.location.href = data.logoutUrl
@@ -54,6 +79,14 @@ export const useAuth = () => {
         },
         onError: () => {
             queryClient.setQueryData(["auth", "me"], null)
+
+            // Reset PostHog user identification even on error
+            try {
+                posthog.reset()
+            } catch (error) {
+                console.warn("PostHog reset failed:", error)
+            }
+
             // Even on error, try to go home
             window.location.href = "/"
         },
@@ -66,6 +99,17 @@ export const useAuth = () => {
             queryClient.setQueryData(["auth", "me"], data.user)
             // Invalidate to ensure fresh data
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+
+            // Identify user in PostHog
+            try {
+                posthog.identify(data.user.id, {
+                    email: data.user.email,
+                    firstName: data.user.firstName,
+                    lastName: data.user.lastName,
+                })
+            } catch (error) {
+                console.warn("PostHog identify failed:", error)
+            }
         },
     })
 
