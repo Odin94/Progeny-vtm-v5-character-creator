@@ -46,7 +46,8 @@ class MetricsCollector {
 
         // Track response times for all routes
         this.fastify.addHook("onResponse", async (request, reply) => {
-            const route = request.routerPath || request.url.split("?")[0]
+            // Get route path - use routeOptions.url if available, otherwise parse from URL
+            const route = request.routeOptions?.url ?? request.url.split("?")[0]
             const method = request.method
 
             // Skip health check and metrics endpoints
