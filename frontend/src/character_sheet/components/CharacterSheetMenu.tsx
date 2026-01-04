@@ -13,6 +13,7 @@ import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
+import { isBackendDisabled } from "~/utils/backend"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions
@@ -222,39 +223,43 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         Go back to Progeny Generator
                     </Button>
 
-                    <Divider />
+                    {!isBackendDisabled() ? (
+                        <>
+                            <Divider />
 
-                    {authLoading ? (
-                        <Button size="lg" color="gray" variant="light" loading fullWidth>
-                            Loading...
-                        </Button>
-                    ) : isAuthenticated && user ? (
-                        <Button
-                            size="lg"
-                            color="red"
-                            variant="light"
-                            onClick={() => {
-                                signOut()
-                                closeMenu()
-                            }}
-                            fullWidth
-                        >
-                            Sign Out {user.firstName ? `(${user.firstName})` : ""}
-                        </Button>
-                    ) : (
-                        <Button
-                            size="lg"
-                            color="blue"
-                            variant="light"
-                            onClick={() => {
-                                signIn()
-                                closeMenu()
-                            }}
-                            fullWidth
-                        >
-                            Sign In
-                        </Button>
-                    )}
+                            {authLoading ? (
+                                <Button size="lg" color="gray" variant="light" loading fullWidth>
+                                    Loading...
+                                </Button>
+                            ) : isAuthenticated && user ? (
+                                <Button
+                                    size="lg"
+                                    color="red"
+                                    variant="light"
+                                    onClick={() => {
+                                        signOut()
+                                        closeMenu()
+                                    }}
+                                    fullWidth
+                                >
+                                    Sign Out {user.firstName ? `(${user.firstName})` : ""}
+                                </Button>
+                            ) : (
+                                <Button
+                                    size="lg"
+                                    color="blue"
+                                    variant="light"
+                                    onClick={() => {
+                                        signIn()
+                                        closeMenu()
+                                    }}
+                                    fullWidth
+                                >
+                                    Sign In
+                                </Button>
+                            )}
+                        </>
+                    ) : null}
 
                     <Divider />
 

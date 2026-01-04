@@ -23,6 +23,7 @@ import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import { getEmptyCharacter } from "./data/Character"
 import { useAuth } from "./hooks/useAuth"
+import { isBackendDisabled } from "./utils/backend"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
@@ -31,6 +32,11 @@ function App() {
     const { handleCallback, isHandlingCallback } = useAuth()
 
     useEffect(() => {
+        // Skip auth callback handling if backend is disabled
+        if (isBackendDisabled()) {
+            return
+        }
+
         const urlParams = new URLSearchParams(window.location.search)
         const code = urlParams.get("code")
         const state = urlParams.get("state")
@@ -123,6 +129,11 @@ function App() {
     }
 
     if (pathname === "/me") {
+        // Redirect to home if backend is disabled
+        if (isBackendDisabled()) {
+            window.location.href = "/"
+            return null
+        }
         return (
             <>
                 <MePage />

@@ -3,6 +3,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { useEffect } from "react"
 import { globals } from "../globals"
 import { AuthButton } from "../components/AuthButton"
+import { isBackendDisabled } from "../utils/backend"
 
 export type TopBarProps = {
     setShowAsideBar: (v: boolean) => void
@@ -60,7 +61,7 @@ const Topbar = ({ setShowAsideBar, showAsideBar }: TopBarProps) => {
                 </Grid.Col>
                 <Grid.Col span={smallScreen ? 5 : 4}>
                     <Group justify="flex-end">
-                        <AuthButton />
+                        {!isBackendDisabled() ? <AuthButton /> : null}
                     </Group>
                 </Grid.Col>
             </Grid>

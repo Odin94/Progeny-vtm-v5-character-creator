@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "../utils/api"
+import { isBackendDisabled } from "../utils/backend"
 
 export const useCoteries = () => {
     return useQuery({
         queryKey: ["coteries"],
         queryFn: () => api.getCoteries(),
+        enabled: !isBackendDisabled(), // Disable query if backend is disabled
     })
 }
 
@@ -12,7 +14,7 @@ export const useCoterie = (id: string | null) => {
     return useQuery({
         queryKey: ["coteries", id],
         queryFn: () => (id ? api.getCoterie(id) : null),
-        enabled: !!id,
+        enabled: !!id && !isBackendDisabled(), // Disable query if backend is disabled
     })
 }
 

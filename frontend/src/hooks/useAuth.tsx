@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api, API_URL } from "../utils/api"
+import { isBackendDisabled } from "../utils/backend"
 
 type User = {
     id: string
@@ -18,6 +19,7 @@ export const useAuth = () => {
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
+        enabled: !isBackendDisabled(), // Disable query if backend is disabled
         retry: (failureCount, error) => {
             // Retry up to 2 times for network/auth errors
             if (failureCount < 2) {
@@ -65,10 +67,12 @@ export const useAuth = () => {
     })
 
     const signIn = () => {
+        if (isBackendDisabled()) return
         window.location.href = `${API_URL}/auth/login`
     }
 
     const signOut = () => {
+        if (isBackendDisabled()) return
         logoutMutation.mutate()
     }
 
