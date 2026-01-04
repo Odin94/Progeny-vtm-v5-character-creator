@@ -33,3 +33,5 @@ ignored/
 
 .env
 .cursor/
+
+.vite/
