@@ -99,7 +99,7 @@ export const getValueForKey = (key: string, character: Character): number => {
 
     if (disciplineNameTo_WoD5EVtt_Key[key as DisciplineName]) {
         const disciplinePowers = character.disciplines.filter((p) => p.discipline === key)
-        return disciplinePowers.length > 0 ? Math.max(...disciplinePowers.map((p) => p.level)) : 0
+        return disciplinePowers.length
     }
 
     return 0

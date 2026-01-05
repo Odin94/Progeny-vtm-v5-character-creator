@@ -12,6 +12,8 @@ type DisciplinePowerCardProps = {
     inModal: boolean
     renderActions?: () => React.ReactNode
     character?: Character
+    disabled?: boolean
+    disabledTooltip?: string | null
 }
 
 export const calculateDicePoolValues = (dicePoolString: string, character: Character): string | null => {
@@ -44,7 +46,16 @@ export const calculateDicePoolValues = (dicePoolString: string, character: Chara
     return values.join(" + ")
 }
 
-const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActions, character }: DisciplinePowerCardProps) => {
+const DisciplinePowerCard = ({
+    power,
+    primaryColor,
+    onClick,
+    inModal,
+    renderActions,
+    character,
+    disabled = false,
+    disabledTooltip,
+}: DisciplinePowerCardProps) => {
     const theme = useMantineTheme()
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const content = (
@@ -101,21 +112,24 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
     )
 
     if (inModal) {
-        return (
+        const cardContent = (
             <Box
                 p="xs"
-                onClick={onClick}
+                onClick={disabled ? undefined : onClick}
                 style={{
                     border: "1px solid var(--mantine-color-gray-8)",
                     borderRadius: "var(--mantine-radius-sm)",
-                    cursor: "pointer",
+                    cursor: disabled ? "default" : "pointer",
                     transition: "background-color 0.2s",
                     minHeight: "140px",
                     display: "flex",
                     position: "relative",
+                    opacity: disabled ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                    if (!disabled) {
+                        e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                    }
                 }}
                 onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = "transparent"
@@ -125,6 +139,16 @@ const DisciplinePowerCard = ({ power, primaryColor, onClick, inModal, renderActi
                 {topRightActions}
             </Box>
         )
+
+        if (disabled && disabledTooltip) {
+            return (
+                <Tooltip label={disabledTooltip} withArrow>
+                    <div style={{ width: "100%" }}>{cardContent}</div>
+                </Tooltip>
+            )
+        }
+
+        return cardContent
     }
 
     return (

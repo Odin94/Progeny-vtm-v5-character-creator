@@ -40,8 +40,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
 
     const getCurrentDisciplineLevel = (disciplineName: DisciplineName): number => {
         const disciplinePowers = character.disciplines.filter((p) => p.discipline === disciplineName)
-        if (disciplinePowers.length === 0) return 0
-        return Math.max(...disciplinePowers.map((p) => p.level))
+        return disciplinePowers.length
     }
 
     const getAvailablePowers = (disciplineName: DisciplineName): Power[] => {
@@ -53,6 +52,27 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
         const characterPowerNames = new Set(character.disciplines.map((p) => p.name))
 
         return discipline.powers.filter((power) => !characterPowerNames.has(power.name) && power.level <= maxLevel)
+    }
+
+    const hasAmalgamPrerequisites = (power: Power): boolean => {
+        for (const { discipline: requiredDiscipline, level: requiredLevel } of power.amalgamPrerequisites) {
+            const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
+            if (characterDisciplineLevel < requiredLevel) {
+                return false
+            }
+        }
+        return true
+    }
+
+    const getAmalgamTooltip = (power: Power): string | null => {
+        const missingPrereqs: string[] = []
+        for (const { discipline: requiredDiscipline, level: requiredLevel } of power.amalgamPrerequisites) {
+            const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
+            if (characterDisciplineLevel < requiredLevel) {
+                missingPrereqs.push(`${upcase(requiredDiscipline)} Level ${requiredLevel}`)
+            }
+        }
+        return missingPrereqs.length > 0 ? `Requires: ${missingPrereqs.join(", ")}` : null
     }
 
     const clanDisciplines = new Set(clans[character.clan]?.nativeDisciplines || [])
@@ -135,6 +155,8 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                         onBack={handleBack}
                         hideBackButton={hideBackButton}
                         character={character}
+                        hasAmalgamPrerequisites={hasAmalgamPrerequisites}
+                        getAmalgamTooltip={getAmalgamTooltip}
                     />
                 ) : opened ? (
                     <>
@@ -234,9 +256,20 @@ type PowerPickerProps = {
     onBack: () => void
     hideBackButton?: boolean
     character: Character
+    hasAmalgamPrerequisites: (power: Power) => boolean
+    getAmalgamTooltip: (power: Power) => string | null
 }
 
-const PowerPicker = ({ availablePowers, primaryColor, onSelectPower, onBack, hideBackButton, character }: PowerPickerProps) => {
+const PowerPicker = ({
+    availablePowers,
+    primaryColor,
+    onSelectPower,
+    onBack,
+    hideBackButton,
+    character,
+    hasAmalgamPrerequisites,
+    getAmalgamTooltip,
+}: PowerPickerProps) => {
     const powersByLevel = new Map<number, Power[]>()
     availablePowers.forEach((power) => {
         const level = power.level
@@ -271,17 +304,23 @@ const PowerPicker = ({ availablePowers, primaryColor, onSelectPower, onBack, hid
                                     Level {level}
                                 </Title>
                                 <Grid gutter="md">
-                                    {powers.map((power) => (
-                                        <Grid.Col key={power.name} span={{ base: 12, sm: 6 }}>
-                                            <DisciplinePowerCard
-                                                power={power}
-                                                primaryColor={primaryColor}
-                                                onClick={() => onSelectPower(power)}
-                                                inModal={true}
-                                                character={character}
-                                            />
-                                        </Grid.Col>
-                                    ))}
+                                    {powers.map((power) => {
+                                        const hasAmalgams = hasAmalgamPrerequisites(power)
+                                        const amalgamTooltip = getAmalgamTooltip(power)
+                                        return (
+                                            <Grid.Col key={power.name} span={{ base: 12, sm: 6 }}>
+                                                <DisciplinePowerCard
+                                                    power={power}
+                                                    primaryColor={primaryColor}
+                                                    onClick={hasAmalgams ? () => onSelectPower(power) : undefined}
+                                                    inModal={true}
+                                                    character={character}
+                                                    disabled={!hasAmalgams}
+                                                    disabledTooltip={amalgamTooltip}
+                                                />
+                                            </Grid.Col>
+                                        )
+                                    })}
                                 </Grid>
                             </Stack>
                         )
