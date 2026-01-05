@@ -24,7 +24,7 @@ npm install
 2. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your WorkOS credentials
+# Edit .env with your WorkOS credentials, correct backend/frontend urls and posthog config
 ```
 
 3. Generate database migrations:

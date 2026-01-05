@@ -62,7 +62,7 @@ type Coterie = {
 }
 
 const MePage = () => {
-    const { user, loading: authLoading, isAuthenticated } = useAuth()
+    const { user, loading: authLoading, isAuthenticated, updateProfile, isUpdatingProfile } = useAuth()
     const { data: characters } = useCharacters()
     const { data: coteries } = useCoteries()
     const [character, setCharacter] = useCharacterLocalStorage()
@@ -92,6 +92,46 @@ const MePage = () => {
     const [editingCoterie, setEditingCoterie] = useState<Coterie | null>(null)
     const [selectedCoterieForAdd, setSelectedCoterieForAdd] = useState<Coterie | null>(null)
     const [selectedCharacterForCoterie, setSelectedCharacterForCoterie] = useState<string>("")
+
+    // Nickname editing
+    const [isEditingNickname, setIsEditingNickname] = useState(false)
+    const [nicknameValue, setNicknameValue] = useState("")
+
+    useEffect(() => {
+        if (user?.nickname !== undefined) {
+            setNicknameValue(user.nickname || "")
+        }
+    }, [user?.nickname])
+
+    const handleSaveNickname = () => {
+        updateProfile(
+            { nickname: nicknameValue.trim() || null },
+            {
+                onSuccess: () => {
+                    setIsEditingNickname(false)
+                    notifications.show({
+                        title: "Success",
+                        message: "Nickname updated",
+                        color: "green",
+                    })
+                },
+                onError: (error) => {
+                    const errorMessage =
+                        error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to update nickname"
+                    notifications.show({
+                        title: "Error",
+                        message: errorMessage,
+                        color: "red",
+                    })
+                },
+            }
+        )
+    }
+
+    const handleCancelNickname = () => {
+        setNicknameValue(user?.nickname || "")
+        setIsEditingNickname(false)
+    }
 
     useEffect(() => {
         setShowAsideBar(!globals.isSmallScreen)
@@ -433,6 +473,7 @@ const MePage = () => {
                                 onClick={() => {
                                     window.location.href = "/"
                                 }}
+                                color="red"
                             >
                                 Go to Home
                             </Button>
@@ -475,6 +516,7 @@ const MePage = () => {
                             display: "flex",
                             flexDirection: "column",
                             overflow: "auto",
+                            paddingTop: "75px",
                         }}
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
@@ -495,6 +537,47 @@ const MePage = () => {
                                                 <Text>{[user?.firstName, user?.lastName].filter(Boolean).join(" ")}</Text>
                                             </Group>
                                         ) : null}
+                                        <Group gap="xs" align="flex-start">
+                                            <Text fw={500} style={{ minWidth: "80px" }}>
+                                                Nickname:
+                                            </Text>
+                                            {isEditingNickname ? (
+                                                <Stack gap="xs" style={{ flex: 1 }}>
+                                                    <TextInput
+                                                        value={nicknameValue}
+                                                        onChange={(e) => setNicknameValue(e.target.value)}
+                                                        placeholder="Enter nickname"
+                                                        maxLength={255}
+                                                        disabled={isUpdatingProfile}
+                                                    />
+                                                    <Group gap="xs">
+                                                        <Button
+                                                            size="xs"
+                                                            color="red"
+                                                            onClick={handleSaveNickname}
+                                                            loading={isUpdatingProfile}
+                                                        >
+                                                            Save
+                                                        </Button>
+                                                        <Button
+                                                            size="xs"
+                                                            variant="subtle"
+                                                            onClick={handleCancelNickname}
+                                                            disabled={isUpdatingProfile}
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                    </Group>
+                                                </Stack>
+                                            ) : (
+                                                <Group gap="xs" style={{ flex: 1 }}>
+                                                    <Text>{user?.nickname || <Text c="dimmed">No nickname set</Text>}</Text>
+                                                    <ActionIcon size="sm" variant="subtle" onClick={() => setIsEditingNickname(true)}>
+                                                        <IconEdit size={16} />
+                                                    </ActionIcon>
+                                                </Group>
+                                            )}
+                                        </Group>
                                         <Group gap="xs">
                                             <Text fw={500}>User ID:</Text>
                                             <Text size="sm" c="dimmed" style={{ fontFamily: "monospace" }}>

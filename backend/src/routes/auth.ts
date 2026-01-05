@@ -4,6 +4,9 @@ import { db, schema } from "../db/index.js"
 import { workos, WORKOS_CLIENT_ID } from "../config/workos.js"
 import { env } from "../config/env.js"
 import { z } from "zod"
+import { updateUserSchema, type UpdateUserInput } from "../schemas/user.js"
+import { zodToFastifySchema } from "../utils/schema.js"
+import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.js"
 
 const callbackQuerySchema = z.object({
     code: z.string().min(1, "Authorization code is required"),
@@ -14,25 +17,31 @@ export async function authRoutes(fastify: FastifyInstance) {
     // Sign-in endpoint - redirects to WorkOS AuthKit
     fastify.get("/auth/login", async (request, reply) => {
         try {
-            // Construct the backend URL for the callback
-            // Prefer BACKEND_URL env var if set, otherwise construct from request
+            // Construct the frontend URL for the callback
+            // WorkOS will redirect to the frontend, which then calls the backend API
             let redirectUri: string
-            if (env.BACKEND_URL) {
-                redirectUri = `${env.BACKEND_URL}/auth/callback`
+            const hostHeader = request.headers.host
+            const isLocalhost =
+                hostHeader?.includes("localhost") ||
+                hostHeader?.includes("127.0.0.1") ||
+                request.hostname === "localhost" ||
+                request.hostname === "127.0.0.1"
+
+            if (env.FRONTEND_URL) {
+                redirectUri = `${env.FRONTEND_URL}/auth/callback`
             } else {
                 const protocol = request.protocol || (env.NODE_ENV === "production" ? "https" : "http")
-                // Try to get host with port from Host header, fallback to hostname
-                const hostHeader = request.headers.host
-                const host = hostHeader || `${request.hostname || "localhost"}:${env.PORT}`
 
-                // Ensure we have the port for localhost
-                if (host.includes(":")) {
-                    redirectUri = `${protocol}://${host}/auth/callback`
-                } else if (host === "localhost" || host === "127.0.0.1") {
-                    redirectUri = `${protocol}://${host}:${env.PORT}/auth/callback`
+                // In development, use localhost:3000 (frontend port)
+                // In production, extract hostname from request
+                if (isLocalhost) {
+                    redirectUri = `http://localhost:3000/auth/callback`
                 } else {
-                    // In production, use the hostname without port (assuming standard ports)
-                    redirectUri = `${protocol}://${host}/auth/callback`
+                    // Try to get host from Host header, fallback to hostname
+                    const host = hostHeader || request.hostname || "localhost"
+                    // Remove port if present (frontend uses standard ports)
+                    const hostname = host.split(":")[0]
+                    redirectUri = `${protocol}://${hostname}/auth/callback`
                 }
             }
 
@@ -139,6 +148,11 @@ export async function authRoutes(fastify: FastifyInstance) {
                 )
             }
 
+            // Get user from database to include nickname
+            const dbUser = await db.query.users.findFirst({
+                where: eq(schema.users.id, user.id),
+            })
+
             // Return success response instead of redirecting
             // The frontend will handle the redirect
             reply.send({
@@ -148,6 +162,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     email: user.email,
                     firstName: user.firstName,
                     lastName: user.lastName,
+                    nickname: dbUser?.nickname ?? null,
                 },
             })
         } catch (error) {
@@ -275,11 +290,17 @@ export async function authRoutes(fastify: FastifyInstance) {
                             sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
                         })
 
+                        // Get user from database to include nickname
+                        const dbUser = await db.query.users.findFirst({
+                            where: eq(schema.users.id, refreshResult.user.id),
+                        })
+
                         reply.send({
                             id: refreshResult.user.id,
                             email: refreshResult.user.email,
                             firstName: refreshResult.user.firstName,
                             lastName: refreshResult.user.lastName,
+                            nickname: dbUser?.nickname || null,
                         })
                         return
                     }
@@ -295,11 +316,17 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             if ("user" in authResult) {
+                // Get user from database to include nickname
+                const dbUser = await db.query.users.findFirst({
+                    where: eq(schema.users.id, authResult.user.id),
+                })
+
                 reply.send({
                     id: authResult.user.id,
                     email: authResult.user.email,
                     firstName: authResult.user.firstName,
                     lastName: authResult.user.lastName,
+                    nickname: dbUser?.nickname || null,
                 })
             } else {
                 reply.code(401).send({
@@ -316,4 +343,86 @@ export async function authRoutes(fastify: FastifyInstance) {
             })
         }
     })
+
+    // Update user profile endpoint
+    fastify.put<{
+        Body: UpdateUserInput
+    }>(
+        "/auth/me",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                body: zodToFastifySchema(updateUserSchema),
+            },
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            try {
+                const userId = request.user!.id
+                const updateData = request.body as UpdateUserInput
+
+                const [updated] = await db
+                    .update(schema.users)
+                    .set({
+                        ...(updateData.nickname !== undefined && { nickname: updateData.nickname ?? null }),
+                        updatedAt: new Date(),
+                    })
+                    .where(eq(schema.users.id, userId))
+                    .returning()
+
+                if (!updated) {
+                    reply.code(404).send({
+                        error: "User not found",
+                    })
+                    return
+                }
+
+                // Get WorkOS user data for email, firstName, lastName
+                const cookiePassword = env.WORKOS_COOKIE_PASSWORD
+                let workosUser = null
+                if (cookiePassword) {
+                    const sessionData = request.cookies["wos-session"]
+                    if (sessionData) {
+                        try {
+                            const session = workos.userManagement.loadSealedSession({
+                                sessionData,
+                                cookiePassword,
+                            })
+                            const authResult = await session.authenticate()
+                            if (authResult.authenticated && "user" in authResult) {
+                                workosUser = authResult.user
+                            }
+                        } catch (error) {
+                            fastify.log.warn({ err: error }, "Failed to get WorkOS user data")
+                        }
+                    }
+                }
+
+                reply.send({
+                    id: updated.id,
+                    email: workosUser?.email || updated.email,
+                    firstName: workosUser?.firstName || updated.firstName,
+                    lastName: workosUser?.lastName || updated.lastName,
+                    nickname: updated.nickname,
+                })
+            } catch (error) {
+                // Handle unique constraint violation for nickname
+                if (error && typeof error === "object" && "code" in error && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+                    const errorMessage = error instanceof Error ? error.message : String(error)
+                    if (errorMessage.includes("nickname")) {
+                        reply.code(409).send({
+                            error: "Nickname already taken",
+                            message: "This nickname is already in use. Please choose a different one.",
+                        })
+                        return
+                    }
+                }
+                const errorMessage = error instanceof Error ? error.message : "Failed to update user"
+                fastify.log.error({ err: error }, "Update user error")
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: errorMessage,
+                })
+            }
+        }
+    )
 }

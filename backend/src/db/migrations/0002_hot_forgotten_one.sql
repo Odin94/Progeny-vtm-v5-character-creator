@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `users_nickname_unique` ON `users` (`nickname`);

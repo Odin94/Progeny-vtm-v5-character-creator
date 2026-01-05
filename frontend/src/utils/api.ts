@@ -36,14 +36,21 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     return response.json()
 }
 
+// TODOdin: Put proper types in APIs
 export const api = {
     // Auth
-    getCurrentUser: () => apiRequest<{ id: string; email: string; firstName?: string; lastName?: string }>("/auth/me"),
+    getCurrentUser: () =>
+        apiRequest<{ id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null }>("/auth/me"),
     handleAuthCallback: (code: string, state?: string) =>
-        apiRequest<{ success: true; user: { id: string; email: string; firstName?: string; lastName?: string } }>(
+        apiRequest<{ success: true; user: { id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null } }>(
             `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`
         ),
     logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
+    updateUserProfile: (data: { nickname?: string | null }) =>
+        apiRequest<{ id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null }>("/auth/me", {
+            method: "PUT",
+            body: data,
+        }),
 
     // Characters
     getCharacters: () => apiRequest<Array<unknown>>("/characters"),

@@ -9,6 +9,7 @@ type User = {
     email: string
     firstName?: string
     lastName?: string
+    nickname?: string | null
 }
 
 export const useAuth = () => {
@@ -123,6 +124,14 @@ export const useAuth = () => {
         logoutMutation.mutate()
     }
 
+    const updateProfileMutation = useMutation({
+        mutationFn: (data: { nickname?: string | null }) => api.updateUserProfile(data),
+        onSuccess: (data) => {
+            queryClient.setQueryData(["auth", "me"], data)
+            queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+        },
+    })
+
     return {
         user: user || null,
         loading,
@@ -133,5 +142,8 @@ export const useAuth = () => {
         handleCallback: handleCallbackMutation.mutate,
         isHandlingCallback: handleCallbackMutation.isPending,
         callbackError: handleCallbackMutation.error,
+        updateProfile: updateProfileMutation.mutate,
+        isUpdatingProfile: updateProfileMutation.isPending,
+        updateProfileError: updateProfileMutation.error,
     }
 }

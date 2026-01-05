@@ -9,7 +9,11 @@ export const AuthButton = () => {
     const { user, loading, isAuthenticated, signIn, signOut } = useAuth()
 
     if (loading) {
-        return <Button loading>Loading...</Button>
+        return (
+            <Button loading color="gray">
+                Loading...
+            </Button>
+        )
     }
 
     if (isAuthenticated && user) {
@@ -20,10 +24,11 @@ export const AuthButton = () => {
                         window.location.href = "/me"
                     }}
                     variant="subtle"
+                    color="red"
                 >
                     {user.firstName || user.email}
                 </Button>
-                <Button onClick={signOut} variant="outline">
+                <Button onClick={signOut} variant="outline" color="red">
                     Sign Out
                 </Button>
             </Group>
@@ -31,7 +36,7 @@ export const AuthButton = () => {
     }
 
     return (
-        <Button onClick={signIn} variant="filled">
+        <Button onClick={signIn} variant="filled" color="red">
             Sign In
         </Button>
     )

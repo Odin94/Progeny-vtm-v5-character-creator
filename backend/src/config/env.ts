@@ -23,7 +23,7 @@ const envSchema = z.object({
 
     // PostHog (optional)
     POSTHOG_API_KEY: z.string().optional(),
-    POSTHOG_HOST: z.url().default("https://app.posthog.com").optional(),
+    POSTHOG_HOST: z.url().default("https://eu.i.posthog.com").optional(),
 
     // WorkOS AuthKit Session
     WORKOS_COOKIE_PASSWORD: z.string().min(32, "WORKOS_COOKIE_PASSWORD must be at least 32 characters"),
@@ -40,7 +40,7 @@ function loadEnv(): Env {
         // Parse with defaults for optional fields
         const parsed = envSchema.parse({
             ...process.env,
-            POSTHOG_HOST: process.env.POSTHOG_HOST || "https://app.posthog.com",
+            POSTHOG_HOST: process.env.POSTHOG_HOST || "https://eu.i.posthog.com",
         })
         return parsed
     } catch (error) {
