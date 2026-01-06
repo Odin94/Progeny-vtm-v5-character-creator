@@ -43,44 +43,40 @@ const fastify = Fastify({
 })
 
 // Register plugins
-// await fastify.register(cors, {
-//     origin: (origin, callback) => {
-//         // In production, reject requests with no origin to prevent CSRF attacks
-//         if (!origin) {
-//             if (env.NODE_ENV === "development") {
-//                 // Allow in development for tools like Postman
-//                 return callback(null, true)
-//             }
-//             return callback(new Error("Not allowed by CORS: No origin header"), false)
-//         }
-
-//         // In development, allow localhost
-//         if (env.NODE_ENV === "development") {
-//             if (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
-//                 return callback(null, true)
-//             }
-//         }
-
-//         // In production, only allow the frontend domain
-//         const allowedOrigins = [
-//             "https://progeny.odin-matthias.de",
-//             "https://www.progeny.odin-matthias.de",
-//             "https://progeny.odin-matthias.com",
-//             "https://www.progeny.odin-matthias.com",
-//             "https://vtm-progeny.netlify.app",
-//             env.FRONTEND_URL,
-//             env.BACKEND_URL,
-//         ].filter(Boolean)
-
-//         if (allowedOrigins.includes(origin)) {
-//             return callback(null, true)
-//         }
-
-//         // TODOdin: CORS shouldn't be a 500 I think?
-//         callback(new Error("Not allowed by CORS"), false)
-//     },
-//     credentials: true,
-// })
+await fastify.register(cors, {
+    // origin: (origin, callback) => {
+    //     // In production, reject requests with no origin to prevent CSRF attacks
+    //     if (!origin) {
+    //         if (env.NODE_ENV === "development") {
+    //             // Allow in development for tools like Postman
+    //             return callback(null, true)
+    //         }
+    //         return callback(new Error("Not allowed by CORS: No origin header"), false)
+    //     }
+    //     // In development, allow localhost
+    //     if (env.NODE_ENV === "development") {
+    //         if (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:")) {
+    //             return callback(null, true)
+    //         }
+    //     }
+    //     // In production, only allow the frontend domain
+    //     const allowedOrigins = [
+    //         "https://progeny.odin-matthias.de",
+    //         "https://www.progeny.odin-matthias.de",
+    //         "https://progeny.odin-matthias.com",
+    //         "https://www.progeny.odin-matthias.com",
+    //         "https://vtm-progeny.netlify.app",
+    //         env.FRONTEND_URL,
+    //         env.BACKEND_URL,
+    //     ].filter(Boolean)
+    //     if (allowedOrigins.includes(origin)) {
+    //         return callback(null, true)
+    //     }
+    //     // TODOdin: CORS shouldn't be a 500 I think?
+    //     callback(new Error("Not allowed by CORS"), false)
+    // },
+    // credentials: true,
+})
 
 await fastify.register(cookie, {
     secret: env.WORKOS_COOKIE_PASSWORD,
