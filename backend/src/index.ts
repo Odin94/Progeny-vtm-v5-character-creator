@@ -44,6 +44,10 @@ const fastify = Fastify({
 
 // Register plugins
 await fastify.register(cors, {
+    origin: (origin, callback) => {
+        callback(null, true)
+        return
+    },
     // origin: (origin, callback) => {
     //     // In production, reject requests with no origin to prevent CSRF attacks
     //     if (!origin) {
