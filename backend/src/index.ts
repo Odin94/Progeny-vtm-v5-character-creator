@@ -10,6 +10,8 @@ import { authRoutes } from "./routes/auth.js"
 import { characterSyncWebSocket } from "./websocket/characterSync.js"
 import { env } from "./config/env.js"
 import { initializeMetrics } from "./utils/metrics.js"
+import { initializePostHogLogging, shutdownPostHogLogging } from "./utils/posthogLogger.js"
+import { shutdownPostHogTracking } from "./utils/tracker.js"
 
 const httpsOptions =
     env.SSL_CERT_PATH && env.SSL_KEY_PATH
@@ -85,6 +87,9 @@ await fastify.register(shareRoutes)
 // Register WebSocket routes
 await fastify.register(characterSyncWebSocket)
 
+// Initialize PostHog logging
+initializePostHogLogging()
+
 // Initialize metrics collection
 initializeMetrics(fastify)
 
@@ -107,5 +112,19 @@ const start = async () => {
         process.exit(1)
     }
 }
+
+process.on("SIGTERM", async () => {
+    await shutdownPostHogLogging()
+    await shutdownPostHogTracking()
+    await fastify.close()
+    process.exit(0)
+})
+
+process.on("SIGINT", async () => {
+    await shutdownPostHogLogging()
+    await shutdownPostHogTracking()
+    await fastify.close()
+    process.exit(0)
+})
 
 start()

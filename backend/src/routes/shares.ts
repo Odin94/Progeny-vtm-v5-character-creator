@@ -5,6 +5,9 @@ import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import { ShareCharacterInput, shareCharacterSchema, ShareParams, shareParamsSchema } from "../schemas/share.js"
 import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { logger } from "../utils/logger.js"
+import { trackEvent } from "../utils/tracker.js"
+import z from "zod"
 
 export async function shareRoutes(fastify: FastifyInstance) {
     // Share character with user
@@ -21,65 +24,133 @@ export async function shareRoutes(fastify: FastifyInstance) {
             },
         },
         async (request: AuthenticatedRequest, reply) => {
-            const userId = request.user!.id
             const { characterId } = request.params as ShareParams
             const { sharedWithUserEmail } = request.body as ShareCharacterInput
+            try {
+                const userId = request.user!.id
 
-            const character = await db.query.characters.findFirst({
-                where: eq(schema.characters.id, characterId),
-            })
+                const character = await db.query.characters.findFirst({
+                    where: eq(schema.characters.id, characterId),
+                })
 
-            if (!character) {
-                reply.code(404).send({ error: "Character not found" })
-                return
-            }
+                if (!character) {
+                    logger.warn("Character not found for share", {
+                        endpoint: "/characters/:characterId/share",
+                        method: "POST",
+                        userId,
+                        characterId,
+                    })
+                    reply.code(404).send({ error: "Character not found" })
+                    return
+                }
 
-            if (character.userId !== userId) {
-                reply.code(403).send({ error: "Forbidden: You can only share your own characters" })
-                return
-            }
+                if (character.userId !== userId) {
+                    logger.warn("Unauthorized character share attempt", {
+                        endpoint: "/characters/:characterId/share",
+                        method: "POST",
+                        userId,
+                        characterId,
+                        characterOwnerId: character.userId,
+                    })
+                    reply.code(403).send({ error: "Forbidden: You can only share your own characters" })
+                    return
+                }
 
-            // Find user by email
-            const sharedWithUser = await db.query.users.findFirst({
-                where: eq(schema.users.email, sharedWithUserEmail),
-            })
+                // Find user by email
+                const sharedWithUser = await db.query.users.findFirst({
+                    where: eq(schema.users.email, sharedWithUserEmail),
+                })
 
-            if (!sharedWithUser) {
-                reply.code(404).send({ error: "User not found" })
-                return
-            }
+                if (!sharedWithUser) {
+                    logger.warn("User not found for share", {
+                        endpoint: "/characters/:characterId/share",
+                        method: "POST",
+                        userId,
+                        characterId,
+                        sharedWithUserEmail,
+                    })
+                    reply.code(404).send({ error: "User not found" })
+                    return
+                }
 
-            if (sharedWithUser.id === userId) {
-                reply.code(400).send({ error: "Cannot share character with yourself" })
-                return
-            }
+                if (sharedWithUser.id === userId) {
+                    logger.warn("Attempt to share character with self", {
+                        endpoint: "/characters/:characterId/share",
+                        method: "POST",
+                        userId,
+                        characterId,
+                    })
+                    reply.code(400).send({ error: "Cannot share character with yourself" })
+                    return
+                }
 
-            // Check if already shared
-            const existingShare = await db.query.characterShares.findFirst({
-                where: and(
-                    eq(schema.characterShares.characterId, characterId),
-                    eq(schema.characterShares.sharedWithUserId, sharedWithUser.id)
-                ),
-            })
+                // Check if already shared
+                const existingShare = await db.query.characterShares.findFirst({
+                    where: and(
+                        eq(schema.characterShares.characterId, characterId),
+                        eq(schema.characterShares.sharedWithUserId, sharedWithUser.id)
+                    ),
+                })
 
-            if (existingShare) {
-                reply.code(409).send({ error: "Character is already shared with this user" })
-                return
-            }
+                if (existingShare) {
+                    logger.warn("Character already shared with user", {
+                        endpoint: "/characters/:characterId/share",
+                        method: "POST",
+                        userId,
+                        characterId,
+                        sharedWithUserId: sharedWithUser.id,
+                    })
+                    reply.code(409).send({ error: "Character is already shared with this user" })
+                    return
+                }
 
-            const shareId = nanoid()
+                const shareId = nanoid()
 
-            const [share] = await db
-                .insert(schema.characterShares)
-                .values({
-                    id: shareId,
+                const [share] = await db
+                    .insert(schema.characterShares)
+                    .values({
+                        id: shareId,
+                        characterId,
+                        sharedWithUserId: sharedWithUser.id,
+                        sharedById: userId,
+                    })
+                    .returning()
+
+                logger.info("Character shared", {
+                    endpoint: "/characters/:characterId/share",
+                    method: "POST",
+                    userId,
                     characterId,
                     sharedWithUserId: sharedWithUser.id,
-                    sharedById: userId,
+                    sharedWithUserEmail,
                 })
-                .returning()
 
-            reply.code(201).send(share)
+                await trackEvent(
+                    "character_shared",
+                    {
+                        endpoint: "/characters/:characterId/share",
+                        method: "POST",
+                        userId,
+                        characterId,
+                        sharedWithUserId: sharedWithUser.id,
+                        sharedWithUserEmail,
+                    },
+                    userId
+                )
+
+                reply.code(201).send(share)
+            } catch (error) {
+                logger.error("Failed to share character", error, {
+                    endpoint: "/characters/:characterId/share",
+                    method: "POST",
+                    userId: request.user?.id ?? null,
+                    characterId,
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: error instanceof Error ? error.message : "Failed to share character",
+                })
+            }
         }
     )
 
@@ -90,6 +161,9 @@ export async function shareRoutes(fastify: FastifyInstance) {
         "/characters/:characterId/share/:userId",
         {
             preHandler: authenticateUser,
+            schema: {
+                params: zodToFastifySchema(shareParamsSchema.extend({ userId: z.string().min(1) })),
+            },
         },
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
@@ -114,6 +188,18 @@ export async function shareRoutes(fastify: FastifyInstance) {
                 .where(
                     and(eq(schema.characterShares.characterId, characterId), eq(schema.characterShares.sharedWithUserId, sharedWithUserId))
                 )
+
+            await trackEvent(
+                "character_unshared",
+                {
+                    endpoint: "/characters/:characterId/share/:userId",
+                    method: "DELETE",
+                    userId,
+                    characterId,
+                    sharedWithUserId,
+                },
+                userId
+            )
 
             reply.code(204).send()
         }
@@ -152,6 +238,18 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     sharedWith: true,
                 },
             })
+
+            await trackEvent(
+                "character_shares_listed",
+                {
+                    endpoint: "/characters/:characterId/shares",
+                    method: "GET",
+                    userId,
+                    characterId,
+                    shareCount: shares.length,
+                },
+                userId
+            )
 
             reply.send(shares)
         }

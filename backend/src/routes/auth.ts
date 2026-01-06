@@ -7,6 +7,8 @@ import { z } from "zod"
 import { updateUserSchema, type UpdateUserInput } from "../schemas/user.js"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.js"
+import { logger } from "../utils/logger.js"
+import { trackEvent } from "../utils/tracker.js"
 
 const callbackQuerySchema = z.object({
     code: z.string().min(1, "Authorization code is required"),
@@ -51,10 +53,22 @@ export async function authRoutes(fastify: FastifyInstance) {
                 clientId: WORKOS_CLIENT_ID,
             })
 
+            await trackEvent(
+                "auth_login_initiated",
+                {
+                    endpoint: "/auth/login",
+                    method: "GET",
+                },
+                "anonymous"
+            )
+
             reply.redirect(authorizationUrl)
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to initiate sign-in"
             fastify.log.error({ err: error }, "Sign-in initiation error")
+            logger.error("Sign-in initiation error", error, {
+                endpoint: "/auth/login",
+            })
             reply.code(500).send({
                 error: "Internal server error",
                 message: errorMessage,
@@ -68,6 +82,11 @@ export async function authRoutes(fastify: FastifyInstance) {
             // Validate query parameters
             const queryResult = callbackQuerySchema.safeParse(request.query)
             if (!queryResult.success) {
+                logger.warn("Invalid auth callback request", {
+                    endpoint: "/auth/callback",
+                    method: "GET",
+                    validationErrorCount: queryResult.error.issues.length,
+                })
                 reply.code(400).send({
                     error: "Invalid request",
                     details: queryResult.error.issues,
@@ -92,6 +111,12 @@ export async function authRoutes(fastify: FastifyInstance) {
             const { user, sealedSession } = authenticateResponse
 
             if (!user || !sealedSession) {
+                logger.warn("Failed to retrieve user or create session", {
+                    endpoint: "/auth/callback",
+                    method: "GET",
+                    hasUser: !!user,
+                    hasSealedSession: !!sealedSession,
+                })
                 reply.code(401).send({
                     error: "Unauthorized",
                     message: "Failed to retrieve user or create session",
@@ -153,6 +178,17 @@ export async function authRoutes(fastify: FastifyInstance) {
                 where: eq(schema.users.id, user.id),
             })
 
+            await trackEvent(
+                "auth_callback_success",
+                {
+                    endpoint: "/auth/callback",
+                    method: "GET",
+                    userId: user.id,
+                    isNewUser: !existingUser,
+                },
+                user.id
+            )
+
             // Return success response instead of redirecting
             // The frontend will handle the redirect
             reply.send({
@@ -168,6 +204,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to process SSO callback"
             fastify.log.error({ err: error }, "SSO callback error")
+            logger.error("SSO callback error", error, {
+                endpoint: "/auth/callback",
+            })
             reply.code(500).send({
                 error: "Internal server error",
                 message: errorMessage,
@@ -176,78 +215,101 @@ export async function authRoutes(fastify: FastifyInstance) {
     })
 
     // Logout endpoint
-    fastify.get("/auth/logout", async (request, reply) => {
-        try {
-            const cookiePassword = env.WORKOS_COOKIE_PASSWORD
-            if (!cookiePassword) {
-                reply.code(500).send({
-                    error: "Internal server error",
-                    message: "WORKOS_COOKIE_PASSWORD is not configured",
-                })
-                return
-            }
-
-            const sessionData = request.cookies["wos-session"]
-            let logoutUrl: string | null = null
-
-            if (sessionData) {
-                try {
-                    const session = workos.userManagement.loadSealedSession({
-                        sessionData,
-                        cookiePassword,
+    fastify.get(
+        "/auth/logout",
+        {
+            preHandler: authenticateUser,
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            try {
+                const cookiePassword = env.WORKOS_COOKIE_PASSWORD
+                if (!cookiePassword) {
+                    reply.code(500).send({
+                        error: "Internal server error",
+                        message: "WORKOS_COOKIE_PASSWORD is not configured",
                     })
-
-                    // Authenticate to get the session ID
-                    const authResult = await session.authenticate()
-
-                    if (authResult.authenticated && "sessionId" in authResult) {
-                        // Get logout URL using the session ID directly
-                        logoutUrl = workos.userManagement.getLogoutUrl({
-                            sessionId: authResult.sessionId,
-                            returnTo: env.FRONTEND_URL,
-                        })
-                    }
-                } catch (error) {
-                    // If we can't get the logout URL, that's okay - we'll still clear the cookie
-                    fastify.log.warn({ err: error }, "Failed to get WorkOS logout URL")
+                    return
                 }
+
+                const sessionData = request.cookies["wos-session"]
+                let logoutUrl: string | null = null
+
+                if (sessionData) {
+                    try {
+                        const session = workos.userManagement.loadSealedSession({
+                            sessionData,
+                            cookiePassword,
+                        })
+
+                        // Authenticate to get the session ID
+                        const authResult = await session.authenticate()
+                        if (authResult.authenticated && "sessionId" in authResult) {
+                            // Get logout URL using the session ID directly
+                            logoutUrl = workos.userManagement.getLogoutUrl({
+                                sessionId: authResult.sessionId,
+                                returnTo: env.FRONTEND_URL,
+                            })
+                        }
+                    } catch (error) {
+                        // If we can't get the logout URL, that's okay - we'll still clear the cookie
+                        fastify.log.warn({ err: error }, "Failed to get WorkOS logout URL")
+                    }
+                }
+
+                // Clear the session cookie
+                reply.clearCookie("wos-session", {
+                    path: "/",
+                    httpOnly: true,
+                    secure: env.NODE_ENV === "production",
+                    sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
+                })
+
+                await trackEvent(
+                    "auth_logout",
+                    {
+                        endpoint: "/auth/logout",
+                        method: "GET",
+                        hasLogoutUrl: !!logoutUrl,
+                    },
+                    request.user!.id
+                )
+
+                // Return the logout URL as JSON instead of redirecting
+                // The frontend will navigate to it if provided, otherwise just redirect to home
+                reply.send({
+                    success: true,
+                    logoutUrl: logoutUrl || null,
+                })
+            } catch (error) {
+                fastify.log.error({ err: error }, "Logout error")
+                logger.error("Logout error", error, {
+                    endpoint: "/auth/logout",
+                    method: "GET",
+                })
+                // Clear cookie even on error
+                reply.clearCookie("wos-session", {
+                    path: "/",
+                    httpOnly: true,
+                    secure: env.NODE_ENV === "production",
+                    sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
+                })
+                reply.send({
+                    success: true,
+                    logoutUrl: null,
+                })
             }
-
-            // Clear the session cookie
-            reply.clearCookie("wos-session", {
-                path: "/",
-                httpOnly: true,
-                secure: env.NODE_ENV === "production",
-                sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
-            })
-
-            // Return the logout URL as JSON instead of redirecting
-            // The frontend will navigate to it if provided, otherwise just redirect to home
-            reply.send({
-                success: true,
-                logoutUrl: logoutUrl || null,
-            })
-        } catch (error) {
-            fastify.log.error({ err: error }, "Logout error")
-            // Clear cookie even on error
-            reply.clearCookie("wos-session", {
-                path: "/",
-                httpOnly: true,
-                secure: env.NODE_ENV === "production",
-                sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
-            })
-            reply.send({
-                success: true,
-                logoutUrl: null,
-            })
         }
-    })
+    )
 
     // Get current user endpoint
     fastify.get("/auth/me", async (request, reply) => {
         try {
             const cookiePassword = env.WORKOS_COOKIE_PASSWORD
             if (!cookiePassword) {
+                logger.error("WORKOS_COOKIE_PASSWORD not configured", undefined, {
+                    endpoint: "/auth/me",
+                    method: "GET",
+                })
                 reply.code(500).send({
                     error: "Internal server error",
                     message: "WORKOS_COOKIE_PASSWORD is not configured",
@@ -258,6 +320,10 @@ export async function authRoutes(fastify: FastifyInstance) {
             const sessionData = request.cookies["wos-session"]
 
             if (!sessionData) {
+                logger.warn("No session found", {
+                    endpoint: "/auth/me",
+                    method: "GET",
+                })
                 reply.code(401).send({
                     error: "Unauthorized",
                     message: "No session found",
@@ -295,6 +361,17 @@ export async function authRoutes(fastify: FastifyInstance) {
                             where: eq(schema.users.id, refreshResult.user.id),
                         })
 
+                        await trackEvent(
+                            "auth_me_success",
+                            {
+                                endpoint: "/auth/me",
+                                method: "GET",
+                                userId: refreshResult.user.id,
+                                sessionRefreshed: true,
+                            },
+                            refreshResult.user.id
+                        )
+
                         reply.send({
                             id: refreshResult.user.id,
                             email: refreshResult.user.email,
@@ -308,6 +385,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                     // Refresh failed, return unauthorized
                 }
 
+                logger.warn("Session is invalid", {
+                    endpoint: "/auth/me",
+                    method: "GET",
+                })
                 reply.code(401).send({
                     error: "Unauthorized",
                     message: "Session is invalid",
@@ -320,6 +401,16 @@ export async function authRoutes(fastify: FastifyInstance) {
                 const dbUser = await db.query.users.findFirst({
                     where: eq(schema.users.id, authResult.user.id),
                 })
+
+                await trackEvent(
+                    "auth_me_success",
+                    {
+                        endpoint: "/auth/me",
+                        method: "GET",
+                        userId: authResult.user.id,
+                    },
+                    authResult.user.id
+                )
 
                 reply.send({
                     id: authResult.user.id,
@@ -337,6 +428,10 @@ export async function authRoutes(fastify: FastifyInstance) {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to get user"
             fastify.log.error({ err: error }, "Get user error")
+            logger.error("Get user error", error, {
+                endpoint: "/auth/me",
+                method: "GET",
+            })
             reply.code(500).send({
                 error: "Internal server error",
                 message: errorMessage,
@@ -360,16 +455,32 @@ export async function authRoutes(fastify: FastifyInstance) {
                 const userId = request.user!.id
                 const updateData = request.body as UpdateUserInput
 
+                if (!updateData.nickname) {
+                    reply.code(200).send({
+                        id: userId,
+                        email: request.user!.email,
+                        firstName: request.user!.firstName,
+                        lastName: request.user!.lastName,
+                        nickname: null,
+                    })
+                    return
+                }
+
                 const [updated] = await db
                     .update(schema.users)
                     .set({
-                        ...(updateData.nickname !== undefined && { nickname: updateData.nickname ?? null }),
+                        ...(updateData.nickname && { nickname: updateData.nickname }),
                         updatedAt: new Date(),
                     })
                     .where(eq(schema.users.id, userId))
                     .returning()
 
                 if (!updated) {
+                    logger.warn("User not found for update", {
+                        endpoint: "/auth/me",
+                        method: "PUT",
+                        userId,
+                    })
                     reply.code(404).send({
                         error: "User not found",
                     })
@@ -397,6 +508,24 @@ export async function authRoutes(fastify: FastifyInstance) {
                     }
                 }
 
+                logger.info("User profile updated", {
+                    endpoint: "/auth/me",
+                    method: "PUT",
+                    userId: updated.id,
+                    updatedFields: updateData.nickname,
+                })
+
+                await trackEvent(
+                    "auth_profile_updated",
+                    {
+                        endpoint: "/auth/me",
+                        method: "PUT",
+                        userId,
+                        updatedFields: updateData.nickname ? ["nickname"] : [],
+                    },
+                    userId
+                )
+
                 reply.send({
                     id: updated.id,
                     email: workosUser?.email || updated.email,
@@ -409,6 +538,12 @@ export async function authRoutes(fastify: FastifyInstance) {
                 if (error && typeof error === "object" && "code" in error && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
                     const errorMessage = error instanceof Error ? error.message : String(error)
                     if (errorMessage.includes("nickname")) {
+                        const updateDataInError = request.body as UpdateUserInput
+                        logger.warn("Nickname already taken", {
+                            endpoint: "/auth/me",
+                            userId: request.user!.id,
+                            nickname: updateDataInError.nickname ?? "",
+                        })
                         reply.code(409).send({
                             error: "Nickname already taken",
                             message: "This nickname is already in use. Please choose a different one.",
@@ -418,6 +553,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                 }
                 const errorMessage = error instanceof Error ? error.message : "Failed to update user"
                 fastify.log.error({ err: error }, "Update user error")
+                logger.error("Update user error", error, {
+                    endpoint: "/auth/me",
+                    userId: request.user!.id,
+                })
                 reply.code(500).send({
                     error: "Internal server error",
                     message: errorMessage,

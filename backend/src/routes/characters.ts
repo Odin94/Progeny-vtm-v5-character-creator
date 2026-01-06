@@ -12,6 +12,8 @@ import {
 } from "../schemas/character.js"
 import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { logger } from "../utils/logger.js"
+import { trackEvent } from "../utils/tracker.js"
 
 export async function characterRoutes(fastify: FastifyInstance) {
     // Create character
@@ -24,41 +26,73 @@ export async function characterRoutes(fastify: FastifyInstance) {
             },
         },
         async (request: AuthenticatedRequest, reply) => {
-            const userId = request.user!.id
-            const { name, data, version } = request.body as CreateCharacterInput
+            try {
+                const userId = request.user!.id
+                const { name, data, version } = request.body as CreateCharacterInput
 
-            // Ensure user exists in database
-            const user = await db.query.users.findFirst({
-                where: eq(schema.users.id, userId),
-            })
+                // Ensure user exists in database
+                const user = await db.query.users.findFirst({
+                    where: eq(schema.users.id, userId),
+                })
 
-            if (!user) {
-                // Create user if doesn't exist
-                await db.insert(schema.users).values({
-                    id: userId,
-                    email: request.user!.email,
-                    firstName: request.user!.firstName,
-                    lastName: request.user!.lastName,
+                if (!user) {
+                    // Create user if doesn't exist
+                    await db.insert(schema.users).values({
+                        id: userId,
+                        email: request.user!.email,
+                        firstName: request.user!.firstName,
+                        lastName: request.user!.lastName,
+                    })
+                }
+
+                const characterId = nanoid()
+
+                const [character] = await db
+                    .insert(schema.characters)
+                    .values({
+                        id: characterId,
+                        userId,
+                        name,
+                        data: JSON.stringify(data),
+                        version,
+                    })
+                    .returning()
+
+                logger.info("Character created", {
+                    endpoint: "/characters",
+                    method: "POST",
+                    userId,
+                    characterId,
+                    characterName: name,
+                })
+
+                await trackEvent(
+                    "character_created",
+                    {
+                        endpoint: "/characters",
+                        method: "POST",
+                        userId,
+                        characterId,
+                        characterName: name,
+                    },
+                    userId
+                )
+
+                reply.code(201).send({
+                    ...character,
+                    data: JSON.parse(character.data),
+                })
+            } catch (error) {
+                logger.error("Failed to create character", error, {
+                    endpoint: "/characters",
+                    method: "POST",
+                    userId: request.user?.id ?? null,
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: error instanceof Error ? error.message : "Failed to create character",
                 })
             }
-
-            const characterId = nanoid()
-
-            const [character] = await db
-                .insert(schema.characters)
-                .values({
-                    id: characterId,
-                    userId,
-                    name,
-                    data: JSON.stringify(data),
-                    version,
-                })
-                .returning()
-
-            reply.code(201).send({
-                ...character,
-                data: JSON.parse(character.data),
-            })
         }
     )
 
@@ -94,6 +128,19 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 ...c,
                 data: JSON.parse(c.data),
             }))
+
+            await trackEvent(
+                "characters_listed",
+                {
+                    endpoint: "/characters",
+                    method: "GET",
+                    userId,
+                    ownedCount: ownedCharacters.length,
+                    sharedCount: sharedCharacters.length,
+                    totalCount: allCharacters.length,
+                },
+                userId
+            )
 
             reply.send(allCharacters)
         }
@@ -132,6 +179,19 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 return
             }
 
+            await trackEvent(
+                "character_viewed",
+                {
+                    endpoint: "/characters/:id",
+                    method: "GET",
+                    userId,
+                    characterId: id,
+                    isOwner,
+                    isShared: !!isShared,
+                },
+                userId
+            )
+
             reply.send({
                 ...character,
                 data: JSON.parse(character.data),
@@ -154,39 +214,85 @@ export async function characterRoutes(fastify: FastifyInstance) {
             },
         },
         async (request: AuthenticatedRequest, reply) => {
-            const userId = request.user!.id
-            const { id } = request.params as CharacterParams
+            const { id: characterId } = request.params as CharacterParams
             const updateData = request.body as UpdateCharacterInput
+            try {
+                const userId = request.user!.id
 
-            const character = await db.query.characters.findFirst({
-                where: eq(schema.characters.id, id),
-            })
-
-            if (!character) {
-                reply.code(404).send({ error: "Character not found" })
-                return
-            }
-
-            if (character.userId !== userId) {
-                reply.code(403).send({ error: "Forbidden: You can only edit your own characters" })
-                return
-            }
-
-            const [updated] = await db
-                .update(schema.characters)
-                .set({
-                    ...(updateData.name && { name: updateData.name }),
-                    ...(updateData.data && { data: JSON.stringify(updateData.data) }),
-                    ...(updateData.version && { version: updateData.version }),
-                    updatedAt: new Date(),
+                const character = await db.query.characters.findFirst({
+                    where: eq(schema.characters.id, characterId),
                 })
-                .where(eq(schema.characters.id, id))
-                .returning()
 
-            reply.send({
-                ...updated,
-                data: JSON.parse(updated.data),
-            })
+                if (!character) {
+                    logger.warn("Character not found for update", {
+                        endpoint: "/characters/:id",
+                        method: "PUT",
+                        userId,
+                        characterId,
+                    })
+                    reply.code(404).send({ error: "Character not found" })
+                    return
+                }
+
+                if (character.userId !== userId) {
+                    logger.warn("Unauthorized character update attempt", {
+                        endpoint: "/characters/:id",
+                        method: "PUT",
+                        userId,
+                        characterId,
+                        characterOwnerId: character.userId,
+                    })
+                    reply.code(403).send({ error: "Forbidden: You can only edit your own characters" })
+                    return
+                }
+
+                const [updated] = await db
+                    .update(schema.characters)
+                    .set({
+                        ...(updateData.name && { name: updateData.name }),
+                        ...(updateData.data && { data: JSON.stringify(updateData.data) }),
+                        ...(updateData.version && { version: updateData.version }),
+                        updatedAt: new Date(),
+                    })
+                    .where(eq(schema.characters.id, characterId))
+                    .returning()
+
+                logger.info("Character updated", {
+                    endpoint: "/characters/:id",
+                    method: "PUT",
+                    userId,
+                    characterId,
+                    updatedFields: Object.keys(updateData),
+                })
+
+                await trackEvent(
+                    "character_updated",
+                    {
+                        endpoint: "/characters/:id",
+                        method: "PUT",
+                        userId,
+                        characterId,
+                        updatedFields: Object.keys(updateData),
+                    },
+                    userId
+                )
+
+                reply.send({
+                    ...updated,
+                    data: JSON.parse(updated.data),
+                })
+            } catch (error) {
+                logger.error("Failed to update character", error, {
+                    endpoint: "/characters/:id",
+                    method: "PUT",
+                    userId: request.user?.id ?? null,
+                    characterId,
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: error instanceof Error ? error.message : "Failed to update character",
+                })
+            }
         }
     )
 
@@ -200,26 +306,70 @@ export async function characterRoutes(fastify: FastifyInstance) {
             },
         },
         async (request: AuthenticatedRequest, reply) => {
-            const userId = request.user!.id
-            const { id } = request.params as CharacterParams
+            const { id: characterId } = request.params as CharacterParams
+            try {
+                const userId = request.user!.id
 
-            const character = await db.query.characters.findFirst({
-                where: eq(schema.characters.id, id),
-            })
+                const character = await db.query.characters.findFirst({
+                    where: eq(schema.characters.id, characterId),
+                })
 
-            if (!character) {
-                reply.code(404).send({ error: "Character not found" })
-                return
+                if (!character) {
+                    logger.warn("Character not found for delete", {
+                        endpoint: "/characters/:id",
+                        method: "DELETE",
+                        userId,
+                        characterId,
+                    })
+                    reply.code(404).send({ error: "Character not found" })
+                    return
+                }
+
+                if (character.userId !== userId) {
+                    logger.warn("Unauthorized character delete attempt", {
+                        endpoint: "/characters/:id",
+                        method: "DELETE",
+                        userId,
+                        characterId,
+                        characterOwnerId: character.userId,
+                    })
+                    reply.code(403).send({ error: "Forbidden: You can only delete your own characters" })
+                    return
+                }
+
+                await db.delete(schema.characters).where(eq(schema.characters.id, characterId))
+
+                logger.info("Character deleted", {
+                    endpoint: "/characters/:id",
+                    method: "DELETE",
+                    userId,
+                    characterId,
+                })
+
+                await trackEvent(
+                    "character_deleted",
+                    {
+                        endpoint: "/characters/:id",
+                        method: "DELETE",
+                        userId,
+                        characterId,
+                    },
+                    userId
+                )
+
+                reply.code(204).send()
+            } catch (error) {
+                logger.error("Failed to delete character", error, {
+                    endpoint: "/characters/:id",
+                    method: "DELETE",
+                    userId: request.user?.id ?? null,
+                    characterId,
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: error instanceof Error ? error.message : "Failed to delete character",
+                })
             }
-
-            if (character.userId !== userId) {
-                reply.code(403).send({ error: "Forbidden: You can only delete your own characters" })
-                return
-            }
-
-            await db.delete(schema.characters).where(eq(schema.characters.id, id))
-
-            reply.code(204).send()
         }
     )
 }

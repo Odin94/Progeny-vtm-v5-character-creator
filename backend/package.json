@@ -18,12 +18,18 @@
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^10.0.1",
     "@fastify/websocket": "^11.0.1",
+    "@opentelemetry/api-logs": "^0.208.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.208.0",
+    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/sdk-logs": "^0.208.0",
+    "@opentelemetry/sdk-node": "^0.208.0",
     "@workos-inc/node": "^7.79.3",
     "better-sqlite3": "^11.7.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.36.4",
     "fastify": "^5.1.0",
     "nanoid": "^5.0.9",
+    "posthog-node": "^5.19.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
