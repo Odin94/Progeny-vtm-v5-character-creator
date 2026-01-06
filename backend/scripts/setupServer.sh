@@ -11,9 +11,7 @@
 # chmod +x /tmp/setupServer.sh
 # /tmp/setupServer.sh
 
-# TODOdin: Consider just writing a script that builds & scps the backend to the server for deployments
-
-set -e  # Exit on error
+set -e
 
 echo "🚀 Starting Progeny Backend server setup..."
 
@@ -194,9 +192,9 @@ BACKEND_URL=https://api.progeny.odin-matthias.de
 FRONTEND_URL=https://progeny.odin-matthias.de
 
 # SSL Configuration (for HTTPS on port 443)
-# After running certbot, uncomment and set these paths:
-# SSL_CERT_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
-# SSL_KEY_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
+# Will only work after running certbot:
+SSL_CERT_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
+SSL_KEY_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
 EOF
 
 chown "$APP_USER:$APP_USER" "$APP_DIR/backend/.env"
@@ -216,7 +214,7 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
 
 2. **Set up environment variables:**
    ```bash
-   vi .env  # Edit with your WorkOS credentials
+   vim .env  # Edit with your WorkOS credentials
    ```
 
 3. **Generate and run database migrations:**
