@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text, Divider, Group } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconMenu2, IconAlertCircle } from "@tabler/icons-react"
+import { IconMenu2, IconAlertCircle, IconExternalLink, IconArrowRight } from "@tabler/icons-react"
 import { Buffer } from "buffer"
 import { useState } from "react"
 import { z } from "zod"
@@ -164,16 +164,30 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         Download as PDF
                     </Button>
 
-                    <Button
-                        leftSection={<FontAwesomeIcon icon={faFloppyDisk} />}
-                        size="lg"
-                        color="yellow"
-                        variant="light"
-                        onClick={handleDownloadJSON}
-                        fullWidth
-                    >
-                        Download as JSON
-                    </Button>
+                    <Group gap="md" grow>
+                        <Button
+                            leftSection={<FontAwesomeIcon icon={faFloppyDisk} />}
+                            size="lg"
+                            color="yellow"
+                            variant="light"
+                            onClick={handleDownloadJSON}
+                        >
+                            Save JSON
+                        </Button>
+                        <FileButton onChange={handleLoadFromFile} accept="application/json">
+                            {(props) => (
+                                <Button
+                                    leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
+                                    size="lg"
+                                    color="green"
+                                    variant="light"
+                                    {...props}
+                                >
+                                    Load JSON
+                                </Button>
+                            )}
+                        </FileButton>
+                    </Group>
 
                     <Button
                         leftSection={<FontAwesomeIcon icon={faFileExport} />}
@@ -188,40 +202,21 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         Export to...
                     </Button>
 
-                    <FileButton onChange={handleLoadFromFile} accept="application/json">
-                        {(props) => (
-                            <Button
-                                leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
-                                size="lg"
-                                color="green"
-                                variant="light"
-                                {...props}
-                                fullWidth
-                            >
-                                Load from JSON
-                            </Button>
-                        )}
-                    </FileButton>
-
-                    <Divider />
-
-                    <Button
-                        component="a"
-                        href="https://ko-fi.com/odin_dev"
-                        target="_blank"
-                        rel="noreferrer"
-                        leftSection={<span>☕</span>}
-                        size="lg"
-                        color="gray"
-                        variant="light"
-                        fullWidth
-                    >
-                        Support Odin on Ko-fi
-                    </Button>
-
-                    <Button size="lg" color="grape" variant="light" onClick={handleGoBack} fullWidth>
-                        Go back to Progeny Generator
-                    </Button>
+                    <Group gap="md" grow>
+                        <Button component="a" href="/" size="lg" color="grape" variant="outline" leftSection={<IconArrowRight size={18} />}>
+                            Generator
+                        </Button>
+                        <Button
+                            component="a"
+                            href="/me"
+                            size="lg"
+                            color="grape"
+                            variant="outline"
+                            leftSection={<IconArrowRight size={18} />}
+                        >
+                            Account
+                        </Button>
+                    </Group>
 
                     {!isBackendDisabled() ? (
                         <>
@@ -260,6 +255,22 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             )}
                         </>
                     ) : null}
+
+                    <Divider />
+
+                    <Button
+                        component="a"
+                        href="https://ko-fi.com/odin_dev"
+                        target="_blank"
+                        rel="noreferrer"
+                        leftSection={<IconExternalLink size={18} />}
+                        size="lg"
+                        color="gray"
+                        variant="light"
+                        fullWidth
+                    >
+                        Support Odin on Ko-fi
+                    </Button>
 
                     <Divider />
 

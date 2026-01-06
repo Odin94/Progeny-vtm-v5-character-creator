@@ -18,10 +18,21 @@ import {
     Text,
     TextInput,
     Title,
+    useComputedColorScheme,
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { useComputedColorScheme } from "@mantine/core"
-import { IconDots, IconDownload, IconEdit, IconPlus, IconSword, IconTrash, IconUpload, IconUser, IconUsers } from "@tabler/icons-react"
+import {
+    IconArrowRight,
+    IconDots,
+    IconDownload,
+    IconDroplet,
+    IconEdit,
+    IconPlus,
+    IconTrash,
+    IconUpload,
+    IconUser,
+    IconUsers,
+} from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import { Character as CharacterType, getEmptyCharacter } from "~/data/Character"
 import { rndInt } from "~/generator/utils"
@@ -469,12 +480,7 @@ const MePage = () => {
                             <Text size="lg" fw={500}>
                                 Please log in to view your profile
                             </Text>
-                            <Button
-                                onClick={() => {
-                                    window.location.href = "/"
-                                }}
-                                color="red"
-                            >
+                            <Button component="a" href="/" color="red" leftSection={<IconArrowRight size={18} />}>
                                 Go to Home
                             </Button>
                         </Stack>
@@ -520,6 +526,20 @@ const MePage = () => {
                         }}
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
+                            <Group gap="md" mb="xl" justify="flex-start">
+                                <Button component="a" href="/" color="red" variant="outline" leftSection={<IconArrowRight size={18} />}>
+                                    Generator
+                                </Button>
+                                <Button
+                                    component="a"
+                                    href="/sheet"
+                                    color="red"
+                                    variant="outline"
+                                    leftSection={<IconArrowRight size={18} />}
+                                >
+                                    Character Sheet
+                                </Button>
+                            </Group>
                             <Stack gap="xl">
                                 <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
                                     <Group gap="md" mb="md">
@@ -572,17 +592,16 @@ const MePage = () => {
                                             ) : (
                                                 <Group gap="xs" style={{ flex: 1 }}>
                                                     <Text>{user?.nickname || <Text c="dimmed">No nickname set</Text>}</Text>
-                                                    <ActionIcon size="sm" variant="subtle" onClick={() => setIsEditingNickname(true)}>
+                                                    <ActionIcon
+                                                        color="red"
+                                                        size="sm"
+                                                        variant="subtle"
+                                                        onClick={() => setIsEditingNickname(true)}
+                                                    >
                                                         <IconEdit size={16} />
                                                     </ActionIcon>
                                                 </Group>
                                             )}
-                                        </Group>
-                                        <Group gap="xs">
-                                            <Text fw={500}>User ID:</Text>
-                                            <Text size="sm" c="dimmed" style={{ fontFamily: "monospace" }}>
-                                                {user?.id}
-                                            </Text>
                                         </Group>
                                     </Stack>
                                 </Card>
@@ -590,7 +609,7 @@ const MePage = () => {
                                 <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
                                     <Group gap="md" mb="md" justify="space-between">
                                         <Group gap="md">
-                                            <IconSword size={32} />
+                                            <IconDroplet size={32} />
                                             <Title order={2}>Characters</Title>
                                             <Badge size="lg" variant="light" color="red">
                                                 {userCharacters.length}
@@ -861,6 +880,7 @@ const MePage = () => {
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
+                            color="red"
                             onClick={() => {
                                 setCreateCharacterModalOpened(false)
                                 setNewCharacterName("")
@@ -900,6 +920,7 @@ const MePage = () => {
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
+                            color="red"
                             onClick={() => {
                                 setCreateCoterieModalOpened(false)
                                 setNewCoterieName("")
@@ -940,6 +961,7 @@ const MePage = () => {
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
+                            color="red"
                             onClick={() => {
                                 setEditCoterieModalOpened(false)
                                 setEditingCoterie(null)
@@ -983,6 +1005,7 @@ const MePage = () => {
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
+                            color="red"
                             onClick={() => {
                                 setAddCharacterToCoterieModalOpened(false)
                                 setSelectedCoterieForAdd(null)
