@@ -26,18 +26,11 @@
     "paths": {
       "~/*": [
         "./src/*"
-      ],
-      "@progeny/shared": [
-        "../shared/src"
-      ],
-      "@progeny/shared/*": [
-        "../shared/src/*"
       ]
     }
   },
   "include": [
-    "src",
-    "../shared/src"
+    "src"
   ],
   "references": [
     {

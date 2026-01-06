@@ -8,7 +8,6 @@ export default defineConfig({
         outDir: "build",
         sourcemap: true,
         rollupOptions: {
-            // Ensure zod is not externalized - it should be bundled
             external: [],
         },
     },
@@ -42,14 +41,6 @@ export default defineConfig({
     resolve: {
         alias: {
             "~": path.resolve(__dirname, "src"),
-            "@progeny/shared": path.resolve(__dirname, "../shared/src"),
-            // Ensure zod resolves from frontend's node_modules even when imported from shared package
-            zod: path.resolve(__dirname, "node_modules/zod"),
         },
-        // Dedupe zod to use the frontend's version
-        dedupe: ["zod"],
-    },
-    optimizeDeps: {
-        include: ["zod"],
     },
 })

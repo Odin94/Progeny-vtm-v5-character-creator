@@ -12,21 +12,41 @@ import proteanLogo from "../resources/Rombo_Disciplines/rombo_Protean.svg"
 import bloodSorceryLogo from "../resources/Rombo_Disciplines/rombo_BloodSorcery.svg"
 import oblivionLogo from "../resources/Rombo_Disciplines/rombo_Oblivion.svg"
 import alchemyLogo from "../resources/Rombo_Disciplines/rombo_Alchemy.svg"
-import {
-    clanNameSchema,
-    DisciplineName,
-    disciplineNameSchema,
-    powerSchema,
-    ritualSchema,
-    amalgamPrerequisiteSchema,
-    type Power,
-    type AmalgamPrerequisite,
-    type Ritual,
-} from "@progeny/shared"
+import { clanNameSchema, DisciplineName, disciplineNameSchema } from "./NameSchemas.js"
 import { Character } from "./Character"
 
-// Re-export from shared for backwards compatibility
-export { powerSchema, ritualSchema, amalgamPrerequisiteSchema, type Power, type AmalgamPrerequisite, type Ritual } from "@progeny/shared"
+export const amalgamPrerequisiteSchema = z.object({
+  discipline: disciplineNameSchema,
+  level: z.number().min(1).int(),
+})
+
+export type AmalgamPrerequisite = z.infer<typeof amalgamPrerequisiteSchema>
+
+export const powerSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  summary: z.string(),
+  dicePool: z.string(),
+  level: z.number().min(1).int(),
+  discipline: disciplineNameSchema,
+  rouseChecks: z.number().min(0).int(),
+  amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
+})
+
+export type Power = z.infer<typeof powerSchema>
+
+export const ritualSchema = z.object({
+  name: z.string(),
+  summary: z.string(),
+  rouseChecks: z.number().min(0).int(),
+  requiredTime: z.string(),
+  dicePool: z.string(),
+  ingredients: z.string(),
+  level: z.number().min(1).int(),
+  discipline: disciplineNameSchema.optional(),
+})
+
+export type Ritual = z.infer<typeof ritualSchema>
 
 export const disciplineSchema = z.object({
     clans: clanNameSchema.array(),

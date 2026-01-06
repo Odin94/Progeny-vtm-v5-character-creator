@@ -1,4 +1,9 @@
-import { specialtySchema, skillsKeySchema, type Specialty } from "@progeny/shared"
+import { z } from "zod"
+import { skillsKeySchema } from "./Skills.js"
 
-// Re-export from shared for backwards compatibility
-export { specialtySchema, skillsKeySchema, type Specialty }
+export const specialtySchema = z.object({
+  skill: skillsKeySchema,
+  name: z.string(),
+})
+
+export type Specialty = z.infer<typeof specialtySchema>
