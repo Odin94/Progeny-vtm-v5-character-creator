@@ -48,12 +48,6 @@ const Topbar = ({ setShowAsideBar, showAsideBar }: TopBarProps) => {
                                     </Text>
                                 )}
                             </span>
-
-                            {phoneScreen ? null : (
-                                <Text c="dimmed" fz="sm" ta="center">
-                                    A VtM v5 Character Creator
-                                </Text>
-                            )}
                         </Stack>
                     </Center>
                 </Grid.Col>
