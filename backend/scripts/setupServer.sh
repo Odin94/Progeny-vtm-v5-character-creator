@@ -173,7 +173,7 @@ runuser -u "$APP_USER" -- pm2 save 2>/dev/null || true
 echo -e "${YELLOW}📝 Creating environment file template...${NC}"
 cat > "$APP_DIR/backend/.env" << 'EOF'
 # PostHog Configuration
-POSTHOG_API_KEY=your_posthog_api_key_here
+POSTHOG_KEY=your_posthog_api_key_here
 POSTHOG_HOST=https://eu.i.posthog.com
 
 # WorkOS Configuration

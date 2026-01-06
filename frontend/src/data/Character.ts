@@ -78,6 +78,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     }
 
     patchV2ToV3Compatibility(parsed)
+    patchV3ToV4Compatibility(parsed)
 
     parsed["version"] = schemaVersion
 }
@@ -118,5 +119,11 @@ export const patchV2ToV3Compatibility = (parsed: Record<string, unknown>): void 
                 }
             })
         }
+    }
+}
+
+export const patchV3ToV4Compatibility = (parsed: Record<string, unknown>): void => {
+    if (parsed["characterVersion"] === undefined || parsed["characterVersion"] === null) {
+        parsed["characterVersion"] = 0
     }
 }

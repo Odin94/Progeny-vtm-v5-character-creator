@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { eq, and } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
@@ -47,14 +47,18 @@ export async function characterRoutes(fastify: FastifyInstance) {
 
                 const characterId = nanoid()
 
+                // Ensure characterVersion is set to 0 for new characters
+                const characterDataWithVersion = { ...data, characterVersion: 0 }
+
                 const [character] = await db
                     .insert(schema.characters)
                     .values({
                         id: characterId,
                         userId,
                         name,
-                        data: JSON.stringify(data),
+                        data: JSON.stringify(characterDataWithVersion),
                         version,
+                        characterVersion: 0,
                     })
                     .returning()
 
@@ -246,12 +250,22 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     return
                 }
 
+                // Increment characterVersion on update
+                const currentCharacter = await db.query.characters.findFirst({
+                    where: eq(schema.characters.id, characterId),
+                })
+                const newCharacterVersion = (currentCharacter?.characterVersion ?? 0) + 1
+
+                // Update character data to include characterVersion
+                const characterData = updateData.data ? { ...updateData.data, characterVersion: newCharacterVersion } : undefined
+
                 const [updated] = await db
                     .update(schema.characters)
                     .set({
                         ...(updateData.name && { name: updateData.name }),
-                        ...(updateData.data && { data: JSON.stringify(updateData.data) }),
+                        ...(characterData && { data: JSON.stringify(characterData) }),
                         ...(updateData.version && { version: updateData.version }),
+                        characterVersion: newCharacterVersion,
                         updatedAt: new Date(),
                     })
                     .where(eq(schema.characters.id, characterId))

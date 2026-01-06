@@ -47,6 +47,7 @@ import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters, useCreateCharacter, useDeleteCharacter, useUpdateCharacter } from "~/hooks/useCharacters"
+import { api } from "~/utils/api"
 import {
     useAddCharacterToCoterie,
     useCoteries,
@@ -111,6 +112,8 @@ const MePage = () => {
     const [loadJsonModalOpened, setLoadJsonModalOpened] = useState(false)
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [loadingCharacterId, setLoadingCharacterId] = useState<string | null>(null)
+    const [versionConflictModalOpened, setVersionConflictModalOpened] = useState(false)
+    const [versionConflictInfo, setVersionConflictInfo] = useState<{ beVersion: number; feVersion: number } | null>(null)
     const [characterToDelete, setCharacterToDelete] = useState<{ id: string; name: string } | null>(null)
     const [coterieToDelete, setCoterieToDelete] = useState<{ id: string; name: string } | null>(null)
     const [characterToLoad, setCharacterToLoad] = useState<{ id: string; name: string; data: CharacterType } | null>(null)
@@ -204,7 +207,7 @@ const MePage = () => {
         )
     }
 
-    const handleSaveCurrentCharacter = () => {
+    const handleSaveCurrentCharacter = async () => {
         if (!character.name.trim()) {
             notifications.show({
                 title: "Error",
@@ -218,6 +221,24 @@ const MePage = () => {
         const targetCharacter = character.id ? userCharacters.find((c) => c.id === character.id) : null
 
         if (targetCharacter && !targetCharacter.shared) {
+            // Fetch current character from backend to check version
+            try {
+                const beCharacter = await api.getCharacter(targetCharacter.id)
+                const beChar = beCharacter as { characterVersion?: number; data?: { characterVersion?: number } }
+                const beVersion = beChar.characterVersion ?? beChar.data?.characterVersion ?? 0
+                const feVersion = (character as CharacterType & { characterVersion?: number }).characterVersion ?? 0
+
+                if (beVersion > feVersion) {
+                    // Show version conflict modal
+                    setVersionConflictInfo({ beVersion, feVersion })
+                    setVersionConflictModalOpened(true)
+                    return
+                }
+            } catch (error) {
+                // If fetch fails, continue with save (character might not exist or network error)
+                console.warn("Failed to fetch character for version check:", error)
+            }
+
             // Update existing character
             updateCharacterMutation.mutate(
                 {
@@ -229,7 +250,21 @@ const MePage = () => {
                     },
                 },
                 {
-                    onSuccess: () => {
+                    onSuccess: (savedCharacter) => {
+                        // Update character in memory with the ID and characterVersion from backend
+                        const saved = savedCharacter as {
+                            id: string
+                            name: string
+                            data: unknown
+                            version?: number
+                            characterVersion?: number
+                        }
+                        const savedData = saved.data as { characterVersion?: number } | undefined
+                        setCharacter({
+                            ...character,
+                            id: saved.id,
+                            characterVersion: saved.characterVersion ?? savedData?.characterVersion ?? 0,
+                        } as CharacterType & { characterVersion: number })
                         notifications.show({
                             title: "Success",
                             message: `Character "${character.name}" saved`,
@@ -255,12 +290,20 @@ const MePage = () => {
                 },
                 {
                     onSuccess: (savedCharacter) => {
-                        // Update character in memory with the ID from backend
-                        const saved = savedCharacter as { id: string; name: string; data: unknown; version?: number }
+                        // Update character in memory with the ID and characterVersion from backend
+                        const saved = savedCharacter as {
+                            id: string
+                            name: string
+                            data: unknown
+                            version?: number
+                            characterVersion?: number
+                        }
+                        const savedData = saved.data as { characterVersion?: number } | undefined
                         setCharacter({
                             ...character,
                             id: saved.id,
-                        })
+                            characterVersion: saved.characterVersion ?? savedData?.characterVersion ?? 0,
+                        } as CharacterType & { characterVersion: number })
                         notifications.show({
                             title: "Success",
                             message: `Character "${character.name}" saved`,
@@ -277,6 +320,57 @@ const MePage = () => {
                 }
             )
         }
+    }
+
+    const handleConfirmOverwriteVersion = () => {
+        if (!character.id || !versionConflictInfo) return
+
+        const targetCharacter = userCharacters.find((c) => c.id === character.id)
+        if (!targetCharacter || targetCharacter.shared) return
+
+        // Proceed with save (overwrite)
+        updateCharacterMutation.mutate(
+            {
+                id: targetCharacter.id,
+                data: {
+                    name: character.name,
+                    data: character,
+                    version: character.version,
+                },
+            },
+            {
+                onSuccess: (savedCharacter) => {
+                    // Update character in memory with the ID and characterVersion from backend
+                    const saved = savedCharacter as {
+                        id: string
+                        name: string
+                        data: unknown
+                        version?: number
+                        characterVersion?: number
+                    }
+                    const savedData = saved.data as { characterVersion?: number } | undefined
+                    setCharacter({
+                        ...character,
+                        id: saved.id,
+                        characterVersion: saved.characterVersion ?? savedData?.characterVersion ?? 0,
+                    } as CharacterType & { characterVersion: number })
+                    setVersionConflictModalOpened(false)
+                    setVersionConflictInfo(null)
+                    notifications.show({
+                        title: "Success",
+                        message: `Character "${character.name}" saved`,
+                        color: "green",
+                    })
+                },
+                onError: (error) => {
+                    notifications.show({
+                        title: "Error",
+                        message: error instanceof Error ? error.message : "Failed to save character",
+                        color: "red",
+                    })
+                },
+            }
+        )
     }
 
     const isSavingCharacter = createCharacterMutation.isPending || updateCharacterMutation.isPending
@@ -742,7 +836,7 @@ const MePage = () => {
                     <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
                 </AppShell.Header>
                 <Center h="100%">
-                    <Loader size="lg" />
+                    <Loader size="lg" color="red" />
                 </Center>
             </AppShell>
         )
@@ -1522,6 +1616,38 @@ const MePage = () => {
                         </Button>
                         <Button color="red" onClick={handleConfirmLoadJson}>
                             Load/Overwrite character
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
+            <Modal
+                opened={versionConflictModalOpened}
+                onClose={() => {
+                    setVersionConflictModalOpened(false)
+                    setVersionConflictInfo(null)
+                }}
+                title="Version Conflict"
+                centered
+            >
+                <Stack gap="md">
+                    <Text>
+                        Character version in database ({versionConflictInfo?.beVersion ?? 0}) is higher than in browser (
+                        {versionConflictInfo?.feVersion ?? 0}) - saving might overwrite changes you made on another device.
+                    </Text>
+                    <Group justify="flex-end" gap="xs">
+                        <Button
+                            variant="subtle"
+                            color="red"
+                            onClick={() => {
+                                setVersionConflictModalOpened(false)
+                                setVersionConflictInfo(null)
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button color="red" onClick={handleConfirmOverwriteVersion}>
+                            Overwrite DB version
                         </Button>
                     </Group>
                 </Stack>

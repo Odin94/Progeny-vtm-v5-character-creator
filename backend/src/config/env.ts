@@ -22,7 +22,7 @@ const envSchema = z.object({
     FRONTEND_URL: z.url().default("http://localhost:3000"),
 
     // PostHog (optional)
-    POSTHOG_API_KEY: z.string().optional(),
+    POSTHOG_KEY: z.string().optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com").optional(),
 
     // WorkOS AuthKit Session

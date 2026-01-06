@@ -9,7 +9,7 @@ let sdk: NodeSDK | null = null
 let logger: ReturnType<typeof logs.getLogger> | null = null
 
 export const initializePostHogLogging = () => {
-    if (!env.POSTHOG_API_KEY) {
+    if (!env.POSTHOG_KEY) {
         console.log("PostHog API key not configured, skipping PostHog logging initialization")
         return
     }
@@ -30,7 +30,7 @@ export const initializePostHogLogging = () => {
                 new OTLPLogExporter({
                     url: logsUrl,
                     headers: {
-                        Authorization: `Bearer ${env.POSTHOG_API_KEY}`,
+                        Authorization: `Bearer ${env.POSTHOG_KEY}`,
                     },
                 })
             ),

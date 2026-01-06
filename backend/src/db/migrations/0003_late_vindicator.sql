@@ -1,0 +1,1 @@
+ALTER TABLE `characters` ADD `character_version` integer DEFAULT 0 NOT NULL;

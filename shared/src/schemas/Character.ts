@@ -23,7 +23,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 3
+export const schemaVersion = 4
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -75,6 +75,7 @@ export const characterSchema = z.object({
         experienceSpent: z.number().min(0).int(),
     }),
     version: z.number().int().positive().optional().default(schemaVersion),
+    characterVersion: z.number().int().min(0).optional().default(0),
 })
 
 export type Character = z.infer<typeof characterSchema>
@@ -167,5 +168,6 @@ export const getEmptyCharacter = (): Character => {
             experienceSpent: 0,
         },
         version: schemaVersion,
+        characterVersion: 0,
     }
 }

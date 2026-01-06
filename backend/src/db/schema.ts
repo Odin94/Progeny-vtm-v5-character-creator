@@ -26,6 +26,7 @@ export const characters = sqliteTable(
         name: text("name").notNull(),
         data: text("data").notNull(), // JSON string of character data
         version: integer("version").notNull().default(1),
+        characterVersion: integer("character_version").notNull().default(0),
         createdAt: integer("created_at", { mode: "timestamp" })
             .notNull()
             .default(sql`(unixepoch())`),

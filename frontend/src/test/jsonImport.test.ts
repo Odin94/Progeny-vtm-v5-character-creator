@@ -32,5 +32,14 @@ describe("JSON Import", () => {
             expect(stunningMerit).toBeDefined()
             expect(stunningMerit?.excludes).toEqual(["Beautiful", "Ugly", "Repulsive"])
         })
+
+        it(`should correctly populate characterVersion`, async () => {
+            const filePath = resolve(__dirname, "jsonExports", jsonFile)
+            const fileContent = readFileSync(filePath, "utf-8")
+
+            const character = await loadCharacterFromJson(fileContent)
+
+            expect(character.characterVersion).toEqual(0)
+        })
     }
 })

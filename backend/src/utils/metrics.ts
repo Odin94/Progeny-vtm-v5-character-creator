@@ -170,7 +170,7 @@ class MetricsCollector {
             return
         }
 
-        if (!env.POSTHOG_API_KEY) {
+        if (!env.POSTHOG_KEY) {
             this.fastify.log.debug("PostHog not configured, skipping metrics")
             return // PostHog not configured
         }
@@ -183,7 +183,7 @@ class MetricsCollector {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    api_key: env.POSTHOG_API_KEY,
+                    api_key: env.POSTHOG_KEY,
                     event: "backend_metrics",
                     properties: {
                         memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
