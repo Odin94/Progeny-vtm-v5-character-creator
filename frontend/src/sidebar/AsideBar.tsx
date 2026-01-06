@@ -1,7 +1,10 @@
-import { ScrollArea, Stepper } from "@mantine/core"
+import { Button, Group, Loader, ScrollArea, Stepper, Stack } from "@mantine/core"
+import { IconArrowRight } from "@tabler/icons-react"
 import { Character, containsBloodSorcery } from "../data/Character"
 import { isDefault, upcase } from "../generator/utils"
 import { globals } from "../globals"
+import { isBackendDisabled } from "../utils/backend"
+import { useAuth } from "../hooks/useAuth"
 
 export type AsideBarProps = {
     selectedStep: number
@@ -10,6 +13,7 @@ export type AsideBarProps = {
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
+    const { loading: authLoading, isAuthenticated, signIn } = useAuth()
     // const smallScreen = globals.isSmallScreen
     const maybeRituals = containsBloodSorcery(character.disciplines) ? ["rituals"] : []
     const stepperKeys = [
@@ -69,9 +73,45 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     const height = globals.viewportHeightPx
     const scrollerHeight = 940
     return (
-        <div style={{ padding: "1rem", zIndex: 0, height: "100%", display: "flex", alignItems: "center" }}>
-            {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStepper()}</ScrollArea> : <>{getStepper()}</>}
-        </div>
+        <Stack gap="md" style={{ padding: "1rem", zIndex: 0, height: "100%" }}>
+            {!isBackendDisabled() ? (
+                <Stack gap="sm">
+                    {authLoading ? (
+                        <Button size="sm" color="gray" variant="outline" loading leftSection={<IconArrowRight size={16} />}>
+                            Loading...
+                        </Button>
+                    ) : !isAuthenticated ? (
+                        <Button size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />} onClick={signIn}>
+                            Sign In
+                        </Button>
+                    ) : (
+                        <Button
+                            component="a"
+                            href="/me"
+                            size="sm"
+                            color="grape"
+                            variant="outline"
+                            leftSection={<IconArrowRight size={16} />}
+                        >
+                            Account
+                        </Button>
+                    )}
+                    <Button
+                        component="a"
+                        href="/sheet"
+                        size="sm"
+                        color="grape"
+                        variant="outline"
+                        leftSection={<IconArrowRight size={16} />}
+                    >
+                        Sheet
+                    </Button>
+                </Stack>
+            ) : null}
+            <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStepper()}</ScrollArea> : <>{getStepper()}</>}
+            </div>
+        </Stack>
     )
 }
 

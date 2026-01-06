@@ -176,7 +176,7 @@ function App() {
                         gap: "1rem",
                     }}
                 >
-                    <Loader size="lg" />
+                    <Loader size="lg" color="red" />
                     <Text size="lg">Completing sign in...</Text>
                 </Container>
             </>

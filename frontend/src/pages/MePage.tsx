@@ -81,7 +81,7 @@ type Coterie = {
 }
 
 const MePage = () => {
-    const { user, loading: authLoading, isAuthenticated, updateProfile, isUpdatingProfile } = useAuth()
+    const { user, loading: authLoading, isAuthenticated, updateProfile, isUpdatingProfile, signOut } = useAuth()
     const { data: characters } = useCharacters()
     const { data: coteries } = useCoteries()
     const [character, setCharacter] = useCharacterLocalStorage()
@@ -918,18 +918,23 @@ const MePage = () => {
                         }}
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
-                            <Group gap="md" mb="xl" justify="flex-start">
-                                <Button component="a" href="/" color="red" variant="outline" leftSection={<IconArrowRight size={18} />}>
-                                    Generator
-                                </Button>
-                                <Button
-                                    component="a"
-                                    href="/sheet"
-                                    color="red"
-                                    variant="outline"
-                                    leftSection={<IconArrowRight size={18} />}
-                                >
-                                    Character Sheet
+                            <Group gap="md" mb="xl" justify="space-between">
+                                <Group gap="md">
+                                    <Button component="a" href="/" color="red" variant="outline" leftSection={<IconArrowRight size={18} />}>
+                                        Generator
+                                    </Button>
+                                    <Button
+                                        component="a"
+                                        href="/sheet"
+                                        color="red"
+                                        variant="outline"
+                                        leftSection={<IconArrowRight size={18} />}
+                                    >
+                                        Character Sheet
+                                    </Button>
+                                </Group>
+                                <Button onClick={signOut} color="red" variant="outline">
+                                    Sign Out
                                 </Button>
                             </Group>
                             <Stack gap="xl">
@@ -1015,6 +1020,18 @@ const MePage = () => {
                                             >
                                                 Create Empty
                                             </Button>
+                                            {showSaveCurrentButton ? (
+                                                <Button
+                                                    leftSection={<IconDownload size={16} />}
+                                                    color="red"
+                                                    variant="light"
+                                                    onClick={handleSaveCurrentCharacter}
+                                                    disabled={!character.name.trim() || isSavingCharacter}
+                                                    loading={isSavingCharacter}
+                                                >
+                                                    Save Current Character
+                                                </Button>
+                                            ) : null}
                                             <Menu keepMounted>
                                                 <Menu.Target>
                                                     <ActionIcon color="red" variant="light" size="lg">
@@ -1037,18 +1054,6 @@ const MePage = () => {
                                                     </FileButton>
                                                 </Menu.Dropdown>
                                             </Menu>
-                                            {showSaveCurrentButton ? (
-                                                <Button
-                                                    leftSection={<IconDownload size={16} />}
-                                                    color="red"
-                                                    variant="light"
-                                                    onClick={handleSaveCurrentCharacter}
-                                                    disabled={!character.name.trim() || isSavingCharacter}
-                                                    loading={isSavingCharacter}
-                                                >
-                                                    Save Current Character
-                                                </Button>
-                                            ) : null}
                                         </Group>
                                     </Group>
                                     {userCharacters.length === 0 ? (
