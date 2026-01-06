@@ -1,6 +1,5 @@
 import {
     Accordion,
-    ActionIcon,
     AppShell,
     BackgroundImage,
     Badge,
@@ -10,56 +9,38 @@ import {
     Center,
     Container,
     Divider,
-    FileButton,
     Grid,
     Group,
     Loader,
-    Menu,
     Modal,
     Paper,
     Select,
     Stack,
     Text,
     TextInput,
-    Title,
     useComputedColorScheme,
     useMantineTheme,
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import {
-    IconArrowRight,
-    IconDots,
-    IconDownload,
-    IconDroplet,
-    IconEdit,
-    IconFileTypePdf,
-    IconFileUpload,
-    IconInfoCircle,
-    IconPlus,
-    IconShare,
-    IconTrash,
-    IconUpload,
-    IconUser,
-    IconUsers,
-} from "@tabler/icons-react"
+import { IconArrowRight, IconDownload, IconInfoCircle, IconTrash, IconUsers } from "@tabler/icons-react"
+import { useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { Buffer } from "buffer"
 import { useEffect, useState } from "react"
 import { z } from "zod"
+import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import { loadCharacterFromJson } from "~/components/LoadModal"
-import { Character as CharacterType, getEmptyCharacter } from "~/data/Character"
+import { attributesKeySchema } from "~/data/Attributes"
+import { characterSchema, Character as CharacterType, getEmptyCharacter } from "~/data/Character"
+import { clans } from "~/data/Clans"
+import type { DisciplineName } from "~/data/NameSchemas"
+import { skillsKeySchema } from "~/data/Skills"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
-import { downloadJson, getUploadFile, rndInt, updateHealthAndWillpowerAndBloodPotencyAndHumanity, upcase } from "~/generator/utils"
+import { downloadJson, getUploadFile, rndInt, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
-import { disciplines } from "~/data/Disciplines"
-import type { DisciplineName } from "~/data/NameSchemas"
-import { attributesKeySchema } from "~/data/Attributes"
-import { skillsKeySchema } from "~/data/Skills"
-import { clans } from "~/data/Clans"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters, useCreateCharacter, useDeleteCharacter, useUpdateCharacter } from "~/hooks/useCharacters"
-import { api } from "~/utils/api"
-import { useQueryClient } from "@tanstack/react-query"
 import {
     useAddCharacterToCoterie,
     useCoteries,
@@ -69,7 +50,6 @@ import {
     useUpdateCoterie,
 } from "~/hooks/useCoteries"
 import { useCharacterShares, useUnshareCharacter } from "~/hooks/useShares"
-import { Link } from "@tanstack/react-router"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
 import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
@@ -77,10 +57,10 @@ import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplas
 import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import Topbar from "~/topbar/Topbar"
-import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
-import UserProfileSection from "./sections/UserProfileSection"
+import { api } from "~/utils/api"
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
+import UserProfileSection from "./sections/UserProfileSection"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
@@ -1610,6 +1590,7 @@ type CoterieSummaryContentProps = {
     theme: ReturnType<typeof useMantineTheme>
 }
 
+// TODOdin: Move modals and their contents from MePage into their own components under sections/
 const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) => {
     const getDisciplineCategory = (disciplineName: DisciplineName): "physical" | "social" | "mental" => {
         const physicalDisciplines: DisciplineName[] = ["celerity", "potence", "fortitude", "protean"]
@@ -1662,39 +1643,43 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
         let socialScore = 0
         let mentalScore = 0
 
+        console.log({ character })
+        console.log(character.attributes)
+
+        // TODOdin: Why does this explode with `Cannot read properties of undefined (reading 'strength')`?
         physicalAttributes.forEach((attr) => {
             const key = attributesKeySchema.parse(attr)
-            physicalScore += character.attributes[key] || 0
+            physicalScore += character.attributes[key] ?? 0
         })
 
         socialAttributes.forEach((attr) => {
             const key = attributesKeySchema.parse(attr)
-            socialScore += character.attributes[key] || 0
+            socialScore += character.attributes[key] ?? 0
         })
 
         mentalAttributes.forEach((attr) => {
             const key = attributesKeySchema.parse(attr)
-            mentalScore += character.attributes[key] || 0
+            mentalScore += character.attributes[key] ?? 0
         })
 
         physicalSkills.forEach((skill) => {
             const key = skillsKeySchema.parse(skill)
-            physicalScore += character.skills[key] || 0
+            physicalScore += character.skills[key] ?? 0
         })
 
         socialSkills.forEach((skill) => {
             const key = skillsKeySchema.parse(skill)
-            socialScore += character.skills[key] || 0
+            socialScore += character.skills[key] ?? 0
         })
 
         mentalSkills.forEach((skill) => {
             const key = skillsKeySchema.parse(skill)
-            mentalScore += character.skills[key] || 0
+            mentalScore += character.skills[key] ?? 0
         })
 
         character.disciplines.forEach((power) => {
             const category = getDisciplineCategory(power.discipline)
-            const level = power.level || 1
+            const level = power.level
             if (category === "physical") physicalScore += level * 2
             if (category === "social") socialScore += level * 2
             if (category === "mental") mentalScore += level * 2
@@ -1729,12 +1714,13 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
 
     return (
         <Grid>
+            {/* TODOdin: Fix typing on member.character - looks like member.character.data is a json string */}
             {members
                 .filter((m) => m.character?.data)
                 .map((member) => {
-                    const charData = member.character!.data as CharacterType
-                    const strength = calculateCharacterStrength(charData)
-                    const clan = charData.clan ? clans[charData.clan] : null
+                    const character = characterSchema.parse(JSON.parse(member.character?.data as string))
+                    const strength = calculateCharacterStrength(character)
+                    const clan = character.clan ? clans[character.clan] : null
                     const backgroundColor = getBackgroundColor(strength.dominant)
                     const borderColor = getBorderColor(strength.dominant)
 
@@ -1772,11 +1758,11 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
                                             ) : null}
                                             <Stack gap={2}>
                                                 <Text fw={600} size="lg">
-                                                    {member.character!.name}
+                                                    {character.name}
                                                 </Text>
-                                                {charData.player ? (
+                                                {character.player ? (
                                                     <Text size="sm" c="dimmed">
-                                                        {charData.player}
+                                                        {character.player}
                                                     </Text>
                                                 ) : null}
                                             </Stack>
