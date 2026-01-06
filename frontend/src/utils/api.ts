@@ -14,7 +14,6 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
         ...headers,
     }
 
-    // Only set Content-Type if there's a body to send
     if (body) {
         requestHeaders["Content-Type"] = "application/json"
     }
