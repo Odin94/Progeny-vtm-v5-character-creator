@@ -1,4 +1,5 @@
 import {
+    Accordion,
     ActionIcon,
     AppShell,
     BackgroundImage,
@@ -9,6 +10,7 @@ import {
     Container,
     Divider,
     FileButton,
+    Grid,
     Group,
     Loader,
     Menu,
@@ -31,6 +33,7 @@ import {
     IconEdit,
     IconFileTypePdf,
     IconFileUpload,
+    IconInfoCircle,
     IconPlus,
     IconShare,
     IconTrash,
@@ -44,9 +47,14 @@ import { z } from "zod"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { Character as CharacterType, getEmptyCharacter } from "~/data/Character"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
-import { downloadJson, getUploadFile, rndInt, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
+import { downloadJson, getUploadFile, rndInt, updateHealthAndWillpowerAndBloodPotencyAndHumanity, upcase } from "~/generator/utils"
 import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
+import { disciplines } from "~/data/Disciplines"
+import type { DisciplineName } from "~/data/NameSchemas"
+import { attributesKeySchema } from "~/data/Attributes"
+import { skillsKeySchema } from "~/data/Skills"
+import { clans } from "~/data/Clans"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters, useCreateCharacter, useDeleteCharacter, useUpdateCharacter } from "~/hooks/useCharacters"
 import { api } from "~/utils/api"
@@ -216,6 +224,8 @@ const MePage = () => {
     const [editingCoterie, setEditingCoterie] = useState<Coterie | null>(null)
     const [selectedCoterieForAdd, setSelectedCoterieForAdd] = useState<Coterie | null>(null)
     const [selectedCharacterForCoterie, setSelectedCharacterForCoterie] = useState<string>("")
+    const [summaryModalOpened, setSummaryModalOpened] = useState(false)
+    const [characterForSummary, setCharacterForSummary] = useState<Character | null>(null)
 
     // Nickname editing
     const [isEditingNickname, setIsEditingNickname] = useState(false)
@@ -660,6 +670,11 @@ const MePage = () => {
                 color: "red",
             })
         })
+    }
+
+    const handleShowSummary = (char: Character) => {
+        setCharacterForSummary(char)
+        setSummaryModalOpened(true)
     }
 
     const handleDownloadPdf = (char: Character) => {
@@ -1316,6 +1331,16 @@ const MePage = () => {
                                                                             </Menu.Target>
                                                                             <Menu.Dropdown>
                                                                                 <Menu.Item
+                                                                                    leftSection={<IconInfoCircle size={14} />}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation()
+                                                                                        handleShowSummary(char)
+                                                                                    }}
+                                                                                >
+                                                                                    Summary
+                                                                                </Menu.Item>
+                                                                                <Menu.Divider />
+                                                                                <Menu.Item
                                                                                     leftSection={<IconDownload size={14} />}
                                                                                     onClick={(e) => {
                                                                                         e.stopPropagation()
@@ -1373,6 +1398,16 @@ const MePage = () => {
                                                                                 </ActionIcon>
                                                                             </Menu.Target>
                                                                             <Menu.Dropdown>
+                                                                                <Menu.Item
+                                                                                    leftSection={<IconInfoCircle size={14} />}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation()
+                                                                                        handleShowSummary(char)
+                                                                                    }}
+                                                                                >
+                                                                                    Summary
+                                                                                </Menu.Item>
+                                                                                <Menu.Divider />
                                                                                 <Menu.Item
                                                                                     leftSection={<IconDownload size={14} />}
                                                                                     onClick={(e) => {
@@ -1928,7 +1963,467 @@ const MePage = () => {
                     </Group>
                 </Stack>
             </Modal>
+
+            <Modal
+                opened={summaryModalOpened}
+                onClose={() => {
+                    setSummaryModalOpened(false)
+                    setCharacterForSummary(null)
+                }}
+                title={
+                    <Group gap="xs">
+                        <IconInfoCircle size={20} />
+                        <Text fw={600} size="lg">
+                            Character Summary: {characterForSummary?.name || ""}
+                        </Text>
+                    </Group>
+                }
+                centered
+                size="xl"
+            >
+                {characterForSummary?.data ? (
+                    <CharacterSummaryContent character={characterForSummary.data as CharacterType} theme={theme} />
+                ) : null}
+            </Modal>
         </>
+    )
+}
+
+type CharacterSummaryContentProps = {
+    character: CharacterType
+    theme: ReturnType<typeof useMantineTheme>
+}
+
+const CharacterSummaryContent = ({ character, theme }: CharacterSummaryContentProps) => {
+    const redColorValue = theme.colors.red[6]
+
+    const physicalAttributes = ["strength", "dexterity", "stamina"] as const
+    const socialAttributes = ["charisma", "manipulation", "composure"] as const
+    const mentalAttributes = ["intelligence", "wits", "resolve"] as const
+
+    const physicalSkills = ["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"] as const
+    const socialSkills = [
+        "animal ken",
+        "etiquette",
+        "insight",
+        "intimidation",
+        "leadership",
+        "performance",
+        "persuasion",
+        "streetwise",
+        "subterfuge",
+    ] as const
+    const mentalSkills = [
+        "academics",
+        "awareness",
+        "finance",
+        "investigation",
+        "medicine",
+        "occult",
+        "politics",
+        "science",
+        "technology",
+    ] as const
+
+    const renderPips = (level: number, minLevel: number = 0) => {
+        return "●".repeat(level) + "○".repeat(5 - level)
+    }
+
+    const disciplineGroups = character.disciplines.reduce(
+        (acc, power) => {
+            if (!acc[power.discipline]) {
+                acc[power.discipline] = []
+            }
+            acc[power.discipline].push(power)
+            return acc
+        },
+        {} as Record<DisciplineName, typeof character.disciplines>
+    )
+
+    const clan = character.clan ? clans[character.clan] : null
+
+    return (
+        <Accordion variant="separated" radius="md" chevronPosition="left">
+            <Accordion.Item value="identity">
+                <Accordion.Control>
+                    <Text fw={600} size="lg">
+                        Identity & Lineage
+                    </Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                    <Stack gap="md">
+                        {character.description ? (
+                            <Paper p="sm" withBorder radius="md">
+                                <Text fw={500} size="sm" mb="xs" c="dimmed">
+                                    Description
+                                </Text>
+                                <Text size="sm">{character.description}</Text>
+                            </Paper>
+                        ) : null}
+                        <Grid>
+                            <Grid.Col span={{ base: 12, md: 4 }}>
+                                <Stack gap="xs">
+                                    <Group justify="space-between">
+                                        <Text fw={500} size="sm" c="dimmed">
+                                            Clan
+                                        </Text>
+                                        <Text fw={500}>{clan?.name || character.clan || "—"}</Text>
+                                    </Group>
+                                    <Group justify="space-between">
+                                        <Text fw={500} size="sm" c="dimmed">
+                                            Predator Type
+                                        </Text>
+                                        <Text>{character.predatorType.name || "—"}</Text>
+                                    </Group>
+                                </Stack>
+                            </Grid.Col>
+                            <Grid.Col span={{ base: 12, md: 4 }}>
+                                <Stack gap="xs">
+                                    <Group justify="space-between">
+                                        <Text fw={500} size="sm" c="dimmed">
+                                            Ambition
+                                        </Text>
+                                        <Text>{character.ambition || "—"}</Text>
+                                    </Group>
+                                    <Group justify="space-between">
+                                        <Text fw={500} size="sm" c="dimmed">
+                                            Desire
+                                        </Text>
+                                        <Text>{character.desire || "—"}</Text>
+                                    </Group>
+                                    {character.player ? (
+                                        <Group justify="space-between">
+                                            <Text fw={500} size="sm" c="dimmed">
+                                                Player
+                                            </Text>
+                                            <Text>{character.player}</Text>
+                                        </Group>
+                                    ) : null}
+                                </Stack>
+                            </Grid.Col>
+                            <Grid.Col span={{ base: 12, md: 4 }}>
+                                <Stack gap="xs">
+                                    {character.generation ? (
+                                        <Group justify="space-between">
+                                            <Text fw={500} size="sm" c="dimmed">
+                                                Generation
+                                            </Text>
+                                            <Text>{character.generation}</Text>
+                                        </Group>
+                                    ) : null}
+                                    {character.sire ? (
+                                        <Group justify="space-between">
+                                            <Text fw={500} size="sm" c="dimmed">
+                                                Sire
+                                            </Text>
+                                            <Text>{character.sire}</Text>
+                                        </Group>
+                                    ) : null}
+                                </Stack>
+                            </Grid.Col>
+                        </Grid>
+                    </Stack>
+                </Accordion.Panel>
+            </Accordion.Item>
+
+            <Accordion.Item value="attributes">
+                <Accordion.Control>
+                    <Text fw={600} size="lg">
+                        Attributes
+                    </Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                    <Grid>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                PHYSICAL
+                            </Text>
+                            <Stack gap="xs">
+                                {physicalAttributes.map((attr) => {
+                                    const key = attributesKeySchema.parse(attr)
+                                    return (
+                                        <Group key={attr} justify="space-between">
+                                            <Text style={{ fontFamily: "Courier New" }}>{upcase(attr)}</Text>
+                                            <Text style={{ fontFamily: "Courier New" }} c={redColorValue}>
+                                                {renderPips(character.attributes[key], 1)}
+                                            </Text>
+                                        </Group>
+                                    )
+                                })}
+                            </Stack>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                SOCIAL
+                            </Text>
+                            <Stack gap="xs">
+                                {socialAttributes.map((attr) => {
+                                    const key = attributesKeySchema.parse(attr)
+                                    return (
+                                        <Group key={attr} justify="space-between">
+                                            <Text style={{ fontFamily: "Courier New" }}>{upcase(attr)}</Text>
+                                            <Text style={{ fontFamily: "Courier New" }} c={redColorValue}>
+                                                {renderPips(character.attributes[key], 1)}
+                                            </Text>
+                                        </Group>
+                                    )
+                                })}
+                            </Stack>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                MENTAL
+                            </Text>
+                            <Stack gap="xs">
+                                {mentalAttributes.map((attr) => {
+                                    const key = attributesKeySchema.parse(attr)
+                                    return (
+                                        <Group key={attr} justify="space-between">
+                                            <Text style={{ fontFamily: "Courier New" }}>{upcase(attr)}</Text>
+                                            <Text style={{ fontFamily: "Courier New" }} c={redColorValue}>
+                                                {renderPips(character.attributes[key], 1)}
+                                            </Text>
+                                        </Group>
+                                    )
+                                })}
+                            </Stack>
+                        </Grid.Col>
+                    </Grid>
+                </Accordion.Panel>
+            </Accordion.Item>
+
+            <Accordion.Item value="skills">
+                <Accordion.Control>
+                    <Text fw={600} size="lg">
+                        Skills
+                    </Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                    <Grid>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                PHYSICAL
+                            </Text>
+                            <Stack gap="xs">
+                                {physicalSkills.map((skill) => {
+                                    const key = skillsKeySchema.parse(skill)
+                                    const level = character.skills[key]
+                                    if (level === 0) return null
+                                    const specialties = character.skillSpecialties.filter((s) => s.skill === skill)
+                                    return (
+                                        <div key={skill}>
+                                            <Group justify="space-between">
+                                                <Text style={{ fontFamily: "Courier New" }}>{upcase(skill)}</Text>
+                                                <Text style={{ fontFamily: "Courier New" }} c={redColorValue}>
+                                                    {renderPips(level)}
+                                                </Text>
+                                            </Group>
+                                            {specialties.length > 0 ? (
+                                                <Text size="xs" c="dimmed" ml="md">
+                                                    Specialties: {specialties.map((s) => s.name).join(", ")}
+                                                </Text>
+                                            ) : null}
+                                        </div>
+                                    )
+                                })}
+                            </Stack>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                SOCIAL
+                            </Text>
+                            <Stack gap="xs">
+                                {socialSkills.map((skill) => {
+                                    const key = skillsKeySchema.parse(skill)
+                                    const level = character.skills[key]
+                                    if (level === 0) return null
+                                    const specialties = character.skillSpecialties.filter((s) => s.skill === skill)
+                                    return (
+                                        <div key={skill}>
+                                            <Group justify="space-between">
+                                                <Text style={{ fontFamily: "Courier New" }}>{upcase(skill)}</Text>
+                                                <Text style={{ fontFamily: "Courier New" }} c={redColorValue}>
+                                                    {renderPips(level)}
+                                                </Text>
+                                            </Group>
+                                            {specialties.length > 0 ? (
+                                                <Text size="xs" c="dimmed" ml="md">
+                                                    Specialties: {specialties.map((s) => s.name).join(", ")}
+                                                </Text>
+                                            ) : null}
+                                        </div>
+                                    )
+                                })}
+                            </Stack>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                MENTAL
+                            </Text>
+                            <Stack gap="xs">
+                                {mentalSkills.map((skill) => {
+                                    const key = skillsKeySchema.parse(skill)
+                                    const level = character.skills[key]
+                                    if (level === 0) return null
+                                    const specialties = character.skillSpecialties.filter((s) => s.skill === skill)
+                                    return (
+                                        <div key={skill}>
+                                            <Group justify="space-between">
+                                                <Text style={{ fontFamily: "Courier New" }}>{upcase(skill)}</Text>
+                                                <Text style={{ fontFamily: "Courier New" }} c={redColorValue}>
+                                                    {renderPips(level)}
+                                                </Text>
+                                            </Group>
+                                            {specialties.length > 0 ? (
+                                                <Text size="xs" c="dimmed" ml="md">
+                                                    Specialties: {specialties.map((s) => s.name).join(", ")}
+                                                </Text>
+                                            ) : null}
+                                        </div>
+                                    )
+                                })}
+                            </Stack>
+                        </Grid.Col>
+                    </Grid>
+                </Accordion.Panel>
+            </Accordion.Item>
+
+            <Accordion.Item value="disciplines">
+                <Accordion.Control>
+                    <Text fw={600} size="lg">
+                        Disciplines & Powers
+                    </Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                    <Stack gap="md">
+                        {Object.entries(disciplineGroups).map(([disciplineName, powers]) => {
+                            const sortedPowers = [...powers].sort((a, b) => a.level - b.level)
+                            return (
+                                <Paper key={disciplineName} p="md" withBorder radius="md">
+                                    <Group gap="xs" mb="sm">
+                                        <Text fw={600} size="md">
+                                            {upcase(disciplineName)}
+                                        </Text>
+                                        <Badge size="sm" color="red" variant="light">
+                                            Level {Math.max(...sortedPowers.map((p) => p.level))}
+                                        </Badge>
+                                    </Group>
+                                    <Stack gap="xs">
+                                        {sortedPowers.map((power) => (
+                                            <div key={power.name}>
+                                                <Group justify="space-between" mb={2}>
+                                                    <Text fw={500} size="sm">
+                                                        {power.name}
+                                                    </Text>
+                                                    <Badge size="xs" color="red" variant="outline">
+                                                        Level {power.level}
+                                                    </Badge>
+                                                </Group>
+                                                <Text size="xs" c="dimmed" ml="md">
+                                                    {power.summary}
+                                                </Text>
+                                            </div>
+                                        ))}
+                                    </Stack>
+                                </Paper>
+                            )
+                        })}
+                        {character.rituals.length > 0 ? (
+                            <Paper p="md" withBorder radius="md">
+                                <Text fw={600} size="md" mb="sm">
+                                    Rituals
+                                </Text>
+                                <Stack gap="xs">
+                                    {character.rituals.map((ritual) => (
+                                        <div key={ritual.name}>
+                                            <Group justify="space-between" mb={2}>
+                                                <Text fw={500} size="sm">
+                                                    {ritual.name}
+                                                </Text>
+                                                <Badge size="xs" color="red" variant="outline">
+                                                    Level {ritual.level}
+                                                </Badge>
+                                            </Group>
+                                            <Text size="xs" c="dimmed" ml="md">
+                                                {ritual.summary}
+                                            </Text>
+                                        </div>
+                                    ))}
+                                </Stack>
+                            </Paper>
+                        ) : null}
+                    </Stack>
+                </Accordion.Panel>
+            </Accordion.Item>
+
+            <Accordion.Item value="merits-flaws">
+                <Accordion.Control>
+                    <Text fw={600} size="lg">
+                        Merits & Flaws
+                    </Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                    <Grid>
+                        <Grid.Col span={{ base: 12, md: 6 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                MERITS
+                            </Text>
+                            <Stack gap="xs">
+                                {character.merits.length > 0 ? (
+                                    character.merits.map((merit, idx) => (
+                                        <Paper key={idx} p="xs" withBorder radius="sm">
+                                            <Group justify="space-between" mb={2}>
+                                                <Text fw={500} size="sm">
+                                                    {merit.name}
+                                                </Text>
+                                                <Badge size="xs" color="green" variant="light">
+                                                    {merit.level}
+                                                </Badge>
+                                            </Group>
+                                            <Text size="xs" c="dimmed">
+                                                {merit.summary}
+                                            </Text>
+                                        </Paper>
+                                    ))
+                                ) : (
+                                    <Text size="sm" c="dimmed" fs="italic">
+                                        No merits
+                                    </Text>
+                                )}
+                            </Stack>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 6 }}>
+                            <Text fw={500} size="sm" c="dimmed" mb="sm">
+                                FLAWS
+                            </Text>
+                            <Stack gap="xs">
+                                {character.flaws.length > 0 ? (
+                                    character.flaws.map((flaw, idx) => (
+                                        <Paper key={idx} p="xs" withBorder radius="sm">
+                                            <Group justify="space-between" mb={2}>
+                                                <Text fw={500} size="sm">
+                                                    {flaw.name}
+                                                </Text>
+                                                <Badge size="xs" color="red" variant="light">
+                                                    {flaw.level}
+                                                </Badge>
+                                            </Group>
+                                            <Text size="xs" c="dimmed">
+                                                {flaw.summary}
+                                            </Text>
+                                        </Paper>
+                                    ))
+                                ) : (
+                                    <Text size="sm" c="dimmed" fs="italic">
+                                        No flaws
+                                    </Text>
+                                )}
+                            </Stack>
+                        </Grid.Col>
+                    </Grid>
+                </Accordion.Panel>
+            </Accordion.Item>
+        </Accordion>
     )
 }
 
