@@ -4,6 +4,7 @@ import {
     AppShell,
     BackgroundImage,
     Badge,
+    Box,
     Button,
     Card,
     Center,
@@ -226,6 +227,8 @@ const MePage = () => {
     const [selectedCharacterForCoterie, setSelectedCharacterForCoterie] = useState<string>("")
     const [summaryModalOpened, setSummaryModalOpened] = useState(false)
     const [characterForSummary, setCharacterForSummary] = useState<Character | null>(null)
+    const [coterieSummaryModalOpened, setCoterieSummaryModalOpened] = useState(false)
+    const [coterieForSummary, setCoterieForSummary] = useState<Coterie | null>(null)
 
     // Nickname editing
     const [isEditingNickname, setIsEditingNickname] = useState(false)
@@ -1506,6 +1509,15 @@ const MePage = () => {
                                                                         </Menu.Target>
                                                                         <Menu.Dropdown>
                                                                             <Menu.Item
+                                                                                leftSection={<IconInfoCircle size={14} />}
+                                                                                onClick={() => {
+                                                                                    setCoterieForSummary(coterie)
+                                                                                    setCoterieSummaryModalOpened(true)
+                                                                                }}
+                                                                            >
+                                                                                Summary
+                                                                            </Menu.Item>
+                                                                            <Menu.Item
                                                                                 leftSection={<IconEdit size={14} />}
                                                                                 onClick={() => handleEditCoterie(coterie)}
                                                                             >
@@ -1964,6 +1976,31 @@ const MePage = () => {
                 </Stack>
             </Modal>
 
+            {/* Coterie Summary Modal */}
+            <Modal
+                opened={coterieSummaryModalOpened}
+                onClose={() => {
+                    setCoterieSummaryModalOpened(false)
+                    setCoterieForSummary(null)
+                }}
+                title={
+                    <Group gap="xs">
+                        <IconUsers size={20} />
+                        <Text fw={600} size="lg">
+                            Coterie Summary: {coterieForSummary?.name || ""}
+                        </Text>
+                    </Group>
+                }
+                centered
+                size="xl"
+            >
+                {coterieForSummary && coterieForSummary.members && coterieForSummary.members.length > 0 ? (
+                    <CoterieSummaryContent members={coterieForSummary.members} theme={theme} />
+                ) : (
+                    <Text c="dimmed">No members in this coterie.</Text>
+                )}
+            </Modal>
+
             <Modal
                 opened={summaryModalOpened}
                 onClose={() => {
@@ -1974,7 +2011,7 @@ const MePage = () => {
                     <Group gap="xs">
                         <IconInfoCircle size={20} />
                         <Text fw={600} size="lg">
-                            Character Summary: {characterForSummary?.name || ""}
+                            Character Summary
                         </Text>
                     </Group>
                 }
@@ -1982,19 +2019,210 @@ const MePage = () => {
                 size="xl"
             >
                 {characterForSummary?.data ? (
-                    <CharacterSummaryContent character={characterForSummary.data as CharacterType} theme={theme} />
+                    <CharacterSummaryContent
+                        character={characterForSummary.data as CharacterType}
+                        characterName={characterForSummary.name}
+                        theme={theme}
+                    />
                 ) : null}
             </Modal>
         </>
     )
 }
 
-type CharacterSummaryContentProps = {
-    character: CharacterType
+type CoterieSummaryContentProps = {
+    members: Array<{ characterId: string; character?: Character }>
     theme: ReturnType<typeof useMantineTheme>
 }
 
-const CharacterSummaryContent = ({ character, theme }: CharacterSummaryContentProps) => {
+const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) => {
+    const getDisciplineCategory = (disciplineName: DisciplineName): "physical" | "social" | "mental" => {
+        const physicalDisciplines: DisciplineName[] = ["celerity", "potence", "fortitude", "protean"]
+        const socialDisciplines: DisciplineName[] = ["presence", "dominate", "obfuscate", "animalism"]
+        const mentalDisciplines: DisciplineName[] = ["auspex", "blood sorcery", "oblivion", "thin-blood alchemy"]
+
+        if (physicalDisciplines.includes(disciplineName)) return "physical"
+        if (socialDisciplines.includes(disciplineName)) return "social"
+        if (mentalDisciplines.includes(disciplineName)) return "mental"
+        return "physical"
+    }
+
+    const calculateCharacterStrength = (
+        character: CharacterType
+    ): {
+        physical: number
+        social: number
+        mental: number
+        dominant: "physical" | "social" | "mental"
+    } => {
+        const physicalAttributes = ["strength", "dexterity", "stamina"] as const
+        const socialAttributes = ["charisma", "manipulation", "composure"] as const
+        const mentalAttributes = ["intelligence", "wits", "resolve"] as const
+
+        const physicalSkills = ["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"] as const
+        const socialSkills = [
+            "animal ken",
+            "etiquette",
+            "insight",
+            "intimidation",
+            "leadership",
+            "performance",
+            "persuasion",
+            "streetwise",
+            "subterfuge",
+        ] as const
+        const mentalSkills = [
+            "academics",
+            "awareness",
+            "finance",
+            "investigation",
+            "medicine",
+            "occult",
+            "politics",
+            "science",
+            "technology",
+        ] as const
+
+        let physicalScore = 0
+        let socialScore = 0
+        let mentalScore = 0
+
+        physicalAttributes.forEach((attr) => {
+            const key = attributesKeySchema.parse(attr)
+            physicalScore += character.attributes[key] || 0
+        })
+
+        socialAttributes.forEach((attr) => {
+            const key = attributesKeySchema.parse(attr)
+            socialScore += character.attributes[key] || 0
+        })
+
+        mentalAttributes.forEach((attr) => {
+            const key = attributesKeySchema.parse(attr)
+            mentalScore += character.attributes[key] || 0
+        })
+
+        physicalSkills.forEach((skill) => {
+            const key = skillsKeySchema.parse(skill)
+            physicalScore += character.skills[key] || 0
+        })
+
+        socialSkills.forEach((skill) => {
+            const key = skillsKeySchema.parse(skill)
+            socialScore += character.skills[key] || 0
+        })
+
+        mentalSkills.forEach((skill) => {
+            const key = skillsKeySchema.parse(skill)
+            mentalScore += character.skills[key] || 0
+        })
+
+        character.disciplines.forEach((power) => {
+            const category = getDisciplineCategory(power.discipline)
+            const level = power.level || 1
+            if (category === "physical") physicalScore += level * 2
+            if (category === "social") socialScore += level * 2
+            if (category === "mental") mentalScore += level * 2
+        })
+
+        const dominant =
+            physicalScore > socialScore && physicalScore > mentalScore ? "physical" : socialScore > mentalScore ? "social" : "mental"
+
+        return { physical: physicalScore, social: socialScore, mental: mentalScore, dominant }
+    }
+
+    const getBackgroundColor = (dominant: "physical" | "social" | "mental"): string => {
+        const opacity = 0.15
+        if (dominant === "physical") {
+            return `rgba(220, 38, 38, ${opacity})`
+        } else if (dominant === "social") {
+            return `rgba(147, 51, 234, ${opacity})`
+        } else {
+            return `rgba(59, 130, 246, ${opacity})`
+        }
+    }
+
+    const getBorderColor = (dominant: "physical" | "social" | "mental"): string => {
+        if (dominant === "physical") {
+            return theme.colors.red[6]
+        } else if (dominant === "social") {
+            return theme.colors.grape[6]
+        } else {
+            return theme.colors.blue[6]
+        }
+    }
+
+    return (
+        <Grid>
+            {members
+                .filter((m) => m.character?.data)
+                .map((member) => {
+                    const charData = member.character!.data as CharacterType
+                    const strength = calculateCharacterStrength(charData)
+                    const clan = charData.clan ? clans[charData.clan] : null
+                    const backgroundColor = getBackgroundColor(strength.dominant)
+                    const borderColor = getBorderColor(strength.dominant)
+
+                    return (
+                        <Grid.Col key={member.characterId} span={{ base: 12, md: 6, lg: 4 }}>
+                            <Paper
+                                p="md"
+                                withBorder
+                                radius="md"
+                                style={{
+                                    backgroundColor,
+                                    borderColor,
+                                    borderWidth: 2,
+                                }}
+                            >
+                                <Stack gap="sm">
+                                    <Group gap="sm" justify="space-between">
+                                        <Group gap="sm">
+                                            {clan?.logo ? (
+                                                <Box
+                                                    style={{
+                                                        width: "40px",
+                                                        height: "40px",
+                                                        backgroundColor: borderColor,
+                                                        maskImage: `url(${clan.logo})`,
+                                                        maskSize: "contain",
+                                                        maskRepeat: "no-repeat",
+                                                        maskPosition: "center",
+                                                        WebkitMaskImage: `url(${clan.logo})`,
+                                                        WebkitMaskSize: "contain",
+                                                        WebkitMaskRepeat: "no-repeat",
+                                                        WebkitMaskPosition: "center",
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <Stack gap={2}>
+                                                <Text fw={600} size="lg">
+                                                    {member.character!.name}
+                                                </Text>
+                                                {charData.player ? (
+                                                    <Text size="sm" c="dimmed">
+                                                        {charData.player}
+                                                    </Text>
+                                                ) : null}
+                                            </Stack>
+                                        </Group>
+                                    </Group>
+                                </Stack>
+                            </Paper>
+                        </Grid.Col>
+                    )
+                })}
+        </Grid>
+    )
+}
+
+type CharacterSummaryContentProps = {
+    character: CharacterType
+    characterName: string
+    theme: ReturnType<typeof useMantineTheme>
+}
+
+const CharacterSummaryContent = ({ character, characterName, theme }: CharacterSummaryContentProps) => {
     const redColorValue = theme.colors.red[6]
 
     const physicalAttributes = ["strength", "dexterity", "stamina"] as const
@@ -2046,20 +2274,31 @@ const CharacterSummaryContent = ({ character, theme }: CharacterSummaryContentPr
         <Accordion variant="separated" radius="md" chevronPosition="left">
             <Accordion.Item value="identity">
                 <Accordion.Control>
-                    <Text fw={600} size="lg">
-                        Identity & Lineage
-                    </Text>
+                    <Group gap="sm" align="center">
+                        {clan?.logo ? (
+                            <Box
+                                style={{
+                                    width: "32px",
+                                    height: "32px",
+                                    backgroundColor: redColorValue,
+                                    maskImage: `url(${clan.logo})`,
+                                    maskSize: "contain",
+                                    maskRepeat: "no-repeat",
+                                    maskPosition: "center",
+                                    WebkitMaskImage: `url(${clan.logo})`,
+                                    WebkitMaskSize: "contain",
+                                    WebkitMaskRepeat: "no-repeat",
+                                    WebkitMaskPosition: "center",
+                                }}
+                            />
+                        ) : null}
+                        <Text fw={600} size="lg" c={redColorValue}>
+                            {characterName || "Unnamed Character"}
+                        </Text>
+                    </Group>
                 </Accordion.Control>
                 <Accordion.Panel>
                     <Stack gap="md">
-                        {character.description ? (
-                            <Paper p="sm" withBorder radius="md">
-                                <Text fw={500} size="sm" mb="xs" c="dimmed">
-                                    Description
-                                </Text>
-                                <Text size="sm">{character.description}</Text>
-                            </Paper>
-                        ) : null}
                         <Grid>
                             <Grid.Col span={{ base: 12, md: 4 }}>
                                 <Stack gap="xs">
@@ -2122,6 +2361,16 @@ const CharacterSummaryContent = ({ character, theme }: CharacterSummaryContentPr
                                 </Stack>
                             </Grid.Col>
                         </Grid>
+                        {character.description ? (
+                            <Paper p="md" withBorder radius="md" style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }}>
+                                <Text fw={500} size="sm" mb="xs" c="dimmed">
+                                    Description
+                                </Text>
+                                <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                                    {character.description}
+                                </Text>
+                            </Paper>
+                        ) : null}
                     </Stack>
                 </Accordion.Panel>
             </Accordion.Item>
