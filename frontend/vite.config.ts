@@ -1,5 +1,6 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
+import { tanstackRouter } from "@tanstack/router-vite-plugin"
 
 import * as path from "path"
 
@@ -36,6 +37,7 @@ export default defineConfig({
                 plugins: ["@emotion/babel-plugin"],
             },
         }),
+        tanstackRouter(),
     ],
     base: "/",
     resolve: {

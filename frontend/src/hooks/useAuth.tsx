@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { api, API_URL } from "../utils/api"
-import { isBackendDisabled } from "../utils/backend"
 import posthog from "posthog-js"
 
 type User = {
@@ -14,6 +14,7 @@ type User = {
 
 export const useAuth = () => {
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
 
     const {
         data: user,
@@ -22,7 +23,6 @@ export const useAuth = () => {
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
-        enabled: !isBackendDisabled(),
         retry: (failureCount, error) => {
             const status = (error as Error & { status?: number })?.status
             if (status && status >= 400 && status < 500) {
@@ -75,7 +75,7 @@ export const useAuth = () => {
             if (data.logoutUrl) {
                 window.location.href = data.logoutUrl
             } else {
-                window.location.href = "/"
+                navigate({ to: "/" })
             }
         },
         onError: () => {
@@ -89,7 +89,7 @@ export const useAuth = () => {
             }
 
             // Even on error, try to go home
-            window.location.href = "/"
+            navigate({ to: "/" })
         },
     })
 
@@ -114,19 +114,15 @@ export const useAuth = () => {
 
             // Redirect to /me after successful authentication
             // This ensures redirect happens even if the component's onSuccess callback doesn't fire
-            if (window.location.pathname === "/auth/callback") {
-                window.location.href = "/me"
-            }
+            navigate({ to: "/" })
         },
     })
 
     const signIn = () => {
-        if (isBackendDisabled()) return
         window.location.href = `${API_URL}/auth/login`
     }
 
     const signOut = () => {
-        if (isBackendDisabled()) return
         logoutMutation.mutate()
     }
 

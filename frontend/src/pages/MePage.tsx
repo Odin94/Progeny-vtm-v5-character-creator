@@ -69,6 +69,7 @@ import {
     useUpdateCoterie,
 } from "~/hooks/useCoteries"
 import { useCharacterShares, useUnshareCharacter } from "~/hooks/useShares"
+import { Link } from "@tanstack/react-router"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
 import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
@@ -77,6 +78,9 @@ import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsp
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import Topbar from "~/topbar/Topbar"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
+import UserProfileSection from "./sections/UserProfileSection"
+import CharactersSection from "./sections/CharactersSection"
+import CoteriesSection from "./sections/CoteriesSection"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
@@ -1051,7 +1055,7 @@ const MePage = () => {
                             <Text size="lg" fw={500}>
                                 Please log in to view your profile
                             </Text>
-                            <Button component="a" href="/" color="red" leftSection={<IconArrowRight size={18} />}>
+                            <Button component={Link} to="/" color="red" leftSection={<IconArrowRight size={18} />}>
                                 Go to Home
                             </Button>
                         </Stack>
@@ -1068,7 +1072,7 @@ const MePage = () => {
     // Find the currently loaded character in the list by ID
     const currentlyLoadedCharacter = character.id ? userCharacters.find((c) => c.id === character.id) : null
     const canSaveToExisting = currentlyLoadedCharacter && !currentlyLoadedCharacter.shared
-    const showSaveCurrentButton = !canSaveToExisting && character.name.trim()
+    const showSaveCurrentButton = !canSaveToExisting && !!character.name.trim()
 
     return (
         <>
@@ -1104,12 +1108,18 @@ const MePage = () => {
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
                             <Group gap="md" mb="xl" justify="space-between">
                                 <Group gap="md">
-                                    <Button component="a" href="/" color="red" variant="outline" leftSection={<IconArrowRight size={18} />}>
+                                    <Button
+                                        component={Link}
+                                        to="/"
+                                        color="red"
+                                        variant="outline"
+                                        leftSection={<IconArrowRight size={18} />}
+                                    >
                                         Generator
                                     </Button>
                                     <Button
-                                        component="a"
-                                        href="/sheet"
+                                        component={Link}
+                                        to="/sheet"
                                         color="red"
                                         variant="outline"
                                         leftSection={<IconArrowRight size={18} />}
@@ -1122,482 +1132,47 @@ const MePage = () => {
                                 </Button>
                             </Group>
                             <Stack gap="xl">
-                                <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
-                                    <Group gap="md" mb="md">
-                                        <IconUser size={32} />
-                                        <Title order={2}>User Profile</Title>
-                                    </Group>
-                                    <Stack gap="sm">
-                                        <Group gap="xs">
-                                            <Text fw={500}>Email:</Text>
-                                            <Text>{user?.email}</Text>
-                                        </Group>
-                                        {user?.firstName || user?.lastName ? (
-                                            <Group gap="xs">
-                                                <Text fw={500}>Name:</Text>
-                                                <Text>{[user?.firstName, user?.lastName].filter(Boolean).join(" ")}</Text>
-                                            </Group>
-                                        ) : null}
-                                        <Group gap="xs" align="flex-start">
-                                            <Text fw={500} style={{ minWidth: "80px" }}>
-                                                Nickname:
-                                            </Text>
-                                            {isEditingNickname ? (
-                                                <Stack gap="xs" style={{ flex: 1 }}>
-                                                    <FocusBorderWrapper colorValue={redColorValue}>
-                                                        <TextInput
-                                                            value={nicknameValue}
-                                                            onChange={(e) => setNicknameValue(e.target.value)}
-                                                            placeholder="Enter nickname"
-                                                            maxLength={255}
-                                                            disabled={isUpdatingProfile}
-                                                        />
-                                                    </FocusBorderWrapper>
-                                                    <Group gap="xs">
-                                                        <Button
-                                                            size="xs"
-                                                            color="red"
-                                                            onClick={handleSaveNickname}
-                                                            loading={isUpdatingProfile}
-                                                        >
-                                                            Save
-                                                        </Button>
-                                                        <Button
-                                                            size="xs"
-                                                            variant="subtle"
-                                                            onClick={handleCancelNickname}
-                                                            disabled={isUpdatingProfile}
-                                                            color="gray"
-                                                        >
-                                                            Cancel
-                                                        </Button>
-                                                    </Group>
-                                                </Stack>
-                                            ) : (
-                                                <Group gap="xs" style={{ flex: 1 }}>
-                                                    <Text>{user?.nickname || <Text c="dimmed">No nickname set</Text>}</Text>
-                                                    <ActionIcon
-                                                        color="red"
-                                                        size="sm"
-                                                        variant="subtle"
-                                                        onClick={() => setIsEditingNickname(true)}
-                                                    >
-                                                        <IconEdit size={16} />
-                                                    </ActionIcon>
-                                                </Group>
-                                            )}
-                                        </Group>
-                                    </Stack>
-                                </Card>
+                                <UserProfileSection
+                                    user={user}
+                                    isEditingNickname={isEditingNickname}
+                                    nicknameValue={nicknameValue}
+                                    setNicknameValue={setNicknameValue}
+                                    setIsEditingNickname={setIsEditingNickname}
+                                    isUpdatingProfile={isUpdatingProfile}
+                                    redColorValue={redColorValue}
+                                    handleSaveNickname={handleSaveNickname}
+                                    handleCancelNickname={handleCancelNickname}
+                                />
 
-                                <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
-                                    <Group gap="md" mb="md" justify="space-between">
-                                        <Group gap="md">
-                                            <IconDroplet size={32} />
-                                            <Title order={2}>Characters</Title>
-                                            <Badge size="lg" variant="light" color="red">
-                                                {userCharacters.length}
-                                            </Badge>
-                                        </Group>
-                                        <Group gap="xs">
-                                            <Button
-                                                leftSection={<IconPlus size={16} />}
-                                                color="red"
-                                                onClick={() => setCreateCharacterModalOpened(true)}
-                                            >
-                                                Create Empty
-                                            </Button>
-                                            {showSaveCurrentButton ? (
-                                                <Button
-                                                    leftSection={<IconDownload size={16} />}
-                                                    color="red"
-                                                    variant="light"
-                                                    onClick={handleSaveCurrentCharacter}
-                                                    disabled={!character.name.trim() || isSavingCharacter}
-                                                    loading={isSavingCharacter}
-                                                >
-                                                    Save Current Character
-                                                </Button>
-                                            ) : null}
-                                            <Menu keepMounted>
-                                                <Menu.Target>
-                                                    <ActionIcon color="red" variant="light" size="lg">
-                                                        <IconDots size={18} />
-                                                    </ActionIcon>
-                                                </Menu.Target>
-                                                <Menu.Dropdown>
-                                                    <FileButton
-                                                        onChange={async (payload: File | null) => {
-                                                            if (!payload) return
-                                                            handleLoadFromFile(payload)
-                                                        }}
-                                                        accept="application/json"
-                                                    >
-                                                        {(props) => (
-                                                            <Menu.Item leftSection={<IconFileUpload size={16} />} {...props}>
-                                                                Load JSON
-                                                            </Menu.Item>
-                                                        )}
-                                                    </FileButton>
-                                                </Menu.Dropdown>
-                                            </Menu>
-                                        </Group>
-                                    </Group>
-                                    {userCharacters.length === 0 ? (
-                                        <Text c="dimmed">No characters yet. Create one in the generator!</Text>
-                                    ) : (
-                                        <Stack gap="sm">
-                                            {userCharacters.map((char) => {
-                                                const isSelected = character.id === char.id && !char.shared
-                                                const charData = char.data as CharacterType | undefined
-                                                const playerName = charData?.player
-                                                return (
-                                                    <Paper
-                                                        key={char.id}
-                                                        p="md"
-                                                        withBorder
-                                                        style={{
-                                                            backgroundColor: isSelected ? "rgba(139, 0, 0, 0.15)" : "rgba(0, 0, 0, 0.4)",
-                                                        }}
-                                                    >
-                                                        <Group justify="space-between">
-                                                            <Group gap="sm">
-                                                                <Text fw={500}>
-                                                                    {char.name}
-                                                                    {playerName ? ` | ${playerName}` : ""}
-                                                                </Text>
-                                                                {isSelected ? (
-                                                                    <Badge size="sm" color="red" variant="filled">
-                                                                        Active
-                                                                    </Badge>
-                                                                ) : null}
-                                                                {char.shared ? (
-                                                                    <Badge size="sm" color="red" variant="light">
-                                                                        Shared
-                                                                    </Badge>
-                                                                ) : null}
-                                                            </Group>
-                                                            <Group gap="xs">
-                                                                {!char.shared ? (
-                                                                    <>
-                                                                        {isSelected ? (
-                                                                            <Button
-                                                                                size="sm"
-                                                                                color="red"
-                                                                                variant="light"
-                                                                                leftSection={<IconDownload size={14} />}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation()
-                                                                                    handleSaveCurrentCharacter()
-                                                                                }}
-                                                                                disabled={!character.name.trim() || isAnyOperationInFlight}
-                                                                                loading={isSavingCharacter}
-                                                                            >
-                                                                                Save
-                                                                            </Button>
-                                                                        ) : null}
-                                                                        <Button
-                                                                            size="sm"
-                                                                            color="red"
-                                                                            variant="light"
-                                                                            leftSection={<IconUpload size={14} />}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation()
-                                                                                handleLoadCharacter(char)
-                                                                            }}
-                                                                            disabled={isAnyOperationInFlight}
-                                                                            loading={loadingCharacterId === char.id}
-                                                                        >
-                                                                            Load
-                                                                        </Button>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            color="red"
-                                                                            variant="light"
-                                                                            leftSection={<IconShare size={14} />}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation()
-                                                                                handleShareCharacter(char)
-                                                                            }}
-                                                                        >
-                                                                            Share
-                                                                        </Button>
-                                                                        <Menu>
-                                                                            <Menu.Target>
-                                                                                <ActionIcon
-                                                                                    color="red"
-                                                                                    variant="light"
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                >
-                                                                                    <IconDots size={16} />
-                                                                                </ActionIcon>
-                                                                            </Menu.Target>
-                                                                            <Menu.Dropdown>
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconInfoCircle size={14} />}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleShowSummary(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Summary
-                                                                                </Menu.Item>
-                                                                                <Menu.Divider />
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconDownload size={14} />}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleSaveJson(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Save JSON
-                                                                                </Menu.Item>
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconFileTypePdf size={14} />}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleDownloadPdf(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Download PDF
-                                                                                </Menu.Item>
-                                                                                <Menu.Divider />
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconTrash size={14} />}
-                                                                                    color="red"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleDeleteCharacter(char.id, char.name)
-                                                                                    }}
-                                                                                >
-                                                                                    Delete
-                                                                                </Menu.Item>
-                                                                            </Menu.Dropdown>
-                                                                        </Menu>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Button
-                                                                            size="sm"
-                                                                            color="red"
-                                                                            variant="light"
-                                                                            leftSection={<IconUpload size={14} />}
-                                                                            onClick={() => {
-                                                                                handleLoadCharacter(char)
-                                                                            }}
-                                                                            disabled={isAnyOperationInFlight}
-                                                                            loading={loadingCharacterId === char.id}
-                                                                        >
-                                                                            View
-                                                                        </Button>
-                                                                        <Menu>
-                                                                            <Menu.Target>
-                                                                                <ActionIcon
-                                                                                    color="red"
-                                                                                    variant="light"
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                >
-                                                                                    <IconDots size={16} />
-                                                                                </ActionIcon>
-                                                                            </Menu.Target>
-                                                                            <Menu.Dropdown>
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconInfoCircle size={14} />}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleShowSummary(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Summary
-                                                                                </Menu.Item>
-                                                                                <Menu.Divider />
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconDownload size={14} />}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleSaveJson(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Save JSON
-                                                                                </Menu.Item>
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconFileTypePdf size={14} />}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleDownloadPdf(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Download PDF
-                                                                                </Menu.Item>
-                                                                                <Menu.Divider />
-                                                                                <Menu.Item
-                                                                                    leftSection={<IconShare size={14} />}
-                                                                                    color="red"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation()
-                                                                                        handleUnshareCharacter(char)
-                                                                                    }}
-                                                                                >
-                                                                                    Unshare
-                                                                                </Menu.Item>
-                                                                            </Menu.Dropdown>
-                                                                        </Menu>
-                                                                    </>
-                                                                )}
-                                                            </Group>
-                                                        </Group>
-                                                    </Paper>
-                                                )
-                                            })}
-                                        </Stack>
-                                    )}
-                                </Card>
+                                <CharactersSection
+                                    userCharacters={userCharacters}
+                                    character={character}
+                                    showSaveCurrentButton={showSaveCurrentButton}
+                                    isSavingCharacter={isSavingCharacter}
+                                    isAnyOperationInFlight={isAnyOperationInFlight}
+                                    loadingCharacterId={loadingCharacterId}
+                                    setCreateCharacterModalOpened={setCreateCharacterModalOpened}
+                                    handleSaveCurrentCharacter={handleSaveCurrentCharacter}
+                                    handleLoadFromFile={handleLoadFromFile}
+                                    handleLoadCharacter={handleLoadCharacter}
+                                    handleShareCharacter={handleShareCharacter}
+                                    handleShowSummary={handleShowSummary}
+                                    handleSaveJson={handleSaveJson}
+                                    handleDownloadPdf={handleDownloadPdf}
+                                    handleDeleteCharacter={handleDeleteCharacter}
+                                    handleUnshareCharacter={handleUnshareCharacter}
+                                />
 
-                                <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
-                                    <Group gap="md" mb="md" justify="space-between">
-                                        <Group gap="md">
-                                            <IconUsers size={32} />
-                                            <Title order={2}>Coteries</Title>
-                                            <Badge size="lg" variant="light" color="red">
-                                                {userCoteries.length}
-                                            </Badge>
-                                        </Group>
-                                        <Button
-                                            leftSection={<IconPlus size={16} />}
-                                            color="red"
-                                            onClick={() => setCreateCoterieModalOpened(true)}
-                                        >
-                                            Create Coterie
-                                        </Button>
-                                    </Group>
-                                    {userCoteries.length === 0 ? (
-                                        <Text c="dimmed">No coteries yet. Create one to organize your characters!</Text>
-                                    ) : (
-                                        <Stack gap="md">
-                                            {userCoteries.map((coterie) => (
-                                                <Paper key={coterie.id} p="md" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}>
-                                                    <Stack gap="sm">
-                                                        <Group justify="space-between">
-                                                            <Group gap="sm">
-                                                                <Text fw={500}>{coterie.name}</Text>
-                                                                {coterie.owned ? (
-                                                                    <Badge size="sm" color="red" variant="light">
-                                                                        Owned
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <Badge size="sm" color="red" variant="light">
-                                                                        Shared
-                                                                    </Badge>
-                                                                )}
-                                                            </Group>
-                                                            {coterie.owned ? (
-                                                                <Group gap="xs">
-                                                                    <Button
-                                                                        size="xs"
-                                                                        color="red"
-                                                                        variant="light"
-                                                                        leftSection={<IconPlus size={14} />}
-                                                                        onClick={() => handleAddCharacterToCoterie(coterie)}
-                                                                    >
-                                                                        Add Character
-                                                                    </Button>
-                                                                    <Menu>
-                                                                        <Menu.Target>
-                                                                            <ActionIcon color="red" variant="light">
-                                                                                <IconDots size={16} />
-                                                                            </ActionIcon>
-                                                                        </Menu.Target>
-                                                                        <Menu.Dropdown>
-                                                                            <Menu.Item
-                                                                                leftSection={<IconInfoCircle size={14} />}
-                                                                                onClick={() => {
-                                                                                    setCoterieForSummary(coterie)
-                                                                                    setCoterieSummaryModalOpened(true)
-                                                                                }}
-                                                                            >
-                                                                                Summary
-                                                                            </Menu.Item>
-                                                                            <Menu.Item
-                                                                                leftSection={<IconEdit size={14} />}
-                                                                                onClick={() => handleEditCoterie(coterie)}
-                                                                            >
-                                                                                Edit
-                                                                            </Menu.Item>
-                                                                            <Menu.Item
-                                                                                leftSection={<IconTrash size={14} />}
-                                                                                color="red"
-                                                                                onClick={() =>
-                                                                                    handleDeleteCoterie(coterie.id, coterie.name)
-                                                                                }
-                                                                            >
-                                                                                Delete
-                                                                            </Menu.Item>
-                                                                        </Menu.Dropdown>
-                                                                    </Menu>
-                                                                </Group>
-                                                            ) : null}
-                                                        </Group>
-                                                        {coterie.members && coterie.members.length > 0 ? (
-                                                            <>
-                                                                <Divider />
-                                                                <Text size="sm" fw={500} mb="xs">
-                                                                    Members ({coterie.members.length}):
-                                                                </Text>
-                                                                <Stack gap="xs">
-                                                                    {coterie.members.map((member) => {
-                                                                        const memberCharData = member.character?.data as
-                                                                            | CharacterType
-                                                                            | undefined
-                                                                        const memberPlayerName = memberCharData?.player
-                                                                        return member.character ? (
-                                                                            <Group
-                                                                                key={member.characterId}
-                                                                                gap="sm"
-                                                                                pl="md"
-                                                                                justify="space-between"
-                                                                            >
-                                                                                <Group gap="sm">
-                                                                                    <Text size="sm">
-                                                                                        • {member.character.name}
-                                                                                        {memberPlayerName ? ` | ${memberPlayerName}` : ""}
-                                                                                    </Text>
-                                                                                    {member.character.shared ? (
-                                                                                        <Badge size="xs" color="red" variant="light">
-                                                                                            Shared
-                                                                                        </Badge>
-                                                                                    ) : null}
-                                                                                </Group>
-                                                                                {coterie.owned ? (
-                                                                                    <ActionIcon
-                                                                                        color="red"
-                                                                                        variant="light"
-                                                                                        size="sm"
-                                                                                        onClick={() =>
-                                                                                            handleRemoveCharacterFromCoterie(
-                                                                                                coterie.id,
-                                                                                                member.characterId
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <IconTrash size={14} />
-                                                                                    </ActionIcon>
-                                                                                ) : null}
-                                                                            </Group>
-                                                                        ) : null
-                                                                    })}
-                                                                </Stack>
-                                                            </>
-                                                        ) : (
-                                                            <Text size="sm" c="dimmed">
-                                                                No members yet
-                                                            </Text>
-                                                        )}
-                                                    </Stack>
-                                                </Paper>
-                                            ))}
-                                        </Stack>
-                                    )}
-                                </Card>
+                                <CoteriesSection
+                                    userCoteries={userCoteries}
+                                    setCreateCoterieModalOpened={setCreateCoterieModalOpened}
+                                    handleAddCharacterToCoterie={handleAddCharacterToCoterie}
+                                    handleEditCoterie={handleEditCoterie}
+                                    handleDeleteCoterie={handleDeleteCoterie}
+                                    handleRemoveCharacterFromCoterie={handleRemoveCharacterFromCoterie}
+                                    setCoterieForSummary={setCoterieForSummary}
+                                    setCoterieSummaryModalOpened={setCoterieSummaryModalOpened}
+                                />
                             </Stack>
                         </Container>
                     </div>

@@ -4,6 +4,7 @@ import { ActionIcon, Button, FileButton, Modal, Stack, Text, Divider, Group } fr
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { IconMenu2, IconAlertCircle, IconExternalLink, IconArrowRight } from "@tabler/icons-react"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { Buffer } from "buffer"
 import { useState } from "react"
 import { z } from "zod"
@@ -13,7 +14,6 @@ import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
-import { isBackendDisabled } from "~/utils/backend"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions
@@ -29,9 +29,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
 
+    const navigate = useNavigate()
     const handleGoBack = () => {
-        window.history.pushState({}, "", "/")
-        window.location.reload()
+        navigate({ to: "/" })
     }
 
     const handleDownloadPDF = () => {
@@ -203,14 +203,21 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     </Button>
 
                     <Group gap="md" grow>
-                        <Button component="a" href="/" size="lg" color="grape" variant="outline" leftSection={<IconArrowRight size={18} />}>
+                        <Button
+                            component={Link}
+                            to="/"
+                            size="lg"
+                            color="grape"
+                            variant="outline"
+                            leftSection={<IconArrowRight size={18} />}
+                        >
                             Generator
                         </Button>
-                        {!isBackendDisabled() && authLoading ? (
+                        {authLoading ? (
                             <Button size="lg" color="gray" variant="outline" loading leftSection={<IconArrowRight size={18} />}>
                                 Loading...
                             </Button>
-                        ) : !isBackendDisabled() && !isAuthenticated ? (
+                        ) : !isAuthenticated ? (
                             <Button
                                 size="lg"
                                 color="grape"
@@ -225,8 +232,8 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             </Button>
                         ) : (
                             <Button
-                                component="a"
-                                href="/me"
+                                component={Link}
+                                to="/me"
                                 size="lg"
                                 color="grape"
                                 variant="outline"

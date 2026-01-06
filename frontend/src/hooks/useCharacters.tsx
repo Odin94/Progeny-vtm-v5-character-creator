@@ -1,12 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "../utils/api"
-import { isBackendDisabled } from "../utils/backend"
 
 export const useCharacters = () => {
     return useQuery({
         queryKey: ["characters"],
         queryFn: () => api.getCharacters(),
-        enabled: !isBackendDisabled(), // Disable query if backend is disabled
     })
 }
 
@@ -14,7 +12,6 @@ export const useCharacter = (id: string | null) => {
     return useQuery({
         queryKey: ["characters", id],
         queryFn: () => (id ? api.getCharacter(id) : null),
-        enabled: !!id && !isBackendDisabled(), // Disable query if backend is disabled
     })
 }
 

@@ -1,11 +1,7 @@
 import { Button, Group } from "@mantine/core"
 import { useAuth } from "../hooks/useAuth"
-import { isBackendDisabled } from "../utils/backend"
 
 export const AuthButton = () => {
-    if (isBackendDisabled()) {
-        return null
-    }
     const { user, loading, isAuthenticated, signIn, signOut } = useAuth()
 
     if (loading) {
