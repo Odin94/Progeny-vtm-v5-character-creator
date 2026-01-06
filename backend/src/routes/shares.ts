@@ -25,7 +25,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
         },
         async (request: AuthenticatedRequest, reply) => {
             const { characterId } = request.params as ShareParams
-            const { sharedWithUserEmail } = request.body as ShareCharacterInput
+            const { sharedWithUserNickname } = request.body as ShareCharacterInput
             try {
                 const userId = request.user!.id
 
@@ -56,9 +56,9 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     return
                 }
 
-                // Find user by email
+                // Find user by nickname
                 const sharedWithUser = await db.query.users.findFirst({
-                    where: eq(schema.users.email, sharedWithUserEmail),
+                    where: eq(schema.users.nickname, sharedWithUserNickname),
                 })
 
                 if (!sharedWithUser) {
@@ -67,7 +67,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         characterId,
-                        sharedWithUserEmail,
+                        sharedWithUserNickname,
                     })
                     reply.code(404).send({ error: "User not found" })
                     return
@@ -122,7 +122,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     userId,
                     characterId,
                     sharedWithUserId: sharedWithUser.id,
-                    sharedWithUserEmail,
+                    sharedWithUserNickname,
                 })
 
                 await trackEvent(
@@ -133,7 +133,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
                         userId,
                         characterId,
                         sharedWithUserId: sharedWithUser.id,
-                        sharedWithUserEmail,
+                        sharedWithUserNickname,
                     },
                     userId
                 )
@@ -251,7 +251,16 @@ export async function shareRoutes(fastify: FastifyInstance) {
                 userId
             )
 
-            reply.send(shares)
+            const response = shares.map((share) => ({
+                characterId: share.characterId,
+                characterName: character.name,
+                createdAt: share.createdAt,
+                sharedWith: {
+                    nickname: share.sharedWith?.nickname || null,
+                },
+            }))
+
+            reply.send(response)
         }
     )
 }

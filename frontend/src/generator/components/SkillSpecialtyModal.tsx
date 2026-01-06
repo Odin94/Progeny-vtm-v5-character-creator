@@ -1,12 +1,13 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
+import { Button, Divider, Group, Modal, Select, Stack, Text, TextInput, useMantineTheme } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
 import { Skills, SkillsKey, skillsKeySchema } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
 import { globals } from "../../globals"
 import { intersection, lowcase, upcase } from "../utils"
+import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 
 type SpecialtyModalProps = {
     modalOpened: boolean
@@ -29,6 +30,8 @@ export const SpecialtyModal = ({
     pickedSkillNames,
     skills,
 }: SpecialtyModalProps) => {
+    const theme = useMantineTheme()
+    const colorValue = theme.colors.grape[6]
     const smallScreen = globals.isSmallScreen
     const phoneScreen = globals.isPhoneScreen
 
@@ -91,11 +94,13 @@ export const SpecialtyModal = ({
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
 
-                    <TextInput
-                        w={inputW}
-                        value={pickedSkillSpecialty}
-                        onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)}
-                    />
+                    <FocusBorderWrapper colorValue={colorValue} style={{ width: inputW }}>
+                        <TextInput
+                            style={{ width: "100%" }}
+                            value={pickedSkillSpecialty}
+                            onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)}
+                        />
+                    </FocusBorderWrapper>
                 </Group>
                 <Divider my="sm" variant="dotted" />
 
@@ -105,11 +110,13 @@ export const SpecialtyModal = ({
                             <Text fw={700} fz={phoneScreen ? "sm" : "xl"}>
                                 {upcase(s)}:
                             </Text>
-                            <TextInput
-                                w={inputW}
-                                value={specialtyStates[s].value}
-                                onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)}
-                            />
+                            <FocusBorderWrapper colorValue={colorValue} style={{ width: inputW }}>
+                                <TextInput
+                                    style={{ width: "100%" }}
+                                    value={specialtyStates[s].value}
+                                    onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)}
+                                />
+                            </FocusBorderWrapper>
                         </Group>
                         <Divider my="sm" variant="dotted" />
                     </div>

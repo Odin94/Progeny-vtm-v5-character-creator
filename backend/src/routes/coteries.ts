@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { eq, and } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
@@ -32,6 +32,37 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             try {
                 const userId = request.user!.id
                 const { name } = request.body as CreateCoterieInput
+
+                // Check coterie count limit (100 per user)
+                const coterieCount = await db
+                    .select({ count: sql<number>`count(*)` })
+                    .from(schema.coteries)
+                    .where(eq(schema.coteries.ownerId, userId))
+
+                if (coterieCount[0]?.count >= 100) {
+                    logger.warn("Coterie limit reached", {
+                        endpoint: "/coteries",
+                        method: "POST",
+                        userId,
+                        coterieCount: coterieCount[0]?.count,
+                    })
+                    await trackEvent(
+                        "coterie_limit_exceeded",
+                        {
+                            endpoint: "/coteries",
+                            method: "POST",
+                            userId,
+                            coterieCount: coterieCount[0]?.count,
+                            limit: 100,
+                        },
+                        userId
+                    )
+                    reply.code(403).send({
+                        error: "Coterie limit reached",
+                        message: "You have reached the maximum limit of 100 coteries. Please delete some coteries before creating new ones.",
+                    })
+                    return
+                }
 
                 const coterieId = nanoid()
 

@@ -30,6 +30,41 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const userId = request.user!.id
                 const { name, data, version } = request.body as CreateCharacterInput
 
+                // Check character count limit (100 per user)
+                const characterCount = await db
+                    .select({ count: sql<number>`count(*)` })
+                    .from(schema.characters)
+                    .where(eq(schema.characters.userId, userId))
+
+                if (characterCount[0]?.count >= 100) {
+                    logger.warn("Character limit reached", {
+                        endpoint: "/characters",
+                        method: "POST",
+                        userId,
+                        characterCount: characterCount[0]?.count,
+                    })
+                    await trackEvent(
+                        "character_limit_exceeded",
+                        {
+                            endpoint: "/characters",
+                            method: "POST",
+                            userId,
+                            characterCount: characterCount[0]?.count,
+                            limit: 100,
+                        },
+                        userId
+                    )
+                    reply.code(403).send({
+                        error: "Character limit reached",
+                        message:
+                            "You have reached the maximum limit of 100 characters. Please delete some characters before creating new ones.",
+                    })
+                    return
+                }
+
+                // Ensure characterVersion is set to 0 for new characters
+                const characterDataWithVersion = { ...data, characterVersion: 0 }
+
                 // Ensure user exists in database
                 const user = await db.query.users.findFirst({
                     where: eq(schema.users.id, userId),
@@ -46,9 +81,6 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 }
 
                 const characterId = nanoid()
-
-                // Ensure characterVersion is set to 0 for new characters
-                const characterDataWithVersion = { ...data, characterVersion: 0 }
 
                 const [character] = await db
                     .insert(schema.characters)

@@ -1,4 +1,18 @@
-import { Button, Center, Divider, Grid, Group, Modal, ScrollArea, Space, Stack, Text, TextInput, Textarea } from "@mantine/core"
+import {
+    Button,
+    Center,
+    Divider,
+    Grid,
+    Group,
+    Modal,
+    ScrollArea,
+    Space,
+    Stack,
+    Text,
+    TextInput,
+    Textarea,
+    useMantineTheme,
+} from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
@@ -8,6 +22,7 @@ import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
+import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 
 type TouchstonePickerProps = {
     character: Character
@@ -16,6 +31,9 @@ type TouchstonePickerProps = {
 }
 
 const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePickerProps) => {
+    const theme = useMantineTheme()
+    const colorValue = theme.colors.grape[6]
+
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Touchstone Picker" })
     }, [])
@@ -65,33 +83,47 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     )}
 
                                     <Grid.Col span={globals.isPhoneScreen ? 12 : 4}>
-                                        <TextInput
+                                        <FocusBorderWrapper
+                                            colorValue={colorValue}
                                             style={{ width: globals.isPhoneScreen ? "100%" : "250px" }}
-                                            value={touchstone.name}
-                                            onChange={(event) => updateTouchstone(i, { name: event.currentTarget.value })}
-                                            placeholder="Max Mustermann"
-                                            label="Touchstone name"
-                                        />
+                                        >
+                                            <TextInput
+                                                style={{ width: "100%" }}
+                                                value={touchstone.name}
+                                                onChange={(event) => updateTouchstone(i, { name: event.currentTarget.value })}
+                                                placeholder="Max Mustermann"
+                                                label="Touchstone name"
+                                            />
+                                        </FocusBorderWrapper>
 
-                                        <TextInput
+                                        <FocusBorderWrapper
+                                            colorValue={colorValue}
                                             style={{ width: globals.isPhoneScreen ? "100%" : "250px" }}
-                                            value={touchstone.conviction}
-                                            onChange={(event) => updateTouchstone(i, { conviction: event.currentTarget.value })}
-                                            placeholder="Never betray your friends"
-                                            label="Conviction"
-                                        />
+                                        >
+                                            <TextInput
+                                                style={{ width: "100%" }}
+                                                value={touchstone.conviction}
+                                                onChange={(event) => updateTouchstone(i, { conviction: event.currentTarget.value })}
+                                                placeholder="Never betray your friends"
+                                                label="Conviction"
+                                            />
+                                        </FocusBorderWrapper>
                                     </Grid.Col>
 
                                     <Grid.Col span={globals.isSmallScreen ? 12 : 4} offset={globals.isSmallScreen ? 0 : 1}>
-                                        <Textarea
+                                        <FocusBorderWrapper
+                                            colorValue={colorValue}
                                             style={{ width: globals.isSmallScreen ? "100%" : "300px" }}
-                                            value={touchstone.description}
-                                            onChange={(event) => updateTouchstone(i, { description: event.currentTarget.value })}
-                                            placeholder="Your childhoood friend to whom you have made a promise to always be there for each other"
-                                            label="Description"
-                                            autosize
-                                            minRows={4}
-                                        />
+                                        >
+                                            <Textarea
+                                                value={touchstone.description}
+                                                onChange={(event) => updateTouchstone(i, { description: event.currentTarget.value })}
+                                                placeholder="Your childhoood friend to whom you have made a promise to always be there for each other"
+                                                label="Description"
+                                                autosize
+                                                minRows={4}
+                                            />
+                                        </FocusBorderWrapper>
                                     </Grid.Col>
                                 </Grid>
                                 <Group>

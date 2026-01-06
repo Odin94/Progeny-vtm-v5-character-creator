@@ -20,6 +20,7 @@ import {
     TextInput,
     Title,
     useComputedColorScheme,
+    useMantineTheme,
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import {
@@ -31,6 +32,7 @@ import {
     IconFileTypePdf,
     IconFileUpload,
     IconPlus,
+    IconShare,
     IconTrash,
     IconUpload,
     IconUser,
@@ -48,6 +50,7 @@ import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters, useCreateCharacter, useDeleteCharacter, useUpdateCharacter } from "~/hooks/useCharacters"
 import { api } from "~/utils/api"
+import { useQueryClient } from "@tanstack/react-query"
 import {
     useAddCharacterToCoterie,
     useCoteries,
@@ -56,6 +59,7 @@ import {
     useRemoveCharacterFromCoterie,
     useUpdateCoterie,
 } from "~/hooks/useCoteries"
+import { useCharacterShares } from "~/hooks/useShares"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
 import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
@@ -63,8 +67,88 @@ import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplas
 import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import Topbar from "~/topbar/Topbar"
+import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
+
+type ShareCharacterModalContentProps = {
+    characterToShare: { id: string; name: string } | null
+    shareNickname: string
+    setShareNickname: (value: string) => void
+    isSharing: boolean
+    redColorValue: string
+    handleConfirmShare: () => void
+    onClose: () => void
+}
+
+const ShareCharacterModalContent = ({
+    characterToShare,
+    shareNickname,
+    setShareNickname,
+    isSharing,
+    redColorValue,
+    handleConfirmShare,
+    onClose,
+}: ShareCharacterModalContentProps) => {
+    const { data: shares, isLoading: isLoadingShares } = useCharacterShares(characterToShare?.id || null)
+
+    const sharedWithNicknames =
+        shares
+            ?.map((share: unknown) => {
+                const s = share as { sharedWith: { nickname: string | null } }
+                return s.sharedWith?.nickname
+            })
+            .filter((nickname: string | null | undefined): nickname is string => !!nickname) || []
+
+    return (
+        <Stack gap="md">
+            <Text>
+                Share <strong>{characterToShare?.name}</strong> with another user.
+            </Text>
+            <Text c="dimmed" size="sm">
+                This is a read-only share. The other user can view your character, and they can store and edit their own copy of it.
+            </Text>
+            <Text c="dimmed" size="sm">
+                They can see updates you have made to your character by clicking "Load".
+            </Text>
+            <FocusBorderWrapper colorValue={redColorValue}>
+                <TextInput
+                    label="User Nickname"
+                    placeholder="Enter the user's nickname"
+                    value={shareNickname}
+                    onChange={(e) => setShareNickname(e.target.value)}
+                    disabled={isSharing}
+                />
+            </FocusBorderWrapper>
+            {isLoadingShares ? (
+                <Text c="dimmed" size="sm">
+                    Loading...
+                </Text>
+            ) : sharedWithNicknames.length > 0 ? (
+                <Stack gap="xs">
+                    <Text fw={500} size="sm">
+                        Currently shared with:
+                    </Text>
+                    <Group gap="xs">
+                        {sharedWithNicknames.map((nickname: string) => (
+                            <Badge key={nickname} color="red" variant="light">
+                                {nickname}
+                            </Badge>
+                        ))}
+                    </Group>
+                </Stack>
+            ) : null}
+            <Group justify="flex-end" gap="xs">
+                <Button variant="subtle" color="red" onClick={onClose} disabled={isSharing}>
+                    Cancel
+                </Button>
+                <Button color="red" onClick={handleConfirmShare} loading={isSharing} disabled={!shareNickname.trim()}>
+                    Share
+                </Button>
+            </Group>
+        </Stack>
+    )
+}
 
 type Character = {
     id: string
@@ -88,6 +172,9 @@ const MePage = () => {
     const computedColorScheme = useComputedColorScheme("dark", { getInitialValueInEffect: true })
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
+    const theme = useMantineTheme()
+    const redColorValue = theme.colors.red[6]
+    const queryClient = useQueryClient()
 
     // Character CRUD
     const createCharacterMutation = useCreateCharacter()
@@ -118,6 +205,10 @@ const MePage = () => {
     const [coterieToDelete, setCoterieToDelete] = useState<{ id: string; name: string } | null>(null)
     const [characterToLoad, setCharacterToLoad] = useState<{ id: string; name: string; data: CharacterType } | null>(null)
     const [newCharacterName, setNewCharacterName] = useState("")
+    const [shareCharacterModalOpened, setShareCharacterModalOpened] = useState(false)
+    const [characterToShare, setCharacterToShare] = useState<{ id: string; name: string } | null>(null)
+    const [shareNickname, setShareNickname] = useState("")
+    const [isSharing, setIsSharing] = useState(false)
     const [newCoterieName, setNewCoterieName] = useState("")
     const [editingCoterie, setEditingCoterie] = useState<Coterie | null>(null)
     const [selectedCoterieForAdd, setSelectedCoterieForAdd] = useState<Coterie | null>(null)
@@ -578,6 +669,45 @@ const MePage = () => {
         })
     }
 
+    const handleShareCharacter = (char: Character) => {
+        setCharacterToShare({ id: char.id, name: char.name })
+        setShareNickname("")
+        setShareCharacterModalOpened(true)
+    }
+
+    const handleConfirmShare = async () => {
+        if (!characterToShare || !shareNickname.trim()) {
+            notifications.show({
+                title: "Error",
+                message: "Please enter a nickname",
+                color: "red",
+            })
+            return
+        }
+
+        setIsSharing(true)
+        try {
+            await api.shareCharacter(characterToShare.id, {
+                sharedWithUserNickname: shareNickname.trim(),
+            })
+            queryClient.invalidateQueries({ queryKey: ["shares", characterToShare.id] })
+            notifications.show({
+                title: "Success",
+                message: `Character shared with ${shareNickname}`,
+                color: "green",
+            })
+            setShareNickname("")
+        } catch (error) {
+            notifications.show({
+                title: "Error",
+                message: error instanceof Error ? error.message : "Failed to share character",
+                color: "red",
+            })
+        } finally {
+            setIsSharing(false)
+        }
+    }
+
     const handleSaveCurrentAndLoad = () => {
         if (!characterToLoad) return
 
@@ -960,13 +1090,15 @@ const MePage = () => {
                                             </Text>
                                             {isEditingNickname ? (
                                                 <Stack gap="xs" style={{ flex: 1 }}>
-                                                    <TextInput
-                                                        value={nicknameValue}
-                                                        onChange={(e) => setNicknameValue(e.target.value)}
-                                                        placeholder="Enter nickname"
-                                                        maxLength={255}
-                                                        disabled={isUpdatingProfile}
-                                                    />
+                                                    <FocusBorderWrapper colorValue={redColorValue}>
+                                                        <TextInput
+                                                            value={nicknameValue}
+                                                            onChange={(e) => setNicknameValue(e.target.value)}
+                                                            placeholder="Enter nickname"
+                                                            maxLength={255}
+                                                            disabled={isUpdatingProfile}
+                                                        />
+                                                    </FocusBorderWrapper>
                                                     <Group gap="xs">
                                                         <Button
                                                             size="xs"
@@ -981,6 +1113,7 @@ const MePage = () => {
                                                             variant="subtle"
                                                             onClick={handleCancelNickname}
                                                             disabled={isUpdatingProfile}
+                                                            color="gray"
                                                         >
                                                             Cancel
                                                         </Button>
@@ -1122,6 +1255,18 @@ const MePage = () => {
                                                                             loading={loadingCharacterId === char.id}
                                                                         >
                                                                             Load
+                                                                        </Button>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            color="red"
+                                                                            variant="light"
+                                                                            leftSection={<IconShare size={14} />}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleShareCharacter(char)
+                                                                            }}
+                                                                        >
+                                                                            Share
                                                                         </Button>
                                                                         <Menu>
                                                                             <Menu.Target>
@@ -1343,17 +1488,19 @@ const MePage = () => {
                 centered
             >
                 <Stack gap="md">
-                    <TextInput
-                        label="Character Name"
-                        placeholder="Enter character name"
-                        value={newCharacterName}
-                        onChange={(e) => setNewCharacterName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleCreateEmptyCharacter()
-                            }
-                        }}
-                    />
+                    <FocusBorderWrapper colorValue={redColorValue}>
+                        <TextInput
+                            label="Character Name"
+                            placeholder="Enter character name"
+                            value={newCharacterName}
+                            onChange={(e) => setNewCharacterName(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleCreateEmptyCharacter()
+                                }
+                            }}
+                        />
+                    </FocusBorderWrapper>
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
@@ -1383,17 +1530,19 @@ const MePage = () => {
                 centered
             >
                 <Stack gap="md">
-                    <TextInput
-                        label="Coterie Name"
-                        placeholder="Enter coterie name"
-                        value={newCoterieName}
-                        onChange={(e) => setNewCoterieName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleCreateCoterie()
-                            }
-                        }}
-                    />
+                    <FocusBorderWrapper colorValue={redColorValue}>
+                        <TextInput
+                            label="Coterie Name"
+                            placeholder="Enter coterie name"
+                            value={newCoterieName}
+                            onChange={(e) => setNewCoterieName(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleCreateCoterie()
+                                }
+                            }}
+                        />
+                    </FocusBorderWrapper>
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
@@ -1424,17 +1573,19 @@ const MePage = () => {
                 centered
             >
                 <Stack gap="md">
-                    <TextInput
-                        label="Coterie Name"
-                        placeholder="Enter coterie name"
-                        value={newCoterieName}
-                        onChange={(e) => setNewCoterieName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleUpdateCoterie()
-                            }
-                        }}
-                    />
+                    <FocusBorderWrapper colorValue={redColorValue}>
+                        <TextInput
+                            label="Coterie Name"
+                            placeholder="Enter coterie name"
+                            value={newCoterieName}
+                            onChange={(e) => setNewCoterieName(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleUpdateCoterie()
+                                }
+                            }}
+                        />
+                    </FocusBorderWrapper>
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
@@ -1611,6 +1762,31 @@ const MePage = () => {
                         </Button>
                     </Group>
                 </Stack>
+            </Modal>
+
+            <Modal
+                opened={shareCharacterModalOpened}
+                onClose={() => {
+                    setShareCharacterModalOpened(false)
+                    setCharacterToShare(null)
+                    setShareNickname("")
+                }}
+                title="Share Character"
+                centered
+            >
+                <ShareCharacterModalContent
+                    characterToShare={characterToShare}
+                    shareNickname={shareNickname}
+                    setShareNickname={setShareNickname}
+                    isSharing={isSharing}
+                    redColorValue={redColorValue}
+                    handleConfirmShare={handleConfirmShare}
+                    onClose={() => {
+                        setShareCharacterModalOpened(false)
+                        setCharacterToShare(null)
+                        setShareNickname("")
+                    }}
+                />
             </Modal>
 
             <Modal opened={loadJsonModalOpened} onClose={() => setLoadJsonModalOpened(false)} title="" centered withCloseButton={false}>

@@ -78,7 +78,7 @@ export const api = {
         apiRequest<void>(`/coteries/${coterieId}/characters/${characterId}`, { method: "DELETE" }),
 
     // Shares
-    shareCharacter: (characterId: string, data: { sharedWithUserEmail: string }) =>
+    shareCharacter: (characterId: string, data: { sharedWithUserNickname: string }) =>
         apiRequest<unknown>(`/characters/${characterId}/share`, { method: "POST", body: data }),
     unshareCharacter: (characterId: string, userId: string) =>
         apiRequest<void>(`/characters/${characterId}/share/${userId}`, { method: "DELETE" }),

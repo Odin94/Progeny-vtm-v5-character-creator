@@ -13,8 +13,8 @@ export const useShareCharacter = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ characterId, sharedWithUserEmail }: { characterId: string; sharedWithUserEmail: string }) =>
-            api.shareCharacter(characterId, { sharedWithUserEmail }),
+        mutationFn: ({ characterId, sharedWithUserNickname }: { characterId: string; sharedWithUserNickname: string }) =>
+            api.shareCharacter(characterId, { sharedWithUserNickname }),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["shares", variables.characterId] })
             queryClient.invalidateQueries({ queryKey: ["characters"] })

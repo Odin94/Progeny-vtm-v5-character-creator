@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const shareCharacterSchema = z.object({
-    sharedWithUserEmail: z.string().email(),
+    sharedWithUserNickname: z.string().min(1),
 })
 
 export const shareParamsSchema = z.object({
