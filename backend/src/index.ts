@@ -69,6 +69,7 @@ await fastify.register(cors, {
             "https://www.progeny.odin-matthias.com",
             "https://vtm-progeny.netlify.app",
             env.FRONTEND_URL,
+            env.BACKEND_URL,
         ].filter(Boolean)
 
         if (allowedOrigins.includes(origin)) {
@@ -145,6 +146,7 @@ initializePostHogLogging()
 initializeMetrics(fastify)
 
 // Health check (excluded from rate limiting)
+// TODOdin: Allow hitting health endpoint without CORS / origin header
 fastify.get(
     "/health",
     {
