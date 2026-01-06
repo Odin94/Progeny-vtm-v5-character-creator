@@ -13,6 +13,9 @@ import { env } from "./config/env.js"
 import { initializeMetrics } from "./utils/metrics.js"
 import { initializePostHogLogging, shutdownPostHogLogging } from "./utils/posthogLogger.js"
 import { shutdownPostHogTracking } from "./utils/tracker.js"
+import { generateRequestId, setRequestId } from "./middleware/requestId.js"
+import { generateCsrfToken, setCsrfToken, validateCsrfToken } from "./middleware/csrf.js"
+import { logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
 
 const httpsOptions =
     env.SSL_CERT_PATH && env.SSL_KEY_PATH
@@ -89,6 +92,42 @@ await fastify.register(rateLimit, {
 })
 
 await fastify.register(websocket)
+
+// Add request ID tracking hook
+fastify.addHook("onRequest", async (request, reply) => {
+    const requestId = (request.headers["x-request-id"] as string | undefined) || generateRequestId()
+    setRequestId(request, reply, requestId)
+})
+
+// Add CSRF token generation for GET requests
+fastify.addHook("onRequest", async (request, reply) => {
+    // Generate and set CSRF token for GET requests (so frontend can read it)
+    if (request.method === "GET" && !request.url.startsWith("/ws/")) {
+        const existingToken = request.cookies["csrf-token"]
+        if (!existingToken) {
+            const token = generateCsrfToken()
+            setCsrfToken(reply, token)
+        }
+    }
+})
+
+// Add CSRF validation for state-changing operations
+fastify.addHook("onRequest", async (request, reply) => {
+    try {
+        await validateCsrfToken(request, reply)
+    } catch (error) {
+        logSecurityEvent(request, reply, "csrf_failure", {
+            url: request.url,
+            method: request.method,
+        })
+        throw error
+    }
+})
+
+// Add security logging hook
+fastify.addHook("onResponse", async (request, reply) => {
+    logRequest(request, reply)
+})
 
 // Register routes
 await fastify.register(authRoutes)

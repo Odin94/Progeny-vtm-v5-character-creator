@@ -7,6 +7,18 @@ type RequestOptions = {
     headers?: Record<string, string>
 }
 
+const getCsrfToken = (): string | null => {
+    // Read CSRF token from cookie
+    const cookies = document.cookie.split(";")
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split("=")
+        if (name === "csrf-token") {
+            return decodeURIComponent(value)
+        }
+    }
+    return null
+}
+
 const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
     const { method = "GET", body, headers = {} } = options
 
@@ -16,6 +28,14 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
 
     if (body) {
         requestHeaders["Content-Type"] = "application/json"
+    }
+
+    // Add CSRF token for state-changing operations
+    if (["POST", "PUT", "DELETE"].includes(method)) {
+        const csrfToken = getCsrfToken()
+        if (csrfToken) {
+            requestHeaders["x-csrf-token"] = csrfToken
+        }
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {

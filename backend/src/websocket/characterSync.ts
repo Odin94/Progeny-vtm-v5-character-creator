@@ -1,7 +1,9 @@
 import { FastifyInstance } from "fastify"
 import { eq, and } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
-import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
+import { AuthenticatedRequest } from "../middleware/auth.js"
+import { workos } from "../config/workos.js"
+import { env } from "../config/env.js"
 
 interface CharacterUpdateMessage {
   type: "character_update"
@@ -26,40 +28,67 @@ type WebSocketMessage = CharacterUpdateMessage | CharacterSubscribeMessage | Cha
 // Map of characterId -> Set of WebSocket connections
 const characterSubscriptions = new Map<string, Set<any>>()
 
+async function authenticateWebSocketUser(request: AuthenticatedRequest): Promise<{ id: string; email: string } | null> {
+  const cookiePassword = env.WORKOS_COOKIE_PASSWORD
+  const sessionData = request.cookies["wos-session"]
+
+  if (!sessionData) {
+    return null
+  }
+
+  try {
+    const session = workos.userManagement.loadSealedSession({
+      sessionData,
+      cookiePassword,
+    })
+
+    const authResult = await session.authenticate()
+
+    if (!authResult.authenticated || !("user" in authResult)) {
+      // Try to refresh the session
+      try {
+        const refreshResult = await session.refresh()
+        if (
+          refreshResult.authenticated &&
+          "user" in refreshResult &&
+          refreshResult.user
+        ) {
+          return {
+            id: refreshResult.user.id,
+            email: refreshResult.user.email,
+          }
+        }
+      } catch (_refreshError) {
+        // Refresh failed
+      }
+      return null
+    }
+
+    return {
+      id: authResult.user.id,
+      email: authResult.user.email,
+    }
+  } catch (_error) {
+    return null
+  }
+}
+
 export async function characterSyncWebSocket(fastify: FastifyInstance) {
   fastify.get(
     "/ws/characters",
     { websocket: true },
     async (connection, request: AuthenticatedRequest) => {
-      // Authenticate WebSocket connection
-      const authHeader = request.headers.authorization
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      // Authenticate WebSocket connection using WorkOS session (same as REST endpoints)
+      const user = await authenticateWebSocketUser(request)
+
+      if (!user) {
         connection.socket.close(1008, "Unauthorized")
         return
       }
 
-      const token = authHeader.substring(7)
-      let userId: string
+      const userId = user.id
 
-      try {
-        const { workos } = await import("../config/workos.js")
-        // Decode JWT token to get user ID
-        const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
-        const userIdFromToken = payload.sub || payload.user_id
-
-        if (!userIdFromToken) {
-          connection.socket.close(1008, "Unauthorized: Invalid token format")
-          return
-        }
-
-        const user = await workos.userManagement.getUser(userIdFromToken)
-        userId = user.id
-      } catch (_error) {
-        connection.socket.close(1008, "Unauthorized")
-        return
-      }
-
-      const subscribedCharacters = new Set<string>()
+        const subscribedCharacters = new Set<string>()
 
       connection.socket.on("message", async (message: Buffer) => {
         try {

@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify"
 import { workos } from "../config/workos.js"
 import { env } from "../config/env.js"
+import { logSecurityEvent } from "./securityLogger.js"
 
 export interface AuthenticatedRequest extends FastifyRequest {
     user?: {
@@ -17,6 +18,9 @@ export async function authenticateUser(request: AuthenticatedRequest, reply: Fas
     const sessionData = request.cookies["wos-session"]
 
     if (!sessionData) {
+        logSecurityEvent(request, reply, "authentication_failure", {
+            reason: "No session cookie provided",
+        })
         reply.code(401).send({ error: "Unauthorized: No session cookie provided" })
         return
     }
@@ -59,6 +63,9 @@ export async function authenticateUser(request: AuthenticatedRequest, reply: Fas
                 // Refresh failed, continue to error
             }
 
+            logSecurityEvent(request, reply, "authentication_failure", {
+                reason: "Invalid or expired session",
+            })
             reply.code(401).send({ error: "Unauthorized: Invalid or expired session" })
             return
         }
@@ -71,6 +78,10 @@ export async function authenticateUser(request: AuthenticatedRequest, reply: Fas
         }
     } catch (error) {
         request.log.error({ err: error }, "Authentication error")
+        logSecurityEvent(request, reply, "authentication_failure", {
+            reason: "Failed to authenticate session",
+            error: error instanceof Error ? error.message : String(error),
+        })
         reply.code(401).send({ error: "Unauthorized: Failed to authenticate session" })
         return
     }

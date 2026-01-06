@@ -417,7 +417,28 @@ const MePage = () => {
     }
 
     const handleConfirmOverwriteVersion = () => {
-        if (!character.id || !versionConflictInfo) return
+        if (!versionConflictInfo) return
+
+        // If characterToLoad is set, we're in a loading scenario
+        if (characterToLoad) {
+            // Load the character (overwriting current with older version)
+            setCharacter({
+                ...characterToLoad.data,
+                id: characterToLoad.id,
+            } as CharacterType & { id: string })
+            setVersionConflictModalOpened(false)
+            setVersionConflictInfo(null)
+            setCharacterToLoad(null)
+            notifications.show({
+                title: "Success",
+                message: `Loaded "${characterToLoad.name}"`,
+                color: "green",
+            })
+            return
+        }
+
+        // Otherwise, we're in a saving scenario
+        if (!character.id) return
 
         const targetCharacter = userCharacters.find((c) => c.id === character.id)
         if (!targetCharacter || targetCharacter.shared) return
@@ -476,7 +497,7 @@ const MePage = () => {
         setDeleteCharacterModalOpened(true)
     }
 
-    const handleLoadCharacter = (char: Character) => {
+    const handleLoadCharacter = async (char: Character) => {
         const charData = char.data as CharacterType | undefined
         if (!charData) return
 
@@ -487,55 +508,37 @@ const MePage = () => {
         const currentCharacterExists = character.id && userCharacters.find((c) => c.id === character.id)
 
         if (currentCharacterExists) {
-            // Save current character first, then load new one
-            const targetCharacter = userCharacters.find((c) => c.id === character.id)
-            if (targetCharacter && !targetCharacter.shared) {
-                updateCharacterMutation.mutate(
-                    {
-                        id: targetCharacter.id,
-                        data: {
-                            name: character.name,
-                            data: character,
-                            version: character.version,
-                        },
-                    },
-                    {
-                        onSuccess: () => {
-                            // Load the new character after save completes
-                            setCharacter({
-                                ...charData,
-                                id: char.id,
-                            } as CharacterType & { id: string })
-                            setLoadingCharacterId(null)
-                            notifications.show({
-                                title: "Success",
-                                message: `Saved current character and loaded "${char.name}"`,
-                                color: "green",
-                            })
-                        },
-                        onError: (error) => {
-                            setLoadingCharacterId(null)
-                            notifications.show({
-                                title: "Error",
-                                message: error instanceof Error ? error.message : "Failed to save current character",
-                                color: "red",
-                            })
-                        },
-                    }
-                )
-            } else {
-                // If character is shared or not found, just load without saving
-                setCharacter({
-                    ...charData,
-                    id: char.id,
-                } as CharacterType & { id: string })
-                setLoadingCharacterId(null)
-                notifications.show({
-                    title: "Success",
-                    message: `Loaded "${char.name}"`,
-                    color: "green",
-                })
+            // Check version conflict before loading
+            try {
+                const beCharacter = await api.getCharacter(char.id)
+                const beChar = beCharacter as { characterVersion?: number; data?: { characterVersion?: number } }
+                const beVersion = beChar.characterVersion ?? beChar.data?.characterVersion ?? 0
+                const feVersion = (character as CharacterType & { characterVersion?: number }).characterVersion ?? 0
+
+                if (beVersion < feVersion) {
+                    // Backend version is older - warn user they're about to load an older version
+                    setLoadingCharacterId(null)
+                    setVersionConflictInfo({ beVersion, feVersion })
+                    setCharacterToLoad({ id: char.id, name: char.name, data: charData })
+                    setVersionConflictModalOpened(true)
+                    return
+                }
+            } catch (error) {
+                // If fetch fails, continue with load (character might not exist or network error)
+                console.warn("Failed to fetch character for version check:", error)
             }
+
+            // Directly load the character without saving first
+            setCharacter({
+                ...charData,
+                id: char.id,
+            } as CharacterType & { id: string })
+            setLoadingCharacterId(null)
+            notifications.show({
+                title: "Success",
+                message: `Loaded "${char.name}"`,
+                color: "green",
+            })
         } else {
             // Show warning modal if current character doesn't exist in backend
             // Clear loading state when opening modal - buttons should be enabled until user confirms
@@ -1896,14 +1899,16 @@ const MePage = () => {
                 onClose={() => {
                     setVersionConflictModalOpened(false)
                     setVersionConflictInfo(null)
+                    setCharacterToLoad(null)
                 }}
                 title="Version Conflict"
                 centered
             >
                 <Stack gap="md">
                     <Text>
-                        Character version in database ({versionConflictInfo?.beVersion ?? 0}) is higher than in browser (
-                        {versionConflictInfo?.feVersion ?? 0}) - saving might overwrite changes you made on another device.
+                        {characterToLoad
+                            ? `Character version in database (${versionConflictInfo?.beVersion ?? 0}) is lower than in browser (${versionConflictInfo?.feVersion ?? 0}) - loading will overwrite your current changes with an older version.`
+                            : `Character version in database (${versionConflictInfo?.beVersion ?? 0}) is higher than in browser (${versionConflictInfo?.feVersion ?? 0}) - saving might overwrite changes you made on another device.`}
                     </Text>
                     <Group justify="flex-end" gap="xs">
                         <Button
@@ -1912,12 +1917,13 @@ const MePage = () => {
                             onClick={() => {
                                 setVersionConflictModalOpened(false)
                                 setVersionConflictInfo(null)
+                                setCharacterToLoad(null)
                             }}
                         >
                             Cancel
                         </Button>
                         <Button color="red" onClick={handleConfirmOverwriteVersion}>
-                            Overwrite DB version
+                            {characterToLoad ? "Load older version" : "Overwrite DB version"}
                         </Button>
                     </Group>
                 </Stack>
