@@ -40,10 +40,10 @@ export function logSecurityEvent(
     }
 
     logger.warn("Security event", {
-        securityEvent: logEntry,
+        securityEvent: JSON.stringify(logEntry),
         endpoint: request.url,
         method: request.method,
-        userId: userId || null,
+        userId: userId ?? null,
     })
 }
 
@@ -60,8 +60,8 @@ export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
         method: request.method,
         url: request.url,
         ip,
-        userAgent,
-        userId: userId || null,
+        userAgent: userAgent ?? null,
+        userId: userId ?? null,
         statusCode,
         endpoint: request.url,
     })
