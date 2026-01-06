@@ -111,6 +111,12 @@ export const useAuth = () => {
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
+
+            // Redirect to /me after successful authentication
+            // This ensures redirect happens even if the component's onSuccess callback doesn't fire
+            if (window.location.pathname === "/auth/callback") {
+                window.location.href = "/me"
+            }
         },
     })
 

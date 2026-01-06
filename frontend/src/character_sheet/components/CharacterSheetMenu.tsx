@@ -206,55 +206,36 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         <Button component="a" href="/" size="lg" color="grape" variant="outline" leftSection={<IconArrowRight size={18} />}>
                             Generator
                         </Button>
-                        <Button
-                            component="a"
-                            href="/me"
-                            size="lg"
-                            color="grape"
-                            variant="outline"
-                            leftSection={<IconArrowRight size={18} />}
-                        >
-                            Account
-                        </Button>
+                        {!isBackendDisabled() && authLoading ? (
+                            <Button size="lg" color="gray" variant="outline" loading leftSection={<IconArrowRight size={18} />}>
+                                Loading...
+                            </Button>
+                        ) : !isBackendDisabled() && !isAuthenticated ? (
+                            <Button
+                                size="lg"
+                                color="grape"
+                                variant="outline"
+                                leftSection={<IconArrowRight size={18} />}
+                                onClick={() => {
+                                    signIn()
+                                    closeMenu()
+                                }}
+                            >
+                                Sign In
+                            </Button>
+                        ) : (
+                            <Button
+                                component="a"
+                                href="/me"
+                                size="lg"
+                                color="grape"
+                                variant="outline"
+                                leftSection={<IconArrowRight size={18} />}
+                            >
+                                Account
+                            </Button>
+                        )}
                     </Group>
-
-                    {!isBackendDisabled() ? (
-                        <>
-                            <Divider />
-
-                            {authLoading ? (
-                                <Button size="lg" color="gray" variant="light" loading fullWidth>
-                                    Loading...
-                                </Button>
-                            ) : isAuthenticated && user ? (
-                                <Button
-                                    size="lg"
-                                    color="red"
-                                    variant="light"
-                                    onClick={() => {
-                                        signOut()
-                                        closeMenu()
-                                    }}
-                                    fullWidth
-                                >
-                                    Sign Out {user.firstName ? `(${user.firstName})` : ""}
-                                </Button>
-                            ) : (
-                                <Button
-                                    size="lg"
-                                    color="blue"
-                                    variant="light"
-                                    onClick={() => {
-                                        signIn()
-                                        closeMenu()
-                                    }}
-                                    fullWidth
-                                >
-                                    Sign In
-                                </Button>
-                            )}
-                        </>
-                    ) : null}
 
                     <Divider />
 

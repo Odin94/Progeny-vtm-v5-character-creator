@@ -1,6 +1,6 @@
-import { AppShell, BackgroundImage, Container, useComputedColorScheme } from "@mantine/core"
+import { AppShell, BackgroundImage, Container, Loader, Text, useComputedColorScheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import "./App.css"
 import Generator from "./generator/Generator"
 import AsideBar from "./sidebar/AsideBar"
@@ -29,7 +29,8 @@ const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 function App() {
     const [pathname, setPathname] = useState(window.location.pathname)
-    const { handleCallback, isHandlingCallback } = useAuth()
+    const { handleCallback, isHandlingCallback, isAuthenticated, user } = useAuth()
+    const callbackProcessedRef = useRef<string | null>(null)
 
     useEffect(() => {
         // Skip auth callback handling if backend is disabled
@@ -41,21 +42,32 @@ function App() {
         const code = urlParams.get("code")
         const state = urlParams.get("state")
 
-        if (code && !isHandlingCallback) {
+        // Prevent processing the same code twice (React StrictMode double-invocation)
+        if (code && !isHandlingCallback && callbackProcessedRef.current !== code) {
+            // Mark this code as being processed
+            callbackProcessedRef.current = code
+
+            // Update pathname to show loading state
+            if (window.location.pathname === "/auth/callback") {
+                setPathname("/auth/callback")
+            }
+
+            // Clean up URL immediately to prevent re-processing on re-render
+            // But keep the pathname as /auth/callback so the useEffect can detect it
+            window.history.replaceState({}, "", "/auth/callback")
+
             // We received the callback, call the backend via React Query
+            // The redirect will be handled by the useEffect that watches for authentication
             handleCallback(
                 { code, state: state || undefined },
                 {
-                    onSuccess: () => {
-                        // Clean up URL and redirect to /me
-                        window.history.replaceState({}, "", "/me")
-                        setPathname("/me")
-                    },
                     onError: (error) => {
                         console.error("Auth callback error:", error)
                         // Clean up URL even on error
                         window.history.replaceState({}, "", "/")
                         setPathname("/")
+                        // Reset the ref so user can try again
+                        callbackProcessedRef.current = null
                     },
                 }
             )
@@ -69,6 +81,14 @@ function App() {
         window.addEventListener("popstate", handleLocationChange)
         return () => window.removeEventListener("popstate", handleLocationChange)
     }, [])
+
+    useEffect(() => {
+        // Redirect to /me once authenticated after callback
+        if (pathname === "/auth/callback" && isAuthenticated && user && !isHandlingCallback) {
+            console.log("Redirecting to /me after successful authentication", { isAuthenticated, user: user?.id })
+            window.location.href = "/me"
+        }
+    }, [pathname, isAuthenticated, user, isHandlingCallback])
 
     const { height: viewportHeight, width: viewportWidth } = useViewportSize()
     globals.viewportHeightPx = viewportHeight
@@ -138,6 +158,27 @@ function App() {
             <>
                 <MePage />
                 <BrokenSaveModal />
+            </>
+        )
+    }
+
+    if (pathname === "/auth/callback") {
+        return (
+            <>
+                <BrokenSaveModal />
+                <Container
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: "100vh",
+                        gap: "1rem",
+                    }}
+                >
+                    <Loader size="lg" />
+                    <Text size="lg">Completing sign in...</Text>
+                </Container>
             </>
         )
     }
