@@ -10,12 +10,18 @@ type RequestOptions = {
 const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
     const { method = "GET", body, headers = {} } = options
 
+    const requestHeaders: Record<string, string> = {
+        ...headers,
+    }
+
+    // Only set Content-Type if there's a body to send
+    if (body) {
+        requestHeaders["Content-Type"] = "application/json"
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
         method,
-        headers: {
-            "Content-Type": "application/json",
-            ...headers,
-        },
+        headers: requestHeaders,
         credentials: "include",
         ...(body ? { body: JSON.stringify(body) } : {}),
     })

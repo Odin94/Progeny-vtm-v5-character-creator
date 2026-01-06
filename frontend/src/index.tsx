@@ -54,7 +54,7 @@ root.render(
                     api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
                     defaults: "2025-05-24",
                     capture_exceptions: true,
-                    debug: import.meta.env.MODE === "development",
+                    // debug: import.meta.env.MODE === "development",
                     before_send: (event) => {
                         if (event && event.event === "$exception") {
                             const character = getCharacterFromStorage()
