@@ -535,7 +535,8 @@ const MePage = () => {
             }
         } else {
             // Show warning modal if current character doesn't exist in backend
-            // Don't clear loading state here - it will be cleared when modal is confirmed or cancelled
+            // Clear loading state when opening modal - buttons should be enabled until user confirms
+            setLoadingCharacterId(null)
             setCharacterToLoad({ id: char.id, name: char.name, data: charData })
             setLoadCharacterWarningModalOpened(true)
         }
@@ -1747,7 +1748,7 @@ const MePage = () => {
                             variant="light"
                             leftSection={<IconDownload size={16} />}
                             onClick={handleSaveCurrentAndLoad}
-                            disabled={!character.name.trim() || isAnyOperationInFlight}
+                            disabled={isAnyOperationInFlight}
                             loading={isSavingCharacter}
                         >
                             Save Current Character
