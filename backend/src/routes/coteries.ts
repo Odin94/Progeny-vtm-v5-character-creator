@@ -55,7 +55,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                             coterieCount: coterieCount[0]?.count,
                             limit: 100,
                         },
-                        userId
+                        userId,
+                        request
                     )
                     reply.code(403).send({
                         error: "Coterie limit reached",
@@ -92,7 +93,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         coterieId,
                         coterieName: name,
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 reply.code(201).send(coterie)
@@ -189,7 +191,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     sharedCount: sharedCoteries.filter((c) => c !== null).length,
                     totalCount: allCoteries.length,
                 },
-                userId
+                userId,
+                request
             )
 
             reply.send(allCoteries)
@@ -253,7 +256,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     isOwner,
                     hasSharedAccess,
                 },
-                userId
+                userId,
+                request
             )
 
             reply.send({
@@ -347,7 +351,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         coterieId: id,
                         updatedFields: name ? ["name"] : [],
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 reply.send(updated)
@@ -403,7 +408,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     userId,
                     coterieId: id,
                 },
-                userId
+                userId,
+                request
             )
 
             reply.code(204).send()
@@ -532,7 +538,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         coterieId,
                         characterId,
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 reply.code(201).send(member)
@@ -617,7 +624,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         coterieId,
                         characterId,
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 reply.code(204).send()

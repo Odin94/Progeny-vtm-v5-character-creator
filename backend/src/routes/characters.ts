@@ -52,7 +52,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                             characterCount: characterCount[0]?.count,
                             limit: 100,
                         },
-                        userId
+                        userId,
+                        request
                     )
                     reply.code(403).send({
                         error: "Character limit reached",
@@ -111,7 +112,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         characterId,
                         characterName: name,
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 const { userId: _, ...characterWithoutUserId } = character
@@ -180,7 +182,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     sharedCount: sharedCharacters.length,
                     totalCount: allCharacters.length,
                 },
-                userId
+                userId,
+                request
             )
 
             reply.send(allCharacters)
@@ -230,7 +233,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     isOwner,
                     isShared: !!isShared,
                 },
-                userId
+                userId,
+                request
             )
 
             const { userId: _, ...characterWithoutUserId } = character
@@ -326,7 +330,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         characterId,
                         updatedFields: Object.keys(updateData),
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 const { userId: _, ...characterWithoutUserId } = updated
@@ -407,7 +412,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         userId,
                         characterId,
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 reply.code(204).send()

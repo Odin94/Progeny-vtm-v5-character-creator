@@ -1,6 +1,8 @@
 import { PostHog } from "posthog-node"
+import { FastifyRequest } from "fastify"
 import { env } from "../config/env.js"
 import { logger } from "./logger.js"
+import { getRequestId } from "../middleware/requestId.js"
 
 type EventProperties = Record<string, string | number | boolean | string[] | number[] | boolean[] | null | undefined>
 
@@ -30,7 +32,12 @@ const getPostHogClient = (): PostHog | null => {
     }
 }
 
-export const trackEvent = async (eventName: string, properties: EventProperties = {}, distinctId: string): Promise<void> => {
+export const trackEvent = async (
+    eventName: string,
+    properties: EventProperties = {},
+    distinctId: string,
+    request?: FastifyRequest
+): Promise<void> => {
     if (env.NODE_ENV === "development") {
         return
     }
@@ -41,12 +48,14 @@ export const trackEvent = async (eventName: string, properties: EventProperties 
     }
 
     try {
+        const requestId = request ? getRequestId(request) : undefined
         client.capture({
             distinctId,
             event: eventName,
             properties: {
                 ...properties,
                 environment: env.NODE_ENV,
+                ...(requestId ? { requestId } : {}),
             },
         })
     } catch (error) {

@@ -59,7 +59,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                     endpoint: "/auth/login",
                     method: "GET",
                 },
-                "anonymous"
+                "anonymous",
+                request
             )
 
             reply.redirect(authorizationUrl)
@@ -160,7 +161,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                         hasFirstName: !!user.firstName,
                         hasLastName: !!user.lastName,
                     },
-                    user.id
+                    user.id,
+                    request
                 )
             }
 
@@ -200,7 +202,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                     userId: user.id,
                     isNewUser: !existingUser,
                 },
-                user.id
+                user.id,
+                request
             )
 
             // Return success response instead of redirecting
@@ -285,7 +288,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                         method: "GET",
                         hasLogoutUrl: !!logoutUrl,
                     },
-                    request.user!.id
+                    request.user!.id,
+                    request
                 )
 
                 // Return the logout URL as JSON instead of redirecting
@@ -383,7 +387,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                                 userId: refreshResult.user.id,
                                 sessionRefreshed: true,
                             },
-                            refreshResult.user.id
+                            refreshResult.user.id,
+                            request
                         )
 
                         reply.send({
@@ -423,7 +428,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                         method: "GET",
                         userId: authResult.user.id,
                     },
-                    authResult.user.id
+                    authResult.user.id,
+                    request
                 )
 
                 reply.send({
@@ -537,7 +543,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                         userId,
                         updatedFields: updateData.nickname ? ["nickname"] : [],
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 reply.send({

@@ -135,7 +135,8 @@ export async function shareRoutes(fastify: FastifyInstance) {
                         sharedWithUserId: sharedWithUser.id,
                         sharedWithUserNickname,
                     },
-                    userId
+                    userId,
+                    request
                 )
 
                 // Return only safe data without user IDs
@@ -223,7 +224,8 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     characterId,
                     sharedWithUserId,
                 },
-                userId
+                userId,
+                request
             )
 
             reply.code(204).send()
@@ -273,7 +275,8 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     characterId,
                     shareCount: shares.length,
                 },
-                userId
+                userId,
+                request
             )
 
             const response = shares.map((share) => ({
