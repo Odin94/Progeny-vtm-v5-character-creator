@@ -1057,6 +1057,8 @@ const MePage = () => {
                                         <Stack gap="sm">
                                             {userCharacters.map((char) => {
                                                 const isSelected = character.id === char.id && !char.shared
+                                                const charData = char.data as CharacterType | undefined
+                                                const playerName = charData?.player
                                                 return (
                                                     <Paper
                                                         key={char.id}
@@ -1068,7 +1070,10 @@ const MePage = () => {
                                                     >
                                                         <Group justify="space-between">
                                                             <Group gap="sm">
-                                                                <Text fw={500}>{char.name}</Text>
+                                                                <Text fw={500}>
+                                                                    {char.name}
+                                                                    {playerName ? ` | ${playerName}` : ""}
+                                                                </Text>
                                                                 {isSelected ? (
                                                                     <Badge size="sm" color="red" variant="filled">
                                                                         Active
@@ -1262,8 +1267,12 @@ const MePage = () => {
                                                                     Members ({coterie.members.length}):
                                                                 </Text>
                                                                 <Stack gap="xs">
-                                                                    {coterie.members.map((member) =>
-                                                                        member.character ? (
+                                                                    {coterie.members.map((member) => {
+                                                                        const memberCharData = member.character?.data as
+                                                                            | CharacterType
+                                                                            | undefined
+                                                                        const memberPlayerName = memberCharData?.player
+                                                                        return member.character ? (
                                                                             <Group
                                                                                 key={member.characterId}
                                                                                 gap="sm"
@@ -1271,7 +1280,10 @@ const MePage = () => {
                                                                                 justify="space-between"
                                                                             >
                                                                                 <Group gap="sm">
-                                                                                    <Text size="sm">• {member.character.name}</Text>
+                                                                                    <Text size="sm">
+                                                                                        • {member.character.name}
+                                                                                        {memberPlayerName ? ` | ${memberPlayerName}` : ""}
+                                                                                    </Text>
                                                                                     {member.character.shared ? (
                                                                                         <Badge size="xs" color="red" variant="light">
                                                                                             Shared
@@ -1295,7 +1307,7 @@ const MePage = () => {
                                                                                 ) : null}
                                                                             </Group>
                                                                         ) : null
-                                                                    )}
+                                                                    })}
                                                                 </Stack>
                                                             </>
                                                         ) : (
