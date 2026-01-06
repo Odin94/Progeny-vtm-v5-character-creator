@@ -148,6 +148,20 @@ export async function authRoutes(fastify: FastifyInstance) {
                     firstName: user.firstName || null,
                     lastName: user.lastName || null,
                 })
+
+                // Track account creation
+                await trackEvent(
+                    "account_created",
+                    {
+                        endpoint: "/auth/callback",
+                        method: "GET",
+                        userId: user.id,
+                        email: user.email,
+                        hasFirstName: !!user.firstName,
+                        hasLastName: !!user.lastName,
+                    },
+                    user.id
+                )
             }
 
             // Store the sealed session in a cookie

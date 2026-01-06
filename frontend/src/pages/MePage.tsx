@@ -59,7 +59,7 @@ import {
     useRemoveCharacterFromCoterie,
     useUpdateCoterie,
 } from "~/hooks/useCoteries"
-import { useCharacterShares } from "~/hooks/useShares"
+import { useCharacterShares, useUnshareCharacter } from "~/hooks/useShares"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
 import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
@@ -187,6 +187,9 @@ const MePage = () => {
     const deleteCoterieMutation = useDeleteCoterie()
     const addCharacterToCoterieMutation = useAddCharacterToCoterie()
     const removeCharacterFromCoterieMutation = useRemoveCharacterFromCoterie()
+
+    // Shares
+    const unshareCharacterMutation = useUnshareCharacter()
 
     // Modals
     const [createCharacterModalOpened, setCreateCharacterModalOpened] = useState(false)
@@ -668,6 +671,35 @@ const MePage = () => {
                 color: "red",
             })
         })
+    }
+
+    const handleUnshareCharacter = (char: Character) => {
+        if (!user?.id) return
+
+        // For shared characters, use the current user's ID to unshare
+        // The backend will check if the user is either the owner or the person shared with
+        unshareCharacterMutation.mutate(
+            {
+                characterId: char.id,
+                userId: user.id,
+            },
+            {
+                onSuccess: () => {
+                    notifications.show({
+                        title: "Success",
+                        message: "Character unshared",
+                        color: "green",
+                    })
+                },
+                onError: (error: unknown) => {
+                    notifications.show({
+                        title: "Error",
+                        message: error instanceof Error ? error.message : "Failed to unshare character",
+                        color: "red",
+                    })
+                },
+            }
+        )
     }
 
     const handleShareCharacter = (char: Character) => {
@@ -1313,19 +1345,63 @@ const MePage = () => {
                                                                         </Menu>
                                                                     </>
                                                                 ) : (
-                                                                    <Button
-                                                                        size="sm"
-                                                                        color="red"
-                                                                        variant="light"
-                                                                        leftSection={<IconUpload size={14} />}
-                                                                        onClick={() => {
-                                                                            handleLoadCharacter(char)
-                                                                        }}
-                                                                        disabled={isAnyOperationInFlight}
-                                                                        loading={loadingCharacterId === char.id}
-                                                                    >
-                                                                        View
-                                                                    </Button>
+                                                                    <>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            color="red"
+                                                                            variant="light"
+                                                                            leftSection={<IconUpload size={14} />}
+                                                                            onClick={() => {
+                                                                                handleLoadCharacter(char)
+                                                                            }}
+                                                                            disabled={isAnyOperationInFlight}
+                                                                            loading={loadingCharacterId === char.id}
+                                                                        >
+                                                                            View
+                                                                        </Button>
+                                                                        <Menu>
+                                                                            <Menu.Target>
+                                                                                <ActionIcon
+                                                                                    color="red"
+                                                                                    variant="light"
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                >
+                                                                                    <IconDots size={16} />
+                                                                                </ActionIcon>
+                                                                            </Menu.Target>
+                                                                            <Menu.Dropdown>
+                                                                                <Menu.Item
+                                                                                    leftSection={<IconDownload size={14} />}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation()
+                                                                                        handleSaveJson(char)
+                                                                                    }}
+                                                                                >
+                                                                                    Save JSON
+                                                                                </Menu.Item>
+                                                                                <Menu.Item
+                                                                                    leftSection={<IconFileTypePdf size={14} />}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation()
+                                                                                        handleDownloadPdf(char)
+                                                                                    }}
+                                                                                >
+                                                                                    Download PDF
+                                                                                </Menu.Item>
+                                                                                <Menu.Divider />
+                                                                                <Menu.Item
+                                                                                    leftSection={<IconShare size={14} />}
+                                                                                    color="red"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation()
+                                                                                        handleUnshareCharacter(char)
+                                                                                    }}
+                                                                                >
+                                                                                    Unshare
+                                                                                </Menu.Item>
+                                                                            </Menu.Dropdown>
+                                                                        </Menu>
+                                                                    </>
                                                                 )}
                                                             </Group>
                                                         </Group>

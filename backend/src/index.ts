@@ -2,6 +2,7 @@ import Fastify from "fastify"
 import cors from "@fastify/cors"
 import websocket from "@fastify/websocket"
 import cookie from "@fastify/cookie"
+import rateLimit from "@fastify/rate-limit"
 import { readFileSync } from "fs"
 import { characterRoutes } from "./routes/characters.js"
 import { coterieRoutes } from "./routes/coteries.js"
@@ -41,9 +42,13 @@ const fastify = Fastify({
 // Register plugins
 await fastify.register(cors, {
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, Postman, or same-origin requests)
+        // In production, reject requests with no origin to prevent CSRF attacks
         if (!origin) {
-            return callback(null, true)
+            if (env.NODE_ENV === "development") {
+                // Allow in development for tools like Postman
+                return callback(null, true)
+            }
+            return callback(new Error("Not allowed by CORS: No origin header"), false)
         }
 
         // In development, allow localhost
@@ -76,6 +81,13 @@ await fastify.register(cookie, {
     secret: env.WORKOS_COOKIE_PASSWORD,
 })
 
+await fastify.register(rateLimit, {
+    max: 1000, // Maximum number of requests per IP
+    timeWindow: "15 minutes", // Time window for the rate limit
+    // Continue processing even if rate limit store has errors
+    skipOnError: true,
+})
+
 await fastify.register(websocket)
 
 // Register routes
@@ -93,10 +105,18 @@ initializePostHogLogging()
 // Initialize metrics collection
 initializeMetrics(fastify)
 
-// Health check
-fastify.get("/health", async () => {
-    return { status: "ok" }
-})
+// Health check (excluded from rate limiting)
+fastify.get(
+    "/health",
+    {
+        config: {
+            rateLimit: false,
+        },
+    },
+    async () => {
+        return { status: "ok" }
+    }
+)
 
 const start = async () => {
     try {

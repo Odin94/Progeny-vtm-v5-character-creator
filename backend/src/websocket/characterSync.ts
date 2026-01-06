@@ -167,7 +167,7 @@ export async function characterSyncWebSocket(fastify: FastifyInstance) {
                   characterId,
                   data: characterData,
                   version,
-                  updatedBy: userId,
+                  // Don't leak userId to other subscribers
                 })
 
                 subscribers.forEach((socket) => {
@@ -187,8 +187,9 @@ export async function characterSyncWebSocket(fastify: FastifyInstance) {
               connection.socket.send(JSON.stringify({ error: "Unknown message type" }))
           }
         } catch (error) {
+          // Don't leak internal error details
           connection.socket.send(
-            JSON.stringify({ error: "Invalid message format", details: String(error) })
+            JSON.stringify({ error: "Invalid message format" })
           )
         }
       })

@@ -138,7 +138,15 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     userId
                 )
 
-                reply.code(201).send(share)
+                // Return only safe data without user IDs
+                reply.code(201).send({
+                    id: share.id,
+                    characterId: share.characterId,
+                    createdAt: share.createdAt,
+                    sharedWith: {
+                        nickname: sharedWithUser.nickname || null,
+                    },
+                })
             } catch (error) {
                 logger.error("Failed to share character", error, {
                     endpoint: "/characters/:characterId/share",
@@ -178,8 +186,25 @@ export async function shareRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            if (character.userId !== userId) {
-                reply.code(403).send({ error: "Forbidden: You can only unshare your own characters" })
+            // Check if user is the character owner or the person who was shared with
+            const isCharacterOwner = character.userId === userId
+            const isSharedWithUser = userId === sharedWithUserId
+
+            if (!isCharacterOwner && !isSharedWithUser) {
+                reply.code(403).send({ error: "Forbidden: You can only unshare characters you own or that are shared with you" })
+                return
+            }
+
+            // Verify the share exists
+            const share = await db.query.characterShares.findFirst({
+                where: and(
+                    eq(schema.characterShares.characterId, characterId),
+                    eq(schema.characterShares.sharedWithUserId, sharedWithUserId)
+                ),
+            })
+
+            if (!share) {
+                reply.code(404).send({ error: "Share not found" })
                 return
             }
 

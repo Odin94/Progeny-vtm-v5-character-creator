@@ -138,7 +138,15 @@ export async function coterieRoutes(fastify: FastifyInstance) {
 
                     return {
                         ...coterie,
-                        members: characters.filter((c) => c !== null),
+                        members: characters
+                            .filter((c) => c !== null)
+                            .map((c) => {
+                                const { userId: _, ...characterWithoutUserId } = c!.character
+                                return {
+                                    ...c!,
+                                    character: characterWithoutUserId,
+                                }
+                            }),
                         owned: true,
                     }
                 })
@@ -252,13 +260,16 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 ...coterie,
                 members: membersWithCharacters
                     .filter((m) => m !== null)
-                    .map((m) => ({
-                        ...m!,
-                        character: {
-                            ...m!.character,
-                            data: JSON.parse(m!.character.data),
-                        },
-                    })),
+                    .map((m) => {
+                        const { userId: _, ...characterWithoutUserId } = m!.character
+                        return {
+                            ...m!,
+                            character: {
+                                ...characterWithoutUserId,
+                                data: JSON.parse(m!.character.data),
+                            },
+                        }
+                    }),
                 canEdit: isOwner,
             })
         }

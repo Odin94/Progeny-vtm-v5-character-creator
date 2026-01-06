@@ -17,6 +17,7 @@
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^10.0.1",
+    "@fastify/rate-limit": "^10.3.0",
     "@fastify/websocket": "^11.0.1",
     "@opentelemetry/api-logs": "^0.208.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.208.0",

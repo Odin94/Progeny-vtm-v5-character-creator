@@ -114,8 +114,9 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     userId
                 )
 
+                const { userId: _, ...characterWithoutUserId } = character
                 reply.code(201).send({
-                    ...character,
+                    ...characterWithoutUserId,
                     data: JSON.parse(character.data),
                 })
             } catch (error) {
@@ -151,14 +152,18 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 where: eq(schema.characterShares.sharedWithUserId, userId),
                 with: {
                     character: true,
+                    sharedBy: true,
                 },
             })
 
-            const sharedCharacters = sharedShares.map((share) => ({
-                ...share.character,
-                shared: true,
-                sharedBy: share.sharedById,
-            }))
+            const sharedCharacters = sharedShares.map((share) => {
+                const { userId: _, ...characterWithoutUserId } = share.character
+                return {
+                    ...characterWithoutUserId,
+                    shared: true,
+                    sharedBy: share.sharedBy?.nickname || null,
+                }
+            })
 
             const allCharacters = [...ownedCharacters.map((c) => ({ ...c, shared: false })), ...sharedCharacters].map((c) => ({
                 ...c,
@@ -228,8 +233,9 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 userId
             )
 
+            const { userId: _, ...characterWithoutUserId } = character
             reply.send({
-                ...character,
+                ...characterWithoutUserId,
                 data: JSON.parse(character.data),
                 canEdit: isOwner,
             })
@@ -323,8 +329,9 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     userId
                 )
 
+                const { userId: _, ...characterWithoutUserId } = updated
                 reply.send({
-                    ...updated,
+                    ...characterWithoutUserId,
                     data: JSON.parse(updated.data),
                 })
             } catch (error) {
