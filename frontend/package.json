@@ -77,5 +77,8 @@
         "vite": "^5.3.3",
         "vite-plugin-svgr": "^4.2.0",
         "vitest": "^3.2.4"
+    },
+    "overrides": {
+        "fastq": "1.20.0"
     }
 }
