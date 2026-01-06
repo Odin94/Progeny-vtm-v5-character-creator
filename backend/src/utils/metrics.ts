@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify"
 import { env } from "../config/env.js"
 import * as os from "os"
+import { trackEvent } from "./tracker.js"
 
 interface ResponseTimeMetric {
     route: string
@@ -164,7 +165,6 @@ class MetricsCollector {
     }
 
     private async sendToPostHog(metrics: SystemMetrics) {
-        // Don't send metrics in development mode
         if (env.NODE_ENV === "development") {
             this.fastify.log.debug("Skipping PostHog metrics in development mode")
             return
@@ -172,37 +172,25 @@ class MetricsCollector {
 
         if (!env.PUBLIC_POSTHOG_KEY) {
             this.fastify.log.debug("PostHog not configured, skipping metrics")
-            return // PostHog not configured
+            return
         }
 
         try {
-            const posthogHost = env.PUBLIC_POSTHOG_HOST || "https://app.posthog.com"
-            const response = await fetch(`${posthogHost}/capture/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
+            await trackEvent(
+                "backend_metrics",
+                {
+                    memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
+                    memory_total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
+                    memory_percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
+                    cpu_percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
+                    response_time_p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
+                    response_time_p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
+                    response_time_p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
+                    request_count: metrics.requestCount,
+                    environment: env.NODE_ENV,
                 },
-                body: JSON.stringify({
-                    api_key: env.PUBLIC_POSTHOG_KEY,
-                    event: "backend_metrics",
-                    properties: {
-                        memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
-                        memory_total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
-                        memory_percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
-                        cpu_percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
-                        response_time_p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
-                        response_time_p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
-                        response_time_p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
-                        request_count: metrics.requestCount,
-                        environment: env.NODE_ENV,
-                    },
-                    timestamp: new Date().toISOString(),
-                }),
-            })
-
-            if (!response.ok) {
-                this.fastify.log.warn(`Failed to send metrics to PostHog: ${response.statusText}`)
-            }
+                "backend_metrics"
+            )
         } catch (error) {
             this.fastify.log.error(`Error sending metrics to PostHog: ${error}`)
         }
@@ -210,7 +198,7 @@ class MetricsCollector {
 
     start() {
         if (this.intervalId) {
-            return // Already started
+            return
         }
 
         // Initialize CPU tracking
