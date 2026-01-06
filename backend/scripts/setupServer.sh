@@ -127,7 +127,8 @@ cat > "$APP_DIR/backend/ecosystem.config.cjs" << 'EOF'
 module.exports = {
   apps: [{
     name: 'progeny-backend',
-    script: './dist/backend/src/index.js',
+    script: 'npm',
+    args: 'start',
     cwd: '/opt/progeny-backend/backend',
     instances: 1,
     exec_mode: 'fork',
