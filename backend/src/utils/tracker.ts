@@ -7,7 +7,7 @@ type EventProperties = Record<string, string | number | boolean | string[] | num
 let posthogClient: PostHog | null = null
 
 const getPostHogClient = (): PostHog | null => {
-    if (!env.POSTHOG_KEY || !env.POSTHOG_HOST) {
+    if (!env.PUBLIC_POSTHOG_KEY || !env.PUBLIC_POSTHOG_HOST) {
         return null
     }
 
@@ -16,8 +16,8 @@ const getPostHogClient = (): PostHog | null => {
     }
 
     try {
-        posthogClient = new PostHog(env.POSTHOG_KEY, {
-            host: env.POSTHOG_HOST,
+        posthogClient = new PostHog(env.PUBLIC_POSTHOG_KEY, {
+            host: env.PUBLIC_POSTHOG_HOST,
             flushAt: 20,
             flushInterval: 10000,
         })

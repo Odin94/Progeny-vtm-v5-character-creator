@@ -13,7 +13,7 @@ npm run db:migrate
 echo "Migrated the database"
 pm2 restart progeny-backend
 echo "Restarted the backend"
-echo "Waiting 2 seconds for backend to start..."
-sleep 2
+echo "Waiting 5 seconds for backend to start..."
+sleep 5
 curl https://api.progeny.odin-matthias.de/health
 echo ""

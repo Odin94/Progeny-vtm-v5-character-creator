@@ -9,16 +9,16 @@ let sdk: NodeSDK | null = null
 let logger: ReturnType<typeof logs.getLogger> | null = null
 
 export const initializePostHogLogging = () => {
-    if (!env.POSTHOG_KEY) {
+    if (!env.PUBLIC_POSTHOG_KEY) {
         console.log("PostHog API key not configured, skipping PostHog logging initialization")
         return
     }
-    if (!env.POSTHOG_HOST) {
+    if (!env.PUBLIC_POSTHOG_HOST) {
         console.log("PostHog host not configured, skipping PostHog logging initialization")
         return
     }
 
-    const logsUrl = `${env.POSTHOG_HOST}/i/v1/logs`
+    const logsUrl = `${env.PUBLIC_POSTHOG_HOST}/i/v1/logs`
 
     try {
         sdk = new NodeSDK({
@@ -30,7 +30,7 @@ export const initializePostHogLogging = () => {
                 new OTLPLogExporter({
                     url: logsUrl,
                     headers: {
-                        Authorization: `Bearer ${env.POSTHOG_KEY}`,
+                        Authorization: `Bearer ${env.PUBLIC_POSTHOG_KEY}`,
                     },
                 })
             ),

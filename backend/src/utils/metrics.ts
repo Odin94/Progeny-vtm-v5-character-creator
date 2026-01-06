@@ -170,20 +170,20 @@ class MetricsCollector {
             return
         }
 
-        if (!env.POSTHOG_KEY) {
+        if (!env.PUBLIC_POSTHOG_KEY) {
             this.fastify.log.debug("PostHog not configured, skipping metrics")
             return // PostHog not configured
         }
 
         try {
-            const posthogHost = env.POSTHOG_HOST || "https://app.posthog.com"
+            const posthogHost = env.PUBLIC_POSTHOG_HOST || "https://app.posthog.com"
             const response = await fetch(`${posthogHost}/capture/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    api_key: env.POSTHOG_KEY,
+                    api_key: env.PUBLIC_POSTHOG_KEY,
                     event: "backend_metrics",
                     properties: {
                         memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
