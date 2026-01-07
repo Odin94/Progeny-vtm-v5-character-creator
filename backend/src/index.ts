@@ -99,11 +99,12 @@ fastify.addHook("onRequest", async (request, reply) => {
 fastify.addHook("onRequest", async (request, reply) => {
     if (request.method === "GET" && !request.url.startsWith("/ws/")) {
         const existingToken = request.cookies["csrf-token"]
+        const token = existingToken ?? generateCsrfToken()
+        // TODOdin: We now set csrf in cookie and header, but only really need header
         if (!existingToken) {
-            const token = generateCsrfToken()
             setCsrfToken(reply, token, request)
-            reply.header("X-CSRF-Token", token)
         }
+        reply.header("X-CSRF-Token", token)
     }
 })
 

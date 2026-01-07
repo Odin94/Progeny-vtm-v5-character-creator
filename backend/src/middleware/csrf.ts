@@ -32,6 +32,7 @@ export function setCsrfToken(reply: FastifyReply, token: string, request: Fastif
     })
 }
 
+// TODOdin: This is not great validation and we should tie csrf tokens to sessions and store server-side
 export async function validateCsrfToken(request: FastifyRequest, reply: FastifyReply): Promise<boolean> {
     // Skip CSRF validation for GET, HEAD, OPTIONS requests
     if (["GET", "HEAD", "OPTIONS"].includes(request.method)) {
