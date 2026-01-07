@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 
-cp database.sqlite database.sqlite.backup.$(date +%Y%m%d_%H%M%S)
-echo "Backed up database.sqlite to database.sqlite.backup.$(date +%Y%m%d_%H%M%S)"
+mkdir -p db_backups
+BACKUP_FILE="db_backups/database.sqlite.backup.$(date +%Y%m%d_%H%M%S)"
+cp database.sqlite "$BACKUP_FILE"
+echo "Backed up database.sqlite to $BACKUP_FILE"
+
 git pull
 echo "Pulled latest code from git"
 npm install
