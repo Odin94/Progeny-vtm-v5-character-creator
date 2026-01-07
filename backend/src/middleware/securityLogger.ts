@@ -39,7 +39,7 @@ export function logSecurityEvent(
         timestamp: Date.now(),
     }
 
-    logger.warn("Security event", {
+    logger.warn(type, {
         securityEvent: JSON.stringify(logEntry),
         endpoint: request.url,
         method: request.method,
@@ -48,6 +48,9 @@ export function logSecurityEvent(
 }
 
 export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
+    if (request.method === "OPTIONS") return
+    if (request.url === "/health") return
+
     const requestId = getRequestId(request)
     const ip = request.ip || request.socket.remoteAddress || "unknown"
     const userAgent = request.headers["user-agent"]
@@ -55,7 +58,7 @@ export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
     const statusCode = reply.statusCode
 
     // Log all requests for security monitoring
-    logger.info("Request", {
+    logger.info(`${request.method} ${request.url}: ${statusCode}`, {
         requestId,
         method: request.method,
         url: request.url,
@@ -63,6 +66,5 @@ export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
         userAgent: userAgent ?? null,
         userId: userId ?? null,
         statusCode,
-        endpoint: request.url,
     })
 }

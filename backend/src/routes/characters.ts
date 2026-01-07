@@ -402,6 +402,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     method: "DELETE",
                     userId,
                     characterId,
+                    character: JSON.stringify(character),
                 })
 
                 await trackEvent(
@@ -411,6 +412,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "DELETE",
                         userId,
                         characterId,
+                        character: JSON.stringify(character),
                     },
                     userId,
                     request

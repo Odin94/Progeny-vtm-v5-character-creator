@@ -6,9 +6,16 @@ import { logs } from "@opentelemetry/api-logs"
 import { env } from "../config/env.js"
 
 let sdk: NodeSDK | null = null
-let logger: ReturnType<typeof logs.getLogger> | null = null
+// Initialize with empty logger
+export let posthogLogger: ReturnType<typeof logs.getLogger> = {
+    emit: () => {},
+}
 
 export const initializePostHogLogging = () => {
+    if (env.NODE_ENV === "development") {
+        console.log("Skipping PostHog logging initialization in development mode")
+        return
+    }
     if (!env.PUBLIC_POSTHOG_KEY) {
         console.log("PostHog API key not configured, skipping PostHog logging initialization")
         return
@@ -38,7 +45,7 @@ export const initializePostHogLogging = () => {
 
         sdk.start()
 
-        logger = logs.getLogger("progeny-backend")
+        posthogLogger = logs.getLogger("progeny-backend")
 
         console.log(`PostHog logging initialized (endpoint: ${logsUrl})`)
     } catch (error) {
@@ -46,19 +53,12 @@ export const initializePostHogLogging = () => {
     }
 }
 
-export const getPostHogLogger = () => {
-    if (!logger) {
-        return {
-            emit: () => {},
-        }
-    }
-    return logger
-}
-
 export const shutdownPostHogLogging = async () => {
     if (sdk) {
         await sdk.shutdown()
         sdk = null
-        logger = null
+        posthogLogger = {
+            emit: () => {},
+        }
     }
 }

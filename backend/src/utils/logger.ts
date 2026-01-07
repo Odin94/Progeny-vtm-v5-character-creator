@@ -1,8 +1,6 @@
-import { getPostHogLogger } from "./posthogLogger.js"
+import { posthogLogger } from "./posthogLogger.js"
 
 type LogAttributes = Record<string, string | number | boolean | string[] | number[] | boolean[] | null>
-
-const posthogLogger = getPostHogLogger()
 
 export const logger = {
     trace: (message: string, attributes?: LogAttributes) => {
