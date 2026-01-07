@@ -71,7 +71,7 @@ await fastify.register(cors, {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["*"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME, "X-Request-Id"],
     exposedHeaders: ["X-Request-Id", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME],
 })
 
