@@ -15,7 +15,7 @@ import { initializePostHogLogging, shutdownPostHogLogging } from "./utils/postho
 import { shutdownPostHogTracking } from "./utils/tracker.js"
 import { generateRequestId, setRequestId } from "./middleware/requestId.js"
 import { CSRF_TOKEN_HEADER_NAME, generateCsrfToken, setCsrfToken, validateCsrfToken } from "./middleware/csrf.js"
-import { logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
+import { logError, logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
 
 const httpsOptions =
     env.SSL_CERT_PATH && env.SSL_KEY_PATH
@@ -121,9 +121,13 @@ fastify.addHook("onRequest", async (request, reply) => {
     }
 })
 
-// Add security logging hook
+// Add logging hooks
 fastify.addHook("onResponse", async (request, reply) => {
     logRequest(request, reply)
+})
+
+fastify.addHook("onError", async (request, reply, error) => {
+    logError(request, reply, error)
 })
 
 // Register routes
