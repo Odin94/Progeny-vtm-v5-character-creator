@@ -96,12 +96,11 @@ fastify.addHook("onRequest", async (request, reply) => {
 
 // Add CSRF token generation for GET requests
 fastify.addHook("onRequest", async (request, reply) => {
-    // Generate and set CSRF token for GET requests (so frontend can read it)
     if (request.method === "GET" && !request.url.startsWith("/ws/")) {
         const existingToken = request.cookies["csrf-token"]
         if (!existingToken) {
             const token = generateCsrfToken()
-            setCsrfToken(reply, token)
+            setCsrfToken(reply, token, request)
         }
     }
 })

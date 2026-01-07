@@ -9,12 +9,26 @@ export function generateCsrfToken(): string {
     return nanoid(32)
 }
 
-export function setCsrfToken(reply: FastifyReply, token: string): void {
+export function setCsrfToken(reply: FastifyReply, token: string, request: FastifyRequest): void {
+    // Determine domain based on request origin
+    const origin = request.headers.origin
+    let domain: string | undefined
+
+    // TODOdin: Allow configuring these domains (and cors domains) via env variables
+    if (origin) {
+        if (origin.includes("odin-matthias.de")) {
+            domain = ".odin-matthias.de"
+        } else if (origin.includes("odin-matthias.com")) {
+            domain = ".odin-matthias.com"
+        }
+    }
+
     reply.setCookie(CSRF_TOKEN_COOKIE_NAME, token, {
-        httpOnly: false, // Must be readable by JavaScript for frontend
+        httpOnly: false,
         secure: env.NODE_ENV === "production",
         sameSite: env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
+        domain: env.NODE_ENV === "production" ? domain : undefined,
     })
 }
 
