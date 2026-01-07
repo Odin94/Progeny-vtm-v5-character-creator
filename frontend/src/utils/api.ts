@@ -19,8 +19,24 @@ const getCsrfToken = (): string | null => {
     return null
 }
 
+// Ensure CSRF token is available before making requests
+// TODOdin: This is not pretty, find an established best practice for initializing CSRF for SPAs
+const ensureCsrfToken = async (): Promise<void> => {
+    if (!getCsrfToken()) {
+        // Make a GET request to trigger CSRF token generation
+        await fetch(`${API_URL}/health`, {
+            credentials: "include",
+        })
+    }
+}
+
 const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
     const { method = "GET", body, headers = {} } = options
+
+    // Ensure CSRF token exists for state-changing operations
+    if (["POST", "PUT", "DELETE"].includes(method)) {
+        await ensureCsrfToken()
+    }
 
     const requestHeaders: Record<string, string> = {
         ...headers,
