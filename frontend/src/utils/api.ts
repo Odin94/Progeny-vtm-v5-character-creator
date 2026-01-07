@@ -49,8 +49,12 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     // Add CSRF token for state-changing operations
     if (["POST", "PUT", "DELETE"].includes(method)) {
         const csrfToken = getCsrfToken()
+        console.log("CSRF Token from cookie:", csrfToken)
         if (csrfToken) {
             requestHeaders["x-csrf-token"] = csrfToken
+            console.log("Added x-csrf-token header:", csrfToken)
+        } else {
+            console.warn("No CSRF token found in cookies!")
         }
     }
 
