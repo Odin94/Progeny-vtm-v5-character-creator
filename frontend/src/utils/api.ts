@@ -7,17 +7,19 @@ type RequestOptions = {
     headers?: Record<string, string>
 }
 
-const getCsrfToken = (): string | null => {
-    // Read CSRF token from cookie
-    const cookies = document.cookie.split(";")
-    for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split("=")
-        if (name === "csrf-token") {
-            return decodeURIComponent(value)
-        }
-    }
-    return null
-}
+// TODOdin: We're now getting token from header because of domain conflict issues
+// verify that what we're doing now is legit and good practice
+// const getCsrfToken = (): string | null => {
+//     // Read CSRF token from cookie
+//     const cookies = document.cookie.split(";")
+//     for (const cookie of cookies) {
+//         const [name, value] = cookie.trim().split("=")
+//         if (name === "csrf-token") {
+//             return decodeURIComponent(value)
+//         }
+//     }
+//     return null
+// }
 
 // Ensure CSRF token is available before making requests
 // TODOdin: This is not pretty, find an established best practice for initializing CSRF for SPAs
@@ -28,6 +30,12 @@ const ensureCsrfToken = async (): Promise<void> => {
             credentials: "include",
         })
     }
+}
+
+let csrfTokenCache: string | null = null
+
+const getCsrfToken = (): string | null => {
+    return csrfTokenCache
 }
 
 const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
@@ -48,6 +56,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
 
     // Add CSRF token for state-changing operations
     if (["POST", "PUT", "DELETE"].includes(method)) {
+        // TODOdin: Clean up debug logs
         const csrfToken = getCsrfToken()
         console.log("CSRF Token from cookie:", csrfToken)
         if (csrfToken) {
@@ -64,6 +73,11 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
         credentials: "include",
         ...(body ? { body: JSON.stringify(body) } : {}),
     })
+
+    const csrfFromHeader = response.headers.get("X-CSRF-Token")
+    if (csrfFromHeader) {
+        csrfTokenCache = csrfFromHeader
+    }
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: "Unknown error" }))

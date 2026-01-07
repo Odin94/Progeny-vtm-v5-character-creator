@@ -90,6 +90,7 @@ await fastify.register(websocket)
 
 // Add request ID tracking hook
 fastify.addHook("onRequest", async (request, reply) => {
+    // TODOdin: is x-request-id working with cors config?
     const requestId = (request.headers["x-request-id"] as string | undefined) || generateRequestId()
     setRequestId(request, reply, requestId)
 })
@@ -101,6 +102,7 @@ fastify.addHook("onRequest", async (request, reply) => {
         if (!existingToken) {
             const token = generateCsrfToken()
             setCsrfToken(reply, token, request)
+            reply.header("X-CSRF-Token", token)
         }
     }
 })
