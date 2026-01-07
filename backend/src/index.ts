@@ -14,7 +14,7 @@ import { initializeMetrics } from "./utils/metrics.js"
 import { initializePostHogLogging, shutdownPostHogLogging } from "./utils/posthogLogger.js"
 import { shutdownPostHogTracking } from "./utils/tracker.js"
 import { generateRequestId, setRequestId } from "./middleware/requestId.js"
-import { generateCsrfToken, setCsrfToken, validateCsrfToken } from "./middleware/csrf.js"
+import { CSRF_TOKEN_HEADER_NAME, generateCsrfToken, setCsrfToken, validateCsrfToken } from "./middleware/csrf.js"
 import { logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
 
 const httpsOptions =
@@ -71,8 +71,8 @@ await fastify.register(cors, {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Request-Id"],
-    exposedHeaders: ["X-Request-Id"],
+    allowedHeaders: ["*"],
+    exposedHeaders: ["X-Request-Id", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME],
 })
 
 await fastify.register(cookie, {

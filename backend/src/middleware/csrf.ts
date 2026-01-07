@@ -3,7 +3,7 @@ import { nanoid } from "nanoid"
 import { env } from "../config/env.js"
 
 const CSRF_TOKEN_COOKIE_NAME = "csrf-token"
-const CSRF_TOKEN_HEADER_NAME = "x-csrf-token"
+export const CSRF_TOKEN_HEADER_NAME = "x-csrf-token"
 
 export function generateCsrfToken(): string {
     return nanoid(32)
