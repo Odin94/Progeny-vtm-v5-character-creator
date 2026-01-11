@@ -53,40 +53,37 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
         return predatorType.meritsAndFlaws.filter((mf) => mf.type === "flaw")
     }, [character.predatorType?.name])
 
-    // Get picked merits and flaws from predator type
-    const pickedPredatorTypeMerits = useMemo(() => {
-        if (!character.predatorType?.pickedMeritsAndFlaws) return []
-        return character.predatorType.pickedMeritsAndFlaws.filter((mf) => mf.type === "merit")
-    }, [character.predatorType?.pickedMeritsAndFlaws])
+    // TODOdin: picked merits and flaws are already added to character.merits and flaws;
+    // consider whether we want to change that (I'm thinking probably yes)
+    // const pickedPredatorTypeMerits = useMemo(() => {
+    //     if (!character.predatorType?.pickedMeritsAndFlaws) return []
+    //     return character.predatorType.pickedMeritsAndFlaws.filter((mf) => mf.type === "merit")
+    // }, [character.predatorType?.pickedMeritsAndFlaws])
 
-    const pickedPredatorTypeFlaws = useMemo(() => {
-        if (!character.predatorType?.pickedMeritsAndFlaws) return []
-        return character.predatorType.pickedMeritsAndFlaws.filter((mf) => mf.type === "flaw")
-    }, [character.predatorType?.pickedMeritsAndFlaws])
+    // const pickedPredatorTypeFlaws = useMemo(() => {
+    //     if (!character.predatorType?.pickedMeritsAndFlaws) return []
+    //     return character.predatorType.pickedMeritsAndFlaws.filter((mf) => mf.type === "flaw")
+    // }, [character.predatorType?.pickedMeritsAndFlaws])
 
     // Combine regular merits with predator type merits (both automatic and picked)
     const allMerits = useMemo(() => {
         const regularMerits = character.merits.map((merit) => ({ merit, isFromPredatorType: false }))
         const autoMerits = predatorTypeMerits.map((merit) => ({ merit, isFromPredatorType: true }))
-        const pickedMerits = pickedPredatorTypeMerits.map((merit) => ({ merit, isFromPredatorType: true }))
-        return [...regularMerits, ...autoMerits, ...pickedMerits]
-    }, [character.merits, predatorTypeMerits, pickedPredatorTypeMerits])
+        return [...regularMerits, ...autoMerits]
+    }, [character.merits, predatorTypeMerits])
 
     // Combine regular flaws with predator type flaws (both automatic and picked)
     const allFlaws = useMemo(() => {
         const regularFlaws = character.flaws.map((flaw) => ({ flaw, isFromPredatorType: false }))
         const autoFlaws = predatorTypeFlaws.map((flaw) => ({ flaw, isFromPredatorType: true }))
-        const pickedFlaws = pickedPredatorTypeFlaws.map((flaw) => ({ flaw, isFromPredatorType: true }))
-        return [...regularFlaws, ...autoFlaws, ...pickedFlaws]
-    }, [character.flaws, predatorTypeFlaws, pickedPredatorTypeFlaws])
+        return [...regularFlaws, ...autoFlaws]
+    }, [character.flaws, predatorTypeFlaws])
 
     if (
         character.merits.length === 0 &&
         character.flaws.length === 0 &&
         predatorTypeMerits.length === 0 &&
         predatorTypeFlaws.length === 0 &&
-        pickedPredatorTypeMerits.length === 0 &&
-        pickedPredatorTypeFlaws.length === 0 &&
         !isEditable
     ) {
         return null
