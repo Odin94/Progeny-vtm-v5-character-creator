@@ -39,6 +39,11 @@ npm install
 npm run dev
 ```
 
+You can optionally run both conveniently with `mprocs` (only tested on Windows):
+* `npm install -g mprocs`
+* `mprocs`
+
+
 ## How to manually create a loadable json character / fix a broken json file
 Check the `characterSchema` in `shared/src/schemas/Character.ts` to get an idea for the expected format. If you can't make it work, feel free to create an issue on Github or contact me.
 

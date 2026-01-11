@@ -1,0 +1,8 @@
+procs:
+  backend:
+    cmd: ["cmd", "/c", "cd backend && npm run dev"]
+  frontend:
+    cmd: ["cmd", "/c", "cd frontend && npm start"]
+  drizzle-studio:
+    cmd: ["cmd", "/c", "cd backend && npm run db:studio"]
+  
