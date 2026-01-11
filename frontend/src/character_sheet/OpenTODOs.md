@@ -12,6 +12,7 @@
 * Add more powers (currently mostly have core book powers)
 * Dice-pool hover should include eg. Prowess for strength
 * Give "+" buttons a cute animation on hover
+* Allow users to create custom disciplines/powers in character sheet
 
 ### Merits/Flaws
 * Add more Merits/Flaws
@@ -34,3 +35,5 @@
 * Do not add an empty specialty to Academics, Craft etc. if the skill is not picked  (visible in sheet)
 * Editing predator type in sheet (should apply bonuses)
 * Prevent background from resizing on mode change
+* **Several people have asked for "In memoriam" support**
+* Custom Clan Banes & Compulsions (basically just overwrite what you have)
