@@ -1,4 +1,20 @@
-import { Badge, Box, Button, Card, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core"
+import {
+    Badge,
+    Box,
+    Button,
+    Card,
+    Grid,
+    Group,
+    Modal,
+    ScrollArea,
+    Stack,
+    Tabs,
+    Text,
+    Textarea,
+    TextInput,
+    Title,
+    Tooltip,
+} from "@mantine/core"
 import posthog from "posthog-js"
 import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
@@ -23,6 +39,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const [selectedLevel, setSelectedLevel] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<string | null>("regular")
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
+    const [customName, setCustomName] = useState("")
+    const [customLevel, setCustomLevel] = useState<number>(1)
+    const [customDescription, setCustomDescription] = useState("")
+    const isEditable = mode === "xp" || mode === "free"
 
     useEffect(() => {
         if (!opened) {
@@ -30,6 +50,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             setSelectedLevel(1)
             setActiveTab("regular")
             setOpenLoresheetTitle("")
+            setCustomName("")
+            setCustomLevel(1)
+            setCustomDescription("")
         }
     }, [opened])
 
@@ -194,6 +217,101 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const handleSelect = () => {
         if (!selectedMeritFlaw) return
         addMeritFlaw(selectedMeritFlaw, selectedLevel)
+    }
+
+    const handleAddCustom = () => {
+        if (!customName.trim()) return
+
+        const customMeritFlaw: MeritFlaw = {
+            name: customName.trim(),
+            level: customLevel,
+            summary: customDescription.trim(),
+            excludes: [],
+            type,
+        }
+
+        if (mode === "xp" && type === "merit") {
+            const existingMerit = character.merits.find((m) => m.name === customName.trim())
+            const previousLevel = existingMerit ? existingMerit.level : 0
+            const cost = getMeritCost(customLevel, previousLevel)
+            const availableXP = getAvailableXP(character)
+            if (!canAffordUpgrade(availableXP, cost)) {
+                return
+            }
+            if (existingMerit) {
+                const updatedMerits = character.merits.map((m) => (m === existingMerit ? customMeritFlaw : m))
+                setCharacter({
+                    ...character,
+                    merits: updatedMerits,
+                    ephemeral: {
+                        ...character.ephemeral,
+                        experienceSpent: character.ephemeral.experienceSpent + cost,
+                    },
+                })
+            } else {
+                setCharacter({
+                    ...character,
+                    merits: [...character.merits, customMeritFlaw],
+                    ephemeral: {
+                        ...character.ephemeral,
+                        experienceSpent: character.ephemeral.experienceSpent + cost,
+                    },
+                })
+            }
+        } else {
+            if (type === "merit") {
+                const existingMerit = character.merits.find((m) => m.name === customName.trim())
+                if (existingMerit) {
+                    const updatedMerits = character.merits.map((m) => (m === existingMerit ? customMeritFlaw : m))
+                    setCharacter({
+                        ...character,
+                        merits: updatedMerits,
+                    })
+                } else {
+                    setCharacter({
+                        ...character,
+                        merits: [...character.merits, customMeritFlaw],
+                    })
+                }
+            } else {
+                const existingFlaw = character.flaws.find((f) => f.name === customName.trim())
+                if (existingFlaw) {
+                    const updatedFlaws = character.flaws.map((f) => (f === existingFlaw ? customMeritFlaw : f))
+                    setCharacter({
+                        ...character,
+                        flaws: updatedFlaws,
+                    })
+                } else {
+                    setCharacter({
+                        ...character,
+                        flaws: [...character.flaws, customMeritFlaw],
+                    })
+                }
+            }
+        }
+
+        try {
+            posthog.capture("sheet-merit-flaw-custom", {
+                name: customName.trim(),
+                type: type,
+                level: customLevel,
+                mode: mode,
+            })
+        } catch (error) {
+            console.warn("PostHog sheet-merit-flaw-custom tracking failed:", error)
+        }
+
+        onClose()
+        setCustomName("")
+        setCustomLevel(1)
+        setCustomDescription("")
+    }
+
+    const getCustomMeritCost = (level: number): number => {
+        if (type === "flaw" || mode !== "xp") return 0
+        const existingMerit = character.merits.find((m) => m.name === customName.trim())
+        const previousLevel = existingMerit ? existingMerit.level : 0
+        return getMeritCost(level, previousLevel)
     }
 
     const getCostForItem = (item: MeritOrFlaw, level: number): number => {
@@ -466,6 +584,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                         <Tabs.List>
                             <Tabs.Tab value="regular">{type === "merit" ? "Merits" : "Flaws"}</Tabs.Tab>
                             {type === "merit" ? <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab> : null}
+                            {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
                         </Tabs.List>
 
                         <Tabs.Panel value="regular" pt="md">
@@ -577,6 +696,69 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                         {type === "merit" ? (
                             <Tabs.Panel value="loresheets" pt="md">
                                 {renderLoresheetsContent()}
+                            </Tabs.Panel>
+                        ) : null}
+                        {isEditable ? (
+                            <Tabs.Panel value="custom" pt="md">
+                                <Stack gap="md">
+                                    <TextInput
+                                        label="Name"
+                                        placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} name`}
+                                        value={customName}
+                                        onChange={(e) => setCustomName(e.target.value)}
+                                        required
+                                    />
+                                    <Textarea
+                                        label="Description"
+                                        placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} description (optional)`}
+                                        value={customDescription}
+                                        onChange={(e) => setCustomDescription(e.target.value)}
+                                        minRows={3}
+                                    />
+                                    <Box>
+                                        <Text size="sm" fw={600} mb="xs">
+                                            Select Level:
+                                        </Text>
+                                        <Group gap="xs">
+                                            {[1, 2, 3, 4, 5].map((level) => {
+                                                const cost = getCustomMeritCost(level)
+                                                const availableXP = getAvailableXP(character)
+                                                const canAfford = type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, cost)
+                                                const disabledReason =
+                                                    type === "flaw" || mode !== "xp"
+                                                        ? undefined
+                                                        : canAfford
+                                                          ? undefined
+                                                          : `Insufficient XP. Need ${cost}, have ${availableXP}`
+
+                                                return (
+                                                    <PipButton
+                                                        key={level}
+                                                        filled={customLevel >= level}
+                                                        onClick={() => setCustomLevel(level)}
+                                                        options={options}
+                                                        disabledReason={disabledReason}
+                                                        xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
+                                                    />
+                                                )
+                                            })}
+                                        </Group>
+                                    </Box>
+                                    <Group justify="flex-end" mt="md">
+                                        <Button
+                                            onClick={handleAddCustom}
+                                            color={primaryColor}
+                                            disabled={
+                                                !customName.trim() ||
+                                                (mode === "xp" &&
+                                                    type === "merit" &&
+                                                    !canAffordUpgrade(getAvailableXP(character), getCustomMeritCost(customLevel)))
+                                            }
+                                        >
+                                            Add
+                                        </Button>
+                                    </Group>
+                                </Stack>
                             </Tabs.Panel>
                         ) : null}
                     </Tabs>

@@ -19,7 +19,7 @@ export const getBasicTestCharacter = (): Character => {
                     name: "Anesthetics",
                 },
             ],
-            pickedMeritsAndFlaws: [{ name: "Resources", level: 1, summary: "", type: "merit" }],
+            pickedMeritsAndFlaws: [{ name: "Resources", level: 1, summary: "", type: "merit", excludes: [] }],
         },
         touchstones: [
             {
@@ -122,6 +122,7 @@ export const getBasicTestCharacter = (): Character => {
                 level: 3,
                 summary: "A direct merit",
                 type: "merit",
+                excludes: [],
             },
         ],
         flaws: [
@@ -130,6 +131,7 @@ export const getBasicTestCharacter = (): Character => {
                 level: 2,
                 summary: "A direct flaw",
                 type: "flaw",
+                excludes: [],
             },
         ],
         notes: "",
@@ -143,5 +145,6 @@ export const getBasicTestCharacter = (): Character => {
             experienceSpent: 0,
         },
         version: 1,
+        characterVersion: 1,
     }
 }

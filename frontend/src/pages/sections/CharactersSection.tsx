@@ -1,16 +1,4 @@
-import {
-    ActionIcon,
-    Badge,
-    Button,
-    Card,
-    FileButton,
-    Group,
-    Menu,
-    Paper,
-    Stack,
-    Text,
-    Title,
-} from "@mantine/core"
+import { ActionIcon, Badge, Button, Card, FileButton, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core"
 import {
     IconDots,
     IconDownload,
@@ -80,11 +68,7 @@ const CharactersSection = ({
                     </Badge>
                 </Group>
                 <Group gap="xs">
-                    <Button
-                        leftSection={<IconPlus size={16} />}
-                        color="red"
-                        onClick={() => setCreateCharacterModalOpened(true)}
-                    >
+                    <Button leftSection={<IconPlus size={16} />} color="red" onClick={() => setCreateCharacterModalOpened(true)}>
                         Create Empty
                     </Button>
                     {showSaveCurrentButton ? (
@@ -204,11 +188,7 @@ const CharactersSection = ({
                                                 </Button>
                                                 <Menu>
                                                     <Menu.Target>
-                                                        <ActionIcon
-                                                            color="red"
-                                                            variant="light"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
+                                                        <ActionIcon color="red" variant="light" onClick={(e) => e.stopPropagation()}>
                                                             <IconDots size={16} />
                                                         </ActionIcon>
                                                     </Menu.Target>
@@ -272,11 +252,7 @@ const CharactersSection = ({
                                                 </Button>
                                                 <Menu>
                                                     <Menu.Target>
-                                                        <ActionIcon
-                                                            color="red"
-                                                            variant="light"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
+                                                        <ActionIcon color="red" variant="light" onClick={(e) => e.stopPropagation()}>
                                                             <IconDots size={16} />
                                                         </ActionIcon>
                                                     </Menu.Target>
