@@ -108,6 +108,7 @@ export const api = {
         }),
 
     // Characters
+    // TODOdin: type these APIs and validate in fetch
     getCharacters: () => apiRequest<Array<unknown>>("/characters"),
     getCharacter: (id: string) => apiRequest<unknown>(`/characters/${id}`),
     createCharacter: (data: { name: string; data?: unknown; version?: number }) =>

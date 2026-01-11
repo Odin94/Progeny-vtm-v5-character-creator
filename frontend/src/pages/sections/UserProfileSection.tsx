@@ -38,8 +38,9 @@ const UserProfileSection = ({
             </Group>
             <Stack gap="sm">
                 <Group gap="xs">
-                    <Text fw={500}>Email:</Text>
-                    <Text>{user?.email}</Text>
+                    {/* TODOdin: Reenable email display after demo */}
+                    {/* <Text fw={500}>Email:</Text> */}
+                    {/* <Text>{user?.email}</Text> */}
                 </Group>
                 {user?.firstName || user?.lastName ? (
                     <Group gap="xs">
