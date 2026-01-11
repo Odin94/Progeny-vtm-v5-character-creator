@@ -338,10 +338,6 @@ export async function authRoutes(fastify: FastifyInstance) {
             const sessionData = request.cookies["wos-session"]
 
             if (!sessionData) {
-                logger.warn("No session found", {
-                    endpoint: "/auth/me",
-                    method: "GET",
-                })
                 reply.code(401).send({
                     error: "Unauthorized",
                     message: "No session found",

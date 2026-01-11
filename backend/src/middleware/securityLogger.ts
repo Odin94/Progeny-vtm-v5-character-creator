@@ -50,6 +50,7 @@ export function logSecurityEvent(
 export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
     if (request.method === "OPTIONS") return
     if (request.url === "/health") return
+    if (request.url === "/auth/me" && reply.statusCode === 401) return // These are triggered when FE checks if there is a session, so they happen a lot and mean nothing
 
     const requestId = getRequestId(request)
     const ip = request.ip || request.socket.remoteAddress || "unknown"
