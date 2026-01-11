@@ -128,7 +128,7 @@ const CharactersSection = ({
             ) : (
                 <Stack gap="sm">
                     {userCharacters.map((char) => {
-                        const isSelected = character.id === char.id && !char.shared
+                        const isSelected = character.id === char.id
                         const charData = char.data as CharacterType | undefined
                         const playerName = charData?.player
                         return (
