@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Group, Modal, Select, Stack, Text, TextInput, useMantineTheme } from "@mantine/core"
 import { useState } from "react"
 import { Character } from "../../data/Character"
-import { Skills, SkillsKey, skillsKeySchema } from "../../data/Skills"
+import { Skills, SkillsKey, skillsKeySchema, allSkills } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
 import { globals } from "../../globals"
 import { intersection, lowcase, upcase } from "../utils"
@@ -89,6 +89,10 @@ export const SpecialtyModal = ({
                         // label="Pick a free specialty"
                         placeholder="Pick one"
                         searchable
+                        value={pickedSkillDisplay}
+                        onChange={(value) => {
+                            setPickedSkillDisplay(value ?? "")
+                        }}
                         onSearchChange={setPickedSkillDisplay}
                         searchValue={pickedSkillDisplay}
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
@@ -133,10 +137,13 @@ export const SpecialtyModal = ({
                             let pickedSpecialties = specialtySkills.reduce<Specialty[]>((acc, s) => {
                                 return [...acc, { skill: skillsKeySchema.parse(s), name: specialtyStates[s as SpecialtySkill].value }]
                             }, [])
-                            pickedSpecialties = [
-                                ...pickedSpecialties,
-                                { skill: skillsKeySchema.parse(pickedSkill), name: lowcase(pickedSkillSpecialty) },
-                            ]
+
+                            if (pickedSkill && pickedSkillSpecialty.trim() && allSkills.includes(pickedSkill as SkillsKey)) {
+                                pickedSpecialties = [
+                                    ...pickedSpecialties,
+                                    { skill: skillsKeySchema.parse(pickedSkill), name: lowcase(pickedSkillSpecialty) },
+                                ]
+                            }
 
                             closeModal()
                             setCharacter({ ...character, skills: skills, skillSpecialties: pickedSpecialties })
