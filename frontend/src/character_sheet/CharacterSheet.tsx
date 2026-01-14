@@ -49,6 +49,9 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     })
     const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
     const primaryColor = getPrimaryColor(character.clan)
+    // TODOdin: Remove this once dice roller is ready
+    const isLocalhost =
+        typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
@@ -114,18 +117,20 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             alignItems: "flex-end",
                         }}
                     >
-                        <ActionIcon
-                            size="xl"
-                            variant="light"
-                            color={primaryColor}
-                            radius="xl"
-                            onClick={openDiceModal}
-                            style={{
-                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                            }}
-                        >
-                            <IconDice size={24} />
-                        </ActionIcon>
+                        {isLocalhost ? (
+                            <ActionIcon
+                                size="xl"
+                                variant="light"
+                                color={primaryColor}
+                                radius="xl"
+                                onClick={openDiceModal}
+                                style={{
+                                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                                }}
+                            >
+                                <IconDice size={24} />
+                            </ActionIcon>
+                        ) : null}
                         <SegmentedControl
                             value={mode}
                             onChange={(value) => setMode(value as CharacterSheetMode)}
@@ -175,7 +180,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 </Box>
             </Container>
             <CharacterSheetMenu options={sheetOptions} />
-            <DiceRollModal opened={diceModalOpened} onClose={closeDiceModal} primaryColor={primaryColor} />
+            {isLocalhost ? <DiceRollModal opened={diceModalOpened} onClose={closeDiceModal} primaryColor={primaryColor} /> : null}
         </BackgroundImage>
     )
 }
