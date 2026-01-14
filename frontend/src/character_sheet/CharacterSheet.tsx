@@ -1,7 +1,8 @@
-import { BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
-import { useLocalStorage } from "@mantine/hooks"
+import { ActionIcon, BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
+import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
+import { IconDice } from "@tabler/icons-react"
 import { getPrimaryColor } from "./utils/style"
 import Attributes from "./sections/Attributes"
 import BottomData from "./sections/BottomData"
@@ -13,6 +14,7 @@ import TopData from "./sections/TopData"
 import Touchstones from "./sections/Touchstones"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
+import DiceRollModal from "./components/DiceRollModal"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
 
@@ -45,6 +47,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         key: "characterSheetMode",
         defaultValue: isEmptyCharacter ? "free" : "play",
     })
+    const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
     const primaryColor = getPrimaryColor(character.clan)
 
     const sheetOptions: SheetOptions = useMemo(
@@ -105,8 +108,24 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             top: "1rem",
                             right: "1rem",
                             zIndex: 10,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.5rem",
+                            alignItems: "flex-end",
                         }}
                     >
+                        <ActionIcon
+                            size="xl"
+                            variant="light"
+                            color={primaryColor}
+                            radius="xl"
+                            onClick={openDiceModal}
+                            style={{
+                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                            }}
+                        >
+                            <IconDice size={24} />
+                        </ActionIcon>
                         <SegmentedControl
                             value={mode}
                             onChange={(value) => setMode(value as CharacterSheetMode)}
@@ -156,6 +175,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 </Box>
             </Container>
             <CharacterSheetMenu options={sheetOptions} />
+            <DiceRollModal opened={diceModalOpened} onClose={closeDiceModal} primaryColor={primaryColor} />
         </BackgroundImage>
     )
 }
