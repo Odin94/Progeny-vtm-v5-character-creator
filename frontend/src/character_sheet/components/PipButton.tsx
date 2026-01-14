@@ -93,7 +93,7 @@ const PipButton = ({
                 <ActionIcon
                     variant="subtle"
                     color={color}
-                    onClick={isDisabled ? undefined : onClick}
+                    onClick={onClick}
                     size="xs"
                     style={buttonStyle}
                     disabled={isDisabled}

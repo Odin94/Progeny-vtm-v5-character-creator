@@ -10,6 +10,27 @@ export type BloodPotencyEffect = {
     penalty: string
 }
 
+export type BloodPotencyLimits = {
+    min: number
+    max: number
+}
+
+export const potencyLimitByGeneration: Record<number, BloodPotencyLimits> = {
+    4: { min: 5, max: 10 },
+    5: { min: 4, max: 9 },
+    6: { min: 3, max: 8 },
+    7: { min: 3, max: 7 },
+    8: { min: 2, max: 6 },
+    9: { min: 2, max: 5 },
+    10: { min: 1, max: 4 },
+    11: { min: 1, max: 4 },
+    12: { min: 1, max: 3 },
+    13: { min: 1, max: 3 },
+    14: { min: 0, max: 0 },
+    15: { min: 0, max: 0 },
+    16: { min: 0, max: 0 },
+}
+
 export const potencyEffects: Record<number, BloodPotencyEffect> = {
     0: { surge: 1, mend: "1 superficial", discBonus: "-", discRouse: "-", bane: 0, penalty: "-" },
     1: { surge: 2, mend: "1 superficial", discBonus: "-", discRouse: "Lvl 1", bane: 2, penalty: "-" },
@@ -45,6 +66,51 @@ export const potencyEffects: Record<number, BloodPotencyEffect> = {
         bane: 4,
         penalty:
             "Animal and bagged blood slake no Hunger,\nSlake 1 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2",
+    },
+    6: {
+        surge: 4,
+        mend: "3 superficial",
+        discBonus: "Add 3 dice",
+        discRouse: "Lvl 3 and below",
+        bane: 4,
+        penalty:
+            "Animal and bagged blood slake no Hunger,\nSlake 2 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2",
+    },
+    7: {
+        surge: 5,
+        mend: "3 superficial",
+        discBonus: "Add 3 dice",
+        discRouse: "Lvl 4 and below",
+        bane: 5,
+        penalty:
+            "Animal and bagged blood slake no Hunger,\nSlake 2 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 2",
+    },
+    8: {
+        surge: 5,
+        mend: "4 superficial",
+        discBonus: "Add 4 dice",
+        discRouse: "Lvl 4 and below",
+        bane: 5,
+        penalty:
+            "Animal and bagged blood slake no Hunger,\nSlake 2 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 3",
+    },
+    9: {
+        surge: 6,
+        mend: "4 superficial",
+        discBonus: "Add 4 dice",
+        discRouse: "Lvl 5 and below",
+        bane: 6,
+        penalty:
+            "Animal and bagged blood slake no Hunger,\nSlake 2 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 3",
+    },
+    10: {
+        surge: 6,
+        mend: "5 superficial",
+        discBonus: "Add 5 dice",
+        discRouse: "Lvl 5 and below",
+        bane: 6,
+        penalty:
+            "Animal and bagged blood slake no Hunger,\nSlake 3 less Hunger per human,\nMust drain and kill a human to reduce Hunger below 3",
     },
 }
 

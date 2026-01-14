@@ -5,6 +5,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
 import { getAvailableXP, canAffordUpgrade, getAttributeCost, getSkillCost, getBloodPotencyCost } from "../utils/xp"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
+import { potencyLimitByGeneration } from "~/data/BloodPotency"
 
 type PipsProps = {
     level: number
@@ -106,6 +107,20 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             if (clampedLevel !== currentLevel + 1) {
                 return "Can only increase one level at a time in XP mode"
             }
+
+            // Check blood potency generation limits
+            if (field === "bloodPotency") {
+                const limits = potencyLimitByGeneration[character.generation]
+                if (limits) {
+                    if (clampedLevel < limits.min) {
+                        return `Blood Potency cannot be below ${limits.min} for ${character.generation}${getGenerationSuffix(character.generation)} generation. Your generation allows Blood Potency between ${limits.min} and ${limits.max}.`
+                    }
+                    if (clampedLevel > limits.max) {
+                        return `Blood Potency cannot exceed ${limits.max} for ${character.generation}${getGenerationSuffix(character.generation)} generation. Your generation allows Blood Potency between ${limits.min} and ${limits.max}.`
+                    }
+                }
+            }
+
             const costFunction = getCostFunction()
             const cost = costFunction ? costFunction(clampedLevel) : 0
             const availableXP = getAvailableXP(character)
@@ -115,6 +130,18 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         }
 
         return undefined
+    }
+
+    const getGenerationSuffix = (generation: number): string => {
+        if (generation >= 11 && generation <= 13) return "th"
+        if (generation === 14) return "th"
+        if (generation === 15) return "th"
+        if (generation === 16) return "th"
+        const lastDigit = generation % 10
+        if (lastDigit === 1) return "st"
+        if (lastDigit === 2) return "nd"
+        if (lastDigit === 3) return "rd"
+        return "th"
     }
 
     const handlePipClick = (index: number) => {
@@ -137,6 +164,17 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             if (clampedLevel !== level + 1) {
                 return
             }
+
+            // Check blood potency generation limits
+            if (field === "bloodPotency") {
+                const limits = potencyLimitByGeneration[character.generation]
+                if (limits) {
+                    if (clampedLevel < limits.min || clampedLevel > limits.max) {
+                        return
+                    }
+                }
+            }
+
             const costFunction = getCostFunction()
             const cost = costFunction ? costFunction(clampedLevel) : 0
             const availableXP = getAvailableXP(character)
