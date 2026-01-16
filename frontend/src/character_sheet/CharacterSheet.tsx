@@ -180,7 +180,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 </Box>
             </Container>
             <CharacterSheetMenu options={sheetOptions} />
-            {isLocalhost ? <DiceRollModal opened={diceModalOpened} onClose={closeDiceModal} primaryColor={primaryColor} /> : null}
+            {isLocalhost ? <DiceRollModal opened={diceModalOpened} onClose={closeDiceModal} primaryColor={primaryColor} character={character} /> : null}
         </BackgroundImage>
     )
 }

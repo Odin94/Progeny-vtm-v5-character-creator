@@ -36,3 +36,4 @@
 * Prevent background from resizing on mode change
 * **Several people have asked for "In memoriam" support**
 * Custom Clan Banes & Compulsions (basically just overwrite what you have)
+* Add (shareable?) homebrew packs where you can define disciplines, clans, merits etc. and add them to your account to display them like official stuff

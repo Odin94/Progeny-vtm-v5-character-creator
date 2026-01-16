@@ -87,7 +87,7 @@ Progeny lets you export your character to several formats:
 * VtM is owned by https://www.worldofdarkness.com/dark-pack
 * The PDF template used for exporting is made by [Nerdbert](https://linktr.ee/nerdbert)
 * CheckSolid.base64 is converted from fontawesome
-* FavIcon, Discipline-Icons provided by [Nerdbert](https://drive.google.com/drive/folders/166CN03nsT6VF-cjjttS0uBfvMZRoNqgK)
+* FavIcon, Discipline-Icons, dice result icons provided by [Nerdbert](https://drive.google.com/drive/folders/166CN03nsT6VF-cjjttS0uBfvMZRoNqgK)
 * Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus Bellamy, Peter Scherbatykh, Thomas Le on [unsplash](unsplash.com)
 * Roboto font from https://fonts.google.com/specimen/Roboto
 
