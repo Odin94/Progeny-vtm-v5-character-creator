@@ -1,4 +1,4 @@
-import { Button, Badge, Box, Grid, Group, Modal, Stack, Text, Title } from "@mantine/core"
+import { Button, Badge, Box, Divider, Grid, Group, Modal, Stack, Text, Title } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
@@ -7,6 +7,7 @@ import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/ge
 import { Character } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplinePowerCard from "./DisciplinePowerCard"
+import CustomDisciplineModal from "./CustomDisciplineModal"
 import { getDisciplineCost } from "../utils/xp"
 import posthog from "posthog-js"
 
@@ -22,6 +23,7 @@ type DisciplineSelectModalProps = {
 const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hideBackButton }: DisciplineSelectModalProps) => {
     const { character, primaryColor, setCharacter } = options
     const [selectedDiscipline, setSelectedDiscipline] = useState<DisciplineName | null>(initialDiscipline || null)
+    const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
 
     useEffect(() => {
         if (opened && initialDiscipline) {
@@ -242,9 +244,32 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                                 })}
                             </Grid>
                         )}
+                        <Divider my="md" />
+                        <Button
+                            variant="filled"
+                            color="black"
+                            fullWidth
+                            onClick={() => {
+                                setCustomDisciplineModalOpened(true)
+                            }}
+                        >
+                            Create Custom Discipline
+                        </Button>
                     </>
                 ) : null}
             </Stack>
+            <CustomDisciplineModal
+                opened={customDisciplineModalOpened}
+                onClose={() => {
+                    setCustomDisciplineModalOpened(false)
+                }}
+                options={options}
+                editingDisciplineName={null}
+                onSave={() => {
+                    setCustomDisciplineModalOpened(false)
+                    onClose()
+                }}
+            />
         </Modal>
     )
 }

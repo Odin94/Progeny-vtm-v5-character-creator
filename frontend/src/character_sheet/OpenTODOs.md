@@ -12,7 +12,6 @@
 * Add more powers (currently mostly have core book powers)
 * Dice-pool hover should include eg. Prowess for strength
 * Give "+" buttons a cute animation on hover
-* Allow users to create custom disciplines/powers in character sheet
 
 ### Merits/Flaws
 * Add more Merits/Flaws

@@ -31,6 +31,7 @@ export const powerSchema = z.object({
   discipline: disciplineNameSchema,
   rouseChecks: z.number().min(0).int(),
   amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
+  isCustom: z.boolean().optional(),
 })
 
 export type Power = z.infer<typeof powerSchema>
@@ -53,8 +54,16 @@ export const disciplineSchema = z.object({
     summary: z.string(),
     powers: powerSchema.array(),
     logo: z.string(),
+    isCustom: z.boolean().optional(),
 })
 export type Discipline = z.infer<typeof disciplineSchema>
+
+export const customDisciplineSchema = z.object({
+    name: z.string(),
+    summary: z.string(),
+    logo: z.string().optional().default(""),
+})
+export type CustomDiscipline = z.infer<typeof customDisciplineSchema>
 
 export const disciplines: Record<DisciplineName, Discipline> = {
     animalism: {
@@ -302,7 +311,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 5,
                 discipline: "auspex",
             },
-        ],
+        ]
     },
     celerity: {
         clans: ["Toreador", "Brujah", "Banu Haqim"],
@@ -410,7 +419,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 5,
                 discipline: "celerity",
             },
-        ],
+        ]
     },
     dominate: {
         clans: ["Ventrue", "Malkavian", "Tremere", "Lasombra", "Tzimisce", "Salubri"],
@@ -528,7 +537,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 level: 5,
                 discipline: "dominate",
             },
-        ],
+        ]
     },
     fortitude: {
         clans: ["Ventrue", "Gangrel", "Hecata", "Salubri"],
@@ -1488,7 +1497,18 @@ export const powerIsRitual = (p: Power | Ritual): p is Ritual => {
 export const getAvailableDisciplines = (character: Character): Record<DisciplineName, Discipline> => {
     const availableDisciplines: Record<string, Discipline> = {}
     for (const n of character.availableDisciplineNames) {
-        availableDisciplines[n] = disciplines[n]
+        if (disciplines[n]) {
+            availableDisciplines[n] = disciplines[n]
+        } else if (character.customDisciplines?.[n]) {
+            const customDiscipline = character.customDisciplines[n]
+            availableDisciplines[n] = {
+                clans: [],
+                summary: customDiscipline.summary,
+                powers: character.disciplines.filter((p) => p.discipline === n && p.isCustom),
+                logo: customDiscipline.logo || "",
+                isCustom: true,
+            }
+        }
     }
 
     return availableDisciplines

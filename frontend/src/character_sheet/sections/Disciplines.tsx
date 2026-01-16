@@ -16,13 +16,15 @@ import {
     useMantineTheme,
 } from "@mantine/core"
 import { useState } from "react"
-import { DisciplineName } from "~/data/NameSchemas"
+import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines } from "~/data/Disciplines"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
-import { IconPlus, IconX } from "@tabler/icons-react"
+import CustomDisciplineModal from "../components/CustomDisciplineModal"
+import CustomPowerModal from "../components/CustomPowerModal"
+import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
 import { Power } from "~/data/Disciplines"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
 import { bgAlpha, hexToRgba } from "../utils/style"
@@ -31,11 +33,19 @@ type DisciplinesProps = {
     options: SheetOptions
 }
 
+const isKnownDiscipline = (name: DisciplineName): name is KnownDisciplineName => {
+    return knownDisciplineNameSchema.safeParse(name).success
+}
+
 const Disciplines = ({ options }: DisciplinesProps) => {
     const { character, primaryColor, mode, setCharacter } = options
     const theme = useMantineTheme()
     const [modalOpened, setModalOpened] = useState(false)
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
+    const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
+    const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
+    const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
+    const [editingPower, setEditingPower] = useState<Power | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
         { type: "power"; power: Power } | { type: "discipline"; disciplineName: DisciplineName } | null
     >(null)
@@ -55,6 +65,14 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             powersByDiscipline.set(power.discipline, [...powersByDiscipline.get(power.discipline)!, power])
         }
     })
+
+    if (isEditable && character.customDisciplines) {
+        Object.keys(character.customDisciplines).forEach((disciplineName) => {
+            if (!powersByDiscipline.has(disciplineName)) {
+                powersByDiscipline.set(disciplineName, [])
+            }
+        })
+    }
 
     const handleDeletePower = (power: Power) => {
         setItemToDelete({ type: "power", power })
@@ -94,8 +112,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     </Title>
                     <Grid gutter="md">
                         {Array.from(powersByDiscipline.entries()).map(([disciplineName, powers]) => {
+                            const isCustom = !isKnownDiscipline(disciplineName)
                             const discipline = disciplines[disciplineName]
-                            const logo = discipline?.logo
+                            const customDiscipline = character.customDisciplines?.[disciplineName]
+                            const logo = discipline?.logo || customDiscipline?.logo || ""
 
                             return (
                                 <Grid.Col key={disciplineName} span={{ base: 12, md: 6, lg: 4 }}>
@@ -115,11 +135,29 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             <Group justify="space-between" style={{ flex: 1 }} align="center">
                                                 <Title order={4} style={{ margin: 0 }}>
                                                     {upcase(disciplineName)}
+                                                    {isCustom ? (
+                                                        <Badge size="xs" variant="dot" color={primaryColor} ml="xs">
+                                                            Custom
+                                                        </Badge>
+                                                    ) : null}
                                                 </Title>
                                                 <Group gap="xs" align="center">
                                                     <Badge size="lg" variant="light" color={primaryColor} circle>
                                                         {powers.length}
                                                     </Badge>
+                                                    {isCustom && isFreeMode ? (
+                                                        <ActionIcon
+                                                            size="sm"
+                                                            variant="subtle"
+                                                            color={primaryColor}
+                                                            onClick={() => {
+                                                                setEditingDisciplineName(disciplineName)
+                                                                setCustomDisciplineModalOpened(true)
+                                                            }}
+                                                        >
+                                                            <IconEdit size={16} />
+                                                        </ActionIcon>
+                                                    ) : null}
                                                     {isFreeMode && powers.length === 0 ? (
                                                         <ActionIcon
                                                             size="sm"
@@ -147,14 +185,30 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         renderActions={
                                                             isFreeMode
                                                                 ? () => (
-                                                                      <ActionIcon
-                                                                          size="sm"
-                                                                          variant="subtle"
-                                                                          color="red"
-                                                                          onClick={() => handleDeletePower(power)}
-                                                                      >
-                                                                          <IconX size={16} />
-                                                                      </ActionIcon>
+                                                                      <Group gap="xs">
+                                                                          {power.isCustom ? (
+                                                                              <ActionIcon
+                                                                                  size="sm"
+                                                                                  variant="subtle"
+                                                                                  color={primaryColor}
+                                                                                  onClick={() => {
+                                                                                      setEditingDisciplineName(disciplineName)
+                                                                                      setEditingPower(power)
+                                                                                      setCustomPowerModalOpened(true)
+                                                                                  }}
+                                                                              >
+                                                                                  <IconEdit size={16} />
+                                                                              </ActionIcon>
+                                                                          ) : null}
+                                                                          <ActionIcon
+                                                                              size="sm"
+                                                                              variant="subtle"
+                                                                              color="red"
+                                                                              onClick={() => handleDeletePower(power)}
+                                                                          >
+                                                                              <IconX size={16} />
+                                                                          </ActionIcon>
+                                                                      </Group>
                                                                   )
                                                                 : undefined
                                                         }
@@ -162,7 +216,21 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 ))}
                                             {isEditable ? (
                                                 <Center mt="xs">
-                                                    {mode === "xp" ? (
+                                                    {isCustom ? (
+                                                        <ActionIcon
+                                                            size="lg"
+                                                            radius="xl"
+                                                            variant="light"
+                                                            color={primaryColor}
+                                                            onClick={() => {
+                                                                setEditingDisciplineName(disciplineName)
+                                                                setEditingPower(null)
+                                                                setCustomPowerModalOpened(true)
+                                                            }}
+                                                        >
+                                                            <IconPlus size={18} />
+                                                        </ActionIcon>
+                                                    ) : mode === "xp" ? (
                                                         (() => {
                                                             const cost = getDisciplineCost(character, disciplineName)
                                                             const availableXP = getAvailableXP(character)
@@ -340,6 +408,26 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 options={options}
                 initialDiscipline={initialDiscipline}
                 hideBackButton={initialDiscipline !== null}
+            />
+            <CustomDisciplineModal
+                opened={customDisciplineModalOpened}
+                onClose={() => {
+                    setCustomDisciplineModalOpened(false)
+                    setEditingDisciplineName(null)
+                }}
+                options={options}
+                editingDisciplineName={editingDisciplineName}
+            />
+            <CustomPowerModal
+                opened={customPowerModalOpened}
+                onClose={() => {
+                    setCustomPowerModalOpened(false)
+                    setEditingDisciplineName(null)
+                    setEditingPower(null)
+                }}
+                options={options}
+                disciplineName={editingDisciplineName || ""}
+                editingPower={editingPower}
             />
             <Modal
                 opened={!!itemToDelete}

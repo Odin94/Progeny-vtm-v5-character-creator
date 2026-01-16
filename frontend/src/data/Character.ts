@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { attributesSchema } from "./Attributes.js"
-import { powerSchema, ritualSchema } from "./Disciplines.js"
+import { powerSchema, ritualSchema, customDisciplineSchema } from "./Disciplines.js"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas.js"
 import { skillsSchema } from "./Skills.js"
 import { specialtySchema } from "./Specialties.js"
@@ -26,7 +26,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 4
+export const schemaVersion = 5
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -54,6 +54,7 @@ export const characterSchema = z.object({
     availableDisciplineNames: disciplineNameSchema.array(),
     disciplines: powerSchema.array(),
     rituals: ritualSchema.array(),
+    customDisciplines: z.record(disciplineNameSchema, customDisciplineSchema).optional().default({}),
 
     bloodPotency: z.number().min(0).int(),
     generation: z.number().min(0).int(),
@@ -143,6 +144,7 @@ export const getEmptyCharacter = (): Character => {
         availableDisciplineNames: [],
         disciplines: [],
         rituals: [],
+        customDisciplines: {},
 
         bloodPotency: 0,
         generation: 0,
@@ -193,6 +195,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     if (!parsed["player"]) parsed["player"] = ""
     if (!parsed["chronicle"]) parsed["chronicle"] = ""
     if (!parsed["sect"]) parsed["sect"] = ""
+    if (!parsed["customDisciplines"]) parsed["customDisciplines"] = {}
     if (!parsed["ephemeral"]) {
         // backwards compatibility for characters that were saved before ephemeral was added
         parsed["ephemeral"] = {
