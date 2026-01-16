@@ -99,13 +99,6 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
             }, 1500)
         }
     }
-
-    const addDie = () => {
-        if (diceCount < 10) {
-            setDiceCount(diceCount + 1)
-        }
-    }
-
     const removeDie = () => {
         if (diceCount > 1) {
             setDiceCount(diceCount - 1)
@@ -205,7 +198,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                     backdropFilter: "blur(10px)",
                     borderRadius: "12px",
                     padding: "1.5rem",
-                    minWidth: "400px",
+                    width: "610px",
+                    height: "600px",
                     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
                     border: `2px solid ${primaryColor}`,
                     cursor: "move",
@@ -215,58 +209,84 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
             >
-                <Group justify="flex-end" mb="md">
-                    <ActionIcon variant="subtle" color="gray" onClick={onClose}>
-                        <IconX size={20} />
-                    </ActionIcon>
-                </Group>
-
-                <Stack gap="lg">
-                    <Group justify="center" gap="md">
+                <Group justify="center" mb="md" style={{ position: "relative" }}>
+                    <Group gap="md">
                         <Button variant="subtle" onClick={removeDie} color={primaryColor} disabled={diceCount <= 1}>
                             <IconMinus size={18} />
                         </Button>
                         <Text fw={600} fz="lg">
                             {diceCount} {diceCount === 1 ? "Die" : "Dice"}
                         </Text>
-                        <Button variant="subtle" onClick={addDie} color={primaryColor}>
+                        <Button variant="subtle" onClick={() => setDiceCount(diceCount + 1)} color={primaryColor}>
                             <IconPlus size={18} />
                         </Button>
                     </Group>
+                    <ActionIcon 
+                        variant="subtle" 
+                        color="gray" 
+                        onClick={onClose}
+                        style={{ position: "absolute", right: 0 }}
+                    >
+                        <IconX size={20} />
+                    </ActionIcon>
+                </Group>
 
+                <Stack gap="lg">
                     <Button size="lg" color={primaryColor} onClick={rollDice} disabled={dice.some((d) => d.isRolling)} fullWidth>
                         {dice.some((d) => d.isRolling) ? "Rolling..." : "Roll Dice"}
                     </Button>
 
-                    <Group justify="center" gap="md" style={{ minHeight: "250px", flexWrap: "wrap", position: "relative" }}>
-                        <AnimatePresence>
+                    <Group justify="center" gap="md" style={{ height: "250px", flexWrap: "wrap", position: "relative", overflow: "hidden", alignItems: "center" }}>
+                        <AnimatePresence mode="wait">
                             {dice.map((die, index) => {
                                 const seed = die.id % 1000
                                 const random = () => {
                                     const x = Math.sin(seed) * 10000
                                     return x - Math.floor(x)
                                 }
+                                
+                                const containerWidth = 562
+                                const containerHeight = 250
+                                const dieSize = 100
+                                const gap = 10
+                                const maxDicePerRow = Math.max(1, Math.floor((containerWidth - dieSize) / (dieSize + gap)))
+                                const row = Math.floor(index / maxDicePerRow)
+                                const col = index % maxDicePerRow
+                                const totalRows = Math.ceil(dice.length / maxDicePerRow)
+                                
+                                const totalWidth = Math.min(dice.length, maxDicePerRow) * (dieSize + gap) - gap
+                                const totalHeight = totalRows * (dieSize + gap) - gap
+                                
+                                const startX = (containerWidth - totalWidth) / 2
+                                const startY = (containerHeight - totalHeight) / 2
+                                
+                                const finalX = (startX + col * (dieSize + gap) + dieSize / 2) - containerWidth / 2 - 30
+                                const finalY = (startY + row * (dieSize + gap) + dieSize / 2) - containerHeight / 2 - 30
+                                
                                 const randomOffset = random() > 0.5 ? 800 : -800
-                                const randomY = (random() - 0.5) * 400
-                                const randomRotation = random() * 360
+                                const randomOffsetX = (random() - 0.5) * 2000 + randomOffset
+                                const randomOffsetY = (random() - 0.5) * 400
+                                const randomRotationZ = random() * 360
                                 const randomDelay = index * 0.1 + random() * 0.2
                                 const randomStiffness = 100 + random() * 50
                                 const randomDamping = 15 + random() * 10
                                 const randomDuration = 0.8 + random() * 0.4
+                                
+                                const spinAmount = 3 + random() * 2
 
                                 return (
                                     <motion.div
                                         key={die.id}
                                         initial={{
-                                            x: (random() - 0.5) * 2000 + randomOffset,
-                                            y: randomY,
+                                            x: finalX + randomOffsetX,
+                                            y: finalY + randomOffsetY,
                                             opacity: 0,
                                             scale: 0.3,
-                                            rotateZ: randomRotation,
+                                            rotateZ: randomRotationZ,
                                         }}
                                         animate={{
-                                            x: 0,
-                                            y: 0,
+                                            x: finalX,
+                                            y: finalY,
                                             opacity: 1,
                                             scale: 1,
                                             rotateZ: 0,
@@ -274,9 +294,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                         exit={{
                                             opacity: 0,
                                             scale: 0.3,
-                                            x: (random() - 0.5) * 2000 + randomOffset,
-                                            y: randomY,
-                                            rotateZ: randomRotation,
+                                            x: finalX + randomOffsetX,
+                                            y: finalY + randomOffsetY,
+                                            rotateZ: randomRotationZ,
                                             transition: {
                                                 duration: 0.4,
                                                 ease: "easeIn",
@@ -290,7 +310,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                             delay: randomDelay,
                                             duration: randomDuration,
                                         }}
-                                        style={{ display: "inline-block" }}
+                                        style={{ 
+                                            display: "inline-block",
+                                            position: "absolute",
+                                            left: "50%",
+                                            top: "50%",
+                                        }}
                                     >
                                         <Die
                                             value={die.value}
@@ -312,9 +337,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                 borderRadius: "8px",
                                 padding: "1rem",
                                 backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                height: "150px",
+                                display: "flex",
+                                flexDirection: "column",
                             }}
                         >
-                            <Stack gap="sm">
+                            <Stack gap="sm" style={{ flex: 1 }}>
                                 <Text fw={700} fz="md" c={primaryColor}>
                                     Successes:
                                 </Text>
@@ -359,7 +387,13 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                 )}
                             </Stack>
                         </Box>
-                    ) : null}
+                    ) : (
+                        <Box
+                            style={{
+                                height: "150px",
+                            }}
+                        />
+                    )}
                 </Stack>
             </motion.div>
         </div>
