@@ -30,7 +30,7 @@
     "drizzle-orm": "^0.45.1",
     "fastify": "^5.1.0",
     "nanoid": "^5.0.9",
-    "posthog-node": "^5.19.0",
+    "posthog-node": "^5.21.1",
     "zod": "^4.2.1"
   },
   "devDependencies": {
