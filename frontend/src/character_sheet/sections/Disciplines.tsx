@@ -38,7 +38,7 @@ const isKnownDiscipline = (name: DisciplineName): name is KnownDisciplineName =>
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
-    const { character, primaryColor, mode, setCharacter } = options
+    const { character, primaryColor, mode, setCharacter, diceModalOpened, selectedDicePool, setSelectedDicePool } = options
     const theme = useMantineTheme()
     const [modalOpened, setModalOpened] = useState(false)
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
@@ -51,7 +51,17 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
+    const isClickable = mode === "play" && diceModalOpened
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
+
+    const handleDisciplineClick = (disciplineName: DisciplineName) => {
+        if (!isClickable) return
+        setSelectedDicePool({
+            ...selectedDicePool,
+            discipline: selectedDicePool.discipline === disciplineName ? null : disciplineName,
+            skill: null,
+        })
+    }
 
     if (character.disciplines.length === 0 && character.rituals.length === 0 && !isEditable) {
         return null
@@ -117,9 +127,22 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             const customDiscipline = character.customDisciplines?.[disciplineName]
                             const logo = discipline?.logo || customDiscipline?.logo || ""
 
+                            const isSelected = selectedDicePool.discipline === disciplineName
                             return (
                                 <Grid.Col key={disciplineName} span={{ base: 12, md: 6, lg: 4 }}>
-                                    <Paper p="md" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
+                                    <Paper
+                                        p="md"
+                                        withBorder
+                                        style={{
+                                            height: "100%",
+                                            backgroundColor: paperBg,
+                                            cursor: isClickable ? "pointer" : "default",
+                                            borderColor: isSelected ? primaryColor : undefined,
+                                            borderWidth: isSelected ? 2 : undefined,
+                                            transition: "border-color 0.2s, border-width 0.2s",
+                                        }}
+                                        onClick={() => handleDisciplineClick(disciplineName)}
+                                    >
                                         <Group gap="md" mb="md" align="center">
                                             {logo ? (
                                                 <img
@@ -150,7 +173,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             size="sm"
                                                             variant="subtle"
                                                             color={primaryColor}
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
                                                                 setEditingDisciplineName(disciplineName)
                                                                 setCustomDisciplineModalOpened(true)
                                                             }}
@@ -163,7 +187,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             size="sm"
                                                             variant="subtle"
                                                             color="red"
-                                                            onClick={() => handleDeleteDiscipline(disciplineName)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleDeleteDiscipline(disciplineName)
+                                                            }}
                                                         >
                                                             <IconX size={16} />
                                                         </ActionIcon>
@@ -172,7 +199,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             </Group>
                                         </Group>
                                         <Divider mb="sm" />
-                                        <Stack gap="sm">
+                                        <Stack gap="sm" onClick={(e) => isClickable && e.stopPropagation()}>
                                             {powers
                                                 .sort((a, b) => a.level - b.level)
                                                 .map((power) => (
@@ -191,7 +218,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                                   size="sm"
                                                                                   variant="subtle"
                                                                                   color={primaryColor}
-                                                                                  onClick={() => {
+                                                                                  onClick={(e) => {
+                                                                                      e.stopPropagation()
                                                                                       setEditingDisciplineName(disciplineName)
                                                                                       setEditingPower(power)
                                                                                       setCustomPowerModalOpened(true)
@@ -204,7 +232,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                               size="sm"
                                                                               variant="subtle"
                                                                               color="red"
-                                                                              onClick={() => handleDeletePower(power)}
+                                                                              onClick={(e) => {
+                                                                                  e.stopPropagation()
+                                                                                  handleDeletePower(power)
+                                                                              }}
                                                                           >
                                                                               <IconX size={16} />
                                                                           </ActionIcon>
@@ -215,14 +246,15 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     />
                                                 ))}
                                             {isEditable ? (
-                                                <Center mt="xs">
+                                                <Center mt="xs" onClick={(e) => isClickable && e.stopPropagation()}>
                                                     {isCustom ? (
                                                         <ActionIcon
                                                             size="lg"
                                                             radius="xl"
                                                             variant="light"
                                                             color={primaryColor}
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
                                                                 setEditingDisciplineName(disciplineName)
                                                                 setEditingPower(null)
                                                                 setCustomPowerModalOpened(true)
@@ -248,7 +280,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                             variant="light"
                                                                             color={primaryColor}
                                                                             disabled={!canAfford}
-                                                                            onClick={() => {
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
                                                                                 setInitialDiscipline(disciplineName)
                                                                                 setModalOpened(true)
                                                                             }}
@@ -268,7 +301,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             radius="xl"
                                                             variant="light"
                                                             color={primaryColor}
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
                                                                 setInitialDiscipline(disciplineName)
                                                                 setModalOpened(true)
                                                             }}

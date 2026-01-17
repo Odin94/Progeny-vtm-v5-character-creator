@@ -1,5 +1,5 @@
-import { ActionIcon, Button, Group, Stack, Text, Box } from "@mantine/core"
-import { IconMinus, IconPlus, IconX } from "@tabler/icons-react"
+import { ActionIcon, Button, Group, Stack, Text, Box, Tabs, Badge, Checkbox } from "@mantine/core"
+import { IconMinus, IconPlus, IconX, IconRotateClockwise } from "@tabler/icons-react"
 import { motion, useMotionValue, AnimatePresence } from "framer-motion"
 import { useState, useEffect, useMemo } from "react"
 import { Character } from "~/data/Character"
@@ -8,12 +8,16 @@ import criticalIcon from "~/resources/diceResults/critical.svg"
 import bloodSuccessIcon from "~/resources/diceResults/blood-success.svg"
 import bloodCriticalIcon from "~/resources/diceResults/blood-critical.svg"
 import bestialFailureIcon from "~/resources/diceResults/bestial-failure.svg"
+import { SelectedDicePool } from "../CharacterSheet"
+import { upcase } from "~/generator/utils"
 
 type DiceRollModalProps = {
     opened: boolean
     onClose: () => void
     primaryColor: string
     character?: Character
+    selectedDicePool: SelectedDicePool
+    setSelectedDicePool: (pool: SelectedDicePool) => void
 }
 
 type DieResult = {
@@ -33,35 +37,68 @@ type DieResult = {
 // * Roll history
 // * Share rolls with your session live
 
-const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollModalProps) => {
+const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDicePool, setSelectedDicePool }: DiceRollModalProps) => {
     const [dice, setDice] = useState<DieResult[]>([])
     const [diceCount, setDiceCount] = useState(1)
+    const [activeTab, setActiveTab] = useState<string | null>("custom")
     const x = useMotionValue(0)
     const y = useMotionValue(0)
     
     const hunger = character?.ephemeral?.hunger ?? 0
 
+    const selectedPoolDiceCount = useMemo(() => {
+        if (!character || !selectedDicePool.attribute) return 0
+        const attributeValue = character.attributes[selectedDicePool.attribute] || 0
+        let skillOrDisciplineValue = 0
+        let specialtyBonus = 0
+        
+        if (selectedDicePool.skill) {
+            skillOrDisciplineValue = character.skills[selectedDicePool.skill] || 0
+            specialtyBonus = selectedDicePool.selectedSpecialties.length
+        } else if (selectedDicePool.discipline) {
+            const disciplinePowers = character.disciplines.filter(p => p.discipline === selectedDicePool.discipline)
+            skillOrDisciplineValue = disciplinePowers.length
+        }
+        
+        const bloodSurgeBonus = selectedDicePool.bloodSurge ? 2 : 0
+        
+        return attributeValue + skillOrDisciplineValue + specialtyBonus + bloodSurgeBonus
+    }, [character, selectedDicePool])
+    
+    const skillSpecialties = useMemo(() => {
+        if (!character || !selectedDicePool.skill) return []
+        return character.skillSpecialties.filter(s => s.skill === selectedDicePool.skill && s.name !== "")
+    }, [character, selectedDicePool.skill])
+
     useEffect(() => {
         if (!opened) {
             setDice([])
             setDiceCount(1)
+            setActiveTab("custom")
             x.set(0)
             y.set(0)
         }
     }, [opened, x, y])
+
+    useEffect(() => {
+        if (selectedDicePool.attribute && (selectedDicePool.skill || selectedDicePool.discipline)) {
+            setActiveTab("selected")
+        }
+    }, [selectedDicePool])
 
     const rollDie = (): number => {
         return Math.floor(Math.random() * 10) + 1
     }
 
     const rollDice = () => {
-        const bloodDiceCount = Math.min(hunger, diceCount)
-        const regularDiceCount = diceCount - bloodDiceCount
+        const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
+        const bloodDiceCount = Math.min(hunger, countToUse)
+        const regularDiceCount = countToUse - bloodDiceCount
         
         if (dice.length > 0) {
             setDice([])
             setTimeout(() => {
-                const newDice: DieResult[] = Array.from({ length: diceCount }, (_, i) => ({
+                const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                     id: Date.now() + i,
                     value: 0,
                     isRolling: true,
@@ -80,7 +117,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                 }, 1500)
             }, 500)
         } else {
-            const newDice: DieResult[] = Array.from({ length: diceCount }, (_, i) => ({
+            const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                 id: Date.now() + i,
                 value: 0,
                 isRolling: true,
@@ -194,49 +231,164 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                     x,
                     y,
                     pointerEvents: "auto",
-                    backgroundColor: "rgba(0, 0, 0, 0.9)",
+                    backgroundColor: "rgba(0, 0, 0, 0.8)",
                     backdropFilter: "blur(10px)",
                     borderRadius: "12px",
                     padding: "1.5rem",
                     width: "610px",
-                    height: "600px",
+                    height: "880px",
                     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
                     border: `2px solid ${primaryColor}`,
                     cursor: "move",
+                    display: "flex",
+                    flexDirection: "column",
                 }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
             >
-                <Group justify="center" mb="md" style={{ position: "relative" }}>
-                    <Group gap="md">
-                        <Button variant="subtle" onClick={removeDie} color={primaryColor} disabled={diceCount <= 1}>
-                            <IconMinus size={18} />
-                        </Button>
-                        <Text fw={600} fz="lg">
-                            {diceCount} {diceCount === 1 ? "Die" : "Dice"}
-                        </Text>
-                        <Button variant="subtle" onClick={() => setDiceCount(diceCount + 1)} color={primaryColor}>
-                            <IconPlus size={18} />
-                        </Button>
-                    </Group>
+                <Group justify="center" mb="md" style={{ position: "relative", paddingRight: "40px" }}>
+                    <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor} style={{ width: "100%" }}>
+                        <Tabs.List grow>
+                            <Tabs.Tab value="custom">Custom</Tabs.Tab>
+                            <Tabs.Tab value="selected">Selected Pool</Tabs.Tab>
+                        </Tabs.List>
+                    </Tabs>
                     <ActionIcon 
                         variant="subtle" 
                         color="gray" 
                         onClick={onClose}
-                        style={{ position: "absolute", right: 0 }}
+                        style={{ 
+                            position: "absolute", 
+                            right: 0,
+                            top: 0,
+                            zIndex: 10,
+                            pointerEvents: "auto"
+                        }}
                     >
                         <IconX size={20} />
                     </ActionIcon>
                 </Group>
 
-                <Stack gap="lg">
-                    <Button size="lg" color={primaryColor} onClick={rollDice} disabled={dice.some((d) => d.isRolling)} fullWidth>
+                <Stack gap="lg" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+                    {activeTab === "custom" ? (
+                        <Group justify="center" gap="md">
+                            <Button variant="subtle" onClick={removeDie} color={primaryColor} disabled={diceCount <= 1}>
+                                <IconMinus size={18} />
+                            </Button>
+                            <Text fw={600} fz="lg">
+                                {diceCount} {diceCount === 1 ? "Die" : "Dice"}
+                            </Text>
+                            <Button variant="subtle" onClick={() => setDiceCount(diceCount + 1)} color={primaryColor}>
+                                <IconPlus size={18} />
+                            </Button>
+                        </Group>
+                    ) : (
+                        <Box
+                            style={{
+                                border: `1px solid ${primaryColor}`,
+                                borderRadius: "8px",
+                                padding: "1rem",
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            }}
+                        >
+                            <Stack gap="sm">
+                                <Group justify="space-between" align="center">
+                                    <Text fw={700} fz="md" c={primaryColor}>
+                                        Selected Dice Pool:
+                                    </Text>
+                                    {(selectedDicePool.attribute || selectedDicePool.skill || selectedDicePool.discipline) ? (
+                                        <ActionIcon
+                                            variant="subtle"
+                                            color={primaryColor}
+                                            onClick={() => setSelectedDicePool({ attribute: null, skill: null, discipline: null, selectedSpecialties: [], bloodSurge: false })}
+                                            title="Reset dice pool"
+                                        >
+                                            <IconRotateClockwise size={18} />
+                                        </ActionIcon>
+                                    ) : null}
+                                </Group>
+                                <Group gap="xs">
+                                    {selectedDicePool.attribute ? (
+                                        <Badge variant="light" color={primaryColor} size="lg">
+                                            {upcase(selectedDicePool.attribute)}: {character?.attributes[selectedDicePool.attribute] || 0}
+                                        </Badge>
+                                    ) : (
+                                        <Text c="dimmed" size="sm">No attribute selected</Text>
+                                    )}
+                                    {selectedDicePool.skill ? (
+                                        <Badge variant="light" color={primaryColor} size="lg">
+                                            {upcase(selectedDicePool.skill)}: {character?.skills[selectedDicePool.skill] || 0}
+                                        </Badge>
+                                    ) : selectedDicePool.discipline ? (
+                                        <Badge variant="light" color={primaryColor} size="lg">
+                                            {upcase(selectedDicePool.discipline)}: {character?.disciplines.filter(p => p.discipline === selectedDicePool.discipline).length || 0}
+                                        </Badge>
+                                    ) : (
+                                        <Text c="dimmed" size="sm">No skill/discipline selected</Text>
+                                    )}
+                                </Group>
+                                {skillSpecialties.length > 0 && selectedDicePool.skill ? (
+                                    <Stack gap="xs" mt="sm">
+                                        <Text fw={600} fz="sm" c={primaryColor}>
+                                            Specialties (+1 die each):
+                                        </Text>
+                                        <Group gap="xs">
+                                            {skillSpecialties.map((specialty) => (
+                                                <Checkbox
+                                                    key={specialty.name}
+                                                    label={specialty.name}
+                                                    checked={selectedDicePool.selectedSpecialties.includes(specialty.name)}
+                                                    onChange={(e) => {
+                                                        if (e.currentTarget.checked) {
+                                                            setSelectedDicePool({
+                                                                ...selectedDicePool,
+                                                                selectedSpecialties: [...selectedDicePool.selectedSpecialties, specialty.name],
+                                                            })
+                                                        } else {
+                                                            setSelectedDicePool({
+                                                                ...selectedDicePool,
+                                                                selectedSpecialties: selectedDicePool.selectedSpecialties.filter(s => s !== specialty.name),
+                                                            })
+                                                        }
+                                                    }}
+                                                    color={primaryColor}
+                                                />
+                                            ))}
+                                        </Group>
+                                    </Stack>
+                                ) : null}
+                                <Checkbox
+                                    label="Blood Surge (+2 dice)"
+                                    checked={selectedDicePool.bloodSurge}
+                                    onChange={(e) => {
+                                        setSelectedDicePool({
+                                            ...selectedDicePool,
+                                            bloodSurge: e.currentTarget.checked,
+                                        })
+                                    }}
+                                    color={primaryColor}
+                                    mt="sm"
+                                />
+                                <Text fw={600} fz="lg" mt="xs">
+                                    Total Dice: {selectedPoolDiceCount}
+                                </Text>
+                            </Stack>
+                        </Box>
+                    )}
+
+                    <Button
+                        size="lg"
+                        color={primaryColor}
+                        onClick={rollDice}
+                        disabled={dice.some((d) => d.isRolling) || (activeTab === "selected" && selectedPoolDiceCount === 0)}
+                        fullWidth
+                    >
                         {dice.some((d) => d.isRolling) ? "Rolling..." : "Roll Dice"}
                     </Button>
 
-                    <Group justify="center" gap="md" style={{ height: "250px", flexWrap: "wrap", position: "relative", overflow: "hidden", alignItems: "center" }}>
+                    <Group justify="center" gap="md" style={{ height: "480px", flexWrap: "wrap", position: "relative", overflow: "hidden", alignItems: "center", flexShrink: 0 }}>
                         <AnimatePresence mode="wait">
                             {dice.map((die, index) => {
                                 const seed = die.id % 1000
@@ -272,8 +424,6 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                 const randomDamping = 15 + random() * 10
                                 const randomDuration = 0.8 + random() * 0.4
                                 
-                                const spinAmount = 3 + random() * 2
-
                                 return (
                                     <motion.div
                                         key={die.id}
@@ -340,6 +490,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                 height: "150px",
                                 display: "flex",
                                 flexDirection: "column",
+                                flexShrink: 0,
+                                marginTop: "auto",
                             }}
                         >
                             <Stack gap="sm" style={{ flex: 1 }}>
@@ -387,13 +539,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                 )}
                             </Stack>
                         </Box>
-                    ) : (
-                        <Box
-                            style={{
-                                height: "150px",
-                            }}
-                        />
-                    )}
+                    ) : null}
                 </Stack>
             </motion.div>
         </div>

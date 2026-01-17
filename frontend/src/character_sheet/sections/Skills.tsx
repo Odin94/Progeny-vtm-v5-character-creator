@@ -45,6 +45,20 @@ const SkillRow = ({
     const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
     const [editingSpecialty, setEditingSpecialty] = useState<{ skill: SkillsKey; index: number } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
+    
+    const isClickable = options.mode === "play" && options.diceModalOpened
+    const isSelected = options.selectedDicePool.skill === skill
+
+    const handleSkillClick = () => {
+        if (!isClickable) return
+        const newSkill = isSelected ? null : skill
+        options.setSelectedDicePool({
+            ...options.selectedDicePool,
+            skill: newSkill,
+            discipline: null,
+            selectedSpecialties: [],
+        })
+    }
 
     useEffect(() => {
         const checkOverflow = () => {
@@ -92,7 +106,14 @@ const SkillRow = ({
                     cursor: disabledReason ? "default" : "pointer",
                     opacity: disabledReason ? 0.6 : 1,
                 }}
-                onClick={disabledReason ? undefined : () => addSpecialty(skill)}
+                onClick={
+                    disabledReason
+                        ? undefined
+                        : (e) => {
+                              e.stopPropagation()
+                              addSpecialty(skill)
+                          }
+                }
             >
                 +
             </Badge>
@@ -107,7 +128,13 @@ const SkillRow = ({
     }
 
     return (
-        <Group ref={containerRef} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
+        <Group
+            ref={containerRef}
+            justify="space-between"
+            mb="xs"
+            wrap="nowrap"
+            align="flex-start"
+        >
             <Group
                 ref={testContentRef}
                 gap="xs"
@@ -130,7 +157,16 @@ const SkillRow = ({
             {showSpecialtiesBelow ? (
                 <Stack gap="xs" style={{ flex: 1 }}>
                     <Group gap="xs" wrap="nowrap">
-                        <Text style={textStyle}>{upcase(skill)}</Text>
+                        <Text
+                            style={{
+                                ...textStyle,
+                                cursor: isClickable ? "pointer" : "default",
+                                userSelect: "none",
+                            }}
+                            onClick={isClickable ? handleSkillClick : undefined}
+                        >
+                            {upcase(skill)}
+                        </Text>
                         {isEditable && renderAddSpecialtyBadge()}
                     </Group>
                     {specialties.length > 0 ? (
@@ -176,7 +212,8 @@ const SkillRow = ({
                                         style={isEditable ? { cursor: "pointer" } : undefined}
                                         onClick={
                                             isEditable
-                                                ? () => {
+                                                ? (e) => {
+                                                      e.stopPropagation()
                                                       setEditingSpecialty({ skill, index })
                                                       setEditingValue(specialty.name)
                                                   }
@@ -192,7 +229,20 @@ const SkillRow = ({
                 </Stack>
             ) : (
                 <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
-                    <Text style={textStyle}>{upcase(skill)}</Text>
+                    <Text
+                        style={{
+                            ...textStyle,
+                            cursor: isClickable ? "pointer" : "default",
+                            userSelect: "none",
+                            padding: isClickable ? "4px 8px" : undefined,
+                            borderRadius: isClickable ? "4px" : undefined,
+                            backgroundColor: isClickable && isSelected ? `${primaryColor}33` : undefined,
+                            transition: isClickable ? "background-color 0.2s" : undefined,
+                        }}
+                        onClick={isClickable ? handleSkillClick : undefined}
+                    >
+                        {upcase(skill)}
+                    </Text>
                     {specialties.map((specialty, index) => {
                         const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
                         return isEditing ? (
@@ -234,7 +284,8 @@ const SkillRow = ({
                                 style={isEditable ? { cursor: "pointer" } : undefined}
                                 onClick={
                                     isEditable
-                                        ? () => {
+                                        ? (e) => {
+                                              e.stopPropagation()
                                               setEditingSpecialty({ skill, index })
                                               setEditingValue(specialty.name)
                                           }
@@ -248,7 +299,13 @@ const SkillRow = ({
                     {isEditable && renderAddSpecialtyBadge()}
                 </Group>
             )}
-            <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
+            <Box onClick={(e) => {
+                if (isClickable) {
+                    e.stopPropagation()
+                }
+            }}>
+                <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
+            </Box>
         </Group>
     )
 }

@@ -1,5 +1,5 @@
 import { Box, Grid, Group, Text, Title } from "@mantine/core"
-import { attributesKeySchema } from "~/data/Attributes"
+import { attributesKeySchema, AttributesKey } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
@@ -9,9 +9,50 @@ type AttributesProps = {
 }
 
 const Attributes = ({ options }: AttributesProps) => {
-    const { character } = options
+    const { character, mode, diceModalOpened, selectedDicePool, setSelectedDicePool } = options
     const textStyle = {
         fontFamily: "Courier New",
+    }
+
+    const isClickable = mode === "play" && diceModalOpened
+
+    const handleAttributeClick = (attribute: AttributesKey) => {
+        if (!isClickable) return
+        setSelectedDicePool({
+            ...selectedDicePool,
+            attribute: selectedDicePool.attribute === attribute ? null : attribute,
+        })
+    }
+
+    const renderAttributeRow = (attribute: AttributesKey) => {
+        const isSelected = selectedDicePool.attribute === attribute
+        return (
+            <Group
+                key={attribute}
+                justify="space-between"
+                mb="xs"
+                style={
+                    isClickable
+                        ? {
+                              cursor: "pointer",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              backgroundColor: isSelected ? `${options.primaryColor}33` : "transparent",
+                              transition: "background-color 0.2s",
+                          }
+                        : undefined
+                }
+                onClick={() => handleAttributeClick(attribute)}
+            >
+                <Text style={textStyle}>{upcase(attribute)}</Text>
+                <Pips
+                    level={character.attributes[attribute]}
+                    minLevel={1}
+                    options={options}
+                    field={`attributes.${attribute}`}
+                />
+            </Group>
+        )
     }
 
     return (
@@ -26,17 +67,7 @@ const Attributes = ({ options }: AttributesProps) => {
                     </Title>
                     {["strength", "dexterity", "stamina"]
                         .map((a) => attributesKeySchema.parse(a))
-                        .map((attribute) => (
-                            <Group key={attribute} justify="space-between" mb="xs">
-                                <Text style={textStyle}>{upcase(attribute)}</Text>
-                                <Pips
-                                    level={character.attributes[attribute]}
-                                    minLevel={1}
-                                    options={options}
-                                    field={`attributes.${attribute}`}
-                                />
-                            </Group>
-                        ))}
+                        .map(renderAttributeRow)}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Title order={4} mb="sm" c="dimmed">
@@ -44,17 +75,7 @@ const Attributes = ({ options }: AttributesProps) => {
                     </Title>
                     {["charisma", "manipulation", "composure"]
                         .map((a) => attributesKeySchema.parse(a))
-                        .map((attribute) => (
-                            <Group key={attribute} justify="space-between" mb="xs">
-                                <Text style={textStyle}>{upcase(attribute)}</Text>
-                                <Pips
-                                    level={character.attributes[attribute]}
-                                    minLevel={1}
-                                    options={options}
-                                    field={`attributes.${attribute}`}
-                                />
-                            </Group>
-                        ))}
+                        .map(renderAttributeRow)}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Title order={4} mb="sm" c="dimmed">
@@ -62,17 +83,7 @@ const Attributes = ({ options }: AttributesProps) => {
                     </Title>
                     {["intelligence", "wits", "resolve"]
                         .map((a) => attributesKeySchema.parse(a))
-                        .map((attribute) => (
-                            <Group key={attribute} justify="space-between" mb="xs">
-                                <Text style={textStyle}>{upcase(attribute)}</Text>
-                                <Pips
-                                    level={character.attributes[attribute]}
-                                    minLevel={1}
-                                    options={options}
-                                    field={`attributes.${attribute}`}
-                                />
-                            </Group>
-                        ))}
+                        .map(renderAttributeRow)}
                 </Grid.Col>
             </Grid>
         </Box>

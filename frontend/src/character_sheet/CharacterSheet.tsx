@@ -1,6 +1,6 @@
 import { ActionIcon, BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
 import { getPrimaryColor } from "./utils/style"
@@ -15,14 +15,28 @@ import Touchstones from "./sections/Touchstones"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
 import DiceRollModal from "./components/DiceRollModal"
+import { AttributesKey } from "~/data/Attributes"
+import { SkillsKey } from "~/data/Skills"
+import { DisciplineName } from "~/data/NameSchemas"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
+
+export type SelectedDicePool = {
+    attribute: AttributesKey | null
+    skill: SkillsKey | null
+    discipline: DisciplineName | null
+    selectedSpecialties: string[]
+    bloodSurge: boolean
+}
 
 export type SheetOptions = {
     mode: CharacterSheetMode
     primaryColor: string
     character: Character
     setCharacter: (character: Character) => void
+    diceModalOpened: boolean
+    selectedDicePool: SelectedDicePool
+    setSelectedDicePool: (pool: SelectedDicePool) => void
 }
 
 type CharacterSheetProps = {
@@ -48,6 +62,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         defaultValue: isEmptyCharacter ? "free" : "play",
     })
     const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
+    const [selectedDicePool, setSelectedDicePool] = useState<SelectedDicePool>({
+        attribute: null,
+        skill: null,
+        discipline: null,
+        selectedSpecialties: [],
+        bloodSurge: false,
+    })
     const primaryColor = getPrimaryColor(character.clan)
     // TODOdin: Remove this once dice roller is ready
     const isLocalhost =
@@ -59,8 +80,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             primaryColor,
             character,
             setCharacter,
+            diceModalOpened,
+            selectedDicePool,
+            setSelectedDicePool,
         }),
-        [mode, primaryColor, character, setCharacter]
+        [mode, primaryColor, character, setCharacter, diceModalOpened, selectedDicePool]
     )
 
     return (
@@ -180,7 +204,19 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 </Box>
             </Container>
             <CharacterSheetMenu options={sheetOptions} />
-            {isLocalhost ? <DiceRollModal opened={diceModalOpened} onClose={closeDiceModal} primaryColor={primaryColor} character={character} /> : null}
+            {isLocalhost ? (
+                <DiceRollModal
+                    opened={diceModalOpened}
+                    onClose={() => {
+                        closeDiceModal()
+                        setSelectedDicePool({ attribute: null, skill: null, discipline: null, selectedSpecialties: [], bloodSurge: false })
+                    }}
+                    primaryColor={primaryColor}
+                    character={character}
+                    selectedDicePool={selectedDicePool}
+                    setSelectedDicePool={setSelectedDicePool}
+                />
+            ) : null}
         </BackgroundImage>
     )
 }
