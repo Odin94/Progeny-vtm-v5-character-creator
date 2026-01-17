@@ -16,6 +16,10 @@ interface SystemMetrics {
         total: number
         percentage: number
     }
+    backendMemoryUsage: {
+        used: number
+        percentage: number
+    }
     cpuUsage: {
         percentage: number
     }
@@ -27,10 +31,18 @@ interface SystemMetrics {
     requestCount: number
 }
 
+type CpuTimes = {
+    user: number
+    nice: number
+    sys: number
+    idle: number
+    irq: number
+}
+
 class MetricsCollector {
     private responseTimes: ResponseTimeMetric[] = []
     private intervalId: NodeJS.Timeout | null = null
-    private lastCpuUsage: NodeJS.CpuUsage | null = null
+    private lastCpuTimes: CpuTimes | null = null
     private lastCpuCheck: number = Date.now()
     private cpuUsageHistory: number[] = []
     private requestStartTimes: WeakMap<FastifyRequest, number> = new WeakMap()
@@ -99,38 +111,73 @@ class MetricsCollector {
             return 0
         }
 
-        const currentUsage = process.cpuUsage(this.lastCpuUsage || process.cpuUsage())
-        const previousUsage = this.lastCpuUsage || { user: 0, system: 0 }
-        this.lastCpuUsage = process.cpuUsage()
+        // Get current system-wide CPU times from all cores
+        const cpus = os.cpus()
+        const currentCpuTimes: CpuTimes = {
+            user: 0,
+            nice: 0,
+            sys: 0,
+            idle: 0,
+            irq: 0,
+        }
+
+        // Sum up CPU times from all cores
+        for (const cpu of cpus) {
+            currentCpuTimes.user += cpu.times.user
+            currentCpuTimes.nice += cpu.times.nice
+            currentCpuTimes.sys += cpu.times.sys
+            currentCpuTimes.idle += cpu.times.idle
+            currentCpuTimes.irq += cpu.times.irq
+        }
+
+        // If this is the first call, initialize and return 0
+        if (!this.lastCpuTimes) {
+            this.lastCpuTimes = currentCpuTimes
+            this.lastCpuCheck = now
+            return 0
+        }
+
+        // Calculate deltas
+        const userDelta = currentCpuTimes.user - this.lastCpuTimes.user
+        const niceDelta = currentCpuTimes.nice - this.lastCpuTimes.nice
+        const sysDelta = currentCpuTimes.sys - this.lastCpuTimes.sys
+        const idleDelta = currentCpuTimes.idle - this.lastCpuTimes.idle
+        const irqDelta = currentCpuTimes.irq - this.lastCpuTimes.irq
+
+        // Total CPU time used (non-idle)
+        const totalUsed = userDelta + niceDelta + sysDelta + irqDelta
+        // Total CPU time (used + idle)
+        const totalTime = totalUsed + idleDelta
+
+        // Calculate CPU usage percentage
+        // If totalTime is 0, return 0 to avoid division by zero
+        const cpuPercent = totalTime > 0 ? (totalUsed / totalTime) * 100 : 0
+        const clampedPercent = Math.min(100, Math.max(0, cpuPercent))
+
+        // Update baseline for next calculation
+        this.lastCpuTimes = currentCpuTimes
         this.lastCpuCheck = now
 
-        // Calculate CPU percentage based on elapsed time
-        // CPU usage is in microseconds, elapsed is in milliseconds
-        const userDelta = (currentUsage.user - previousUsage.user) / 1000 // Convert to milliseconds
-        const systemDelta = (currentUsage.system - previousUsage.system) / 1000
-        const totalDelta = userDelta + systemDelta
-
-        // CPU percentage = (CPU time / elapsed time) * 100
-        // This gives us the percentage of one CPU core used
-        const percentage = (totalDelta / elapsed) * 100
-
-        const cpuPercent = Math.min(100, Math.max(0, percentage))
-
         // Store in history (keep last 10 samples)
-        this.cpuUsageHistory.push(cpuPercent)
+        this.cpuUsageHistory.push(clampedPercent)
         if (this.cpuUsageHistory.length > 10) {
             this.cpuUsageHistory.shift()
         }
 
-        return cpuPercent
+        return clampedPercent
     }
 
     private collectMetrics(): SystemMetrics {
-        // Memory metrics
-        const memUsage = process.memoryUsage()
+        // Memory metrics - system-wide
         const totalMemory = os.totalmem()
-        const usedMemory = memUsage.heapUsed
+        const freeMemory = os.freemem()
+        const usedMemory = totalMemory - freeMemory
         const memoryPercentage = (usedMemory / totalMemory) * 100
+
+        // Backend memory metrics - Node.js process
+        const backendMemUsage = process.memoryUsage()
+        const backendUsedMemory = backendMemUsage.heapUsed
+        const backendMemoryPercentage = (backendUsedMemory / totalMemory) * 100
 
         // CPU metrics - get average over the collection period
         const cpuUsage =
@@ -151,6 +198,10 @@ class MetricsCollector {
                 used: usedMemory,
                 total: totalMemory,
                 percentage: memoryPercentage,
+            },
+            backendMemoryUsage: {
+                used: backendUsedMemory,
+                percentage: backendMemoryPercentage,
             },
             cpuUsage: {
                 percentage: cpuUsage,
@@ -182,6 +233,8 @@ class MetricsCollector {
                     memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
                     memory_total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
                     memory_percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
+                    backend_memory_used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
+                    backend_memory_percentage: Math.round(metrics.backendMemoryUsage.percentage * 100) / 100,
                     cpu_percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
                     response_time_p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
                     response_time_p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
@@ -201,8 +254,22 @@ class MetricsCollector {
             return
         }
 
-        // Initialize CPU tracking
-        this.lastCpuUsage = process.cpuUsage()
+        // Initialize system-wide CPU tracking
+        const cpus = os.cpus()
+        this.lastCpuTimes = {
+            user: 0,
+            nice: 0,
+            sys: 0,
+            idle: 0,
+            irq: 0,
+        }
+        for (const cpu of cpus) {
+            this.lastCpuTimes.user += cpu.times.user
+            this.lastCpuTimes.nice += cpu.times.nice
+            this.lastCpuTimes.sys += cpu.times.sys
+            this.lastCpuTimes.idle += cpu.times.idle
+            this.lastCpuTimes.irq += cpu.times.irq
+        }
         this.lastCpuCheck = Date.now()
 
         // Collect CPU usage every second for averaging
@@ -213,6 +280,31 @@ class MetricsCollector {
         // Send metrics every 10 minutes
         this.intervalId = setInterval(async () => {
             const metrics = this.collectMetrics()
+            
+            // Log metrics for debugging
+            this.fastify.log.info({
+                metrics: {
+                    memory: {
+                        used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
+                        total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
+                        percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
+                    },
+                    backend_memory: {
+                        used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
+                        percentage: Math.round(metrics.backendMemoryUsage.percentage * 100) / 100,
+                    },
+                    cpu: {
+                        percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
+                    },
+                    response_times: {
+                        p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
+                        p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
+                        p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
+                    },
+                    request_count: metrics.requestCount,
+                },
+            }, "System metrics collected")
+            
             await this.sendToPostHog(metrics)
 
             // Clear old response times (keep last 10 minutes for next aggregation)
