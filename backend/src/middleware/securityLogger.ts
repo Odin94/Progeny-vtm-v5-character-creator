@@ -70,6 +70,11 @@ export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
 }
 
 export function logError(request: FastifyRequest, reply: FastifyReply, error: FastifyError): void {
+    // Skip logging CSRF token errors - they're already logged as security events
+    if (error.message === "CSRF token missing" || error.message === "CSRF token mismatch") {
+        return
+    }
+
     const errorMessage = error.message
     const requestId = getRequestId(request)
     const ip = request.ip || request.socket.remoteAddress || "unknown"
