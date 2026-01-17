@@ -22,7 +22,7 @@ const Attributes = ({ options }: AttributesProps) => {
         fontFamily: "Courier New",
     }
 
-    const isClickable = mode === "play" && diceModalOpened
+    const isClickable = diceModalOpened
 
     const handleAttributeClick = (attribute: AttributesKey) => {
         if (!isClickable) return

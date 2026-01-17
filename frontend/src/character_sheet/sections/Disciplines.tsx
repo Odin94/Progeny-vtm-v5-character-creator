@@ -59,7 +59,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
-    const isClickable = mode === "play" && diceModalOpened
+    const isClickable = diceModalOpened
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
@@ -134,7 +134,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             const customDiscipline = character.customDisciplines?.[disciplineName]
                             const logo = discipline?.logo || customDiscipline?.logo || ""
 
-                            const isSelected = selectedDicePool.discipline === disciplineName
                             return (
                                 <Grid.Col key={disciplineName} span={{ base: 12, md: 6, lg: 4 }}>
                                     <Paper
@@ -144,9 +143,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             height: "100%",
                                             backgroundColor: paperBg,
                                             cursor: isClickable ? "pointer" : "default",
-                                            borderColor: isSelected ? primaryColor : undefined,
-                                            borderWidth: isSelected ? 2 : undefined,
-                                            transition: "border-color 0.2s, border-width 0.2s",
                                         }}
                                         onClick={() => handleDisciplineClick(disciplineName)}
                                     >

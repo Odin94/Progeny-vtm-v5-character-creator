@@ -1,5 +1,5 @@
-import { ActionIcon, Badge, Box, Checkbox, Group, Stack, Text } from "@mantine/core"
-import { IconRotateClockwise } from "@tabler/icons-react"
+import { ActionIcon, Badge, Box, Checkbox, Group, Stack, Text, Tooltip } from "@mantine/core"
+import { IconInfoCircle, IconRotateClockwise } from "@tabler/icons-react"
 import { Character } from "~/data/Character"
 import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
 import { upcase } from "~/generator/utils"
@@ -35,9 +35,28 @@ const SelectedDicePoolDisplay = ({
         >
             <Stack gap="xs">
                 <Group justify="space-between" align="center">
-                    <Text fw={700} fz="md" c={primaryColor}>
-                        Selected Dice Pool:
-                    </Text>
+                    <Group gap="xs" align="center">
+                        <Text fw={700} fz="md" c={primaryColor}>
+                            Selected Dice Pool:
+                        </Text>
+                        <Tooltip
+                            label="You can click Attributes, Skills, or Disciplines on the character sheet to determine your dice pool"
+                            position="top"
+                            withArrow
+                            multiline
+                            w={250}
+                            zIndex={3000}
+                        >
+                            <ActionIcon
+                                variant="subtle"
+                                color={primaryColor}
+                                size="sm"
+                                style={{ cursor: "help" }}
+                            >
+                                <IconInfoCircle size={18} />
+                            </ActionIcon>
+                        </Tooltip>
+                    </Group>
                     {(selectedDicePool.attribute || selectedDicePool.skill || selectedDicePool.discipline) ? (
                         <ActionIcon
                             variant="subtle"

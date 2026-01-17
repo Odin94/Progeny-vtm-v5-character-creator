@@ -54,7 +54,7 @@ const SkillRow = ({
         }))
     )
     
-    const isClickable = options.mode === "play" && options.diceModalOpened
+    const isClickable = options.diceModalOpened
     const isSelected = selectedDicePool.skill === skill
 
     const handleSkillClick = () => {
