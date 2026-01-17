@@ -9,7 +9,6 @@ type SelectedDicePoolDisplayProps = {
     setSelectedDicePool: (pool: SelectedDicePool) => void
     character?: Character
     primaryColor: string
-    selectedPoolDiceCount: number
     skillSpecialties: Array<{ name: string; skill: string }>
 }
 
@@ -18,7 +17,6 @@ const SelectedDicePoolDisplay = ({
     setSelectedDicePool,
     character,
     primaryColor,
-    selectedPoolDiceCount,
     skillSpecialties,
 }: SelectedDicePoolDisplayProps) => {
     return (
@@ -28,12 +26,10 @@ const SelectedDicePoolDisplay = ({
                 borderRadius: "8px",
                 padding: "1rem",
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
-                maxHeight: "120px",
-                overflowY: "auto",
                 flexShrink: 0,
             }}
         >
-            <Stack gap="sm">
+            <Stack gap="xs">
                 <Group justify="space-between" align="center">
                     <Text fw={700} fz="md" c={primaryColor}>
                         Selected Dice Pool:
@@ -111,9 +107,6 @@ const SelectedDicePoolDisplay = ({
                     color={primaryColor}
                     mt="sm"
                 />
-                <Text fw={600} fz="lg" mt="xs">
-                    Total Dice: {selectedPoolDiceCount}
-                </Text>
             </Stack>
         </Box>
     )

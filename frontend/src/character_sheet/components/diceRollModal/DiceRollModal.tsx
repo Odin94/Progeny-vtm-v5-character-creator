@@ -20,7 +20,7 @@ type DiceRollModalProps = {
 
 // TODOdin:
 // * Boring mode - no fancy animations
-// * Show results as success/failure
+// * Add discipline stats that affect attributes
 // * Crits & bestials
 // * Selecting dice pool from sheet
 // * Reading and updating hunger / rouse rolls
@@ -254,7 +254,6 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDiceP
                             setSelectedDicePool={setSelectedDicePool}
                             character={character}
                             primaryColor={primaryColor}
-                            selectedPoolDiceCount={selectedPoolDiceCount}
                             skillSpecialties={skillSpecialties}
                         />
                     )}
@@ -267,7 +266,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDiceP
                         fullWidth
                         style={{ flexShrink: 0 }}
                     >
-                        {dice.some((d) => d.isRolling) ? "Rolling..." : "Roll Dice"}
+                        {dice.some((d) => d.isRolling) 
+                            ? "Rolling..." 
+                            : activeTab === "selected" 
+                                ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
+                                : "Roll Dice"}
                     </Button>
 
                     <DiceContainer
