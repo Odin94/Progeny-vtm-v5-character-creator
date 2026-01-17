@@ -1,7 +1,8 @@
 import { Button, Stack } from "@mantine/core"
 import { motion, useMotionValue } from "framer-motion"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Character } from "~/data/Character"
+import posthog from "posthog-js"
 import { useCharacterSheetStore } from "../../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -46,6 +47,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
     )
     const x = useMotionValue(0)
     const y = useMotionValue(0)
+    const lastRollTrackedRef = useRef<number>(0)
     
     const hunger = character?.ephemeral?.hunger ?? 0
 
@@ -78,6 +80,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
             resetModal()
             x.set(0)
             y.set(0)
+            lastRollTrackedRef.current = 0
         }
     }, [opened, resetModal, x, y])
 
@@ -196,6 +199,45 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
 
         return { totalSuccesses, results }
     }, [dice])
+
+    useEffect(() => {
+        if (dice.length > 0 && !dice.some((d) => d.isRolling) && calculateSuccesses.totalSuccesses >= 0) {
+            const currentRollId = dice[0]?.id || 0
+            if (currentRollId !== lastRollTrackedRef.current) {
+                lastRollTrackedRef.current = currentRollId
+                
+                try {
+                    if (activeTab === "custom") {
+                        posthog.capture("dice-roll-custom", {
+                            dice_count: diceCount,
+                            total_successes: calculateSuccesses.totalSuccesses,
+                            blood_dice_count: dice.filter((d) => d.isBloodDie).length,
+                            regular_dice_count: dice.filter((d) => !d.isBloodDie).length,
+                            has_criticals: calculateSuccesses.results.some((r) => r.type === "critical" || r.type === "blood-critical"),
+                            has_bestial_failure: calculateSuccesses.results.some((r) => r.type === "bestial-failure"),
+                        })
+                    } else {
+                        const poolData: Record<string, string | number | boolean | string[]> = {
+                            attribute: selectedDicePool.attribute || "",
+                            skill: selectedDicePool.skill || "",
+                            discipline: selectedDicePool.discipline || "",
+                            blood_surge: selectedDicePool.bloodSurge,
+                            specialties: selectedDicePool.selectedSpecialties,
+                            total_successes: calculateSuccesses.totalSuccesses,
+                            dice_count: selectedPoolDiceCount,
+                            blood_dice_count: dice.filter((d) => d.isBloodDie).length,
+                            regular_dice_count: dice.filter((d) => !d.isBloodDie).length,
+                            has_criticals: calculateSuccesses.results.some((r) => r.type === "critical" || r.type === "blood-critical"),
+                            has_bestial_failure: calculateSuccesses.results.some((r) => r.type === "bestial-failure"),
+                        }
+                        posthog.capture("dice-roll-selected-pool", poolData)
+                    }
+                } catch (error) {
+                    console.warn("PostHog dice roll tracking failed:", error)
+                }
+            }
+        }
+    }, [dice, calculateSuccesses, activeTab, diceCount, selectedDicePool, selectedPoolDiceCount])
 
     if (!opened) return null
 

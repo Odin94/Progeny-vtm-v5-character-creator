@@ -3,6 +3,7 @@ import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
+import posthog from "posthog-js"
 import { getPrimaryColor } from "./utils/style"
 import Attributes from "./sections/Attributes"
 import BottomData from "./sections/BottomData"
@@ -127,7 +128,16 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 variant="light"
                                 color={primaryColor}
                                 radius="xl"
-                                onClick={openDiceModal}
+                                onClick={() => {
+                                    openDiceModal()
+                                    try {
+                                        posthog.capture("dice-modal-opened", {
+                                            mode,
+                                        })
+                                    } catch (error) {
+                                        console.warn("PostHog dice-modal-opened tracking failed:", error)
+                                    }
+                                }}
                                 style={{
                                     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                                 }}
