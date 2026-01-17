@@ -3,13 +3,21 @@ import { attributesKeySchema, AttributesKey } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
+import { useCharacterSheetStore } from "../stores/characterSheetStore"
+import { useShallow } from "zustand/react/shallow"
 
 type AttributesProps = {
     options: SheetOptions
 }
 
 const Attributes = ({ options }: AttributesProps) => {
-    const { character, mode, diceModalOpened, selectedDicePool, setSelectedDicePool } = options
+    const { character, mode, diceModalOpened } = options
+    const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
+        useShallow((state) => ({
+            selectedDicePool: state.selectedDicePool,
+            updateSelectedDicePool: state.updateSelectedDicePool,
+        }))
+    )
     const textStyle = {
         fontFamily: "Courier New",
     }
@@ -18,8 +26,7 @@ const Attributes = ({ options }: AttributesProps) => {
 
     const handleAttributeClick = (attribute: AttributesKey) => {
         if (!isClickable) return
-        setSelectedDicePool({
-            ...selectedDicePool,
+        updateSelectedDicePool({
             attribute: selectedDicePool.attribute === attribute ? null : attribute,
         })
     }

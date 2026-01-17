@@ -1,14 +1,21 @@
 import { ActionIcon, Group, Tabs } from "@mantine/core"
 import { IconX } from "@tabler/icons-react"
+import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
+import { useShallow } from "zustand/react/shallow"
 
 type ModalHeaderProps = {
-    activeTab: string | null
-    setActiveTab: (value: string | null) => void
     primaryColor: string
     onClose: () => void
 }
 
-const ModalHeader = ({ activeTab, setActiveTab, primaryColor, onClose }: ModalHeaderProps) => {
+const ModalHeader = ({ primaryColor, onClose }: ModalHeaderProps) => {
+    const { activeTab, setActiveTab } = useDiceRollModalStore(
+        useShallow((state) => ({
+            activeTab: state.activeTab,
+            setActiveTab: state.setActiveTab,
+        }))
+    )
+
     return (
         <Group justify="center" mb="md" style={{ position: "relative", paddingRight: "40px" }}>
             <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor} style={{ width: "100%" }}>

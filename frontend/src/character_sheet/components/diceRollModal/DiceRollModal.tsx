@@ -1,8 +1,10 @@
 import { Button, Stack } from "@mantine/core"
 import { motion, useMotionValue } from "framer-motion"
-import { useState, useEffect, useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Character } from "~/data/Character"
-import { SelectedDicePool } from "../../CharacterSheet"
+import { useCharacterSheetStore } from "../../stores/characterSheetStore"
+import { useDiceRollModalStore } from "../../stores/diceRollModalStore"
+import { useShallow } from "zustand/react/shallow"
 import CustomDicePoolControls from "./parts/CustomDicePoolControls"
 import DiceContainer, { type DieResult } from "./parts/DiceContainer"
 import ModalHeader from "./parts/ModalHeader"
@@ -14,8 +16,6 @@ type DiceRollModalProps = {
     onClose: () => void
     primaryColor: string
     character?: Character
-    selectedDicePool: SelectedDicePool
-    setSelectedDicePool: (pool: SelectedDicePool) => void
 }
 
 // TODOdin:
@@ -28,10 +28,22 @@ type DiceRollModalProps = {
 // * Roll history
 // * Share rolls with your session live
 
-const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDicePool, setSelectedDicePool }: DiceRollModalProps) => {
-    const [dice, setDice] = useState<DieResult[]>([])
-    const [diceCount, setDiceCount] = useState(1)
-    const [activeTab, setActiveTab] = useState<string | null>("custom")
+const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollModalProps) => {
+    const { selectedDicePool } = useCharacterSheetStore(
+        useShallow((state) => ({
+            selectedDicePool: state.selectedDicePool,
+        }))
+    )
+    const { dice, setDice, diceCount, activeTab, setActiveTab, reset: resetModal } = useDiceRollModalStore(
+        useShallow((state) => ({
+            dice: state.dice,
+            setDice: state.setDice,
+            diceCount: state.diceCount,
+            activeTab: state.activeTab,
+            setActiveTab: state.setActiveTab,
+            reset: state.reset,
+        }))
+    )
     const x = useMotionValue(0)
     const y = useMotionValue(0)
     
@@ -63,13 +75,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDiceP
 
     useEffect(() => {
         if (!opened) {
-            setDice([])
-            setDiceCount(1)
-            setActiveTab("custom")
+            resetModal()
             x.set(0)
             y.set(0)
         }
-    }, [opened, x, y])
+    }, [opened, resetModal, x, y])
 
     useEffect(() => {
         if (selectedDicePool.attribute && (selectedDicePool.skill || selectedDicePool.discipline)) {
@@ -235,23 +245,15 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDiceP
                 transition={{ duration: 0.2 }}
             >
                 <ModalHeader
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
                     primaryColor={primaryColor}
                     onClose={onClose}
                 />
 
                 <Stack gap="lg" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
                     {activeTab === "custom" ? (
-                        <CustomDicePoolControls
-                            diceCount={diceCount}
-                            setDiceCount={setDiceCount}
-                            primaryColor={primaryColor}
-                        />
+                        <CustomDicePoolControls primaryColor={primaryColor} />
                     ) : (
                         <SelectedDicePoolDisplay
-                            selectedDicePool={selectedDicePool}
-                            setSelectedDicePool={setSelectedDicePool}
                             character={character}
                             primaryColor={primaryColor}
                             skillSpecialties={skillSpecialties}
@@ -274,9 +276,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, selectedDiceP
                     </Button>
 
                     <DiceContainer
-                        dice={dice}
                         primaryColor={primaryColor}
-                        activeTab={activeTab}
                     />
 
                     {dice.length > 0 && !dice.some((d) => d.isRolling) ? (

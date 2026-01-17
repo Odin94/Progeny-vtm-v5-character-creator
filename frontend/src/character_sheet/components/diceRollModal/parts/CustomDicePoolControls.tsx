@@ -1,13 +1,20 @@
 import { Button, Group, Text } from "@mantine/core"
 import { IconMinus, IconPlus } from "@tabler/icons-react"
+import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
+import { useShallow } from "zustand/react/shallow"
 
 type CustomDicePoolControlsProps = {
-    diceCount: number
-    setDiceCount: (count: number) => void
     primaryColor: string
 }
 
-const CustomDicePoolControls = ({ diceCount, setDiceCount, primaryColor }: CustomDicePoolControlsProps) => {
+const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) => {
+    const { diceCount, setDiceCount } = useDiceRollModalStore(
+        useShallow((state) => ({
+            diceCount: state.diceCount,
+            setDiceCount: state.setDiceCount,
+        }))
+    )
+
     const removeDie = () => {
         if (diceCount > 1) {
             setDiceCount(diceCount - 1)

@@ -1,6 +1,8 @@
 import { Group } from "@mantine/core"
 import { AnimatePresence, motion } from "framer-motion"
 import Die from "./Die"
+import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
+import { useShallow } from "zustand/react/shallow"
 
 export type DieResult = {
     id: number
@@ -10,12 +12,16 @@ export type DieResult = {
 }
 
 type DiceContainerProps = {
-    dice: DieResult[]
     primaryColor: string
-    activeTab: string | null
 }
 
-const DiceContainer = ({ dice, primaryColor, activeTab }: DiceContainerProps) => {
+const DiceContainer = ({ primaryColor }: DiceContainerProps) => {
+    const { dice, activeTab } = useDiceRollModalStore(
+        useShallow((state) => ({
+            dice: state.dice,
+            activeTab: state.activeTab,
+        }))
+    )
     return (
         <Group justify="center" gap="md" style={{ flex: activeTab === "selected" ? "1 1 380px" : "1 1 480px", maxHeight: activeTab === "selected" ? "380px" : "480px", minHeight: "300px", flexWrap: "wrap", position: "relative", overflow: "hidden", alignItems: "center" }}>
             <AnimatePresence mode="wait">

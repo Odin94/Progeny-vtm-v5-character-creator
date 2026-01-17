@@ -1,24 +1,28 @@
 import { ActionIcon, Badge, Box, Checkbox, Group, Stack, Text } from "@mantine/core"
 import { IconRotateClockwise } from "@tabler/icons-react"
 import { Character } from "~/data/Character"
-import { SelectedDicePool } from "../../../CharacterSheet"
+import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
 import { upcase } from "~/generator/utils"
+import { useShallow } from "zustand/react/shallow"
 
 type SelectedDicePoolDisplayProps = {
-    selectedDicePool: SelectedDicePool
-    setSelectedDicePool: (pool: SelectedDicePool) => void
     character?: Character
     primaryColor: string
     skillSpecialties: Array<{ name: string; skill: string }>
 }
 
 const SelectedDicePoolDisplay = ({
-    selectedDicePool,
-    setSelectedDicePool,
     character,
     primaryColor,
     skillSpecialties,
 }: SelectedDicePoolDisplayProps) => {
+    const { selectedDicePool, resetSelectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
+        useShallow((state) => ({
+            selectedDicePool: state.selectedDicePool,
+            resetSelectedDicePool: state.resetSelectedDicePool,
+            updateSelectedDicePool: state.updateSelectedDicePool,
+        }))
+    )
     return (
         <Box
             style={{
@@ -38,7 +42,7 @@ const SelectedDicePoolDisplay = ({
                         <ActionIcon
                             variant="subtle"
                             color={primaryColor}
-                            onClick={() => setSelectedDicePool({ attribute: null, skill: null, discipline: null, selectedSpecialties: [], bloodSurge: false })}
+                            onClick={resetSelectedDicePool}
                             title="Reset dice pool"
                         >
                             <IconRotateClockwise size={18} />
@@ -78,13 +82,11 @@ const SelectedDicePoolDisplay = ({
                                     checked={selectedDicePool.selectedSpecialties.includes(specialty.name)}
                                     onChange={(e) => {
                                         if (e.currentTarget.checked) {
-                                            setSelectedDicePool({
-                                                ...selectedDicePool,
+                                            updateSelectedDicePool({
                                                 selectedSpecialties: [...selectedDicePool.selectedSpecialties, specialty.name],
                                             })
                                         } else {
-                                            setSelectedDicePool({
-                                                ...selectedDicePool,
+                                            updateSelectedDicePool({
                                                 selectedSpecialties: selectedDicePool.selectedSpecialties.filter(s => s !== specialty.name),
                                             })
                                         }
@@ -99,8 +101,7 @@ const SelectedDicePoolDisplay = ({
                     label="Blood Surge (+2 dice)"
                     checked={selectedDicePool.bloodSurge}
                     onChange={(e) => {
-                        setSelectedDicePool({
-                            ...selectedDicePool,
+                        updateSelectedDicePool({
                             bloodSurge: e.currentTarget.checked,
                         })
                     }}

@@ -28,6 +28,8 @@ import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
 import { Power } from "~/data/Disciplines"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
 import { bgAlpha, hexToRgba } from "../utils/style"
+import { useCharacterSheetStore } from "../stores/characterSheetStore"
+import { useShallow } from "zustand/react/shallow"
 
 type DisciplinesProps = {
     options: SheetOptions
@@ -38,7 +40,13 @@ const isKnownDiscipline = (name: DisciplineName): name is KnownDisciplineName =>
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
-    const { character, primaryColor, mode, setCharacter, diceModalOpened, selectedDicePool, setSelectedDicePool } = options
+    const { character, primaryColor, mode, setCharacter, diceModalOpened } = options
+    const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
+        useShallow((state) => ({
+            selectedDicePool: state.selectedDicePool,
+            updateSelectedDicePool: state.updateSelectedDicePool,
+        }))
+    )
     const theme = useMantineTheme()
     const [modalOpened, setModalOpened] = useState(false)
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
@@ -56,8 +64,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
         if (!isClickable) return
-        setSelectedDicePool({
-            ...selectedDicePool,
+        updateSelectedDicePool({
             discipline: selectedDicePool.discipline === disciplineName ? null : disciplineName,
             skill: null,
         })

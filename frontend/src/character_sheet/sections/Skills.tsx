@@ -6,6 +6,8 @@ import Pips from "~/character_sheet/components/Pips"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
+import { useCharacterSheetStore } from "../stores/characterSheetStore"
+import { useShallow } from "zustand/react/shallow"
 
 type SkillsProps = {
     options: SheetOptions
@@ -45,15 +47,20 @@ const SkillRow = ({
     const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
     const [editingSpecialty, setEditingSpecialty] = useState<{ skill: SkillsKey; index: number } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
+    const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
+        useShallow((state) => ({
+            selectedDicePool: state.selectedDicePool,
+            updateSelectedDicePool: state.updateSelectedDicePool,
+        }))
+    )
     
     const isClickable = options.mode === "play" && options.diceModalOpened
-    const isSelected = options.selectedDicePool.skill === skill
+    const isSelected = selectedDicePool.skill === skill
 
     const handleSkillClick = () => {
         if (!isClickable) return
         const newSkill = isSelected ? null : skill
-        options.setSelectedDicePool({
-            ...options.selectedDicePool,
+        updateSelectedDicePool({
             skill: newSkill,
             discipline: null,
             selectedSpecialties: [],

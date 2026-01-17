@@ -40,7 +40,7 @@ export const knownDisciplineNameSchema = z.union([
 
 export type KnownDisciplineName = z.infer<typeof knownDisciplineNameSchema>
 
-export const disciplineNameSchema = z.string()
+export const disciplineNameSchema = z.union([z.string(), knownDisciplineNameSchema])
 export type DisciplineName = z.infer<typeof disciplineNameSchema>
 
 export const predatorTypeNameSchema = z.union([
