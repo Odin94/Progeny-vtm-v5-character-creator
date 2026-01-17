@@ -11,6 +11,7 @@ import DiceContainer, { type DieResult } from "./parts/DiceContainer"
 import ModalHeader from "./parts/ModalHeader"
 import SelectedDicePoolDisplay from "./parts/SelectedDicePoolDisplay"
 import SuccessResults from "./parts/SuccessResults"
+import { getApplicableDisciplinePowers } from "../../utils/disciplinePowerMatcher"
 
 type DiceRollModalProps = {
     opened: boolean
@@ -67,7 +68,27 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
         
         const bloodSurgeBonus = selectedDicePool.bloodSurge ? 2 : 0
         
-        return attributeValue + skillOrDisciplineValue + specialtyBonus + bloodSurgeBonus
+        let disciplinePowerBonus = 0
+        if (selectedDicePool.attribute) {
+            const applicablePowers = getApplicableDisciplinePowers(character, selectedDicePool.attribute, selectedDicePool.skill)
+            const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
+            
+            for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
+                if (!applicablePowerKeys.has(powerKey)) continue
+                
+                const [disciplineName, powerName] = powerKey.split("-", 2)
+                const disciplinePowers = character.disciplines.filter(p => p.discipline === disciplineName)
+                const disciplineRating = disciplinePowers.length
+                
+                if (powerName === "Wrecker") {
+                    disciplinePowerBonus += disciplineRating * 2
+                } else {
+                    disciplinePowerBonus += disciplineRating
+                }
+            }
+        }
+        
+        return attributeValue + skillOrDisciplineValue + specialtyBonus + bloodSurgeBonus + disciplinePowerBonus
     }, [character, selectedDicePool])
     
     const skillSpecialties = useMemo(() => {
@@ -223,6 +244,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                             discipline: selectedDicePool.discipline || "",
                             blood_surge: selectedDicePool.bloodSurge,
                             specialties: selectedDicePool.selectedSpecialties,
+                            discipline_powers: selectedDicePool.selectedDisciplinePowers,
                             total_successes: calculateSuccesses.totalSuccesses,
                             dice_count: selectedPoolDiceCount,
                             blood_dice_count: dice.filter((d) => d.isBloodDie).length,

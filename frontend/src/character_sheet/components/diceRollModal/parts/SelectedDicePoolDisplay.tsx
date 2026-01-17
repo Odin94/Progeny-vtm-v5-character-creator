@@ -4,6 +4,8 @@ import { Character } from "~/data/Character"
 import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
 import { upcase } from "~/generator/utils"
 import { useShallow } from "zustand/react/shallow"
+import { getApplicableDisciplinePowers } from "../../../utils/disciplinePowerMatcher"
+import { useMemo } from "react"
 
 type SelectedDicePoolDisplayProps = {
     character?: Character
@@ -23,6 +25,11 @@ const SelectedDicePoolDisplay = ({
             updateSelectedDicePool: state.updateSelectedDicePool,
         }))
     )
+
+    const applicablePowers = useMemo(() => {
+        if (!character || !selectedDicePool.attribute) return []
+        return getApplicableDisciplinePowers(character, selectedDicePool.attribute, selectedDicePool.skill)
+    }, [character, selectedDicePool.attribute, selectedDicePool.skill])
     return (
         <Box
             style={{
@@ -116,17 +123,51 @@ const SelectedDicePoolDisplay = ({
                         </Group>
                     </Stack>
                 ) : null}
-                <Checkbox
-                    label="Blood Surge (+2 dice)"
-                    checked={selectedDicePool.bloodSurge}
-                    onChange={(e) => {
-                        updateSelectedDicePool({
-                            bloodSurge: e.currentTarget.checked,
-                        })
-                    }}
-                    color={primaryColor}
-                    mt="sm"
-                />
+                {(applicablePowers.length > 0 || true) ? (
+                    <Stack gap="xs" mt="sm">
+                        <Text fw={600} fz="sm" c={primaryColor}>
+                            The Blood:
+                        </Text>
+                        <Group gap="xs">
+                            <Checkbox
+                                label="Blood Surge (+2 dice)"
+                                checked={selectedDicePool.bloodSurge}
+                                onChange={(e) => {
+                                    updateSelectedDicePool({
+                                        bloodSurge: e.currentTarget.checked,
+                                    })
+                                }}
+                                color={primaryColor}
+                            />
+                            {applicablePowers.map(({ power, disciplineRating }) => {
+                                const isWrecker = power.name === "Wrecker"
+                                const bonusDice = isWrecker ? disciplineRating * 2 : disciplineRating
+                                const powerKey = `${power.discipline}-${power.name}`
+                                const isChecked = selectedDicePool.selectedDisciplinePowers.includes(powerKey)
+                                
+                                return (
+                                    <Checkbox
+                                        key={powerKey}
+                                        label={`${power.name} (+${bonusDice} ${bonusDice === 1 ? "die" : "dice"})`}
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                            if (e.currentTarget.checked) {
+                                                updateSelectedDicePool({
+                                                    selectedDisciplinePowers: [...selectedDicePool.selectedDisciplinePowers, powerKey],
+                                                })
+                                            } else {
+                                                updateSelectedDicePool({
+                                                    selectedDisciplinePowers: selectedDicePool.selectedDisciplinePowers.filter(p => p !== powerKey),
+                                                })
+                                            }
+                                        }}
+                                        color={primaryColor}
+                                    />
+                                )
+                            })}
+                        </Group>
+                    </Stack>
+                ) : null}
             </Stack>
         </Box>
     )
