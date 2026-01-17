@@ -15,6 +15,7 @@ interface SystemMetrics {
         used: number
         total: number
         percentage: number
+        maxPercentage: number
     }
     backendMemoryUsage: {
         used: number
@@ -22,6 +23,7 @@ interface SystemMetrics {
     }
     cpuUsage: {
         percentage: number
+        maxPercentage: number
     }
     responseTimes: {
         p50: number
@@ -45,6 +47,8 @@ class MetricsCollector {
     private lastCpuTimes: CpuTimes | null = null
     private lastCpuCheck: number = Date.now()
     private cpuUsageHistory: number[] = []
+    private maxCpuUsage: number = 0
+    private maxMemoryUsage: number = 0
     private requestStartTimes: WeakMap<FastifyRequest, number> = new WeakMap()
 
     constructor(private fastify: FastifyInstance) {
@@ -164,6 +168,11 @@ class MetricsCollector {
             this.cpuUsageHistory.shift()
         }
 
+        // Track maximum CPU usage
+        if (clampedPercent > this.maxCpuUsage) {
+            this.maxCpuUsage = clampedPercent
+        }
+
         return clampedPercent
     }
 
@@ -173,6 +182,11 @@ class MetricsCollector {
         const freeMemory = os.freemem()
         const usedMemory = totalMemory - freeMemory
         const memoryPercentage = (usedMemory / totalMemory) * 100
+
+        // Track maximum memory usage
+        if (memoryPercentage > this.maxMemoryUsage) {
+            this.maxMemoryUsage = memoryPercentage
+        }
 
         // Backend memory metrics - Node.js process
         const backendMemUsage = process.memoryUsage()
@@ -198,6 +212,7 @@ class MetricsCollector {
                 used: usedMemory,
                 total: totalMemory,
                 percentage: memoryPercentage,
+                maxPercentage: this.maxMemoryUsage,
             },
             backendMemoryUsage: {
                 used: backendUsedMemory,
@@ -205,6 +220,7 @@ class MetricsCollector {
             },
             cpuUsage: {
                 percentage: cpuUsage,
+                maxPercentage: this.maxCpuUsage,
             },
             responseTimes: {
                 p50,
@@ -233,9 +249,11 @@ class MetricsCollector {
                     memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
                     memory_total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
                     memory_percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
+                    memory_max_percentage: Math.round(metrics.memoryUsage.maxPercentage * 100) / 100,
                     backend_memory_used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
                     backend_memory_percentage: Math.round(metrics.backendMemoryUsage.percentage * 100) / 100,
                     cpu_percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
+                    cpu_max_percentage: Math.round(metrics.cpuUsage.maxPercentage * 100) / 100,
                     response_time_p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
                     response_time_p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
                     response_time_p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
@@ -288,6 +306,7 @@ class MetricsCollector {
                         used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
                         total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
                         percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
+                        max_percentage: Math.round(metrics.memoryUsage.maxPercentage * 100) / 100,
                     },
                     backend_memory: {
                         used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
@@ -295,6 +314,7 @@ class MetricsCollector {
                     },
                     cpu: {
                         percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
+                        max_percentage: Math.round(metrics.cpuUsage.maxPercentage * 100) / 100,
                     },
                     response_times: {
                         p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
@@ -311,8 +331,10 @@ class MetricsCollector {
             const tenMinutesAgo = Date.now() - 10 * 60 * 1000
             this.responseTimes = this.responseTimes.filter((rt) => rt.timestamp > tenMinutesAgo)
 
-            // Clear CPU history after sending
+            // Clear CPU history and reset maximums after sending
             this.cpuUsageHistory = []
+            this.maxCpuUsage = 0
+            this.maxMemoryUsage = 0
         }, 10 * 60 * 1000) // 10 minutes
 
         this.fastify.log.info("Metrics collection started (sending to PostHog every 10 minutes)")
