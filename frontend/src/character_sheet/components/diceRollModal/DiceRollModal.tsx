@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
@@ -7,6 +8,7 @@ import RouseCheckButton from "../RouseCheckButton"
 import { useCharacterSheetStore } from "../../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import { globals } from "~/globals"
 import CustomDicePoolControls from "./parts/CustomDicePoolControls"
 import DiceContainer, { type DieResult } from "./parts/DiceContainer"
 import ModalHeader from "./parts/ModalHeader"
@@ -24,7 +26,6 @@ type DiceRollModalProps = {
 
 // TODOdin:
 // * Boring mode - no fancy animations
-// * Make it work on mobile
 // * Selecting dice pool from sheet
 // * Maybe use icons on dice for bestial & crit
 // * Roll history
@@ -33,6 +34,7 @@ type DiceRollModalProps = {
 const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter }: DiceRollModalProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
+    const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     const { selectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
@@ -131,9 +133,37 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
         const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
         const bloodDiceCount = Math.min(hunger, countToUse)
 
-        if (dice.length > 0) {
-            setDice([])
-            setTimeout(() => {
+        if (isMobile) {
+            const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
+                id: Date.now() + i,
+                value: rollDie(),
+                isRolling: false,
+                isBloodDie: i < bloodDiceCount,
+            }))
+            setDice(newDice)
+        } else {
+            if (dice.length > 0) {
+                setDice([])
+                setTimeout(() => {
+                    const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
+                        id: Date.now() + i,
+                        value: 0,
+                        isRolling: true,
+                        isBloodDie: i < bloodDiceCount,
+                    }))
+                    setDice(newDice)
+
+                    setTimeout(() => {
+                        setDice((prev) =>
+                            prev.map((die) => ({
+                                ...die,
+                                value: rollDie(),
+                                isRolling: false,
+                            }))
+                        )
+                    }, 1500)
+                }, 500)
+            } else {
                 const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                     id: Date.now() + i,
                     value: 0,
@@ -151,25 +181,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         }))
                     )
                 }, 1500)
-            }, 500)
-        } else {
-            const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
-                id: Date.now() + i,
-                value: 0,
-                isRolling: true,
-                isBloodDie: i < bloodDiceCount,
-            }))
-            setDice(newDice)
-
-            setTimeout(() => {
-                setDice((prev) =>
-                    prev.map((die) => ({
-                        ...die,
-                        value: rollDie(),
-                        isRolling: false,
-                    }))
-                )
-            }, 1500)
+            }
         }
     }
 
@@ -347,6 +359,131 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
 
     if (!opened) return null
 
+    const modalContent = (
+        <>
+            <ModalHeader
+                primaryColor={primaryColor}
+                onClose={onClose}
+            />
+
+            <Stack gap="lg" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+                {activeTab === "custom" ? (
+                    <CustomDicePoolControls primaryColor={primaryColor} />
+                ) : (
+                    <SelectedDicePoolDisplay
+                        character={character}
+                        primaryColor={primaryColor}
+                        skillSpecialties={skillSpecialties}
+                    />
+                )}
+
+                <Group gap="xs" justify="space-between" style={{ flexShrink: 0, position: "relative" }}>
+                    <div style={{ width: character && setCharacter ? 36 : 0 }} />
+                    <Button
+                        size="md"
+                        color={primaryColor}
+                        onClick={rollDice}
+                        disabled={dice.some((d) => d.isRolling) || (activeTab === "selected" && selectedPoolDiceCount === 0)}
+                    >
+                        {dice.some((d) => d.isRolling)
+                            ? "Rolling..."
+                            : activeTab === "selected"
+                                ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
+                                : "Roll Dice"}
+                    </Button>
+                    {character && setCharacter ? (
+                        <RouseCheckButton
+                            character={character}
+                            setCharacter={setCharacter}
+                            primaryColor={primaryColor}
+                            size="lg"
+                            iconSize={20}
+                            tooltipZIndex={3000}
+                        />
+                    ) : (
+                        <div style={{ width: 36 }} />
+                    )}
+                </Group>
+
+                {isMobile ? null : <DiceContainer
+                    primaryColor={primaryColor}
+                    onDieClick={handleDieClick}
+                    selectedDiceIds={selectedDiceIds}
+                    isMobile={isMobile}
+                />}
+
+                <AnimatePresence>
+                    {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
+                        <SuccessResults
+                            key="success-results"
+                            results={calculateSuccesses.results}
+                            totalSuccesses={calculateSuccesses.totalSuccesses}
+                            primaryColor={primaryColor}
+                            onReroll={nonBloodDice.length > 0 && character && setCharacter ? handleReroll : undefined}
+                            canReroll={canReroll}
+                            selectedDiceCount={selectedDiceIds.size}
+                        />
+                    ) : null}
+                </AnimatePresence>
+            </Stack>
+        </>
+    )
+
+    if (isMobile) {
+        return (
+            <>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.2)",
+                        zIndex: 1999,
+                        pointerEvents: "none",
+                    }}
+                />
+                <motion.div
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "100%" }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        position: "fixed",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: "75vh",
+                        maxHeight: "600px",
+                        backgroundColor: "rgba(0, 0, 0, 0.95)",
+                        backdropFilter: "blur(10px)",
+                        borderTopLeftRadius: "16px",
+                        borderTopRightRadius: "16px",
+                        borderTop: `2px solid ${colorValue}`,
+                        boxShadow: "0 -8px 32px rgba(0, 0, 0, 0.5)",
+                        zIndex: 2000,
+                        display: "flex",
+                        flexDirection: "column",
+                        padding: "1rem",
+                        paddingTop: "0.5rem",
+                        overflow: "hidden",
+                        pointerEvents: "auto",
+                    }}
+                >
+                    <div style={{ overflowY: "auto", flex: 1, minHeight: 0, paddingTop: "0.5rem" }}>
+                        {modalContent}
+                    </div>
+                </motion.div>
+            </>
+        )
+    }
+
     return (
         <div
             style={{
@@ -356,6 +493,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 transform: "translate(-50%, -50%)",
                 zIndex: 2000,
                 pointerEvents: "none",
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
             }}
         >
             <motion.div
@@ -379,8 +521,10 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     backdropFilter: "blur(10px)",
                     borderRadius: "12px",
                     padding: "1.5rem",
-                    width: "610px",
-                    height: "880px",
+                    width: "min(610px, 90vw)",
+                    height: "min(880px, 90vh)",
+                    maxWidth: "90vw",
+                    maxHeight: "90vh",
                     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
                     border: `2px solid ${colorValue}`,
                     cursor: "move",
@@ -392,70 +536,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
             >
-                <ModalHeader
-                    primaryColor={primaryColor}
-                    onClose={onClose}
-                />
-
-                <Stack gap="lg" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-                    {activeTab === "custom" ? (
-                        <CustomDicePoolControls primaryColor={primaryColor} />
-                    ) : (
-                        <SelectedDicePoolDisplay
-                            character={character}
-                            primaryColor={primaryColor}
-                            skillSpecialties={skillSpecialties}
-                        />
-                    )}
-
-                    <Group gap="xs" justify="space-between" style={{ flexShrink: 0, position: "relative" }}>
-                        <div style={{ width: character && setCharacter ? 36 : 0 }} />
-                        <Button
-                            size="md"
-                            color={primaryColor}
-                            onClick={rollDice}
-                            disabled={dice.some((d) => d.isRolling) || (activeTab === "selected" && selectedPoolDiceCount === 0)}
-                        >
-                            {dice.some((d) => d.isRolling)
-                                ? "Rolling..."
-                                : activeTab === "selected"
-                                    ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
-                                    : "Roll Dice"}
-                        </Button>
-                        {character && setCharacter ? (
-                            <RouseCheckButton
-                                character={character}
-                                setCharacter={setCharacter}
-                                primaryColor={primaryColor}
-                                size="lg"
-                                iconSize={20}
-                                tooltipZIndex={3000}
-                            />
-                        ) : (
-                            <div style={{ width: 36 }} />
-                        )}
-                    </Group>
-
-                    <DiceContainer
-                        primaryColor={primaryColor}
-                        onDieClick={handleDieClick}
-                        selectedDiceIds={selectedDiceIds}
-                    />
-
-                    <AnimatePresence>
-                        {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
-                            <SuccessResults
-                                key="success-results"
-                                results={calculateSuccesses.results}
-                                totalSuccesses={calculateSuccesses.totalSuccesses}
-                                primaryColor={primaryColor}
-                                onReroll={nonBloodDice.length > 0 && character && setCharacter ? handleReroll : undefined}
-                                canReroll={canReroll}
-                                selectedDiceCount={selectedDiceIds.size}
-                            />
-                        ) : null}
-                    </AnimatePresence>
-                </Stack>
+                {modalContent}
             </motion.div>
         </div>
     )

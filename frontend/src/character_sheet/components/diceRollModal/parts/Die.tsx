@@ -1,5 +1,7 @@
+import { Badge } from "@mantine/core"
 import { motion } from "framer-motion"
 import { useMantineTheme } from "@mantine/core"
+import { vtmRed } from "~/character_sheet/utils/style"
 
 type DieProps = {
     value: number
@@ -10,11 +12,50 @@ type DieProps = {
     onClick?: () => void
     isSelected?: boolean
     isSelectable?: boolean
+    isMobile?: boolean
+    isBloodDie?: boolean
 }
 
-const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onClick, isSelected = false, isSelectable = false }: DieProps) => {
+const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onClick, isSelected = false, isSelectable = false, isMobile = false, isBloodDie = false }: DieProps) => {
     const theme = useMantineTheme()
     const colorValue = primaryColor.startsWith("#") ? primaryColor : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
+
+    if (isMobile) {
+        const displayValue = value === 10 ? "0" : value.toString()
+        const dieColor = isBloodDie ? vtmRed : colorValue
+
+        return (
+            <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                whileTap={isSelectable ? { scale: 0.9 } : undefined}
+                onClick={isSelectable ? onClick : undefined}
+                style={{ cursor: isSelectable ? "pointer" : "default" }}
+            >
+                <Badge
+                    size="xl"
+                    radius="xl"
+                    variant="filled"
+                    color={dieColor}
+                    style={{
+                        width: "50px",
+                        height: "50px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "20px",
+                        fontWeight: 700,
+                        border: isSelected ? "3px solid #ffd700" : "2px solid rgba(255, 255, 255, 0.3)",
+                        boxShadow: isSelected ? "0 0 12px rgba(255, 215, 0, 0.8)" : "0 2px 8px rgba(0, 0, 0, 0.3)",
+                    }}
+                >
+                    {displayValue}
+                </Badge>
+            </motion.div>
+        )
+    }
     const seededRandom = (offset: number = 0) => {
         const x = Math.sin(seed + offset) * 10000
         return x - Math.floor(x)
@@ -61,7 +102,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
 
     const selectionColor = isSelected ? "#ffd700" : colorValue
     const selectionGlow = isSelected ? "drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))" : "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
-    
+
     const baseFaceStyle = {
         position: "absolute" as const,
         left: "50%",

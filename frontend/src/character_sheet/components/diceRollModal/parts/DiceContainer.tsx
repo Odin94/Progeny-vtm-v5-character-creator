@@ -16,15 +16,17 @@ type DiceContainerProps = {
     primaryColor: string
     onDieClick?: (dieId: number, isBloodDie: boolean) => void
     selectedDiceIds?: Set<number>
+    isMobile?: boolean
 }
 
-const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }: DiceContainerProps) => {
+const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set(), isMobile = false }: DiceContainerProps) => {
     const { dice, activeTab } = useDiceRollModalStore(
         useShallow((state) => ({
             dice: state.dice,
             activeTab: state.activeTab,
         }))
     )
+
     return (
         <Group justify="center" gap="md" style={{ flex: activeTab === "selected" ? "1 1 380px" : "1 1 480px", maxHeight: activeTab === "selected" ? "380px" : "480px", minHeight: "270px", flexWrap: "wrap", position: "relative", overflow: "hidden", alignItems: "center" }}>
             <AnimatePresence mode="wait">
@@ -34,7 +36,7 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }
                         const x = Math.sin(seed) * 10000
                         return x - Math.floor(x)
                     }
-                    
+
                     const containerWidth = 562
                     const containerHeight = 250
                     const dieSize = 100
@@ -43,16 +45,16 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }
                     const row = Math.floor(index / maxDicePerRow)
                     const col = index % maxDicePerRow
                     const totalRows = Math.ceil(dice.length / maxDicePerRow)
-                    
+
                     const totalWidth = Math.min(dice.length, maxDicePerRow) * (dieSize + gap) - gap
                     const totalHeight = totalRows * (dieSize + gap) - gap
-                    
+
                     const startX = (containerWidth - totalWidth) / 2
                     const startY = (containerHeight - totalHeight) / 2
-                    
+
                     const finalX = (startX + col * (dieSize + gap) + dieSize / 2) - containerWidth / 2 - 30
                     const finalY = (startY + row * (dieSize + gap) + dieSize / 2) - containerHeight / 2 - 30
-                    
+
                     const randomOffset = random() > 0.5 ? 800 : -800
                     const randomOffsetX = (random() - 0.5) * 2000 + randomOffset
                     const randomOffsetY = (random() - 0.5) * 400
@@ -61,7 +63,7 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }
                     const randomStiffness = 100 + random() * 50
                     const randomDamping = 15 + random() * 10
                     const randomDuration = 0.8 + random() * 0.4
-                    
+
                     return (
                         <motion.div
                             key={die.id}
@@ -98,7 +100,7 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }
                                 delay: randomDelay,
                                 duration: randomDuration,
                             }}
-                            style={{ 
+                            style={{
                                 display: "inline-block",
                                 position: "absolute",
                                 left: "50%",
@@ -114,6 +116,8 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }
                                 onClick={() => onDieClick?.(die.id, die.isBloodDie)}
                                 isSelected={selectedDiceIds.has(die.id)}
                                 isSelectable={!die.isBloodDie && !die.isRolling && onDieClick !== undefined}
+                                isMobile={false}
+                                isBloodDie={die.isBloodDie}
                             />
                         </motion.div>
                     )
