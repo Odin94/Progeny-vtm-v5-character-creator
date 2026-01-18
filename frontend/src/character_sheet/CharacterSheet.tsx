@@ -203,6 +203,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                     }}
                     primaryColor={primaryColor}
                     character={character}
+                    setCharacter={setCharacter}
                 />
             ) : null}
         </BackgroundImage>

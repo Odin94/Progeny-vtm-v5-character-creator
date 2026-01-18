@@ -7,9 +7,12 @@ type DieProps = {
     primaryColor: string
     animationDelay?: number
     seed?: number
+    onClick?: () => void
+    isSelected?: boolean
+    isSelectable?: boolean
 }
 
-const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: DieProps) => {
+const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onClick, isSelected = false, isSelectable = false }: DieProps) => {
     const theme = useMantineTheme()
     const colorValue = primaryColor.startsWith("#") ? primaryColor : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const seededRandom = (offset: number = 0) => {
@@ -53,9 +56,12 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: D
         width: "100%",
         height: "100%",
         transformStyle: "preserve-3d" as const,
-        cursor: "pointer",
+        cursor: isSelectable ? "pointer" : "default",
     }
 
+    const selectionColor = isSelected ? "#ffd700" : colorValue
+    const selectionGlow = isSelected ? "drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))" : "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
+    
     const baseFaceStyle = {
         position: "absolute" as const,
         left: "50%",
@@ -63,12 +69,12 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: D
         margin: `0 -${internalWidth}px`,
         borderLeft: `${internalWidth}px solid transparent`,
         borderRight: `${internalWidth}px solid transparent`,
-        borderBottom: `${upperHeight}px solid ${colorValue}`,
+        borderBottom: `${upperHeight}px solid ${selectionColor}`,
         width: "0px",
         height: "0px",
         transformStyle: "preserve-3d" as const,
         backfaceVisibility: "hidden" as const,
-        filter: "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))",
+        filter: selectionGlow,
     }
 
     const faceAfterStyle = {
@@ -78,10 +84,10 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: D
         left: `-${internalWidth}px`,
         borderLeft: `${internalWidth}px solid transparent`,
         borderRight: `${internalWidth}px solid transparent`,
-        borderTop: `${lowerHeight}px solid ${colorValue}`,
+        borderTop: `${lowerHeight}px solid ${selectionColor}`,
         width: "0px",
         height: "0px",
-        filter: "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))",
+        filter: selectionGlow,
     }
 
     const faceBeforeStyle = {
@@ -191,7 +197,8 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: D
                     duration: 0.5,
                     ease: "easeOut",
                 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={isSelectable ? { scale: 1.1 } : { scale: 1.05 }}
+                onClick={isSelectable ? onClick : undefined}
                 style={dieStyle}
             >
                 {Array.from({ length: 10 }, (_, i) => {

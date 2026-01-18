@@ -1,6 +1,7 @@
-import { Box, Group, Stack, Text, useMantineTheme } from "@mantine/core"
+import { Box, Group, Stack, Text, useMantineTheme, ActionIcon, Tooltip, Badge } from "@mantine/core"
 import { motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
+import { IconRefresh } from "@tabler/icons-react"
 import successIcon from "~/resources/diceResults/success.svg"
 import criticalIcon from "~/resources/diceResults/critical.svg"
 import bloodSuccessIcon from "~/resources/diceResults/blood-success.svg"
@@ -16,9 +17,12 @@ type SuccessResultsProps = {
     results: SuccessResult[]
     totalSuccesses: number
     primaryColor: string
+    onReroll?: () => void
+    canReroll?: boolean
+    selectedDiceCount?: number
 }
 
-const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResultsProps) => {
+const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canReroll = false, selectedDiceCount = 0 }: SuccessResultsProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const totalSuccessesRef = useRef<HTMLDivElement>(null)
@@ -90,9 +94,34 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
                 }}
             >
             <Stack gap="sm" style={{ flex: 1 }}>
-                <Text fw={700} fz="md" c={primaryColor}>
-                    Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
-                </Text>
+                <Group justify="space-between" align="center" wrap="nowrap">
+                    <Text fw={700} fz="md" c={primaryColor} style={{ flex: 1 }}>
+                        Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
+                    </Text>
+                    {onReroll ? (
+                        <Group gap="xs" wrap="nowrap">
+                            {selectedDiceCount > 0 ? (
+                                <Badge size="sm" variant="filled" color={primaryColor}>
+                                    {selectedDiceCount}/3
+                                </Badge>
+                            ) : null}
+                            <Tooltip 
+                                label={selectedDiceCount > 0 ? `Reroll ${selectedDiceCount} dice (1 willpower)` : "Select up to 3 non-blood dice to reroll (1 willpower)"}
+                                zIndex={2100}
+                            >
+                                <ActionIcon
+                                    color={primaryColor}
+                                    variant={canReroll ? "filled" : "outline"}
+                                    onClick={onReroll}
+                                    disabled={!canReroll}
+                                    size="sm"
+                                >
+                                    <IconRefresh size={16} />
+                                </ActionIcon>
+                            </Tooltip>
+                        </Group>
+                    ) : null}
+                </Group>
                 {results.length > 0 ? (
                     <>
                         <Group gap="xs" wrap="wrap">

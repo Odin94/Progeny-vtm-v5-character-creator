@@ -13,9 +13,11 @@ export type DieResult = {
 
 type DiceContainerProps = {
     primaryColor: string
+    onDieClick?: (dieId: number, isBloodDie: boolean) => void
+    selectedDiceIds?: Set<number>
 }
 
-const DiceContainer = ({ primaryColor }: DiceContainerProps) => {
+const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }: DiceContainerProps) => {
     const { dice, activeTab } = useDiceRollModalStore(
         useShallow((state) => ({
             dice: state.dice,
@@ -108,6 +110,9 @@ const DiceContainer = ({ primaryColor }: DiceContainerProps) => {
                                 primaryColor={die.isBloodDie ? "#c03f3f" : primaryColor}
                                 animationDelay={randomDelay}
                                 seed={seed}
+                                onClick={() => onDieClick?.(die.id, die.isBloodDie)}
+                                isSelected={selectedDiceIds.has(die.id)}
+                                isSelectable={!die.isBloodDie && !die.isRolling && onDieClick !== undefined}
                             />
                         </motion.div>
                     )

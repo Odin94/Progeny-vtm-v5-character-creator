@@ -1,6 +1,6 @@
-import { Button, Stack, useMantineTheme } from "@mantine/core"
+import { Button, Stack, useMantineTheme, Text } from "@mantine/core"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
 import posthog from "posthog-js"
 import { useCharacterSheetStore } from "../../stores/characterSheetStore"
@@ -18,10 +18,12 @@ type DiceRollModalProps = {
     onClose: () => void
     primaryColor: string
     character?: Character
+    setCharacter?: (character: Character) => void
 }
 
 // TODOdin:
 // * Boring mode - no fancy animations
+// * Make it work on mobile
 // * Add discipline stats that affect attributes
 // * Crits & bestials
 // * Selecting dice pool from sheet
@@ -30,7 +32,7 @@ type DiceRollModalProps = {
 // * Roll history
 // * Share rolls with your session live
 
-const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollModalProps) => {
+const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter }: DiceRollModalProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const { selectedDicePool } = useCharacterSheetStore(
@@ -51,6 +53,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
     const x = useMotionValue(0)
     const y = useMotionValue(0)
     const lastRollTrackedRef = useRef<number>(0)
+    const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
     
     const hunger = character?.ephemeral?.hunger ?? 0
 
@@ -104,6 +107,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
             x.set(0)
             y.set(0)
             lastRollTrackedRef.current = 0
+            setSelectedDiceIds(new Set())
         }
     }, [opened, resetModal, x, y])
 
@@ -169,6 +173,79 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                 )
             }, 1500)
         }
+    }
+
+    const nonBloodDice = useMemo(() => {
+        return dice.filter((d) => !d.isBloodDie && !d.isRolling)
+    }, [dice])
+
+    const canReroll = useMemo(() => {
+        if (!character || !setCharacter) return false
+        const totalWillpowerDamage = (character.ephemeral?.superficialWillpowerDamage ?? 0) + (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
+        const availableWillpower = character.willpower - totalWillpowerDamage
+        return availableWillpower > 0 && selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
+    }, [character, selectedDiceIds])
+
+    const handleDieClick = (dieId: number, isBloodDie: boolean) => {
+        if (isBloodDie || dice.some((d) => d.isRolling)) return
+        
+        setSelectedDiceIds((prev) => {
+            const newSet = new Set(prev)
+            if (newSet.has(dieId)) {
+                newSet.delete(dieId)
+            } else if (newSet.size < 3) {
+                newSet.add(dieId)
+            }
+            return newSet
+        })
+    }
+
+    const handleReroll = () => {
+        if (!character || !setCharacter || !canReroll) return
+        
+        const selectedIds = Array.from(selectedDiceIds)
+        if (selectedIds.length === 0) return
+
+        const totalWillpowerDamage = (character.ephemeral?.superficialWillpowerDamage ?? 0) + (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
+        const availableWillpower = character.willpower - totalWillpowerDamage
+        if (availableWillpower <= 0) return
+
+        setCharacter({
+            ...character,
+            ephemeral: {
+                ...character.ephemeral,
+                superficialWillpowerDamage: (character.ephemeral?.superficialWillpowerDamage ?? 0) + 1,
+            },
+        })
+
+        setDice((prev) =>
+            prev.map((die) => {
+                if (selectedDiceIds.has(die.id)) {
+                    return {
+                        ...die,
+                        value: 0,
+                        isRolling: true,
+                    }
+                }
+                return die
+            })
+        )
+
+        setTimeout(() => {
+            setDice((prev) =>
+                prev.map((die) => {
+                    if (selectedDiceIds.has(die.id)) {
+                        return {
+                            ...die,
+                            value: rollDie(),
+                            isRolling: false,
+                        }
+                    }
+                    return die
+                })
+            )
+            setSelectedDiceIds(new Set())
+        }, 1500)
     }
 
     const calculateSuccesses = useMemo(() => {
@@ -350,6 +427,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
 
                     <DiceContainer
                         primaryColor={primaryColor}
+                        onDieClick={handleDieClick}
+                        selectedDiceIds={selectedDiceIds}
                     />
 
                     <AnimatePresence>
@@ -359,6 +438,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                                 results={calculateSuccesses.results}
                                 totalSuccesses={calculateSuccesses.totalSuccesses}
                                 primaryColor={primaryColor}
+                                onReroll={nonBloodDice.length > 0 && character && setCharacter ? handleReroll : undefined}
+                                canReroll={canReroll}
+                                selectedDiceCount={selectedDiceIds.size}
                             />
                         ) : null}
                     </AnimatePresence>
