@@ -73,6 +73,13 @@ const powerMatchingRules: Array<{
             return attribute === "charisma" || attribute === "manipulation" || skill === "intimidation"
         },
     },
+    {
+        powerName: "Unswayable Mind",
+        discipline: "fortitude",
+        matches: (attribute, skill) => {
+            return attribute === "resolve" || attribute === "composure"
+        },
+    },
 ]
 
 export const getApplicableDisciplinePowers = (
