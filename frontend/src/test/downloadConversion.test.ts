@@ -35,17 +35,6 @@ Object.defineProperty(window, "atob", {
     value: vi.fn((str: string) => Buffer.from(str, "base64").toString("binary")),
 })
 
-// Mock URL.createObjectURL and revokeObjectURL
-Object.defineProperty(URL, "createObjectURL", {
-    writable: true,
-    value: vi.fn(() => "mock-url"),
-})
-
-Object.defineProperty(URL, "revokeObjectURL", {
-    writable: true,
-    value: vi.fn(),
-})
-
 // Mock anchor element for download
 const mockAnchor = {
     href: "",

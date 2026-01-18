@@ -1,15 +1,15 @@
-import { readFileSync } from "fs"
-import { fileURLToPath } from "url"
-import { resolve } from "path"
-import React from "react"
-import { renderHook, act, render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
 import { MantineProvider } from "@mantine/core"
-import { getEmptyCharacter } from "~/data/Character"
-import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
-import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
+import { render, renderHook, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { readFileSync } from "fs"
+import { resolve } from "path"
+import React, { act } from "react"
+import { fileURLToPath } from "url"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
+import { getEmptyCharacter } from "~/data/Character"
+import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
+import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
@@ -99,11 +99,7 @@ describe("Broken Character Logic", () => {
 
             expect(characterHook.current[0]).toEqual(getEmptyCharacter())
 
-            const mockCreateObjectURL = vi.fn(() => "blob:mock-url")
-            const mockRevokeObjectURL = vi.fn()
-
-            global.URL.createObjectURL = mockCreateObjectURL
-            global.URL.revokeObjectURL = mockRevokeObjectURL
+            const mockCreateObjectURL = URL.createObjectURL as ReturnType<typeof vi.fn>
 
             let createdLink: HTMLAnchorElement | null = null
             const linkClickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function () {
@@ -141,7 +137,6 @@ describe("Broken Character Logic", () => {
 
             // Verify the blob was created with the correct type and content
             expect(mockCreateObjectURL.mock.calls.length).toBeGreaterThan(0)
-            // @ts-expect-error - this is a mock
             const blobCall = mockCreateObjectURL.mock.calls[0][0] as unknown as Blob
             expect(blobCall).toBeDefined()
             expect(blobCall.type).toBe("application/json")
