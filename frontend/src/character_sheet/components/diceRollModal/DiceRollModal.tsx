@@ -1,4 +1,4 @@
-import { Button, Stack } from "@mantine/core"
+import { Button, Stack, useMantineTheme } from "@mantine/core"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { useEffect, useMemo, useRef } from "react"
 import { Character } from "~/data/Character"
@@ -31,6 +31,8 @@ type DiceRollModalProps = {
 // * Share rolls with your session live
 
 const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollModalProps) => {
+    const theme = useMantineTheme()
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const { selectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
@@ -298,7 +300,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                     width: "610px",
                     height: "880px",
                     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${primaryColor}`,
+                    border: `2px solid ${colorValue}`,
                     cursor: "move",
                     display: "flex",
                     flexDirection: "column",

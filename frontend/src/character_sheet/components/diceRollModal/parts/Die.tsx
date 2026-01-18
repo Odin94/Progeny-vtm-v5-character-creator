@@ -1,4 +1,5 @@
 import { motion } from "framer-motion"
+import { useMantineTheme } from "@mantine/core"
 
 type DieProps = {
     value: number
@@ -9,6 +10,8 @@ type DieProps = {
 }
 
 const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: DieProps) => {
+    const theme = useMantineTheme()
+    const colorValue = primaryColor.startsWith("#") ? primaryColor : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const seededRandom = (offset: number = 0) => {
         const x = Math.sin(seed + offset) * 10000
         return x - Math.floor(x)
@@ -60,7 +63,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: D
         margin: `0 -${internalWidth}px`,
         borderLeft: `${internalWidth}px solid transparent`,
         borderRight: `${internalWidth}px solid transparent`,
-        borderBottom: `${upperHeight}px solid ${primaryColor}`,
+        borderBottom: `${upperHeight}px solid ${colorValue}`,
         width: "0px",
         height: "0px",
         transformStyle: "preserve-3d" as const,
@@ -75,7 +78,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0 }: D
         left: `-${internalWidth}px`,
         borderLeft: `${internalWidth}px solid transparent`,
         borderRight: `${internalWidth}px solid transparent`,
-        borderTop: `${lowerHeight}px solid ${primaryColor}`,
+        borderTop: `${lowerHeight}px solid ${colorValue}`,
         width: "0px",
         height: "0px",
         filter: "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))",

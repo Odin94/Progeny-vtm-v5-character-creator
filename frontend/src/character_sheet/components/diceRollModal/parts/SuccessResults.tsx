@@ -1,4 +1,4 @@
-import { Box, Group, Stack, Text } from "@mantine/core"
+import { Box, Group, Stack, Text, useMantineTheme } from "@mantine/core"
 import { motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import successIcon from "~/resources/diceResults/success.svg"
@@ -19,6 +19,8 @@ type SuccessResultsProps = {
 }
 
 const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResultsProps) => {
+    const theme = useMantineTheme()
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const totalSuccessesRef = useRef<HTMLDivElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
     const [showCountInHeadline, setShowCountInHeadline] = useState(false)
@@ -75,7 +77,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
             <Box
                 ref={containerRef}
                 style={{
-                    border: `1px solid ${primaryColor}`,
+                    border: `1px solid ${colorValue}`,
                     borderRadius: "8px",
                     padding: "1rem",
                     backgroundColor: "rgba(255, 255, 255, 0.1)",

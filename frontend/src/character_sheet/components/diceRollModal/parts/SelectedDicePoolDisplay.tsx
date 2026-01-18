@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Box, Checkbox, Group, Stack, Text, Tooltip } from "@mantine/core"
+import { ActionIcon, Badge, Box, Checkbox, Group, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core"
 import { IconInfoCircle, IconRotateClockwise } from "@tabler/icons-react"
 import { Character } from "~/data/Character"
 import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
@@ -18,6 +18,8 @@ const SelectedDicePoolDisplay = ({
     primaryColor,
     skillSpecialties,
 }: SelectedDicePoolDisplayProps) => {
+    const theme = useMantineTheme()
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const { selectedDicePool, resetSelectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
@@ -33,7 +35,7 @@ const SelectedDicePoolDisplay = ({
     return (
         <Box
             style={{
-                border: `1px solid ${primaryColor}`,
+                border: `1px solid ${colorValue}`,
                 borderRadius: "8px",
                 padding: "1rem",
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
