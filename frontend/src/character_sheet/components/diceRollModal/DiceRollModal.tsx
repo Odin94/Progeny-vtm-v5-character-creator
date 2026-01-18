@@ -1,5 +1,5 @@
 import { Button, Stack } from "@mantine/core"
-import { motion, useMotionValue } from "framer-motion"
+import { AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { useEffect, useMemo, useRef } from "react"
 import { Character } from "~/data/Character"
 import posthog from "posthog-js"
@@ -343,13 +343,16 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
                         primaryColor={primaryColor}
                     />
 
-                    {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
-                        <SuccessResults
-                            results={calculateSuccesses.results}
-                            totalSuccesses={calculateSuccesses.totalSuccesses}
-                            primaryColor={primaryColor}
-                        />
-                    ) : null}
+                    <AnimatePresence>
+                        {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
+                            <SuccessResults
+                                key="success-results"
+                                results={calculateSuccesses.results}
+                                totalSuccesses={calculateSuccesses.totalSuccesses}
+                                primaryColor={primaryColor}
+                            />
+                        ) : null}
+                    </AnimatePresence>
                 </Stack>
             </motion.div>
         </div>

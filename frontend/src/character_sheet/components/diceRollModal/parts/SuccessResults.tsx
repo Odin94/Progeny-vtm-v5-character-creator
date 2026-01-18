@@ -1,4 +1,5 @@
 import { Box, Group, Stack, Text } from "@mantine/core"
+import { motion } from "framer-motion"
 import successIcon from "~/resources/diceResults/success.svg"
 import criticalIcon from "~/resources/diceResults/critical.svg"
 import bloodSuccessIcon from "~/resources/diceResults/blood-success.svg"
@@ -18,19 +19,30 @@ type SuccessResultsProps = {
 
 const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResultsProps) => {
     return (
-        <Box
-            style={{
-                border: `1px solid ${primaryColor}`,
-                borderRadius: "8px",
-                padding: "1rem",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                minHeight: "150px",
-                maxHeight: "150px",
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0,
+        <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+                duration: 0.5,
             }}
         >
+            <Box
+                style={{
+                    border: `1px solid ${primaryColor}`,
+                    borderRadius: "8px",
+                    padding: "1rem",
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    minHeight: "150px",
+                    maxHeight: "150px",
+                    display: "flex",
+                    flexDirection: "column",
+                    flexShrink: 0,
+                }}
+            >
             <Stack gap="sm" style={{ flex: 1 }}>
                 <Text fw={700} fz="md" c={primaryColor}>
                     Successes:
@@ -58,11 +70,19 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
                                         break
                                 }
                                 return (
-                                    <img
+                                    <motion.img
                                         key={index}
                                         src={iconSrc}
                                         alt={result.type}
                                         style={{ width: "40px", height: "40px" }}
+                                        initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 400,
+                                            damping: 20,
+                                            delay: index * 0.05,
+                                        }}
                                     />
                                 )
                             })}
@@ -76,6 +96,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
                 )}
             </Stack>
         </Box>
+        </motion.div>
     )
 }
 

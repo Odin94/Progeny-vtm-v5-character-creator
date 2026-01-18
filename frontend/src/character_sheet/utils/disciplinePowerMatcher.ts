@@ -19,7 +19,7 @@ const powerMatchingRules: Array<{
         powerName: "Heightened Senses",
         discipline: "auspex",
         matches: (attribute, skill) => {
-            return skill === "awareness" || (attribute === "wits" && skill === null)
+            return skill === "awareness"
         },
     },
     {
@@ -56,21 +56,21 @@ const powerMatchingRules: Array<{
         powerName: "Spark of Rage",
         discipline: "potence",
         matches: (attribute, skill) => {
-            return (attribute === "manipulation" || attribute === "charisma")
+            return attribute === "manipulation" || attribute === "charisma"
         },
     },
     {
         powerName: "Awe",
         discipline: "presence",
         matches: (attribute, skill) => {
-            return (attribute === "charisma" || attribute === "manipulation") && (skill === "persuasion" || skill === "performance")
+            return attribute === "charisma" || attribute === "manipulation" || skill === "persuasion" || skill === "performance"
         },
     },
     {
         powerName: "Daunt",
         discipline: "presence",
         matches: (attribute, skill) => {
-            return (attribute === "charisma" || attribute === "manipulation") && skill === "intimidation"
+            return attribute === "charisma" || attribute === "manipulation" || skill === "intimidation"
         },
     },
 ]
