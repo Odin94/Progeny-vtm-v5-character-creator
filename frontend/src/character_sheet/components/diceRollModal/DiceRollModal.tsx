@@ -114,13 +114,20 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character }: DiceRollMod
     }, [selectedDicePool])
 
     const rollDie = (): number => {
+        if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+            // fully random numbers
+            const array = new Uint32Array(1)
+            crypto.getRandomValues(array)
+            const random = array[0] / (0xFFFFFFFF + 1)
+            return Math.floor(random * 10) + 1
+        }
+        // Pseudo-random numbers
         return Math.floor(Math.random() * 10) + 1
     }
 
     const rollDice = () => {
         const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
         const bloodDiceCount = Math.min(hunger, countToUse)
-        const regularDiceCount = countToUse - bloodDiceCount
         
         if (dice.length > 0) {
             setDice([])
