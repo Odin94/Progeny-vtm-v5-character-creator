@@ -1,5 +1,6 @@
 import { Box, Group, Stack, Text } from "@mantine/core"
 import { motion } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
 import successIcon from "~/resources/diceResults/success.svg"
 import criticalIcon from "~/resources/diceResults/critical.svg"
 import bloodSuccessIcon from "~/resources/diceResults/blood-success.svg"
@@ -18,6 +19,47 @@ type SuccessResultsProps = {
 }
 
 const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResultsProps) => {
+    const totalSuccessesRef = useRef<HTMLDivElement>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [showCountInHeadline, setShowCountInHeadline] = useState(false)
+
+    useEffect(() => {
+        const checkVisibility = () => {
+            if (!totalSuccessesRef.current || !containerRef.current) return
+
+            const containerRect = containerRef.current.getBoundingClientRect()
+            const totalSuccessesRect = totalSuccessesRef.current.getBoundingClientRect()
+
+            const isVisible = 
+                totalSuccessesRect.top >= containerRect.top &&
+                totalSuccessesRect.bottom <= containerRect.bottom
+
+            setShowCountInHeadline(!isVisible)
+        }
+
+        checkVisibility()
+        const observer = new ResizeObserver(checkVisibility)
+        const mutationObserver = new MutationObserver(checkVisibility)
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current)
+            mutationObserver.observe(containerRef.current, {
+                childList: true,
+                subtree: true,
+            })
+        }
+
+        window.addEventListener("scroll", checkVisibility, true)
+        window.addEventListener("resize", checkVisibility)
+
+        return () => {
+            observer.disconnect()
+            mutationObserver.disconnect()
+            window.removeEventListener("scroll", checkVisibility, true)
+            window.removeEventListener("resize", checkVisibility)
+        }
+    }, [results])
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -31,6 +73,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
             }}
         >
             <Box
+                ref={containerRef}
                 style={{
                     border: `1px solid ${primaryColor}`,
                     borderRadius: "8px",
@@ -41,11 +84,12 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
                     display: "flex",
                     flexDirection: "column",
                     flexShrink: 0,
+                    overflow: "hidden",
                 }}
             >
             <Stack gap="sm" style={{ flex: 1 }}>
                 <Text fw={700} fz="md" c={primaryColor}>
-                    Successes:
+                    Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
                 </Text>
                 {results.length > 0 ? (
                     <>
@@ -87,7 +131,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor }: SuccessResult
                                 )
                             })}
                         </Group>
-                        <Text fw={600} fz="lg">
+                        <Text ref={totalSuccessesRef} fw={600} fz="lg">
                             Total Successes: {totalSuccesses}
                         </Text>
                     </>
