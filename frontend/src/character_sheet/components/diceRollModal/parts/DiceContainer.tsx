@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import Die from "./Die"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import { vtmRed } from "~/character_sheet/utils/style"
 
 export type DieResult = {
     id: number
@@ -107,7 +108,7 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set() }
                             <Die
                                 value={die.value}
                                 isRolling={die.isRolling}
-                                primaryColor={die.isBloodDie ? "#c03f3f" : primaryColor}
+                                primaryColor={die.isBloodDie ? vtmRed : primaryColor}
                                 animationDelay={randomDelay}
                                 seed={seed}
                                 onClick={() => onDieClick?.(die.id, die.isBloodDie)}
