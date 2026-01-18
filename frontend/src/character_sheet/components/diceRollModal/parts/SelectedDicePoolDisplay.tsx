@@ -146,7 +146,7 @@ const SelectedDicePoolDisplay = ({
                                 const bonusDice = isWrecker ? disciplineRating * 2 : disciplineRating
                                 const powerKey = `${power.discipline}-${power.name}`
                                 const isChecked = selectedDicePool.selectedDisciplinePowers.includes(powerKey)
-                                
+
                                 return (
                                     <Checkbox
                                         key={powerKey}

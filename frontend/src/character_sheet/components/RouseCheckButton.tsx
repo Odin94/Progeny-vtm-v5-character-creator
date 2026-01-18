@@ -47,6 +47,8 @@ const RouseCheckButton = ({
                 },
             })
             message += ". Hunger increased"
+        } else {
+            message += ". Passed."
         }
 
         notifications.show({
@@ -59,9 +61,13 @@ const RouseCheckButton = ({
         return null
     }
 
+    const hunger = character.ephemeral?.hunger ?? 0
+    const isDisabled = hunger >= 5
+    console.log({ hunger, isDisabled })
+
     return (
         <Tooltip
-            label="Roll rouse check"
+            label={isDisabled ? "Cannot rouse check at hunger 5" : "Roll rouse check"}
             zIndex={tooltipZIndex}
         >
             <ActionIcon
@@ -69,6 +75,7 @@ const RouseCheckButton = ({
                 variant="subtle"
                 onClick={handleRouseCheck}
                 color={vtmRed}
+                disabled={isDisabled}
             >
                 <motion.div
                     key={animationKey}

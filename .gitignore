@@ -37,3 +37,5 @@ ignored/
 .vite/
 
 mprocs.log
+
+ignore/
