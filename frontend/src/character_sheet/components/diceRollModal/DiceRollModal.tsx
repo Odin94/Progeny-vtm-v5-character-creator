@@ -124,6 +124,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             const array = new Uint32Array(1)
             crypto.getRandomValues(array)
             const random = array[0] / (0xFFFFFFFF + 1)
+            console.log(Math.floor(random * 10) + 1)
             return Math.floor(random * 10) + 1
         }
         // Pseudo-random numbers
@@ -318,8 +319,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
         }
 
         const results: Array<{ type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"; value: number }> = []
-        const tens: DieResult[] = []
-        const bloodTens: DieResult[] = []
+        const allTens: DieResult[] = []
         let totalSuccesses = 0
 
         dice.forEach((die) => {
@@ -327,11 +327,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 results.push({ type: "bestial-failure", value: die.value })
             } else if (die.value >= 6) {
                 if (die.value === 10) {
-                    if (die.isBloodDie) {
-                        bloodTens.push(die)
-                    } else {
-                        tens.push(die)
-                    }
+                    allTens.push(die)
                 } else {
                     if (die.isBloodDie) {
                         results.push({ type: "blood-success", value: die.value })
@@ -343,28 +339,21 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             }
         })
 
-        const regularCritPairs = Math.floor(tens.length / 2)
-        const bloodCritPairs = Math.floor(bloodTens.length / 2)
-        const remainingRegularTens = tens.length % 2
-        const remainingBloodTens = bloodTens.length % 2
+        const totalCritPairs = Math.floor(allTens.length / 2)
+        const remainingTens = allTens.length % 2
 
-        for (let i = 0; i < regularCritPairs; i++) {
-            results.push({ type: "critical", value: 10 })
+        for (let i = 0; i < totalCritPairs; i++) {
+            const die1 = allTens[i * 2]
+            const die2 = allTens[i * 2 + 1]
+
+            results.push({ type: die1.isBloodDie ? "blood-critical" : "critical", value: 10 })
+            results.push({ type: die2.isBloodDie ? "blood-critical" : "critical", value: 10 })
             totalSuccesses += 4
         }
 
-        for (let i = 0; i < bloodCritPairs; i++) {
-            results.push({ type: "blood-critical", value: 10 })
-            totalSuccesses += 4
-        }
-
-        if (remainingRegularTens > 0) {
-            results.push({ type: "success", value: 10 })
-            totalSuccesses += 1
-        }
-
-        if (remainingBloodTens > 0) {
-            results.push({ type: "blood-success", value: 10 })
+        for (let i = 0; i < remainingTens; i++) {
+            const die = allTens[totalCritPairs * 2 + i]
+            results.push({ type: die.isBloodDie ? "blood-critical" : "critical", value: 10 })
             totalSuccesses += 1
         }
 

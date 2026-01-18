@@ -82,7 +82,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
         }
     }
 
-    const faceNum = value === 10 ? 0 : value - 1
+    const faceNum = value === 10 ? 9 : value - 1
 
     const contentStyle = {
         margin: "auto auto",
