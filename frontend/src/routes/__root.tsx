@@ -54,7 +54,7 @@ export const Route = createRootRoute({
                     }}
                     defaultColorScheme="dark"
                 >
-                    <Notifications position="bottom-center" />
+                    <Notifications position="bottom-center" zIndex={3000} />
                     <BrokenSaveModal />
                     <Outlet />
                 </MantineProvider>

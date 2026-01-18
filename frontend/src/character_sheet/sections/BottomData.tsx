@@ -1,13 +1,10 @@
-import { ActionIcon, Grid, Group, Paper, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { IconDroplet } from "@tabler/icons-react"
-import { motion } from "framer-motion"
-import { useState } from "react"
+import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
 import DamagePips from "~/character_sheet/components/DamagePips"
 import Pips from "~/character_sheet/components/Pips"
+import RouseCheckButton from "~/character_sheet/components/RouseCheckButton"
 import SquarePips from "~/character_sheet/components/SquarePips"
 import { SheetOptions } from "../CharacterSheet"
-import { bgAlpha, hexToRgba, vtmRed } from "../utils/style"
+import { bgAlpha, hexToRgba } from "../utils/style"
 
 type BottomDataProps = {
     options: SheetOptions
@@ -18,34 +15,6 @@ const BottomData = ({ options }: BottomDataProps) => {
     const theme = useMantineTheme()
     const { superficialDamage, aggravatedDamage, superficialWillpowerDamage, aggravatedWillpowerDamage, hunger } = character.ephemeral
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
-    const [animationKey, setAnimationKey] = useState(0)
-    const [isSuccess, setIsSuccess] = useState(true)
-
-    const handleRouseCheck = () => {
-        const roll = Math.floor(Math.random() * 10) + 1
-        const success = roll >= 6
-        setIsSuccess(success)
-        setAnimationKey((prev) => prev + 1)
-        
-        let message = `Rouse Check: ${roll}`
-        
-        if (!success) {
-            const newHunger = Math.min(hunger + 1, 5)
-            setCharacter({
-                ...character,
-                ephemeral: {
-                    ...character.ephemeral,
-                    hunger: newHunger,
-                },
-            })
-            message += ". Hunger increased"
-        }
-        
-        notifications.show({
-            message,
-            color: success ? primaryColor : "red",
-        })
-    }
 
     return (
         <Grid justify="space-between">
@@ -118,27 +87,13 @@ const BottomData = ({ options }: BottomDataProps) => {
                 <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
                     <Group gap="xs" mb="xs" justify="space-between">
                         <Text fw={700}>Hunger</Text>
-                        <Tooltip label="Roll rouse check">
-                            <ActionIcon size="sm" variant="subtle" onClick={handleRouseCheck} color={vtmRed}>
-                                <motion.div
-                                    key={animationKey}
-                                    animate={isSuccess ? {
-                                        rotate: [0, -6, 6, -3, 3, 0],
-                                        y: [0, 2, -2, 0]
-                                    } : {
-                                        x: [0, -2, 2, -2, 2, 0],
-                                        rotate: [0, -8, 8, 0],
-                                    }}
-                                    transition={{
-                                        duration: 0.6,
-                                        ease: "easeInOut",
-                                    }}
-                                    style={{ display: "inline-block" }}
-                                >
-                                    <IconDroplet size={16} />
-                                </motion.div>
-                            </ActionIcon>
-                        </Tooltip>
+                        <RouseCheckButton
+                            character={character}
+                            setCharacter={setCharacter}
+                            primaryColor={primaryColor}
+                            size="sm"
+                            iconSize={16}
+                        />
                     </Group>
                     <SquarePips value={hunger} options={options} field="ephemeral.hunger" maxLevel={5} />
                 </Paper>

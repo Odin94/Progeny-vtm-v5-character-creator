@@ -1,4 +1,4 @@
-import { Button, Group, Text } from "@mantine/core"
+import { Button, Group, Text, useMantineTheme } from "@mantine/core"
 import { IconMinus, IconPlus } from "@tabler/icons-react"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -8,6 +8,8 @@ type CustomDicePoolControlsProps = {
 }
 
 const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) => {
+    const theme = useMantineTheme()
+    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const { diceCount, setDiceCount } = useDiceRollModalStore(
         useShallow((state) => ({
             diceCount: state.diceCount,
@@ -22,7 +24,7 @@ const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) =
     }
 
     return (
-        <Group justify="center" gap="md" style={{ flexShrink: 0 }}>
+        <Group justify="center" gap="md" style={{ flexShrink: 0, borderBottom: `1px solid ${colorValue}`, paddingBottom: "1rem" }}>
             <Button variant="subtle" onClick={removeDie} color={primaryColor} disabled={diceCount <= 1}>
                 <IconMinus size={18} />
             </Button>

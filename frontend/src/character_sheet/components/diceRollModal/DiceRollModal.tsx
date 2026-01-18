@@ -1,8 +1,9 @@
-import { Button, Stack, useMantineTheme, Text } from "@mantine/core"
+import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
 import posthog from "posthog-js"
+import RouseCheckButton from "../RouseCheckButton"
 import { useCharacterSheetStore } from "../../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -24,10 +25,7 @@ type DiceRollModalProps = {
 // TODOdin:
 // * Boring mode - no fancy animations
 // * Make it work on mobile
-// * Add discipline stats that affect attributes
-// * Crits & bestials
 // * Selecting dice pool from sheet
-// * Reading and updating hunger / rouse rolls
 // * Maybe use icons on dice for bestial & crit
 // * Roll history
 // * Share rolls with your session live
@@ -54,7 +52,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     const y = useMotionValue(0)
     const lastRollTrackedRef = useRef<number>(0)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
-    
+
     const hunger = character?.ephemeral?.hunger ?? 0
 
     const selectedPoolDiceCount = useMemo(() => {
@@ -62,7 +60,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
         const attributeValue = character.attributes[selectedDicePool.attribute] || 0
         let skillOrDisciplineValue = 0
         let specialtyBonus = 0
-        
+
         if (selectedDicePool.skill) {
             skillOrDisciplineValue = character.skills[selectedDicePool.skill] || 0
             specialtyBonus = selectedDicePool.selectedSpecialties.length
@@ -70,21 +68,21 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             const disciplinePowers = character.disciplines.filter(p => p.discipline === selectedDicePool.discipline)
             skillOrDisciplineValue = disciplinePowers.length
         }
-        
+
         const bloodSurgeBonus = selectedDicePool.bloodSurge ? 2 : 0
-        
+
         let disciplinePowerBonus = 0
         if (selectedDicePool.attribute) {
             const applicablePowers = getApplicableDisciplinePowers(character, selectedDicePool.attribute, selectedDicePool.skill)
             const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
-            
+
             for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
                 if (!applicablePowerKeys.has(powerKey)) continue
-                
+
                 const [disciplineName, powerName] = powerKey.split("-", 2)
                 const disciplinePowers = character.disciplines.filter(p => p.discipline === disciplineName)
                 const disciplineRating = disciplinePowers.length
-                
+
                 if (powerName === "Wrecker") {
                     disciplinePowerBonus += disciplineRating * 2
                 } else {
@@ -92,10 +90,10 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 }
             }
         }
-        
+
         return attributeValue + skillOrDisciplineValue + specialtyBonus + bloodSurgeBonus + disciplinePowerBonus
     }, [character, selectedDicePool])
-    
+
     const skillSpecialties = useMemo(() => {
         if (!character || !selectedDicePool.skill) return []
         return character.skillSpecialties.filter(s => s.skill === selectedDicePool.skill && s.name !== "")
@@ -132,7 +130,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     const rollDice = () => {
         const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
         const bloodDiceCount = Math.min(hunger, countToUse)
-        
+
         if (dice.length > 0) {
             setDice([])
             setTimeout(() => {
@@ -188,7 +186,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
 
     const handleDieClick = (dieId: number, isBloodDie: boolean) => {
         if (isBloodDie || dice.some((d) => d.isRolling)) return
-        
+
         setSelectedDiceIds((prev) => {
             const newSet = new Set(prev)
             if (newSet.has(dieId)) {
@@ -202,7 +200,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
 
     const handleReroll = () => {
         if (!character || !setCharacter || !canReroll) return
-        
+
         const selectedIds = Array.from(selectedDiceIds)
         if (selectedIds.length === 0) return
 
@@ -312,7 +310,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             const currentRollId = dice[0]?.id || 0
             if (currentRollId !== lastRollTrackedRef.current) {
                 lastRollTrackedRef.current = currentRollId
-                
+
                 try {
                     if (activeTab === "custom") {
                         posthog.capture("dice-roll-custom", {
@@ -366,11 +364,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 dragConstraints={
                     typeof window !== "undefined"
                         ? {
-                              left: -window.innerWidth / 2 + 200,
-                              right: window.innerWidth / 2 - 200,
-                              top: -window.innerHeight / 2 + 200,
-                              bottom: window.innerHeight / 2 - 200,
-                          }
+                            left: -window.innerWidth / 2 + 200,
+                            right: window.innerWidth / 2 - 200,
+                            top: -window.innerHeight / 2 + 200,
+                            bottom: window.innerHeight / 2 - 200,
+                        }
                         : undefined
                 }
                 style={{
@@ -410,20 +408,33 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         />
                     )}
 
-                    <Button
-                        size="lg"
-                        color={primaryColor}
-                        onClick={rollDice}
-                        disabled={dice.some((d) => d.isRolling) || (activeTab === "selected" && selectedPoolDiceCount === 0)}
-                        fullWidth
-                        style={{ flexShrink: 0 }}
-                    >
-                        {dice.some((d) => d.isRolling) 
-                            ? "Rolling..." 
-                            : activeTab === "selected" 
-                                ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
-                                : "Roll Dice"}
-                    </Button>
+                    <Group gap="xs" justify="space-between" style={{ flexShrink: 0, position: "relative" }}>
+                        <div style={{ width: character && setCharacter ? 36 : 0 }} />
+                        <Button
+                            size="md"
+                            color={primaryColor}
+                            onClick={rollDice}
+                            disabled={dice.some((d) => d.isRolling) || (activeTab === "selected" && selectedPoolDiceCount === 0)}
+                        >
+                            {dice.some((d) => d.isRolling)
+                                ? "Rolling..."
+                                : activeTab === "selected"
+                                    ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
+                                    : "Roll Dice"}
+                        </Button>
+                        {character && setCharacter ? (
+                            <RouseCheckButton
+                                character={character}
+                                setCharacter={setCharacter}
+                                primaryColor={primaryColor}
+                                size="lg"
+                                iconSize={20}
+                                tooltipZIndex={3000}
+                            />
+                        ) : (
+                            <div style={{ width: 36 }} />
+                        )}
+                    </Group>
 
                     <DiceContainer
                         primaryColor={primaryColor}
