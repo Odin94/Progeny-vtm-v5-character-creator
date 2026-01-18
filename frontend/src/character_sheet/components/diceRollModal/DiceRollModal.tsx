@@ -1,5 +1,6 @@
 import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
@@ -189,12 +190,19 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
         return dice.filter((d) => !d.isBloodDie && !d.isRolling)
     }, [dice])
 
+    const rerollableDice = useMemo(() => {
+        return dice.filter((d) => !d.isBloodDie && !d.isRolling && d.value < 6)
+    }, [dice])
+
     const canReroll = useMemo(() => {
         if (!character || !setCharacter) return false
         const totalWillpowerDamage = (character.ephemeral?.superficialWillpowerDamage ?? 0) + (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
         const availableWillpower = character.willpower - totalWillpowerDamage
+        if (isMobile) {
+            return availableWillpower > 0 && rerollableDice.length > 0
+        }
         return availableWillpower > 0 && selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
-    }, [character, selectedDiceIds])
+    }, [character, selectedDiceIds, isMobile, rerollableDice.length])
 
     const handleDieClick = (dieId: number, isBloodDie: boolean) => {
         if (isBloodDie || dice.some((d) => d.isRolling)) return
@@ -213,12 +221,17 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     const handleReroll = () => {
         if (!character || !setCharacter || !canReroll) return
 
-        const selectedIds = Array.from(selectedDiceIds)
-        if (selectedIds.length === 0) return
-
         const totalWillpowerDamage = (character.ephemeral?.superficialWillpowerDamage ?? 0) + (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
         const availableWillpower = character.willpower - totalWillpowerDamage
         if (availableWillpower <= 0) return
+
+        let diceIdsToReroll: Set<number>
+        if (isMobile) {
+            diceIdsToReroll = new Set(rerollableDice.map((d) => d.id))
+        } else {
+            diceIdsToReroll = selectedDiceIds
+            if (diceIdsToReroll.size === 0) return
+        }
 
         setCharacter({
             ...character,
@@ -228,34 +241,75 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             },
         })
 
-        setDice((prev) =>
-            prev.map((die) => {
-                if (selectedDiceIds.has(die.id)) {
+        if (isMobile) {
+            const rerolledDice = dice.filter((d) => diceIdsToReroll.has(d.id))
+            const oldValuesMap = new Map(rerolledDice.map((d) => [d.id, d.value]))
+
+            const newDice = dice.map((die) => {
+                if (diceIdsToReroll.has(die.id)) {
                     return {
                         ...die,
-                        value: 0,
-                        isRolling: true,
+                        value: rollDie(),
+                        isRolling: false,
                     }
                 }
                 return die
             })
-        )
 
-        setTimeout(() => {
+            const resultsText = rerolledDice.map((die) => {
+                const oldVal = oldValuesMap.get(die.id) ?? 0
+                const newDie = newDice.find((d) => d.id === die.id)
+                const newVal = newDie?.value ?? 0
+                const displayOld = oldVal === 10 ? "0" : oldVal.toString()
+                const displayNew = newVal === 10 ? "0" : newVal.toString()
+                return `${displayOld}→${displayNew}`
+            }).join(", ")
+
+            const newValues = rerolledDice.map((die) => {
+                const newDie = newDice.find((d) => d.id === die.id)
+                return newDie?.value ?? 0
+            })
+            const successCount = newValues.filter((v) => v >= 6).length
+            const successText = successCount > 0 ? ` (${successCount} ${successCount === 1 ? "success" : "successes"})` : ""
+
+            setDice(newDice)
+
+            notifications.show({
+                title: "Willpower Reroll",
+                message: `${resultsText}${successText}`,
+                color: primaryColor,
+                autoClose: 4000,
+            })
+        } else {
             setDice((prev) =>
                 prev.map((die) => {
-                    if (selectedDiceIds.has(die.id)) {
+                    if (diceIdsToReroll.has(die.id)) {
                         return {
                             ...die,
-                            value: rollDie(),
-                            isRolling: false,
+                            value: 0,
+                            isRolling: true,
                         }
                     }
                     return die
                 })
             )
-            setSelectedDiceIds(new Set())
-        }, 1500)
+
+            setTimeout(() => {
+                setDice((prev) =>
+                    prev.map((die) => {
+                        if (diceIdsToReroll.has(die.id)) {
+                            return {
+                                ...die,
+                                value: rollDie(),
+                                isRolling: false,
+                            }
+                        }
+                        return die
+                    })
+                )
+                setSelectedDiceIds(new Set())
+            }, 1500)
+        }
     }
 
     const calculateSuccesses = useMemo(() => {
@@ -422,6 +476,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             onReroll={nonBloodDice.length > 0 && character && setCharacter ? handleReroll : undefined}
                             canReroll={canReroll}
                             selectedDiceCount={selectedDiceIds.size}
+                            rerollableDiceCount={rerollableDice.length}
+                            isMobile={isMobile}
                         />
                     ) : null}
                 </AnimatePresence>

@@ -20,9 +20,11 @@ type SuccessResultsProps = {
     onReroll?: () => void
     canReroll?: boolean
     selectedDiceCount?: number
+    rerollableDiceCount?: number
+    isMobile?: boolean
 }
 
-const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canReroll = false, selectedDiceCount = 0 }: SuccessResultsProps) => {
+const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canReroll = false, selectedDiceCount = 0, rerollableDiceCount = 0, isMobile = false }: SuccessResultsProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const totalSuccessesRef = useRef<HTMLDivElement>(null)
@@ -36,7 +38,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
             const containerRect = containerRef.current.getBoundingClientRect()
             const totalSuccessesRect = totalSuccessesRef.current.getBoundingClientRect()
 
-            const isVisible = 
+            const isVisible =
                 totalSuccessesRect.top >= containerRect.top &&
                 totalSuccessesRect.bottom <= containerRect.bottom
 
@@ -93,84 +95,100 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
                     overflow: "hidden",
                 }}
             >
-            <Stack gap="sm" style={{ flex: 1 }}>
-                <Group justify="space-between" align="center" wrap="nowrap">
-                    <Text fw={700} fz="md" c={primaryColor} style={{ flex: 1 }}>
-                        Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
-                    </Text>
-                    {onReroll ? (
-                        <Group gap="xs" wrap="nowrap">
-                            {selectedDiceCount > 0 ? (
-                                <Badge size="sm" variant="filled" color={primaryColor}>
-                                    {selectedDiceCount}/3
-                                </Badge>
-                            ) : null}
-                            <Tooltip 
-                                label={selectedDiceCount > 0 ? `Reroll ${selectedDiceCount} dice (1 willpower)` : "Select up to 3 non-blood dice to reroll (1 willpower)"}
-                                zIndex={2100}
-                            >
-                                <ActionIcon
-                                    color={primaryColor}
-                                    variant={canReroll ? "filled" : "outline"}
-                                    onClick={onReroll}
-                                    disabled={!canReroll}
-                                    size="sm"
-                                >
-                                    <IconRefresh size={16} />
-                                </ActionIcon>
-                            </Tooltip>
-                        </Group>
-                    ) : null}
-                </Group>
-                {results.length > 0 ? (
-                    <>
-                        <Group gap="xs" wrap="wrap">
-                            {results.map((result, index) => {
-                                let iconSrc: string
-                                switch (result.type) {
-                                    case "success":
-                                        iconSrc = successIcon
-                                        break
-                                    case "critical":
-                                        iconSrc = criticalIcon
-                                        break
-                                    case "blood-success":
-                                        iconSrc = bloodSuccessIcon
-                                        break
-                                    case "blood-critical":
-                                        iconSrc = bloodCriticalIcon
-                                        break
-                                    case "bestial-failure":
-                                        iconSrc = bestialFailureIcon
-                                        break
-                                }
-                                return (
-                                    <motion.img
-                                        key={index}
-                                        src={iconSrc}
-                                        alt={result.type}
-                                        style={{ width: "40px", height: "40px" }}
-                                        initial={{ opacity: 0, scale: 0, rotate: -180 }}
-                                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 400,
-                                            damping: 20,
-                                            delay: index * 0.05,
-                                        }}
-                                    />
-                                )
-                            })}
-                        </Group>
-                        <Text ref={totalSuccessesRef} fw={600} fz="lg">
-                            Total Successes: {totalSuccesses}
+                <Stack gap="sm" style={{ flex: 1 }}>
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                        <Text fw={700} fz="md" c={primaryColor} style={{ flex: 1 }}>
+                            Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
                         </Text>
-                    </>
-                ) : (
-                    <Text c="dimmed">No successes</Text>
-                )}
-            </Stack>
-        </Box>
+                        {onReroll ? (
+                            <Group gap="xs" wrap="nowrap">
+                                {isMobile ? (
+                                    rerollableDiceCount > 0 ? (
+                                        <Badge size="sm" variant="filled" color={primaryColor}>
+                                            {rerollableDiceCount} WP rerollable
+                                        </Badge>
+                                    ) : null
+                                ) : (
+                                    selectedDiceCount > 0 ? (
+                                        <Badge size="sm" variant="filled" color={primaryColor}>
+                                            {selectedDiceCount}/3
+                                        </Badge>
+                                    ) : null
+                                )}
+                                <Tooltip
+                                    label={
+                                        isMobile
+                                            ? rerollableDiceCount > 0
+                                                ? `Reroll ${rerollableDiceCount} non-success dice (1 willpower)`
+                                                : "No dice to reroll"
+                                            : selectedDiceCount > 0
+                                                ? `Reroll ${selectedDiceCount} dice (1 willpower)`
+                                                : "Select up to 3 non-blood dice to reroll (1 willpower)"
+                                    }
+                                    zIndex={2100}
+                                >
+                                    <ActionIcon
+                                        color={primaryColor}
+                                        variant={canReroll ? "filled" : "outline"}
+                                        onClick={onReroll}
+                                        disabled={!canReroll}
+                                        size="sm"
+                                    >
+                                        <IconRefresh size={16} />
+                                    </ActionIcon>
+                                </Tooltip>
+                            </Group>
+                        ) : null}
+                    </Group>
+                    {results.length > 0 ? (
+                        <>
+                            <Group gap="xs" wrap="wrap">
+                                {results.map((result, index) => {
+                                    let iconSrc: string
+                                    switch (result.type) {
+                                        case "success":
+                                            iconSrc = successIcon
+                                            break
+                                        case "critical":
+                                            iconSrc = criticalIcon
+                                            break
+                                        case "blood-success":
+                                            iconSrc = bloodSuccessIcon
+                                            break
+                                        case "blood-critical":
+                                            iconSrc = bloodCriticalIcon
+                                            break
+                                        case "bestial-failure":
+                                            iconSrc = bestialFailureIcon
+                                            break
+                                    }
+                                    return (
+                                        <motion.img
+                                            key={index}
+                                            src={iconSrc}
+                                            alt={result.type}
+                                            style={{ width: "40px", height: "40px" }}
+                                            initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                            transition={{
+                                                type: "spring",
+                                                stiffness: 400,
+                                                damping: 20,
+                                                delay: index * 0.05,
+                                            }}
+                                        />
+                                    )
+                                })}
+                            </Group>
+                            <Text ref={totalSuccessesRef} fw={600} fz="lg">
+                                Total Successes: {totalSuccesses}
+                            </Text>
+                        </>
+                    ) : (
+                        <Text c="dimmed">No successes</Text>
+                    )}
+                </Stack>
+            </Box>
         </motion.div>
     )
 }
