@@ -53,9 +53,6 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
     const resetSelectedDicePool = useCharacterSheetStore((state) => state.resetSelectedDicePool)
     const primaryColor = getPrimaryColor(character.clan)
-    // TODOdin: Remove this once dice roller is ready
-    const isLocalhost =
-        typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
@@ -122,29 +119,27 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             alignItems: "flex-end",
                         }}
                     >
-                        {isLocalhost ? (
-                            <ActionIcon
-                                size="xl"
-                                variant="light"
-                                color={primaryColor}
-                                radius="xl"
-                                onClick={() => {
-                                    openDiceModal()
-                                    try {
-                                        posthog.capture("dice-modal-opened", {
-                                            mode,
-                                        })
-                                    } catch (error) {
-                                        console.warn("PostHog dice-modal-opened tracking failed:", error)
-                                    }
-                                }}
-                                style={{
-                                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                                }}
-                            >
-                                <IconDice size={24} />
-                            </ActionIcon>
-                        ) : null}
+                        <ActionIcon
+                            size="xl"
+                            variant="light"
+                            color={primaryColor}
+                            radius="xl"
+                            onClick={() => {
+                                openDiceModal()
+                                try {
+                                    posthog.capture("dice-modal-opened", {
+                                        mode,
+                                    })
+                                } catch (error) {
+                                    console.warn("PostHog dice-modal-opened tracking failed:", error)
+                                }
+                            }}
+                            style={{
+                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                            }}
+                        >
+                            <IconDice size={24} />
+                        </ActionIcon>
                         <SegmentedControl
                             value={mode}
                             onChange={(value) => setMode(value as CharacterSheetMode)}
@@ -194,18 +189,16 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 </Box>
             </Container>
             <CharacterSheetMenu options={sheetOptions} />
-            {isLocalhost ? (
-                <DiceRollModal
-                    opened={diceModalOpened}
-                    onClose={() => {
-                        closeDiceModal()
-                        resetSelectedDicePool()
-                    }}
-                    primaryColor={primaryColor}
-                    character={character}
-                    setCharacter={setCharacter}
-                />
-            ) : null}
+            <DiceRollModal
+                opened={diceModalOpened}
+                onClose={() => {
+                    closeDiceModal()
+                    resetSelectedDicePool()
+                }}
+                primaryColor={primaryColor}
+                character={character}
+                setCharacter={setCharacter}
+            />
         </BackgroundImage>
     )
 }

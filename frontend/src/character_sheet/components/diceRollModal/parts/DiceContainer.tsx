@@ -29,7 +29,7 @@ const DiceContainer = ({ primaryColor, onDieClick, selectedDiceIds = new Set(), 
 
     return (
         <Group justify="center" gap="md" style={{ flex: activeTab === "selected" ? "1 1 380px" : "1 1 480px", maxHeight: activeTab === "selected" ? "380px" : "480px", minHeight: "270px", flexWrap: "wrap", position: "relative", overflow: "hidden", alignItems: "center" }}>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {dice.map((die, index) => {
                     const seed = die.id % 1000
                     const random = () => {
