@@ -124,7 +124,6 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             const array = new Uint32Array(1)
             crypto.getRandomValues(array)
             const random = array[0] / (0xFFFFFFFF + 1)
-            console.log(Math.floor(random * 10) + 1)
             return Math.floor(random * 10) + 1
         }
         // Pseudo-random numbers

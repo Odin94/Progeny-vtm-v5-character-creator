@@ -72,17 +72,17 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
     const translateLowerZ = -translateZ
     const translateLowerY = -translateY
 
-    const getFaceTransform = (faceNum: number) => {
-        if (faceNum % 2 === 0) {
-            const angleMultiplier = faceNum / 2
+    const getFaceTransform = (faceIndex: number) => {
+        if (faceIndex % 2 === 0) {
+            const angleMultiplier = faceIndex / 2
             return `rotateY(-${sideAngle * angleMultiplier}deg) translateZ(${translateZ}px) translateY(${translateY}px) rotateX(${angle}deg)`
         } else {
-            const angleMultiplier = (faceNum + 1) / 2
+            const angleMultiplier = (faceIndex + 1) / 2
             return `rotateY(${sideAngle * angleMultiplier}deg) translateZ(${translateLowerZ}px) translateY(${translateLowerY}px) rotateZ(180deg) rotateY(180deg) rotateX(${angle}deg)`
         }
     }
 
-    const faceNum = value === 10 ? 9 : value - 1
+    const faceIndex = value === 10 ? 9 : value - 1
 
     const contentStyle = {
         margin: "auto auto",
@@ -145,14 +145,14 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
     }
 
     const getFinalRotation = () => {
-        if (faceNum % 2 === 0) {
-            const angleMultiplier = faceNum / 2
+        if (faceIndex % 2 === 0) {
+            const angleMultiplier = faceIndex / 2
             return {
                 rotateX: -angle,
                 rotateY: sideAngle * angleMultiplier,
             }
         } else {
-            const angleMultiplier = (faceNum + 1) / 2
+            const angleMultiplier = (faceIndex + 1) / 2
             return {
                 rotateX: -(180 + angle),
                 rotateY: -sideAngle * angleMultiplier,
