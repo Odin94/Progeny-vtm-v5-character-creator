@@ -27,6 +27,22 @@ export const Route = createRootRoute({
                     capture_exceptions: true,
                     before_send: (event) => {
                         if (event && event.event === "$exception") {
+                            const exceptionType = event.properties?.$exception_type
+                            const exceptionMessage = event.properties?.$exception_message
+                            const exceptionValue = event.properties?.$exception_values?.[0]
+
+                            if (exceptionType === "CustomEvent" ||
+                                (typeof exceptionValue === "string" && exceptionValue.includes("CustomEvent"))) {
+                                return null
+                            }
+
+                            if (exceptionType === "NotFoundError" &&
+                                typeof exceptionMessage === "string" &&
+                                exceptionMessage.includes("removeChild") &&
+                                exceptionMessage.includes("not a child of this node")) {
+                                return null
+                            }
+
                             try {
                                 const characterData = localStorage.getItem("character")
                                 if (characterData) {
