@@ -67,7 +67,7 @@ The script will:
 - Create application user and directories
 - Set up PM2 for automatic restarts
 
-3. After setup, follow the instructions in `/opt/progeny-backend/README-SETUP.md` to deploy your code.
+1. After setup, follow the instructions in `/opt/progeny/README-SETUP.md` to deploy your code.
 
 **Note:** The setup script requires root/sudo access and will configure the server for production use.
 

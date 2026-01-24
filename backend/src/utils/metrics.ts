@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify"
 import { env } from "../config/env.js"
 import * as os from "os"
+import { execSync } from "child_process"
 import { trackEvent } from "./tracker.js"
 
 interface ResponseTimeMetric {
@@ -25,6 +26,7 @@ interface SystemMetrics {
         percentage: number
         maxPercentage: number
     }
+    diskUsage?: DiskUsage
     responseTimes: {
         p50: number
         p90: number
@@ -39,6 +41,12 @@ type CpuTimes = {
     sys: number
     idle: number
     irq: number
+}
+
+type DiskUsage = {
+    usedMB: number
+    totalMB: number
+    percentage: number
 }
 
 class MetricsCollector {
@@ -176,6 +184,87 @@ class MetricsCollector {
         return clampedPercent
     }
 
+    private getDiskUsage(): DiskUsage | null {
+        try {
+            if (process.platform === "win32") {
+                const lines = execSync(
+                    'wmic logicaldisk where "DeviceID=\\"C:\\"" get Size,FreeSpace /format:csv',
+                    {
+                        encoding: "utf8",
+                        stdio: ["ignore", "pipe", "ignore"],
+                    }
+                )
+                    .toString()
+                    .trim()
+                    .split("\n")
+
+                const dataLine = lines.find((line) => line && line.includes(",") && !line.toLowerCase().startsWith("node"))
+                if (!dataLine) {
+                    return null
+                }
+
+                const parts = dataLine.trim().split(",")
+                if (parts.length < 3) {
+                    return null
+                }
+
+                const free = Number.parseInt(parts[parts.length - 2] ?? "", 10)
+                const total = Number.parseInt(parts[parts.length - 1] ?? "", 10)
+
+                if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free)) {
+                    return null
+                }
+
+                const used = total - free
+                const percentage = (used / total) * 100
+                const usedMB = used / 1024 / 1024
+                const totalMB = total / 1024 / 1024
+
+                return {
+                    usedMB,
+                    totalMB,
+                    percentage,
+                }
+            }
+
+            const lines = execSync("df -kP .", {
+                encoding: "utf8",
+                stdio: ["ignore", "pipe", "ignore"],
+            })
+                .toString()
+                .trim()
+                .split("\n")
+
+            if (lines.length < 2) {
+                return null
+            }
+
+            const parts = lines[1]?.trim().split(/\s+/) ?? []
+            if (parts.length < 3) {
+                return null
+            }
+
+            const totalKb = Number.parseInt(parts[1] ?? "", 10)
+            const usedKb = Number.parseInt(parts[2] ?? "", 10)
+
+            if (!Number.isFinite(totalKb) || totalKb <= 0 || !Number.isFinite(usedKb)) {
+                return null
+            }
+
+            const totalMB = totalKb / 1024
+            const usedMB = usedKb / 1024
+            const percentage = (usedMB / totalMB) * 100
+
+            return {
+                usedMB,
+                totalMB,
+                percentage,
+            }
+        } catch {
+            return null
+        }
+    }
+
     private collectMetrics(): SystemMetrics {
         // Memory metrics - system-wide
         const totalMemory = os.totalmem()
@@ -206,6 +295,7 @@ class MetricsCollector {
         const p50 = this.calculatePercentiles(durations, 50)
         const p90 = this.calculatePercentiles(durations, 90)
         const p99 = this.calculatePercentiles(durations, 99)
+        const diskUsage = this.getDiskUsage()
 
         return {
             memoryUsage: {
@@ -222,6 +312,7 @@ class MetricsCollector {
                 percentage: cpuUsage,
                 maxPercentage: this.maxCpuUsage,
             },
+            diskUsage: diskUsage ?? undefined,
             responseTimes: {
                 p50,
                 p90,
@@ -243,6 +334,16 @@ class MetricsCollector {
         }
 
         try {
+            const diskUsage = metrics.diskUsage
+            const diskProps =
+                diskUsage && diskUsage.totalMB > 0
+                    ? {
+                          usedDiskMB: Math.round(diskUsage.usedMB * 100) / 100,
+                          totalDiskMB: Math.round(diskUsage.totalMB * 100) / 100,
+                          usedDiskPercentage: Math.round(diskUsage.percentage * 100) / 100,
+                      }
+                    : {}
+
             await trackEvent(
                 "backend_metrics",
                 {
@@ -258,6 +359,7 @@ class MetricsCollector {
                     response_time_p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
                     response_time_p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
                     request_count: metrics.requestCount,
+                    ...diskProps,
                     environment: env.NODE_ENV,
                 },
                 "backend_metrics"
@@ -316,6 +418,15 @@ class MetricsCollector {
                         percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
                         max_percentage: Math.round(metrics.cpuUsage.maxPercentage * 100) / 100,
                     },
+                    ...(metrics.diskUsage
+                        ? {
+                              disk: {
+                                  used_gb: Math.round((metrics.diskUsage.usedMB / 1024) * 100) / 100,
+                                  total_gb: Math.round((metrics.diskUsage.totalMB / 1024) * 100) / 100,
+                                  percentage: Math.round(metrics.diskUsage.percentage * 100) / 100,
+                              },
+                          }
+                        : {}),
                     response_times: {
                         p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
                         p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,

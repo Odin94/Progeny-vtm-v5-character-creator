@@ -66,7 +66,7 @@ Once DNS has propagated (wait 5-10 minutes after adding the DNS record):
 5. **Update your `.env` file**:
    ```bash
    sudo su - progeny
-   cd /opt/progeny-backend/backend
+   cd /opt/progeny/backend
    vi .env
    ```
    

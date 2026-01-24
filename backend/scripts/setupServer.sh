@@ -81,7 +81,7 @@ fi
 
 # Create application user
 APP_USER="progeny"
-APP_DIR="/opt/progeny-backend"
+APP_DIR="/opt/progeny"
 
 if ! id "$APP_USER" &>/dev/null; then
     echo -e "${YELLOW}👤 Creating application user...${NC}"
@@ -127,7 +127,7 @@ module.exports = {
     name: 'progeny-backend',
     script: 'npm',
     args: 'start',
-    cwd: '/opt/progeny-backend/backend',
+    cwd: '/opt/progeny/backend',
     instances: 1,
     exec_mode: 'fork',
     env: {
@@ -209,7 +209,7 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
    ```bash
    ssh your-server
    sudo su - progeny
-   cd /opt/progeny-backend/backend
+   cd /opt/progeny/backend
    ```
 
 2. **Set up environment variables:**
@@ -274,15 +274,15 @@ Welcome to the Progeny VTM V5 Character Creator backend server.
 
 ## Quick Links
 
-- **Backend Directory**: `/opt/progeny-backend/backend`
+- **Backend Directory**: `/opt/progeny/backend`
 - **Logs**: `/var/log/progeny-backend/`
-- **Database**: `/opt/progeny-backend/backend/database.sqlite`
+- **Database**: `/opt/progeny/backend/database.sqlite`
 
 ## Getting Started
 
 1. Navigate to the backend directory:
    ```bash
-   cd /opt/progeny-backend/backend
+   cd /opt/progeny/backend
    ```
 
 2. See `README-SETUP.md` for detailed setup and management instructions.
