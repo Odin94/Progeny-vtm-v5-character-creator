@@ -213,6 +213,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 sessionId: data.sessionId,
                 sessionType: data.sessionType,
                 participants: data.participants,
+                messages: [],
                 lastJoinOptions: options,
               })
             } else {
@@ -222,6 +223,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 sessionId: data.sessionId,
                 sessionType: data.sessionType,
                 participants: data.participants,
+                messages: [],
                 lastJoinOptions: options,
               })
             }

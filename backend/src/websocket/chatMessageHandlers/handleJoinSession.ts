@@ -105,7 +105,7 @@ export async function handleJoinSession(
       }, userId)
     }
   } else {
-    const newSessionId = nanoid()
+    const newSessionId = nanoid(8)
     const newSession: Session = {
       id: newSessionId,
       type: "temporary",

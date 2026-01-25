@@ -1,6 +1,6 @@
 import { ActionIcon, Badge, Box, Button, Group, Paper, ScrollArea, Stack, Text, TextInput, Tooltip, useMantineTheme } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconAlertCircle, IconChevronDown, IconDice, IconDroplet, IconInfoCircle, IconMessageCircle, IconUsers, IconX, IconArrowLeft } from "@tabler/icons-react"
+import { IconAlertCircle, IconChevronDown, IconCopy, IconDice, IconDroplet, IconInfoCircle, IconMessageCircle, IconUsers, IconX, IconArrowLeft } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
@@ -8,6 +8,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
 import { RollData } from "../stores/sessionChatStore"
+import FocusBorderWrapper from "./FocusBorderWrapper"
 
 type ChatWindowProps = {
     options: SheetOptions
@@ -27,6 +28,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const [view, setView] = useState<"disconnected" | "creating" | "joining" | "joiningCoterie">("disconnected")
     const [sessionInput, setSessionInput] = useState("")
     const [sessionType, setSessionType] = useState<"temporary" | "coterie" | null>(null)
+    const [copiedSessionId, setCopiedSessionId] = useState(false)
     const [coteries, setCoteries] = useState<Coterie[]>([])
     const [autoShare, setAutoShare] = useState(getAutoShareDiceRolls())
     const [messageInput, setMessageInput] = useState("")
@@ -71,6 +73,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         setSessionType("temporary")
         setSessionInput("")
         setView("creating")
+        setCopiedSessionId(false)
     }
 
     const handleJoinSession = () => {
@@ -102,7 +105,18 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         } else if (sessionType === "temporary") {
             connect()
             joinSession()
-            setView("disconnected")
+        }
+    }
+
+    const handleCopySessionId = async () => {
+        if (sessionId) {
+            try {
+                await navigator.clipboard.writeText(sessionId)
+                setCopiedSessionId(true)
+                setTimeout(() => setCopiedSessionId(false), 2000)
+            } catch (error) {
+                console.error("Failed to copy session ID:", error)
+            }
         }
     }
 
@@ -140,6 +154,23 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
             default:
                 return "gray"
         }
+    }
+
+    const getDisabledTooltipMessage = (): string => {
+        const status = connectionStatus
+        if (status === "connecting") {
+            return "Connecting to chat..."
+        }
+        if (status === "disconnected") {
+            return !sessionId ? "Join or create a session to send messages" : "Not connected to chat"
+        }
+        if (status === "error") {
+            return "Connection error. Please try reconnecting."
+        }
+        if (!sessionId) {
+            return "Join or create a session to send messages"
+        }
+        return ""
     }
 
     if (!expanded) {
@@ -216,79 +247,104 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                     </Group>
                 </Group>
 
-                {connectionStatus === "disconnected" ? (
+                {view === "creating" || view === "joining" || view === "joiningCoterie" ? (
                     <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                        {view === "disconnected" ? (
-                            <>
-                                <Text ta="center" c="dimmed" size="sm" style={{ marginTop: "auto", marginBottom: "auto" }}>
-                                    {isAuthenticated ? "Join or create a session to start chatting" : "Sign in to use chat"}
-                                </Text>
-                                {isAuthenticated ? (
-                                    <Stack gap="xs" style={{ marginTop: "auto" }}>
-                                        <Button
-                                            fullWidth
-                                            color={primaryColor}
-                                            onClick={handleCreateSession}
-                                            leftSection={<IconMessageCircle size={16} />}
-                                        >
-                                            Create Session
-                                        </Button>
-                                        <Button
-                                            fullWidth
-                                            variant="light"
-                                            color={primaryColor}
-                                            onClick={handleJoinSession}
-                                            leftSection={<IconMessageCircle size={16} />}
-                                        >
-                                            Join Session
-                                        </Button>
-                                        {coteries.length > 0 ? (
-                                            <Button
-                                                fullWidth
-                                                variant="light"
-                                                color={primaryColor}
-                                                onClick={handleJoinCoterie}
-                                                leftSection={<IconUsers size={16} />}
-                                            >
-                                                Join Coterie
-                                            </Button>
-                                        ) : null}
-                                    </Stack>
-                                ) : null}
-                            </>
-                        ) : view === "creating" || view === "joining" ? (
+                        {view === "creating" ? (
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                                 <Group gap="xs">
-                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack}>
+                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack} color={primaryColor}>
                                         <IconArrowLeft size={16} />
                                     </ActionIcon>
                                     <Text fw={600} size="lg" style={{ flex: 1 }}>
-                                        {view === "creating" ? "Create Session" : "Join Session"}
+                                        Create Session
                                     </Text>
                                 </Group>
-                                <TextInput
-                                    placeholder={view === "creating" ? "Leave empty to create new" : "Session ID"}
-                                    value={sessionInput}
-                                    onChange={(e) => setSessionInput(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleConnect()
-                                        }
-                                    }}
-                                />
+                                {sessionId ? (
+                                    <>
+                                        <Text size="sm" c="dimmed">
+                                            Session created! Share this ID with others to join:
+                                        </Text>
+                                        <Group gap="xs">
+                                            <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
+                                                <TextInput
+                                                    value={sessionId}
+                                                    readOnly
+                                                    style={{ flex: 1 }}
+                                                    styles={{
+                                                        input: {
+                                                            fontFamily: "monospace",
+                                                            fontSize: "0.875rem",
+                                                        },
+                                                    }}
+                                                />
+                                            </FocusBorderWrapper>
+                                            <Tooltip label={copiedSessionId ? "Copied!" : "Copy to clipboard"} withArrow zIndex={2000}>
+                                                <ActionIcon
+                                                    color={copiedSessionId ? "green" : primaryColor}
+                                                    variant="filled"
+                                                    onClick={handleCopySessionId}
+                                                >
+                                                    <IconCopy size={16} />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        </Group>
+                                        <Group justify="flex-end" style={{ marginTop: "auto" }}>
+                                            <Button variant="subtle" onClick={handleBack} color="yellow">
+                                                Go to chat
+                                            </Button>
+                                        </Group>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text size="sm" c="dimmed">
+                                            Click the button below to create a new session. A unique session ID will be generated for you to share.
+                                        </Text>
+                                        <Group justify="flex-end" style={{ marginTop: "auto" }}>
+                                            <Button variant="subtle" onClick={handleBack} color="yellow">
+                                                Cancel
+                                            </Button>
+                                            <Button color={primaryColor} onClick={handleConnect}>
+                                                Create Session
+                                            </Button>
+                                        </Group>
+                                    </>
+                                )}
+                            </Stack>
+                        ) : view === "joining" ? (
+                            <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                                <Group gap="xs">
+                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack} color={primaryColor}>
+                                        <IconArrowLeft size={16} />
+                                    </ActionIcon>
+                                    <Text fw={600} size="lg" style={{ flex: 1 }}>
+                                        Join Session
+                                    </Text>
+                                </Group>
+                                <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
+                                    <TextInput
+                                        placeholder="Session ID"
+                                        value={sessionInput}
+                                        onChange={(e) => setSessionInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                handleConnect()
+                                            }
+                                        }}
+                                    />
+                                </FocusBorderWrapper>
                                 <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                    <Button variant="subtle" onClick={handleBack}>
+                                    <Button variant="subtle" onClick={handleBack} color="yellow">
                                         Cancel
                                     </Button>
-                                    <Button color={primaryColor} onClick={handleConnect}>
-                                        {view === "creating" ? (sessionInput ? "Join" : "Create") : "Join"}
+                                    <Button color={primaryColor} onClick={handleConnect} disabled={!sessionInput.trim()}>
+                                        Join
                                     </Button>
                                 </Group>
                             </Stack>
                         ) : view === "joiningCoterie" ? (
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                                 <Group gap="xs">
-                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack}>
+                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack} color={primaryColor}>
                                         <IconArrowLeft size={16} />
                                     </ActionIcon>
                                     <Text fw={600} size="lg" style={{ flex: 1 }}>
@@ -319,6 +375,44 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                         ) : null}
                                     </Stack>
                                 </ScrollArea>
+                            </Stack>
+                        ) : null}
+                    </Stack>
+                ) : connectionStatus === "disconnected" ? (
+                    <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                        <Text ta="center" c="dimmed" size="sm" style={{ marginTop: "auto", marginBottom: "auto" }}>
+                            {isAuthenticated ? "Join or create a session to start chatting" : "Sign in to use chat"}
+                        </Text>
+                        {isAuthenticated ? (
+                            <Stack gap="xs" style={{ marginTop: "auto" }}>
+                                <Button
+                                    fullWidth
+                                    color={primaryColor}
+                                    onClick={handleCreateSession}
+                                    leftSection={<IconMessageCircle size={16} />}
+                                >
+                                    Create Session
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    variant="light"
+                                    color={primaryColor}
+                                    onClick={handleJoinSession}
+                                    leftSection={<IconMessageCircle size={16} />}
+                                >
+                                    Join Session
+                                </Button>
+                                {coteries.length > 0 ? (
+                                    <Button
+                                        fullWidth
+                                        variant="light"
+                                        color={primaryColor}
+                                        onClick={handleJoinCoterie}
+                                        leftSection={<IconUsers size={16} />}
+                                    >
+                                        Join Coterie
+                                    </Button>
+                                ) : null}
                             </Stack>
                         ) : null}
                     </Stack>
@@ -497,25 +591,34 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         </ScrollArea>
 
                         <Group gap="xs" mb="xs">
-                            <TextInput
-                                placeholder="Type a message..."
-                                value={messageInput}
-                                onChange={(e) => {
-                                    const value = e.target.value
-                                    if (value.length <= 5000) {
-                                        setMessageInput(value)
-                                    }
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
-                                        e.preventDefault()
-                                        handleSendMessage()
-                                    }
-                                }}
-                                style={{ flex: 1 }}
-                                disabled={connectionStatus !== "connected" || !sessionId}
-                                maxLength={5000}
-                            />
+                            <Tooltip
+                                label={getDisabledTooltipMessage()}
+                                disabled={connectionStatus === "connected" && sessionId !== null}
+                                withArrow
+                                zIndex={2000}
+                            >
+                                <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
+                                    <TextInput
+                                        placeholder="Type a message..."
+                                        value={messageInput}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            if (value.length <= 5000) {
+                                                setMessageInput(value)
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                e.preventDefault()
+                                                handleSendMessage()
+                                            }
+                                        }}
+                                        style={{ flex: 1 }}
+                                        disabled={connectionStatus !== "connected" || !sessionId}
+                                        maxLength={5000}
+                                    />
+                                </FocusBorderWrapper>
+                            </Tooltip>
                             <ActionIcon
                                 color={primaryColor}
                                 variant="filled"
@@ -541,7 +644,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         </Group>
                     </>
                 )}
-            </Paper>
+            </Paper >
         </>
     )
 }
