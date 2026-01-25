@@ -324,6 +324,32 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         totalSuccesses += 1
                     }
 
+                    let specialtyBonus = 0
+                    let disciplinePowerBonus = 0
+                    
+                    if (activeTab === "selected" && selectedDicePool.attribute) {
+                        if (selectedDicePool.skill) {
+                            specialtyBonus = selectedDicePool.selectedSpecialties.length
+                        }
+                        
+                        const applicablePowers = getApplicableDisciplinePowers(character!, selectedDicePool.attribute, selectedDicePool.skill)
+                        const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
+                        
+                        for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
+                            if (!applicablePowerKeys.has(powerKey)) continue
+                            
+                            const [disciplineName, powerName] = powerKey.split("-", 2)
+                            const disciplinePowers = character!.disciplines.filter(p => p.discipline === disciplineName)
+                            const disciplineRating = disciplinePowers.length
+                            
+                            if (powerName === "Wrecker") {
+                                disciplinePowerBonus += disciplineRating * 2
+                            } else {
+                                disciplinePowerBonus += disciplineRating
+                            }
+                        }
+                    }
+                    
                     const rollData = {
                         dice: newDice.map((d) => ({
                             id: d.id,
@@ -343,6 +369,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                     diceCount: selectedPoolDiceCount,
                                     bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
                                     bloodSurge: selectedDicePool.bloodSurge,
+                                    specialtyBonus: specialtyBonus > 0 ? specialtyBonus : undefined,
+                                    disciplinePowerBonus: disciplinePowerBonus > 0 ? disciplinePowerBonus : undefined,
                                 }
                                 : {
                                     diceCount: diceCount,
@@ -430,6 +458,32 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                 totalSuccesses += 1
                             }
 
+                            let specialtyBonus = 0
+                            let disciplinePowerBonus = 0
+                            
+                            if (activeTab === "selected" && selectedDicePool.attribute) {
+                                if (selectedDicePool.skill) {
+                                    specialtyBonus = selectedDicePool.selectedSpecialties.length
+                                }
+                                
+                                const applicablePowers = getApplicableDisciplinePowers(character!, selectedDicePool.attribute, selectedDicePool.skill)
+                                const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
+                                
+                                for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
+                                    if (!applicablePowerKeys.has(powerKey)) continue
+                                    
+                                    const [disciplineName, powerName] = powerKey.split("-", 2)
+                                    const disciplinePowers = character!.disciplines.filter(p => p.discipline === disciplineName)
+                                    const disciplineRating = disciplinePowers.length
+                                    
+                                    if (powerName === "Wrecker") {
+                                        disciplinePowerBonus += disciplineRating * 2
+                                    } else {
+                                        disciplinePowerBonus += disciplineRating
+                                    }
+                                }
+                            }
+                            
                             const rollData = {
                                 dice: newDice.map((d) => ({
                                     id: d.id,
@@ -449,6 +503,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                             diceCount: selectedPoolDiceCount,
                                             bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
                                             bloodSurge: selectedDicePool.bloodSurge,
+                                            specialtyBonus: specialtyBonus > 0 ? specialtyBonus : undefined,
+                                            disciplinePowerBonus: disciplinePowerBonus > 0 ? disciplinePowerBonus : undefined,
                                         }
                                         : {
                                             diceCount: diceCount,
@@ -555,6 +611,32 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 const autoShareDiceRolls = getAutoShareDiceRolls()
                 if (autoShareDiceRolls && connectionStatus === "connected" && sessionId) {
                     try {
+                        let specialtyBonus = 0
+                        let disciplinePowerBonus = 0
+                        
+                        if (activeTab === "selected" && selectedDicePool.attribute) {
+                            if (selectedDicePool.skill) {
+                                specialtyBonus = selectedDicePool.selectedSpecialties.length
+                            }
+                            
+                            const applicablePowers = getApplicableDisciplinePowers(character!, selectedDicePool.attribute, selectedDicePool.skill)
+                            const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
+                            
+                            for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
+                                if (!applicablePowerKeys.has(powerKey)) continue
+                                
+                                const [disciplineName, powerName] = powerKey.split("-", 2)
+                                const disciplinePowers = character!.disciplines.filter(p => p.discipline === disciplineName)
+                                const disciplineRating = disciplinePowers.length
+                                
+                                if (powerName === "Wrecker") {
+                                    disciplinePowerBonus += disciplineRating * 2
+                                } else {
+                                    disciplinePowerBonus += disciplineRating
+                                }
+                            }
+                        }
+                        
                         const rollData = {
                             dice: dice.map((d) => ({
                                 id: d.id,
@@ -573,6 +655,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                         diceCount: selectedPoolDiceCount,
                                         bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
                                         bloodSurge: selectedDicePool.bloodSurge,
+                                        specialtyBonus: specialtyBonus > 0 ? specialtyBonus : undefined,
+                                        disciplinePowerBonus: disciplinePowerBonus > 0 ? disciplinePowerBonus : undefined,
                                     }
                                     : {
                                         diceCount: diceCount,

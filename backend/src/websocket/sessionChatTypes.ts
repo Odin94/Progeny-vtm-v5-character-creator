@@ -46,6 +46,8 @@ export type DiceRollMessage = {
       diceCount: number
       bloodDiceCount: number
       bloodSurge?: boolean
+      specialtyBonus?: number
+      disciplinePowerBonus?: number
     }
     rollId?: string
     isReroll?: boolean
@@ -103,6 +105,8 @@ export type DiceRollReceived = {
       diceCount: number
       bloodDiceCount: number
       bloodSurge?: boolean
+      specialtyBonus?: number
+      disciplinePowerBonus?: number
     }
     rollId?: string
     isReroll?: boolean
@@ -147,6 +151,8 @@ const diceRollPoolInfoSchema = z.object({
   diceCount: z.number().int().min(0),
   bloodDiceCount: z.number().int().min(0),
   bloodSurge: z.boolean().optional(),
+  specialtyBonus: z.number().int().min(0).optional(),
+  disciplinePowerBonus: z.number().int().min(0).optional(),
 })
 
 const diceRollResultSchema = z.object({

@@ -91,7 +91,6 @@ const RouseCheckButton = ({
 
     const hunger = character.ephemeral?.hunger ?? 0
     const isDisabled = hunger >= 5
-    console.log({ hunger, isDisabled })
 
     return (
         <Tooltip

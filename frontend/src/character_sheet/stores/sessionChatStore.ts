@@ -16,11 +16,7 @@ type ChatMessage = {
   timestamp: number
 }
 
-type DiceRollMessage = {
-  type: "dice_roll"
-  userName: string
-  characterName?: string
-  rollData: {
+export type RollData = {
     dice: Array<{ id: number; value: number; isBloodDie: boolean }>
     totalSuccesses: number
     results: Array<{ type: string; value: number }>
@@ -31,10 +27,19 @@ type DiceRollMessage = {
       diceCount: number
       bloodDiceCount: number
       bloodSurge?: boolean
+      specialtyBonus?: number
+      disciplinePowerBonus?: number
     }
     rollId?: string
     isReroll?: boolean
-  }
+}
+
+
+export type DiceRollMessage = {
+  type: "dice_roll"
+  userName: string
+  characterName?: string
+  rollData: RollData
   timestamp: number
 }
 

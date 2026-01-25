@@ -7,6 +7,7 @@ import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettin
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
+import { RollData } from "../stores/sessionChatStore"
 
 type ChatWindowProps = {
     options: SheetOptions
@@ -188,7 +189,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         <Text fw={600} size="lg">
                             Chat
                         </Text>
-                        <Tooltip label="Chat messages are not stored on the server and will be lost when the chat is closed" withArrow>
+                        <Tooltip label="Chat messages are not stored on the server and will be lost when the chat is closed" withArrow zIndex={2000}>
                             <ActionIcon size="xs" variant="subtle" color="gray" style={{ cursor: "help" }}>
                                 <IconInfoCircle size={14} />
                             </ActionIcon>
@@ -356,8 +357,31 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             </Box>
                                         )
                                     } else if (msg.type === "dice_roll") {
-                                        const hasCriticals = msg.rollData.results.some((r) => r.type === "critical" || r.type === "blood-critical")
+                                        const criticalCount = msg.rollData.results.filter((r) => r.type === "critical" || r.type === "blood-critical").length
+                                        const hasCriticals = criticalCount >= 2
                                         const hasBestial = msg.rollData.results.some((r) => r.type === "bestial-failure")
+                                        function getDiceBonusStr(rollData: RollData) {
+                                            const bonuses: string[] = []
+
+                                            if (rollData.poolInfo?.bloodSurge) {
+                                                bonuses.push("Blood Surge")
+                                            }
+
+                                            if (rollData.poolInfo?.specialtyBonus && rollData.poolInfo.specialtyBonus > 0) {
+                                                bonuses.push(`${rollData.poolInfo.specialtyBonus} Specialty${rollData.poolInfo.specialtyBonus > 1 ? "ies" : ""}`)
+                                            }
+
+                                            if (rollData.poolInfo?.disciplinePowerBonus && rollData.poolInfo.disciplinePowerBonus > 0) {
+                                                bonuses.push(`${rollData.poolInfo.disciplinePowerBonus} from Discipline Powers`)
+                                            }
+
+                                            if (bonuses.length === 0) {
+                                                return ""
+                                            }
+
+                                            return ` (${bonuses.join(", ")})`
+                                        }
+
                                         return (
                                             <Box
                                                 key={idx}
@@ -398,7 +422,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 {msg.rollData.poolInfo ? (
                                                     <Text size="xs" c="dimmed" mt={4}>
                                                         {msg.rollData.poolInfo.attribute
-                                                            ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${msg.rollData.poolInfo.bloodSurge ? " (Blood Surge)" : ""}`
+                                                            ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
                                                             : "Custom pool"}
                                                     </Text>
                                                 ) : null}
