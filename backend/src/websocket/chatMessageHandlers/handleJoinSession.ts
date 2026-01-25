@@ -85,25 +85,19 @@ export async function handleJoinSession(
       }, userId)
     }
   } else if (sessionId) {
-    const isNewTemporarySession = !temporarySessions.has(sessionId)
-    if (isNewTemporarySession) {
-      temporarySessions.set(sessionId, {
-        id: sessionId,
-        type: "temporary",
-        participants: new Map(),
-        createdAt: Date.now(),
-        lastActivity: Date.now(),
-      })
+    if (!temporarySessions.has(sessionId)) {
+      sendErrorAndTrack(
+        socket,
+        fastify,
+        userId,
+        "Session not found",
+        "session_not_found",
+        { session_id: sessionId }
+      )
+      return currentSession
     }
 
     currentSession = temporarySessions.get(sessionId)!
-
-    if (isNewTemporarySession) {
-      trackEvent("chat-session-created", {
-        session_type: "temporary",
-        session_id: sessionId,
-      }, userId)
-    }
   } else {
     const newSessionId = nanoid(8)
     const newSession: Session = {

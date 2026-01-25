@@ -32,6 +32,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const [coteries, setCoteries] = useState<Coterie[]>([])
     const [autoShare, setAutoShare] = useState(getAutoShareDiceRolls())
     const [messageInput, setMessageInput] = useState("")
+    const [joinError, setJoinError] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const { user, isAuthenticated } = useAuth()
 
@@ -62,6 +63,16 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         }
     }, [messages, expanded])
 
+    useEffect(() => {
+        const errorMessage = messages.find((msg) => msg.type === "error")
+        if (errorMessage && view === "joining") {
+            setJoinError(errorMessage.message)
+        } else if (connectionStatus === "connected" && sessionId && view === "joining") {
+            setJoinError(null)
+            setView("disconnected")
+        }
+    }, [messages, connectionStatus, sessionId, view])
+
     const loadCoteries = async () => {
         try {
             const data = await api.getCoteries()
@@ -82,6 +93,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         setSessionType("temporary")
         setSessionInput("")
         setView("joining")
+        setJoinError(null)
     }
 
     const handleJoinCoterie = () => {
@@ -93,17 +105,20 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         setView("disconnected")
         setSessionInput("")
         setSessionType(null)
+        setJoinError(null)
+        if (connectionStatus === "connected" || connectionStatus === "connecting") {
+            leaveSession()
+        }
     }
 
     const handleConnect = () => {
+        setJoinError(null)
         if (sessionType === "temporary" && sessionInput.trim()) {
             connect()
             joinSession({ sessionId: sessionInput.trim(), characterName })
-            setView("disconnected")
         } else if (sessionType === "coterie" && sessionInput.trim()) {
             connect()
             joinSession({ coterieId: sessionInput.trim(), characterName })
-            setView("disconnected")
         } else if (sessionType === "temporary") {
             connect()
             joinSession({ characterName })
@@ -125,6 +140,10 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const handleDisconnect = () => {
         leaveSession()
         setSessionInput("")
+        setView("disconnected")
+    }
+
+    const handleGoToChat = () => {
         setView("disconnected")
     }
 
@@ -313,7 +332,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             </Tooltip>
                                         </Group>
                                         <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                            <Button variant="subtle" onClick={handleBack} color="yellow">
+                                            <Button variant="subtle" onClick={handleGoToChat} color="yellow">
                                                 Go to chat
                                             </Button>
                                         </Group>
@@ -348,19 +367,33 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                     <TextInput
                                         placeholder="Session ID"
                                         value={sessionInput}
-                                        onChange={(e) => setSessionInput(e.target.value)}
+                                        onChange={(e) => {
+                                            setSessionInput(e.target.value)
+                                            setJoinError(null)
+                                        }}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 handleConnect()
                                             }
                                         }}
+                                        error={joinError || undefined}
                                     />
                                 </FocusBorderWrapper>
+                                {joinError ? (
+                                    <Text size="sm" c="red" style={{ marginTop: "-0.5rem" }}>
+                                        {joinError}
+                                    </Text>
+                                ) : null}
                                 <Group justify="flex-end" style={{ marginTop: "auto" }}>
                                     <Button variant="subtle" onClick={handleBack} color="yellow">
                                         Cancel
                                     </Button>
-                                    <Button color={primaryColor} onClick={handleConnect} disabled={!sessionInput.trim()}>
+                                    <Button 
+                                        color={primaryColor} 
+                                        onClick={handleConnect} 
+                                        disabled={!sessionInput.trim() || connectionStatus === "connecting"}
+                                        loading={connectionStatus === "connecting"}
+                                    >
                                         Join
                                     </Button>
                                 </Group>
@@ -402,7 +435,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                             </Stack>
                         ) : null}
                     </Stack>
-                ) : connectionStatus === "disconnected" ? (
+                ) : connectionStatus === "disconnected" || (view === "disconnected" && !sessionId) ? (
                     <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                         <Text ta="center" c="dimmed" size="sm" style={{ marginTop: "auto", marginBottom: "auto" }}>
                             {isAuthenticated ? "Join or create a session to start chatting" : "Sign in to use chat"}
@@ -426,7 +459,8 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                 >
                                     Join Session
                                 </Button>
-                                {coteries.length > 0 ? (
+                                {/* TODOdin: Uncomment once multi-account coteries are in */}
+                                {/* {coteries.length > 0 ? (
                                     <Button
                                         fullWidth
                                         variant="light"
@@ -436,7 +470,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                     >
                                         Join Coterie
                                     </Button>
-                                ) : null}
+                                ) : null} */}
                             </Stack>
                         ) : null}
                     </Stack>

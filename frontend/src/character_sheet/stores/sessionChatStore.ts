@@ -374,6 +374,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
       sessionId: null,
       sessionType: null,
       participants: [],
+      messages: [],
       lastJoinOptions: null,
     })
   }
