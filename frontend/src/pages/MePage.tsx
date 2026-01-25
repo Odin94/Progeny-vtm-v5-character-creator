@@ -28,6 +28,7 @@ import { Link } from "@tanstack/react-router"
 import { Buffer } from "buffer"
 import { useEffect, useState } from "react"
 import { z } from "zod"
+import ChatWindow from "~/character_sheet/components/ChatWindow"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
@@ -1807,6 +1808,15 @@ const MePage = () => {
                     />
                 ) : null}
             </Modal>
+            <ChatWindow
+                options={{
+                    mode: "play",
+                    primaryColor: "red",
+                    character,
+                    setCharacter,
+                    diceModalOpened: false,
+                }}
+            />
         </>
     )
 }

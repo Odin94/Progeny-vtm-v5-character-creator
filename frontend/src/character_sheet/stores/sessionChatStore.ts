@@ -173,6 +173,10 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
       return
     }
 
+    if (state.isManualDisconnect) {
+      return
+    }
+
     set({ isManualDisconnect: false, connectionStatus: "connecting" })
     const wsUrl = getWebSocketUrl()
     const ws = new WebSocket(wsUrl)
@@ -180,6 +184,17 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     ws.onopen = () => {
       const currentState = get()
       set({ connectionStatus: "connected", reconnectAttempts: 0 })
+
+      if (currentState.isManualDisconnect) {
+        const queue = [...currentState.messageQueue]
+        set({ messageQueue: [] })
+        queue.forEach((queuedMessage) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(queuedMessage))
+          }
+        })
+        return
+      }
 
       const lastJoinOptions = currentState.lastJoinOptions || loadLastJoinOptions()
       if (lastJoinOptions) {
@@ -325,7 +340,13 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         }, delay)
         set({ reconnectAttempts: attempts, reconnectTimeout: timeout })
       } else {
-        set({ reconnectAttempts: 0, isManualDisconnect: false })
+        set({ 
+          reconnectAttempts: 0, 
+          isManualDisconnect: false,
+          sessionId: null,
+          sessionType: null,
+          participants: [],
+        })
       }
     }
 
@@ -349,7 +370,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
       reconnectTimeout: null,
       reconnectAttempts: 0,
       ws: null,
-      connectionStatus: "disconnected",
+      connectionStatus: "disconnected" as const,
       sessionId: null,
       sessionType: null,
       participants: [],
@@ -389,10 +410,11 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
   }
 
   const leaveSession = () => {
-    sendMessage({ type: "leave_session" })
-    setTimeout(() => {
-      get().disconnect()
-    }, 100)
+    const state = get()
+    if (state.ws?.readyState === WebSocket.OPEN) {
+      sendMessage({ type: "leave_session" })
+    }
+    disconnect()
   }
 
   const sendChatMessage = (message: string, characterName?: string) => {

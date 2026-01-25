@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Box, Button, Group, Paper, ScrollArea, Stack, Text, TextInput, Tooltip, useMantineTheme } from "@mantine/core"
+import { ActionIcon, Badge, Box, Button, Group, Indicator, Paper, ScrollArea, Stack, Text, TextInput, Tooltip, useMantineTheme } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { IconAlertCircle, IconChevronDown, IconCopy, IconDice, IconDroplet, IconInfoCircle, IconMessageCircle, IconUsers, IconX, IconArrowLeft } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
@@ -186,23 +186,35 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     }
 
     if (!expanded) {
+        const isConnected = connectionStatus === "connected" && sessionId !== null && sessionId !== undefined
         return (
-            <ActionIcon
-                size="xl"
-                variant="light"
-                color={primaryColor}
-                radius="xl"
-                onClick={toggleExpanded}
+            <Indicator
+                disabled={!isConnected}
+                processing={isConnected}
+                color="green"
+                size={12}
+                offset={7}
+                key={`${connectionStatus}-${sessionId}`}
                 style={{
                     position: "fixed",
                     bottom: "2rem",
                     right: "6rem",
                     zIndex: 1000,
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                 }}
             >
-                <IconMessageCircle size={24} />
-            </ActionIcon>
+                <ActionIcon
+                    size="xl"
+                    variant="light"
+                    color={primaryColor}
+                    radius="xl"
+                    onClick={toggleExpanded}
+                    style={{
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                    }}
+                >
+                    <IconMessageCircle size={24} />
+                </ActionIcon>
+            </Indicator>
         )
     }
 
