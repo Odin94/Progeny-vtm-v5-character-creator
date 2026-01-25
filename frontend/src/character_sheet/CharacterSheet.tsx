@@ -16,6 +16,7 @@ import Touchstones from "./sections/Touchstones"
 import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
 import DiceRollModal from "./components/diceRollModal/DiceRollModal"
+import ChatWindow from "./components/ChatWindow"
 import { useCharacterSheetStore } from "./stores/characterSheetStore"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
@@ -189,6 +190,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 </Box>
             </Container>
             <CharacterSheetMenu options={sheetOptions} />
+            <ChatWindow options={sheetOptions} />
             <DiceRollModal
                 opened={diceModalOpened}
                 onClose={() => {

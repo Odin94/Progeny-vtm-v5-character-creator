@@ -9,6 +9,7 @@ import { coterieRoutes } from "./routes/coteries.js"
 import { shareRoutes } from "./routes/shares.js"
 import { authRoutes } from "./routes/auth.js"
 import { characterSyncWebSocket } from "./websocket/characterSync.js"
+import { sessionChatWebSocket } from "./websocket/sessionChat.js"
 import { env } from "./config/env.js"
 import { initializeMetrics } from "./utils/metrics.js"
 import { initializePostHogLogging, shutdownPostHogLogging } from "./utils/posthogLogger.js"
@@ -138,6 +139,7 @@ await fastify.register(shareRoutes)
 
 // Register WebSocket routes
 await fastify.register(characterSyncWebSocket)
+await fastify.register(sessionChatWebSocket)
 
 // Initialize PostHog logging
 initializePostHogLogging()

@@ -10,6 +10,7 @@ import { useState } from "react"
 import { z } from "zod"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
+import { createInconnuJson } from "~/generator/inconnuJsonCreator"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
@@ -80,6 +81,28 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     autoClose: 10000,
                 })
             }
+
+            closeExportModal()
+            closeMenu()
+        } catch (e) {
+            console.error(e)
+            setDownloadError(e as Error)
+        }
+    }
+
+    const handleExportToInconnu = () => {
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+        try {
+            const inconnuJson = createInconnuJson(character)
+            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], { type: "application/json" })
+            const link = document.createElement("a")
+            link.href = window.URL.createObjectURL(blob)
+            link.download = `inconnu_${character.name}.json`
+            link.click()
+
+            setTimeout(() => {
+                window.URL.revokeObjectURL(link.href)
+            }, 100)
 
             closeExportModal()
             closeMenu()
@@ -305,6 +328,32 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             </Text>
                         </Stack>
                         <Button color="grape" size="sm" onClick={handleExportToFoundry}>
+                            Export JSON
+                        </Button>
+                    </Group>
+
+                    <Group
+                        justify="space-between"
+                        align="center"
+                        p="md"
+                        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: "8px" }}
+                    >
+                        <Stack gap="xs" style={{ flex: 1 }}>
+                            <Text fw={600} size="md">
+                                <a
+                                    href="https://docs.inconnu.app"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: "#1976d2", textDecoration: "underline" }}
+                                >
+                                    Inconnu Discord Bot
+                                </a>
+                            </Text>
+                            <Text fz="sm" c="dimmed">
+                                Export for use with the Inconnu Discord character manager
+                            </Text>
+                        </Stack>
+                        <Button color="grape" size="sm" onClick={handleExportToInconnu}>
                             Export JSON
                         </Button>
                     </Group>

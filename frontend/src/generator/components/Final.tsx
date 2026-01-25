@@ -13,6 +13,7 @@ import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
 import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
+import { createInconnuJson } from "../inconnuJsonCreator"
 import { downloadCharacterSheet } from "../pdfCreator"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { SocialIcons } from "./SocialIcons"
@@ -261,6 +262,65 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
 
                                     trackEvent({
                                         action: "JSON downloaded (foundry_wod5e vtt)",
+                                        category: "downloads",
+                                        label: JSON.stringify(character),
+                                    })
+                                    closeExportModal()
+                                } catch (e) {
+                                    console.error(e)
+                                    setDownloadError(e as Error)
+                                }
+                            }}
+                        >
+                            Export JSON
+                        </Button>
+                    </div>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "16px",
+                            backgroundColor: "rgba(0, 0, 0, 0.4)",
+                            borderRadius: "8px",
+                        }}
+                    >
+                        <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                <Text fw={600} size="md">
+                                    <a
+                                        href="https://docs.inconnu.app"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: "#1976d2", textDecoration: "underline" }}
+                                    >
+                                        Inconnu Discord Bot
+                                    </a>
+                                </Text>
+                            </div>
+                            <Text fz={"sm"} c="dimmed">
+                                Export for use with the Inconnu Discord character manager
+                            </Text>
+                        </div>
+                        <Button
+                            color="grape"
+                            size="sm"
+                            onClick={() => {
+                                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+                                try {
+                                    const inconnuJson = createInconnuJson(character)
+                                    const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], { type: "application/json" })
+                                    const link = document.createElement("a")
+                                    link.href = window.URL.createObjectURL(blob)
+                                    link.download = `inconnu_${character.name}.json`
+                                    link.click()
+
+                                    setTimeout(() => {
+                                        window.URL.revokeObjectURL(link.href)
+                                    }, 100)
+
+                                    trackEvent({
+                                        action: "JSON downloaded (inconnu)",
                                         category: "downloads",
                                         label: JSON.stringify(character),
                                     })

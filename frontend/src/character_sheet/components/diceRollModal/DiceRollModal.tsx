@@ -16,6 +16,8 @@ import ModalHeader from "./parts/ModalHeader"
 import SelectedDicePoolDisplay from "./parts/SelectedDicePoolDisplay"
 import SuccessResults from "./parts/SuccessResults"
 import { getApplicableDisciplinePowers } from "../../utils/disciplinePowerMatcher"
+import { useSessionChat } from "~/hooks/useSessionChat"
+import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 
 type DiceRollModalProps = {
     opened: boolean
@@ -54,7 +56,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     const x = useMotionValue(0)
     const y = useMotionValue(0)
     const lastRollTrackedRef = useRef<number>(0)
+    const currentRollIdRef = useRef<string | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
+    const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat()
 
     const hunger = character?.ephemeral?.hunger ?? 0
 
@@ -108,6 +112,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             x.set(0)
             y.set(0)
             lastRollTrackedRef.current = 0
+            currentRollIdRef.current = null
             setSelectedDiceIds(new Set())
         }
     }, [opened, resetModal, x, y])
@@ -133,6 +138,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     const rollDice = () => {
         const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
         const bloodDiceCount = Math.min(hunger, countToUse)
+        currentRollIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
         if (isMobile) {
             const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
@@ -146,6 +152,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             if (dice.length > 0) {
                 setDice([])
                 setTimeout(() => {
+                    currentRollIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
                     const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                         id: Date.now() + i,
                         value: 0,
@@ -165,6 +172,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     }, 1500)
                 }, 500)
             } else {
+                currentRollIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
                 const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                     id: Date.now() + i,
                     value: 0,
@@ -274,6 +282,79 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
 
             setDice(newDice)
 
+            const autoShareDiceRolls = getAutoShareDiceRolls()
+            if (autoShareDiceRolls && connectionStatus === "connected" && sessionId && currentRollIdRef.current) {
+                try {
+                    const results: Array<{ type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"; value: number }> = []
+                    const allTens: typeof newDice = []
+                    let totalSuccesses = 0
+
+                    newDice.forEach((die) => {
+                        if (die.isBloodDie && die.value === 1) {
+                            results.push({ type: "bestial-failure", value: die.value })
+                        } else if (die.value >= 6) {
+                            if (die.value === 10) {
+                                allTens.push(die)
+                            } else {
+                                if (die.isBloodDie) {
+                                    results.push({ type: "blood-success", value: die.value })
+                                } else {
+                                    results.push({ type: "success", value: die.value })
+                                }
+                                totalSuccesses += 1
+                            }
+                        }
+                    })
+
+                    const totalCritPairs = Math.floor(allTens.length / 2)
+                    const remainingTens = allTens.length % 2
+
+                    for (let i = 0; i < totalCritPairs; i++) {
+                        const die1 = allTens[i * 2]
+                        const die2 = allTens[i * 2 + 1]
+
+                        results.push({ type: die1.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                        results.push({ type: die2.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                        totalSuccesses += 4
+                    }
+
+                    for (let i = 0; i < remainingTens; i++) {
+                        const die = allTens[totalCritPairs * 2 + i]
+                        results.push({ type: die.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                        totalSuccesses += 1
+                    }
+
+                    const rollData = {
+                        dice: newDice.map((d) => ({
+                            id: d.id,
+                            value: d.value,
+                            isBloodDie: d.isBloodDie,
+                        })),
+                        totalSuccesses,
+                        results,
+                        rollId: currentRollIdRef.current,
+                        isReroll: true,
+                        poolInfo:
+                            activeTab === "selected" && selectedDicePool.attribute
+                                ? {
+                                    attribute: selectedDicePool.attribute ? String(selectedDicePool.attribute) : undefined,
+                                    skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
+                                    discipline: selectedDicePool.discipline ? String(selectedDicePool.discipline) : undefined,
+                                    diceCount: selectedPoolDiceCount,
+                                    bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
+                                    bloodSurge: selectedDicePool.bloodSurge,
+                                }
+                                : {
+                                    diceCount: diceCount,
+                                    bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
+                                },
+                    }
+                    sendDiceRoll(rollData)
+                } catch (error) {
+                    console.warn("Failed to share dice roll update:", error)
+                }
+            }
+
             notifications.show({
                 title: "Willpower Reroll",
                 message: `${resultsText}${successText}`,
@@ -295,8 +376,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             )
 
             setTimeout(() => {
-                setDice((prev) =>
-                    prev.map((die) => {
+                setDice((prev) => {
+                    const newDice = prev.map((die) => {
                         if (diceIdsToReroll.has(die.id)) {
                             return {
                                 ...die,
@@ -306,7 +387,82 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         }
                         return die
                     })
-                )
+
+                    const autoShareDiceRolls = getAutoShareDiceRolls()
+                    if (autoShareDiceRolls && connectionStatus === "connected" && sessionId && currentRollIdRef.current) {
+                        try {
+                            const results: Array<{ type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"; value: number }> = []
+                            const allTens: typeof newDice = []
+                            let totalSuccesses = 0
+
+                            newDice.forEach((die) => {
+                                if (die.isBloodDie && die.value === 1) {
+                                    results.push({ type: "bestial-failure", value: die.value })
+                                } else if (die.value >= 6) {
+                                    if (die.value === 10) {
+                                        allTens.push(die)
+                                    } else {
+                                        if (die.isBloodDie) {
+                                            results.push({ type: "blood-success", value: die.value })
+                                        } else {
+                                            results.push({ type: "success", value: die.value })
+                                        }
+                                        totalSuccesses += 1
+                                    }
+                                }
+                            })
+
+                            const totalCritPairs = Math.floor(allTens.length / 2)
+                            const remainingTens = allTens.length % 2
+
+                            for (let i = 0; i < totalCritPairs; i++) {
+                                const die1 = allTens[i * 2]
+                                const die2 = allTens[i * 2 + 1]
+
+                                results.push({ type: die1.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                                results.push({ type: die2.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                                totalSuccesses += 4
+                            }
+
+                            for (let i = 0; i < remainingTens; i++) {
+                                const die = allTens[totalCritPairs * 2 + i]
+                                results.push({ type: die.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                                totalSuccesses += 1
+                            }
+
+                            const rollData = {
+                                dice: newDice.map((d) => ({
+                                    id: d.id,
+                                    value: d.value,
+                                    isBloodDie: d.isBloodDie,
+                                })),
+                                totalSuccesses,
+                                results,
+                                rollId: currentRollIdRef.current,
+                                isReroll: true,
+                                poolInfo:
+                                    activeTab === "selected" && selectedDicePool.attribute
+                                        ? {
+                                            attribute: selectedDicePool.attribute ? String(selectedDicePool.attribute) : undefined,
+                                            skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
+                                            discipline: selectedDicePool.discipline ? String(selectedDicePool.discipline) : undefined,
+                                            diceCount: selectedPoolDiceCount,
+                                            bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
+                                            bloodSurge: selectedDicePool.bloodSurge,
+                                        }
+                                        : {
+                                            diceCount: diceCount,
+                                            bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
+                                        },
+                            }
+                            sendDiceRoll(rollData)
+                        } catch (error) {
+                            console.warn("Failed to share dice roll update:", error)
+                        }
+                    }
+
+                    return newDice
+                })
                 setSelectedDiceIds(new Set())
             }, 1500)
         }
@@ -395,9 +551,42 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 } catch (error) {
                     console.warn("PostHog dice roll tracking failed:", error)
                 }
+
+                const autoShareDiceRolls = getAutoShareDiceRolls()
+                if (autoShareDiceRolls && connectionStatus === "connected" && sessionId) {
+                    try {
+                        const rollData = {
+                            dice: dice.map((d) => ({
+                                id: d.id,
+                                value: d.value,
+                                isBloodDie: d.isBloodDie,
+                            })),
+                            totalSuccesses: calculateSuccesses.totalSuccesses,
+                            results: calculateSuccesses.results,
+                            rollId: currentRollIdRef.current,
+                            poolInfo:
+                                activeTab === "selected" && selectedDicePool.attribute
+                                    ? {
+                                        attribute: selectedDicePool.attribute ? String(selectedDicePool.attribute) : undefined,
+                                        skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
+                                        discipline: selectedDicePool.discipline ? String(selectedDicePool.discipline) : undefined,
+                                        diceCount: selectedPoolDiceCount,
+                                        bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
+                                        bloodSurge: selectedDicePool.bloodSurge,
+                                    }
+                                    : {
+                                        diceCount: diceCount,
+                                        bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
+                                    },
+                        }
+                        sendDiceRoll(rollData)
+                    } catch (error) {
+                        console.warn("Failed to share dice roll:", error)
+                    }
+                }
             }
         }
-    }, [dice, calculateSuccesses, activeTab, diceCount, selectedDicePool, selectedPoolDiceCount])
+    }, [dice, calculateSuccesses, activeTab, diceCount, selectedDicePool, selectedPoolDiceCount, connectionStatus, sessionId, sendDiceRoll])
 
     if (!opened) return null
 

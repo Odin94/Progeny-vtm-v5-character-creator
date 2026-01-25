@@ -3,8 +3,11 @@ import { notifications } from "@mantine/notifications"
 import { IconDroplet } from "@tabler/icons-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
+import posthog from "posthog-js"
 import { Character } from "~/data/Character"
 import { vtmRed } from "../utils/style"
+import { useSessionChat } from "~/hooks/useSessionChat"
+import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 
 type RouseCheckButtonProps = {
     character?: Character
@@ -13,6 +16,7 @@ type RouseCheckButtonProps = {
     size?: "sm" | "md" | "lg" | "xl"
     iconSize?: number
     tooltipZIndex?: number
+    onRouseCheck?: (roll: number, success: boolean) => void
 }
 
 const RouseCheckButton = ({
@@ -21,10 +25,12 @@ const RouseCheckButton = ({
     primaryColor,
     size = "sm",
     iconSize = 16,
-    tooltipZIndex
+    tooltipZIndex,
+    onRouseCheck
 }: RouseCheckButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
+    const { sendRouseCheck, sessionId, connectionStatus } = useSessionChat()
 
     const handleRouseCheck = () => {
         if (!character || !setCharacter) return
@@ -35,10 +41,9 @@ const RouseCheckButton = ({
         setIsSuccess(success)
         setAnimationKey((prev) => prev + 1)
 
-        let message = `Rouse Check: ${roll}`
-
+        let newHunger = hunger
         if (!success) {
-            const newHunger = Math.min(hunger + 1, 5)
+            newHunger = Math.min(hunger + 1, 5)
             setCharacter({
                 ...character,
                 ephemeral: {
@@ -46,6 +51,11 @@ const RouseCheckButton = ({
                     hunger: newHunger,
                 },
             })
+        }
+
+        let message = `Rouse Check: ${roll}`
+
+        if (!success) {
             message += ". Hunger increased"
         } else {
             message += ". Passed."
@@ -55,6 +65,24 @@ const RouseCheckButton = ({
             message,
             color: success ? primaryColor : "red",
         })
+
+        try {
+            posthog.capture("rouse-check", {
+                roll,
+                success,
+                hunger_before: hunger,
+                hunger_after: newHunger,
+            })
+        } catch (error) {
+            console.warn("PostHog rouse-check tracking failed:", error)
+        }
+
+        const autoShareDiceRolls = getAutoShareDiceRolls()
+        if (autoShareDiceRolls && connectionStatus === "connected" && sessionId) {
+            sendRouseCheck(roll, success, newHunger)
+        }
+
+        onRouseCheck?.(roll, success)
     }
 
     if (!character || !setCharacter) {
