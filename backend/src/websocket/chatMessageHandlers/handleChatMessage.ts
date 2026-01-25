@@ -65,7 +65,7 @@ export async function handleChatMessage(
   const message: ChatMessageReceived = {
     type: "chat_message",
     userName: participant.userName,
-    characterName: participant.characterName,
+    characterName: data.characterName ?? participant.characterName,
     message: sanitizedMessage,
     timestamp: Date.now(),
   }

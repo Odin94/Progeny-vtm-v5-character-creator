@@ -48,6 +48,8 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         sendChatMessage,
     } = useSessionChat()
 
+    const characterName = character?.name || undefined
+
     useEffect(() => {
         if (expanded && isAuthenticated && connectionStatus === "disconnected") {
             loadCoteries()
@@ -96,15 +98,15 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const handleConnect = () => {
         if (sessionType === "temporary" && sessionInput.trim()) {
             connect()
-            joinSession({ sessionId: sessionInput.trim() })
+            joinSession({ sessionId: sessionInput.trim(), characterName })
             setView("disconnected")
         } else if (sessionType === "coterie" && sessionInput.trim()) {
             connect()
-            joinSession({ coterieId: sessionInput.trim() })
+            joinSession({ coterieId: sessionInput.trim(), characterName })
             setView("disconnected")
         } else if (sessionType === "temporary") {
             connect()
-            joinSession()
+            joinSession({ characterName })
         }
     }
 
@@ -128,7 +130,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
 
     const handleSendMessage = () => {
         if (messageInput.trim() && connectionStatus === "connected" && sessionId) {
-            sendChatMessage(messageInput.trim())
+            sendChatMessage(messageInput.trim(), characterName)
             setMessageInput("")
         }
     }
@@ -141,6 +143,16 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const formatTimestamp = (timestamp: number): string => {
         const date = new Date(timestamp)
         return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    }
+
+    const formatMessageName = (userName: string | undefined, characterName?: string): string => {
+        if (!userName) {
+            return characterName || "Unknown"
+        }
+        if (characterName && characterName !== userName) {
+            return `${characterName} (${userName})`
+        }
+        return userName
     }
 
     const getConnectionStatusColor = (): string => {
@@ -361,7 +373,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 fullWidth
                                                 onClick={() => {
                                                     connect()
-                                                    joinSession({ coterieId: coterie.id })
+                                                    joinSession({ coterieId: coterie.id, characterName })
                                                     setView("disconnected")
                                                 }}
                                             >
@@ -428,7 +440,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                             <Group gap="xs" mb="xs" p="xs" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", borderRadius: "4px" }}>
                                 <IconUsers size={14} />
                                 <Text size="xs" c="dimmed">
-                                    {participants.map((p) => p.characterName || p.userName).join(", ")}
+                                    {participants.map((p) => p.userName).join(", ")}
                                 </Text>
                             </Group>
                         ) : null}
@@ -441,7 +453,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             <Box key={idx} p="xs" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", borderRadius: "4px" }}>
                                                 <Group gap="xs" mb={4}>
                                                     <Text size="sm" fw={600}>
-                                                        {msg.characterName || msg.userName}
+                                                        {formatMessageName(msg.userName, msg.characterName)}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}
@@ -489,7 +501,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 <Group gap="xs" mb={4}>
                                                     <IconDice size={14} />
                                                     <Text size="sm" fw={600}>
-                                                        {msg.characterName || msg.userName}
+                                                        {formatMessageName(msg.userName, msg.characterName)}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}
@@ -541,7 +553,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 <Group gap="xs" mb={4}>
                                                     <IconDroplet size={14} />
                                                     <Text size="sm" fw={600}>
-                                                        {msg.characterName || msg.userName}
+                                                        {formatMessageName(msg.userName, msg.characterName)}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}

@@ -21,7 +21,7 @@ export async function handleJoinSession(
   userName: string,
   currentSession: Session | null
 ): Promise<Session | null> {
-  const { sessionId, coterieId } = data
+  const { sessionId, coterieId, characterName } = data
 
   if (coterieId) {
     const coterie = await db.query.coteries.findFirst({
@@ -127,6 +127,7 @@ export async function handleJoinSession(
     const participant: Participant = {
       userId,
       userName,
+      characterName,
       socket: socket,
     }
 

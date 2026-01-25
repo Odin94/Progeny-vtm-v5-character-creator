@@ -62,7 +62,7 @@ export async function handleDiceRoll(
   const message: DiceRollReceived = {
     type: "dice_roll",
     userName: participant.userName,
-    characterName: participant.characterName,
+    characterName: data.characterName ?? participant.characterName,
     rollData: data.rollData,
     timestamp: Date.now(),
   }

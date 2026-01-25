@@ -22,6 +22,7 @@ export type JoinSessionMessage = {
   type: "join_session"
   sessionId?: string
   coterieId?: string
+  characterName?: string
 }
 
 export type LeaveSessionMessage = {
@@ -31,6 +32,7 @@ export type LeaveSessionMessage = {
 export type ChatMessage = {
   type: "chat_message"
   message: string
+  characterName?: string
 }
 
 export type DiceRollMessage = {
@@ -52,6 +54,7 @@ export type DiceRollMessage = {
     rollId?: string
     isReroll?: boolean
   }
+  characterName?: string
 }
 
 export type RouseCheckMessage = {
@@ -59,6 +62,7 @@ export type RouseCheckMessage = {
   roll: number
   success: boolean
   newHunger: number
+  characterName?: string
 }
 
 export type ClientMessage = JoinSessionMessage | LeaveSessionMessage | ChatMessage | DiceRollMessage | RouseCheckMessage
@@ -183,6 +187,7 @@ export const joinSessionMessageSchema = z.object({
   type: z.literal("join_session"),
   sessionId: sessionIdSchema.optional(),
   coterieId: sessionIdSchema.optional(),
+  characterName: z.string().max(200, "Character name exceeds maximum length of 200 characters").optional(),
 })
 
 export const leaveSessionMessageSchema = z.object({
@@ -192,11 +197,13 @@ export const leaveSessionMessageSchema = z.object({
 export const chatMessageSchema = z.object({
   type: z.literal("chat_message"),
   message: messageSchema,
+  characterName: z.string().max(200, "Character name exceeds maximum length of 200 characters").optional(),
 })
 
 export const diceRollMessageSchema = z.object({
   type: z.literal("dice_roll"),
   rollData: diceRollDataSchema,
+  characterName: z.string().max(200, "Character name exceeds maximum length of 200 characters").optional(),
 })
 
 export const rouseCheckMessageSchema = z.object({
@@ -204,6 +211,7 @@ export const rouseCheckMessageSchema = z.object({
   roll: z.number().int().min(1).max(10),
   success: z.boolean(),
   newHunger: z.number().int().min(0).max(5),
+  characterName: z.string().max(200, "Character name exceeds maximum length of 200 characters").optional(),
 })
 
 export const clientMessageSchema = z.discriminatedUnion("type", [

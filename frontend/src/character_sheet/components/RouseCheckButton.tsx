@@ -79,7 +79,8 @@ const RouseCheckButton = ({
 
         const autoShareDiceRolls = getAutoShareDiceRolls()
         if (autoShareDiceRolls && connectionStatus === "connected" && sessionId) {
-            sendRouseCheck(roll, success, newHunger)
+            const characterName = character?.name || undefined
+            sendRouseCheck(roll, success, newHunger, characterName)
         }
 
         onRouseCheck?.(roll, success)

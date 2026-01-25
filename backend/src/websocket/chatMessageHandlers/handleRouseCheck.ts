@@ -41,7 +41,7 @@ export async function handleRouseCheck(
   const message: RouseCheckReceived = {
     type: "rouse_check",
     userName: participant.userName,
-    characterName: participant.characterName,
+    characterName: data.characterName ?? participant.characterName,
     roll: data.roll,
     success: data.success,
     newHunger: data.newHunger,

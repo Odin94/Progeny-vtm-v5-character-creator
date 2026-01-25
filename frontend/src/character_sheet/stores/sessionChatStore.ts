@@ -113,9 +113,9 @@ type SessionChatStore = {
   lastJoinOptions: { sessionId?: string; coterieId?: string } | null
   connect: () => void
   disconnect: () => void
-  joinSession: (options?: { sessionId?: string; coterieId?: string }) => void
+  joinSession: (options?: { sessionId?: string; coterieId?: string; characterName?: string }) => void
   leaveSession: () => void
-  sendChatMessage: (message: string) => void
+  sendChatMessage: (message: string, characterName?: string) => void
   sendDiceRoll: (rollData: {
     dice: Array<{ id: number; value: number; isBloodDie: boolean }>
     totalSuccesses: number
@@ -127,8 +127,8 @@ type SessionChatStore = {
       diceCount: number
       bloodDiceCount: number
     }
-  }) => void
-  sendRouseCheck: (roll: number, success: boolean, newHunger: number) => void
+  }, characterName?: string) => void
+  sendRouseCheck: (roll: number, success: boolean, newHunger: number, characterName?: string) => void
 }
 
 export const useSessionChatStore = create<SessionChatStore>((set, get) => {
@@ -357,8 +357,8 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     })
   }
 
-  const joinSession = (options?: { sessionId?: string; coterieId?: string }) => {
-    const joinOptions = options || null
+  const joinSession = (options?: { sessionId?: string; coterieId?: string; characterName?: string }) => {
+    const joinOptions = options ? { sessionId: options.sessionId, coterieId: options.coterieId } : null
     saveLastJoinOptions(joinOptions)
     set({ lastJoinOptions: joinOptions })
 
@@ -382,7 +382,9 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
 
     sendMessage({
       type: "join_session",
-      ...options,
+      sessionId: options?.sessionId,
+      coterieId: options?.coterieId,
+      characterName: options?.characterName,
     })
   }
 
@@ -393,7 +395,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     }, 100)
   }
 
-  const sendChatMessage = (message: string) => {
+  const sendChatMessage = (message: string, characterName?: string) => {
     const state = get()
     if (!state.sessionId) {
       console.warn("Cannot send chat message: not in a session")
@@ -410,6 +412,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     sendMessage({
       type: "chat_message",
       message: message.trim(),
+      characterName,
     })
   }
 
@@ -427,7 +430,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     }
     rollId?: string
     isReroll?: boolean
-  }) => {
+  }, characterName?: string) => {
     const state = get()
     if (!state.sessionId) {
       console.warn("Cannot send dice roll: not in a session")
@@ -436,10 +439,11 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     sendMessage({
       type: "dice_roll",
       rollData,
+      characterName,
     })
   }
 
-  const sendRouseCheck = (roll: number, success: boolean, newHunger: number) => {
+  const sendRouseCheck = (roll: number, success: boolean, newHunger: number, characterName?: string) => {
     const state = get()
     if (!state.sessionId) {
       console.warn("Cannot send rouse check: not in a session")
@@ -458,6 +462,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
       roll,
       success,
       newHunger,
+      characterName,
     })
   }
 

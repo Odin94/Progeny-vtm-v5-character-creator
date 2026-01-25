@@ -377,7 +377,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                     bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
                                 },
                     }
-                    sendDiceRoll(rollData)
+                    const characterName = character?.name || undefined
+                    sendDiceRoll(rollData, characterName)
                 } catch (error) {
                     console.warn("Failed to share dice roll update:", error)
                 }
@@ -511,7 +512,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                             bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
                                         },
                             }
-                            sendDiceRoll(rollData)
+                            const characterName = character?.name || undefined
+                    sendDiceRoll(rollData, characterName)
                         } catch (error) {
                             console.warn("Failed to share dice roll update:", error)
                         }
@@ -663,7 +665,8 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                         bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
                                     },
                         }
-                        sendDiceRoll(rollData)
+                        const characterName = character?.name || undefined
+                    sendDiceRoll(rollData, characterName)
                     } catch (error) {
                         console.warn("Failed to share dice roll:", error)
                     }
