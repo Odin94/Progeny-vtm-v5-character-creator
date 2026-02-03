@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setup script for Progeny Backend on Ubuntu Hetzner Server
-# This script prepares an Ubuntu server for running the Fastify backend
+# This script prepares an Ubuntu server for running the Fastify backend behind a caddy reverse proxy
 
 # NOTE: You can NOT just paste this as hetzner init script, those follow a yaml format
 # Copy over with scp, fix line endings and run
