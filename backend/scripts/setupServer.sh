@@ -42,6 +42,17 @@ apt-get install -y \
     libcap2-bin \
     certbot
 
+# Install Caddy
+echo -e "${YELLOW}📦 Installing Caddy...${NC}"
+apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+chmod o+r /etc/apt/sources.list.d/caddy-stable.list
+apt-get update
+apt-get install -y caddy
+echo -e "${GREEN}✓ Caddy installed${NC}"
+
 # Install Node.js 24.x
 echo -e "${YELLOW}📦 Installing Node.js 24.x...${NC}"
 if ! command -v node &> /dev/null; then
@@ -68,15 +79,6 @@ if ! command -v pm2 &> /dev/null; then
     npm install -g pm2
 else
     echo -e "${GREEN}PM2 is already installed${NC}"
-fi
-
-# Allow Node.js to bind to privileged ports (443)
-echo -e "${YELLOW}🔐 Setting capabilities for privileged ports...${NC}"
-NODE_PATH=$(which node)
-if setcap 'cap_net_bind_service=+ep' "$NODE_PATH" 2>/dev/null; then
-    echo -e "${GREEN}✓ Capabilities set for Node.js to bind to port 443${NC}"
-else
-    echo -e "${YELLOW}Warning: Could not set capabilities. Node.js may need root privileges to bind to port 443.${NC}"
 fi
 
 # Create application user
@@ -119,36 +121,6 @@ runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm install"
 echo -e "${YELLOW}🔨 Building backend...${NC}"
 runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm run build"
 
-# Create PM2 ecosystem file
-echo -e "${YELLOW}⚙️  Creating PM2 ecosystem file...${NC}"
-cat > "$APP_DIR/backend/ecosystem.config.cjs" << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'progeny-backend',
-    script: 'npm',
-    args: 'start',
-    cwd: '/opt/progeny/backend',
-    instances: 1,
-    exec_mode: 'fork',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 443,
-      HOST: '0.0.0.0'
-    },
-    error_file: '/var/log/progeny-backend/error.log',
-    out_file: '/var/log/progeny-backend/out.log',
-    log_file: '/var/log/progeny-backend/combined.log',
-    time: true,
-    autorestart: true,
-    max_restarts: 10,
-    min_uptime: '10s',
-    max_memory_restart: '2G'
-  }]
-};
-EOF
-
-chown "$APP_USER:$APP_USER" "$APP_DIR/backend/ecosystem.config.cjs"
-
 # Create systemd service for PM2
 echo -e "${YELLOW}⚙️  Setting up PM2 startup script...${NC}"
 PM2_STARTUP=$(runuser -u "$APP_USER" -- pm2 startup systemd -u "$APP_USER" --hp "$APP_DIR" | grep -v "PM2" | tail -n 1)
@@ -181,8 +153,8 @@ WORKOS_CLIENT_ID=your_workos_client_id_here
 WORKOS_COOKIE_PASSWORD=your_cookie_password_here
 
 # Server Configuration
-PORT=443
-HOST=0.0.0.0
+PORT=3000
+HOST=localhost
 NODE_ENV=production
 
 # Optional: Backend URL (for auth redirects)
@@ -191,10 +163,8 @@ BACKEND_URL=https://api.progeny.odin-matthias.de
 # Optional: Frontend URL (for logout redirects)
 FRONTEND_URL=https://progeny.odin-matthias.de
 
-# SSL Configuration (for HTTPS on port 443)
-# Will only work after running certbot:
-SSL_CERT_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
-SSL_KEY_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
+# SSL Configuration (handled by Caddy reverse proxy)
+# Backend runs on localhost:3000, Caddy handles HTTPS on port 443
 EOF
 
 chown "$APP_USER:$APP_USER" "$APP_DIR/backend/.env"
@@ -223,24 +193,14 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
    npm run db:migrate
    ```
 
-4. **Set up SSL certificates (after DNS is configured):**
-   ```bash
-   # First, stop the backend if it's running
-   pm2 stop progeny-backend
-   
-   # Get SSL certificate from Let's Encrypt
-   sudo certbot certonly --standalone -d api.progeny.odin-matthias.de
-   
-   # Allow the progeny user to read the certificates
-   sudo chmod 755 /etc/letsencrypt/live
-   sudo chmod 755 /etc/letsencrypt/archive
-   sudo chmod 644 /etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
-   sudo chmod 644 /etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
-   
-   # Update .env with certificate paths (uncomment and set):
-   # SSL_CERT_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
-   # SSL_KEY_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
-   ```
+4. **Configure Caddy reverse proxy (after DNS is configured):**
+   # Configure Caddy to proxy to localhost:3000
+   # Edit /etc/caddy/Caddyfile with your domain configuration
+   # Example:
+   # api.progeny.odin-matthias.de {
+   #     reverse_proxy localhost:3000
+   # }
+   # Then restart Caddy: `sudo systemctl restart caddy`
 
 5. **Start with PM2:**
    ```bash
@@ -310,7 +270,7 @@ echo "2. Navigate to: cd $APP_DIR/backend"
 echo "3. Follow the instructions in $APP_DIR/backend/README-SETUP.md"
 echo ""
 echo -e "${YELLOW}Note: Make sure to configure your .env file with WorkOS credentials before starting the application.${NC}"
-echo -e "${YELLOW}Note: Fastify will listen on port 443. Make sure your Hetzner firewall allows traffic on this port.${NC}"
+echo -e "${YELLOW}Note: Backend will listen on localhost:3000. Caddy will handle HTTPS on port 443.${NC}"
 echo ""
 echo -e "${GREEN}📋 DNS & SSL Setup:${NC}"
 echo ""
@@ -318,6 +278,6 @@ echo "1. In Netlify DNS, add an A record:"
 echo "   - Name: api"
 echo "   - Value: <your-hetzner-server-ip>"
 echo ""
-echo "2. After DNS propagates (5-10 min), see: backend/scripts/DNS_SSL_SETUP.md"
-echo "   for detailed SSL certificate setup instructions."
+echo "2. After DNS propagates (5-10 min), configure Caddy reverse proxy"
+echo "   to point to localhost:3000. Caddy will handle SSL automatically."
 echo ""

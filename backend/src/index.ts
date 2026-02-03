@@ -28,6 +28,7 @@ const httpsOptions =
 
 const fastify = Fastify({
     https: httpsOptions,
+    trustProxy: true,
     logger:
         env.NODE_ENV === "development"
             ? {
