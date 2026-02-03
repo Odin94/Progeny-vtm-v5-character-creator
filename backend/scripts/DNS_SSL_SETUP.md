@@ -1,4 +1,4 @@
-# DNS & SSL Setup Guide for api.progeny.odin-matthias.de
+# DNS & SSL Setup Guide for api-progeny.odin-matthias.de
 
 This guide explains how to point your Netlify domain to your Hetzner server and set up SSL certificates.
 
@@ -15,9 +15,9 @@ This guide explains how to point your Netlify domain to your Hetzner server and 
 
 **Note**: DNS propagation can take 5-10 minutes. You can check if it's ready by running:
 ```bash
-dig api.progeny.odin-matthias.de
+dig api-progeny.odin-matthias.de
 # or
-nslookup api.progeny.odin-matthias.de
+nslookup api-progeny.odin-matthias.de
 ```
 
 ## Step 2: Get Your Server's IP Address
@@ -47,7 +47,7 @@ Once DNS has propagated (wait 5-10 minutes after adding the DNS record):
 
 3. **Get SSL certificate from Let's Encrypt**:
    ```bash
-   sudo certbot certonly --standalone -d api.progeny.odin-matthias.de
+   sudo certbot certonly --standalone -d api-progeny.odin-matthias.de
    ```
    
    - Follow the prompts
@@ -59,8 +59,8 @@ Once DNS has propagated (wait 5-10 minutes after adding the DNS record):
    ```bash
    sudo chmod 755 /etc/letsencrypt/live
    sudo chmod 755 /etc/letsencrypt/archive
-   sudo chmod 644 /etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
-   sudo chmod 644 /etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
+   sudo chmod 644 /etc/letsencrypt/live/api-progeny.odin-matthias.de/fullchain.pem
+   sudo chmod 644 /etc/letsencrypt/live/api-progeny.odin-matthias.de/privkey.pem
    ```
 
 5. **Update your `.env` file**:
@@ -72,8 +72,8 @@ Once DNS has propagated (wait 5-10 minutes after adding the DNS record):
    
    Uncomment and set these lines:
    ```env
-   SSL_CERT_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/fullchain.pem
-   SSL_KEY_PATH=/etc/letsencrypt/live/api.progeny.odin-matthias.de/privkey.pem
+   SSL_CERT_PATH=/etc/letsencrypt/live/api-progeny.odin-matthias.de/fullchain.pem
+   SSL_KEY_PATH=/etc/letsencrypt/live/api-progeny.odin-matthias.de/privkey.pem
    ```
 
 6. **Restart the backend**:
@@ -84,7 +84,7 @@ Once DNS has propagated (wait 5-10 minutes after adding the DNS record):
 
 7. **Test HTTPS**:
    ```bash
-   curl https://api.progeny.odin-matthias.de/health
+   curl https://api-progeny.odin-matthias.de/health
    ```
 
 ## Step 4: Set Up Auto-Renewal
@@ -128,7 +128,7 @@ Let's Encrypt certificates expire after 90 days. Set up automatic renewal:
 
 ### DNS not resolving
 - Wait 5-10 minutes for DNS propagation
-- Check DNS with: `dig api.progeny.odin-matthias.de`
+- Check DNS with: `dig api-progeny.odin-matthias.de`
 - Verify the A record in Netlify DNS settings
 
 ### Certificate generation fails

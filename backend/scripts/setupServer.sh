@@ -158,7 +158,7 @@ HOST=localhost
 NODE_ENV=production
 
 # Optional: Backend URL (for auth redirects)
-BACKEND_URL=https://api.progeny.odin-matthias.de
+BACKEND_URL=https://api-progeny.odin-matthias.de
 
 # Optional: Frontend URL (for logout redirects)
 FRONTEND_URL=https://progeny.odin-matthias.de
@@ -197,7 +197,7 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
    # Configure Caddy to proxy to localhost:3000
    # Edit /etc/caddy/Caddyfile with your domain configuration
    # Example:
-   # api.progeny.odin-matthias.de {
+   # api-progeny.odin-matthias.de {
    #     reverse_proxy localhost:3000
    # }
    # Then restart Caddy: `sudo systemctl restart caddy`

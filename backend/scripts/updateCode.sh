@@ -18,6 +18,6 @@ pm2 restart progeny-backend
 echo "Restarted the backend"
 echo "Waiting 5 seconds for backend to start..."
 sleep 5
-curl https://api.progeny.odin-matthias.de/health
+curl https://api-progeny.odin-matthias.de/health
 echo "pm2 logs to see logs"
 echo ""
