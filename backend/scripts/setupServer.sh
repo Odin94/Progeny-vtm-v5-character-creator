@@ -53,6 +53,42 @@ apt-get update
 apt-get install -y caddy
 echo -e "${GREEN}✓ Caddy installed${NC}"
 
+# Create Caddy log directory and set permissions
+CADDY_LOG_DIR="/var/log/caddy"
+mkdir -p "$CADDY_LOG_DIR"
+chown -R caddy:caddy "$CADDY_LOG_DIR"
+chmod 755 "$CADDY_LOG_DIR"
+echo -e "${GREEN}✓ Caddy log directory created at $CADDY_LOG_DIR${NC}"
+
+# Write Caddyfile with reverse proxy and per-site logging
+echo -e "${YELLOW}📝 Writing Caddyfile...${NC}"
+cat > /etc/caddy/Caddyfile << 'CADDYFILE_EOF'
+api-progeny.odin-matthias.de {
+    reverse_proxy 127.0.0.1:3000
+
+    log {
+        output file /var/log/caddy/progeny.log
+    }
+}
+
+api-cozycrowns.odin-matthias.de {
+    reverse_proxy 127.0.0.1:3001
+
+    log {
+        output file /var/log/caddy/cozycrowns.log
+    }
+}
+
+api-hiveborn.odin-matthias.de {
+    reverse_proxy 127.0.0.1:3002
+
+    log {
+        output file /var/log/caddy/hiveborn.log
+    }
+}
+CADDYFILE_EOF
+echo -e "${GREEN}✓ Caddyfile written to /etc/caddy/Caddyfile${NC}"
+
 # Install Node.js 24.x
 echo -e "${YELLOW}📦 Installing Node.js 24.x...${NC}"
 if ! command -v node &> /dev/null; then
@@ -193,14 +229,8 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
    npm run db:migrate
    ```
 
-4. **Configure Caddy reverse proxy (after DNS is configured):**
-   # Configure Caddy to proxy to localhost:3000
-   # Edit /etc/caddy/Caddyfile with your domain configuration
-   # Example:
-   # api-progeny.odin-matthias.de {
-   #     reverse_proxy localhost:3000
-   # }
-   # Then restart Caddy: `sudo systemctl restart caddy`
+4. **Enable Caddy (after DNS is configured):**
+   The Caddyfile is already written at /etc/caddy/Caddyfile with api-progeny, api-cozycrowns, and api-hiveborn. After DNS points to this server, run: `sudo systemctl reload caddy` (or `sudo systemctl restart caddy`)
 
 5. **Start with PM2:**
    ```bash
