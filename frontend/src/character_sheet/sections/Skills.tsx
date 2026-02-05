@@ -53,7 +53,7 @@ const SkillRow = ({
             updateSelectedDicePool: state.updateSelectedDicePool,
         }))
     )
-    
+
     const isClickable = options.diceModalOpened
     const isSelected = selectedDicePool.skill === skill
 
@@ -118,9 +118,9 @@ const SkillRow = ({
                     disabledReason
                         ? undefined
                         : (e) => {
-                              e.stopPropagation()
-                              addSpecialty(skill)
-                          }
+                            e.stopPropagation()
+                            addSpecialty(skill)
+                        }
                 }
             >
                 +
@@ -169,7 +169,6 @@ const SkillRow = ({
                             style={{
                                 ...textStyle,
                                 cursor: isClickable ? "pointer" : "default",
-                                userSelect: "none",
                             }}
                             onClick={isClickable ? handleSkillClick : undefined}
                         >
@@ -221,10 +220,10 @@ const SkillRow = ({
                                         onClick={
                                             isEditable
                                                 ? (e) => {
-                                                      e.stopPropagation()
-                                                      setEditingSpecialty({ skill, index })
-                                                      setEditingValue(specialty.name)
-                                                  }
+                                                    e.stopPropagation()
+                                                    setEditingSpecialty({ skill, index })
+                                                    setEditingValue(specialty.name)
+                                                }
                                                 : undefined
                                         }
                                     >
@@ -241,7 +240,6 @@ const SkillRow = ({
                         style={{
                             ...textStyle,
                             cursor: isClickable ? "pointer" : "default",
-                            userSelect: "none",
                             padding: isClickable ? "4px 8px" : undefined,
                             borderRadius: isClickable ? "4px" : undefined,
                             backgroundColor: isClickable && isSelected ? `${primaryColor}33` : undefined,
@@ -293,10 +291,10 @@ const SkillRow = ({
                                 onClick={
                                     isEditable
                                         ? (e) => {
-                                              e.stopPropagation()
-                                              setEditingSpecialty({ skill, index })
-                                              setEditingValue(specialty.name)
-                                          }
+                                            e.stopPropagation()
+                                            setEditingSpecialty({ skill, index })
+                                            setEditingValue(specialty.name)
+                                        }
                                         : undefined
                                 }
                             >
