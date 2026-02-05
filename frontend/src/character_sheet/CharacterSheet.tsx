@@ -1,4 +1,4 @@
-import { ActionIcon, BackgroundImage, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
+import { ActionIcon, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
@@ -67,37 +67,50 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     )
 
     return (
-        <BackgroundImage
-            src={backgroundImage}
-            style={{
-                minHeight: "100vh",
-                width: "100%",
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                padding: "2rem 0",
-                position: "relative",
-            }}
-        >
+        <>
             <Box
                 style={{
-                    position: "absolute",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: `url(${backgroundImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundAttachment: "fixed",
+                    zIndex: -1,
+                }}
+            />
+            <Box
+                style={{
+                    position: "fixed",
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
                     backgroundColor: "rgba(0, 0, 0, 0.4)",
-                    zIndex: 0,
+                    zIndex: -1,
                 }}
             />
-            <Container
-                size="xl"
+            <Box
                 style={{
+                    minHeight: "100vh",
                     width: "100%",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    padding: "2rem 0",
                     position: "relative",
-                    zIndex: 1,
                 }}
             >
+                <Container
+                    size="xl"
+                    style={{
+                        width: "100%",
+                        position: "relative",
+                    }}
+                >
                 <Box
                     style={{
                         backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -188,7 +201,8 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                         </Stack>
                     </Paper>
                 </Box>
-            </Container>
+                </Container>
+            </Box>
             <CharacterSheetMenu options={sheetOptions} />
             <ChatWindow options={sheetOptions} />
             <DiceRollModal
@@ -201,7 +215,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 character={character}
                 setCharacter={setCharacter}
             />
-        </BackgroundImage>
+        </>
     )
 }
 
