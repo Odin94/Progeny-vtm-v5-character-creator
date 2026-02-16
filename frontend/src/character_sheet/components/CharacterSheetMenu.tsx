@@ -22,7 +22,7 @@ type CharacterSheetMenuProps = {
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const { character, setCharacter, primaryColor } = options
-    const { user, loading: authLoading, isAuthenticated, signIn, signOut } = useAuth()
+    const { loading: authLoading, isAuthenticated, signIn } = useAuth()
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
     const [disclaimerOpened, { open: openDisclaimer, close: closeDisclaimer }] = useDisclosure(false)

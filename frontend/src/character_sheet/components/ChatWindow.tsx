@@ -34,7 +34,8 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const [messageInput, setMessageInput] = useState("")
     const [joinError, setJoinError] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
-    const { user, isAuthenticated } = useAuth()
+    const { isAuthenticated, signIn } = useAuth()
+
 
     const {
         connectionStatus,
@@ -388,9 +389,9 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                     <Button variant="subtle" onClick={handleBack} color="yellow">
                                         Cancel
                                     </Button>
-                                    <Button 
-                                        color={primaryColor} 
-                                        onClick={handleConnect} 
+                                    <Button
+                                        color={primaryColor}
+                                        onClick={handleConnect}
                                         disabled={!sessionInput.trim() || connectionStatus === "connecting"}
                                         loading={connectionStatus === "connecting"}
                                     >
@@ -438,7 +439,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                 ) : connectionStatus === "disconnected" || (view === "disconnected" && !sessionId) ? (
                     <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                         <Text ta="center" c="dimmed" size="sm" style={{ marginTop: "auto", marginBottom: "auto" }}>
-                            {isAuthenticated ? "Join or create a session to start chatting" : "Sign in to use chat"}
+                            {isAuthenticated ? "Join or create a session to start chatting" : <Text style={{ cursor: "pointer" }} onClick={() => signIn()}>Sign in to use chat</Text>}
                         </Text>
                         {isAuthenticated ? (
                             <Stack gap="xs" style={{ marginTop: "auto" }}>

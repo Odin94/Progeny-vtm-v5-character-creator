@@ -1,6 +1,8 @@
 import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
 import DamagePips from "~/character_sheet/components/DamagePips"
+import HumanityStainsPips from "~/character_sheet/components/HumanityStainsPips"
 import Pips from "~/character_sheet/components/Pips"
+import RemorseTestButton from "~/character_sheet/components/RemorseTestButton"
 import RouseCheckButton from "~/character_sheet/components/RouseCheckButton"
 import SquarePips from "~/character_sheet/components/SquarePips"
 import { SheetOptions } from "../CharacterSheet"
@@ -13,8 +15,9 @@ type BottomDataProps = {
 const BottomData = ({ options }: BottomDataProps) => {
     const { character, setCharacter, primaryColor } = options
     const theme = useMantineTheme()
-    const { superficialDamage, aggravatedDamage, superficialWillpowerDamage, aggravatedWillpowerDamage, hunger } = character.ephemeral
+    const { superficialDamage, aggravatedDamage, superficialWillpowerDamage, aggravatedWillpowerDamage, hunger, humanityStains } = character.ephemeral
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
+    const emptyHumanityPips = 10 - character.humanity
 
     return (
         <Grid justify="space-between">
@@ -76,10 +79,26 @@ const BottomData = ({ options }: BottomDataProps) => {
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
                 <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
-                    <Text fw={700} mb="xs">
-                        Humanity
-                    </Text>
-                    <SquarePips value={character.humanity} options={options} field="humanity" maxLevel={10} groupSize={5} />
+                    <Group gap="xs" mb="xs" justify="space-between">
+                        <Text fw={700}>Humanity</Text>
+                        <RemorseTestButton
+                            character={character}
+                            setCharacter={setCharacter}
+                            primaryColor={primaryColor}
+                            size="sm"
+                            iconSize={16}
+                        />
+                    </Group>
+                    <Stack gap="xs">
+                        <div style={{ maxWidth: "226px" }}>
+                            <div>
+                                <SquarePips value={character.humanity} options={options} field="humanity" maxLevel={10} groupSize={5} />
+                            </div>
+                            {emptyHumanityPips > 0 ? (
+                                <HumanityStainsPips value={humanityStains} maxLevel={emptyHumanityPips} filledHumanity={character.humanity} options={options} />
+                            ) : null}
+                        </div>
+                    </Stack>
                 </Paper>
             </Grid.Col>
 
