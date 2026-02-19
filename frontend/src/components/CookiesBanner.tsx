@@ -3,6 +3,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import posthog from 'posthog-js';
 import { globals } from '~/globals';
+import { IconCookie } from '@tabler/icons-react';
 
 const LEARN_MORE_HREF = "https://odin-matthias.de/datenschutzerklaerung"
 
@@ -60,9 +61,12 @@ export const CookiesBanner = () => {
         >
             <Paper withBorder p="lg" radius="md" shadow="md">
                 <Group justify="space-between" mb="xs">
-                    <Text fz="md" fw={500}>
-                        Allow cookies
-                    </Text>
+                    <Group gap="xs" align="center">
+                        <Text fz="md" fw={500}>
+                            Sink your fangs into some cookies!
+                        </Text>
+                        <IconCookie size={25} />
+                    </Group>
                     <CloseButton mr={-9} mt={-9} aria-label="Close cookie banner" onClick={handleClose} />
                 </Group>
                 <Text c="dimmed" fz="xs">
