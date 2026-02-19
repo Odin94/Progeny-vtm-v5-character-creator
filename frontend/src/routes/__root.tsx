@@ -5,6 +5,7 @@ import { Notifications } from "@mantine/notifications"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
+import { CookiesBanner } from "~/components/CookiesBanner"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -25,6 +26,7 @@ export const Route = createRootRoute({
                     api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
                     defaults: "2025-05-24",
                     capture_exceptions: true,
+                    cookieless_mode: "on_reject",
                     before_send: (event) => {
                         if (event && event.event === "$exception") {
                             const exceptionType = event.properties?.$exception_type
@@ -72,6 +74,7 @@ export const Route = createRootRoute({
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
                     <BrokenSaveModal />
+                    <CookiesBanner />
                     <Outlet />
                 </MantineProvider>
             </PostHogProvider>

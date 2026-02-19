@@ -8,6 +8,7 @@ type RequestOptions = {
 }
 
 // TODOdin: We're now getting token from header because of domain conflict issues
+// TODOdin: Switch to JWT-in-header auth (like in cozycrowns) and ditch all CSRF stuff
 // verify that what we're doing now is legit and good practice
 // const getCsrfToken = (): string | null => {
 //     // Read CSRF token from cookie
@@ -98,7 +99,7 @@ export const api = {
         apiRequest<{ id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null }>("/auth/me"),
     handleAuthCallback: (code: string, state?: string) =>
         apiRequest<{ success: true; user: { id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null } }>(
-            `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`
+            `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`,
         ),
     logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
     updateUserProfile: (data: { nickname?: string | null }) =>

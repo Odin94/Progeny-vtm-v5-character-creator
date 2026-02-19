@@ -89,6 +89,8 @@ api-hiveborn.odin-matthias.de {
 CADDYFILE_EOF
 echo -e "${GREEN}✓ Caddyfile written to /etc/caddy/Caddyfile${NC}"
 
+# Note that you have to run `sudo systemctl reload caddy` after changing the caddyfile
+
 # Install Node.js 24.x
 echo -e "${YELLOW}📦 Installing Node.js 24.x...${NC}"
 if ! command -v node &> /dev/null; then

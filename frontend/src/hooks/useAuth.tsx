@@ -4,14 +4,6 @@ import { useEffect } from "react"
 import { api, API_URL } from "../utils/api"
 import posthog from "posthog-js"
 
-type User = {
-    id: string
-    email: string
-    firstName?: string
-    lastName?: string
-    nickname?: string | null
-}
-
 export const useAuth = () => {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
