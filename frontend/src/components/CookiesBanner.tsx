@@ -11,15 +11,12 @@ export const CookiesBanner = () => {
     const [showBanner, setShowBanner] = useState(false);
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`);
 
+
+    const consentStatus = posthog.get_explicit_consent_status();
+
     useEffect(() => {
-        try {
-            const consentStatus = posthog.get_explicit_consent_status();
-            setShowBanner(consentStatus === "pending");
-        } catch (error) {
-            console.warn("Failed to check PostHog consent status:", error);
-            setShowBanner(false);
-        }
-    }, []);
+        setShowBanner(consentStatus === "pending");
+    }, [consentStatus]);
 
     const handleAccept = () => {
         try {
