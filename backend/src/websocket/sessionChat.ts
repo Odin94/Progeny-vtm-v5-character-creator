@@ -8,6 +8,7 @@ import { handleChatMessage } from "./chatMessageHandlers/handleChatMessage.js"
 import { handleDiceRoll } from "./chatMessageHandlers/handleDiceRoll.js"
 import { handleJoinSession } from "./chatMessageHandlers/handleJoinSession.js"
 import { handleLeaveSession } from "./chatMessageHandlers/handleLeaveSession.js"
+import { handleRemorseCheck } from "./chatMessageHandlers/handleRemorseCheck.js"
 import { handleRouseCheck } from "./chatMessageHandlers/handleRouseCheck.js"
 import {
   type Session,
@@ -103,6 +104,10 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
 
             case "rouse_check":
               currentSession = await handleRouseCheck(data, socket, fastify, userId, currentSession)
+              break
+
+            case "remorse_check":
+              currentSession = await handleRemorseCheck(data, socket, fastify, userId, currentSession)
               break
 
             default:

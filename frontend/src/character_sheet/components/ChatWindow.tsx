@@ -1,6 +1,6 @@
 import { ActionIcon, Badge, Box, Button, Group, Indicator, Paper, ScrollArea, Stack, Text, TextInput, Tooltip, useMantineTheme } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconAlertCircle, IconChevronDown, IconCopy, IconDice, IconDroplet, IconInfoCircle, IconMessageCircle, IconUsers, IconX, IconArrowLeft } from "@tabler/icons-react"
+import { IconAlertCircle, IconChevronDown, IconCopy, IconDice, IconDroplet, IconHeartHandshake, IconInfoCircle, IconMessageCircle, IconUsers, IconX, IconArrowLeft } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
@@ -614,6 +614,37 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
                                                     Hunger: {msg.newHunger}/5
+                                                </Text>
+                                            </Box>
+                                        )
+                                    } else if (msg.type === "remorse_check") {
+                                        return (
+                                            <Box
+                                                key={idx}
+                                                p="xs"
+                                                style={{
+                                                    backgroundColor: "rgba(192, 63, 63, 0.1)",
+                                                    borderRadius: "4px",
+                                                    border: `1px solid ${colorValue}`,
+                                                }}
+                                            >
+                                                <Group gap="xs" mb={4}>
+                                                    <IconHeartHandshake size={14} />
+                                                    <Text size="sm" fw={600}>
+                                                        {formatMessageName(msg.userName, msg.characterName)}
+                                                    </Text>
+                                                    <Text size="xs" c="dimmed">
+                                                        {formatTimestamp(msg.timestamp)}
+                                                    </Text>
+                                                </Group>
+                                                <Text size="sm">
+                                                    Remorse Test: [{msg.rolls.join(", ")}] – {msg.successes} {msg.successes === 1 ? "success" : "successes"}
+                                                    <Text span fw={600} c={msg.passed ? "green" : "red"}>
+                                                        {msg.passed ? " ✓ Passed" : " ✗ Failed"}
+                                                    </Text>
+                                                </Text>
+                                                <Text size="xs" c="dimmed" mt={4}>
+                                                    {msg.passed ? "Stains cleared." : `Humanity decreased to ${msg.newHumanity}.`}
                                                 </Text>
                                             </Box>
                                         )

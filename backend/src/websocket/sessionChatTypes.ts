@@ -65,7 +65,16 @@ export type RouseCheckMessage = {
   characterName?: string
 }
 
-export type ClientMessage = JoinSessionMessage | LeaveSessionMessage | ChatMessage | DiceRollMessage | RouseCheckMessage
+export type RemorseCheckMessage = {
+  type: "remorse_check"
+  rolls: number[]
+  successes: number
+  passed: boolean
+  newHumanity: number
+  characterName?: string
+}
+
+export type ClientMessage = JoinSessionMessage | LeaveSessionMessage | ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage
 
 export type SessionJoinedMessage = {
   type: "session_joined"
@@ -128,6 +137,17 @@ export type RouseCheckReceived = {
   timestamp: number
 }
 
+export type RemorseCheckReceived = {
+  type: "remorse_check"
+  userName: string
+  characterName?: string
+  rolls: number[]
+  successes: number
+  passed: boolean
+  newHumanity: number
+  timestamp: number
+}
+
 export type ServerMessage =
   | SessionJoinedMessage
   | UserJoinedMessage
@@ -135,6 +155,7 @@ export type ServerMessage =
   | ChatMessageReceived
   | DiceRollReceived
   | RouseCheckReceived
+  | RemorseCheckReceived
   | { type: "error"; message: string }
 
 export type RateLimitEntry = {
@@ -214,10 +235,20 @@ export const rouseCheckMessageSchema = z.object({
   characterName: z.string().max(200, "Character name exceeds maximum length of 200 characters").optional(),
 })
 
+export const remorseCheckMessageSchema = z.object({
+  type: z.literal("remorse_check"),
+  rolls: z.array(z.number().int().min(1).max(10)).max(10),
+  successes: z.number().int().min(0),
+  passed: z.boolean(),
+  newHumanity: z.number().int().min(0).max(10),
+  characterName: z.string().max(200, "Character name exceeds maximum length of 200 characters").optional(),
+})
+
 export const clientMessageSchema = z.discriminatedUnion("type", [
   joinSessionMessageSchema,
   leaveSessionMessageSchema,
   chatMessageSchema,
   diceRollMessageSchema,
   rouseCheckMessageSchema,
+  remorseCheckMessageSchema,
 ])

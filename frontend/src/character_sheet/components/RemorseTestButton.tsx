@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import { useState } from "react"
 import posthog from "posthog-js"
 import { Character } from "~/data/Character"
+import { useSessionChat } from "~/hooks/useSessionChat"
+import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 import { vtmRed } from "../utils/style"
 
 type RemorseTestButtonProps = {
@@ -28,6 +30,7 @@ const RemorseTestButton = ({
 }: RemorseTestButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
+    const { sendRemorseCheck, sessionId, connectionStatus } = useSessionChat()
 
     const handleRemorseTest = () => {
         if (!character || !setCharacter) return
@@ -81,6 +84,12 @@ const RemorseTestButton = ({
             message,
             color: passed ? primaryColor : "red",
         })
+
+        const autoShareDiceRolls = getAutoShareDiceRolls()
+        if (autoShareDiceRolls && connectionStatus === "connected" && sessionId) {
+            const characterName = character?.name ?? undefined
+            sendRemorseCheck(rolls, successes, passed, newHumanity, characterName)
+        }
 
         try {
             posthog.capture("remorse-test", {

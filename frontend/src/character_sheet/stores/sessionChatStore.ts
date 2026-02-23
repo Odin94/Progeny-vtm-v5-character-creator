@@ -53,6 +53,17 @@ type RouseCheckMessage = {
   timestamp: number
 }
 
+type RemorseCheckMessage = {
+  type: "remorse_check"
+  userName: string
+  characterName?: string
+  rolls: number[]
+  successes: number
+  passed: boolean
+  newHumanity: number
+  timestamp: number
+}
+
 type SessionJoinedMessage = {
   type: "session_joined"
   sessionId: string
@@ -78,7 +89,7 @@ type ErrorMessage = {
   timestamp: number
 }
 
-type ServerMessage = SessionJoinedMessage | UserJoinedMessage | UserLeftMessage | ChatMessage | DiceRollMessage | RouseCheckMessage | ErrorMessage
+type ServerMessage = SessionJoinedMessage | UserJoinedMessage | UserLeftMessage | ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage | ErrorMessage
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error"
 
@@ -104,7 +115,7 @@ type SessionChatStore = {
   sessionId: string | null
   sessionType: "temporary" | "coterie" | null
   participants: Participant[]
-  messages: Array<ChatMessage | DiceRollMessage | RouseCheckMessage | ErrorMessage>
+  messages: Array<ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage | ErrorMessage>
   ws: WebSocket | null
   reconnectTimeout: NodeJS.Timeout | null
   reconnectAttempts: number
@@ -129,6 +140,7 @@ type SessionChatStore = {
     }
   }, characterName?: string) => void
   sendRouseCheck: (roll: number, success: boolean, newHunger: number, characterName?: string) => void
+  sendRemorseCheck: (rolls: number[], successes: number, passed: boolean, newHumanity: number, characterName?: string) => void
 }
 
 export const useSessionChatStore = create<SessionChatStore>((set, get) => {
@@ -302,6 +314,10 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
           }
 
           case "rouse_check":
+            set((state) => ({ messages: [...state.messages, data] }))
+            break
+
+          case "remorse_check":
             set((state) => ({ messages: [...state.messages, data] }))
             break
 
@@ -489,6 +505,22 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     })
   }
 
+  const sendRemorseCheck = (rolls: number[], successes: number, passed: boolean, newHumanity: number, characterName?: string) => {
+    const state = get()
+    if (!state.sessionId) {
+      console.warn("Cannot send remorse check: not in a session")
+      return
+    }
+    sendMessage({
+      type: "remorse_check",
+      rolls,
+      successes,
+      passed,
+      newHumanity,
+      characterName,
+    })
+  }
+
   return {
     connectionStatus: "disconnected",
     sessionId: null,
@@ -508,5 +540,6 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
     sendChatMessage,
     sendDiceRoll,
     sendRouseCheck,
+    sendRemorseCheck,
   }
 })

@@ -15,6 +15,7 @@ export const useSessionChat = () => {
     sendChatMessage,
     sendDiceRoll,
     sendRouseCheck,
+    sendRemorseCheck,
   } = useSessionChatStore(
     useShallow((state) => ({
       connectionStatus: state.connectionStatus,
@@ -29,6 +30,7 @@ export const useSessionChat = () => {
       sendChatMessage: state.sendChatMessage,
       sendDiceRoll: state.sendDiceRoll,
       sendRouseCheck: state.sendRouseCheck,
+      sendRemorseCheck: state.sendRemorseCheck,
     }))
   )
 
@@ -45,5 +47,6 @@ export const useSessionChat = () => {
     sendChatMessage,
     sendDiceRoll,
     sendRouseCheck,
+    sendRemorseCheck,
   }
 }
