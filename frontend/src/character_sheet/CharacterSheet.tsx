@@ -5,6 +5,8 @@ import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
 import posthog from "posthog-js"
 import { getPrimaryColor } from "./utils/style"
+import { type UserPreferences, getBackgroundSrc } from "./utils/preferences"
+import { useUserPreferences } from "~/hooks/useUserPreferences"
 import Attributes from "./sections/Attributes"
 import BottomData from "./sections/BottomData"
 import Disciplines from "./sections/Disciplines"
@@ -13,7 +15,7 @@ import Skills from "./sections/Skills"
 import TheBlood from "./sections/TheBlood"
 import TopData from "./sections/TopData"
 import Touchstones from "./sections/Touchstones"
-import backgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
+import defaultBackgroundImage from "./resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
 import DiceRollModal from "./components/diceRollModal/DiceRollModal"
 import ChatWindow from "./components/ChatWindow"
@@ -27,6 +29,8 @@ export type SheetOptions = {
     character: Character
     setCharacter: (character: Character) => void
     diceModalOpened: boolean
+    preferences: UserPreferences
+    onUpdatePreferences: (partial: Partial<UserPreferences>) => void
 }
 
 type CharacterSheetProps = {
@@ -53,7 +57,8 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     })
     const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
     const resetSelectedDicePool = useCharacterSheetStore((state) => state.resetSelectedDicePool)
-    const primaryColor = getPrimaryColor(character.clan)
+    const { preferences, updatePreferences } = useUserPreferences()
+    const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
@@ -62,8 +67,10 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             character,
             setCharacter,
             diceModalOpened,
+            preferences,
+            onUpdatePreferences: updatePreferences,
         }),
-        [mode, primaryColor, character, setCharacter, diceModalOpened]
+        [mode, primaryColor, character, setCharacter, diceModalOpened, preferences, updatePreferences]
     )
 
     return (
@@ -75,7 +82,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundImage: `url(${backgroundImage})`,
+                    backgroundImage: `url(${getBackgroundSrc(preferences.backgroundImage) ?? defaultBackgroundImage})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundAttachment: "fixed",

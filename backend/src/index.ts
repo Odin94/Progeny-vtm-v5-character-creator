@@ -8,6 +8,7 @@ import { characterRoutes } from "./routes/characters.js"
 import { coterieRoutes } from "./routes/coteries.js"
 import { shareRoutes } from "./routes/shares.js"
 import { authRoutes } from "./routes/auth.js"
+import { preferencesRoutes } from "./routes/preferences.js"
 import { characterSyncWebSocket } from "./websocket/characterSync.js"
 import { sessionChatWebSocket } from "./websocket/sessionChat.js"
 import { env } from "./config/env.js"
@@ -133,6 +134,7 @@ fastify.addHook("onError", async (request, reply, error) => {
 
 // Register routes
 await fastify.register(authRoutes)
+await fastify.register(preferencesRoutes)
 await fastify.register(characterRoutes)
 await fastify.register(coterieRoutes)
 await fastify.register(shareRoutes)

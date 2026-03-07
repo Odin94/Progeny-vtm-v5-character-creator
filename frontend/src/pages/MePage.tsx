@@ -1815,6 +1815,8 @@ const MePage = () => {
                     character,
                     setCharacter,
                     diceModalOpened: false,
+                    preferences: { colorTheme: null, backgroundImage: null },
+                    onUpdatePreferences: () => undefined,
                 }}
             />
         </>

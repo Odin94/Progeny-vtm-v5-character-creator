@@ -92,6 +92,11 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     return response.json()
 }
 
+type UserPreferences = {
+    colorTheme: string | null
+    backgroundImage: string | null
+}
+
 // TODOdin: Put proper types in APIs
 export const api = {
     // Auth
@@ -107,6 +112,9 @@ export const api = {
             method: "PUT",
             body: data,
         }),
+    getPreferences: () => apiRequest<UserPreferences>("/auth/preferences"),
+    updatePreferences: (data: Partial<UserPreferences>) =>
+        apiRequest<UserPreferences>("/auth/preferences", { method: "PUT", body: data }),
 
     // Characters
     // TODOdin: type these APIs and validate in fetch

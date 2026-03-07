@@ -3,10 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text, Divider, Group } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconMenu2, IconAlertCircle, IconExternalLink, IconArrowRight } from "@tabler/icons-react"
+import { IconMenu2, IconAlertCircle, IconExternalLink, IconArrowRight, IconPalette, IconChevronLeft } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { Buffer } from "buffer"
-import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { useRef, useState } from "react"
 import { z } from "zod"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
@@ -15,13 +16,22 @@ import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
+import PreferencesContent from "./PreferencesModal"
+
+type MenuView = "menu" | "preferences"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions
 }
 
+const slideVariants = {
+    enter: (dir: number) => ({ x: dir * 40, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir * -40, opacity: 0 }),
+}
+
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
-    const { character, setCharacter, primaryColor } = options
+    const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
     const { loading: authLoading, isAuthenticated, signIn } = useAuth()
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
@@ -30,17 +40,32 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
 
-    const navigate = useNavigate()
-    const handleGoBack = () => {
-        navigate({ to: "/" })
+    const [view, setView] = useState<MenuView>("menu")
+    const direction = useRef<1 | -1>(1)
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const [wrapperMinHeight, setWrapperMinHeight] = useState<number | undefined>(undefined)
+
+    const navigateTo = (nextView: MenuView) => {
+        direction.current = nextView === "preferences" ? 1 : -1
+        if (nextView === "preferences" && wrapperRef.current) {
+            setWrapperMinHeight(wrapperRef.current.offsetHeight)
+        }
+        setView(nextView)
     }
+
+    const handleMenuClose = () => {
+        closeMenu()
+        setView("menu")
+    }
+
+    const navigate = useNavigate()
 
     const handleDownloadPDF = () => {
         downloadCharacterSheet(character).catch((e) => {
             console.error(e)
             setDownloadError(e as Error)
         })
-        closeMenu()
+        handleMenuClose()
     }
 
     const handleDownloadJSON = () => {
@@ -49,7 +74,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             console.error(e)
             setDownloadError(e as Error)
         })
-        closeMenu()
+        handleMenuClose()
     }
 
     const handleExportToFoundry = () => {
@@ -83,7 +108,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             }
 
             closeExportModal()
-            closeMenu()
+            handleMenuClose()
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
@@ -105,7 +130,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             }, 100)
 
             closeExportModal()
-            closeMenu()
+            handleMenuClose()
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
@@ -130,7 +155,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             const loadedCharacter = await loadCharacterFromJson(json)
             setCharacter(loadedCharacter)
             closeLoadModal()
-            closeMenu()
+            handleMenuClose()
             notifications.show({
                 title: "Character loaded",
                 message: `Successfully loaded ${loadedCharacter.name}`,
@@ -157,6 +182,16 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         }
     }
 
+    const menuTitle = view === "menu" ? "Menu" : <Button
+        leftSection={<IconChevronLeft size={16} />}
+        size="sm"
+        color="gray"
+        variant="subtle"
+        onClick={() => navigateTo("menu")}
+        style={{ alignSelf: "flex-start" }}
+    >
+    </Button>
+
     return (
         <>
             <ActionIcon
@@ -175,129 +210,168 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 <IconMenu2 size={24} />
             </ActionIcon>
 
-            <Modal opened={menuOpened} onClose={closeMenu} title="Menu" centered>
-                <Stack gap="md">
-                    <Button
-                        leftSection={<FontAwesomeIcon icon={faFilePdf} />}
-                        size="lg"
-                        color="grape"
-                        onClick={handleDownloadPDF}
-                        fullWidth
-                    >
-                        Download as PDF
-                    </Button>
-
-                    <Group gap="md" grow>
-                        <Button
-                            leftSection={<FontAwesomeIcon icon={faFloppyDisk} />}
-                            size="lg"
-                            color="yellow"
-                            variant="light"
-                            onClick={handleDownloadJSON}
+            <Modal
+                opened={menuOpened}
+                onClose={handleMenuClose}
+                title={menuTitle}
+                centered
+            >
+                <div
+                    ref={wrapperRef}
+                    style={{ overflow: "hidden", position: "relative", minHeight: wrapperMinHeight }}
+                >
+                    <AnimatePresence mode="wait" custom={direction.current}>
+                        <motion.div
+                            key={view}
+                            custom={direction.current}
+                            variants={slideVariants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{ type: "tween", duration: 0.18, ease: "easeInOut" }}
                         >
-                            Save JSON
-                        </Button>
-                        <FileButton onChange={handleLoadFromFile} accept="application/json">
-                            {(props) => (
-                                <Button
-                                    leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
-                                    size="lg"
-                                    color="green"
-                                    variant="light"
-                                    {...props}
-                                >
-                                    Load JSON
-                                </Button>
+                            {view === "menu" ? (
+                                <Stack gap="md">
+                                    <Button
+                                        leftSection={<FontAwesomeIcon icon={faFilePdf} />}
+                                        size="lg"
+                                        color="grape"
+                                        onClick={handleDownloadPDF}
+                                        fullWidth
+                                    >
+                                        Download as PDF
+                                    </Button>
+
+                                    <Group gap="md" grow>
+                                        <Button
+                                            leftSection={<FontAwesomeIcon icon={faFloppyDisk} />}
+                                            size="lg"
+                                            color="yellow"
+                                            variant="light"
+                                            onClick={handleDownloadJSON}
+                                        >
+                                            Save JSON
+                                        </Button>
+                                        <FileButton onChange={handleLoadFromFile} accept="application/json">
+                                            {(props) => (
+                                                <Button
+                                                    leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
+                                                    size="lg"
+                                                    color="green"
+                                                    variant="light"
+                                                    {...props}
+                                                >
+                                                    Load JSON
+                                                </Button>
+                                            )}
+                                        </FileButton>
+                                    </Group>
+
+                                    <Button
+                                        leftSection={<FontAwesomeIcon icon={faFileExport} />}
+                                        size="lg"
+                                        color="blue"
+                                        variant="light"
+                                        onClick={() => openExportModal()}
+                                        fullWidth
+                                    >
+                                        Export to...
+                                    </Button>
+
+                                    <Group gap="md" grow>
+                                        <Button
+                                            component={Link}
+                                            to="/"
+                                            size="lg"
+                                            color="grape"
+                                            variant="outline"
+                                            leftSection={<IconArrowRight size={18} />}
+                                        >
+                                            Generator
+                                        </Button>
+                                        {authLoading ? (
+                                            <Button size="lg" color="gray" variant="outline" loading leftSection={<IconArrowRight size={18} />}>
+                                                Loading...
+                                            </Button>
+                                        ) : !isAuthenticated ? (
+                                            <Button
+                                                size="lg"
+                                                color="grape"
+                                                variant="outline"
+                                                leftSection={<IconArrowRight size={18} />}
+                                                onClick={() => {
+                                                    signIn()
+                                                    handleMenuClose()
+                                                }}
+                                            >
+                                                Sign In
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                component={Link}
+                                                to="/me"
+                                                size="lg"
+                                                color="grape"
+                                                variant="outline"
+                                                leftSection={<IconArrowRight size={18} />}
+                                            >
+                                                Account
+                                            </Button>
+                                        )}
+                                    </Group>
+
+                                    <Button
+                                        leftSection={<IconPalette size={18} />}
+                                        size="lg"
+                                        color={primaryColor}
+                                        variant="light"
+                                        onClick={() => navigateTo("preferences")}
+                                        fullWidth
+                                    >
+                                        Preferences
+                                    </Button>
+
+                                    <Divider />
+
+                                    <Button
+                                        component="a"
+                                        href="https://ko-fi.com/odin_dev"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        leftSection={<IconExternalLink size={18} />}
+                                        size="lg"
+                                        color="gray"
+                                        variant="light"
+                                        fullWidth
+                                    >
+                                        Support Odin on Ko-fi
+                                    </Button>
+
+                                    <Divider />
+
+                                    <Button
+                                        leftSection={<IconAlertCircle size={18} />}
+                                        size="sm"
+                                        color="gray"
+                                        variant="subtle"
+                                        onClick={() => openDisclaimer()}
+                                        fullWidth
+                                    >
+                                        Disclaimer
+                                    </Button>
+                                </Stack>
+                            ) : (
+                                <Stack gap="md">
+                                    <PreferencesContent
+                                        preferences={preferences}
+                                        onUpdate={onUpdatePreferences}
+                                        primaryColor={primaryColor}
+                                    />
+                                </Stack>
                             )}
-                        </FileButton>
-                    </Group>
-
-                    <Button
-                        leftSection={<FontAwesomeIcon icon={faFileExport} />}
-                        size="lg"
-                        color="blue"
-                        variant="light"
-                        onClick={() => {
-                            openExportModal()
-                        }}
-                        fullWidth
-                    >
-                        Export to...
-                    </Button>
-
-                    <Group gap="md" grow>
-                        <Button
-                            component={Link}
-                            to="/"
-                            size="lg"
-                            color="grape"
-                            variant="outline"
-                            leftSection={<IconArrowRight size={18} />}
-                        >
-                            Generator
-                        </Button>
-                        {authLoading ? (
-                            <Button size="lg" color="gray" variant="outline" loading leftSection={<IconArrowRight size={18} />}>
-                                Loading...
-                            </Button>
-                        ) : !isAuthenticated ? (
-                            <Button
-                                size="lg"
-                                color="grape"
-                                variant="outline"
-                                leftSection={<IconArrowRight size={18} />}
-                                onClick={() => {
-                                    signIn()
-                                    closeMenu()
-                                }}
-                            >
-                                Sign In
-                            </Button>
-                        ) : (
-                            <Button
-                                component={Link}
-                                to="/me"
-                                size="lg"
-                                color="grape"
-                                variant="outline"
-                                leftSection={<IconArrowRight size={18} />}
-                            >
-                                Account
-                            </Button>
-                        )}
-                    </Group>
-
-                    <Divider />
-
-                    <Button
-                        component="a"
-                        href="https://ko-fi.com/odin_dev"
-                        target="_blank"
-                        rel="noreferrer"
-                        leftSection={<IconExternalLink size={18} />}
-                        size="lg"
-                        color="gray"
-                        variant="light"
-                        fullWidth
-                    >
-                        Support Odin on Ko-fi
-                    </Button>
-
-                    <Divider />
-
-                    <Button
-                        leftSection={<IconAlertCircle size={18} />}
-                        size="sm"
-                        color="gray"
-                        variant="subtle"
-                        onClick={() => {
-                            openDisclaimer()
-                        }}
-                        fullWidth
-                    >
-                        Disclaimer
-                    </Button>
-                </Stack>
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
             </Modal>
 
             <Modal opened={exportModalOpened} onClose={closeExportModal} title="Export to other platforms" centered>

@@ -29,6 +29,13 @@
       "when": 1767706564699,
       "tag": "0003_late_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1772899269274,
+      "tag": "0004_medical_skullbuster",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { api, API_URL } from "../utils/api"
+import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
 
 export const useAuth = () => {
@@ -92,6 +93,8 @@ export const useAuth = () => {
             queryClient.setQueryData(["auth", "me"], data.user)
             // Invalidate to ensure fresh data
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+            // Fetch preferences from backend now that user is authenticated
+            queryClient.invalidateQueries({ queryKey: PREFERENCES_QUERY_KEY })
 
             // Identify user in PostHog
             try {
