@@ -10,6 +10,7 @@ export const useCharacterLocalStorage = () => {
     const [character, setCharacterInternal] = useLocalStorage<Character>({
         key: "character",
         defaultValue: getEmptyCharacter(),
+        getInitialValueInEffect: false,
         deserialize: (value) => {
             if (!value) {
                 return getEmptyCharacter()

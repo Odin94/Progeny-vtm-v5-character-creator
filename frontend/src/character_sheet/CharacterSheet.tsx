@@ -54,6 +54,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     const [mode, setMode] = useLocalStorage<CharacterSheetMode>({
         key: "characterSheetMode",
         defaultValue: isEmptyCharacter ? "free" : "play",
+        getInitialValueInEffect: false,
     })
     const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
     const resetSelectedDicePool = useCharacterSheetStore((state) => state.resetSelectedDicePool)
