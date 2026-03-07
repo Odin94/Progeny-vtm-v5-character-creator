@@ -1,4 +1,10 @@
 import defaultBg from "../resources/backgrounds/pexels-skyriusmarketing-2129796.jpg"
+import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
+import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
+import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
+import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg"
+import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
+import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 
 export type UserPreferences = {
     colorTheme: string | null
@@ -35,6 +41,12 @@ export type BackgroundImageOption = {
 
 export const BACKGROUND_IMAGES: BackgroundImageOption[] = [
     { id: "default", label: "Default", src: defaultBg },
+    { id: "bg_club", label: "Club", src: club },
+    { id: "bg_broken_door", label: "Broken Door", src: brokenDoor },
+    { id: "bg_city", label: "City", src: city },
+    { id: "bg_blood_guy", label: "Blood", src: bloodGuy },
+    { id: "bg_bat_woman", label: "Bat Woman", src: batWoman },
+    { id: "bg_alley", label: "Alley", src: alley },
 ]
 
 export const getBackgroundSrc = (id: string | null): string | null => {
