@@ -6,7 +6,7 @@ body,
 }
 
 :root {
-    --text-color: var(--mantine-color-text);
+    --text-color: "#c9c9c9";
 }
 
 body {
