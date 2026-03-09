@@ -70,7 +70,7 @@ export const Route = createRootRoute({
                             xl: `${globals.largeScreenW}px`,
                         },
                     }}
-                    defaultColorScheme="dark"
+                    forceColorScheme="dark"
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
                     <BrokenSaveModal />
