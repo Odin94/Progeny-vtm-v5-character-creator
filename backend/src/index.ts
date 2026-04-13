@@ -1,182 +1,13 @@
-import Fastify from "fastify"
-import cors from "@fastify/cors"
-import websocket from "@fastify/websocket"
-import cookie from "@fastify/cookie"
-import rateLimit from "@fastify/rate-limit"
-import { readFileSync } from "fs"
-import { characterRoutes } from "./routes/characters.js"
-import { coterieRoutes } from "./routes/coteries.js"
-import { shareRoutes } from "./routes/shares.js"
-import { authRoutes } from "./routes/auth.js"
-import { preferencesRoutes } from "./routes/preferences.js"
-import { characterSyncWebSocket } from "./websocket/characterSync.js"
-import { sessionChatWebSocket } from "./websocket/sessionChat.js"
+import { buildApp } from "./app.js"
 import { env } from "./config/env.js"
 import { initializeMetrics } from "./utils/metrics.js"
 import { initializePostHogLogging, shutdownPostHogLogging } from "./utils/posthogLogger.js"
 import { shutdownPostHogTracking } from "./utils/tracker.js"
-import { generateRequestId, setRequestId } from "./middleware/requestId.js"
-import { CSRF_TOKEN_HEADER_NAME, generateCsrfToken, setCsrfToken, validateCsrfToken } from "./middleware/csrf.js"
-import { logError, logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
 
-const httpsOptions =
-    env.SSL_CERT_PATH && env.SSL_KEY_PATH
-        ? {
-              cert: readFileSync(env.SSL_CERT_PATH),
-              key: readFileSync(env.SSL_KEY_PATH),
-          }
-        : null
+const fastify = await buildApp()
 
-const fastify = Fastify({
-    https: httpsOptions,
-    trustProxy: true,
-    logger:
-        env.NODE_ENV === "development"
-            ? {
-                  transport: {
-                      target: "pino-pretty",
-                      options: {
-                          colorize: true,
-                          translateTime: "HH:MM:ss Z",
-                          ignore: "pid,hostname",
-                      },
-                  },
-              }
-            : true,
-})
-
-await fastify.register(cors, {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (server-to-server, mobile apps, etc.)
-        if (!origin) {
-            return callback(null, true)
-        }
-
-        if (
-            origin.startsWith("http://localhost:") ||
-            origin.startsWith("http://127.0.0.1:") ||
-            origin.startsWith("https://localhost:") ||
-            origin.startsWith("https://127.0.0.1:")
-        ) {
-            return callback(null, true)
-        }
-
-        // Allow all subdomains of odin-matthias.de and odin-matthias.com
-        const allowedPatterns = [/^https?:\/\/([a-z0-9-]+\.)*odin-matthias\.de$/, /^https?:\/\/([a-z0-9-]+\.)*odin-matthias\.com$/]
-
-        const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin))
-
-        if (isAllowed) {
-            return callback(null, true)
-        }
-
-        callback(new Error("Not allowed by CORS"), false)
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME, "X-Request-Id"],
-    exposedHeaders: ["X-Request-Id", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME],
-})
-
-await fastify.register(cookie, {
-    secret: env.WORKOS_COOKIE_PASSWORD,
-})
-
-await fastify.register(rateLimit, {
-    max: 1000, // Maximum number of requests per IP
-    timeWindow: "15 minutes", // Time window for the rate limit
-    // Continue processing even if rate limit store has errors
-    skipOnError: true,
-})
-
-await fastify.register(websocket)
-
-// Add request ID tracking hook
-fastify.addHook("onRequest", async (request, reply) => {
-    const requestId = (request.headers["x-request-id"] as string | undefined) || generateRequestId()
-    setRequestId(request, reply, requestId)
-})
-
-// Add CSRF token generation for GET requests
-fastify.addHook("onRequest", async (request, reply) => {
-    if (request.method === "GET" && !request.url.startsWith("/ws/")) {
-        const existingToken = request.cookies["csrf-token"]
-        const token = existingToken ?? generateCsrfToken()
-        // TODOdin: We now set csrf in cookie and header, but only really need header
-        if (!existingToken) {
-            setCsrfToken(reply, token, request)
-        }
-        reply.header("X-CSRF-Token", token)
-    }
-})
-
-// Add CSRF validation for state-changing operations
-fastify.addHook("onRequest", async (request, reply) => {
-    try {
-        await validateCsrfToken(request, reply)
-    } catch (error) {
-        logSecurityEvent(request, reply, "csrf_failure", {
-            url: request.url,
-            method: request.method,
-        })
-        throw error
-    }
-})
-
-// Add logging hooks
-fastify.addHook("onResponse", async (request, reply) => {
-    logRequest(request, reply)
-})
-
-fastify.addHook("onError", async (request, reply, error) => {
-    logError(request, reply, error)
-})
-
-// Register routes
-await fastify.register(authRoutes)
-await fastify.register(preferencesRoutes)
-await fastify.register(characterRoutes)
-await fastify.register(coterieRoutes)
-await fastify.register(shareRoutes)
-
-// Register WebSocket routes
-await fastify.register(characterSyncWebSocket)
-await fastify.register(sessionChatWebSocket)
-
-// Initialize PostHog logging
 initializePostHogLogging()
-
-// Initialize metrics collection
 initializeMetrics(fastify)
-
-// Health check (excluded from rate limiting)
-// TODOdin: Allow hitting health endpoint without CORS / origin header
-fastify.get(
-    "/health",
-    {
-        config: {
-            rateLimit: false,
-        },
-    },
-    async () => {
-        return { status: "ok" }
-    }
-)
-
-const start = async () => {
-    try {
-        await fastify.listen({ port: env.PORT, host: env.HOST })
-        const protocol = httpsOptions ? "https" : "http"
-        fastify.log.info(`Server listening on ${protocol}://${env.HOST}:${env.PORT}`)
-        fastify.log.info(`Environment: ${env.NODE_ENV}`)
-        if (httpsOptions) {
-            fastify.log.info("HTTPS enabled with SSL certificates")
-        }
-    } catch (err) {
-        fastify.log.error(err)
-        process.exit(1)
-    }
-}
 
 process.on("SIGTERM", async () => {
     await shutdownPostHogLogging()
@@ -191,5 +22,20 @@ process.on("SIGINT", async () => {
     await fastify.close()
     process.exit(0)
 })
+
+const start = async () => {
+    try {
+        await fastify.listen({ port: env.PORT, host: env.HOST })
+        const protocol = env.SSL_CERT_PATH && env.SSL_KEY_PATH ? "https" : "http"
+        fastify.log.info(`Server listening on ${protocol}://${env.HOST}:${env.PORT}`)
+        fastify.log.info(`Environment: ${env.NODE_ENV}`)
+        if (env.SSL_CERT_PATH && env.SSL_KEY_PATH) {
+            fastify.log.info("HTTPS enabled with SSL certificates")
+        }
+    } catch (err) {
+        fastify.log.error(err)
+        process.exit(1)
+    }
+}
 
 start()
