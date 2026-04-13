@@ -31,6 +31,11 @@
 - The app assumes cookie-based auth against the backend. Avoid introducing ad hoc token storage in the browser.
 - Session chat and live updates depend on backend WebSocket message shapes. If you change the store payloads, verify the backend handlers too.
 
+## Character Schema Versioning and Backwards Compatibility
+- `schemaVersion` in `src/data/Character.ts` must be incremented whenever the character schema changes in a way that affects serialized data (new required fields, renamed fields, removed fields, changed defaults).
+- `applyCharacterCompatibilityPatches` in `src/data/Character.ts` must be updated alongside any such schema change. Add a new `patchVnToVn+1Compatibility` function and call it from `applyCharacterCompatibilityPatches` so that characters saved under old versions are silently upgraded on load.
+- Every new patch function needs a corresponding test in `src/test/` that constructs a minimal old-version character object, runs it through `applyCharacterCompatibilityPatches`, and asserts the upgraded fields are correct. These tests are the safety net for production data that predates the change.
+
 ## Generator Step Footgun
 
 The Blood Sorcery ritual step (step 8) is **conditional** — it only appears when the character has Blood Sorcery disciplines. `Generator.tsx` compensates with a `patchedSelectedStep` offset: when Blood Sorcery is absent and `selectedStep >= 8`, it adds 1 to align the switch case.
@@ -46,4 +51,5 @@ The Blood Sorcery ritual step (step 8) is **conditional** — it only appears wh
 - UI or route changes: `npm run build` — a clean build with no TypeScript errors is the minimum bar.
 - API or hook changes: `npm run build` and confirm the matching backend route accepts the same payload shape.
 - Character model or export/import changes: `npm run test:run` — all tests must pass. The suite covers PDF, Foundry, and Inconnu export output; a build-only check is not sufficient here.
+- Character schema changes: increment `schemaVersion`, add a `patchVnToVn+1Compatibility` function in `src/data/Character.ts`, call it from `applyCharacterCompatibilityPatches`, and add a backwards-compatibility test in `src/test/` before running `npm run test:run`.
 - Large UI refactors: `npm run lint` in addition to the build. Fix all lint errors before considering the task done.

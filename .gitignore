@@ -41,4 +41,5 @@ mprocs.log
 ignore/
 
 oprocs/
+.oprocs/
 .oprocs.lock

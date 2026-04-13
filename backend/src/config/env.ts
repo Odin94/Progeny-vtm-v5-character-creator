@@ -7,7 +7,7 @@ import { dirname } from "path"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-config({ path: resolve(__dirname, "../../.env") })
+config({ path: resolve(__dirname, "../../.env"), quiet: true })
 
 const envSchema = z.object({
     // WorkOS

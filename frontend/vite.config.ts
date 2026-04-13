@@ -4,6 +4,8 @@ import { tanstackRouter } from "@tanstack/router-vite-plugin"
 
 import * as path from "path"
 
+process.env.DOTENV_CONFIG_QUIET ??= "true"
+
 export default defineConfig({
     build: {
         outDir: "build",
