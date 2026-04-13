@@ -6,13 +6,14 @@ import { meritFlawSchema } from "./Character"
 const selectableMeritsAndFlawsSchema = z.object({
     options: meritFlawSchema.extend({ maxLevel: z.number().int() }).omit({ level: true }).array(),
     totalPoints: z.number().int(),
+    exclusive: z.boolean().optional(),
 })
 export type SelectableMeritsAndFlaws = z.infer<typeof selectableMeritsAndFlawsSchema>
 
 export const predatorTypeSchema = z.object({
     name: z.string(),
     summary: z.string(),
-    specialtyOptions: specialtySchema.array(),
+    specialtyOptions: specialtySchema.extend({ customInput: z.string().optional() }).array(),
     disciplineOptions: z.object({ name: disciplineNameSchema }).array(),
     meritsAndFlaws: meritFlawSchema.array(),
     selectableMeritsAndFlaws: selectableMeritsAndFlawsSchema.array(),
@@ -56,7 +57,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             },
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "potence" }],
-        meritsAndFlaws: [{ name: "Enemy", level: 2, summary: "(Police or Victim)", excludes: [], type: "flaw" }],
+        meritsAndFlaws: [],
         selectableMeritsAndFlaws: [
             {
                 options: [
@@ -76,6 +77,14 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
                     },
                 ],
                 totalPoints: 3,
+            },
+            {
+                options: [
+                    { name: "Enemy", summary: "Police", maxLevel: 2, excludes: [], type: "flaw" },
+                    { name: "Enemy", summary: "Victim", maxLevel: 2, excludes: [], type: "flaw" },
+                ],
+                totalPoints: 2,
+                exclusive: true,
             },
         ],
         humanityChange: 0,
@@ -173,10 +182,12 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             {
                 skill: "occult",
                 name: "[pick tradition]",
+                customInput: "Which tradition?",
             },
             {
                 skill: "performance",
                 name: "[pick any]",
+                customInput: "Which specialty?",
             },
         ],
         disciplineOptions: [{ name: "blood sorcery" }, { name: "presence" }],
@@ -229,14 +240,17 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             {
                 skill: "etiquette",
                 name: "[Specific Scene]",
+                customInput: "Which scene?",
             },
             {
                 skill: "leadership",
                 name: "[Specific Scene]",
+                customInput: "Which scene?",
             },
             {
                 skill: "streetwise",
                 name: "[Specific Scene]",
+                customInput: "Which scene?",
             },
         ],
         disciplineOptions: [{ name: "dominate" }, { name: "potence" }],
@@ -450,6 +464,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
                     { name: "Shunned", summary: "Despised by a faction", maxLevel: 2, excludes: [], type: "flaw" },
                 ],
                 totalPoints: 2,
+                exclusive: true,
             },
         ],
         humanityChange: -1,
@@ -462,6 +477,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
             {
                 skill: "animal ken",
                 name: "[pick animal]",
+                customInput: "Which animal?",
             },
             {
                 skill: "survival",

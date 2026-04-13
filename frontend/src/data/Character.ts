@@ -271,3 +271,4 @@ export const patchV3ToV4Compatibility = (parsed: Record<string, unknown>): void 
         parsed["characterVersion"] = 0
     }
 }
+

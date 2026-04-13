@@ -46,6 +46,7 @@ The Blood Sorcery ritual step (step 8) is **conditional** — it only appears wh
 - UI components: use Mantine (`@mantine/core`, `@mantine/hooks`, `@mantine/notifications`). Do not introduce custom modal, overlay, or notification implementations when a Mantine primitive exists.
 - Icons: use `@tabler/icons-react`. FontAwesome icons are present in the codebase but Tabler is preferred for new work.
 - Frontend validation: use Zod where validation logic is needed (already a dependency). Keep Zod schemas co-located with the code that uses them.
+- Input focus rings: always wrap `TextInput` and `Textarea` elements with the `FocusBorderWrapper` component (`src/character_sheet/components/FocusBorderWrapper.tsx`). It sets the `--input-bd` CSS variable on focus to show a colored border ring. Pass `colorValue` to match the surrounding UI — `theme.colors.grape[6]` in the generator, the selected theme color in the character sheet. Never render a bare Mantine text input without this wrapper.
 
 ## Verification Triggers
 - UI or route changes: `npm run build` — a clean build with no TypeScript errors is the minimum bar.

@@ -13,9 +13,15 @@ type SkillsProps = {
     options: SheetOptions
 }
 
+type SpecialtyEntry = {
+    skill: string
+    name: string
+    fromPredatorType?: boolean
+}
+
 type SkillRowProps = {
     skill: SkillsKey
-    specialties: Array<{ skill: string; name: string }>
+    specialties: SpecialtyEntry[]
     character: SheetOptions["character"]
     options: SheetOptions
     primaryColor: string
@@ -179,6 +185,18 @@ const SkillRow = ({
                     {specialties.length > 0 ? (
                         <Group gap="xs" wrap="wrap">
                             {specialties.map((specialty, index) => {
+                                if (specialty.fromPredatorType) {
+                                    return (
+                                        <Badge
+                                            key={`${skill}-pt-${specialty.name}-${index}`}
+                                            variant="outline"
+                                            size="sm"
+                                            color={primaryColor}
+                                        >
+                                            {specialty.name}
+                                        </Badge>
+                                    )
+                                }
                                 const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
                                 return isEditing ? (
                                     <FocusBorderWrapper key={`${skill}-${index}-edit`} colorValue={colorValue} style={{ width: "100px" }}>
@@ -250,6 +268,18 @@ const SkillRow = ({
                         {upcase(skill)}
                     </Text>
                     {specialties.map((specialty, index) => {
+                        if (specialty.fromPredatorType) {
+                            return (
+                                <Badge
+                                    key={`${skill}-pt-${specialty.name}-${index}`}
+                                    variant="outline"
+                                    size="sm"
+                                    color={primaryColor}
+                                >
+                                    {specialty.name}
+                                </Badge>
+                            )
+                        }
                         const isEditing = editingSpecialty?.skill === skill && editingSpecialty?.index === index
                         return isEditing ? (
                             <FocusBorderWrapper key={`${skill}-${index}-edit`} colorValue={colorValue} style={{ width: "100px" }}>
@@ -327,12 +357,20 @@ const Skills = ({ options }: SkillsProps) => {
     const isEditable = mode === "xp" || mode === "free"
 
     // Map skill to array of specialty objects (not just names) for editing
-    const specialtiesBySkill = new Map<string, typeof character.skillSpecialties>()
+    const specialtiesBySkill = new Map<string, SpecialtyEntry[]>()
     character.skillSpecialties.forEach((specialty) => {
         if (!specialtiesBySkill.has(specialty.skill)) {
             specialtiesBySkill.set(specialty.skill, [])
         }
         specialtiesBySkill.get(specialty.skill)!.push(specialty)
+    })
+    // Include predator type specialties as read-only entries
+    character.predatorType.pickedSpecialties.forEach((specialty) => {
+        if (!specialty.name) return
+        if (!specialtiesBySkill.has(specialty.skill)) {
+            specialtiesBySkill.set(specialty.skill, [])
+        }
+        specialtiesBySkill.get(specialty.skill)!.push({ ...specialty, fromPredatorType: true })
     })
 
     const addSpecialty = (skill: SkillsKey) => {

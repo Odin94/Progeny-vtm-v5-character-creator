@@ -1,6 +1,6 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, Group, Modal, SegmentedControl, Stack, Text, Title, Tooltip, useMantineTheme } from "@mantine/core"
+import { Button, Divider, Grid, Group, Modal, Radio, SegmentedControl, Stack, Text, TextInput, Title, Tooltip, useMantineTheme } from "@mantine/core"
 import { trackEvent } from "../utils/analytics"
 import { Character, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
@@ -10,7 +10,8 @@ import { globals } from "../globals"
 import usePointStates from "../hooks/usePointStates"
 import PointPicker from "./PointPicker"
 import Tally from "./Tally"
-import { useEffect } from "react"
+import FocusBorderWrapper from "../character_sheet/components/FocusBorderWrapper"
+import { useEffect, useState } from "react"
 import { DisciplineName, disciplineNameSchema, PredatorTypeName } from "~/data/NameSchemas"
 
 type PredatorTypeModalProps = {
@@ -46,12 +47,15 @@ const PredatorTypeModal = ({
     const predatorType = PredatorTypes[pickedPredatorType]
     const pickedDiscipline = disciplines[discipline as DisciplineName]
 
+    const [customSpecialtyText, setCustomSpecialtyText] = useState("")
+
     // refactor-idea to make this less messy: make pointStates a map from group-index -> {meritName -> {curPoints, maxPoints}} and return a default value when accessing things that don't exist yet
     // -> no need to check for updated state before rendering modal & maybe accessing looks less messy..?
-    const { pointStates, updatePointStates, setFromSelectableMeritsAndFlaws } = usePointStates(predatorType.selectableMeritsAndFlaws)
+    const { pointStates, updatePointStates, setExclusiveSelection, setFromSelectableMeritsAndFlaws } = usePointStates(predatorType.selectableMeritsAndFlaws)
     useEffect(() => {
         // set baseline for pointStates so the array-access-methods don't crash
         setFromSelectableMeritsAndFlaws(predatorType.selectableMeritsAndFlaws)
+        setCustomSpecialtyText("")
     }, [pickedPredatorType])
 
     const titleWidth = smallScreen ? "300px" : "750px"
@@ -60,6 +64,22 @@ const PredatorTypeModal = ({
     if (predatorType.selectableMeritsAndFlaws.length > 0 && !pointStates?.at(predatorType.selectableMeritsAndFlaws.length - 1)) {
         return <></>
     }
+
+    // Validation: check that all required inputs are filled
+    const selectedSpecialtyOption = predatorType.specialtyOptions.find(
+        (s) => `${s.skill}_${s.name}` === specialty
+    )
+    const needsCustomText = selectedSpecialtyOption?.customInput !== undefined
+    const customTextFilled = !needsCustomText || customSpecialtyText.trim().length > 0
+
+    const exclusiveGroupsFilled = predatorType.selectableMeritsAndFlaws.every((selectable, i) => {
+        if (!selectable.exclusive) return true
+        const subPointStates = pointStates[i]?.subPointStates
+        if (!subPointStates) return false
+        return subPointStates.some((s) => s.selectedPoints > 0)
+    })
+
+    const canConfirm = customTextFilled && exclusiveGroupsFilled
 
     return (
         <Modal
@@ -151,23 +171,54 @@ const PredatorTypeModal = ({
                                     )
                                 })}
                                 {/* TODO: Can we split some of this into a separate component? */}
-                                {predatorType.selectableMeritsAndFlaws.map(({ options, totalPoints }, i) => {
+                                {predatorType.selectableMeritsAndFlaws.map(({ options, totalPoints, exclusive }, i) => {
                                     const subPointStates = pointStates[i].subPointStates
                                     const spentPoints = subPointStates.reduce((acc, cur) => {
                                         return acc + cur.selectedPoints
                                     }, 0)
+                                    const selectedExclusiveIndex = exclusive
+                                        ? subPointStates.findIndex((s) => s.selectedPoints > 0)
+                                        : -1
+
                                     return (
                                         <div key={i}>
                                             <Divider my="sm" />
                                             <Group justify="space-between">
-                                                <Text maw={"80%"} fz={"xl"}>
-                                                    {`Pick ${totalPoints} point(s) from: `}
-                                                </Text>
-                                                <div>
-                                                    Remaining: <Title ta={"center"} c={"red"}>{`${totalPoints - spentPoints}`}</Title>
-                                                </div>
+                                                {exclusive ? (
+                                                    <Text maw={"80%"} fz={"xl"}>
+                                                        {options[0].name}:
+                                                    </Text>
+                                                ) : (
+                                                    <Text maw={"80%"} fz={"xl"}>
+                                                        {`Pick ${totalPoints} point(s) from: `}
+                                                    </Text>
+                                                )}
+                                                {!exclusive && (
+                                                    <div>
+                                                        Remaining: <Title ta={"center"} c={"red"}>{`${totalPoints - spentPoints}`}</Title>
+                                                    </div>
+                                                )}
                                                 <Stack>
                                                     {options.map((option, j) => {
+                                                        if (exclusive) {
+                                                            return (
+                                                                <Group key={predatorType.name + "/" + option.name + j} justify="space-between" wrap="nowrap" style={{ width: "100%" }}>
+                                                                    <Radio
+                                                                        checked={selectedExclusiveIndex === j}
+                                                                        onChange={() => setExclusiveSelection(i, j)}
+                                                                        label={option.summary}
+                                                                        color="red"
+                                                                        styles={{ radio: { cursor: "pointer" }, label: { cursor: "pointer" } }}
+                                                                    />
+                                                                    <Tally
+                                                                        n={totalPoints}
+                                                                        style={{ color: theme.colors.red[7], marginTop: "-5px" }}
+                                                                        size={"28px"}
+                                                                    />
+                                                                </Group>
+                                                            )
+                                                        }
+
                                                         const { selectedPoints, maxLevel } = subPointStates[j]
                                                         return (
                                                             <Group key={predatorType.name + "/" + option.name + j}>
@@ -207,12 +258,30 @@ const PredatorTypeModal = ({
                     size={phoneScreen ? "sm" : "md"}
                     color="red"
                     value={specialty}
-                    onChange={setSpecialty}
-                    data={predatorType.specialtyOptions.map((specialty) => ({
-                        label: `${upcase(specialty.skill)}: ${specialty.name}`,
-                        value: `${specialty.skill}_${specialty.name}`,
+                    onChange={(value) => {
+                        setSpecialty(value)
+                        setCustomSpecialtyText("")
+                    }}
+                    data={predatorType.specialtyOptions.map((s) => ({
+                        label: `${upcase(s.skill)}: ${s.name}`,
+                        value: `${s.skill}_${s.name}`,
                     }))}
                 />
+                {(() => {
+                    const selectedSpecialtyOption = predatorType.specialtyOptions.find(
+                        (s) => `${s.skill}_${s.name}` === specialty
+                    )
+                    return selectedSpecialtyOption?.customInput ? (
+                        <FocusBorderWrapper colorValue={theme.colors.grape[6]}>
+                            <TextInput
+                                placeholder={selectedSpecialtyOption.customInput}
+                                value={customSpecialtyText}
+                                onChange={(e) => setCustomSpecialtyText(e.target.value)}
+                                mt="xs"
+                            />
+                        </FocusBorderWrapper>
+                    ) : null
+                })()}
                 <Divider my="sm" />
 
                 <Text fw={700} fz={"xl"} ta="center">
@@ -244,14 +313,22 @@ const PredatorTypeModal = ({
 
                     <Button
                         color="grape"
+                        disabled={!canConfirm}
                         onClick={async () => {
-                            const pickedSpecialty = predatorType.specialtyOptions.find(({ name }) => name === specialty.split("_")[1])
+                            const pickedSpecialtyOption = predatorType.specialtyOptions.find(
+                                (s) => `${s.skill}_${s.name}` === specialty
+                            )
                             const pickedDiscipline = predatorType.disciplineOptions.find(({ name }) => name === discipline)
-                            if (!pickedSpecialty) {
-                                console.error(`Couldn't find specialty with name ${specialty}`)
+                            if (!pickedSpecialtyOption) {
+                                console.error(`Couldn't find specialty with key ${specialty}`)
                             } else if (!pickedDiscipline) {
                                 console.error(`Couldn't find discipline with name ${discipline}`)
                             } else {
+                                // Substitute custom text into the specialty name when applicable
+                                const resolvedSpecialty = pickedSpecialtyOption.customInput && customSpecialtyText.trim()
+                                    ? { skill: pickedSpecialtyOption.skill, name: customSpecialtyText.trim() }
+                                    : { skill: pickedSpecialtyOption.skill, name: pickedSpecialtyOption.name }
+
                                 const pickedMeritsAndFlaws = predatorType.selectableMeritsAndFlaws.flatMap((selectable, i) => {
                                     const subPointStates = pointStates[i].subPointStates
                                     const pickedMerits = selectable.options.flatMap((option, j) => {
@@ -274,7 +351,7 @@ const PredatorTypeModal = ({
                                     predatorType: {
                                         name: pickedPredatorType,
                                         pickedDiscipline,
-                                        pickedSpecialties: [pickedSpecialty],
+                                        pickedSpecialties: [resolvedSpecialty],
                                         pickedMeritsAndFlaws,
                                     },
                                     disciplines: changedPickedDiscipline ? [] : character.disciplines,

@@ -1,9 +1,10 @@
-import { Button, Select, Space, Stack, Text } from "@mantine/core"
+import { Button, Select, Space, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 
 type GenerationPickerProps = {
     character: Character
@@ -12,6 +13,8 @@ type GenerationPickerProps = {
 }
 
 const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPickerProps) => {
+    const theme = useMantineTheme()
+
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Generation Picker" })
     }, [])
@@ -38,25 +41,27 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
             <Space h={"sm"} />
 
             <Stack align="center" gap="xl">
-                <Select
-                    styles={(_theme) => ({})}
-                    style={{ width: "100%" }}
-                    value={generation}
-                    onChange={setGeneration}
-                    label="When were you turned?"
-                    placeholder="Pick one"
-                    data={
-                        isThinBlood
-                            ? [{ value: "14", label: "14: Childer - Recently" }]
-                            : [
-                                  { value: "14", label: "14: Childer - Recently" },
-                                  { value: "13", label: "13: Neonate - Been a while" },
-                                  { value: "12", label: "12: Neonate - Been a while" },
-                                  { value: "11", label: "11: Ancillae - I barely remember" },
-                                  { value: "10", label: "10: Ancillae - I barely remember" },
-                              ]
-                    }
-                />
+                <FocusBorderWrapper colorValue={theme.colors.grape[6]} style={{ width: "100%" }}>
+                    <Select
+                        styles={(_theme) => ({})}
+                        style={{ width: "100%" }}
+                        value={generation}
+                        onChange={setGeneration}
+                        label="When were you turned?"
+                        placeholder="Pick one"
+                        data={
+                            isThinBlood
+                                ? [{ value: "14", label: "14: Childer - Recently" }]
+                                : [
+                                      { value: "14", label: "14: Childer - Recently" },
+                                      { value: "13", label: "13: Neonate - Been a while" },
+                                      { value: "12", label: "12: Neonate - Been a while" },
+                                      { value: "11", label: "11: Ancillae - I barely remember" },
+                                      { value: "10", label: "10: Ancillae - I barely remember" },
+                                  ]
+                        }
+                    />
+                </FocusBorderWrapper>
 
                 <Button
                     disabled={generation === null}
