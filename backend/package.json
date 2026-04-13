@@ -14,7 +14,8 @@
     "test:run": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:pull-backup": "node scripts/pull-db.mjs"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
