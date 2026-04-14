@@ -1,4 +1,4 @@
-import { Card, Center, Grid, Image, rgba, ScrollArea, Text, Title, useMantineTheme } from "@mantine/core"
+import { Box, Card, Center, Grid, Image, rgba, ScrollArea, Stack, Text, Title, useMantineTheme } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useEffect } from "react"
 import ReactGA from "react-ga4"
@@ -31,12 +31,23 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         return (
             <Grid.Col key={clan} span={4}>
                 <Card
-                    className="hoverCard"
                     shadow="sm"
                     padding="lg"
                     radius="md"
                     h={275}
-                    style={{ background: bgColor, cursor: "pointer" }}
+                    style={{
+                        background: bgColor,
+                        cursor: "pointer",
+                        transition: "transform 160ms ease, box-shadow 160ms ease",
+                    }}
+                    onMouseEnter={(event) => {
+                        event.currentTarget.style.transform = "translateY(-8px)"
+                        event.currentTarget.style.boxShadow = "rgba(0, 0, 0, 0.22) 0px 19px 43px"
+                    }}
+                    onMouseLeave={(event) => {
+                        event.currentTarget.style.transform = "translateY(0)"
+                        event.currentTarget.style.boxShadow = ""
+                    }}
                     onClick={() => {
                         const newMerits = clan === character.clan ? character.merits : getNewMerits(clan, character)
                         const newFlaws = clan === "Thin-blood" ? character.flaws : flawsWithoutThinbloodFlaws(character.flaws)
@@ -92,69 +103,102 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
             </Grid.Col>
         )
     }
-
-    const height = globals.viewportHeightPx
     return (
-        <div style={{ height: height - 250 }}>
-            <Text fz={"30px"} ta={"center"}>
-                Pick your <b>Clan</b>
-            </Text>
+        <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", paddingTop: 75, boxSizing: "border-box" }}>
+            <ScrollArea
+                style={{ flex: 1, minHeight: 0 }}
+                w={"100%"}
+                px={20}
+                pt={4}
+                pb={8}
+                scrollbarSize={11}
+                type="auto"
+                offsetScrollbars="present"
+                styles={{
+                    scrollbar: {
+                        background: "transparent",
+                    },
+                    thumb: {
+                        background: "rgba(224, 49, 49, 0.3)",
+                        borderRadius: "999px",
+                        transition: "background 140ms ease",
+                        "&:hover": {
+                            background: "rgba(224, 49, 49, 0.52)",
+                        },
+                        "&:active": {
+                            background: "rgba(224, 49, 49, 0.7)",
+                        },
+                    },
+                    corner: {
+                        background: "transparent",
+                    },
+                }}
+            >
+                <Stack gap={4} align="center" mb={6}>
+                    <Title
+                        order={2}
+                        ta="center"
+                        style={{
+                            fontFamily: "Cinzel, Georgia, serif",
+                            fontWeight: 600,
+                            letterSpacing: "0.05em",
+                            color: "rgba(248, 240, 235, 0.96)",
+                        }}
+                    >
+                        Pick your{" "}
+                        <Text component="strong" inherit c="red.5" style={{ textShadow: "0 0 18px rgba(224, 49, 49, 0.35)" }}>
+                            Clan
+                        </Text>
+                    </Title>
+                    <Text
+                        ta="center"
+                        maw={620}
+                        style={{
+                            fontFamily: "Crimson Text, Georgia, serif",
+                            fontSize: "1.1rem",
+                            color: "rgba(235, 225, 218, 0.74)",
+                        }}
+                    >
+                        Your clan defines your lineage, your powers, and your curse.
+                    </Text>
+                </Stack>
 
-            <Text ta="center" fz="xl" fw={700} c="red">
-                Clan
-            </Text>
-            <hr color="#e03131" />
-
-            <ScrollArea h={height - 215} w={"100%"} p={20}>
-                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.blue[6]}>
-                    Rulers & Commanders
-                </Text>
+                <CategoryHeading label="Rulers & Commanders" />
                 <Grid grow m={0}>
                     {["Ventrue", "Tzimisce", "Lasombra"]
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, rgba(theme.colors.blue[8], 0.9)))}
                 </Grid>
 
-                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.red[8]}>
-                    Fighters & Protectors
-                </Text>
+                <CategoryHeading label="Fighters & Protectors" />
                 <Grid grow m={0}>
                     {["Brujah", "Gangrel", "Banu Haqim"]
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, rgba(theme.colors.red[8], 0.9)))}
                 </Grid>
 
-                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c={theme.colors.grape[7]}>
-                    Seducers & Deceivers
-                </Text>
-
+                <CategoryHeading label="Seducers & Deceivers" />
                 <Grid grow m={0}>
                     {["Toreador", "Ravnos", "Ministry"]
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, rgba(theme.colors.grape[8], 0.9)))}
                 </Grid>
 
-                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c="green">
-                    Investigators & Researchers
-                </Text>
+                <CategoryHeading label="Investigators & Researchers" />
                 <Grid grow m={0}>
                     {["Malkavian", "Tremere", "Hecata"]
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, rgba(theme.colors.green[9], 0.9)))}
                 </Grid>
 
-                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c="rgb(175,175,175)">
-                    Hidden Lurkers
-                </Text>
+                <CategoryHeading label="Hidden Lurkers" />
                 <Grid grow m={0}>
                     {["Nosferatu", "Salubri"]
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, rgba(theme.colors.gray[6], 0.9)))}
                 </Grid>
 
-                <Text ta="center" fz="xl" fw={700} mb={"sm"} mt={"md"} c="teal">
-                    Advanced & special Clans
-                </Text>
+                <CategoryHeading label="Advanced & Special Clans" />
                 <Grid grow m={0}>
                     {["Caitiff", "Thin-blood"]
                         .map((c) => clanNameSchema.parse(c))
@@ -164,6 +208,28 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         </div>
     )
 }
+
+const CategoryHeading = ({ label }: { label: string }) => (
+    <Box my="md">
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <Text
+                ta="center"
+                style={{
+                    fontFamily: "Cinzel, Georgia, serif",
+                    fontSize: "0.96rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.22em",
+                    textTransform: "uppercase",
+                    color: "rgba(224, 49, 49, 1)",
+                }}
+            >
+                {label}
+            </Text>
+            <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+        </div>
+    </Box>
+)
 
 const meritsWithoutThinbloodMerits = (merits: MeritFlaw[]) => merits.filter((m) => !isThinbloodMerit(m.name))
 const flawsWithoutThinbloodFlaws = (flaws: MeritFlaw[]) => flaws.filter((f) => !isThinbloodFlaw(f.name))
