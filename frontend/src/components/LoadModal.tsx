@@ -4,7 +4,8 @@ import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { Buffer } from "buffer"
 import { z } from "zod"
-import { applyCharacterCompatibilityPatches, Character, characterSchema, containsBloodSorcery } from "../data/Character"
+import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
+import { GeneratorStepId } from "../generator/steps"
 import { getUploadFile } from "../generator/utils"
 
 export type LoadModalProps = {
@@ -12,7 +13,7 @@ export type LoadModalProps = {
     loadModalOpened: boolean
     closeLoadModal: () => void
     loadedFile: File | null
-    setSelectedStep: (step: number) => void
+    setSelectedStep: (step: GeneratorStepId) => void
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
@@ -50,12 +51,7 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, 
                                 const json = Buffer.from(base64, "base64").toString()
                                 const loadedCharacter = await loadCharacterFromJson(json)
                                 setCharacter(loadedCharacter)
-                                // Navigate to Final step
-                                // Final is at case 11, but due to patching logic:
-                                // - If character has blood sorcery: step 11 → case 11 (Final)
-                                // - If character doesn't have blood sorcery: step 10 → case 11 (Final) after patching
-                                const finalStep = containsBloodSorcery(loadedCharacter.disciplines) ? 11 : 10
-                                setSelectedStep(finalStep)
+                                setSelectedStep("final")
                                 closeLoadModal()
                             } catch (e) {
                                 if (e instanceof z.ZodError) {
