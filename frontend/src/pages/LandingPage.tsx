@@ -151,6 +151,33 @@ export default function LandingPage() {
                                   Explore more
                                 </Button>
                             </Group>
+                            <Stack gap={4} mt="lg" align="center">
+                                <Text size="sm" className="landing-page__hero-meta">
+                                    Feedback, requests or questions? Reach out to Odin on{" "}
+                                    <Anchor href="https://www.reddit.com/user/Odin94" target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                        Reddit
+                                    </Anchor>
+                                    {", "}
+                                    <Anchor href="https://bsky.app/profile/odin-dev.bsky.social" target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                        Bluesky
+                                    </Anchor>
+                                    {" or "}
+                                    <Anchor href="https://ko-fi.com/odin_dev" target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                        Ko-Fi
+                                    </Anchor>
+                                </Text>
+                                <Text size="sm" className="landing-page__hero-meta">
+                                    Find source code on {" "}
+                                    <Anchor
+                                        href="https://github.com/Odin94/Progeny-vtm-v5-character-creator"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
+                                        GitHub
+                                    </Anchor>
+                                </Text>
+                            </Stack>
                         </Stack>
                     </motion.div>
                 </Container>
