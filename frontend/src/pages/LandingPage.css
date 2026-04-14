@@ -80,7 +80,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(8, 7, 8, 0.48) 0%, rgba(8, 7, 8, 0.2) 18%, rgba(8, 7, 8, 0.82) 100%),
+        linear-gradient(180deg, rgba(8, 7, 8, 0.56) 0%, rgba(8, 7, 8, 0.34) 18%, rgba(8, 7, 8, 0.86) 100%),
         radial-gradient(circle at center, rgba(179, 39, 56, 0.15), transparent 40%);
 }
 
@@ -127,6 +127,25 @@
 
 .landing-page__cta-group {
     margin-top: 2.25rem;
+}
+
+.landing-page__hero-meta {
+    color: rgba(235, 225, 218, 0.56);
+    font-family: var(--landing-ui-font);
+    letter-spacing: 0.02em;
+    text-align: center;
+    font-size: 0.83rem;
+}
+
+.landing-page__hero-meta-link {
+    color: var(--landing-text);
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+    transition: color 180ms ease;
+}
+
+.landing-page__hero-meta-link:hover {
+    color: var(--landing-gold);
 }
 
 .landing-page__primary-button,
