@@ -9,12 +9,13 @@ import LoadModal from "../../components/LoadModal"
 import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
+import { GeneratorStepId } from "../steps"
 import { SocialIcons } from "./SocialIcons"
 
 type IntroProps = {
     setCharacter: (character: Character) => void
     nextStep: () => void
-    setSelectedStep: (step: number) => void
+    setSelectedStep: (step: GeneratorStepId) => void
 }
 
 const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {

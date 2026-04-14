@@ -2,6 +2,7 @@ import { faDownload, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Code, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
+import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { getEmptyCharacter } from "~/data/Character"
@@ -9,7 +10,7 @@ import { getEmptyCharacter } from "~/data/Character"
 const BrokenSaveModal = () => {
     const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } = useBrokenCharacter()
     const [, setCharacter] = useCharacterLocalStorage()
-    const [, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
+    const [, setSelectedStep] = useLocalStorage<GeneratorStepId>({ key: "selectedGeneratorStep", defaultValue: defaultGeneratorStepId })
 
     const onDownload = () => {
         if (brokenData) {
@@ -27,7 +28,7 @@ const BrokenSaveModal = () => {
     const onReset = () => {
         clearBrokenCharacter()
         setCharacter(getEmptyCharacter())
-        setSelectedStep(0)
+        setSelectedStep("intro")
     }
 
     return (

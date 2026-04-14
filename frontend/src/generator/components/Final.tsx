@@ -15,13 +15,14 @@ import { trackEvent } from "../../utils/analytics"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
 import { downloadCharacterSheet } from "../pdfCreator"
+import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { SocialIcons } from "./SocialIcons"
 
 type FinalProps = {
     character: Character
     setCharacter: (character: Character) => void
-    setSelectedStep: (step: number) => void
+    setSelectedStep: (step: GeneratorStepId) => void
 }
 
 const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {

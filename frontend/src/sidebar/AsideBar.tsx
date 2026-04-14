@@ -1,36 +1,31 @@
 import { Button, ScrollArea, Stack, Stepper } from "@mantine/core"
 import { IconArrowRight } from "@tabler/icons-react"
 import { Link } from "@tanstack/react-router"
-import { Character, containsBloodSorcery } from "../data/Character"
-import { isDefault, upcase } from "../generator/utils"
+import { Character } from "../data/Character"
+import { GeneratorStepId, getGeneratorStepIndex, getVisibleGeneratorSteps } from "../generator/steps"
+import { isDefault } from "../generator/utils"
 import { globals } from "../globals"
 import { useAuth } from "../hooks/useAuth"
 
 export type AsideBarProps = {
-    selectedStep: number
-    setSelectedStep: (step: number) => void
+    selectedStep: GeneratorStepId
+    setSelectedStep: (step: GeneratorStepId) => void
     character: Character
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
     const { loading: authLoading, isAuthenticated, signIn } = useAuth()
-    // const smallScreen = globals.isSmallScreen
-    const maybeRituals = containsBloodSorcery(character.disciplines) ? ["rituals"] : []
-    const stepperKeys = [
-        "clan",
-        "attributes",
-        "skills",
-        "generation",
-        "predatorType",
-        "name",
-        "disciplines",
-        ...maybeRituals,
-        "touchstones",
-        "merits",
-    ] as (keyof Character)[]
+    const steps = getVisibleGeneratorSteps(character)
 
-    const isHigherLevelAccessible = (character: Character, key: keyof Character) => {
-        const index = Math.max(0, stepperKeys.indexOf(key) - 1) // if n-1 is not default then we can jump to n
+    const isHigherLevelAccessible = (character: Character, step: (typeof steps)[number]) => {
+        if (!step.progressKey) {
+            return true
+        }
+
+        const stepperKeys = steps
+            .map((candidateStep) => candidateStep.progressKey)
+            .filter((value): value is NonNullable<typeof value> => value !== undefined)
+        const index = Math.max(0, stepperKeys.indexOf(step.progressKey) - 1) // if n-1 is not default then we can jump to n
 
         for (let i = index; i < stepperKeys.length; i++) {
             if (!isDefault(character, stepperKeys[i])) return true
@@ -43,29 +38,26 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
             <Stepper
                 color="grape"
                 orientation="vertical"
-                active={selectedStep}
+                active={getGeneratorStepIndex(character, selectedStep)}
                 onStepClick={(x) => {
-                    setSelectedStep(x)
+                    const nextStep = steps[x]
+                    if (nextStep) {
+                        setSelectedStep(nextStep.id)
+                    }
                 }}
             >
-                <Stepper.Step key={"Intro"} label={"Intro"} description="">
-                    {" "}
-                </Stepper.Step>
-                {stepperKeys.map((title) => {
+                {steps.map((step) => {
                     return (
                         <Stepper.Step
-                            key={title}
-                            label={upcase(title)}
+                            key={step.id}
+                            label={step.label}
                             description=""
-                            disabled={!isHigherLevelAccessible(character, title)}
+                            disabled={!isHigherLevelAccessible(character, step)}
                         >
                             {" "}
                         </Stepper.Step>
                     )
                 })}
-                <Stepper.Step key={"Final"} label={"Final"} description="" disabled={isDefault(character, "disciplines")}>
-                    {" "}
-                </Stepper.Step>
             </Stepper>
         )
     }
