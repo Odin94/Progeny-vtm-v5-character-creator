@@ -2,10 +2,11 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { Character, getEmptyCharacter } from "../data/Character"
+import { GeneratorStepId } from "../generator/steps"
 
 export type ResetModalProps = {
     setCharacter: (character: Character) => void
-    setSelectedStep: (step: number) => void
+    setSelectedStep: (step: GeneratorStepId) => void
     resetModalOpened: boolean
     closeResetModal: () => void
 }
@@ -27,7 +28,7 @@ const ResetModal = ({ resetModalOpened, closeResetModal, setCharacter, setSelect
                         color="red"
                         onClick={async () => {
                             setCharacter(getEmptyCharacter())
-                            setSelectedStep(0)
+                            setSelectedStep("intro")
 
                             closeResetModal()
                         }}

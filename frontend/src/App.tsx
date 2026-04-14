@@ -3,6 +3,7 @@ import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { useEffect, useRef, useState } from "react"
 import "./App.css"
 import Generator from "./generator/Generator"
+import { defaultGeneratorStepId, type GeneratorStepId } from "./generator/steps"
 import AsideBar from "./sidebar/AsideBar"
 import Sidebar from "./sidebar/Sidebar"
 import Topbar from "./topbar/Topbar"
@@ -98,7 +99,10 @@ function App() {
     }, [globals.isPhoneScreen, globals.isSmallScreen])
 
     const [character, setCharacter] = useCharacterLocalStorage()
-    const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
+    const [selectedStep, setSelectedStep] = useLocalStorage<GeneratorStepId>({
+        key: "selectedGeneratorStep",
+        defaultValue: defaultGeneratorStepId,
+    })
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
 
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)

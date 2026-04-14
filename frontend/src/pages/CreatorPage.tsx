@@ -1,7 +1,9 @@
 import { AppShell, BackgroundImage, Container, useComputedColorScheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
+import { useLocation, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import Generator from "~/generator/Generator"
+import { defaultGeneratorStepId, normalizeGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { rndInt } from "~/generator/utils"
 import { globals } from "~/globals"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
@@ -18,6 +20,8 @@ import Topbar from "~/topbar/Topbar"
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
 export default function CreatorPage() {
+    const navigate = useNavigate()
+    const location = useLocation()
     const { height: viewportHeight, width: viewportWidth } = useViewportSize()
     globals.viewportHeightPx = viewportHeight
     globals.viewportWidthPx = viewportWidth
@@ -32,13 +36,51 @@ export default function CreatorPage() {
     }, [globals.isPhoneScreen, globals.isSmallScreen])
 
     const [character, setCharacter] = useCharacterLocalStorage()
-    const [selectedStep, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
+    const [storedSelectedStep, setStoredSelectedStep] = useLocalStorage<GeneratorStepId>({
+        key: "selectedGeneratorStep",
+        defaultValue: defaultGeneratorStepId,
+    })
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
+
+    const routeHash = location.hash.replace(/^#/, "")
+    const fallbackStep = normalizeGeneratorStepId(storedSelectedStep, character)
+    const selectedStep = normalizeGeneratorStepId(routeHash || fallbackStep, character)
+
+    const setSelectedStep = (step: GeneratorStepId, options?: { replace?: boolean }) => {
+        if (storedSelectedStep !== step) {
+            setStoredSelectedStep(step)
+        }
+
+        const nextHash = `#${step}`
+        if (location.hash === nextHash) {
+            return
+        }
+
+        navigate({
+            to: "/create",
+            hash: step,
+            replace: options?.replace ?? false,
+        })
+    }
 
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     useEffect(() => {
         setShowAsideBar(!globals.isSmallScreen)
     }, [globals.isSmallScreen])
+
+    useEffect(() => {
+        if (storedSelectedStep !== selectedStep) {
+            setStoredSelectedStep(selectedStep)
+        }
+    }, [selectedStep, setStoredSelectedStep, storedSelectedStep])
+
+    useEffect(() => {
+        const normalizedHash = routeHash ? normalizeGeneratorStepId(routeHash, character) : fallbackStep
+
+        if (normalizedHash !== selectedStep || location.hash !== `#${selectedStep}`) {
+            setSelectedStep(normalizedHash, { replace: true })
+        }
+    }, [character, fallbackStep, location.hash, routeHash, selectedStep])
 
     return (
         <AppShell

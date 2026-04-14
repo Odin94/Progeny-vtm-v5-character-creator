@@ -1,6 +1,6 @@
 import { Text } from "@mantine/core"
 import ErrorBoundary from "../components/ErrorBoundary"
-import { Character, containsBloodSorcery } from "../data/Character"
+import { Character } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
 import ClanPicker from "./components/ClanPicker"
@@ -13,131 +13,112 @@ import PredatorTypePicker from "./components/PredatorTypePicker"
 import RitualsPicker from "./components/RitualsPicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
+import { GeneratorStepId, getNextGeneratorStepId } from "./steps"
 
 export type GeneratorProps = {
     character: Character
     setCharacter: (character: Character) => void
 
-    selectedStep: number
-    setSelectedStep: (step: number) => void
+    selectedStep: GeneratorStepId
+    setSelectedStep: (step: GeneratorStepId) => void
 }
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
+    const nextStep = () => {
+        setSelectedStep(getNextGeneratorStepId(character, selectedStep))
+    }
+
     const getStepComponent = () => {
-        // Unclean solution: Stepper in AsideBar only gives us an index to use here and if we don't have a blood-sorcery step (at 8) it breaks alignment of the steps. Ideally we'd get a string from the stepper rather than a number and then we wouldn't have to map things here
-        const patchedSelectedStep = !containsBloodSorcery(character.disciplines) && selectedStep >= 8 ? selectedStep + 1 : selectedStep
-        switch (patchedSelectedStep) {
-            case 0:
+        switch (selectedStep) {
+            case "intro":
                 return (
                     <Intro
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                         setSelectedStep={setSelectedStep}
                     />
                 )
-            case 1:
+            case "clan":
                 return (
                     <ClanPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 2:
+            case "attributes":
                 return (
                     <AttributePicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 3:
+            case "skills":
                 return (
                     <SkillsPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 4:
+            case "generation":
                 return (
                     <GenerationPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 5:
+            case "predator-type":
                 return (
                     <PredatorTypePicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 6:
+            case "basics":
                 return (
                     <BasicsPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 7:
+            case "disciplines":
                 return (
                     <DisciplinesPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 8:
+            case "rituals":
                 return (
                     <RitualsPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 9:
+            case "touchstones":
                 return (
                     <TouchstonePicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 10:
+            case "merits":
                 return (
                     <MeritsAndFlawsPicker
                         character={character}
                         setCharacter={setCharacter}
-                        nextStep={() => {
-                            setSelectedStep(selectedStep + 1)
-                        }}
+                        nextStep={nextStep}
                     />
                 )
-            case 11:
+            case "final":
                 return <Final character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
             default:
                 return <Text size={"xl"}>{`Error: Step ${selectedStep} is not implemented`}</Text>
