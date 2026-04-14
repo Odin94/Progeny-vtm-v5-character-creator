@@ -1,5 +1,6 @@
-import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
+import { Box, Button, Divider, Grid, Group, ScrollArea, Space, Stack, Text, Title, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
+import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -71,12 +72,14 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const distr = pickedDistribution ? distributionByType[pickedDistribution] : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: SkillsKey, i: number) => {
-        const alreadyPicked = [
-            ...pickedSkills.special,
-            ...pickedSkills.strongest,
-            ...pickedSkills.decent,
-            ...pickedSkills.acceptable,
-        ].includes(skill)
+        const alreadyPicked = [...pickedSkills.special, ...pickedSkills.strongest, ...pickedSkills.decent, ...pickedSkills.acceptable].includes(skill)
+        const assignedLevel = (() => {
+            if (pickedSkills.special.includes(skill)) return 4
+            if (pickedSkills.strongest.includes(skill)) return 3
+            if (pickedSkills.decent.includes(skill)) return 2
+            if (pickedSkills.acceptable.includes(skill)) return 1
+            return null
+        })()
 
         let onClick: () => void
         if (alreadyPicked) {
@@ -101,7 +104,6 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
         } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {
-            // -1 so the very last pick opens modal
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] })
             }
@@ -146,18 +148,9 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
                 setPickedSkills(finalPick)
                 setSkills(skills)
-
                 openModal()
             }
         }
-
-        const dots = (() => {
-            if (pickedSkills.special.includes(skill)) return "🚀"
-            if (pickedSkills.strongest.includes(skill)) return "🥇"
-            if (pickedSkills.decent.includes(skill)) return "🥈"
-            if (pickedSkills.acceptable.includes(skill)) return "🥉"
-            return ""
-        })()
 
         const trackClick = () => {
             trackEvent({
@@ -178,16 +171,90 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Button
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
-                        leftSection={dots}
                         disabled={pickedDistribution === null}
                         color="grape"
-                        fullWidth
+                        fullWidth={false}
+                        style={{ width: "88%", marginLeft: "auto", marginRight: "auto", minHeight: phoneScreen ? 36 : 40 }}
+                        styles={{
+                            inner: {
+                                alignItems: "center",
+                                justifyContent: phoneScreen ? "center" : "space-between",
+                                paddingTop: 2,
+                                paddingBottom: 3,
+                            },
+                            label: {
+                                lineHeight: 1.3,
+                                overflow: "visible",
+                                flex: 1,
+                            },
+                            section: {
+                                overflow: "visible",
+                            },
+                            root: {
+                                justifyContent: "space-between",
+                                background:
+                                    assignedLevel === 4
+                                        ? "rgba(197, 32, 32, 0.38)"
+                                        : assignedLevel === 3
+                                          ? "rgba(197, 32, 32, 0.2)"
+                                          : assignedLevel === 2
+                                            ? "rgba(204, 166, 51, 0.4)"
+                                            : assignedLevel === 1
+                                              ? "rgba(43, 43, 43, 0.5)"
+                                              : pickedDistribution === null
+                                                ? "rgba(43, 43, 43, 0.3)"
+                                                : "rgba(126, 74, 201, 0.8)",
+                                borderColor:
+                                    assignedLevel === 4
+                                        ? "rgba(224, 49, 49, 1)"
+                                        : assignedLevel === 3
+                                          ? "rgba(224, 49, 49, 0.95)"
+                                          : assignedLevel === 2
+                                            ? "rgba(201, 172, 102, 0.9)"
+                                            : assignedLevel === 1
+                                              ? "rgba(180, 180, 180, 0.42)"
+                                              : pickedDistribution === null
+                                                ? "rgba(180, 180, 180, 0.24)"
+                                                : "rgba(183, 148, 246, 0.45)",
+                                color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined,
+                            },
+                        }}
+                        rightSection={
+                            !phoneScreen && assignedLevel ? (
+                                <Group gap={4} wrap="nowrap">
+                                    {Array.from({ length: 5 }).map((_, dotIndex) => (
+                                        <Box
+                                            key={`${skill}-dot-${dotIndex}`}
+                                            style={{
+                                                width: 6,
+                                                height: 6,
+                                                borderRadius: "999px",
+                                                background:
+                                                    dotIndex < assignedLevel
+                                                        ? assignedLevel === 4 || assignedLevel === 3
+                                                            ? "rgba(224, 49, 49, 1)"
+                                                            : assignedLevel === 2
+                                                              ? "rgba(232, 204, 92, 0.98)"
+                                                              : "rgba(210, 210, 210, 0.85)"
+                                                        : "rgba(255, 255, 255, 0.14)",
+                                                boxShadow:
+                                                    dotIndex < assignedLevel && (assignedLevel === 4 || assignedLevel === 3)
+                                                        ? "0 0 6px rgba(224, 49, 49, 0.38)"
+                                                        : "none",
+                                            }}
+                                        />
+                                    ))}
+                                </Group>
+                            ) : undefined
+                        }
                         onClick={() => {
                             trackClick()
                             onClick()
                         }}
                     >
-                        <Text fz={phoneScreen ? 12 : "inherit"}>{upcase(skill)}</Text>
+                        <Text fz={phoneScreen ? 12 : "inherit"} lh={1.3} ta={phoneScreen ? "center" : "left"} style={{ width: "100%" }}>
+                            {upcase(skill)}
+                        </Text>
                     </Button>
                 </Tooltip>
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
@@ -199,14 +266,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         if (pickedSkills.special.length < distr.special) return "special"
         if (pickedSkills.strongest.length < distr.strongest) return "strongest"
         if (pickedSkills.decent.length < distr.decent) return "decent"
-        else return "acceptable"
+        return "acceptable"
     })()
-
-    const specialStyle = toPick === "special" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const strongestStyle = toPick === "strongest" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const decentStyle = toPick === "decent" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const acceptableStyle =
-        toPick === "acceptable" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
@@ -265,41 +326,52 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
             </Grid>
         </Group>
     )
+
     const height = globals.viewportHeightPx
+    const phases = [
+        pickedDistribution === "Specialist"
+            ? {
+                  key: "special",
+                  prompt: "Pick your",
+                  bold: `${distr.special - pickedSkills.special.length}`,
+                  suffix: "specialty skill",
+                  level: 4,
+                  done: pickedSkills.special.length === distr.special,
+              }
+            : null,
+        {
+            key: "strongest",
+            prompt: "Pick your",
+            bold: `${distr.strongest - pickedSkills.strongest.length} strongest`,
+            suffix: "skills",
+            level: 3,
+            done: pickedSkills.strongest.length === distr.strongest,
+        },
+        {
+            key: "decent",
+            prompt: "Pick",
+            bold: `${distr.decent - pickedSkills.decent.length}`,
+            suffix: "skills you're decent in",
+            level: 2,
+            done: pickedSkills.decent.length === distr.decent,
+        },
+        {
+            key: "acceptable",
+            prompt: "Pick",
+            bold: `${distr.acceptable - pickedSkills.acceptable.length}`,
+            suffix: "skills you're ok in",
+            level: 1,
+            done: pickedSkills.acceptable.length === distr.acceptable,
+        },
+    ].filter(Boolean) as Array<{ key: string; prompt: string; bold: string; suffix: string; level: number; done: boolean }>
 
     return (
         <div style={{ marginTop: height < globals.heightBreakPoint ? "60px" : 0 }}>
             {!pickedDistribution ? (
-                <Text fz={globals.largeFontSize} ta={"center"}>
-                    Pick your <b>Skill Distribution</b>
-                </Text>
-            ) : (
                 <>
-                    <Text style={{ fontSize: globals.smallerFontSize, color: "grey" }} ta={"center"}>
-                        {pickedDistribution}
+                    <Text fz={globals.largeFontSize} ta={"center"}>
+                        Pick your <b>Skill Distribution</b>
                     </Text>
-                    {pickedDistribution === "Specialist" ? (
-                        <Text style={specialStyle} fz={"30px"} ta={"center"}>
-                            {toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill
-                        </Text>
-                    ) : null}
-                    <Text style={strongestStyle} ta={"center"}>
-                        {toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b>{" "}
-                        skills
-                    </Text>
-                    <Text style={decentStyle} ta={"center"}>
-                        {toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re{" "}
-                        <b>decent</b> in
-                    </Text>
-                    <Text style={acceptableStyle} ta={"center"}>
-                        {toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills
-                        you&apos;re <b>ok</b> in
-                    </Text>
-                </>
-            )}
-
-            {pickedDistribution !== null ? null : (
-                <>
                     <Space h="xl" />
                     <Grid grow>
                         {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
@@ -330,12 +402,118 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Space h="xl" />
                     <Space h="xl" />
                 </>
+            ) : (
+                <Stack gap={6} align="center" mb="md">
+                    <Text
+                        ta="center"
+                        style={{
+                            fontFamily: "Inter, Segoe UI, sans-serif",
+                            fontSize: "0.78rem",
+                            letterSpacing: "0.06em",
+                            color: "rgba(214, 204, 198, 0.42)",
+                        }}
+                    >
+                        {pickedDistribution}
+                    </Text>
+                    {phases.map((phase) => {
+                        const isActive = toPick === phase.key
+                        const isPast = phase.done && !isActive
+
+                        return (
+                            <Box
+                                key={phase.key}
+                                style={{
+                                    position: "relative",
+                                    height: phoneScreen ? "1.9rem" : "2.35rem",
+                                    width: "100%",
+                                }}
+                            >
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: isPast ? 0.28 : isActive ? 1 : 0.5, y: 0 }}
+                                    transition={{ duration: 0.35, ease: "easeOut" }}
+                                    style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <Text
+                                        ta="center"
+                                        style={{
+                                            fontFamily: "Crimson Text, Georgia, serif",
+                                            fontSize: isActive ? (phoneScreen ? "1.15rem" : "1.45rem") : phoneScreen ? "0.95rem" : "1rem",
+                                            lineHeight: 1.1,
+                                            color: isActive ? "rgba(244, 236, 232, 0.95)" : "rgba(214, 204, 198, 0.56)",
+                                            transition: "all 220ms ease",
+                                        }}
+                                    >
+                                        {isActive ? (
+                                            <motion.span
+                                                animate={{ opacity: [0.65, 1, 0.65] }}
+                                                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                                                style={{
+                                                    fontFamily: "Cinzel, Georgia, serif",
+                                                    color: "rgba(224, 49, 49, 1)",
+                                                    marginRight: "0.4rem",
+                                                }}
+                                            >
+                                                {"›"}
+                                            </motion.span>
+                                        ) : null}
+                                        {phase.prompt}{" "}
+                                        <span
+                                            style={{
+                                                fontFamily: "Cinzel, Georgia, serif",
+                                                letterSpacing: "0.05em",
+                                                color: isActive ? "rgba(224, 49, 49, 1)" : "inherit",
+                                                textDecoration: isPast ? "line-through" : "none",
+                                            }}
+                                        >
+                                            {phase.bold}
+                                        </span>{" "}
+                                        {phase.suffix}
+                                        <span
+                                            style={{
+                                                marginLeft: "0.45rem",
+                                                fontFamily: "Inter, Segoe UI, sans-serif",
+                                                fontSize: phoneScreen ? "0.68rem" : "0.72rem",
+                                                letterSpacing: "0.11em",
+                                                textTransform: "uppercase",
+                                                opacity: isActive ? 0.72 : 0.5,
+                                            }}
+                                        >
+                                            lvl {phase.level}
+                                        </span>
+                                    </Text>
+                                </motion.div>
+                            </Box>
+                        )
+                    })}
+                </Stack>
             )}
 
-            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
-                Skills
-            </Text>
-            <hr color="#e03131" />
+            <Box my="lg">
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <Title
+                        order={4}
+                        style={{
+                            fontFamily: "Cinzel, Georgia, serif",
+                            fontSize: "0.95rem",
+                            fontWeight: 600,
+                            letterSpacing: "0.24em",
+                            textTransform: "uppercase",
+                            color: "rgba(224, 49, 49, 1)",
+                        }}
+                    >
+                        Skills
+                    </Title>
+                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                </div>
+            </Box>
 
             <Space h="sm" />
 
