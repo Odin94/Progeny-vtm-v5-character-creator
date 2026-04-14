@@ -62,9 +62,23 @@ export const SpecialtyModal = ({
             size="lg"
             opened={modalOpened}
             onClose={closeModal}
+            styles={{
+                header: {
+                    justifyContent: "center",
+                },
+                title: {
+                    width: "100%",
+                    textAlign: "center",
+                },
+                body: {
+                    maxWidth: smallScreen ? 340 : 560,
+                    margin: "0 auto",
+                    width: "100%",
+                },
+            }}
             title={
-                <div>
-                    <Text w={smallScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">
+                <div style={{ maxWidth: smallScreen ? "280px" : "520px", margin: "0 auto", width: "100%", textAlign: "center" }}>
+                    <Text fw={700} fz={"30px"} ta="center">
                         Specialties
                     </Text>
                     <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">
@@ -84,6 +98,7 @@ export const SpecialtyModal = ({
                 </Text>
 
                 <Group justify="space-between">
+                  <FocusBorderWrapper colorValue={colorValue} style={{ width: inputW }}>
                     <Select
                         w={inputW}
                         // label="Pick a free specialty"
@@ -97,6 +112,8 @@ export const SpecialtyModal = ({
                         searchValue={pickedSkillDisplay}
                         data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
                     />
+                  </FocusBorderWrapper>
+
 
                     <FocusBorderWrapper colorValue={colorValue} style={{ width: inputW }}>
                         <TextInput
