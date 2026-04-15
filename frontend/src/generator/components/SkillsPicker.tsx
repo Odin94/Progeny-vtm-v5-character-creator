@@ -369,10 +369,39 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         <div style={{ marginTop: height < globals.heightBreakPoint ? "60px" : 0 }}>
             {!pickedDistribution ? (
                 <>
-                    <Text fz={globals.largeFontSize} ta={"center"}>
-                        Pick your <b>Skill Distribution</b>
-                    </Text>
-                    <Space h="xl" />
+                    <Stack gap={6} align="center" mb="xl">
+                        <Text
+                            ta="center"
+                            style={{
+                                fontFamily: "Crimson Text, Georgia, serif",
+                                fontSize: phoneScreen ? "1.95rem" : "2.35rem",
+                                lineHeight: 1.1,
+                                color: "rgba(244, 236, 232, 0.95)",
+                            }}
+                        >
+                            Pick your{" "}
+                            <span
+                                style={{
+                                    fontFamily: "Cinzel, Georgia, serif",
+                                    letterSpacing: "0.05em",
+                                    color: "rgba(224, 49, 49, 1)",
+                                }}
+                            >
+                                Skill Distribution
+                            </span>
+                        </Text>
+                        <Text
+                            ta="center"
+                            style={{
+                                fontFamily: "Inter, Segoe UI, sans-serif",
+                                fontSize: phoneScreen ? "0.82rem" : "0.9rem",
+                                letterSpacing: "0.04em",
+                                color: "rgba(214, 204, 198, 0.5)",
+                            }}
+                        >
+                            Balanced is the default choice
+                        </Text>
+                    </Stack>
                     <Grid grow>
                         {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
                             return (
