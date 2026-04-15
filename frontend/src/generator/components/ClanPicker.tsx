@@ -9,6 +9,7 @@ import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import { globals } from "../../globals"
 import { notDefault } from "../utils"
+import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type ClanPickerProps = {
     character: Character
@@ -111,30 +112,12 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                 px={20}
                 pt={4}
                 pb={8}
-                scrollbarSize={11}
+                scrollbarSize={nightfallScrollbarSize}
                 type="auto"
                 offsetScrollbars="present"
-                styles={{
-                    scrollbar: {
-                        background: "transparent",
-                    },
-                    thumb: {
-                        background: "rgba(224, 49, 49, 0.3)",
-                        borderRadius: "999px",
-                        transition: "background 140ms ease",
-                        "&:hover": {
-                            background: "rgba(224, 49, 49, 0.52)",
-                        },
-                        "&:active": {
-                            background: "rgba(224, 49, 49, 0.7)",
-                        },
-                    },
-                    corner: {
-                        background: "transparent",
-                    },
-                }}
+                styles={nightfallScrollAreaStyles}
             >
-                <Stack gap={4} align="center" mb={6}>
+                <Stack gap={4} align="center" mb={globals.isPhoneScreen ? 18 : 26}>
                     <Title
                         order={2}
                         ta="center"
