@@ -181,12 +181,12 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         specialtyOptions: [
             {
                 skill: "occult",
-                name: "[pick tradition]",
+                name: "Tradition",
                 customInput: "Which tradition?",
             },
             {
                 skill: "performance",
-                name: "[pick any]",
+                name: "Custom",
                 customInput: "Which specialty?",
             },
         ],
@@ -239,17 +239,17 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         specialtyOptions: [
             {
                 skill: "etiquette",
-                name: "[Specific Scene]",
+                name: "Scene",
                 customInput: "Which scene?",
             },
             {
                 skill: "leadership",
-                name: "[Specific Scene]",
+                name: "Scene",
                 customInput: "Which scene?",
             },
             {
                 skill: "streetwise",
-                name: "[Specific Scene]",
+                name: "Scene",
                 customInput: "Which scene?",
             },
         ],
@@ -476,7 +476,7 @@ export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {
         specialtyOptions: [
             {
                 skill: "animal ken",
-                name: "[pick animal]",
+                name: "Animal",
                 customInput: "Which animal?",
             },
             {
