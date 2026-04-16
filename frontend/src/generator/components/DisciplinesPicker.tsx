@@ -22,11 +22,11 @@ const SectionDivider = ({ label }: { label: string }) => (
             <Text
                 style={{
                     fontFamily: "Cinzel, Georgia, serif",
-                    fontSize: "0.78rem",
-                    fontWeight: 600,
+                    fontSize: "0.88rem",
+                    fontWeight: 800,
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
-                    color: "rgba(224, 49, 49, 0.95)",
+                    color: "rgba(224, 49, 49, 1)",
                     whiteSpace: "nowrap",
                 }}
             >
@@ -212,7 +212,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             else setPickedPowers([...pickedPowers, power])
                         }}
                     >
-                        Pick
+                        Take
                     </Button>
                 )}
                 {isPickedAsClan && (
@@ -225,7 +225,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         disabled
                         style={{ fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.05em", fontSize: "0.72rem" }}
                     >
-                        Picked as clan
+                        Taken as clan
                     </Button>
                 )}
                 {isPickedAsPredatorType && (
@@ -238,7 +238,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         disabled
                         style={{ fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.05em", fontSize: "0.72rem" }}
                     >
-                        Picked as predator
+                        Taken as predator
                     </Button>
                 )}
                 {showUndo && (
