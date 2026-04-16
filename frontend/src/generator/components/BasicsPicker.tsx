@@ -1,8 +1,9 @@
-import { Button, Stack, Text, TextInput, Textarea, useMantineTheme } from "@mantine/core"
+import { Button, ScrollArea, Stack, Text, Textarea, TextInput } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
-import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
+import { globals } from "../../globals"
+import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type BasicsPickerProps = {
     character: Character
@@ -10,13 +11,45 @@ type BasicsPickerProps = {
     nextStep: () => void
 }
 
+const inputStyles = {
+    label: {
+        fontFamily: "Cinzel, Georgia, serif",
+        fontSize: "0.9rem",
+        fontWeight: 800,
+        letterSpacing: "0.18em",
+        textTransform: "uppercase" as const,
+        color: "rgba(212, 175, 100, 0.9)",
+        marginBottom: 6,
+    },
+    description: {
+        fontFamily: "Inter, Segoe UI, sans-serif",
+        fontSize: "0.76rem",
+        color: "rgba(214, 204, 198, 0.4)",
+        marginBottom: 4,
+    },
+    input: {
+        background: "rgba(255, 255, 255, 0.18)",
+        backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(2px)',
+        border: "1px solid rgba(255, 255, 255, 0.16)",
+        borderRadius: 10,
+        color: "rgba(244, 236, 232, 0.92)",
+        fontFamily: "Inter, Segoe UI, sans-serif",
+        fontSize: "1rem",
+        transition: "border-color 180ms ease",
+        ":focus": {
+            borderColor: "rgba(190, 75, 219, 1)",
+        },
+    },
+}
+
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Basics Picker" })
     }, [])
 
-    const theme = useMantineTheme()
-    const colorValue = theme.colors.grape[6]
+    const phoneScreen = globals.isPhoneScreen
+    const height = globals.viewportHeightPx
 
     const [name, setName] = useState(character.name)
     const [sire, setSire] = useState(character.sire)
@@ -25,74 +58,106 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
     const [description, setDescription] = useState(character.description)
 
     return (
-        <div>
-            <Text fw={700} fz={"30px"} ta="center">
-                Come up with the basics
-            </Text>
+        <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
+            <style>{`
+                .basics-picker-input::placeholder {
+                    color: rgba(214, 204, 198, 0.5);
+                    opacity: 1;
+                }
+            `}</style>
+            <ScrollArea h={height - 230} type="auto" offsetScrollbars="present" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
+                <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
+                    <Text
+                        ta="center"
+                        style={{
+                            fontFamily: "Crimson Text, Georgia, serif",
+                            fontSize: phoneScreen ? "1.95rem" : "2.35rem",
+                            lineHeight: 1.1,
+                            color: "rgba(244, 236, 232, 0.95)",
+                        }}
+                    >
+                        Come up with the{" "}
+                        <span
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                letterSpacing: "0.05em",
+                                color: "rgba(224, 49, 49, 1)",
+                            }}
+                        >
+                            Basics
+                        </span>
+                    </Text>
+                </Stack>
 
-            <Stack mt={"xl"} align="center" gap="xl">
-                <FocusBorderWrapper colorValue={colorValue} style={{ width: "300px" }}>
+                <Stack
+                    gap="lg"
+                    maw={420}
+                    mx="auto"
+                    px={phoneScreen ? 12 : 0}
+                    pb="xl"
+                >
                     <TextInput
-                        style={{ width: "100%" }}
                         value={name}
-                        onChange={(event) => setName(event.currentTarget.value)}
+                        onChange={(e) => setName(e.currentTarget.value)}
                         placeholder="Erika Mustermann"
                         label="Full name"
+                        styles={inputStyles}
+                        classNames={{ input: "basics-picker-input" }}
                     />
-                </FocusBorderWrapper>
 
-                <FocusBorderWrapper colorValue={colorValue} style={{ width: "300px" }}>
                     <TextInput
-                        style={{ width: "100%" }}
                         value={sire}
-                        onChange={(event) => setSire(event.currentTarget.value)}
+                        onChange={(e) => setSire(e.currentTarget.value)}
                         placeholder="Your sire"
                         label="Sire"
                         description="The vampire that turned you"
+                        styles={inputStyles}
+                        classNames={{ input: "basics-picker-input" }}
                     />
-                </FocusBorderWrapper>
 
-                <FocusBorderWrapper colorValue={colorValue} style={{ width: "300px" }}>
                     <TextInput
-                        style={{ width: "100%" }}
                         value={ambition}
-                        onChange={(event) => setAmbition(event.currentTarget.value)}
+                        onChange={(e) => setAmbition(e.currentTarget.value)}
                         placeholder="Break free from my sire's clutches"
-                        label="Your long term ambition"
+                        label="Long term ambition"
+                        styles={inputStyles}
+                        classNames={{ input: "basics-picker-input" }}
                     />
-                </FocusBorderWrapper>
 
-                <FocusBorderWrapper colorValue={colorValue} style={{ width: "300px" }}>
                     <TextInput
-                        style={{ width: "100%" }}
                         value={desire}
-                        onChange={(event) => setDesire(event.currentTarget.value)}
+                        onChange={(e) => setDesire(e.currentTarget.value)}
                         placeholder="Embarrass my rival in court"
-                        label="Your short term desire"
+                        label="Short term desire"
+                        styles={inputStyles}
+                        classNames={{ input: "basics-picker-input" }}
                     />
-                </FocusBorderWrapper>
 
-                <FocusBorderWrapper colorValue={colorValue} style={{ width: "300px" }}>
                     <Textarea
                         value={description}
-                        onChange={(event) => setDescription(event.currentTarget.value)}
+                        onChange={(e) => setDescription(e.currentTarget.value)}
                         placeholder="Young alt-rock musician with a black vegan-leather jacket and long black hair"
-                        label="Description & appearance of your character"
+                        label="Description & appearance"
                         autosize
                         minRows={4}
+                        styles={inputStyles}
+                        classNames={{ input: "basics-picker-input" }}
                     />
-                </FocusBorderWrapper>
 
-                <Button
-                    color="grape"
-                    onClick={() => {
-                        setCharacter({ ...character, name, sire, ambition, desire, description })
-                        nextStep()
-                    }}
-                >
-                    Confirm
-                </Button>
-            </Stack>
+                    <Button
+                        color="grape"
+                        mt="sm"
+                        mx="auto"
+                        display="block"
+                        onClick={() => {
+                            setCharacter({ ...character, name, sire, ambition, desire, description })
+                            nextStep()
+                        }}
+                    >
+                        Confirm
+                    </Button>
+                </Stack>
+            </ScrollArea>
         </div>
     )
 }
