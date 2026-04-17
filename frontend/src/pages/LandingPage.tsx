@@ -9,6 +9,7 @@ import {
 import { Link, useNavigate } from "@tanstack/react-router"
 import { motion } from "framer-motion"
 import { useRef, type ReactNode } from "react"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import "./LandingPage.css"
@@ -154,27 +155,27 @@ export default function LandingPage() {
                             <Stack gap={4} mt="lg" align="center">
                                 <Text size="sm" className="landing-page__hero-meta">
                                     Feedback, requests or questions? Reach out to Odin on{" "}
-                                    <Anchor href="https://www.reddit.com/user/Odin94" target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
-                                        Reddit
+                                    <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                        {CONTACT_LINKS.reddit.label}
                                     </Anchor>
                                     {", "}
-                                    <Anchor href="https://bsky.app/profile/odin-dev.bsky.social" target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
-                                        Bluesky
+                                    <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                        {CONTACT_LINKS.bluesky.label}
                                     </Anchor>
                                     {" or "}
-                                    <Anchor href="https://ko-fi.com/odin_dev" target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
-                                        Ko-Fi
+                                    <Anchor href={CONTACT_LINKS.kofi.href} target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                        {CONTACT_LINKS.kofi.label}
                                     </Anchor>
                                 </Text>
                                 <Text size="sm" className="landing-page__hero-meta">
                                     Find source code on {" "}
                                     <Anchor
-                                        href="https://github.com/Odin94/Progeny-vtm-v5-character-creator"
+                                        href={CONTACT_LINKS.github.href}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="landing-page__hero-meta-link"
                                     >
-                                        GitHub
+                                        {CONTACT_LINKS.github.label}
                                     </Anchor>
                                 </Text>
                             </Stack>
@@ -335,26 +336,26 @@ export default function LandingPage() {
 
                         <Group gap="lg" className="landing-page__footer-links">
                           <Text className="landing-page__link">Contact me:</Text>
-                            <Anchor href="https://www.reddit.com/user/Odin94" target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
-                                Reddit
+                            <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                                {CONTACT_LINKS.reddit.label}
                             </Anchor>
-                            <Anchor href="https://bsky.app/profile/odin-dev.bsky.social" target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
-                                Bluesky
+                            <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                                {CONTACT_LINKS.bluesky.label}
                             </Anchor>
                             <Anchor
-                                href="https://github.com/Odin94/Progeny-vtm-v5-character-creator"
+                                href={CONTACT_LINKS.github.href}
                                 target="_blank"
                                 rel="noreferrer"
                                 underline="never"
                                 className="landing-page__link"
                             >
-                                GitHub
+                                {CONTACT_LINKS.github.label}
                             </Anchor>
-                            <Anchor href="https://ko-fi.com/odin_dev" target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
-                                Ko-fi
+                            <Anchor href={CONTACT_LINKS.kofi.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                                {CONTACT_LINKS.kofi.label}
                             </Anchor>
-                            <Anchor href="https://odin-matthias.de" target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
-                                Website
+                            <Anchor href={CONTACT_LINKS.website.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                                {CONTACT_LINKS.website.label}
                             </Anchor>
                         </Group>
                     </Group>
