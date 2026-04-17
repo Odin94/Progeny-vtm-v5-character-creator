@@ -7,6 +7,7 @@ import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../d
 import { globals } from "../../globals"
 import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
+import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type DisciplinesPickerProps = {
@@ -43,8 +44,6 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     }, [])
 
     const phoneScreen = globals.isPhoneScreen
-    const height = globals.viewportHeightPx
-
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
 
@@ -321,8 +320,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     // Thin-blood
     if (character.clan === "Thin-blood") {
         return (
-            <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
-                <Stack align="center" gap="md">
+            <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+                <Stack align="center" justify="center" gap="md" style={generatorScrollableAreaStyle}>
                     <Text
                         ta="center"
                         style={{
@@ -349,8 +348,18 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     }
 
     return (
-        <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
-            <ScrollArea h={height - 230} type="auto" offsetScrollbars="present" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
+        <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+            <ScrollArea
+                style={generatorScrollableAreaStyle}
+                w="100%"
+                px={20}
+                pt={4}
+                pb={8}
+                type="auto"
+                offsetScrollbars="present"
+                scrollbarSize={nightfallScrollbarSize}
+                styles={nightfallScrollAreaStyles}
+            >
                 <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
                     <Text
                         ta="center"
@@ -385,7 +394,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     </Text>
                 </Stack>
 
-                <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl">
+                <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl" w="100%">
                     <SectionDivider label="Clan Disciplines" />
 
                     <Accordion

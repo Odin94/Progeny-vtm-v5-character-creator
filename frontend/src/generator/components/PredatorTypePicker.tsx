@@ -9,6 +9,7 @@ import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
 import { clans } from "~/data/Clans"
+import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type PredatorTypePickerProps = {
@@ -237,11 +238,10 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
         </Stack>
     )
 
-    const height = globals.viewportHeightPx
     return (
-        <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
+        <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
             {isThinBlood ? (
-                <div style={{ fontSize: globals.largeFontSize, textAlign: "center" }}>
+                <div style={{ ...generatorScrollableAreaStyle, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
                     <Text fz={globals.largeFontSize} ta={"center"} component="span">
                         <b>Thin-bloods</b> do not have a predator type
                     </Text>
@@ -261,7 +261,17 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     </Button>
                 </div>
             ) : (
-                <ScrollArea h={height - 230} type="auto" offsetScrollbars="present" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
+                <ScrollArea
+                    style={generatorScrollableAreaStyle}
+                    w="100%"
+                    px={20}
+                    pt={4}
+                    pb={8}
+                    type="auto"
+                    offsetScrollbars="present"
+                    scrollbarSize={nightfallScrollbarSize}
+                    styles={nightfallScrollAreaStyles}
+                >
                     {createPredatorTypeStack()}
                 </ScrollArea>
             )}
