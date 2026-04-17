@@ -97,6 +97,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
     )
     const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false)
     const [touchstoneToDelete, setTouchstoneToDelete] = useState<number | null>(null)
+    const [addButtonHovered, setAddButtonHovered] = useState(false)
 
     const persistTouchstones = (updatedTouchstones: Touchstone[]) => {
         setCharacter({ ...character, touchstones: updatedTouchstones })
@@ -118,7 +119,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                     pt={4}
                     pb={8}
                     scrollbarSize={nightfallScrollbarSize}
-                    type="auto"
+                    type="always"
                     offsetScrollbars="present"
                     styles={nightfallScrollAreaStyles}
                 >
@@ -293,21 +294,20 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                 setTouchstonePlaceholders(newPlaceholders)
                                 persistTouchstones(newTouchstones)
                             }}
+                            onMouseEnter={() => setAddButtonHovered(true)}
+                            onMouseLeave={() => setAddButtonHovered(false)}
                             styles={{
+                              // TODOdin: Lol. Lmao even. Let's get proper css hover in here before merging
                                 root: {
                                     alignSelf: "center",
-                                    borderColor: "rgba(224, 49, 49, 0.4)",
-                                    background: "rgba(224, 49, 49, 0.08)",
+                                    borderColor: addButtonHovered ? "rgba(250, 82, 82, 0.85)" : "rgba(224, 49, 49, 0.4)",
+                                    background: addButtonHovered ? "rgba(224, 49, 49, 0.24)" : "rgba(224, 49, 49, 0.08)",
+                                    boxShadow: addButtonHovered ? "0 0 0 1px rgba(224, 49, 49, 0.22), 0 0 18px rgba(224, 49, 49, 0.18), 0 10px 24px rgba(224, 49, 49, 0.18)" : "none",
+                                    transform: addButtonHovered ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
                                     transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
                                     letterSpacing: "0.14em",
                                     textTransform: "uppercase",
                                     fontFamily: "Cinzel, Georgia, serif",
-                                    "&:hover": {
-                                        background: "rgba(224, 49, 49, 0.18)",
-                                        borderColor: "rgba(224, 49, 49, 0.7)",
-                                        boxShadow: "0 0 0 1px rgba(224, 49, 49, 0.15), 0 8px 20px rgba(224, 49, 49, 0.14)",
-                                        transform: "translateY(-1px)",
-                                    },
                                 },
                                 section: {
                                     color: "rgba(224, 49, 49, 1)",
