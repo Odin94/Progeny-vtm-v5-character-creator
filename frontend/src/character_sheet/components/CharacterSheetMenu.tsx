@@ -9,6 +9,8 @@ import { Buffer } from "buffer"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRef, useState } from "react"
 import { z } from "zod"
+import ErrorDetails from "~/components/ErrorDetails"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
@@ -335,7 +337,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 
                                     <Button
                                         component="a"
-                                        href="https://ko-fi.com/odin_dev"
+                                        href={CONTACT_LINKS.kofi.href}
                                         target="_blank"
                                         rel="noreferrer"
                                         leftSection={<IconExternalLink size={18} />}
@@ -482,21 +484,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 
             {downloadError ? (
                 <Modal opened={!!downloadError} onClose={() => setDownloadError(undefined)} title="Download Error" centered>
-                    <Stack gap="md">
-                        <Text c="red" fw={600}>
-                            There was a download error: {downloadError.message}
-                        </Text>
-                        <Text size="sm" c="dimmed">
-                            Send a screenshot of this to me on{" "}
-                            <a target="_blank" rel="noreferrer" href="https://twitter.com/Odin68092534" style={{ color: "#9c36b5" }}>
-                                Twitter
-                            </a>{" "}
-                            to help me fix it
-                        </Text>
-                        <Text size="xs" c="dimmed" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                            {downloadError.stack}
-                        </Text>
-                    </Stack>
+                    <ErrorDetails error={downloadError} linkColor="#9c36b5" />
                 </Modal>
             ) : null}
         </>

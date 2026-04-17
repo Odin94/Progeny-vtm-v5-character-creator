@@ -5,6 +5,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { IconBrandGithub } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 import LoadModal from "../../components/LoadModal"
 import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
 import { Character } from "../../data/Character"
@@ -69,7 +70,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
 
                 <Button
                     component="a"
-                    href="https://github.com/Odin94/Progeny-vtm-v5-character-creator"
+                    href={CONTACT_LINKS.github.href}
                     target="_blank"
                     rel="noreferrer"
                     leftSection={<IconBrandGithub />}
@@ -81,7 +82,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                 </Button>
                 <Button
                     component="a"
-                    href="https://ko-fi.com/odin_dev"
+                    href={CONTACT_LINKS.kofi.href}
                     target="_blank"
                     rel="noreferrer"
                     leftSection={<span>☕</span>}
@@ -93,7 +94,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                 </Button>
                 <Button
                     component="a"
-                    href="https://odin-matthias.de"
+                    href={CONTACT_LINKS.website.href}
                     target="_blank"
                     rel="noreferrer"
                     size="xs"
