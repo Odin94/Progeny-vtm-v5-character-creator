@@ -9,6 +9,7 @@ import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import { globals } from "../../globals"
 import { notDefault } from "../utils"
+import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type ClanPickerProps = {
@@ -105,9 +106,9 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         )
     }
     return (
-        <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden", paddingTop: 75, boxSizing: "border-box" }}>
+        <div style={generatorScrollableShellStyle}>
             <ScrollArea
-                style={{ flex: 1, minHeight: 0 }}
+                style={generatorScrollableAreaStyle}
                 w={"100%"}
                 px={20}
                 pt={4}
