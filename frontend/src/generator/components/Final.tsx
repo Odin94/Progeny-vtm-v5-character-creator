@@ -6,6 +6,8 @@ import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { IconAlertCircle, IconHelpHexagon } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
+import ErrorDetails from "~/components/ErrorDetails"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ReactGA from "react-ga4"
 import { globals } from "~/globals"
 import ResetModal from "../../components/ResetModal"
@@ -112,7 +114,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
 
                 <Button
                     component="a"
-                    href="https://ko-fi.com/odin_dev"
+                    href={CONTACT_LINKS.kofi.href}
                     target="_blank"
                     rel="noreferrer"
                     leftSection={<span>☕</span>}
@@ -138,19 +140,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
 
             {downloadError ? (
                 <Alert mt={"50px"} icon={<IconAlertCircle size="1rem" />} color="red" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
-                    <Text fz={"xl"} ta={"center"}>
-                        There was a download-error: {downloadError.message}
-                    </Text>
-                    <Text fz={"lg"} ta={"center"} mb={"xl"}>
-                        Send a screenshot of this to me on{" "}
-                        <a target="_blank" rel="noreferrer" href="https://twitter.com/Odin68092534">
-                            Twitter
-                        </a>{" "}
-                        to help me fix it
-                    </Text>
-                    <Text fz={"xs"} ta={"center"}>
-                        {downloadError.stack}
-                    </Text>
+                    <ErrorDetails error={downloadError} />
                 </Alert>
             ) : null}
 
