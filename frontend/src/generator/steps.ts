@@ -12,7 +12,6 @@ type GeneratorProgressKey =
     | "merits"
 
 export type GeneratorStepId =
-    | "intro"
     | "clan"
     | "attributes"
     | "skills"
@@ -32,7 +31,6 @@ export type GeneratorStep = {
 }
 
 const allGeneratorSteps: GeneratorStep[] = [
-    { id: "intro", label: "Intro" },
     { id: "clan", label: "Clan", progressKey: "clan" },
     { id: "attributes", label: "Attributes", progressKey: "attributes" },
     { id: "skills", label: "Skills", progressKey: "skills" },
@@ -46,7 +44,7 @@ const allGeneratorSteps: GeneratorStep[] = [
     { id: "final", label: "Final" },
 ]
 
-export const defaultGeneratorStepId: GeneratorStepId = "intro"
+export const defaultGeneratorStepId: GeneratorStepId = "clan"
 
 const isStepAvailable = (character: Character, stepId: GeneratorStepId) => {
     if (stepId === "rituals") {

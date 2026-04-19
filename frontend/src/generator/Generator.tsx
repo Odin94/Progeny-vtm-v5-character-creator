@@ -7,7 +7,6 @@ import ClanPicker from "./components/ClanPicker"
 import DisciplinesPicker from "./components/DisciplinesPicker"
 import Final from "./components/Final"
 import GenerationPicker from "./components/GenerationPicker"
-import Intro from "./components/Intro"
 import MeritsAndFlawsPicker from "./components/MeritsAndFlawsPicker"
 import PredatorTypePicker from "./components/PredatorTypePicker"
 import RitualsPicker from "./components/RitualsPicker"
@@ -30,14 +29,6 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
 
     const getStepComponent = () => {
         switch (selectedStep) {
-            case "intro":
-                return (
-                    <Intro
-                        setCharacter={setCharacter}
-                        nextStep={nextStep}
-                        setSelectedStep={setSelectedStep}
-                    />
-                )
             case "clan":
                 return (
                     <ClanPicker

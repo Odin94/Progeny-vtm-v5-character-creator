@@ -5,6 +5,11 @@ body,
     margin: 0;
 }
 
+html {
+    /* Keep centered containers aligned between scrolling and non-scrolling routes. */
+    scrollbar-gutter: stable;
+}
+
 :root {
     --text-color: "#c9c9c9";
 }
