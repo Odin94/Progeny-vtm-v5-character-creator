@@ -7,7 +7,7 @@ import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../d
 import { globals } from "../../globals"
 import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
-import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type DisciplinesPickerProps = {
@@ -320,7 +320,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     // Thin-blood
     if (character.clan === "Thin-blood") {
         return (
-            <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+            <div style={generatorScrollableShellStyle}>
                 <Stack align="center" justify="center" gap="md" style={generatorScrollableAreaStyle}>
                     <Text
                         ta="center"
@@ -348,7 +348,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     }
 
     return (
-        <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+        <div style={generatorScrollableShellStyle}>
             <ScrollArea
                 style={generatorScrollableAreaStyle}
                 w="100%"
@@ -360,6 +360,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 scrollbarSize={nightfallScrollbarSize}
                 styles={nightfallScrollAreaStyles}
             >
+                <div style={generatorScrollableContentStyle}>
                 <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
                     <Text
                         ta="center"
@@ -452,6 +453,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         </Button>
                     </Group>
                 </Box>
+                </div>
             </ScrollArea>
         </div>
     )

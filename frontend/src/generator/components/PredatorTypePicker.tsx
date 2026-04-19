@@ -9,7 +9,7 @@ import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
 import { clans } from "~/data/Clans"
-import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type PredatorTypePickerProps = {
@@ -239,7 +239,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     )
 
     return (
-        <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+        <div style={generatorScrollableShellStyle}>
             {isThinBlood ? (
                 <div style={{ ...generatorScrollableAreaStyle, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
                     <Text fz={globals.largeFontSize} ta={"center"} component="span">
@@ -272,7 +272,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     scrollbarSize={nightfallScrollbarSize}
                     styles={nightfallScrollAreaStyles}
                 >
-                    {createPredatorTypeStack()}
+                    <div style={generatorScrollableContentStyle}>{createPredatorTypeStack()}</div>
                 </ScrollArea>
             )}
 

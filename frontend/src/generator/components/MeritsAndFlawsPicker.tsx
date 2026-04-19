@@ -1,6 +1,6 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Grid, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import { Box, Button, Divider, Grid, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
 import { useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -24,6 +24,8 @@ const flawIcon = () => {
 const meritIcon = () => {
     return <FontAwesomeIcon icon={faPlay} rotation={270} style={{ color: "rgb(47, 158, 68)" }} />
 }
+
+const meritsContentMaxWidth = 980
 
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
     useEffect(() => {
@@ -89,6 +91,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => {
         const buttonColor = type === "flaw" ? "red" : "green"
         const icon = type === "flaw" ? flawIcon() : meritIcon()
+        const lineKey = `${type}-${meritOrFlaw.name}`
 
         const alreadyPickedItem = pickedMeritsAndFlaws.find((l) => l.name === meritOrFlaw.name)
         const wasPickedLevel = alreadyPickedItem?.level ?? 0
@@ -147,7 +150,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
               : meritOrFlaw.summary
 
         const textContent = (
-            <Text style={textStyle} key={meritOrFlaw.name}>
+            <Text style={textStyle} key={lineKey}>
                 {icon} &nbsp;
                 <b>{meritOrFlaw.name}</b> - {summaryText}
                 <span>
@@ -178,7 +181,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
         if (isExcluded) {
             return (
-                <Tooltip label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`} withArrow>
+                <Tooltip key={lineKey} label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`} withArrow>
                     {textContent}
                 </Tooltip>
             )
@@ -208,36 +211,38 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 {/* Merits & Flaws */}
                 <Tabs.Panel value="merits" pt="xs">
                     <ScrollArea h={height - 330} w={"100%"} p={20}>
-                        {isThinBlood ? (
-                            <>
-                                <Text fz={globals.largeFontSize} ta={"center"} c={theme.colors.grape[6]}>
-                                    Pick Thin-blood flaws to gain Thin-blood merit points
-                                </Text>
-                                <Text fz={globals.smallFontSize} ta={"center"} c={theme.colors.grape[6]}>
-                                    Points: {remainingThinbloodMeritPoints}
-                                </Text>
-                            </>
-                        ) : null}
-                        <Grid m={0}>
-                            {/* Thinbloods */}
-                            {isThinBlood ? thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine) : null}
+                        <Box maw={meritsContentMaxWidth} mx="auto" w="100%">
+                            {isThinBlood ? (
+                                <>
+                                    <Text fz={globals.largeFontSize} ta={"center"} c={theme.colors.grape[6]}>
+                                        Pick Thin-blood flaws to gain Thin-blood merit points
+                                    </Text>
+                                    <Text fz={globals.smallFontSize} ta={"center"} c={theme.colors.grape[6]}>
+                                        Points: {remainingThinbloodMeritPoints}
+                                    </Text>
+                                </>
+                            ) : null}
+                            <Grid m={0}>
+                                {/* Thinbloods */}
+                                {isThinBlood ? thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine) : null}
 
-                            {meritsAndFlaws.map((category) => {
-                                return (
-                                    <Grid.Col span={6} key={category.title}>
-                                        <Stack gap={"xs"}>
-                                            <Text fw={700} size={"xl"}>
-                                                {category.title}
-                                            </Text>
-                                            <Divider mt={0} w={"50%"} />
+                                {meritsAndFlaws.map((category) => {
+                                    return (
+                                        <Grid.Col span={6} key={category.title}>
+                                            <Stack gap={"xs"}>
+                                                <Text fw={700} size={"xl"}>
+                                                    {category.title}
+                                                </Text>
+                                                <Divider mt={0} w={"50%"} />
 
-                                            {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
-                                            {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
-                                        </Stack>
-                                    </Grid.Col>
-                                )
-                            })}
-                        </Grid>
+                                                {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+                                                {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
+                                            </Stack>
+                                        </Grid.Col>
+                                    )
+                                })}
+                            </Grid>
+                        </Box>
                     </ScrollArea>
                 </Tabs.Panel>
 

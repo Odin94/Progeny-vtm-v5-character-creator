@@ -22,7 +22,7 @@ import { trackEvent } from "../../utils/analytics"
 import { faPlus, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
 import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
-import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type TouchstonePickerProps = {
@@ -110,7 +110,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
     }
 
     return (
-        <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+        <div style={generatorScrollableShellStyle}>
             <Stack align="center" gap={"md"} style={{ ...generatorScrollableAreaStyle, width: "100%" }}>
                 <ScrollArea
                     style={generatorScrollableAreaStyle}
@@ -123,6 +123,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                     offsetScrollbars="present"
                     styles={nightfallScrollAreaStyles}
                 >
+                    <div style={generatorScrollableContentStyle}>
                     <Stack gap="md" align="center">
                         <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26} w="100%">
                             <Text
@@ -317,6 +318,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                             Add Touchstone
                         </Button>
                     </Stack>
+                    </div>
                 </ScrollArea>
 
                 <Group justify="center">

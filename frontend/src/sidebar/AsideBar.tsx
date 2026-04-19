@@ -14,7 +14,7 @@ export type AsideBarProps = {
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
-    const { loading: authLoading, isAuthenticated, signIn } = useAuth()
+    const { isLoading: authLoading, isAuthenticated, signIn } = useAuth()
     const steps = getVisibleGeneratorSteps(character)
 
     const isHigherLevelAccessible = (character: Character, step: (typeof steps)[number]) => {

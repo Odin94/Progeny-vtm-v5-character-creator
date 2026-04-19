@@ -1,17 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { api, API_URL } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
 
+const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
+
+const getCurrentReturnTo = () => {
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    return returnTo === "/auth/callback" ? "/" : returnTo
+}
+
+export const getStoredAuthReturnTo = () => sessionStorage.getItem(AUTH_RETURN_TO_STORAGE_KEY)
+
+export const clearStoredAuthReturnTo = () => {
+    sessionStorage.removeItem(AUTH_RETURN_TO_STORAGE_KEY)
+}
+
 export const useAuth = () => {
     const queryClient = useQueryClient()
-    const navigate = useNavigate()
 
     const {
         data: user,
-        isLoading: loading,
+        isLoading,
         refetch,
     } = useQuery({
         queryKey: ["auth", "me"],
@@ -68,7 +79,7 @@ export const useAuth = () => {
             if (data.logoutUrl) {
                 window.location.href = data.logoutUrl
             } else {
-                navigate({ to: "/" })
+                window.location.href = "/"
             }
         },
         onError: () => {
@@ -82,7 +93,7 @@ export const useAuth = () => {
             }
 
             // Even on error, try to go home
-            navigate({ to: "/" })
+            window.location.href = "/"
         },
     })
 
@@ -106,15 +117,13 @@ export const useAuth = () => {
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
-
-            // Redirect to /me after successful authentication
-            // This ensures redirect happens even if the component's onSuccess callback doesn't fire
-            navigate({ to: "/" })
         },
     })
 
     const signIn = () => {
-        window.location.href = `${API_URL}/auth/login`
+        const returnTo = getCurrentReturnTo()
+        sessionStorage.setItem(AUTH_RETURN_TO_STORAGE_KEY, returnTo)
+        window.location.href = `${API_URL}/auth/login?returnTo=${encodeURIComponent(returnTo)}`
     }
 
     const signOut = () => {
@@ -130,8 +139,8 @@ export const useAuth = () => {
     })
 
     return {
-        user: user || null,
-        loading,
+        user: user ?? null,
+        isLoading,
         isAuthenticated: !!user,
         signIn,
         signOut,
