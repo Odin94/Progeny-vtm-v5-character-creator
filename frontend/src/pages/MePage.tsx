@@ -166,7 +166,7 @@ type Coterie = {
 // * Move a bunch of the stuff we're currently passing into sections into the section components
 
 const MePage = () => {
-    const { user, loading: authLoading, isAuthenticated, updateProfile, isUpdatingProfile, signOut } = useAuth()
+    const { user, isLoading: authLoading, isAuthenticated, updateProfile, isUpdatingProfile, signOut } = useAuth()
     const { data: characters } = useCharacters()
     const { data: coteries } = useCoteries()
     const [character, setCharacter] = useCharacterLocalStorage()

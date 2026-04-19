@@ -65,7 +65,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
-    const { isAuthenticated, loading: authLoading, signIn } = useAuth()
+    const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
 
     const charName = character.name?.trim() || ""
     const displayTitle = charName || "Your Kindred Awaits"

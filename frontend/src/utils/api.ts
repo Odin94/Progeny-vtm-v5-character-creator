@@ -97,21 +97,47 @@ type UserPreferences = {
     backgroundImage: string | null
 }
 
+export type CurrentUser = {
+    id: string
+    email: string
+    firstName?: string
+    lastName?: string
+    nickname?: string | null
+}
+
 // TODOdin: Put proper types in APIs
 export const api = {
     // Auth
-    getCurrentUser: () =>
-        apiRequest<{ id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null }>("/auth/me"),
+    getCurrentUser: async (): Promise<CurrentUser | null> => {
+        const response = await fetch(`${API_URL}/auth/me`, {
+            credentials: "include",
+        })
+
+        const csrfFromHeader = response.headers.get("X-CSRF-Token")
+        if (csrfFromHeader) {
+            csrfTokenCache = csrfFromHeader
+        }
+
+        if (response.status === 401) {
+            return null
+        }
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: "Unknown error" }))
+            const errorMessage = error.message || error.error || `HTTP ${response.status}`
+            const httpError = new Error(errorMessage) as Error & { status?: number }
+            httpError.status = response.status
+            throw httpError
+        }
+
+        return response.json()
+    },
     handleAuthCallback: (code: string, state?: string) =>
-        apiRequest<{ success: true; user: { id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null } }>(
+        apiRequest<{ success: true; user: CurrentUser }>(
             `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`,
         ),
     logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
-    updateUserProfile: (data: { nickname?: string | null }) =>
-        apiRequest<{ id: string; email: string; firstName?: string; lastName?: string; nickname?: string | null }>("/auth/me", {
-            method: "PUT",
-            body: data,
-        }),
+    updateUserProfile: (data: { nickname?: string | null }) => apiRequest<CurrentUser>("/auth/me", { method: "PUT", body: data }),
     getPreferences: () => apiRequest<UserPreferences>("/auth/preferences"),
     updatePreferences: (data: Partial<UserPreferences>) =>
         apiRequest<UserPreferences>("/auth/preferences", { method: "PUT", body: data }),

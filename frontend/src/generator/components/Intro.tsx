@@ -11,7 +11,7 @@ import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
 import { GeneratorStepId } from "../steps"
-import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { SocialIcons } from "./SocialIcons"
 
@@ -33,7 +33,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
     const smallScreen = globals.isSmallScreen
 
     return (
-        <div style={{ ...generatorScrollableShellStyle, width: "100%" }}>
+        <div style={generatorScrollableShellStyle}>
             <Stack align="center" gap="md" style={{ ...generatorScrollableAreaStyle, width: "100%" }}>
                 <ScrollArea
                     style={generatorScrollableAreaStyle}
@@ -46,6 +46,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                     offsetScrollbars="present"
                     styles={nightfallScrollAreaStyles}
                 >
+                    <div style={generatorScrollableContentStyle}>
                     <Stack gap="xl" align="center">
                         <Stack gap={10} align="center" mb={phoneScreen ? 4 : 8} w="100%">
                             <Text
@@ -290,6 +291,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                             </Button>
                         </Stack>
                     </Stack>
+                    </div>
                 </ScrollArea>
             </Stack>
 

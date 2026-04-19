@@ -117,18 +117,12 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     }
 
     return (
-        <div
-            style={{
-                height: "100%",
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                minHeight: 0,
-            }}
-        >
-            <ErrorBoundary key={selectedStep}>{getStepComponent()}</ErrorBoundary>
+        // position: relative is the anchor for ShellStyle-based steps that use position: absolute
+        <div style={{ height: "100%", width: "100%", position: "relative", flex: 1, minHeight: 0 }}>
+            {/* 960px centered wrapper for steps that don't use their own full-width shell */}
+            <div style={{ maxWidth: 960, marginLeft: "auto", marginRight: "auto", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 0 }}>
+                <ErrorBoundary key={selectedStep}>{getStepComponent()}</ErrorBoundary>
+            </div>
         </div>
     )
 }

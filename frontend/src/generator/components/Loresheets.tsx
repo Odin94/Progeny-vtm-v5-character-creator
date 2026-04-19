@@ -1,4 +1,4 @@
-import { Button, Card, Grid, ScrollArea, Text } from "@mantine/core"
+import { Box, Button, Card, Grid, ScrollArea, Text } from "@mantine/core"
 import { useState } from "react"
 import { Loresheet, MeritOrFlaw, loresheets } from "../../data/MeritsAndFlaws"
 import { globals } from "../../globals"
@@ -11,6 +11,8 @@ type LoresheetProps = {
     getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element
     pickedMeritsAndFlaws: MeritFlaw[]
 }
+
+const loresheetsContentMaxWidth = 980
 
 // TODO: Create text-filter for loresheets?
 export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws }: LoresheetProps) => {
@@ -54,17 +56,19 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
     const height = globals.viewportHeightPx
     return (
         <ScrollArea h={height - 330} w={"100%"} p={20}>
-            <Grid w={"100%"}>
-                {openLoresheet ? (
-                    <OpenedLoresheet
-                        loresheet={openLoresheet}
-                        getMeritOrFlawLine={getMeritOrFlawLine}
-                        setOpenLoresheetTitle={setOpenLoresheetTitle}
-                    />
-                ) : (
-                    loresheets.map(getLoresheetCol)
-                )}
-            </Grid>
+            <Box maw={loresheetsContentMaxWidth} mx="auto" w="100%">
+                <Grid w={"100%"}>
+                    {openLoresheet ? (
+                        <OpenedLoresheet
+                            loresheet={openLoresheet}
+                            getMeritOrFlawLine={getMeritOrFlawLine}
+                            setOpenLoresheetTitle={setOpenLoresheetTitle}
+                        />
+                    ) : (
+                        loresheets.map(getLoresheetCol)
+                    )}
+                </Grid>
+            </Box>
         </ScrollArea>
     )
 }

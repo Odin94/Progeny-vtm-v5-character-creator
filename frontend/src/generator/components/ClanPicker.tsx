@@ -9,7 +9,7 @@ import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import { globals } from "../../globals"
 import { notDefault } from "../utils"
-import { generatorScrollableAreaStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type ClanPickerProps = {
@@ -118,6 +118,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                 offsetScrollbars="present"
                 styles={nightfallScrollAreaStyles}
             >
+                <div style={generatorScrollableContentStyle}>
                 <Stack gap={4} align="center" mb={globals.isPhoneScreen ? 18 : 26}>
                     <Title
                         order={2}
@@ -188,6 +189,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         .map((c) => clanNameSchema.parse(c))
                         .map((clan) => createClanPick(clan, rgba(theme.colors.teal[8], 0.9)))}
                 </Grid>
+                </div>
             </ScrollArea>
         </div>
     )

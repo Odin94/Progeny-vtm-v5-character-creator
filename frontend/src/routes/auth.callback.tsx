@@ -1,23 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { Container, Loader, Text } from "@mantine/core"
 import { useEffect, useRef } from "react"
-import { useAuth } from "~/hooks/useAuth"
-import { useNavigate } from "@tanstack/react-router"
+import { clearStoredAuthReturnTo, getStoredAuthReturnTo, useAuth } from "~/hooks/useAuth"
 
 export const Route = createFileRoute("/auth/callback")({
     component: AuthCallback,
 })
 
+const DEFAULT_POST_AUTH_PATH = "/"
+
+function getSafeReturnTo(state?: string | null) {
+    const candidate = state || getStoredAuthReturnTo() || DEFAULT_POST_AUTH_PATH
+
+    if (!candidate.startsWith("/")) {
+        return DEFAULT_POST_AUTH_PATH
+    }
+
+    if (candidate.startsWith("//")) {
+        return DEFAULT_POST_AUTH_PATH
+    }
+
+    return candidate === "/auth/callback" ? DEFAULT_POST_AUTH_PATH : candidate
+}
+
 // TODOdin: Give users a way out of here if they're stuck in `Completing sign in...`
 function AuthCallback() {
-    const { handleCallback, isHandlingCallback, isAuthenticated, user } = useAuth()
+    const { handleCallback, isHandlingCallback } = useAuth()
     const callbackProcessedRef = useRef<string | null>(null)
-    const navigate = useNavigate()
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search)
         const code = urlParams.get("code")
         const state = urlParams.get("state")
+        const returnTo = getSafeReturnTo(state)
 
         if (code && !isHandlingCallback && callbackProcessedRef.current !== code) {
             callbackProcessedRef.current = code
@@ -27,23 +42,31 @@ function AuthCallback() {
             handleCallback(
                 { code, state: state || undefined },
                 {
+                    onSuccess: () => {
+                        clearStoredAuthReturnTo()
+                        window.location.replace(returnTo)
+                    },
                     onError: (error) => {
                         console.error("Auth callback error:", error)
-                        window.history.replaceState({}, "", "/")
-                        navigate({ to: "/" })
+                        clearStoredAuthReturnTo()
+                        window.location.replace("/")
                         callbackProcessedRef.current = null
                     },
                 }
             )
+        } else if (!code) {
+            clearStoredAuthReturnTo()
+            window.location.replace("/")
         }
-    }, [handleCallback, isHandlingCallback, navigate])
+    }, [handleCallback, isHandlingCallback])
 
     useEffect(() => {
-        if (isAuthenticated && user && !isHandlingCallback) {
-            console.log("Redirecting to /me after successful authentication", { isAuthenticated, user: user?.id })
-            navigate({ to: "/me" })
+        return () => {
+            if (!isHandlingCallback) {
+                clearStoredAuthReturnTo()
+            }
         }
-    }, [isAuthenticated, user, isHandlingCallback, navigate])
+    }, [isHandlingCallback])
 
     return (
         <Container

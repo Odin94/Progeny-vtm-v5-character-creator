@@ -1,7 +1,7 @@
-import { AppShell, BackgroundImage, Container, useComputedColorScheme } from "@mantine/core"
+import { AppShell, BackgroundImage, useComputedColorScheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Generator from "~/generator/Generator"
 import { defaultGeneratorStepId, normalizeGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { rndInt } from "~/generator/utils"
@@ -155,14 +155,14 @@ export default function CreatorPage() {
                 }}
             >
                 <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
-                    <Container h="100%" style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0, "--aside-offset": showAsideBar ? "200px" : "0px" } as React.CSSProperties}>
                         <Generator
                             character={character}
                             setCharacter={setCharacter}
                             selectedStep={selectedStep}
                             setSelectedStep={setSelectedStep}
                         />
-                    </Container>
+                    </div>
                 </div>
             </BackgroundImage>
         </AppShell>
