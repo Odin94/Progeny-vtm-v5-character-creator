@@ -329,9 +329,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 export const downloadCharacterSheet = async (character: Character) => {
     const pdfBytes = await createPdf_nerdbert(character)
     notifications.show({
-        title: "PDF base kindly provided by Nerdbert!",
+        title: "PDF template kindly provided by Nerdbert!",
         message: "https://linktr.ee/nerdbert",
-        autoClose: 10000,
+        autoClose: 5000,
         color: "grape",
     })
 

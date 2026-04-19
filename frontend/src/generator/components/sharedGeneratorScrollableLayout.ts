@@ -4,7 +4,7 @@ export const generatorScrollableShellStyle = {
     flexDirection: "column" as const,
     minHeight: 0,
     overflow: "hidden",
-    paddingTop: 85,
+    paddingTop: 62,
     paddingBottom: 18,
     boxSizing: "border-box" as const,
 }

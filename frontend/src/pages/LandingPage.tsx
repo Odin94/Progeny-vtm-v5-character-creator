@@ -1,3 +1,4 @@
+import AppTopbar from "~/components/AppTopbar"
 import { Anchor, Box, Button, Card, Container, Grid, Group, List, Modal, Stack, Text, Title } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
@@ -83,28 +84,7 @@ export default function LandingPage() {
     return (
         <Box className="landing-page">
             <Box className="landing-page__nav">
-                <Container size="lg" py="md">
-                    <Group justify="space-between" align="center">
-                        <Anchor component={Link} to="/" underline="never">
-                            <Group gap="sm">
-                                <Text size="sm" className="landing-page__brand">
-                                    Progeny
-                                </Text>
-                            </Group>
-                        </Anchor>
-                        <Anchor
-                            href="#"
-                            underline="never"
-                            className="landing-page__link"
-                            onClick={(event) => {
-                                event.preventDefault()
-                                openAccountArea()
-                            }}
-                        >
-                            {isAuthenticated ? "Account" : "Sign in"}
-                        </Anchor>
-                    </Group>
-                </Container>
+                <AppTopbar />
             </Box>
 
             <Box className="landing-page__section landing-page__hero">

@@ -75,19 +75,47 @@ export default function CreatorPage() {
     }, [selectedStep, setStoredSelectedStep, storedSelectedStep])
 
     useEffect(() => {
+      // TODOdin: This fixes that we get linked back here right after linking to /me by clicking account button
+      // Find a cleaner fix for this
+        if (location.pathname !== "/create") return
+
         const normalizedHash = routeHash ? normalizeGeneratorStepId(routeHash, character) : fallbackStep
 
         if (normalizedHash !== selectedStep || location.hash !== `#${selectedStep}`) {
             setSelectedStep(normalizedHash, { replace: true })
         }
-    }, [character, fallbackStep, location.hash, routeHash, selectedStep])
+    }, [character, fallbackStep, location.hash, location.pathname, routeHash, selectedStep])
 
     return (
         <AppShell
             padding="0"
+            header={{ height: 52 }}
             styles={(theme) => ({
                 root: {
                     height: "100vh",
+                },
+                header: {
+                    background: "rgba(8, 7, 8, 0.7)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                    borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                    zIndex: 200,
+                },
+                navbar: {
+                    top: 52,
+                    height: "calc(100vh - 52px)",
+                    background: "rgba(8, 7, 8, 0.72)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                    borderRight: "1px solid rgba(201, 172, 102, 0.12)",
+                },
+                aside: {
+                    top: 52,
+                    height: "calc(100vh - 52px)",
+                    background: "rgba(8, 7, 8, 0.72)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                    borderLeft: "1px solid rgba(201, 172, 102, 0.12)",
                 },
                 main: {
                     backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
@@ -98,14 +126,14 @@ export default function CreatorPage() {
                 },
             })}
         >
+            <AppShell.Header>
+                <Topbar asideBar={{ show: showAsideBar, onToggle: () => setShowAsideBar(!showAsideBar) }} />
+            </AppShell.Header>
             {!globals.isSmallScreen && (
                 <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
                     <Sidebar character={character} />
                 </AppShell.Navbar>
             )}
-            <AppShell.Header p="xs" h={75}>
-                <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
-            </AppShell.Header>
             {showAsideBar && (
                 <AppShell.Aside
                     p="md"
