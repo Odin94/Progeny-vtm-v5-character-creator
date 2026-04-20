@@ -195,7 +195,8 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
                 disciplineMap.set(inconnuDisciplineName, { rating: 0, powers: [] })
             }
             const disc = disciplineMap.get(inconnuDisciplineName)!
-            for (const power of customDisc.powers) {
+            const customPowers = character.disciplines.filter((power) => power.discipline === discName && power.isCustom)
+            for (const power of customPowers) {
                 disc.powers.push(power.name)
                 disc.rating = Math.max(disc.rating, power.level)
             }

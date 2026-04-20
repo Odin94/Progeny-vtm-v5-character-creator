@@ -28,7 +28,7 @@ const BrokenSaveModal = () => {
     const onReset = () => {
         clearBrokenCharacter()
         setCharacter(getEmptyCharacter())
-        setSelectedStep("intro")
+        setSelectedStep(defaultGeneratorStepId)
     }
 
     return (

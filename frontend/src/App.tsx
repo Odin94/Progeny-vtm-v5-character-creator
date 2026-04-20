@@ -200,7 +200,12 @@ function App() {
                     </AppShell.Navbar>
                 )}
                 <AppShell.Header p="xs" h={75}>
-                    <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
+                    <Topbar
+                        asideBar={{
+                            show: showAsideBar,
+                            onToggle: () => setShowAsideBar((prev) => !prev),
+                        }}
+                    />
                 </AppShell.Header>
                 {showAsideBar && (
                     <AppShell.Aside

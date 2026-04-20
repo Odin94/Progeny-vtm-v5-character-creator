@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { globals } from "../../globals"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type BasicsPickerProps = {
@@ -149,6 +150,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                         mt="sm"
                         mx="auto"
                         display="block"
+                        styles={generatorConfirmButtonStyles}
                         onClick={() => {
                             setCharacter({ ...character, name, sire, ambition, desire, description })
                             nextStep()
