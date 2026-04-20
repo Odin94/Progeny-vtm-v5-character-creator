@@ -43,7 +43,7 @@ type MeritOrFlawCardProps = {
     type: "flaw" | "merit"
     pickedByName: Map<string, MeritFlaw>
     exclusionMap: Map<string, string[]>
-    predatorTypeMeritsByName: Map<string, MeritOrFlaw>
+    predatorTypeMeritsByName: Map<string, MeritFlaw>
     remainingMerits: number
     remainingFlaws: number
     remainingThinbloodMeritPoints: number
@@ -311,7 +311,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         return map
     }, [pickedMeritsAndFlaws, character.predatorType.name, character.clan])
 
-    const cardProps = {
+    const cardProps: Omit<MeritOrFlawCardProps, "meritOrFlaw" | "type"> = {
         pickedByName,
         exclusionMap,
         predatorTypeMeritsByName,

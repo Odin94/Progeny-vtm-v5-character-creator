@@ -9,4 +9,4 @@ export const generatorConfirmButtonStyles = {
         letterSpacing: "0.08em",
         textTransform: "uppercase" as const,
     },
-} as const
+}
