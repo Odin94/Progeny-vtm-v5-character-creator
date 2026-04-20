@@ -7,6 +7,7 @@ import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../d
 import { globals } from "../../globals"
 import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
@@ -335,6 +336,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     </Text>
                     <Button
                         color="red"
+                        styles={generatorConfirmButtonStyles}
                         onClick={() => {
                             trackEvent({ action: "power clicked", category: "disciplines", label: "thin-blood - no disciplines" })
                             nextStep()
@@ -439,6 +441,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         <Button
                             disabled={!(allPowersPicked() && pickedPredatorTypePower)}
                             color="grape"
+                            styles={generatorConfirmButtonStyles}
                             onClick={() => {
                                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                 setCharacter({

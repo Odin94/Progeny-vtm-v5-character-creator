@@ -10,15 +10,41 @@ import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
 
+const DEFAULT_POST_AUTH_PATH = "/"
+
 const callbackQuerySchema = z.object({
     code: z.string().min(1, "Authorization code is required"),
     state: z.string().optional(),
 })
 
+const loginQuerySchema = z.object({
+    returnTo: z.string().optional(),
+})
+
+function getSafeReturnPath(returnTo?: string): string {
+    if (!returnTo) return DEFAULT_POST_AUTH_PATH
+    if (!returnTo.startsWith("/")) return DEFAULT_POST_AUTH_PATH
+    if (returnTo.startsWith("//")) return DEFAULT_POST_AUTH_PATH
+
+    try {
+        const parsed = new URL(returnTo, "http://localhost")
+        if (parsed.origin !== "http://localhost") {
+            return DEFAULT_POST_AUTH_PATH
+        }
+
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`
+    } catch {
+        return DEFAULT_POST_AUTH_PATH
+    }
+}
+
 export async function authRoutes(fastify: FastifyInstance) {
     // Sign-in endpoint - redirects to WorkOS AuthKit
     fastify.get("/auth/login", async (request, reply) => {
         try {
+            const loginQueryResult = loginQuerySchema.safeParse(request.query)
+            const returnTo = loginQueryResult.success ? getSafeReturnPath(loginQueryResult.data.returnTo) : DEFAULT_POST_AUTH_PATH
+
             // Construct the frontend URL for the callback
             // WorkOS will redirect to the frontend, which then calls the backend API
             let redirectUri: string
@@ -51,6 +77,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 provider: "authkit",
                 redirectUri,
                 clientId: WORKOS_CLIENT_ID,
+                state: returnTo,
             })
 
             await trackEvent(
@@ -58,6 +85,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 {
                     endpoint: "/auth/login",
                     method: "GET",
+                    returnTo,
                 },
                 "anonymous",
                 request

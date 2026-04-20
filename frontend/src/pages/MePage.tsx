@@ -1190,7 +1190,12 @@ const MePage = () => {
                 })}
             >
                 <AppShell.Header p="xs" h={75}>
-                    <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
+                    <Topbar
+                        asideBar={{
+                            show: showAsideBar,
+                            onToggle: () => setShowAsideBar((prev) => !prev),
+                        }}
+                    />
                 </AppShell.Header>
                 <Center h="100%">
                     <Loader size="lg" color="red" />
@@ -1216,7 +1221,12 @@ const MePage = () => {
                 })}
             >
                 <AppShell.Header p="xs" h={75}>
-                    <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
+                    <Topbar
+                        asideBar={{
+                            show: showAsideBar,
+                            onToggle: () => setShowAsideBar((prev) => !prev),
+                        }}
+                    />
                 </AppShell.Header>
                 <Center h="100%">
                     <Card p="xl" withBorder>
@@ -1261,7 +1271,12 @@ const MePage = () => {
                 })}
             >
                 <AppShell.Header p="xs" h={75}>
-                    <Topbar setShowAsideBar={setShowAsideBar} showAsideBar={showAsideBar} />
+                    <Topbar
+                        asideBar={{
+                            show: showAsideBar,
+                            onToggle: () => setShowAsideBar((prev) => !prev),
+                        }}
+                    />
                 </AppShell.Header>
                 <BackgroundImage h={"100%"} src={backgrounds[backgroundIndex]} style={{ flex: 1, minHeight: 0 }}>
                     <div

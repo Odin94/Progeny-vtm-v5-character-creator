@@ -77,6 +77,7 @@ export const getBasicTestCharacter = (): Character => {
             },
         ],
         availableDisciplineNames: ["potence", "blood sorcery"],
+        customDisciplines: {},
         disciplines: [
             {
                 name: "Prowess",

@@ -7,6 +7,7 @@ import { calculateBloodPotency } from "../../data/BloodPotency"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 import { globals } from "../../globals"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 
 type GenerationPickerProps = {
     character: Character
@@ -263,6 +264,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                 <Button
                     disabled={generation === null}
                     color="grape"
+                    styles={generatorConfirmButtonStyles}
                     onClick={() => {
                         const genValue = parseInt(generation ?? "0")
                         let experience = 0

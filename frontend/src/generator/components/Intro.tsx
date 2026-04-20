@@ -182,9 +182,6 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                             "0 10px 28px rgba(224, 49, 49, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
                                         transition: "transform 140ms ease, box-shadow 140ms ease",
                                     },
-                                    root__hover: {
-                                        transform: "translateY(-1px)",
-                                    },
                                 }}
                             >
                                 Get Started

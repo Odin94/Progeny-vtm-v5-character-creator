@@ -22,6 +22,7 @@ import { trackEvent } from "../../utils/analytics"
 import { faPlus, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
 import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
@@ -324,6 +325,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                 <Group justify="center">
                     <Button
                         color="grape"
+                        styles={generatorConfirmButtonStyles}
                         onClick={() => {
                             persistTouchstones(touchstones)
 

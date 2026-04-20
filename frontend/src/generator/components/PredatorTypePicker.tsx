@@ -9,6 +9,7 @@ import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
 import { clans } from "~/data/Clans"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
@@ -248,6 +249,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     <Button
                         ml={"20px"}
                         color={"red"}
+                        styles={generatorConfirmButtonStyles}
                         onClick={() => {
                             trackEvent({
                                 action: "predatortype confirm clicked",
