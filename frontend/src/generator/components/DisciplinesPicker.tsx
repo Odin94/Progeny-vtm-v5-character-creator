@@ -84,6 +84,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     }
 
     const allPowersPicked = () => pickedPowers.length >= 3
+    const confirmDisabled = !(allPowersPicked() && pickedPredatorTypePower)
 
     // Check prerequisites using an explicit set of picked powers (not the closure variable)
     const hasMissingPrerequisites = (power: Power, clanPowers: Power[], predPower: Power | undefined): boolean => {
@@ -439,9 +440,20 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
                     <Group justify="center" mt="xl">
                         <Button
-                            disabled={!(allPowersPicked() && pickedPredatorTypePower)}
+                            disabled={confirmDisabled}
                             color="grape"
-                            styles={generatorConfirmButtonStyles}
+                            styles={{
+                                ...generatorConfirmButtonStyles,
+                                root: {
+                                    ...generatorConfirmButtonStyles.root,
+                                    background: confirmDisabled
+                                        ? "rgba(80, 80, 80, 0.75)"
+                                        : generatorConfirmButtonStyles.root.background,
+                                    boxShadow: confirmDisabled ? "none" : generatorConfirmButtonStyles.root.boxShadow,
+                                    color: confirmDisabled ? "rgba(214, 204, 198, 0.55)" : undefined,
+                                    cursor: confirmDisabled ? "not-allowed" : undefined,
+                                },
+                            }}
                             onClick={() => {
                                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                 setCharacter({

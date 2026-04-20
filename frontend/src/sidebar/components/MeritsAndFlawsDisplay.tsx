@@ -1,4 +1,4 @@
-import { Grid, List, Stack, Text, Title } from "@mantine/core"
+import { Box, Grid, Group, List, Stack, Text, Title } from "@mantine/core"
 import { MeritFlaw } from "../../data/Character"
 import Tally from "../../components/Tally"
 
@@ -11,6 +11,12 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
     const textStyle: React.CSSProperties = {
         fontFamily: "Courier New",
     }
+    const nameStyle: React.CSSProperties = {
+        ...textStyle,
+        width: "8ch",
+        flexShrink: 0,
+        display: "inline-block",
+    }
 
     return (
         <Stack>
@@ -21,9 +27,14 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
                         {merits.map((merit) => {
                             return (
                                 <List.Item key={merit.name}>
-                                    <Text c="green" style={textStyle}>
-                                        {merit.name.slice(0, 7)}: <Tally n={merit.level} />
-                                    </Text>
+                                    <Group gap={0} wrap="nowrap" align="center">
+                                        <Text c="green" style={nameStyle}>
+                                            {merit.name.slice(0, 7)}:
+                                        </Text>
+                                        <Box style={textStyle}>
+                                            <Tally n={merit.level} style={{ color: "var(--mantine-color-green-6)" }} />
+                                        </Box>
+                                    </Group>
                                 </List.Item>
                             )
                         })}
@@ -35,9 +46,14 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
                         {flaws.map((flaw) => {
                             return (
                                 <List.Item key={flaw.name}>
-                                    <Text c="red" style={textStyle}>
-                                        {flaw.name.slice(0, 7)}: <Tally n={flaw.level} />
-                                    </Text>
+                                    <Group gap={0} wrap="nowrap" align="center">
+                                        <Text c="red" style={nameStyle}>
+                                            {flaw.name.slice(0, 7)}:
+                                        </Text>
+                                        <Box style={textStyle}>
+                                            <Tally n={flaw.level} style={{ color: "var(--mantine-color-red-6)" }} />
+                                        </Box>
+                                    </Group>
                                 </List.Item>
                             )
                         })}
