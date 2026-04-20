@@ -66,7 +66,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     opacity: 1;
                 }
             `}</style>
-            <ScrollArea h={height - 230} type="auto" offsetScrollbars="present" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
+            <ScrollArea h={height - 230} type="always" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
                 <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
                     <Text
                         ta="center"

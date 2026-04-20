@@ -43,7 +43,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                     pb={8}
                     scrollbarSize={nightfallScrollbarSize}
                     type="always"
-                    offsetScrollbars="present"
+                   
                     styles={nightfallScrollAreaStyles}
                 >
                     <div style={generatorScrollableContentStyle}>

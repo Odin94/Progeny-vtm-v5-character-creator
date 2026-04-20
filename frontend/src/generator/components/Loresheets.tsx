@@ -42,8 +42,8 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                 >
                     <Stack justify="space-between" h="100%" gap="md">
                         <ScrollArea
-                            type="auto"
-                            offsetScrollbars="present"
+                            type="always"
+                           
                             scrollbarSize={6}
                             styles={{
                                 scrollbar: {
