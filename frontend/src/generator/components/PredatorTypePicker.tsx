@@ -269,8 +269,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     px={20}
                     pt={4}
                     pb={8}
-                    type="auto"
-                    offsetScrollbars="present"
+                    type="always"
+                   
                     scrollbarSize={nightfallScrollbarSize}
                     styles={nightfallScrollAreaStyles}
                 >

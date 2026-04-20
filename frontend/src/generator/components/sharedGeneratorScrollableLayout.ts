@@ -1,9 +1,9 @@
 // position: absolute so these full-page scroll steps can escape any max-width wrapper in the parent.
-// right uses --aside-offset (set by CreatorPage) so the scrollbar stays in the visible area.
+// left/right use CSS vars set by CreatorPage so the shell aligns with the visible content area between both sidebars.
 export const generatorScrollableShellStyle = {
     position: "absolute" as const,
     top: 0,
-    left: 0,
+    left: "var(--navbar-offset, 0px)",
     right: "var(--aside-offset, 0px)",
     bottom: 0,
     display: "flex",

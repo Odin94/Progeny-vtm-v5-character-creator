@@ -155,7 +155,7 @@ export default function CreatorPage() {
                 }}
             >
                 <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
-                    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0, "--aside-offset": showAsideBar ? "200px" : "0px" } as React.CSSProperties}>
+                    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0, "--aside-offset": showAsideBar ? "200px" : "0px", "--navbar-offset": globals.isSmallScreen ? "0px" : "250px" } as React.CSSProperties}>
                         <Generator
                             character={character}
                             setCharacter={setCharacter}

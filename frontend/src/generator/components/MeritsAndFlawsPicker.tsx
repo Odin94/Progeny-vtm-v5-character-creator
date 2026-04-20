@@ -1,7 +1,7 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Badge, Box, Button, Divider, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
-import { useEffect, useMemo, useState } from "react"
+import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
@@ -38,6 +38,196 @@ const sectionHeadingStyle = {
     textTransform: "uppercase" as const,
 }
 
+type MeritOrFlawCardProps = {
+    meritOrFlaw: MeritOrFlaw
+    type: "flaw" | "merit"
+    pickedByName: Map<string, MeritFlaw>
+    exclusionMap: Map<string, string[]>
+    predatorTypeMeritsByName: Map<string, MeritOrFlaw>
+    remainingMerits: number
+    remainingFlaws: number
+    remainingThinbloodMeritPoints: number
+    phoneScreen: boolean
+    setPickedMeritsAndFlaws: Dispatch<SetStateAction<MeritFlaw[]>>
+    setRemainingMerits: Dispatch<SetStateAction<number>>
+    setRemainingFlaws: Dispatch<SetStateAction<number>>
+    setRemainingThinbloodMeritPoints: Dispatch<SetStateAction<number>>
+}
+
+const MeritOrFlawCard = memo(({
+    meritOrFlaw,
+    type,
+    pickedByName,
+    exclusionMap,
+    predatorTypeMeritsByName,
+    remainingMerits,
+    remainingFlaws,
+    remainingThinbloodMeritPoints,
+    phoneScreen,
+    setPickedMeritsAndFlaws,
+    setRemainingMerits,
+    setRemainingFlaws,
+    setRemainingThinbloodMeritPoints,
+}: MeritOrFlawCardProps) => {
+    const buttonColor = type === "flaw" ? "red" : "teal"
+    const icon = type === "flaw" ? flawIcon() : meritIcon()
+    const lineKey = `${type}-${meritOrFlaw.name}`
+    const accentColor = type === "flaw" ? "rgba(250, 82, 82, 0.92)" : "rgba(63, 192, 120, 0.92)"
+    const selectedBg = type === "flaw" ? "rgba(224, 49, 49, 0.18)" : "rgba(46, 160, 67, 0.16)"
+    const selectedBorder = type === "flaw" ? "rgba(250, 82, 82, 0.38)" : "rgba(63, 192, 120, 0.32)"
+    const baseBg = "rgba(255, 255, 255, 0.03)"
+    const baseBorder = "rgba(255, 255, 255, 0.06)"
+
+    const alreadyPickedItem = pickedByName.get(meritOrFlaw.name)
+    const wasPickedLevel = alreadyPickedItem?.level ?? 0
+    const excludingItems = exclusionMap.get(meritOrFlaw.name) ?? []
+    const isExcluded = excludingItems.length > 0
+
+    const meritInPredatorType = predatorTypeMeritsByName.get(meritOrFlaw.name)
+    const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
+
+    const createButton = (level: number) => {
+        const cost = level - meritInPredatorTypeLevel
+        return (
+            <Button
+                key={meritOrFlaw.name + level}
+                disabled={
+                    isExcluded ||
+                    (meritInPredatorType && meritInPredatorType.level >= level) ||
+                    wasPickedLevel === level
+                }
+                onClick={() => {
+                    if (isThinbloodFlaw(meritOrFlaw.name)) {
+                        setRemainingThinbloodMeritPoints((prev) => prev + 1)
+                    } else if (isThinbloodMerit(meritOrFlaw.name)) {
+                        if (remainingThinbloodMeritPoints < cost) return
+                        setRemainingThinbloodMeritPoints((prev) => prev - 1)
+                    } else if (type === "flaw") {
+                        if (remainingFlaws + wasPickedLevel < cost) return
+                        setRemainingFlaws((prev) => prev + wasPickedLevel - cost)
+                    } else {
+                        if (remainingMerits + wasPickedLevel < cost) return
+                        setRemainingMerits((prev) => prev + wasPickedLevel - cost)
+                    }
+                    setPickedMeritsAndFlaws((prev) => [
+                        ...prev.filter((m) => m.name !== meritOrFlaw.name),
+                        { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary, excludes: meritOrFlaw.excludes },
+                    ])
+                }}
+                style={{ marginRight: "5px" }}
+                size="xs"
+                variant={alreadyPickedItem?.level === level ? "filled" : "outline"}
+                color={buttonColor}
+                styles={{
+                    root: {
+                        minWidth: 36,
+                        borderColor: type === "flaw" ? "rgba(250, 82, 82, 0.45)" : "rgba(63, 192, 120, 0.4)",
+                        background: alreadyPickedItem?.level === level ? accentColor : "transparent",
+                        color: "rgba(244, 236, 232, 0.92)",
+                    },
+                }}
+            >
+                {level}
+            </Button>
+        )
+    }
+
+    const cost = wasPickedLevel - meritInPredatorTypeLevel
+    const summaryText = meritInPredatorType
+        ? "Already picked in Predator Type"
+        : isExcluded
+          ? `Excluded by: ${excludingItems.join(", ")}`
+          : meritOrFlaw.summary
+
+    const textContent = (
+        <Box
+            key={lineKey}
+            style={{
+                padding: phoneScreen ? "12px" : "14px 16px",
+                borderRadius: 14,
+                border: `1px solid ${alreadyPickedItem ? selectedBorder : baseBorder}`,
+                background: alreadyPickedItem ? selectedBg : baseBg,
+                opacity: isExcluded ? 0.5 : 1,
+                transition: "background 180ms ease, border-color 180ms ease",
+            }}
+        >
+            <Group justify="space-between" align="flex-start" gap="sm" mb={6}>
+                <Text
+                    style={{
+                        fontFamily: "Cinzel, Georgia, serif",
+                        fontSize: phoneScreen ? "0.88rem" : "0.94rem",
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                        color: alreadyPickedItem ? accentColor : "rgba(244, 236, 232, 0.94)",
+                        flex: 1,
+                    }}
+                >
+                    {icon} &nbsp;<span>{meritOrFlaw.name}</span>
+                </Text>
+                <Badge
+                    variant="light"
+                    radius="sm"
+                    color={type === "flaw" ? "red" : "teal"}
+                    styles={{ root: { textTransform: "uppercase", letterSpacing: "0.08em" } }}
+                >
+                    {type}
+                </Badge>
+            </Group>
+
+            <Text
+                style={{
+                    fontFamily: "Crimson Text, Georgia, serif",
+                    fontSize: phoneScreen ? "0.95rem" : "1rem",
+                    lineHeight: 1.45,
+                    color: meritInPredatorType
+                        ? "rgba(212, 176, 105, 0.88)"
+                        : isExcluded
+                          ? "rgba(214, 204, 198, 0.72)"
+                          : "rgba(214, 204, 198, 0.88)",
+                }}
+            >
+                {summaryText}
+            </Text>
+
+            <Group gap={6} mt={10}>
+                {meritOrFlaw.cost.map((i) => createButton(i))}
+                {alreadyPickedItem ? (
+                    <Button
+                        onClick={() => {
+                            setPickedMeritsAndFlaws((prev) => prev.filter((m) => m.name !== meritOrFlaw.name))
+                            if (isThinbloodFlaw(meritOrFlaw.name)) {
+                                setRemainingThinbloodMeritPoints((prev) => prev - 1)
+                            } else if (isThinbloodMerit(meritOrFlaw.name)) {
+                                setRemainingThinbloodMeritPoints((prev) => prev + 1)
+                            } else {
+                                type === "flaw"
+                                    ? setRemainingFlaws((prev) => prev + cost)
+                                    : setRemainingMerits((prev) => prev + cost)
+                            }
+                        }}
+                        size="xs"
+                        variant="subtle"
+                        color="yellow"
+                        styles={{ root: { paddingLeft: 8, paddingRight: 8 } }}
+                    >
+                        Unpick
+                    </Button>
+                ) : null}
+            </Group>
+        </Box>
+    )
+
+    if (isExcluded) {
+        return (
+            <Tooltip key={lineKey} label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`} withArrow>
+                {textContent}
+            </Tooltip>
+        )
+    }
+
+    return textContent
+})
+
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Merits-and-flaws Picker" })
@@ -67,9 +257,25 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const tbMeritCount = character.merits.filter((m) => isThinbloodMerit(m.name)).length
     const tbFlawCount = character.flaws.filter((f) => isThinbloodFlaw(f.name)).length
     const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(tbFlawCount - tbMeritCount)
+
     const predatorTypePickedNames = useMemo(
         () => new Set(character.predatorType.pickedMeritsAndFlaws.map((item) => item.name)),
         [character.predatorType.pickedMeritsAndFlaws]
+    )
+
+    const pickedByName = useMemo(
+        () => new Map(pickedMeritsAndFlaws.map((item) => [item.name, item])),
+        [pickedMeritsAndFlaws]
+    )
+
+    const predatorTypeMeritsFlaws = useMemo(
+        () => PredatorTypes[character.predatorType.name].meritsAndFlaws,
+        [character.predatorType.name]
+    )
+
+    const predatorTypeMeritsByName = useMemo(
+        () => new Map(predatorTypeMeritsFlaws.map((m) => [m.name, m])),
+        [predatorTypeMeritsFlaws]
     )
 
     const exclusionMap = useMemo(() => {
@@ -105,164 +311,23 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         return map
     }, [pickedMeritsAndFlaws, character.predatorType.name, character.clan])
 
-    const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => {
-        const buttonColor = type === "flaw" ? "red" : "teal"
-        const icon = type === "flaw" ? flawIcon() : meritIcon()
-        const lineKey = `${type}-${meritOrFlaw.name}`
-        const accentColor = type === "flaw" ? "rgba(250, 82, 82, 0.92)" : "rgba(63, 192, 120, 0.92)"
-        const selectedBg = type === "flaw" ? "rgba(224, 49, 49, 0.18)" : "rgba(46, 160, 67, 0.16)"
-        const selectedBorder = type === "flaw" ? "rgba(250, 82, 82, 0.38)" : "rgba(63, 192, 120, 0.32)"
-        const baseBg = "rgba(255, 255, 255, 0.03)"
-        const baseBorder = "rgba(255, 255, 255, 0.06)"
-
-        const alreadyPickedItem = pickedMeritsAndFlaws.find((l) => l.name === meritOrFlaw.name)
-        const wasPickedLevel = alreadyPickedItem?.level ?? 0
-        const excludingItems = exclusionMap.get(meritOrFlaw.name) ?? []
-        const isExcluded = excludingItems.length > 0
-
-        const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws
-        const meritInPredatorType = predatorTypeMeritsFlaws.find((m) => m.name === meritOrFlaw.name)
-        const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
-
-        const createButton = (level: number) => {
-            const cost = level - meritInPredatorTypeLevel
-            return (
-                <Button
-                    key={meritOrFlaw.name + level}
-                    disabled={
-                        isExcluded ||
-                        (meritInPredatorType && meritInPredatorType.level >= level) ||
-                        wasPickedLevel === level
-                    }
-                    onClick={() => {
-                        if (isThinbloodFlaw(meritOrFlaw.name)) {
-                            setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints + 1)
-                        } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                            if (remainingThinbloodMeritPoints < cost) return
-                            setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints - 1)
-                        } else if (type === "flaw") {
-                            if (remainingFlaws + wasPickedLevel < cost) return
-                            setRemainingFlaws(remainingFlaws + wasPickedLevel - cost)
-                        } else {
-                            if (remainingMerits + wasPickedLevel < cost) return
-                            setRemainingMerits(remainingMerits + wasPickedLevel - cost)
-                        }
-                        setPickedMeritsAndFlaws([
-                            ...pickedMeritsAndFlaws.filter((m) => m.name !== alreadyPickedItem?.name),
-                            { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary, excludes: meritOrFlaw.excludes },
-                        ])
-                    }}
-                    style={{ marginRight: "5px" }}
-                    size="xs"
-                    variant={alreadyPickedItem?.level === level ? "filled" : "outline"}
-                    color={buttonColor}
-                    styles={{
-                        root: {
-                            minWidth: 36,
-                            borderColor: type === "flaw" ? "rgba(250, 82, 82, 0.45)" : "rgba(63, 192, 120, 0.4)",
-                            background: alreadyPickedItem?.level === level ? accentColor : "transparent",
-                            color: "rgba(244, 236, 232, 0.92)",
-                        },
-                    }}
-                >
-                    {level}
-                </Button>
-            )
-        }
-
-        const cost = wasPickedLevel - meritInPredatorTypeLevel
-        const summaryText = meritInPredatorType
-            ? "Already picked in Predator Type"
-            : isExcluded
-              ? `Excluded by: ${excludingItems.join(", ")}`
-              : meritOrFlaw.summary
-
-        const textContent = (
-            <Box
-                key={lineKey}
-                style={{
-                    padding: phoneScreen ? "12px" : "14px 16px",
-                    borderRadius: 14,
-                    border: `1px solid ${alreadyPickedItem ? selectedBorder : baseBorder}`,
-                    background: alreadyPickedItem ? selectedBg : baseBg,
-                    opacity: isExcluded ? 0.5 : 1,
-                    transition: "background 180ms ease, border-color 180ms ease",
-                }}
-            >
-                <Group justify="space-between" align="flex-start" gap="sm" mb={6}>
-                    <Text
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: phoneScreen ? "0.88rem" : "0.94rem",
-                            fontWeight: 600,
-                            lineHeight: 1.3,
-                            color: alreadyPickedItem ? accentColor : "rgba(244, 236, 232, 0.94)",
-                            flex: 1,
-                        }}
-                    >
-                        {icon} &nbsp;<span>{meritOrFlaw.name}</span>
-                    </Text>
-                    <Badge
-                        variant="light"
-                        radius="sm"
-                        color={type === "flaw" ? "red" : "teal"}
-                        styles={{ root: { textTransform: "uppercase", letterSpacing: "0.08em" } }}
-                    >
-                        {type}
-                    </Badge>
-                </Group>
-
-                <Text
-                    style={{
-                        fontFamily: "Crimson Text, Georgia, serif",
-                        fontSize: phoneScreen ? "0.95rem" : "1rem",
-                        lineHeight: 1.45,
-                        color: meritInPredatorType
-                            ? "rgba(212, 176, 105, 0.88)"
-                            : isExcluded
-                              ? "rgba(214, 204, 198, 0.72)"
-                              : "rgba(214, 204, 198, 0.88)",
-                    }}
-                >
-                    {summaryText}
-                </Text>
-
-                <Group gap={6} mt={10}>
-                    {meritOrFlaw.cost.map((i) => createButton(i))}
-                    {alreadyPickedItem ? (
-                        <Button
-                            onClick={() => {
-                                setPickedMeritsAndFlaws([...pickedMeritsAndFlaws.filter((m) => m.name !== alreadyPickedItem?.name)])
-                                if (isThinbloodFlaw(meritOrFlaw.name)) {
-                                    setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints - 1)
-                                } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                                    setRemainingThinbloodMeritPoints(remainingThinbloodMeritPoints + 1)
-                                } else {
-                                    type === "flaw" ? setRemainingFlaws(remainingFlaws + cost) : setRemainingMerits(remainingMerits + cost)
-                                }
-                            }}
-                            size="xs"
-                            variant="subtle"
-                            color="yellow"
-                            styles={{ root: { paddingLeft: 8, paddingRight: 8 } }}
-                        >
-                            Unpick
-                        </Button>
-                    ) : null}
-                </Group>
-            </Box>
-        )
-
-        if (isExcluded) {
-            return (
-                <Tooltip key={lineKey} label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`} withArrow>
-                    {textContent}
-                </Tooltip>
-            )
-        }
-
-        return textContent
+    const cardProps = {
+        pickedByName,
+        exclusionMap,
+        predatorTypeMeritsByName,
+        remainingMerits,
+        remainingFlaws,
+        remainingThinbloodMeritPoints,
+        phoneScreen,
+        setPickedMeritsAndFlaws,
+        setRemainingMerits,
+        setRemainingFlaws,
+        setRemainingThinbloodMeritPoints,
     }
+
+    const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => (
+        <MeritOrFlawCard key={`${type}-${meritOrFlaw.name}`} meritOrFlaw={meritOrFlaw} type={type} {...cardProps} />
+    )
 
     const isConfirmDisabled = isThinBlood && remainingThinbloodMeritPoints < 0
     const meritSpentPoints = meritPoints - remainingMerits
@@ -297,8 +362,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                     px={20}
                     pt={4}
                     pb={8}
-                    type="auto"
-                    offsetScrollbars="present"
+                    type="always"
+                   
                     scrollbarSize={nightfallScrollbarSize}
                     styles={nightfallScrollAreaStyles}
                 >

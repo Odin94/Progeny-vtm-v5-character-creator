@@ -52,8 +52,10 @@ export const thinbloodMeritsAndFlaws: MeritsAndFlaws = {
         { name: "Vitae Dependency", cost: [1], summary: "Need to drink Vampire vitae once a week to use Disciplines", excludes: [] },
     ],
 }
-export const isThinbloodMerit = (m: string) => !!thinbloodMeritsAndFlaws.merits.find((tbm) => tbm.name === m)
-export const isThinbloodFlaw = (f: string) => !!thinbloodMeritsAndFlaws.flaws.find((tbf) => tbf.name === f)
+const _thinbloodMeritNames = new Set(thinbloodMeritsAndFlaws.merits.map((m) => m.name))
+const _thinbloodFlawNames = new Set(thinbloodMeritsAndFlaws.flaws.map((f) => f.name))
+export const isThinbloodMerit = (m: string) => _thinbloodMeritNames.has(m)
+export const isThinbloodFlaw = (f: string) => _thinbloodFlawNames.has(f)
 export const isThinbloodMeritOrFlaw = (mf: string) => isThinbloodMerit(mf) || isThinbloodFlaw(mf)
 
 export const meritsAndFlaws: MeritsAndFlaws[] = [

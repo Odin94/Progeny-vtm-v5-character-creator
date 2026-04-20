@@ -121,7 +121,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                     pb={8}
                     scrollbarSize={nightfallScrollbarSize}
                     type="always"
-                    offsetScrollbars="present"
+                   
                     styles={nightfallScrollAreaStyles}
                 >
                     <div style={generatorScrollableContentStyle}>
