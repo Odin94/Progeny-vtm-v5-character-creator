@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { createPdf_nerdbert } from "~/generator/pdfCreator"
+import { createPdf_nerdbert, setButtonImageOverlay, setHumanityTracker } from "~/generator/pdfCreator"
 import { getBasicTestCharacter } from "./testUtils"
 import { readFileSync } from "fs"
 import { resolve } from "path"
@@ -111,5 +111,65 @@ describe("createPdf_nerdbert", () => {
         const meritTexts = allMeritFields.map((field) => field.getText()).join(" ")
         expect(meritTexts).toContain(character.merits[0].name)
         expect(meritTexts).toContain(character.flaws[0].name)
+    })
+
+    it("uses the character's tracked humanity value for the humanity tracker", async () => {
+        const character = getBasicTestCharacter()
+        character.humanity = 4
+
+        const setHumanityTrackerSpy = vi.spyOn(await import("~/generator/pdfCreator"), "setHumanityTracker")
+
+        await createPdf_nerdbert(character)
+
+        expect(setHumanityTrackerSpy).toHaveBeenCalled()
+        expect(setHumanityTrackerSpy.mock.calls[0][3]).toBe(4)
+    })
+})
+
+describe("PDF humanity helpers", () => {
+    it("draws an image overlay at the matching button widget position", () => {
+        const drawImage = vi.fn()
+        const pageRef = { id: "page-1" }
+        const page = { ref: pageRef, drawImage }
+        const widget = {
+            P: () => pageRef,
+            getRectangle: () => ({ x: 10, y: 20, width: 30, height: 40 }),
+        }
+        const button = {
+            acroField: {
+                getWidgets: () => [widget],
+            },
+        }
+        const pdfDoc = {
+            getPages: () => [page],
+        }
+        const form = {
+            getButton: vi.fn().mockReturnValue(button),
+        }
+        const image = { id: "image" }
+
+        setButtonImageOverlay(pdfDoc as any, form as any, "Humanity-1", image as any)
+
+        expect(form.getButton).toHaveBeenCalledWith("Humanity-1")
+        expect(drawImage).toHaveBeenCalledWith(image, {
+            x: 12.4,
+            y: 23.2,
+            width: 25.2,
+            height: 33.6,
+        })
+    })
+
+    it("draws one humanity mark per filled humanity slot", async () => {
+        const pdfDoc = {} as PDFDocument
+        const form = {} as any
+        const image = {} as any
+        const overlaySpy = vi.spyOn(await import("~/generator/pdfCreator"), "setButtonImageOverlay").mockImplementation(() => {})
+
+        setHumanityTracker(pdfDoc, form, image, 3)
+
+        expect(overlaySpy).toHaveBeenCalledTimes(3)
+        expect(overlaySpy).toHaveBeenNthCalledWith(1, pdfDoc, form, "Humanity-1", image)
+        expect(overlaySpy).toHaveBeenNthCalledWith(2, pdfDoc, form, "Humanity-2", image)
+        expect(overlaySpy).toHaveBeenNthCalledWith(3, pdfDoc, form, "Humanity-3", image)
     })
 })

@@ -1,5 +1,6 @@
 import { AppShell, BackgroundImage, Container, Loader, Text, useComputedColorScheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
 import { useEffect, useRef, useState } from "react"
 import "./App.css"
 import Generator from "./generator/Generator"
@@ -9,6 +10,7 @@ import Sidebar from "./sidebar/Sidebar"
 import Topbar from "./topbar/Topbar"
 import CharacterSheet from "./character_sheet/CharacterSheet"
 import BrokenSaveModal from "./components/BrokenSaveModal"
+import LoadModal from "./components/LoadModal"
 import MePage from "./pages/MePage"
 
 import { useViewportSize } from "@mantine/hooks"
@@ -22,8 +24,9 @@ import batWoman from "./resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsp
 import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
-import { getEmptyCharacter } from "./data/Character"
+import { characterSchema, getEmptyCharacter, type Character as CharacterType } from "./data/Character"
 import { useAuth } from "./hooks/useAuth"
+import { api } from "./utils/api"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 
@@ -103,12 +106,46 @@ function App() {
         key: "selectedGeneratorStep",
         defaultValue: defaultGeneratorStepId,
     })
+    const [loadModalOpened, setLoadModalOpened] = useState(false)
+    const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
 
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     useEffect(() => {
         setShowAsideBar(!globals.isSmallScreen)
     }, [globals.isSmallScreen])
+
+    const openLoadModal = (file: File | null) => {
+        if (!file) {
+            return
+        }
+
+        setLoadedFile(file)
+        setLoadModalOpened(true)
+    }
+
+    const closeLoadModal = () => {
+        setLoadModalOpened(false)
+        setLoadedFile(null)
+    }
+
+    const loadSavedCharacter = async (characterId: string) => {
+        const response = await api.getCharacter(characterId)
+        const loadedCharacter = characterSchema.parse((response as { data: unknown }).data)
+
+        setCharacter({
+            ...loadedCharacter,
+            id: characterId,
+        } as CharacterType & { id: string })
+        setSelectedStep("final")
+
+        notifications.show({
+            title: "Character loaded",
+            message: `Loaded "${loadedCharacter.name}"`,
+            color: "green",
+            autoClose: 3000,
+        })
+    }
 
     useEffect(() => {
         if (pathname === "/sheet") {
@@ -179,6 +216,13 @@ function App() {
     return (
         <>
             <BrokenSaveModal />
+            <LoadModal
+                loadModalOpened={loadModalOpened}
+                closeLoadModal={closeLoadModal}
+                setCharacter={setCharacter}
+                loadedFile={loadedFile}
+                setSelectedStep={setSelectedStep}
+            />
             <AppShell
                 padding="0"
                 styles={(theme) => ({
@@ -196,7 +240,7 @@ function App() {
             >
                 {!globals.isSmallScreen && (
                     <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
-                        <Sidebar character={character} />
+                        <Sidebar character={character} onLoadFromFile={openLoadModal} onLoadSavedCharacter={loadSavedCharacter} />
                     </AppShell.Navbar>
                 )}
                 <AppShell.Header p="xs" h={75}>
@@ -214,7 +258,11 @@ function App() {
                         style={{ display: "flex", flexDirection: "column" }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <AsideBar selectedStep={selectedStep} setSelectedStep={setSelectedStep} character={character} />
+                        <AsideBar
+                            selectedStep={selectedStep}
+                            setSelectedStep={setSelectedStep}
+                            character={character}
+                        />
                     </AppShell.Aside>
                 )}
                 <BackgroundImage

@@ -24,6 +24,7 @@ type CategoryMeta = {
     accentColor: string
     bgColor: string
     bgActiveColor: string
+    pillColor: string
     borderColor: string
     borderActiveColor: string
     lineColor: string
@@ -35,7 +36,8 @@ const CATEGORIES: CategoryMeta[] = [
         label: "Violent",
         accentColor: "rgba(250, 82, 82, 0.95)",
         bgColor: "rgba(224, 49, 49, 0.22)",
-        bgActiveColor: "rgba(224, 49, 49, 0.29)",
+        bgActiveColor: "rgba(224, 49, 49, 0.39)",
+        pillColor: "rgba(224, 49, 49, 0.39)",
         borderColor: "rgba(224, 49, 49, 0.18)",
         borderActiveColor: "rgba(250, 82, 82, 0.55)",
         lineColor: "rgba(250, 82, 82, 0.38)",
@@ -45,7 +47,8 @@ const CATEGORIES: CategoryMeta[] = [
         label: "Sociable",
         accentColor: "rgba(190, 75, 219, 0.95)",
         bgColor: "rgba(190, 75, 219, 0.3)",
-        bgActiveColor: "rgba(190, 75, 219, 0.38)",
+        bgActiveColor: "rgba(190, 75, 219, 0.48)",
+        pillColor: "rgba(190, 75, 219, 0.38)",
         borderColor: "rgba(190, 75, 219, 0.18)",
         borderActiveColor: "rgba(190, 75, 219, 0.55)",
         lineColor: "rgba(190, 75, 219, 0.38)",
@@ -55,7 +58,8 @@ const CATEGORIES: CategoryMeta[] = [
         label: "Stealth",
         accentColor: "rgba(222, 226, 230, 0.92)",
         bgColor: "rgba(173, 181, 189, 0.32)",
-        bgActiveColor: "rgba(173, 181, 189, 0.38)",
+        bgActiveColor: "rgba(173, 181, 189, 0.48)",
+        pillColor: "rgba(173, 181, 189, 0.38)",
         borderColor: "rgba(173, 181, 189, 0.18)",
         borderActiveColor: "rgba(222, 226, 230, 0.55)",
         lineColor: "rgba(173, 181, 189, 0.34)",
@@ -65,7 +69,8 @@ const CATEGORIES: CategoryMeta[] = [
         label: "Excluding Mortals",
         accentColor: "rgba(153, 105, 229, 0.95)",
         bgColor: "rgba(132, 94, 247, 0.35)",
-        bgActiveColor: "rgba(132, 94, 247, 0.4)",
+        bgActiveColor: "rgba(132, 94, 247, 0.48)",
+        pillColor: "rgba(132, 94, 247, 0.4)",
         borderColor: "rgba(132, 94, 247, 0.18)",
         borderActiveColor: "rgba(132, 94, 247, 0.55)",
         lineColor: "rgba(132, 94, 247, 0.38)",
@@ -136,8 +141,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 <Text
                     style={{
                         fontFamily: "Cinzel, Georgia, serif",
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
+                        fontSize: "0.95rem",
+                        fontWeight: 800,
                         letterSpacing: "0.04em",
                         color: "rgb(244, 236, 232)",
                     }}
@@ -163,7 +168,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     style={{
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "0.9rem",
-                        color: "rgba(214, 204, 198, 0.88)",
+                        color: "rgba(214, 204, 198, 0.93)",
                         lineHeight: 1.4,
                     }}
                 >
@@ -179,13 +184,15 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 padding: "2px 8px",
                                 borderRadius: "999px",
-                                background: meta.bgActiveColor,
+                                background: meta.pillColor,
                                 border: `1px solid ${meta.borderColor}`,
                                 letterSpacing: "0.03em",
                             }}
-                        >
-                            {titleCase(disc.name)}
-                        </span>
+                      >
+                        <Text fz={"xs"}>
+                          {titleCase(disc.name)}
+                        </Text>
+                      </span>
                     ))}
                 </div>
             </div>
@@ -270,7 +277,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     pt={4}
                     pb={8}
                     type="always"
-                   
+
                     scrollbarSize={nightfallScrollbarSize}
                     styles={nightfallScrollAreaStyles}
                 >

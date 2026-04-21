@@ -39,6 +39,28 @@ const SectionDivider = ({ label }: { label: string }) => (
     </Box>
 )
 
+const DisciplineDots = ({ count }: { count: number }) => {
+    if (count <= 0) return null
+
+    return (
+        <Group gap={6} ml={10} wrap="nowrap">
+            {Array.from({ length: count }, (_, index) => (
+                <Box
+                    key={index}
+                    style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "rgba(224, 49, 49, 0.95)",
+                        boxShadow: "0 0 10px rgba(224, 49, 49, 0.35)",
+                        flexShrink: 0,
+                    }}
+                />
+            ))}
+        </Group>
+    )
+}
+
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Disciplines Picker" })
@@ -47,6 +69,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const phoneScreen = globals.isPhoneScreen
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
+    const [hoveredTakeButton, setHoveredTakeButton] = useState<string | null>(null)
 
     let allPickedPowers = pickedPredatorTypePower ? [...pickedPowers, pickedPredatorTypePower] : pickedPowers
 
@@ -85,6 +108,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
     const allPowersPicked = () => pickedPowers.length >= 3
     const confirmDisabled = !(allPowersPicked() && pickedPredatorTypePower)
+    const getPickedPowerCountForDiscipline = (disciplineName: string) => allPickedPowers.filter((power) => power.discipline === disciplineName).length
 
     // Check prerequisites using an explicit set of picked powers (not the closure variable)
     const hasMissingPrerequisites = (power: Power, clanPowers: Power[], predPower: Power | undefined): boolean => {
@@ -134,6 +158,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         const isPickedAsPredatorType = !isForPredatorType && pickedPredatorTypePower?.name === power.name
         const isPickedAsClan = isForPredatorType && pickedPowers.some((p) => p.name === power.name)
         const showUndo = picked && !isPickedAsPredatorType && !isPickedAsClan
+        const takeButtonHoverKey = `${isForPredatorType ? "predator" : "clan"}-${power.name}`
+        const takeButtonHovered = hoveredTakeButton === takeButtonHoverKey
 
         return (
             <div
@@ -141,9 +167,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 style={{
                     padding: "12px 14px",
                     borderRadius: 10,
-                    border: `1px solid ${picked ? "rgba(224, 49, 49, 0.45)" : "rgba(255, 255, 255, 0.18)"}`,
-                    background: picked ? "rgba(224, 49, 49, 0.28)" : "rgba(255, 255, 255, 0.18)",
-                    opacity: disabled && !picked ? 0.4 : 1,
+                    border: `1px solid ${picked ? "rgba(224, 49, 49, 0.3)" : "rgba(125, 91, 72, 0.25)"}`,
+                    background: picked ? "linear-gradient(180deg, rgba(52, 18, 22, 0.75) 0%, rgba(34, 10, 13, 0.75) 100%)" : "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)",
+                    opacity: disabled && !picked ? 0.6 : 1,
                     transition: "background 180ms ease, border-color 180ms ease",
                     marginBottom: 8,
                 }}
@@ -202,11 +228,31 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     <Button
                         disabled={disabled}
                         size="xs"
-                        variant="subtle"
+                        variant="outline"
                         color="red"
                         fullWidth
                         mt={4}
-                        style={{ fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.05em", fontSize: "0.72rem" }}
+                        onMouseEnter={() => setHoveredTakeButton(takeButtonHoverKey)}
+                        onMouseLeave={() => setHoveredTakeButton(null)}
+                        styles={{
+                            root: {
+                                alignSelf: "center",
+                                borderColor: takeButtonHovered ? "rgba(250, 82, 82, 0.85)" : "rgba(224, 49, 49, 0.4)",
+                                background: takeButtonHovered ? "rgba(224, 49, 49, 0.24)" : "rgba(224, 49, 49, 0.08)",
+                                boxShadow: takeButtonHovered
+                                    ? "0 0 0 1px rgba(224, 49, 49, 0.22), 0 0 18px rgba(224, 49, 49, 0.18), 0 10px 24px rgba(224, 49, 49, 0.18)"
+                                    : "none",
+                                transform: takeButtonHovered ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
+                                transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+                                letterSpacing: "0.14em",
+                                textTransform: "uppercase",
+                                fontFamily: "Cinzel, Georgia, serif",
+                                fontSize: "0.72rem",
+                            },
+                            section: {
+                                color: "rgba(224, 49, 49, 1)",
+                            },
+                        }}
                         onClick={() => {
                             trackEvent({ action: "power clicked", category: "disciplines", label: power.name })
                             if (isForPredatorType) setPickedPredatorTypePower(power)
@@ -278,6 +324,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         const columnGroups = canReachLvl3 ? [lvl1, lvl2, lvl3] : [lvl1, lvl2]
         const colWidth = phoneScreen ? "100%" : `${Math.floor(100 / columnGroups.length)}%`
+        const pickedPowerCount = getPickedPowerCountForDiscipline(disciplineName)
 
         return (
             <Accordion.Item key={disciplineName + isPredatorType} value={disciplineName + isPredatorType}>
@@ -287,9 +334,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         label: {
                             fontFamily: "Cinzel, Georgia, serif",
                             fontSize: "0.88rem",
-                            fontWeight: 600,
+                            fontWeight: 900,
                             letterSpacing: "0.1em",
-                            color: "rgba(244, 236, 232, 0.92)",
+                            color: "rgb(244, 236, 232)",
                         },
                         control: {
                             borderRadius: 8,
@@ -297,7 +344,21 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         },
                     }}
                 >
-                    {upcase(disciplineName)}
+                    <Group gap={0} wrap="nowrap">
+                        <Text
+                            component="span"
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                fontSize: "0.88rem",
+                                fontWeight: 900,
+                                letterSpacing: "0.1em",
+                                color: "rgb(244, 236, 232)",
+                            }}
+                        >
+                            {upcase(disciplineName)}
+                        </Text>
+                        <DisciplineDots count={pickedPowerCount} />
+                    </Group>
                 </Accordion.Control>
                 <Accordion.Panel>
                     <div
@@ -359,7 +420,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 pt={4}
                 pb={8}
                 type="always"
-               
+
                 scrollbarSize={nightfallScrollbarSize}
                 styles={nightfallScrollAreaStyles}
             >

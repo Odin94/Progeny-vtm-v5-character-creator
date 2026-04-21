@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
-import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFName } from "pdf-lib"
+import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
 import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
@@ -76,6 +76,39 @@ const downloadPdf = (fileName: string, bytes: Uint8Array) => {
     setTimeout(() => {
         window.URL.revokeObjectURL(link.href)
     }, 100)
+}
+
+export const setButtonImageOverlay = (pdfDoc: PDFDocument, form: PDFForm, fieldName: string, image: PDFImage) => {
+    const button = form.getButton(fieldName)
+    const widget = button.acroField.getWidgets()[0]
+
+    if (!widget) return
+
+    const pageRef = widget.P()
+    const page = pdfDoc.getPages().find((candidate) => candidate.ref === pageRef)
+
+    if (!page) return
+
+    const { x, y, width, height } = widget.getRectangle()
+    const insetX = width * 0.08
+    const insetY = height * 0.08
+
+    page.drawImage(image, {
+        x: x + insetX,
+        y: y + insetY,
+        width: width - insetX * 2,
+        height: height - insetY * 2,
+    })
+}
+
+export const setHumanityTracker = (pdfDoc: PDFDocument, form: PDFForm, image: PDFImage, humanity: number) => {
+    const clampedHumanity = Math.max(0, Math.min(10, humanity))
+
+    for (let i = 1; i <= clampedHumanity; i++) {
+        // Humanity widgets in the template are push buttons, so we draw directly on the page
+        // instead of setting a button image that can be lost when appearances are regenerated.
+        setButtonImageOverlay(pdfDoc, form, `Humanity-${i}`, image)
+    }
 }
 
 export const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
@@ -207,13 +240,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("BaneSev").setText(`${effects.bane}`)
 
     //Humanity
-    const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
+    const humanity = Math.max(0, Math.min(10, character.humanity))
     const checkImageBytes = await fetch(checkPng).then((res) => res.arrayBuffer())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
-    for (let i = 1; i <= humanity; i++) {
-        // Broken by setting "NeedAppearances" to true
-        form.getButton(`Humanity-${i}`).setImage(checkImage)
-    }
+    setHumanityTracker(pdfDoc, form, checkImage, humanity)
 
     // Top fields
     form.getTextField("Name").setText(character.name)
