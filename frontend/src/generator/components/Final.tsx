@@ -405,11 +405,13 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     <p
                         style={{
                             fontFamily: FONT_BODY,
-                            fontSize: "0.92rem",
-                            color: "rgba(214, 204, 198, 0.55)",
-                            maxWidth: 440,
+                            fontSize: "1.22rem",
+                            color: "rgba(244, 236, 232, 0.9)",
+                            maxWidth: 560,
                             margin: "0 auto",
-                            lineHeight: 1.55,
+                            lineHeight: 1.45,
+                            fontWeight: 600,
+                            textShadow: "0 0 18px rgba(224, 49, 49, 0.14)",
                         }}
                     >
                         Character creation complete. Save your work, export for your favourite tools, or jump straight

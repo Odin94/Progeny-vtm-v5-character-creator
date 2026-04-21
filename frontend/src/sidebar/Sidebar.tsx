@@ -1,6 +1,6 @@
 import { Box, Button, Center, FileButton, Group, Modal, Paper, ScrollArea, Stack, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { IconChevronRight, IconFileUpload, IconUser } from "@tabler/icons-react"
+import { IconChevronRight, IconFilePlus, IconFileUpload, IconUser } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import { Character } from "../data/Character"
 import { notDefault } from "../generator/utils"
@@ -18,6 +18,7 @@ export type SidebarProps = {
     character: Character
     onLoadFromFile: (file: File | null) => void
     onLoadSavedCharacter: (characterId: string) => Promise<void>
+    onCreateCharacter: () => Promise<void>
 }
 
 type SidebarCharacterOption = {
@@ -25,7 +26,7 @@ type SidebarCharacterOption = {
     label: string
 }
 
-const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter }: SidebarProps) => {
+const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateCharacter }: SidebarProps) => {
     const height = globals.viewportHeightPx
     const phoneScreen = globals.isPhoneScreen
     const { isAuthenticated } = useAuth()
@@ -41,7 +42,7 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter }: SidebarPro
             label: candidate.name || "Untitled character",
         }))
 
-    const showCharacterSelect = isAuthenticated && characterOptions.length > 0
+    const showCharacterSelect = isAuthenticated
 
     useEffect(() => {
         setSelectedCharacterId(character.id || null)
@@ -60,11 +61,13 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter }: SidebarPro
             await onLoadSavedCharacter(value)
         } catch (error) {
             setSelectedCharacterId(character.id || null)
-            notifications.show({
-                title: "Error loading character",
-                message: error instanceof Error ? error.message : "Failed to load selected character",
-                color: "red",
-            })
+            if (!(error instanceof Error && "alreadyNotified" in error && error.alreadyNotified === true)) {
+                notifications.show({
+                    title: "Error loading character",
+                    message: error instanceof Error ? error.message : "Failed to load selected character",
+                    color: "red",
+                })
+            }
         } finally {
             setIsLoadingSelectedCharacter(false)
         }
@@ -151,6 +154,59 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter }: SidebarPro
 
                     <ScrollArea.Autosize mah={phoneScreen ? 320 : 420} type="auto">
                         <Stack gap="sm">
+                            <Paper
+                                p="sm"
+                                withBorder
+                                style={{
+                                    borderColor: "rgba(125, 91, 72, 0.32)",
+                                    background: "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)",
+                                }}
+                            >
+                                <Group justify="space-between" align="center" wrap="nowrap">
+                                    <Box style={{ minWidth: 0 }}>
+                                        <Text
+                                            style={{
+                                                fontFamily: "Cinzel, Georgia, serif",
+                                                fontSize: "0.92rem",
+                                                letterSpacing: "0.06em",
+                                                textTransform: "uppercase",
+                                                color: "rgba(244, 236, 232, 0.95)",
+                                            }}
+                                        >
+                                            New Character
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
+                                            Start a fresh character at the clan step
+                                        </Text>
+                                    </Box>
+                                    <Button
+                                        size="xs"
+                                        variant="outline"
+                                        color="red"
+                                        disabled={isLoadingSelectedCharacter}
+                                        onClick={async () => {
+                                            try {
+                                                setIsLoadingSelectedCharacter(true)
+                                                await onCreateCharacter()
+                                                setSwitchCharacterModalOpened(false)
+                                            } catch (error) {
+                                                if (!(error instanceof Error && "alreadyNotified" in error && error.alreadyNotified === true)) {
+                                                    notifications.show({
+                                                        title: "Error creating character",
+                                                        message: error instanceof Error ? error.message : "Failed to create a new character",
+                                                        color: "red",
+                                                    })
+                                                }
+                                            } finally {
+                                                setIsLoadingSelectedCharacter(false)
+                                            }
+                                        }}
+                                        styles={actionButtonStyles}
+                                    >
+                                        Create
+                                    </Button>
+                                </Group>
+                            </Paper>
                             {characterOptions.map((option) => {
                                 const isActive = option.value === selectedCharacterId
 
@@ -221,7 +277,7 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter }: SidebarPro
                             <Button
                                 size="sm"
                                 variant="outline"
-                                leftSection={<IconUser size={16} />}
+                                leftSection={characterOptions.length > 0 ? <IconUser size={16} /> : <IconFilePlus size={16} />}
                                 rightSection={<IconChevronRight size={14} />}
                                 disabled={charactersLoading || isLoadingSelectedCharacter}
                                 loading={charactersLoading}

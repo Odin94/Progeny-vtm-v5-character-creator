@@ -23,8 +23,8 @@ export type GeneratorProps = {
 }
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
-    const nextStep = () => {
-        setSelectedStep(getNextGeneratorStepId(character, selectedStep))
+    const nextStep = (characterOverride?: Character) => {
+        setSelectedStep(getNextGeneratorStepId(characterOverride ?? character, selectedStep))
     }
 
     const getStepComponent = () => {

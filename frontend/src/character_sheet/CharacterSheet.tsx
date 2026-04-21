@@ -105,10 +105,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 style={{
                     minHeight: "100vh",
                     width: "100%",
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: "center",
-                    padding: "2rem 0",
+                    padding: "calc(2rem + 52px) 0 2rem",
                     position: "relative",
                 }}
             >
