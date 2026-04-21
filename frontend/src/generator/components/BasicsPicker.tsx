@@ -5,6 +5,7 @@ import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { globals } from "../../globals"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
+import { GeneratorStepHero, generatorFieldStyles, getGeneratorFieldStyles } from "./sharedGeneratorUi"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type BasicsPickerProps = {
@@ -14,29 +15,22 @@ type BasicsPickerProps = {
 }
 
 const inputStyles = {
+    ...getGeneratorFieldStyles("gold"),
     label: {
-        fontFamily: "Cinzel, Georgia, serif",
-        fontSize: "0.9rem",
+        ...generatorFieldStyles.goldLabel,
         fontWeight: 800,
         letterSpacing: "0.16em",
-        textTransform: "uppercase" as const,
         color: rgba(RAW_GOLD, 0.9),
         marginBottom: 6,
     },
-    description: {
-        fontFamily: "Inter, Segoe UI, sans-serif",
-        fontSize: "0.76rem",
-        color: rgba(RAW_GREY, 0.7),
-        marginBottom: 4,
-    },
     input: {
+        ...generatorFieldStyles.input,
         background: "rgba(33, 33, 33, 0.18)",
-        backdropFilter: 'blur(2px)',
-          WebkitBackdropFilter: 'blur(2px)',
+        backdropFilter: "blur(2px)",
+        WebkitBackdropFilter: "blur(2px)",
         border: "1px solid rgba(255, 255, 255, 0.16)",
         borderRadius: 10,
         color: "rgba(244, 236, 232, 0.92)",
-        fontFamily: "Inter, Segoe UI, sans-serif",
         fontSize: "1rem",
         transition: "border-color 180ms ease",
         ":focus": {
@@ -68,28 +62,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                 }
             `}</style>
             <ScrollArea h={height - 230} type="always" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
-                <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
-                    <Text
-                        ta="center"
-                        style={{
-                            fontFamily: "Crimson Text, Georgia, serif",
-                            fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                            lineHeight: 1.1,
-                            color: "rgba(244, 236, 232, 0.95)",
-                        }}
-                    >
-                        Come up with the{" "}
-                        <span
-                            style={{
-                                fontFamily: "Cinzel, Georgia, serif",
-                                letterSpacing: "0.05em",
-                                color: rgba(RAW_RED, 1),
-                            }}
-                        >
-                            Basics
-                        </span>
-                    </Text>
-                </Stack>
+                <GeneratorStepHero leadText="Come up with the" accentText="Basics" marginBottom={phoneScreen ? 18 : 26} />
 
                 <Stack
                     gap="lg"

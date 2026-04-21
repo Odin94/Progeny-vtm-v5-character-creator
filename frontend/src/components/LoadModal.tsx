@@ -1,12 +1,10 @@
-import { faXmark } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { Buffer } from "buffer"
 import { z } from "zod"
 import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
 import { GeneratorStepId } from "../generator/steps"
 import { getUploadFile } from "../generator/utils"
+import ConfirmActionModal from "./ConfirmActionModal"
 
 export type LoadModalProps = {
     setCharacter: (character: Character) => void
@@ -27,66 +25,54 @@ export const loadCharacterFromJson = async (json: string): Promise<Character> =>
 
 const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, setSelectedStep }: LoadModalProps) => {
     return (
-        <Modal opened={loadModalOpened} onClose={closeLoadModal} title="" centered withCloseButton={false}>
-            <Stack>
-                <Text fz={"xl"} ta={"center"}>
-                    Overwrite current character and load from selected file?
-                </Text>
-                <Divider my="sm" />
-                <Group justify="space-between">
-                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>
-                        Cancel
-                    </Button>
+        <ConfirmActionModal
+            opened={loadModalOpened}
+            onClose={closeLoadModal}
+            onConfirm={async () => {
+                if (!loadedFile) {
+                    console.log("Error: No file loaded!")
+                    return
+                }
+                try {
+                    const fileData = await getUploadFile(loadedFile)
+                    const base64 = fileData.split(",")[1]
+                    if (!base64) {
+                        throw new Error("Invalid file format")
+                    }
 
-                    <Button
-                        color="red"
-                        onClick={async () => {
-                            if (!loadedFile) {
-                                console.log("Error: No file loaded!")
-                                return
-                            }
-                            try {
-                                const fileData = await getUploadFile(loadedFile)
-                                const base64 = fileData.split(",")[1]
-                                if (!base64) {
-                                    throw new Error("Invalid file format")
-                                }
+                    let json: string
+                    try {
+                        json = atob(base64)
+                    } catch (_decodeError) {
+                        json = Buffer.from(base64, "base64").toString()
+                    }
 
-                                let json: string
-                                try {
-                                    json = atob(base64)
-                                } catch (_decodeError) {
-                                    json = Buffer.from(base64, "base64").toString()
-                                }
-
-                                const loadedCharacter = await loadCharacterFromJson(json)
-                                setCharacter({ ...loadedCharacter, id: "" })
-                                setSelectedStep("final")
-                                closeLoadModal()
-                            } catch (e) {
-                                if (e instanceof z.ZodError) {
-                                    notifications.show({
-                                        title: "JSON content error loading character",
-                                        message: z.prettifyError(e),
-                                        color: "red",
-                                        autoClose: false,
-                                    })
-                                } else {
-                                    notifications.show({
-                                        title: "Error loading character",
-                                        message: e instanceof Error ? e.message : "Failed to load character from file",
-                                        color: "red",
-                                    })
-                                }
-                                console.log({ e })
-                            }
-                        }}
-                    >
-                        Load/Overwrite character
-                    </Button>
-                </Group>
-            </Stack>
-        </Modal>
+                    const loadedCharacter = await loadCharacterFromJson(json)
+                    setCharacter({ ...loadedCharacter, id: "" })
+                    setSelectedStep("final")
+                    closeLoadModal()
+                } catch (e) {
+                    if (e instanceof z.ZodError) {
+                        notifications.show({
+                            title: "JSON content error loading character",
+                            message: z.prettifyError(e),
+                            color: "red",
+                            autoClose: false,
+                        })
+                    } else {
+                        notifications.show({
+                            title: "Error loading character",
+                            message: e instanceof Error ? e.message : "Failed to load character from file",
+                            color: "red",
+                        })
+                    }
+                    console.log({ e })
+                }
+            }}
+            title="Load Character?"
+            body="This will overwrite the current character with the selected file. This action cannot be undone."
+            confirmLabel="Load"
+        />
     )
 }
 

@@ -1,7 +1,6 @@
-import { Box, Button, Divider, Grid, Group, ScrollArea, Space, Stack, Text, Title, Tooltip } from "@mantine/core"
+import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -10,6 +9,7 @@ import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } f
 import { globals } from "../../globals"
 import { upcase } from "../utils"
 import { SpecialtyModal } from "./SkillSpecialtyModal"
+import { GeneratorPhasePrompt, GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 
 type SkillsPickerProps = {
     character: Character
@@ -224,7 +224,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                             !phoneScreen && assignedLevel ? (
                                 <Group gap={4} wrap="nowrap">
                                     {Array.from({ length: 5 }).map((_, dotIndex) => (
-                                        <Box
+                                        <div
                                             key={`${skill}-dot-${dotIndex}`}
                                             style={{
                                                 width: 6,
@@ -370,39 +370,12 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         <div style={{ marginTop: height < globals.heightBreakPoint ? "60px" : 0 }}>
             {!pickedDistribution ? (
                 <>
-                    <Stack gap={6} align="center" mb="xl">
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                                lineHeight: 1.1,
-                                color: "rgba(244, 236, 232, 0.95)",
-                            }}
-                        >
-                            Pick your{" "}
-                            <span
-                                style={{
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    letterSpacing: "0.05em",
-                                    color: rgba(RAW_RED, 1),
-                                }}
-                            >
-                                Skill Distribution
-                            </span>
-                        </Text>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                fontSize: phoneScreen ? "0.82rem" : "0.9rem",
-                                letterSpacing: "0.04em",
-                                color: rgba(RAW_GREY, 0.5),
-                            }}
-                        >
-                            Balanced is the default choice
-                        </Text>
-                    </Stack>
+                    <GeneratorStepHero
+                        leadText="Pick your"
+                        accentText="Skill Distribution"
+                        description="Balanced is the default choice"
+                        marginBottom={32}
+                    />
                     <Grid grow>
                         {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
                             return (
@@ -433,117 +406,10 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Space h="xl" />
                 </>
             ) : (
-                <Stack gap={6} align="center" mb="md">
-                    <Text
-                        ta="center"
-                        style={{
-                            fontFamily: "Inter, Segoe UI, sans-serif",
-                            fontSize: "0.78rem",
-                            letterSpacing: "0.06em",
-                            color: rgba(RAW_GREY, 0.42),
-                        }}
-                    >
-                        {pickedDistribution}
-                    </Text>
-                    {phases.map((phase) => {
-                        const isActive = toPick === phase.key
-                        const isPast = phase.done && !isActive
-
-                        return (
-                            <Box
-                                key={phase.key}
-                                style={{
-                                    position: "relative",
-                                    height: phoneScreen ? "1.9rem" : "2.35rem",
-                                    width: "100%",
-                                }}
-                            >
-                                <motion.div
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: isPast ? 0.28 : isActive ? 1 : 0.5, y: 0 }}
-                                    transition={{ duration: 0.35, ease: "easeOut" }}
-                                    style={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <Text
-                                        ta="center"
-                                        style={{
-                                            fontFamily: "Crimson Text, Georgia, serif",
-                                            fontSize: isActive ? (phoneScreen ? "1.15rem" : "1.45rem") : phoneScreen ? "0.95rem" : "1rem",
-                                            lineHeight: 1.1,
-                                            color: isActive ? "rgba(244, 236, 232, 0.95)" : rgba(RAW_GREY, 0.56),
-                                            transition: "all 220ms ease",
-                                        }}
-                                    >
-                                        {isActive ? (
-                                            <motion.span
-                                                animate={{ opacity: [0.65, 1, 0.65] }}
-                                                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                                                style={{
-                                                    fontFamily: "Cinzel, Georgia, serif",
-                                                    color: rgba(RAW_RED, 1),
-                                                    marginRight: "0.4rem",
-                                                }}
-                                            >
-                                                {"›"}
-                                            </motion.span>
-                                        ) : null}
-                                        {phase.prompt}{" "}
-                                        <span
-                                            style={{
-                                                fontFamily: "Cinzel, Georgia, serif",
-                                                letterSpacing: "0.05em",
-                                                color: isActive ? rgba(RAW_RED, 1) : "inherit",
-                                                textDecoration: isPast ? "line-through" : "none",
-                                            }}
-                                        >
-                                            {phase.bold}
-                                        </span>{" "}
-                                        {phase.suffix}
-                                        <span
-                                            style={{
-                                                marginLeft: "0.45rem",
-                                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                                fontSize: phoneScreen ? "0.68rem" : "0.72rem",
-                                                letterSpacing: "0.11em",
-                                                textTransform: "uppercase",
-                                                opacity: isActive ? 0.72 : 0.5,
-                                            }}
-                                        >
-                                            lvl {phase.level}
-                                        </span>
-                                    </Text>
-                                </motion.div>
-                            </Box>
-                        )
-                    })}
-                </Stack>
+                <GeneratorPhasePrompt lines={phases} activeKey={toPick} phoneScreen={phoneScreen} caption={pickedDistribution} />
             )}
 
-            <Box my="lg">
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
-                    <Title
-                        order={4}
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: "0.95rem",
-                            fontWeight: 600,
-                            letterSpacing: "0.24em",
-                            textTransform: "uppercase",
-                            color: rgba(RAW_RED, 1),
-                        }}
-                    >
-                        Skills
-                    </Title>
-                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
-                </div>
-            </Box>
+            <GeneratorSectionDivider label="Skills" />
 
             <Space h="sm" />
 

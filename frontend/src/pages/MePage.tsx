@@ -31,6 +31,7 @@ import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
 import { characterSchema, Character as CharacterType, getEmptyCharacter } from "~/data/Character"
@@ -1564,67 +1565,37 @@ const MePage = () => {
                 </Stack>
             </Modal>
 
-            <Modal
+            <ConfirmActionModal
                 opened={deleteCharacterModalOpened}
                 onClose={() => {
                     setDeleteCharacterModalOpened(false)
                     setCharacterToDelete(null)
                 }}
+                onConfirm={handleConfirmDeleteCharacter}
                 title="Delete Character"
-                centered
-            >
-                <Stack gap="md">
-                    <Text>
+                body={
+                    <>
                         Are you sure you want to delete <strong>{characterToDelete?.name}</strong>? This action cannot be undone.
-                    </Text>
-                    <Group justify="flex-end" gap="xs">
-                        <Button
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                                setDeleteCharacterModalOpened(false)
-                                setCharacterToDelete(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button color="red" onClick={handleConfirmDeleteCharacter}>
-                            Delete
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                    </>
+                }
+                confirmLabel="Delete"
+            />
 
-            <Modal
+            <ConfirmActionModal
                 opened={deleteCoterieModalOpened}
                 onClose={() => {
                     setDeleteCoterieModalOpened(false)
                     setCoterieToDelete(null)
                 }}
+                onConfirm={handleConfirmDeleteCoterie}
                 title="Delete Coterie"
-                centered
-            >
-                <Stack gap="md">
-                    <Text>
+                body={
+                    <>
                         Are you sure you want to delete <strong>{coterieToDelete?.name}</strong>? This action cannot be undone.
-                    </Text>
-                    <Group justify="flex-end" gap="xs">
-                        <Button
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                                setDeleteCoterieModalOpened(false)
-                                setCoterieToDelete(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button color="red" onClick={handleConfirmDeleteCoterie}>
-                            Delete
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                    </>
+                }
+                confirmLabel="Delete"
+            />
 
             <Modal
                 opened={loadCharacterWarningModalOpened}
@@ -1746,119 +1717,30 @@ const MePage = () => {
                 />
             </Modal>
 
-            <Modal
+            <ConfirmActionModal
                 opened={loadJsonModalOpened}
-                onClose={() => setLoadJsonModalOpened(false)}
-                title=""
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={{
-                    content: {
-                        border: "1px solid rgba(125, 91, 72, 0.38)",
-                        background: "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
-                        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
-                    },
-                    body: {
-                        padding: phoneScreen ? "1.1rem" : "1.35rem",
-                    },
+                onClose={() => {
+                    setLoadJsonModalOpened(false)
+                    setLoadedFile(null)
                 }}
-            >
-                <Stack gap="md">
-                    <Stack gap={6} align="center">
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontSize: phoneScreen ? "1.2rem" : "1.35rem",
-                                letterSpacing: "0.08em",
-                                textTransform: "uppercase",
-                                color: "rgba(244, 236, 232, 0.95)",
-                            }}
-                        >
-                            Load Character?
-                        </Text>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                fontSize: "0.9rem",
-                                color: rgba(RAW_GREY, 0.62),
-                            }}
-                        >
-                            This will overwrite the current character with the selected file. This action cannot be undone.
-                        </Text>
-                    </Stack>
+                onConfirm={handleConfirmLoadJson}
+                title="Load Character?"
+                body="This will overwrite the current character with the selected file. This action cannot be undone."
+                confirmLabel="Load"
+            />
 
-                    <Divider color="rgba(125, 91, 72, 0.28)" />
-
-                    <Group justify="space-between">
-                        <Button
-                            color="gray"
-                            variant="subtle"
-                            onClick={() => {
-                                setLoadJsonModalOpened(false)
-                                setLoadedFile(null)
-                            }}
-                            styles={{
-                                root: {
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                },
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleConfirmLoadJson}
-                            styles={{
-                                root: {
-                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
-                                },
-                            }}
-                        >
-                            Load
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
-
-            <Modal
+            <ConfirmActionModal
                 opened={versionConflictModalOpened}
                 onClose={() => {
                     setVersionConflictModalOpened(false)
                     setVersionConflictInfo(null)
                     setCharacterToLoad(null)
                 }}
+                onConfirm={handleConfirmOverwriteVersion}
                 title="Version Conflict"
-                centered
-            >
-                <Stack gap="md">
-                    <Text>{versionConflictInfo?.message}</Text>
-                    <Group justify="flex-end" gap="xs">
-                        <Button
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                                setVersionConflictModalOpened(false)
-                                setVersionConflictInfo(null)
-                                setCharacterToLoad(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button color="red" onClick={handleConfirmOverwriteVersion}>
-                            {characterToLoad ? "Load older version" : "Overwrite DB version"}
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                body={versionConflictInfo?.message ?? ""}
+                confirmLabel={characterToLoad ? "Load older version" : "Overwrite DB version"}
+            />
 
             {/* Coterie Summary Modal */}
             <Modal

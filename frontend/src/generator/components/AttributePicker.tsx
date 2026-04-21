@@ -1,6 +1,5 @@
-import { Box, Button, Divider, Grid, Group, Stack, Text, Title, Tooltip, useMantineTheme } from "@mantine/core"
-import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
-import { motion } from "framer-motion"
+import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
+import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -8,6 +7,7 @@ import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../..
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { GeneratorPhasePrompt, GeneratorSectionDivider } from "./sharedGeneratorUi"
 
 type AttributePickerProps = {
     character: Character
@@ -23,8 +23,6 @@ type AttributeSetting = {
 
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    const theme = useMantineTheme()
-
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Attribute Picker" })
     }, [])
@@ -131,7 +129,6 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                           ? "rgba(204, 166, 51, 0.4)"
                                           : assignedLevel === 1
                                             ? "rgba(43, 43, 43, 0.5)"
-                                            // TODOdin: This is theme.grape, but +20 to everything and 0.8 alpha - do we want to use this here/everywhere?
                                             : rgba(RAW_GRAPE, 0.8),
                                 borderColor:
                                     assignedLevel === 4
@@ -148,7 +145,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                             !phoneScreen && assignedLevel ? (
                                 <Group gap={4} wrap="nowrap">
                                     {Array.from({ length: 5 }).map((_, dotIndex) => (
-                                        <Box
+                                        <div
                                             key={`${attribute}-dot-${dotIndex}`}
                                             style={{
                                                 width: phoneScreen ? 5 : 6,
@@ -190,8 +187,8 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
 
     const toPick = (() => {
         if (!pickedAttributes.strongest) return "strongest"
-        else if (!pickedAttributes.weakest) return "weakest"
-        else return "medium"
+        if (!pickedAttributes.weakest) return "weakest"
+        return "medium"
     })()
 
     const phases = [
@@ -205,108 +202,18 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             level: 3,
             done: pickedAttributes.medium.length === 2,
         },
-    ] as const
+    ]
 
     return (
         <div>
-            <Stack gap={6} align="center" mb="md">
-                {phases.map((phase) => {
-                    const isActive = toPick === phase.key
-                    const isPast = phase.done && !isActive
+            <GeneratorPhasePrompt
+                lines={phases}
+                activeKey={toPick}
+                phoneScreen={phoneScreen}
+                footerText="Remaining attributes will be lvl 2"
+            />
 
-                    return (
-                        <Box
-                            key={phase.key}
-                            style={{
-                                position: "relative",
-                                height: phoneScreen ? "1.9rem" : "2.35rem",
-                                width: "100%",
-                            }}
-                        >
-                            <motion.div
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: isPast ? 0.28 : isActive ? 1 : 0.5, y: 0 }}
-                                transition={{ duration: 0.35, ease: "easeOut" }}
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Text
-                                    ta="center"
-                                    style={{
-                                        fontFamily: "Crimson Text, Georgia, serif",
-                                        fontSize: isActive ? (phoneScreen ? "1.15rem" : "1.45rem") : phoneScreen ? "0.95rem" : "1rem",
-                                        lineHeight: 1.1,
-                                        color: isActive ? "rgba(244, 236, 232, 0.95)" : rgba(RAW_GREY, 0.56),
-                                        transition: "all 220ms ease",
-                                    }}
-                                >
-                                    {isActive ? (
-                                        <motion.span
-                                            animate={{ opacity: [0.65, 1, 0.65] }}
-                                            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                                            style={{
-                                                fontFamily: "Cinzel, Georgia, serif",
-                                                color: rgba(RAW_RED, 1),
-                                                marginRight: "0.4rem",
-                                            }}
-                                        >
-                                            {"›"}
-                                        </motion.span>
-                                    ) : null}
-                                    {phase.prompt}{" "}
-                                    <span
-                                        style={{
-                                            fontFamily: "Cinzel, Georgia, serif",
-                                            letterSpacing: "0.05em",
-                                            color: isActive ? rgba(RAW_RED, 1) : "inherit",
-                                            textDecoration: isPast ? "line-through" : "none",
-                                        }}
-                                    >
-                                        {phase.bold}
-                                    </span>{" "}
-                                    {phase.suffix}
-                                </Text>
-                            </motion.div>
-                        </Box>
-                    )
-                })}
-                <Text
-                    ta="center"
-                    style={{
-                        fontFamily: "Inter, Segoe UI, sans-serif",
-                        fontSize: "0.78rem",
-                        letterSpacing: "0.06em",
-                        color: rgba(RAW_GREY, 0.42),
-                    }}
-                >
-                    Remaining attributes will be lvl 2
-                </Text>
-            </Stack>
-
-            <Box my="lg">
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
-                    <Title
-                        order={4}
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: "0.95rem",
-                            fontWeight: 600,
-                            letterSpacing: "0.24em",
-                            textTransform: "uppercase",
-                            color: rgba(RAW_RED, 1),
-                        }}
-                    >
-                        Attributes
-                    </Title>
-                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
-                </div>
-            </Box>
+            <GeneratorSectionDivider label="Attributes" />
 
             <Group>
                 <Grid grow>

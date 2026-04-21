@@ -13,6 +13,7 @@ import { clans } from "~/data/Clans"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
+import { GeneratorStepHero } from "./sharedGeneratorUi"
 
 type PredatorTypePickerProps = {
     character: Character
@@ -202,39 +203,12 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
     const createPredatorTypeStack = () => (
         <Stack gap="xl">
-            <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
-                <Text
-                    ta="center"
-                    style={{
-                        fontFamily: "Crimson Text, Georgia, serif",
-                        fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                        lineHeight: 1.1,
-                        color: "rgba(244, 236, 232, 0.95)",
-                    }}
-                >
-                    Pick your{" "}
-                    <span
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            letterSpacing: "0.05em",
-                            color: rgba(RAW_RED, 1),
-                        }}
-                    >
-                        Predator Type
-                    </span>
-                </Text>
-                <Text
-                    ta="center"
-                    style={{
-                        fontFamily: "Inter, Segoe UI, sans-serif",
-                        fontSize: phoneScreen ? "0.82rem" : "0.9rem",
-                        letterSpacing: "0.04em",
-                        color: rgba(RAW_GREY, 0.5),
-                    }}
-                >
-                    Choose a predator type that defines your feeding habits
-                </Text>
-            </Stack>
+            <GeneratorStepHero
+                leadText="Pick your"
+                accentText="Predator Type"
+                description="Choose a predator type that defines your feeding habits"
+                marginBottom={phoneScreen ? 18 : 26}
+            />
 
             {CATEGORIES.map((meta) => (
                 <Box key={meta.label} px={phoneScreen ? 4 : 12}>

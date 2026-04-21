@@ -9,6 +9,7 @@ import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 import { globals } from "../../globals"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
+import { GeneratorSectionDivider, GeneratorStepHero, generatorFieldStyles, getGeneratorFieldStyles } from "./sharedGeneratorUi"
 
 type GenerationPickerProps = {
     character: Character
@@ -85,59 +86,14 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
     return (
         <div style={{ width: "100%" }}>
-            <Stack gap={6} align="center" mb="md">
-                <Text
-                    ta="center"
-                    style={{
-                        fontFamily: "Crimson Text, Georgia, serif",
-                        fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                        lineHeight: 1.1,
-                        color: "rgba(244, 236, 232, 0.95)",
-                    }}
-                >
-                    Pick your{" "}
-                    <span
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            letterSpacing: "0.05em",
-                            color: rgba(RAW_RED, 1),
-                        }}
-                    >
-                        Generation
-                    </span>
-                </Text>
-                <Text
-                    ta="center"
-                    style={{
-                        fontFamily: "Inter, Segoe UI, sans-serif",
-                        fontSize: phoneScreen ? "0.82rem" : "0.9rem",
-                        letterSpacing: "0.04em",
-                        color: rgba(RAW_GREY, 0.5),
-                    }}
-                >
-                    {isThinBlood ? "Thin-bloods can only begin at 14th generation." : "Default choice is '13th Gen - Neonate'"}
-                </Text>
-            </Stack>
+            <GeneratorStepHero
+                leadText="Pick your"
+                accentText="Generation"
+                description={isThinBlood ? "Thin-bloods can only begin at 14th generation." : "Default choice is '13th Gen - Neonate'"}
+                marginBottom={16}
+            />
 
-            <Box my="lg">
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
-                    <Title
-                        order={4}
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: "0.95rem",
-                            fontWeight: 600,
-                            letterSpacing: "0.24em",
-                            textTransform: "uppercase",
-                            color: rgba(RAW_RED, 1),
-                        }}
-                    >
-                        Generation
-                    </Title>
-                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
-                </div>
-            </Box>
+            <GeneratorSectionDivider label="Generation" />
 
             <Stack align="center" gap="xl">
                 <FocusBorderWrapper colorValue={theme.colors.grape[6]} style={{ width: "100%", maxWidth: phoneScreen ? 320 : 430 }}>
@@ -147,19 +103,10 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                         placeholder="Select your generation"
                         data={availableOptions}
                         styles={{
-                            label: {
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontSize: "0.82rem",
-                                letterSpacing: "0.1em",
-                                textTransform: "uppercase",
-                                color: rgba(RAW_GREY, 0.72),
-                                marginBottom: 8,
-                            },
+                            ...getGeneratorFieldStyles("muted"),
                             input: {
+                                ...generatorFieldStyles.input,
                                 minHeight: 44,
-                                background: "rgba(20, 16, 18, 0.82)",
-                                borderColor: "rgba(125, 91, 72, 0.4)",
-                                color: "rgba(244, 236, 232, 0.95)",
                                 fontFamily: "Crimson Text, Georgia, serif",
                                 fontSize: phoneScreen ? "1rem" : "1.08rem",
                                 textAlign: "center",
