@@ -50,6 +50,20 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                 {/* Right side */}
                 <Group gap="md" align="center">
                     <Anchor
+                        component={Link}
+                        to="/sheet"
+                        underline="never"
+                        style={{
+                            fontFamily: "Inter, Segoe UI, sans-serif",
+                            fontSize: "0.78rem",
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))",
+                        }}
+                    >
+                        Sheet
+                    </Anchor>
+                    <Anchor
                         href="#"
                         underline="never"
                         onClick={handleAccountClick}

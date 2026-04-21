@@ -17,7 +17,7 @@ const inputStyles = {
         fontFamily: "Cinzel, Georgia, serif",
         fontSize: "0.9rem",
         fontWeight: 800,
-        letterSpacing: "0.18em",
+        letterSpacing: "0.16em",
         textTransform: "uppercase" as const,
         color: "rgba(212, 175, 100, 0.9)",
         marginBottom: 6,
@@ -25,11 +25,11 @@ const inputStyles = {
     description: {
         fontFamily: "Inter, Segoe UI, sans-serif",
         fontSize: "0.76rem",
-        color: "rgba(214, 204, 198, 0.4)",
+        color: "rgba(214, 204, 198, 0.7)",
         marginBottom: 4,
     },
     input: {
-        background: "rgba(255, 255, 255, 0.18)",
+        background: "rgba(33, 33, 33, 0.18)",
         backdropFilter: 'blur(2px)',
           WebkitBackdropFilter: 'blur(2px)',
         border: "1px solid rgba(255, 255, 255, 0.16)",

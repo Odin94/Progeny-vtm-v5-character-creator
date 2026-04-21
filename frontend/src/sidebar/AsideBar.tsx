@@ -14,7 +14,7 @@ export type AsideBarProps = {
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
-    const { isLoading: authLoading, isAuthenticated, signIn } = useAuth()
+    const { isLoading: authLoading, isAuthenticated } = useAuth()
     const steps = getVisibleGeneratorSteps(character)
     const activeIndex = getGeneratorStepIndex(character, selectedStep)
 
@@ -159,24 +159,19 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     const scrollerHeight = 940
     return (
         <Stack gap="md" style={{ padding: "1rem", zIndex: 0, height: "100%" }}>
-            <Stack gap="sm">
-                {authLoading ? (
-                    <Button size="sm" color="gray" variant="outline" loading leftSection={<IconArrowRight size={16} />}>
-                        Loading...
-                    </Button>
-                ) : !isAuthenticated ? (
-                    <Button size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />} onClick={signIn}>
-                        Sign In
-                    </Button>
-                ) : (
+            {authLoading || isAuthenticated ? (
+                <Stack gap="sm">
+                    {authLoading ? (
+                        <Button size="sm" color="gray" variant="outline" loading leftSection={<IconArrowRight size={16} />}>
+                            Loading...
+                        </Button>
+                    ) : (
                     <Button component={Link} to="/me" size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />}>
                         Account
                     </Button>
-                )}
-                <Button component={Link} to="/sheet" size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />}>
-                    Sheet
-                </Button>
-            </Stack>
+                    )}
+                </Stack>
+            ) : null}
             <div style={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
                 {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStagesList()}</ScrollArea> : <>{getStagesList()}</>}
             </div>
