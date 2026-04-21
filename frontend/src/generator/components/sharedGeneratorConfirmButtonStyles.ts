@@ -12,3 +12,28 @@ export const generatorConfirmButtonStyles = {
         textTransform: "uppercase" as const,
     },
 }
+
+export const generatorOutlineActionButtonStyles = {
+    root: {
+        borderColor: rgba(RAW_RED, 0.4),
+        background: rgba(RAW_RED, 0.08),
+        boxShadow: "none",
+        transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+        letterSpacing: "0.14em",
+        textTransform: "uppercase" as const,
+        fontFamily: "Cinzel, Georgia, serif",
+    },
+    section: {
+        color: rgba(RAW_RED, 1),
+    },
+}
+
+export const confirmationModalDangerConfirmButtonStyles = {
+    root: {
+        background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase" as const,
+        fontFamily: "Cinzel, Georgia, serif",
+        boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
+    },
+}

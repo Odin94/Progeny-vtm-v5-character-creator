@@ -1,7 +1,7 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Box, Button, Divider, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import { Box, Button, Divider, Grid, Group, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
 import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -15,6 +15,8 @@ import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
+import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 
 type MeritsAndFlawsPickerProps = {
     character: Character
@@ -29,14 +31,6 @@ const flawIcon = () => {
 }
 const meritIcon = () => {
     return <FontAwesomeIcon icon={faPlay} rotation={270} style={{ color: "rgb(47, 158, 68)" }} />
-}
-
-const sectionHeadingStyle = {
-    fontFamily: "Cinzel, Georgia, serif",
-    fontSize: "0.96rem",
-    fontWeight: 600,
-    letterSpacing: "0.22em",
-    textTransform: "uppercase" as const,
 }
 
 type MeritOrFlawCardProps = {
@@ -377,40 +371,13 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 >
                     <div style={generatorScrollableContentStyle}>
                         <Stack gap="lg" pb="xl">
-                            <Stack gap={6} align="center" mb={phoneScreen ? 8 : 12}>
-                                <Text
-                                    ta="center"
-                                    style={{
-                                        fontFamily: "Crimson Text, Georgia, serif",
-                                        fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                                        lineHeight: 1.1,
-                                        color: "rgba(244, 236, 232, 0.95)",
-                                    }}
-                                >
-                                    Shape your{" "}
-                                    <span
-                                        style={{
-                                            fontFamily: "Cinzel, Georgia, serif",
-                                            letterSpacing: "0.05em",
-                                            color: rgba(RAW_RED, 1),
-                                        }}
-                                    >
-                                        Merits & Flaws
-                                    </span>
-                                </Text>
-                                <Text
-                                    ta="center"
-                                    maw={720}
-                                    style={{
-                                        fontFamily: "Inter, Segoe UI, sans-serif",
-                                        fontSize: phoneScreen ? "0.82rem" : "0.9rem",
-                                        letterSpacing: "0.04em",
-                                        color: rgba(RAW_GREY, 0.5),
-                                    }}
-                                >
-                                    Define what empowers you, what complicates your unlife, and which loresheets still fit your story.
-                                </Text>
-                            </Stack>
+                            <GeneratorStepHero
+                                leadText="Shape your"
+                                accentText="Merits & Flaws"
+                                description="Define what empowers you, what complicates your unlife, and which loresheets still fit your story."
+                                maxWidth={720}
+                                marginBottom={phoneScreen ? 12 : 16}
+                            />
 
                         <Grid m={0} gutter="sm">
                             <Grid.Col span={phoneScreen ? 12 : 4}>
@@ -539,7 +506,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                 return (
                                                     <Grid.Col span={phoneScreen ? 12 : 6} key={category.title}>
                                                         <Stack gap="sm">
-                                                            <SectionHeading label={category.title} />
+                                                            <GeneratorSectionDivider label={category.title} accentAlpha={0.32} titleSize="0.96rem" lineHeight={1} marginY="xs" />
                                                             {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
                                                             {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
                                                         </Stack>
@@ -594,87 +561,14 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 </Stack>
             </Stack>
 
-            <Modal
+            <ConfirmActionModal
                 opened={resetTarget !== null}
                 onClose={() => setResetTarget(null)}
-                title=""
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={{
-                    content: {
-                        border: "1px solid rgba(125, 91, 72, 0.38)",
-                        background: "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
-                        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
-                    },
-                    body: {
-                        padding: phoneScreen ? "1.1rem" : "1.35rem",
-                    },
-                }}
-            >
-                <Stack gap="md">
-                    <Stack gap={6} align="center">
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontSize: phoneScreen ? "1.2rem" : "1.35rem",
-                                letterSpacing: "0.08em",
-                                textTransform: "uppercase",
-                                color: "rgba(244, 236, 232, 0.95)",
-                            }}
-                        >
-                            Reset {resetTarget === "merit" ? "Advantages" : "Flaws"}?
-                        </Text>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                fontSize: "0.9rem",
-                                color: rgba(RAW_GREY, 0.62),
-                            }}
-                        >
-                            This will remove your picked {resetTarget === "merit" ? "advantages" : "flaws"} from this step.
-                            Predator type picks are kept.
-                        </Text>
-                    </Stack>
-
-                    <Divider color="rgba(125, 91, 72, 0.28)" />
-
-                    <Group justify="space-between">
-                        <Button
-                            color="gray"
-                            variant="subtle"
-                            onClick={() => setResetTarget(null)}
-                            styles={{
-                                root: {
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                },
-                            }}
-                        >
-                            Cancel
-                        </Button>
-
-                        <Button
-                            color="red"
-                            onClick={handleReset}
-                            styles={{
-                                root: {
-                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
-                                },
-                            }}
-                        >
-                            Reset
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                onConfirm={handleReset}
+                title={`Reset ${resetTarget === "merit" ? "Advantages" : "Flaws"}?`}
+                body={`This will remove your picked ${resetTarget === "merit" ? "advantages" : "flaws"} from this step. Predator type picks are kept.`}
+                confirmLabel="Reset"
+            />
         </div>
     )
 }
@@ -787,16 +681,6 @@ const PointCard = ({
     )
 }
 
-const SectionHeading = ({ label }: { label: string }) => (
-    <Box my="xs">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.32)} 50%, transparent 100%)` }} />
-            <Text style={{ ...sectionHeadingStyle, color: rgba(RAW_RED, 1) }}>{label}</Text>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.32)} 50%, transparent 100%)` }} />
-        </div>
-    </Box>
-)
-
 function thinBloodMeritsAndFlawsComponent(
     getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element,
     phoneScreen: boolean
@@ -805,13 +689,13 @@ function thinBloodMeritsAndFlawsComponent(
         <>
             <Grid.Col span={phoneScreen ? 12 : 6}>
                 <Stack gap={"sm"}>
-                    <SectionHeading label="Thin-blood merits" />
+                    <GeneratorSectionDivider label="Thin-blood merits" accentAlpha={0.32} titleSize="0.96rem" lineHeight={1} marginY="xs" />
                     {thinbloodMeritsAndFlaws.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
                 </Stack>
             </Grid.Col>
             <Grid.Col span={phoneScreen ? 12 : 6}>
                 <Stack gap={"sm"}>
-                    <SectionHeading label="Thin-blood flaws" />
+                    <GeneratorSectionDivider label="Thin-blood flaws" accentAlpha={0.32} titleSize="0.96rem" lineHeight={1} marginY="xs" />
                     {thinbloodMeritsAndFlaws.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
                 </Stack>
             </Grid.Col>

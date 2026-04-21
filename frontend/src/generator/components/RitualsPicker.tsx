@@ -9,34 +9,13 @@ import { upcase } from "../utils"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { globals } from "../../globals"
+import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 
 type RitualsPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
-
-const SectionDivider = ({ label }: { label: string }) => (
-    <Box my="sm">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
-            <Text
-                style={{
-                    fontFamily: "Cinzel, Georgia, serif",
-                    fontSize: "0.88rem",
-                    fontWeight: 800,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: rgba(RAW_RED, 1),
-                    whiteSpace: "nowrap",
-                }}
-            >
-                {label}
-            </Text>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
-        </div>
-    </Box>
-)
 
 const GOLD_LABEL_COLOR = rgba(RAW_GOLD, 1)
 
@@ -189,42 +168,15 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                 styles={nightfallScrollAreaStyles}
             >
                 <div style={generatorScrollableContentStyle}>
-                    <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                                lineHeight: 1.1,
-                                color: "rgba(244, 236, 232, 0.95)",
-                            }}
-                        >
-                            Pick your free{" "}
-                            <span
-                                style={{
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    letterSpacing: "0.05em",
-                                    color: rgba(RAW_RED, 1),
-                                }}
-                            >
-                                Ritual
-                            </span>
-                        </Text>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                fontSize: phoneScreen ? "0.82rem" : "0.9rem",
-                                letterSpacing: "0.04em",
-                                color: rgba(RAW_GREY, 0.5),
-                            }}
-                        >
-                            Blood Sorcerers begin with one free Level 1 ritual
-                        </Text>
-                    </Stack>
+                    <GeneratorStepHero
+                        leadText="Pick your free"
+                        accentText="Ritual"
+                        description="Blood Sorcerers begin with one free Level 1 ritual"
+                        marginBottom={phoneScreen ? 18 : 26}
+                    />
 
                     <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl" w="100%">
-                        <SectionDivider label="Level 1 Rituals" />
+                        <GeneratorSectionDivider label="Level 1 Rituals" lineHeight={1} accentAlpha={0.38} titleSize="0.88rem" marginY="sm" />
 
                         <div
                             style={{

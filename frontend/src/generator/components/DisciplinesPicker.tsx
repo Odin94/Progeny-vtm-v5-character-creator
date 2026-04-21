@@ -11,34 +11,13 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
+import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 
 type DisciplinesPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: (characterOverride?: Character) => void
 }
-
-const SectionDivider = ({ label }: { label: string }) => (
-    <Box my="sm">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
-            <Text
-                style={{
-                    fontFamily: "Cinzel, Georgia, serif",
-                    fontSize: "0.88rem",
-                    fontWeight: 800,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: rgba(RAW_RED, 1),
-                    whiteSpace: "nowrap",
-                }}
-            >
-                {label}
-            </Text>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
-        </div>
-    </Box>
-)
 
 const DisciplineDots = ({ count }: { count: number }) => {
     if (count <= 0) return null
@@ -461,7 +440,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 </Stack>
 
                 <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl" w="100%">
-                    <SectionDivider label="Clan Disciplines" />
+                    <GeneratorSectionDivider label="Clan Disciplines" lineHeight={1} accentAlpha={0.38} titleSize="0.88rem" marginY="sm" />
 
                     <Accordion
                         variant="separated"
@@ -482,7 +461,13 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         )}
                     </Accordion>
 
-                    <SectionDivider label={`Predator Type · ${upcase(character.predatorType.pickedDiscipline)}`} />
+                    <GeneratorSectionDivider
+                        label={`Predator Type · ${upcase(character.predatorType.pickedDiscipline)}`}
+                        lineHeight={1}
+                        accentAlpha={0.38}
+                        titleSize="0.88rem"
+                        marginY="sm"
+                    />
 
                     <Accordion
                         variant="separated"
