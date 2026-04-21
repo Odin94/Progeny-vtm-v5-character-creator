@@ -1,4 +1,5 @@
 import { Badge, Box, Button, Card, Grid, Group, ScrollArea, Stack, Text } from "@mantine/core"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconChevronLeft } from "@tabler/icons-react"
 import { useState } from "react"
 import { Loresheet, MeritOrFlaw, loresheets } from "../../data/MeritsAndFlaws"
@@ -50,7 +51,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                                     background: "transparent",
                                 },
                                 thumb: {
-                                    background: "rgba(224, 49, 49, 0.22)",
+                                    background: rgba(RAW_RED, 0.22),
                                     borderRadius: "999px",
                                 },
                             }}
@@ -80,7 +81,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                                     fontFamily: "Crimson Text, Georgia, serif",
                                     fontSize: "1rem",
                                     lineHeight: 1.45,
-                                    color: "rgba(214, 204, 198, 0.82)",
+                                    color: rgba(RAW_GREY, 0.82),
                                 }}
                             >
                                 {loresheet.summary}
@@ -188,7 +189,7 @@ const OpenedLoresheet = ({
                         style={{
                             fontFamily: "Crimson Text, Georgia, serif",
                             fontSize: "1.02rem",
-                            color: "rgba(214, 204, 198, 0.82)",
+                            color: rgba(RAW_GREY, 0.82),
                         }}
                     >
                         {loresheet.summary}

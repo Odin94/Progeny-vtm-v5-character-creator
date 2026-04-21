@@ -1,4 +1,5 @@
 import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconSparkles } from "@tabler/icons-react"
 import { useMemo, useState } from "react"
 import { Character } from "../../data/Character"
@@ -31,7 +32,7 @@ export const SpecialtyModal = ({
 }: SpecialtyModalProps) => {
     const phoneScreen = globals.isPhoneScreen
 
-    const RED = "rgba(224, 49, 49, 1)"
+    const RED = rgba(RAW_RED, 1)
 
     const bonusSkills = useMemo(
         () => BONUS_SPECIALTY_SKILLS.filter((s) => pickedSkillNames.includes(s as SkillsKey)),
@@ -103,14 +104,14 @@ export const SpecialtyModal = ({
                             Skill Specialties
                         </Text>
                     </Group>
-                    <Text style={{ fontFamily: "Crimson Text, Georgia, serif", fontSize: "0.95rem", color: "rgba(214, 204, 198, 0.55)", lineHeight: 1.55 }}>
+                    <Text style={{ fontFamily: "Crimson Text, Georgia, serif", fontSize: "0.95rem", color: rgba(RAW_GREY, 0.55), lineHeight: 1.55 }}>
                         Specialties represent focused expertise within a skill —{" "}
                         <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>Performance: Dancing</span> or{" "}
                         <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>Academics: History</span>.
                     </Text>
                 </div>
 
-                <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(224,49,49,0.25), transparent)" }} />
+                <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${rgba(RAW_RED, 0.25)}, transparent)` }} />
 
                 {/* Free specialty */}
                 <Stack gap={8}>
@@ -151,7 +152,7 @@ export const SpecialtyModal = ({
                                             fontFamily: "Cinzel, Georgia, serif",
                                             fontSize: "0.82rem",
                                             letterSpacing: "0.04em",
-                                            color: "rgba(201, 172, 102, 0.85)",
+                                            color: rgba(RAW_GOLD, 0.85),
                                             minWidth: phoneScreen ? 90 : 110,
                                             textTransform: "capitalize",
                                         }}

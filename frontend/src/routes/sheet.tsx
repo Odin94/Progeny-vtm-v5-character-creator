@@ -1,6 +1,7 @@
 import { AppShell } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect } from "react"
+import { RAW_GOLD, rgba } from "~/theme/colors"
 import CharacterSheet from "~/character_sheet/CharacterSheet"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
@@ -51,7 +52,7 @@ function Sheet() {
                     background: "rgba(8, 7, 8, 0.7)",
                     backdropFilter: "blur(10px)",
                     WebkitBackdropFilter: "blur(10px)",
-                    borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                    borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                     zIndex: 200,
                 },
                 main: {

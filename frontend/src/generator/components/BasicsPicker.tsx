@@ -1,4 +1,5 @@
 import { Button, ScrollArea, Stack, Text, Textarea, TextInput } from "@mantine/core"
+import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
@@ -19,13 +20,13 @@ const inputStyles = {
         fontWeight: 800,
         letterSpacing: "0.16em",
         textTransform: "uppercase" as const,
-        color: "rgba(212, 175, 100, 0.9)",
+        color: rgba(RAW_GOLD, 0.9),
         marginBottom: 6,
     },
     description: {
         fontFamily: "Inter, Segoe UI, sans-serif",
         fontSize: "0.76rem",
-        color: "rgba(214, 204, 198, 0.7)",
+        color: rgba(RAW_GREY, 0.7),
         marginBottom: 4,
     },
     input: {
@@ -62,7 +63,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
         <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
             <style>{`
                 .basics-picker-input::placeholder {
-                    color: rgba(214, 204, 198, 0.5);
+                    color: ${rgba(RAW_GREY, 0.5)};
                     opacity: 1;
                 }
             `}</style>
@@ -82,7 +83,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                             style={{
                                 fontFamily: "Cinzel, Georgia, serif",
                                 letterSpacing: "0.05em",
-                                color: "rgba(224, 49, 49, 1)",
+                                color: rgba(RAW_RED, 1),
                             }}
                         >
                             Basics

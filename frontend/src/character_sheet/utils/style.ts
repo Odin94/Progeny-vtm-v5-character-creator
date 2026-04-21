@@ -37,4 +37,4 @@ export const getPrimaryColor = (clan: ClanName): string => {
     return clanColorMap[clan] || "red"
 }
 
-export const vtmRed = "#c03f3f"
+export const vtmRed = "#e03131"

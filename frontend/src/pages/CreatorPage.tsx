@@ -1,4 +1,5 @@
 import { AppShell, BackgroundImage, useComputedColorScheme } from "@mantine/core"
+import { RAW_GOLD, rgba } from "~/theme/colors"
 import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
@@ -341,7 +342,7 @@ export default function CreatorPage() {
                         background: "rgba(8, 7, 8, 0.7)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                         zIndex: 200,
                     },
                     navbar: {
@@ -350,7 +351,7 @@ export default function CreatorPage() {
                         background: "rgba(8, 7, 8, 0.72)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderRight: "1px solid rgba(201, 172, 102, 0.12)",
+                        borderRight: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                     },
                     aside: {
                         top: 52,
@@ -358,7 +359,7 @@ export default function CreatorPage() {
                         background: "rgba(8, 7, 8, 0.72)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderLeft: "1px solid rgba(201, 172, 102, 0.12)",
+                        borderLeft: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                     },
                     main: {
                         backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],

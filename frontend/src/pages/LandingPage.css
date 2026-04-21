@@ -11,7 +11,7 @@
     --landing-dim: rgba(235, 225, 218, 0.72);
     --landing-blood: #b32738;
     --landing-blood-bright: #db4153;
-    --landing-gold: #c9ac66;
+    --landing-gold: #d4af64;
     --landing-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
     --landing-glow: 0 0 40px rgba(219, 65, 83, 0.16);
     --landing-display-font: "Cinzel", serif;
@@ -38,7 +38,7 @@
     z-index: 20;
     backdrop-filter: blur(8px);
     background: rgba(8, 7, 8, 0.36);
-    border-bottom: 1px solid rgba(201, 172, 102, 0.12);
+    border-bottom: 1px solid rgba(212, 175, 100, 0.12);
 }
 
 .landing-page__brand {
@@ -110,7 +110,7 @@
     width: 96px;
     height: 1px;
     margin: 1rem auto;
-    background: linear-gradient(90deg, transparent 0%, rgba(201, 172, 102, 0.9) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 100, 0.9) 50%, transparent 100%);
 }
 
 .landing-page__lede,
@@ -173,12 +173,12 @@
 
 .landing-page__secondary-button {
     background: rgba(17, 13, 13, 0.78);
-    border-color: rgba(201, 172, 102, 0.2);
+    border-color: rgba(212, 175, 100, 0.2);
 }
 
 .landing-page__secondary-button:hover {
     transform: translateY(-1px);
-    border-color: rgba(201, 172, 102, 0.4);
+    border-color: rgba(212, 175, 100, 0.4);
     background: rgba(28, 21, 21, 0.92);
 }
 
@@ -283,8 +283,8 @@
     align-items: center;
     justify-content: center;
     color: var(--landing-gold);
-    background: rgba(201, 172, 102, 0.08);
-    border: 1px solid rgba(201, 172, 102, 0.15);
+    background: rgba(212, 175, 100, 0.08);
+    border: 1px solid rgba(212, 175, 100, 0.15);
 }
 
 .landing-page__card-title,
@@ -331,7 +331,7 @@
 }
 
 .landing-page__footer {
-    border-top: 1px solid rgba(201, 172, 102, 0.12);
+    border-top: 1px solid rgba(212, 175, 100, 0.12);
     background: rgba(8, 7, 8, 0.72);
     backdrop-filter: blur(10px);
     padding: 1.2rem 0 1.2rem;

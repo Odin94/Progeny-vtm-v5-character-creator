@@ -1,4 +1,5 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
+import { RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Box, Button, Divider, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
 import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
@@ -73,7 +74,7 @@ const MeritOrFlawCard = memo(({
     const icon = type === "flaw" ? flawIcon() : meritIcon()
     const lineKey = `${type}-${meritOrFlaw.name}`
     const accentColor = type === "flaw" ? "rgba(250, 82, 82, 0.92)" : "rgba(63, 192, 120, 0.92)"
-    const selectedBg = type === "flaw" ? "rgba(224, 49, 49, 0.18)" : "rgba(46, 160, 67, 0.16)"
+    const selectedBg = type === "flaw" ? rgba(RAW_RED, 0.18) : "rgba(46, 160, 67, 0.16)"
     const selectedBorder = type === "flaw" ? "rgba(250, 82, 82, 0.38)" : "rgba(63, 192, 120, 0.32)"
     const baseBg = "rgba(255, 255, 255, 0.03)"
     const baseBorder = "rgba(255, 255, 255, 0.06)"
@@ -174,8 +175,8 @@ const MeritOrFlawCard = memo(({
                     color: meritInPredatorType
                         ? "rgba(212, 176, 105, 0.88)"
                         : isExcluded
-                          ? "rgba(214, 204, 198, 0.72)"
-                          : "rgba(214, 204, 198, 0.88)",
+                          ? rgba(RAW_GREY, 0.72)
+                          : rgba(RAW_GREY, 0.88),
                 }}
             >
                 {summaryText}
@@ -235,8 +236,19 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         ...character.flaws,
     ])
 
-    const usedMeritsLevel = character.merits.filter((m) => !isThinbloodMerit(m.name)).reduce((acc, { level }) => acc + level, 0)
-    const usedFLawsLevel = character.flaws.filter((f) => !isThinbloodFlaw(f.name)).reduce((acc, { level }) => acc + level, 0)
+    const predatorTypeProvidedNames = useMemo(() => {
+        const autoPredatorTypeNames = PredatorTypes[character.predatorType.name]?.meritsAndFlaws.map((item) => item.name) ?? []
+        const pickedPredatorTypeNames = character.predatorType.pickedMeritsAndFlaws.map((item) => item.name)
+
+        return new Set([...autoPredatorTypeNames, ...pickedPredatorTypeNames])
+    }, [character.predatorType.name, character.predatorType.pickedMeritsAndFlaws])
+
+    const usedMeritsLevel = character.merits
+        .filter((m) => !isThinbloodMerit(m.name) && !predatorTypeProvidedNames.has(m.name))
+        .reduce((acc, { level }) => acc + level, 0)
+    const usedFLawsLevel = character.flaws
+        .filter((f) => !isThinbloodFlaw(f.name) && !predatorTypeProvidedNames.has(f.name))
+        .reduce((acc, { level }) => acc + level, 0)
 
     const meritPoints = character.generation === 10 || character.generation === 11 ? 9 : 7
     const flawPoints = character.generation === 10 || character.generation === 11 ? 4 : 2
@@ -380,7 +392,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         style={{
                                             fontFamily: "Cinzel, Georgia, serif",
                                             letterSpacing: "0.05em",
-                                            color: "rgba(224, 49, 49, 1)",
+                                            color: rgba(RAW_RED, 1),
                                         }}
                                     >
                                         Merits & Flaws
@@ -393,7 +405,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                         fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                                         letterSpacing: "0.04em",
-                                        color: "rgba(214, 204, 198, 0.5)",
+                                        color: rgba(RAW_GREY, 0.5),
                                     }}
                                 >
                                     Define what empowers you, what complicates your unlife, and which loresheets still fit your story.
@@ -443,7 +455,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         borderRadius: 999,
                                         border: "1px solid rgba(255, 255, 255, 0.08)",
                                         background: "rgba(255, 255, 255, 0.03)",
-                                        color: "rgba(214, 204, 198, 0.72)",
+                                        color: rgba(RAW_GREY, 0.72),
                                         fontFamily: "Cinzel, Georgia, serif",
                                         letterSpacing: "0.08em",
                                         textTransform: "uppercase",
@@ -460,8 +472,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 <Tabs.Tab
                                     value="merits"
                                     style={activeTab === "merits" ? {
-                                        background: "linear-gradient(135deg, rgba(160, 80, 200, 0.4), rgba(224, 49, 49, 0.35))",
-                                        border: "1px solid rgba(224, 49, 49, 0.6)",
+                                        background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
+                                        border: `1px solid ${rgba(RAW_RED, 0.6)}`,
                                         color: "rgba(248, 240, 235, 0.96)",
                                         boxShadow: "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                                         transform: "translateY(-1px)",
@@ -472,8 +484,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 <Tabs.Tab
                                     value="loresheets"
                                     style={activeTab === "loresheets" ? {
-                                        background: "linear-gradient(135deg, rgba(160, 80, 200, 0.4), rgba(224, 49, 49, 0.35))",
-                                        border: "1px solid rgba(224, 49, 49, 0.6)",
+                                        background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
+                                        border: `1px solid ${rgba(RAW_RED, 0.6)}`,
                                         color: "rgba(248, 240, 235, 0.96)",
                                         boxShadow: "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                                         transform: "translateY(-1px)",
@@ -511,7 +523,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                                         fontSize: "0.8rem",
                                                         letterSpacing: "0.06em",
-                                                        color: "rgba(214, 204, 198, 0.56)",
+                                                        color: rgba(RAW_GREY, 0.56),
                                                         textTransform: "uppercase",
                                                     }}
                                                 >
@@ -619,7 +631,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                             style={{
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: "0.9rem",
-                                color: "rgba(214, 204, 198, 0.62)",
+                                color: rgba(RAW_GREY, 0.62),
                             }}
                         >
                             This will remove your picked {resetTarget === "merit" ? "advantages" : "flaws"} from this step.
@@ -650,11 +662,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                             onClick={handleReset}
                             styles={{
                                 root: {
-                                    background: "linear-gradient(180deg, rgba(224, 49, 49, 0.92) 0%, rgba(186, 38, 38, 0.95) 100%)",
+                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
                                     fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: "0 10px 24px rgba(224, 49, 49, 0.24)",
+                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
                                 },
                             }}
                         >
@@ -688,7 +700,7 @@ const PointCard = ({
         },
         flaw: {
             border: "rgba(250, 82, 82, 0.24)",
-            bg: "rgba(224, 49, 49, 0.1)",
+            bg: rgba(RAW_RED, 0.1),
             value: "rgba(255, 135, 135, 0.95)",
         },
         warning: {
@@ -699,7 +711,7 @@ const PointCard = ({
         neutral: {
             border: "rgba(183, 148, 246, 0.24)",
             bg: "rgba(132, 94, 247, 0.09)",
-            value: "rgba(214, 204, 198, 0.94)",
+            value: rgba(RAW_GREY, 0.94),
         },
     }[tone]
 
@@ -719,7 +731,7 @@ const PointCard = ({
                     fontSize: "0.74rem",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
-                    color: "rgba(214, 204, 198, 0.54)",
+                    color: rgba(RAW_GREY, 0.54),
                     marginBottom: 6,
                 }}
             >
@@ -765,7 +777,7 @@ const PointCard = ({
                     style={{
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "0.95rem",
-                        color: "rgba(214, 204, 198, 0.72)",
+                        color: rgba(RAW_GREY, 0.72),
                     }}
                 >
                     {helper}
@@ -778,9 +790,9 @@ const PointCard = ({
 const SectionHeading = ({ label }: { label: string }) => (
     <Box my="xs">
         <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.32) 50%, transparent 100%)" }} />
-            <Text style={{ ...sectionHeadingStyle, color: "rgba(224, 49, 49, 1)" }}>{label}</Text>
-            <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.32) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.32)} 50%, transparent 100%)` }} />
+            <Text style={{ ...sectionHeadingStyle, color: rgba(RAW_RED, 1) }}>{label}</Text>
+            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.32)} 50%, transparent 100%)` }} />
         </div>
     </Box>
 )

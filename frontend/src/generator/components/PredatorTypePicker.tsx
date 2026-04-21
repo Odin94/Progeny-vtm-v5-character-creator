@@ -1,4 +1,5 @@
 import { Box, Button, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
@@ -35,10 +36,10 @@ const CATEGORIES: CategoryMeta[] = [
     {
         label: "Violent",
         accentColor: "rgba(250, 82, 82, 0.95)",
-        bgColor: "rgba(224, 49, 49, 0.22)",
-        bgActiveColor: "rgba(224, 49, 49, 0.39)",
-        pillColor: "rgba(224, 49, 49, 0.39)",
-        borderColor: "rgba(224, 49, 49, 0.18)",
+        bgColor: rgba(RAW_RED, 0.22),
+        bgActiveColor: rgba(RAW_RED, 0.39),
+        pillColor: rgba(RAW_RED, 0.39),
+        borderColor: rgba(RAW_RED, 0.18),
         borderActiveColor: "rgba(250, 82, 82, 0.55)",
         lineColor: "rgba(250, 82, 82, 0.38)",
         predatorTypes: ["Alleycat", "Extortionist", "Roadside Killer", "Montero"],
@@ -168,7 +169,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     style={{
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "0.9rem",
-                        color: "rgba(214, 204, 198, 0.93)",
+                        color: rgba(RAW_GREY, 0.93),
                         lineHeight: 1.4,
                     }}
                 >
@@ -216,7 +217,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                         style={{
                             fontFamily: "Cinzel, Georgia, serif",
                             letterSpacing: "0.05em",
-                            color: "rgba(224, 49, 49, 1)",
+                            color: rgba(RAW_RED, 1),
                         }}
                     >
                         Predator Type
@@ -228,7 +229,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                         fontFamily: "Inter, Segoe UI, sans-serif",
                         fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                         letterSpacing: "0.04em",
-                        color: "rgba(214, 204, 198, 0.5)",
+                        color: rgba(RAW_GREY, 0.5),
                     }}
                 >
                     Choose a predator type that defines your feeding habits

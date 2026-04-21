@@ -13,6 +13,7 @@ import {
     Title,
     useMantineTheme,
 } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
@@ -70,7 +71,7 @@ const touchstoneFieldStyles = {
         fontSize: "0.9rem",
         letterSpacing: "0.1em",
         textTransform: "uppercase",
-        color: "rgba(201, 172, 102, 1)",
+        color: rgba(RAW_GOLD, 1),
         marginBottom: 8,
     },
     input: {
@@ -141,7 +142,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     style={{
                                         fontFamily: "Cinzel, Georgia, serif",
                                         letterSpacing: "0.05em",
-                                        color: "rgba(224, 49, 49, 1)",
+                                        color: rgba(RAW_RED, 1),
                                     }}
                                 >
                                     Touchstones & Convictions
@@ -153,7 +154,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     fontFamily: "Inter, Segoe UI, sans-serif",
                                     fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                                     letterSpacing: "0.04em",
-                                    color: "rgba(214, 204, 198, 0.5)",
+                                    color: rgba(RAW_GREY, 0.5),
                                 }}
                             >
                                 Touchstones are humans in your life that tie you to your humanity
@@ -164,7 +165,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     fontFamily: "Inter, Segoe UI, sans-serif",
                                     fontSize: "0.76rem",
                                     letterSpacing: "0.05em",
-                                    color: "rgba(214, 204, 198, 0.36)",
+                                    color: rgba(RAW_GREY, 0.36),
                                 }}
                             >
                                 Connect a conviction to each relationship
@@ -173,7 +174,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
 
                         <Box my="lg" w="100%">
                             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                                <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                                <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                                 <Title
                                     order={4}
                                     style={{
@@ -182,12 +183,12 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                         fontWeight: 600,
                                         letterSpacing: "0.24em",
                                         textTransform: "uppercase",
-                                        color: "rgba(224, 49, 49, 1)",
+                                        color: rgba(RAW_RED, 1),
                                     }}
                                 >
                                     Touchstones
                                 </Title>
-                                <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                                <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                             </div>
                         </Box>
 
@@ -302,9 +303,9 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                               // TODOdin: Lol. Lmao even. Let's get proper css hover in here before merging
                                 root: {
                                     alignSelf: "center",
-                                    borderColor: addButtonHovered ? "rgba(250, 82, 82, 0.85)" : "rgba(224, 49, 49, 0.4)",
-                                    background: addButtonHovered ? "rgba(224, 49, 49, 0.24)" : "rgba(224, 49, 49, 0.08)",
-                                    boxShadow: addButtonHovered ? "0 0 0 1px rgba(224, 49, 49, 0.22), 0 0 18px rgba(224, 49, 49, 0.18), 0 10px 24px rgba(224, 49, 49, 0.18)" : "none",
+                                    borderColor: addButtonHovered ? "rgba(250, 82, 82, 0.85)" : rgba(RAW_RED, 0.4),
+                                    background: addButtonHovered ? rgba(RAW_RED, 0.24) : rgba(RAW_RED, 0.08),
+                                    boxShadow: addButtonHovered ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}` : "none",
                                     transform: addButtonHovered ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
                                     transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
                                     letterSpacing: "0.14em",
@@ -312,7 +313,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     fontFamily: "Cinzel, Georgia, serif",
                                 },
                                 section: {
-                                    color: "rgba(224, 49, 49, 1)",
+                                    color: rgba(RAW_RED, 1),
                                 },
                             }}
                         >
@@ -380,7 +381,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                             style={{
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: "0.9rem",
-                                color: "rgba(214, 204, 198, 0.62)",
+                                color: rgba(RAW_GREY, 0.62),
                             }}
                         >
                             This will remove the touchstone and its conviction from the character.
@@ -404,7 +405,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     fontSize: "0.92rem",
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
-                                    color: "rgba(201, 172, 102, 1)",
+                                    color: rgba(RAW_GOLD, 1),
                                 }}
                             >
                                 {touchstones[touchstoneToDelete].name}
@@ -449,11 +450,11 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                             }}
                             styles={{
                                 root: {
-                                    background: "linear-gradient(180deg, rgba(224, 49, 49, 0.92) 0%, rgba(186, 38, 38, 0.95) 100%)",
+                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
                                     fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: "0 10px 24px rgba(224, 49, 49, 0.24)",
+                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
                                 },
                             }}
                         >

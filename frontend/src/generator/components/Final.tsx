@@ -1,4 +1,5 @@
 import { notifications } from "@mantine/notifications"
+import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import {
     IconAlertCircle,
@@ -37,15 +38,15 @@ type FinalProps = {
 
 const COLORS = {
     foreground: "rgba(244, 236, 232, 0.95)",
-    mutedForeground: "rgba(214, 204, 198, 0.7)",
-    mutedForegroundSoft: "rgba(214, 204, 198, 0.6)",
-    smoke: "rgba(214, 204, 198, 0.4)",
-    smokeSoft: "rgba(214, 204, 198, 0.25)",
-    primary: "rgba(224, 49, 49, 1)",
-    primarySoft: "rgba(224, 49, 49, 0.5)",
-    primaryMuted: "rgba(224, 49, 49, 0.1)",
-    gold: "rgba(212, 175, 100, 1)",
-    goldSoft: "rgba(212, 175, 100, 0.5)",
+    mutedForeground: rgba(RAW_GREY, 0.7),
+    mutedForegroundSoft: rgba(RAW_GREY, 0.6),
+    smoke: rgba(RAW_GREY, 0.4),
+    smokeSoft: rgba(RAW_GREY, 0.25),
+    primary: rgba(RAW_RED, 1),
+    primarySoft: rgba(RAW_RED, 0.5),
+    primaryMuted: rgba(RAW_RED, 0.1),
+    gold: rgba(RAW_GOLD, 1),
+    goldSoft: rgba(RAW_GOLD, 0.5),
     border: "rgba(125, 91, 72, 0.4)",
     borderSoft: "rgba(125, 91, 72, 0.3)",
     cardBg: "rgba(30, 21, 24, 0.85)",
@@ -136,7 +137,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     flex-shrink: 0;
                     padding: 10px;
                     border-radius: 8px;
-                    background: rgba(224, 49, 49, 0.18);
+                    background: ${rgba(RAW_RED, 0.18)};
                     color: ${COLORS.primary};
                     display: flex;
                     align-items: center;
@@ -144,13 +145,13 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     transition: background 250ms ease;
                 }
                 .nf-action-card:hover .nf-icon-wrap {
-                    background: rgba(224, 49, 49, 0.2);
+                    background: ${rgba(RAW_RED, 0.2)};
                 }
                 .nf-reset-btn {
                     background: none;
-                    border: 1px solid rgba(224, 49, 49, 0.3);
+                    border: 1px solid ${rgba(RAW_RED, 0.3)};
                     border-radius: 8px;
-                    color: rgba(224, 49, 49, 0.7);
+                    color: ${rgba(RAW_RED, 0.7)};
                     cursor: pointer;
                     font-family: ${FONT_UI};
                     font-size: 12px;
@@ -161,13 +162,13 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
                 }
                 .nf-reset-btn:hover {
-                    color: rgba(224, 49, 49, 1);
-                    border-color: rgba(224, 49, 49, 0.6);
-                    background: rgba(224, 49, 49, 0.08);
+                    color: ${rgba(RAW_RED, 1)};
+                    border-color: ${rgba(RAW_RED, 0.6)};
+                    background: ${rgba(RAW_RED, 0.08)};
                 }
                 .nf-account-card {
                     border-radius: 14px;
-                    border: 1px solid rgba(212, 175, 100, 0.22);
+                    border: 1px solid ${rgba(RAW_GOLD, 0.22)};
                     background: linear-gradient(180deg, rgba(32, 24, 16, 0.72) 0%, rgba(22, 16, 12, 0.8) 100%);
                     padding: 18px;
                     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
@@ -185,25 +186,25 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     width: 38px;
                     height: 38px;
                     border-radius: 9px;
-                    background: rgba(212, 175, 100, 0.1);
-                    color: rgba(212, 175, 100, 0.7);
+                    background: ${rgba(RAW_GOLD, 0.1)};
+                    color: ${rgba(RAW_GOLD, 0.7)};
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 1px solid rgba(212, 175, 100, 0.18);
+                    border: 1px solid ${rgba(RAW_GOLD, 0.18)};
                 }
                 .nf-account-title {
                     margin: 0;
                     font-family: ${FONT_DISPLAY};
                     font-size: 0.95rem;
                     letter-spacing: 0.06em;
-                    color: rgba(212, 175, 100, 0.85);
+                    color: ${rgba(RAW_GOLD, 0.85)};
                 }
                 .nf-account-subtitle {
                     margin: 2px 0 0 0;
                     font-family: ${FONT_UI};
                     font-size: 10px;
-                    color: rgba(214, 204, 198, 0.4);
+                    color: ${rgba(RAW_GREY, 0.4)};
                 }
                 .nf-account-list {
                     margin: 0;
@@ -229,7 +230,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     width: 5px;
                     height: 5px;
                     border-radius: 50%;
-                    background: rgba(212, 175, 100, 0.55);
+                    background: ${rgba(RAW_GOLD, 0.55)};
                 }
                 .nf-account-btn {
                     display: inline-flex;
@@ -238,9 +239,9 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     gap: 8px;
                     padding: 8px 18px;
                     border-radius: 8px;
-                    border: 1px solid rgba(212, 175, 100, 0.4);
-                    background: rgba(212, 175, 100, 0.1);
-                    color: rgba(212, 175, 100, 0.9);
+                    border: 1px solid ${rgba(RAW_GOLD, 0.4)};
+                    background: ${rgba(RAW_GOLD, 0.1)};
+                    color: ${rgba(RAW_GOLD, 0.9)};
                     font-family: ${FONT_DISPLAY};
                     font-size: 0.8rem;
                     letter-spacing: 0.12em;
@@ -250,9 +251,9 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     align-self: center;
                 }
                 .nf-account-btn:hover {
-                    background: rgba(212, 175, 100, 0.2);
-                    border-color: rgba(212, 175, 100, 0.65);
-                    color: rgba(212, 175, 100, 1);
+                    background: ${rgba(RAW_GOLD, 0.2)};
+                    border-color: ${rgba(RAW_GOLD, 0.65)};
+                    color: ${rgba(RAW_GOLD, 1)};
                 }
                 .nf-kofi-link {
                     display: inline-flex;
@@ -260,7 +261,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     gap: 12px;
                     padding: 12px 24px;
                     border-radius: 10px;
-                    border: 1px solid rgba(212, 175, 100, 0.5);
+                    border: 1px solid ${rgba(RAW_GOLD, 0.5)};
                     background: rgba(40, 30, 20, 0.85);
                     text-decoration: none;
                     transition: background 300ms ease, border-color 300ms ease;
@@ -268,7 +269,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 }
                 .nf-kofi-link:hover {
                     background: rgba(60, 44, 28, 0.95);
-                    border-color: rgba(212, 175, 100, 0.75);
+                    border-color: ${rgba(RAW_GOLD, 0.75)};
                 }
                 .nf-kofi-link:hover .nf-kofi-coffee {
                     transform: scale(1.1);
@@ -344,12 +345,12 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 .nf-export-action {
                     font-family: ${FONT_UI};
                     font-size: 12px;
-                    color: rgba(224, 49, 49, 0.7);
+                    color: ${rgba(RAW_RED, 0.7)};
                     transition: color 200ms ease;
                     flex-shrink: 0;
                 }
                 .nf-text-glow {
-                    text-shadow: 0 0 20px rgba(224, 49, 49, 0.25);
+                    text-shadow: 0 0 20px ${rgba(RAW_RED, 0.25)};
                 }
                 .nf-close-btn {
                     background: none;
@@ -411,7 +412,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             margin: "0 auto",
                             lineHeight: 1.45,
                             fontWeight: 600,
-                            textShadow: "0 0 18px rgba(224, 49, 49, 0.14)",
+                            textShadow: `0 0 18px ${rgba(RAW_RED, 0.14)}`,
                         }}
                     >
                         Character creation complete. Save your work, export for your favourite tools, or jump straight
@@ -536,7 +537,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                                     margin: 0,
                                     fontFamily: FONT_UI,
                                     fontSize: 10,
-                                    color: "rgba(214, 204, 198, 0.5)",
+                                    color: rgba(RAW_GREY, 0.5),
                                 }}
                             >
                                 Help keep Progeny growing
@@ -549,7 +550,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         style={{
                             fontFamily: FONT_UI,
                             fontSize: 12,
-                            color: "rgba(214, 204, 198, 0.4)",
+                            color: rgba(RAW_GREY, 0.4),
                             textAlign: "center",
                             margin: 0,
                         }}
@@ -594,7 +595,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     style={{
                         fontFamily: FONT_UI,
                         fontSize: 11,
-                        color: "rgba(214, 204, 198, 0.35)",
+                        color: rgba(RAW_GREY, 0.35),
                         textAlign: "center",
                         margin: 0,
                         letterSpacing: "0.02em",
@@ -653,7 +654,7 @@ function ActionCard({
                         margin: "2px 0 0 0",
                         fontFamily: FONT_UI,
                         fontSize: 11,
-                        color: "rgba(214, 204, 198, 0.55)",
+                        color: rgba(RAW_GREY, 0.55),
                     }}
                 >
                     {description}
@@ -768,7 +769,7 @@ function ExportModal({
                     style={{
                         fontFamily: FONT_BODY,
                         fontSize: 12,
-                        color: "rgba(214, 204, 198, 0.6)",
+                        color: rgba(RAW_GREY, 0.6),
                         margin: "0 0 20px 0",
                     }}
                 >
@@ -813,7 +814,7 @@ function ExportModal({
                                     margin: "2px 0 0 0",
                                     fontFamily: FONT_UI,
                                     fontSize: 10,
-                                    color: "rgba(214, 204, 198, 0.4)",
+                                    color: rgba(RAW_GREY, 0.4),
                                 }}
                             >
                                 Download a JSON file compatible with the WoD5E Foundry module
@@ -868,7 +869,7 @@ function ExportModal({
                                     margin: "2px 0 0 0",
                                     fontFamily: FONT_UI,
                                     fontSize: 10,
-                                    color: "rgba(214, 204, 198, 0.4)",
+                                    color: rgba(RAW_GREY, 0.4),
                                 }}
                             >
                                 Export for use with the Inconnu Discord character manager
@@ -884,7 +885,7 @@ function ExportModal({
                         marginBottom: 0,
                         fontFamily: FONT_UI,
                         fontSize: 10,
-                        color: "rgba(214, 204, 198, 0.3)",
+                        color: rgba(RAW_GREY, 0.3),
                         textAlign: "center",
                     }}
                 >

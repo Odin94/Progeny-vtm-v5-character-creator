@@ -1,4 +1,5 @@
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Group, Modal, Radio, SegmentedControl, Stack, Text, TextInput, Tooltip } from "@mantine/core"
 import { trackEvent } from "../utils/analytics"
@@ -28,9 +29,9 @@ const CATEGORY_INFO: Record<string, CategoryInfo> = {
     violent: {
         label: "Violent",
         accentColor: "rgba(250, 82, 82, 0.95)",
-        bgColor: "rgba(224, 49, 49, 0.05)",
-        headerBg: "linear-gradient(to bottom, rgba(224, 49, 49, 0.06) 0%, transparent 100%)",
-        borderColor: "rgba(224, 49, 49, 0.22)",
+        bgColor: rgba(RAW_RED, 0.05),
+        headerBg: `linear-gradient(to bottom, ${rgba(RAW_RED, 0.06)} 0%, transparent 100%)`,
+        borderColor: rgba(RAW_RED, 0.22),
         tallyColor: "rgba(250, 82, 82, 0.85)",
         mantineColor: "red",
     },
@@ -224,7 +225,7 @@ const PredatorTypeModal = ({
                     style={{
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "1rem",
-                        color: "rgba(214, 204, 198, 0.65)",
+                        color: rgba(RAW_GREY, 0.65),
                         marginTop: 6,
                     }}
                 >
@@ -240,7 +241,7 @@ const PredatorTypeModal = ({
                         <Group gap="xl" justify="center">
                             {predatorType.bloodPotencyChange !== 0 && (
                                 <div style={{ textAlign: "center" }}>
-                                    <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(214, 204, 198, 0.45)", marginBottom: 2 }}>
+                                    <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: rgba(RAW_GREY, 0.45), marginBottom: 2 }}>
                                         Blood Potency
                                     </Text>
                                     <Text style={{ fontFamily: "Cinzel, Georgia, serif", fontSize: "1.1rem", fontWeight: 700, color: predatorType.bloodPotencyChange > 0 ? "rgba(100, 220, 120, 0.9)" : "rgba(250, 82, 82, 0.9)" }}>
@@ -250,7 +251,7 @@ const PredatorTypeModal = ({
                             )}
                             {predatorType.humanityChange !== 0 && (
                                 <div style={{ textAlign: "center" }}>
-                                    <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(214, 204, 198, 0.45)", marginBottom: 2 }}>
+                                    <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: rgba(RAW_GREY, 0.45), marginBottom: 2 }}>
                                         Humanity
                                     </Text>
                                     <Text style={{ fontFamily: "Cinzel, Georgia, serif", fontSize: "1.1rem", fontWeight: 700, color: predatorType.humanityChange > 0 ? "rgba(100, 220, 120, 0.9)" : "rgba(250, 82, 82, 0.9)" }}>
@@ -282,7 +283,7 @@ const PredatorTypeModal = ({
                                             {mf.name}
                                         </Text>
                                         {mf.summary && (
-                                            <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.76rem", color: "rgba(214, 204, 198, 0.5)", marginTop: 1 }}>
+                                            <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.76rem", color: rgba(RAW_GREY, 0.5), marginTop: 1 }}>
                                                 {mf.summary}
                                             </Text>
                                         )}
@@ -336,7 +337,7 @@ const PredatorTypeModal = ({
                                                                 style={{
                                                                     fontFamily: "Crimson Text, Georgia, serif",
                                                                     fontSize: "1rem",
-                                                                    color: "rgba(214, 204, 198, 0.85)",
+                                                                    color: rgba(RAW_GREY, 0.85),
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => setExclusiveSelection(i, j)}
@@ -380,7 +381,7 @@ const PredatorTypeModal = ({
                                                                 style={{
                                                                     fontFamily: "Crimson Text, Georgia, serif",
                                                                     fontSize: "1rem",
-                                                                    color: "rgba(214, 204, 198, 0.85)",
+                                                                    color: rgba(RAW_GREY, 0.85),
                                                                     minWidth: 140,
                                                                 }}
                                                             >
@@ -468,7 +469,7 @@ const PredatorTypeModal = ({
                         color="gray"
                         leftSection={<FontAwesomeIcon icon={faChevronLeft} />}
                         onClick={closeModal}
-                        styles={{ root: { color: "rgba(214, 204, 198, 0.5)", "&:hover": { color: "rgba(214, 204, 198, 0.85)" } } }}
+                        styles={{ root: { color: rgba(RAW_GREY, 0.5), "&:hover": { color: rgba(RAW_GREY, 0.85) } } }}
                     >
                         Back
                     </Button>

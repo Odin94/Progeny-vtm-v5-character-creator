@@ -1,4 +1,5 @@
-import { Box, Card, Center, Grid, Image, rgba, ScrollArea, Stack, Text, Title, useMantineTheme } from "@mantine/core"
+import { Box, Card, Center, Grid, Image, rgba as mantineRgba, ScrollArea, Stack, Text, Title, useMantineTheme } from "@mantine/core"
+import { RAW_RED, rgba } from "~/theme/colors"
 import { notifications } from "@mantine/notifications"
 import { useEffect } from "react"
 import ReactGA from "react-ga4"
@@ -131,7 +132,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         }}
                     >
                         Pick your{" "}
-                        <Text component="strong" inherit c="red.5" style={{ textShadow: "0 0 18px rgba(224, 49, 49, 0.35)" }}>
+                        <Text component="strong" inherit c="red.5" style={{ textShadow: `0 0 18px ${rgba(RAW_RED, 0.35)}` }}>
                             Clan
                         </Text>
                     </Title>
@@ -152,42 +153,42 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                 <Grid grow m={0}>
                     {["Ventrue", "Tzimisce", "Lasombra"]
                         .map((c) => clanNameSchema.parse(c))
-                        .map((clan) => createClanPick(clan, rgba(theme.colors.blue[8], 0.9)))}
+                        .map((clan) => createClanPick(clan, mantineRgba(theme.colors.blue[8], 0.9)))}
                 </Grid>
 
                 <CategoryHeading label="Fighters & Protectors" />
                 <Grid grow m={0}>
                     {["Brujah", "Gangrel", "Banu Haqim"]
                         .map((c) => clanNameSchema.parse(c))
-                        .map((clan) => createClanPick(clan, rgba(theme.colors.red[8], 0.9)))}
+                        .map((clan) => createClanPick(clan, mantineRgba(theme.colors.red[8], 0.9)))}
                 </Grid>
 
                 <CategoryHeading label="Seducers & Deceivers" />
                 <Grid grow m={0}>
                     {["Toreador", "Ravnos", "Ministry"]
                         .map((c) => clanNameSchema.parse(c))
-                        .map((clan) => createClanPick(clan, rgba(theme.colors.grape[8], 0.9)))}
+                        .map((clan) => createClanPick(clan, mantineRgba(theme.colors.grape[8], 0.9)))}
                 </Grid>
 
                 <CategoryHeading label="Investigators & Researchers" />
                 <Grid grow m={0}>
                     {["Malkavian", "Tremere", "Hecata"]
                         .map((c) => clanNameSchema.parse(c))
-                        .map((clan) => createClanPick(clan, rgba(theme.colors.green[9], 0.9)))}
+                        .map((clan) => createClanPick(clan, mantineRgba(theme.colors.green[9], 0.9)))}
                 </Grid>
 
                 <CategoryHeading label="Hidden Lurkers" />
                 <Grid grow m={0}>
                     {["Nosferatu", "Salubri"]
                         .map((c) => clanNameSchema.parse(c))
-                        .map((clan) => createClanPick(clan, rgba(theme.colors.gray[6], 0.9)))}
+                        .map((clan) => createClanPick(clan, mantineRgba(theme.colors.gray[6], 0.9)))}
                 </Grid>
 
                 <CategoryHeading label="Advanced & Special Clans" />
                 <Grid grow m={0}>
                     {["Caitiff", "Thin-blood"]
                         .map((c) => clanNameSchema.parse(c))
-                        .map((clan) => createClanPick(clan, rgba(theme.colors.teal[8], 0.9)))}
+                        .map((clan) => createClanPick(clan, mantineRgba(theme.colors.teal[8], 0.9)))}
                 </Grid>
                 </div>
             </ScrollArea>
@@ -198,7 +199,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
 const CategoryHeading = ({ label }: { label: string }) => (
     <Box my="md">
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
             <Text
                 ta="center"
                 style={{
@@ -207,12 +208,12 @@ const CategoryHeading = ({ label }: { label: string }) => (
                     fontWeight: 600,
                     letterSpacing: "0.22em",
                     textTransform: "uppercase",
-                    color: "rgba(224, 49, 49, 1)",
+                    color: rgba(RAW_RED, 1),
                 }}
             >
                 {label}
             </Text>
-            <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
         </div>
     </Box>
 )

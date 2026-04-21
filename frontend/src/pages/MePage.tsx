@@ -28,6 +28,7 @@ import { Link } from "@tanstack/react-router"
 import { Buffer } from "buffer"
 import { useEffect, useState } from "react"
 import { z } from "zod"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import { loadCharacterFromJson } from "~/components/LoadModal"
@@ -1187,7 +1188,7 @@ const MePage = () => {
                         background: "rgba(8, 7, 8, 0.7)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                         zIndex: 200,
                     },
                     main: {
@@ -1226,7 +1227,7 @@ const MePage = () => {
                         background: "rgba(8, 7, 8, 0.7)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                         zIndex: 200,
                     },
                     main: {
@@ -1284,7 +1285,7 @@ const MePage = () => {
                         background: "rgba(8, 7, 8, 0.7)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                         zIndex: 200,
                     },
                     main: {
@@ -1782,7 +1783,7 @@ const MePage = () => {
                             style={{
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: "0.9rem",
-                                color: "rgba(214, 204, 198, 0.62)",
+                                color: rgba(RAW_GREY, 0.62),
                             }}
                         >
                             This will overwrite the current character with the selected file. This action cannot be undone.
@@ -1814,11 +1815,11 @@ const MePage = () => {
                             onClick={handleConfirmLoadJson}
                             styles={{
                                 root: {
-                                    background: "linear-gradient(180deg, rgba(224, 49, 49, 0.92) 0%, rgba(186, 38, 38, 0.95) 100%)",
+                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
                                     fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: "0 10px 24px rgba(224, 49, 49, 0.24)",
+                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
                                 },
                             }}
                         >

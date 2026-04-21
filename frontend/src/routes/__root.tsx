@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { MantineProvider } from "@mantine/core"
+import { createTheme, MantineProvider } from "@mantine/core"
+import { generateColors } from "@mantine/colors-generator"
 import { Notifications } from "@mantine/notifications"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
@@ -61,7 +62,11 @@ export const Route = createRootRoute({
                 }}
             >
                 <MantineProvider
-                    theme={{
+                    theme={createTheme({
+                        colors: {
+                            red:   generateColors("#e03131"),
+                            grape: generateColors("#7e4ac9"),
+                        },
                         breakpoints: {
                             xs: "576px",
                             sm: "768px",
@@ -69,7 +74,7 @@ export const Route = createRootRoute({
                             lg: `${globals.smallScreenW}px`,
                             xl: `${globals.largeScreenW}px`,
                         },
-                    }}
+                    })}
                     forceColorScheme="dark"
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
