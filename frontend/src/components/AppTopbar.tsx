@@ -1,4 +1,5 @@
 import { Anchor, Burger, Container, Group, Text } from "@mantine/core"
+import { RAW_GREY, rgba } from "~/theme/colors"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useAuth } from "~/hooks/useAuth"
 import { globals } from "~/globals"
@@ -85,7 +86,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                             onClick={asideBar.onToggle}
                             aria-label={asideBar.show ? "Close side bar" : "Open side bar"}
                             size="sm"
-                            color="rgba(214, 204, 198, 0.7)"
+                            color={rgba(RAW_GREY, 0.7)}
                         />
                     )}
                 </Group>

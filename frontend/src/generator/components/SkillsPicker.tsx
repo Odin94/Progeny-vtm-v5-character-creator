@@ -1,4 +1,5 @@
 import { Box, Button, Divider, Grid, Group, ScrollArea, Space, Stack, Text, Title, Tooltip } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -194,23 +195,23 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                 justifyContent: "space-between",
                                 background:
                                     assignedLevel === 4
-                                        ? "rgba(197, 32, 32, 0.38)"
+                                        ? rgba(RAW_RED, 0.38)
                                         : assignedLevel === 3
-                                          ? "rgba(197, 32, 32, 0.2)"
+                                          ? rgba(RAW_RED, 0.2)
                                           : assignedLevel === 2
                                             ? "rgba(204, 166, 51, 0.4)"
                                             : assignedLevel === 1
                                               ? "rgba(43, 43, 43, 0.5)"
                                               : pickedDistribution === null
                                                 ? "rgba(43, 43, 43, 0.3)"
-                                                : "rgba(126, 74, 201, 0.8)",
+                                                : rgba(RAW_GRAPE, 0.8),
                                 borderColor:
                                     assignedLevel === 4
-                                        ? "rgba(224, 49, 49, 1)"
+                                        ? rgba(RAW_RED, 1)
                                         : assignedLevel === 3
-                                          ? "rgba(224, 49, 49, 0.95)"
+                                          ? rgba(RAW_RED, 0.95)
                                           : assignedLevel === 2
-                                            ? "rgba(201, 172, 102, 0.9)"
+                                            ? rgba(RAW_GOLD, 0.9)
                                             : assignedLevel === 1
                                               ? "rgba(180, 180, 180, 0.42)"
                                               : pickedDistribution === null
@@ -232,14 +233,14 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                                 background:
                                                     dotIndex < assignedLevel
                                                         ? assignedLevel === 4 || assignedLevel === 3
-                                                            ? "rgba(224, 49, 49, 1)"
+                                                            ? rgba(RAW_RED, 1)
                                                             : assignedLevel === 2
                                                               ? "rgba(232, 204, 92, 0.98)"
                                                               : "rgba(210, 210, 210, 0.85)"
                                                         : "rgba(255, 255, 255, 0.14)",
                                                 boxShadow:
                                                     dotIndex < assignedLevel && (assignedLevel === 4 || assignedLevel === 3)
-                                                        ? "0 0 6px rgba(224, 49, 49, 0.38)"
+                                                        ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
                                                         : "none",
                                             }}
                                         />
@@ -384,7 +385,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                 style={{
                                     fontFamily: "Cinzel, Georgia, serif",
                                     letterSpacing: "0.05em",
-                                    color: "rgba(224, 49, 49, 1)",
+                                    color: rgba(RAW_RED, 1),
                                 }}
                             >
                                 Skill Distribution
@@ -396,7 +397,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                                 letterSpacing: "0.04em",
-                                color: "rgba(214, 204, 198, 0.5)",
+                                color: rgba(RAW_GREY, 0.5),
                             }}
                         >
                             Balanced is the default choice
@@ -439,7 +440,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                             fontFamily: "Inter, Segoe UI, sans-serif",
                             fontSize: "0.78rem",
                             letterSpacing: "0.06em",
-                            color: "rgba(214, 204, 198, 0.42)",
+                            color: rgba(RAW_GREY, 0.42),
                         }}
                     >
                         {pickedDistribution}
@@ -475,7 +476,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                             fontFamily: "Crimson Text, Georgia, serif",
                                             fontSize: isActive ? (phoneScreen ? "1.15rem" : "1.45rem") : phoneScreen ? "0.95rem" : "1rem",
                                             lineHeight: 1.1,
-                                            color: isActive ? "rgba(244, 236, 232, 0.95)" : "rgba(214, 204, 198, 0.56)",
+                                            color: isActive ? "rgba(244, 236, 232, 0.95)" : rgba(RAW_GREY, 0.56),
                                             transition: "all 220ms ease",
                                         }}
                                     >
@@ -485,7 +486,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                                                 style={{
                                                     fontFamily: "Cinzel, Georgia, serif",
-                                                    color: "rgba(224, 49, 49, 1)",
+                                                    color: rgba(RAW_RED, 1),
                                                     marginRight: "0.4rem",
                                                 }}
                                             >
@@ -497,7 +498,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                             style={{
                                                 fontFamily: "Cinzel, Georgia, serif",
                                                 letterSpacing: "0.05em",
-                                                color: isActive ? "rgba(224, 49, 49, 1)" : "inherit",
+                                                color: isActive ? rgba(RAW_RED, 1) : "inherit",
                                                 textDecoration: isPast ? "line-through" : "none",
                                             }}
                                         >
@@ -526,7 +527,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
             <Box my="lg">
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                     <Title
                         order={4}
                         style={{
@@ -535,12 +536,12 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                             fontWeight: 600,
                             letterSpacing: "0.24em",
                             textTransform: "uppercase",
-                            color: "rgba(224, 49, 49, 1)",
+                            color: rgba(RAW_RED, 1),
                         }}
                     >
                         Skills
                     </Title>
-                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                 </div>
             </Box>
 

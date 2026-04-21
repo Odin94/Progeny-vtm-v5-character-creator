@@ -1,4 +1,5 @@
 import { Badge, Box, Button, Group, ScrollArea, Stack, Text } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -18,7 +19,7 @@ type RitualsPickerProps = {
 const SectionDivider = ({ label }: { label: string }) => (
     <Box my="sm">
         <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
             <Text
                 style={{
                     fontFamily: "Cinzel, Georgia, serif",
@@ -26,18 +27,18 @@ const SectionDivider = ({ label }: { label: string }) => (
                     fontWeight: 800,
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
-                    color: "rgba(224, 49, 49, 1)",
+                    color: rgba(RAW_RED, 1),
                     whiteSpace: "nowrap",
                 }}
             >
                 {label}
             </Text>
-            <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
         </div>
     </Box>
 )
 
-const GOLD_LABEL_COLOR = "rgba(201, 172, 102, 1)"
+const GOLD_LABEL_COLOR = rgba(RAW_GOLD, 1)
 
 const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) => {
     const [hovered, setHovered] = useState(false)
@@ -50,7 +51,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                 height: "100%",
                 padding: "14px 16px",
                 borderRadius: 10,
-                border: `1px solid ${hovered ? "rgba(224, 49, 49, 0.45)" : "rgba(125, 91, 72, 0.25)"}`,
+                border: `1px solid ${hovered ? rgba(RAW_RED, 0.45) : "rgba(125, 91, 72, 0.25)"}`,
                 background: hovered
                     ? "linear-gradient(180deg, rgba(40, 14, 18, 0.85) 0%, rgba(20, 7, 10, 0.9) 100%)"
                     : "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)",
@@ -80,7 +81,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                 style={{
                     fontFamily: "Crimson Text, Georgia, serif",
                     fontSize: "0.95rem",
-                    color: "rgba(214, 204, 198, 0.7)",
+                    color: rgba(RAW_GREY, 0.7),
                     lineHeight: 1.45,
                     marginBottom: 10,
                     minHeight: "5.6rem",
@@ -117,10 +118,10 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                 onMouseLeave={() => setHovered(false)}
                 styles={{
                     root: {
-                        borderColor: hovered ? "rgba(250, 82, 82, 0.85)" : "rgba(224, 49, 49, 0.4)",
-                        background: hovered ? "rgba(224, 49, 49, 0.24)" : "rgba(224, 49, 49, 0.08)",
+                        borderColor: hovered ? "rgba(250, 82, 82, 0.85)" : rgba(RAW_RED, 0.4),
+                        background: hovered ? rgba(RAW_RED, 0.24) : rgba(RAW_RED, 0.08),
                         boxShadow: hovered
-                            ? "0 0 0 1px rgba(224, 49, 49, 0.22), 0 0 18px rgba(224, 49, 49, 0.18), 0 10px 24px rgba(224, 49, 49, 0.18)"
+                            ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`
                             : "none",
                         transform: hovered ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
                         transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
@@ -152,7 +153,7 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
         >
             {label}
         </Text>
-        <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.78rem", color: "rgba(214, 204, 198, 0.6)" }}>
+        <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.78rem", color: rgba(RAW_GREY, 0.6) }}>
             {value}
         </Text>
     </div>
@@ -203,7 +204,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                                 style={{
                                     fontFamily: "Cinzel, Georgia, serif",
                                     letterSpacing: "0.05em",
-                                    color: "rgba(224, 49, 49, 1)",
+                                    color: rgba(RAW_RED, 1),
                                 }}
                             >
                                 Ritual
@@ -215,7 +216,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                                 letterSpacing: "0.04em",
-                                color: "rgba(214, 204, 198, 0.5)",
+                                color: rgba(RAW_GREY, 0.5),
                             }}
                         >
                             Blood Sorcerers begin with one free Level 1 ritual

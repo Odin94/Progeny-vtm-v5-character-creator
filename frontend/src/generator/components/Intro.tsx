@@ -1,4 +1,5 @@
 import { faFileArrowUp, faPlay } from "@fortawesome/free-solid-svg-icons"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Box, Button, FileButton, ScrollArea, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
@@ -56,7 +57,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     fontSize: phoneScreen ? "0.72rem" : "0.8rem",
                                     letterSpacing: "0.34em",
                                     textTransform: "uppercase",
-                                    color: "rgba(212, 175, 100, 0.75)",
+                                    color: rgba(RAW_GOLD, 0.75),
                                 }}
                             >
                                 Vampire: The Masquerade · V5
@@ -68,14 +69,14 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     fontSize: phoneScreen ? "2.6rem" : "3.4rem",
                                     lineHeight: 1,
                                     color: "rgba(244, 236, 232, 0.96)",
-                                    textShadow: "0 2px 28px rgba(224, 49, 49, 0.18)",
+                                    textShadow: `0 2px 28px ${rgba(RAW_RED, 0.18)}`,
                                 }}
                             >
                                 <span
                                     style={{
                                         fontFamily: "Cinzel, Georgia, serif",
                                         letterSpacing: "0.08em",
-                                        color: "rgba(224, 49, 49, 1)",
+                                        color: rgba(RAW_RED, 1),
                                     }}
                                 >
                                     Progeny
@@ -86,7 +87,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     width: 180,
                                     height: 2,
                                     background:
-                                        "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.45) 50%, transparent 100%)",
+                                        `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.45)} 50%, transparent 100%)`,
                                 }}
                             />
                             <Text
@@ -95,7 +96,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     fontFamily: "Inter, Segoe UI, sans-serif",
                                     fontSize: phoneScreen ? "0.92rem" : "1rem",
                                     letterSpacing: "0.04em",
-                                    color: "rgba(214, 204, 198, 0.7)",
+                                    color: rgba(RAW_GREY, 0.7),
                                     maxWidth: 520,
                                 }}
                             >
@@ -124,7 +125,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                         fontSize: "0.92rem",
                                         lineHeight: 1.55,
-                                        color: "rgba(214, 204, 198, 0.78)",
+                                        color: rgba(RAW_GREY, 0.78),
                                     }}
                                 >
                                     When you&apos;re finished, download a printable PDF (template kindly provided by{" "}
@@ -132,7 +133,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                         href="https://linktr.ee/nerdbert"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ color: "rgba(212, 175, 100, 0.95)" }}
+                                        style={{ color: rgba(RAW_GOLD, 0.95) }}
                                     >
                                         Nerdbert
                                     </a>
@@ -143,7 +144,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                         fontSize: "0.82rem",
                                         lineHeight: 1.55,
-                                        color: "rgba(214, 204, 198, 0.55)",
+                                        color: rgba(RAW_GREY, 0.55),
                                     }}
                                 >
                                     Created under the{" "}
@@ -151,7 +152,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                         href="https://www.worldofdarkness.com/dark-pack"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ color: "rgba(224, 49, 49, 0.95)" }}
+                                        style={{ color: rgba(RAW_RED, 0.95) }}
                                     >
                                         Dark Pack License
                                     </a>
@@ -176,10 +177,10 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                         letterSpacing: "0.18em",
                                         textTransform: "uppercase",
                                         background:
-                                            "linear-gradient(180deg, rgba(224, 49, 49, 0.94) 0%, rgba(168, 32, 32, 0.96) 100%)",
-                                        border: "1px solid rgba(224, 49, 49, 0.55)",
+                                            `linear-gradient(180deg, ${rgba(RAW_RED, 0.94)} 0%, rgba(168, 32, 32, 0.96) 100%)`,
+                                        border: `1px solid ${rgba(RAW_RED, 0.55)}`,
                                         boxShadow:
-                                            "0 10px 28px rgba(224, 49, 49, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+                                            `0 10px 28px ${rgba(RAW_RED, 0.28)}, inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
                                         transition: "transform 140ms ease, box-shadow 140ms ease",
                                     },
                                 }}
@@ -207,9 +208,9 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                                 fontFamily: "Cinzel, Georgia, serif",
                                                 letterSpacing: "0.14em",
                                                 textTransform: "uppercase",
-                                                borderColor: "rgba(212, 175, 100, 0.45)",
-                                                color: "rgba(212, 175, 100, 0.95)",
-                                                background: "rgba(212, 175, 100, 0.06)",
+                                                borderColor: rgba(RAW_GOLD, 0.45),
+                                                color: rgba(RAW_GOLD, 0.95),
+                                                background: rgba(RAW_GOLD, 0.06),
                                             },
                                         }}
                                     >
@@ -243,7 +244,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     root: {
                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                         letterSpacing: "0.06em",
-                                        color: "rgba(214, 204, 198, 0.6)",
+                                        color: rgba(RAW_GREY, 0.6),
                                     },
                                 }}
                             >
@@ -262,7 +263,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     root: {
                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                         letterSpacing: "0.06em",
-                                        color: "rgba(212, 175, 100, 0.75)",
+                                        color: rgba(RAW_GOLD, 0.75),
                                     },
                                 }}
                             >
@@ -280,7 +281,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                     root: {
                                         fontFamily: "Inter, Segoe UI, sans-serif",
                                         letterSpacing: "0.06em",
-                                        color: "rgba(214, 204, 198, 0.45)",
+                                        color: rgba(RAW_GREY, 0.45),
                                     },
                                 }}
                             >

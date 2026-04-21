@@ -1,4 +1,5 @@
 import { Box, Button, Center, FileButton, Group, Modal, Paper, ScrollArea, Stack, Text } from "@mantine/core"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { notifications } from "@mantine/notifications"
 import { IconChevronRight, IconFilePlus, IconFileUpload, IconUser } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
@@ -77,8 +78,8 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
         root: {
             minHeight: 42,
             justifyContent: "center",
-            borderColor: "rgba(224, 49, 49, 0.4)",
-            background: "rgba(224, 49, 49, 0.08)",
+            borderColor: rgba(RAW_RED, 0.4),
+            background: rgba(RAW_RED, 0.08),
             boxShadow: "none",
             transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
             letterSpacing: "0.14em",
@@ -88,13 +89,13 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
             color: "rgba(244, 236, 232, 0.95)",
             "&:hover": {
                 borderColor: "rgba(250, 82, 82, 0.85)",
-                background: "rgba(224, 49, 49, 0.24)",
-                boxShadow: "0 0 0 1px rgba(224, 49, 49, 0.22), 0 0 18px rgba(224, 49, 49, 0.18), 0 10px 24px rgba(224, 49, 49, 0.18)",
+                background: rgba(RAW_RED, 0.24),
+                boxShadow: `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`,
                 transform: "translateY(-1px) scale(1.01)",
             },
         },
         section: {
-            color: "rgba(224, 49, 49, 1)",
+            color: rgba(RAW_RED, 1),
         },
         label: {
             overflow: "hidden",
@@ -145,7 +146,7 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                             style={{
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: "0.9rem",
-                                color: "rgba(214, 204, 198, 0.62)",
+                                color: rgba(RAW_GREY, 0.62),
                             }}
                         >
                             Choose one of your saved characters to load into the generator.
@@ -216,11 +217,11 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                         p="sm"
                                         withBorder
                                         style={{
-                                            borderColor: isActive ? "rgba(224, 49, 49, 0.45)" : "rgba(125, 91, 72, 0.32)",
+                                            borderColor: isActive ? rgba(RAW_RED, 0.45) : "rgba(125, 91, 72, 0.32)",
                                             background: isActive
                                                 ? "linear-gradient(180deg, rgba(58, 18, 22, 0.9) 0%, rgba(32, 14, 17, 0.96) 100%)"
                                                 : "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)",
-                                            boxShadow: isActive ? "0 12px 24px rgba(224, 49, 49, 0.14)" : "none",
+                                            boxShadow: isActive ? `0 12px 24px ${rgba(RAW_RED, 0.14)}` : "none",
                                         }}
                                     >
                                         <Group justify="space-between" align="center" wrap="nowrap">

@@ -1,4 +1,5 @@
 import { Button, Divider, Group, Modal, Stack, Text, TextInput, useMantineTheme } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 
 type NameCharacterBeforeSwitchModalProps = {
@@ -62,7 +63,7 @@ const NameCharacterBeforeSwitchModal = ({
                         style={{
                             fontFamily: "Inter, Segoe UI, sans-serif",
                             fontSize: "0.9rem",
-                            color: "rgba(214, 204, 198, 0.62)",
+                            color: rgba(RAW_GREY, 0.62),
                         }}
                     >
                         Before you {pendingActionLabel}, either give this character a name and save it, or discard it and continue.
@@ -81,7 +82,7 @@ const NameCharacterBeforeSwitchModal = ({
                                 fontSize: "0.9rem",
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
-                                color: "rgba(201, 172, 102, 1)",
+                                color: rgba(RAW_GOLD, 1),
                                 marginBottom: 8,
                             },
                             input: {
@@ -135,11 +136,11 @@ const NameCharacterBeforeSwitchModal = ({
                             loading={isSaving}
                             styles={{
                                 root: {
-                                    background: "linear-gradient(180deg, rgba(224, 49, 49, 0.92) 0%, rgba(186, 38, 38, 0.95) 100%)",
+                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
                                     fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: "0 10px 24px rgba(224, 49, 49, 0.24)",
+                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
                                 },
                             }}
                         >

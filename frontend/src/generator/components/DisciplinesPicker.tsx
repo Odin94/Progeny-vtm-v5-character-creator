@@ -1,4 +1,5 @@
 import { Accordion, Badge, Box, Button, Group, Image, List, ScrollArea, Stack, Text } from "@mantine/core"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -20,7 +21,7 @@ type DisciplinesPickerProps = {
 const SectionDivider = ({ label }: { label: string }) => (
     <Box my="sm">
         <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
             <Text
                 style={{
                     fontFamily: "Cinzel, Georgia, serif",
@@ -28,13 +29,13 @@ const SectionDivider = ({ label }: { label: string }) => (
                     fontWeight: 800,
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
-                    color: "rgba(224, 49, 49, 1)",
+                    color: rgba(RAW_RED, 1),
                     whiteSpace: "nowrap",
                 }}
             >
                 {label}
             </Text>
-            <div style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.38) 50%, transparent 100%)" }} />
+            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)` }} />
         </div>
     </Box>
 )
@@ -51,8 +52,8 @@ const DisciplineDots = ({ count }: { count: number }) => {
                         width: 8,
                         height: 8,
                         borderRadius: "50%",
-                        background: "rgba(224, 49, 49, 0.95)",
-                        boxShadow: "0 0 10px rgba(224, 49, 49, 0.35)",
+                        background: rgba(RAW_RED, 0.95),
+                        boxShadow: `0 0 10px ${rgba(RAW_RED, 0.35)}`,
                         flexShrink: 0,
                     }}
                 />
@@ -167,7 +168,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 style={{
                     padding: "12px 14px",
                     borderRadius: 10,
-                    border: `1px solid ${picked ? "rgba(224, 49, 49, 0.3)" : "rgba(125, 91, 72, 0.25)"}`,
+                    border: `1px solid ${picked ? rgba(RAW_RED, 0.3) : "rgba(125, 91, 72, 0.25)"}`,
                     background: picked ? "linear-gradient(180deg, rgba(52, 18, 22, 0.75) 0%, rgba(34, 10, 13, 0.75) 100%)" : "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)",
                     opacity: disabled && !picked ? 0.6 : 1,
                     transition: "background 180ms ease, border-color 180ms ease",
@@ -196,7 +197,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     style={{
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "0.9rem",
-                        color: "rgba(214, 204, 198, 0.65)",
+                        color: rgba(RAW_GREY, 0.65),
                         lineHeight: 1.4,
                         marginBottom: power.amalgamPrerequisites.length > 0 ? 6 : 0,
                     }}
@@ -209,7 +210,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.72rem", color: "rgba(250, 82, 82, 0.7)", marginBottom: 2 }}>
                             Requires:
                         </Text>
-                        <List size="xs" styles={{ item: { color: "rgba(214, 204, 198, 0.55)", fontSize: "0.72rem" } }}>
+                        <List size="xs" styles={{ item: { color: rgba(RAW_GREY, 0.55), fontSize: "0.72rem" } }}>
                             {power.amalgamPrerequisites.map((prereq) => (
                                 <List.Item key={power.name + prereq.discipline}>
                                     {upcase(prereq.discipline)}: Lv {prereq.level}
@@ -237,10 +238,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         styles={{
                             root: {
                                 alignSelf: "center",
-                                borderColor: takeButtonHovered ? "rgba(250, 82, 82, 0.85)" : "rgba(224, 49, 49, 0.4)",
-                                background: takeButtonHovered ? "rgba(224, 49, 49, 0.24)" : "rgba(224, 49, 49, 0.08)",
+                                borderColor: takeButtonHovered ? "rgba(250, 82, 82, 0.85)" : rgba(RAW_RED, 0.4),
+                                background: takeButtonHovered ? rgba(RAW_RED, 0.24) : rgba(RAW_RED, 0.08),
                                 boxShadow: takeButtonHovered
-                                    ? "0 0 0 1px rgba(224, 49, 49, 0.22), 0 0 18px rgba(224, 49, 49, 0.18), 0 10px 24px rgba(224, 49, 49, 0.18)"
+                                    ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`
                                     : "none",
                                 transform: takeButtonHovered ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
                                 transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
@@ -250,7 +251,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 fontSize: "0.72rem",
                             },
                             section: {
-                                color: "rgba(224, 49, 49, 1)",
+                                color: rgba(RAW_RED, 1),
                             },
                         }}
                         onClick={() => {
@@ -440,7 +441,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             style={{
                                 fontFamily: "Cinzel, Georgia, serif",
                                 letterSpacing: "0.05em",
-                                color: "rgba(224, 49, 49, 1)",
+                                color: rgba(RAW_RED, 1),
                             }}
                         >
                             Disciplines
@@ -452,7 +453,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             fontFamily: "Inter, Segoe UI, sans-serif",
                             fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                             letterSpacing: "0.04em",
-                            color: "rgba(214, 204, 198, 0.5)",
+                            color: rgba(RAW_GREY, 0.5),
                         }}
                     >
                         2 powers in one discipline · 1 in another · 1 from your predator type ({upcase(character.predatorType.pickedDiscipline)})
@@ -487,8 +488,8 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         variant="separated"
                         styles={{
                             item: {
-                                background: "rgba(224, 49, 49, 0.04)",
-                                border: "1px solid rgba(224, 49, 49, 0.15)",
+                                background: rgba(RAW_RED, 0.04),
+                                border: `1px solid ${rgba(RAW_RED, 0.15)}`,
                                 borderRadius: 10,
                             },
                             panel: {
@@ -511,7 +512,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                         ? "rgba(80, 80, 80, 0.75)"
                                         : generatorConfirmButtonStyles.root.background,
                                     boxShadow: confirmDisabled ? "none" : generatorConfirmButtonStyles.root.boxShadow,
-                                    color: confirmDisabled ? "rgba(214, 204, 198, 0.55)" : undefined,
+                                    color: confirmDisabled ? rgba(RAW_GREY, 0.55) : undefined,
                                     cursor: confirmDisabled ? "not-allowed" : undefined,
                                 },
                             }}

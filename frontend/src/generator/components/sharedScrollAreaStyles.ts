@@ -1,3 +1,5 @@
+import { RAW_RED, rgba } from "~/theme/colors"
+
 export const nightfallScrollbarSize = 11
 
 export const nightfallScrollAreaStyles = {
@@ -5,14 +7,14 @@ export const nightfallScrollAreaStyles = {
         background: "transparent",
     },
     thumb: {
-        background: "rgba(224, 49, 49, 0.3)",
+        background: rgba(RAW_RED, 0.3),
         borderRadius: "999px",
         transition: "background 140ms ease",
         "&:hover": {
-            background: "rgba(224, 49, 49, 0.52)",
+            background: rgba(RAW_RED, 0.52),
         },
         "&:active": {
-            background: "rgba(224, 49, 49, 0.7)",
+            background: rgba(RAW_RED, 0.7),
         },
     },
     corner: {

@@ -1,4 +1,5 @@
 import { Box, Button, Group, Select, Stack, Text, Title, useMantineTheme } from "@mantine/core"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useMemo, useState } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import ReactGA from "react-ga4"
@@ -99,7 +100,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                         style={{
                             fontFamily: "Cinzel, Georgia, serif",
                             letterSpacing: "0.05em",
-                            color: "rgba(224, 49, 49, 1)",
+                            color: rgba(RAW_RED, 1),
                         }}
                     >
                         Generation
@@ -111,7 +112,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                         fontFamily: "Inter, Segoe UI, sans-serif",
                         fontSize: phoneScreen ? "0.82rem" : "0.9rem",
                         letterSpacing: "0.04em",
-                        color: "rgba(214, 204, 198, 0.5)",
+                        color: rgba(RAW_GREY, 0.5),
                     }}
                 >
                     {isThinBlood ? "Thin-bloods can only begin at 14th generation." : "Default choice is '13th Gen - Neonate'"}
@@ -120,7 +121,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
 
             <Box my="lg">
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                     <Title
                         order={4}
                         style={{
@@ -129,12 +130,12 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                             fontWeight: 600,
                             letterSpacing: "0.24em",
                             textTransform: "uppercase",
-                            color: "rgba(224, 49, 49, 1)",
+                            color: rgba(RAW_RED, 1),
                         }}
                     >
                         Generation
                     </Title>
-                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                 </div>
             </Box>
 
@@ -151,7 +152,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                                 fontSize: "0.82rem",
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
-                                color: "rgba(214, 204, 198, 0.72)",
+                                color: rgba(RAW_GREY, 0.72),
                                 marginBottom: 8,
                             },
                             input: {
@@ -208,7 +209,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                                     fontSize: "0.8rem",
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
-                                    color: "rgba(214, 204, 198, 0.48)",
+                                    color: rgba(RAW_GREY, 0.48),
                                 }}
                             >
                                 {selectedGeneration.tier}

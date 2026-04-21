@@ -1,4 +1,5 @@
 import { Box, Button, Divider, Grid, Group, Stack, Text, Title, Tooltip, useMantineTheme } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
@@ -125,18 +126,18 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                 justifyContent: "space-between",
                                 background:
                                     assignedLevel === 4
-                                        ? "rgba(197, 32, 32, 0.2)"
+                                        ? rgba(RAW_RED, 0.2)
                                         : assignedLevel === 3
                                           ? "rgba(204, 166, 51, 0.4)"
                                           : assignedLevel === 1
                                             ? "rgba(43, 43, 43, 0.5)"
                                             // TODOdin: This is theme.grape, but +20 to everything and 0.8 alpha - do we want to use this here/everywhere?
-                                            : "rgb(126, 74, 201, 0.8)",
+                                            : rgba(RAW_GRAPE, 0.8),
                                 borderColor:
                                     assignedLevel === 4
-                                        ? "rgba(224, 49, 49, 0.95)"
+                                        ? rgba(RAW_RED, 0.95)
                                         : assignedLevel === 3
-                                          ? "rgba(201, 172, 102, 0.9)"
+                                          ? rgba(RAW_GOLD, 0.9)
                                           : assignedLevel === 1
                                             ? "rgba(180, 180, 180, 0.42)"
                                             : undefined,
@@ -156,14 +157,14 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                                 background:
                                                     dotIndex < assignedLevel
                                                         ? assignedLevel === 4
-                                                            ? "rgba(224, 49, 49, 1)"
+                                                            ? rgba(RAW_RED, 1)
                                                             : assignedLevel === 3
                                                               ? "rgba(232, 204, 92, 0.98)"
                                                               : "rgba(210, 210, 210, 0.85)"
                                                         : "rgba(255, 255, 255, 0.14)",
                                                 boxShadow:
                                                     dotIndex < assignedLevel && assignedLevel === 4
-                                                        ? "0 0 6px rgba(224, 49, 49, 0.38)"
+                                                        ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
                                                         : "none",
                                             }}
                                         />
@@ -240,7 +241,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                         fontFamily: "Crimson Text, Georgia, serif",
                                         fontSize: isActive ? (phoneScreen ? "1.15rem" : "1.45rem") : phoneScreen ? "0.95rem" : "1rem",
                                         lineHeight: 1.1,
-                                        color: isActive ? "rgba(244, 236, 232, 0.95)" : "rgba(214, 204, 198, 0.56)",
+                                        color: isActive ? "rgba(244, 236, 232, 0.95)" : rgba(RAW_GREY, 0.56),
                                         transition: "all 220ms ease",
                                     }}
                                 >
@@ -250,7 +251,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                                             style={{
                                                 fontFamily: "Cinzel, Georgia, serif",
-                                                color: "rgba(224, 49, 49, 1)",
+                                                color: rgba(RAW_RED, 1),
                                                 marginRight: "0.4rem",
                                             }}
                                         >
@@ -262,7 +263,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                         style={{
                                             fontFamily: "Cinzel, Georgia, serif",
                                             letterSpacing: "0.05em",
-                                            color: isActive ? "rgba(224, 49, 49, 1)" : "inherit",
+                                            color: isActive ? rgba(RAW_RED, 1) : "inherit",
                                             textDecoration: isPast ? "line-through" : "none",
                                         }}
                                     >
@@ -280,7 +281,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                         fontFamily: "Inter, Segoe UI, sans-serif",
                         fontSize: "0.78rem",
                         letterSpacing: "0.06em",
-                        color: "rgba(214, 204, 198, 0.42)",
+                        color: rgba(RAW_GREY, 0.42),
                     }}
                 >
                     Remaining attributes will be lvl 2
@@ -289,7 +290,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
 
             <Box my="lg">
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                     <Title
                         order={4}
                         style={{
@@ -298,12 +299,12 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                             fontWeight: 600,
                             letterSpacing: "0.24em",
                             textTransform: "uppercase",
-                            color: "rgba(224, 49, 49, 1)",
+                            color: rgba(RAW_RED, 1),
                         }}
                     >
                         Attributes
                     </Title>
-                    <div style={{ flex: 1, height: "2px", background: "linear-gradient(90deg, transparent 0%, rgba(224, 49, 49, 0.3) 50%, transparent 100%)" }} />
+                    <div style={{ flex: 1, height: "2px", background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.3)} 50%, transparent 100%)` }} />
                 </div>
             </Box>
 

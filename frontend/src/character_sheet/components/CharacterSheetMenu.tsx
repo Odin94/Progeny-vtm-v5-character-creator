@@ -1,4 +1,5 @@
 import { faFileArrowUp, faFileExport, faFilePdf, faFloppyDisk } from "@fortawesome/free-solid-svg-icons"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text, Divider, Group } from "@mantine/core"
 import { useDisclosure, useMediaQuery } from "@mantine/hooks"
@@ -503,7 +504,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             style={{
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: "0.9rem",
-                                color: "rgba(214, 204, 198, 0.62)",
+                                color: rgba(RAW_GREY, 0.62),
                             }}
                         >
                             This will overwrite the current character with the selected file. This action cannot be undone.
@@ -532,11 +533,11 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             onClick={handleConfirmLoad}
                             styles={{
                                 root: {
-                                    background: "linear-gradient(180deg, rgba(224, 49, 49, 0.92) 0%, rgba(186, 38, 38, 0.95) 100%)",
+                                    background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
                                     letterSpacing: "0.08em",
                                     textTransform: "uppercase",
                                     fontFamily: "Cinzel, Georgia, serif",
-                                    boxShadow: "0 10px 24px rgba(224, 49, 49, 0.24)",
+                                    boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`,
                                 },
                             }}
                         >
