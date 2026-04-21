@@ -1,6 +1,6 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Badge, Box, Button, Divider, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import { Box, Button, Divider, Grid, Group, Modal, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
 import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -164,14 +164,6 @@ const MeritOrFlawCard = memo(({
                 >
                     {icon} &nbsp;<span>{meritOrFlaw.name}</span>
                 </Text>
-                <Badge
-                    variant="light"
-                    radius="sm"
-                    color={type === "flaw" ? "red" : "teal"}
-                    styles={{ root: { textTransform: "uppercase", letterSpacing: "0.08em" } }}
-                >
-                    {type}
-                </Badge>
             </Group>
 
             <Text
