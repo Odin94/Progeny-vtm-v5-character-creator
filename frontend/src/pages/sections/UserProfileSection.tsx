@@ -1,5 +1,6 @@
-import { ActionIcon, Button, Card, Group, Stack, Text, TextInput, Title, useMantineTheme } from "@mantine/core"
-import { IconEdit, IconUser } from "@tabler/icons-react"
+import { ActionIcon, Button, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core"
+import { IconEdit, IconEye, IconEyeOff, IconUser } from "@tabler/icons-react"
+import { useState } from "react"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 
 type UserProfileSectionProps = {
@@ -30,6 +31,8 @@ const UserProfileSection = ({
     handleSaveNickname,
     handleCancelNickname,
 }: UserProfileSectionProps) => {
+    const [emailVisible, setEmailVisible] = useState(false)
+
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
             <Group gap="md" mb="md">
@@ -37,9 +40,18 @@ const UserProfileSection = ({
                 <Title order={2}>User Profile</Title>
             </Group>
             <Stack gap="sm">
-                <Group gap="xs">
+                <Group gap="xs" align="center">
                     <Text fw={500}>Email:</Text>
-                    <Text>{user?.email}</Text>
+                    <Text>{emailVisible ? (user?.email ?? "No email available") : "Hidden"}</Text>
+                    <ActionIcon
+                        color="red"
+                        size="sm"
+                        variant="subtle"
+                        onClick={() => setEmailVisible((current) => !current)}
+                        aria-label={emailVisible ? "Hide email" : "Show email"}
+                    >
+                        {emailVisible ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                    </ActionIcon>
                 </Group>
                 {user?.firstName || user?.lastName ? (
                     <Group gap="xs">

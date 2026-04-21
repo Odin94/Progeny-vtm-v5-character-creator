@@ -124,6 +124,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             }
 
             const { code, state } = queryResult.data
+            const returnTo = getSafeReturnPath(state)
 
             const cookiePassword = env.WORKOS_COOKIE_PASSWORD
 
@@ -238,6 +239,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             // The frontend will handle the redirect
             reply.send({
                 success: true,
+                returnTo,
                 user: {
                     id: user.id,
                     email: user.email,

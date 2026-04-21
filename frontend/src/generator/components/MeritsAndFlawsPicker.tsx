@@ -241,7 +241,6 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([
         ...character.merits,
         ...character.flaws,
-        ...character.predatorType.pickedMeritsAndFlaws,
     ])
 
     const usedMeritsLevel = character.merits.filter((m) => !isThinbloodMerit(m.name)).reduce((acc, { level }) => acc + level, 0)
@@ -332,19 +331,27 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const isConfirmDisabled = isThinBlood && remainingThinbloodMeritPoints < 0
     const handleReset = () => {
         if (resetTarget === "merit") {
-            setPickedMeritsAndFlaws((current) =>
-                current.filter((item) => item.type !== "merit" || predatorTypePickedNames.has(item.name))
-            )
+            const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter((item) => item.type !== "merit")
+            setPickedMeritsAndFlaws(nextPickedMeritsAndFlaws)
             setRemainingMerits(meritPoints)
             setRemainingThinbloodMeritPoints(tbFlawCount)
+            setCharacter({
+                ...character,
+                merits: [],
+                flaws: nextPickedMeritsAndFlaws.filter((item) => item.type === "flaw"),
+            })
         }
 
         if (resetTarget === "flaw") {
-            setPickedMeritsAndFlaws((current) =>
-                current.filter((item) => item.type !== "flaw" || predatorTypePickedNames.has(item.name))
-            )
+            const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter((item) => item.type !== "flaw")
+            setPickedMeritsAndFlaws(nextPickedMeritsAndFlaws)
             setRemainingFlaws(flawPoints)
             setRemainingThinbloodMeritPoints(-tbMeritCount)
+            setCharacter({
+                ...character,
+                merits: nextPickedMeritsAndFlaws.filter((item) => item.type === "merit"),
+                flaws: [],
+            })
         }
 
         setResetTarget(null)

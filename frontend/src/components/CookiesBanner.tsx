@@ -4,19 +4,21 @@ import { useEffect, useState } from 'react';
 import posthog from 'posthog-js';
 import { globals } from '~/globals';
 import { IconCookie } from '@tabler/icons-react';
+import { useAuth } from '~/hooks/useAuth';
 
 const LEARN_MORE_HREF = "https://odin-matthias.de/datenschutzerklaerung"
 
 export const CookiesBanner = () => {
     const [showBanner, setShowBanner] = useState(false);
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`);
+    const { isAuthenticated } = useAuth();
 
 
     const consentStatus = posthog.get_explicit_consent_status();
 
     useEffect(() => {
-        setShowBanner(consentStatus === "pending");
-    }, [consentStatus]);
+        setShowBanner(!isAuthenticated && consentStatus === "pending");
+    }, [consentStatus, isAuthenticated]);
 
     const handleAccept = () => {
         try {

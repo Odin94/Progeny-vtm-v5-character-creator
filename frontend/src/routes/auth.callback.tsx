@@ -1,72 +1,78 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { useQueryClient } from "@tanstack/react-query"
 import { Container, Loader, Text } from "@mantine/core"
-import { useEffect, useRef } from "react"
-import { clearStoredAuthReturnTo, getStoredAuthReturnTo, useAuth } from "~/hooks/useAuth"
+import { useEffect } from "react"
+import posthog from "posthog-js"
+import { clearStoredAuthReturnTo, getSafeAuthReturnTo } from "~/hooks/useAuth"
+import { PREFERENCES_QUERY_KEY } from "~/hooks/useUserPreferences"
+import { api, type CurrentUser } from "~/utils/api"
 
 export const Route = createFileRoute("/auth/callback")({
     component: AuthCallback,
 })
 
-const DEFAULT_POST_AUTH_PATH = "/"
-
-function getSafeReturnTo(state?: string | null) {
-    const candidate = state || getStoredAuthReturnTo() || DEFAULT_POST_AUTH_PATH
-
-    if (!candidate.startsWith("/")) {
-        return DEFAULT_POST_AUTH_PATH
-    }
-
-    if (candidate.startsWith("//")) {
-        return DEFAULT_POST_AUTH_PATH
-    }
-
-    return candidate === "/auth/callback" ? DEFAULT_POST_AUTH_PATH : candidate
+type AuthCallbackResponse = {
+    success: true
+    returnTo: string
+    user: CurrentUser
 }
+
+let activeAuthCallbackRequest: { code: string; promise: Promise<AuthCallbackResponse> } | null = null
 
 // TODOdin: Give users a way out of here if they're stuck in `Completing sign in...`
 function AuthCallback() {
-    const { handleCallback, isHandlingCallback } = useAuth()
-    const callbackProcessedRef = useRef<string | null>(null)
+    const queryClient = useQueryClient()
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search)
         const code = urlParams.get("code")
         const state = urlParams.get("state")
-        const returnTo = getSafeReturnTo(state)
 
-        if (code && !isHandlingCallback && callbackProcessedRef.current !== code) {
-            callbackProcessedRef.current = code
-
-            window.history.replaceState({}, "", "/auth/callback")
-
-            handleCallback(
-                { code, state: state || undefined },
-                {
-                    onSuccess: () => {
-                        clearStoredAuthReturnTo()
-                        window.location.replace(returnTo)
-                    },
-                    onError: (error) => {
-                        console.error("Auth callback error:", error)
-                        clearStoredAuthReturnTo()
-                        window.location.replace("/")
-                        callbackProcessedRef.current = null
-                    },
-                }
-            )
-        } else if (!code) {
+        if (!code) {
             clearStoredAuthReturnTo()
             window.location.replace("/")
+            return
         }
-    }, [handleCallback, isHandlingCallback])
 
-    useEffect(() => {
-        return () => {
-            if (!isHandlingCallback) {
-                clearStoredAuthReturnTo()
-            }
+        const request =
+            activeAuthCallbackRequest?.code === code
+                ? activeAuthCallbackRequest.promise
+                : api.handleAuthCallback(code, state || undefined)
+
+        if (activeAuthCallbackRequest?.code !== code) {
+            activeAuthCallbackRequest = { code, promise: request }
         }
-    }, [isHandlingCallback])
+
+        void request
+            .then((data) => {
+                queryClient.setQueryData(["auth", "me"], data.user)
+                queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+                queryClient.invalidateQueries({ queryKey: PREFERENCES_QUERY_KEY })
+
+                try {
+                    posthog.identify(data.user.id, {
+                        email: data.user.email,
+                        firstName: data.user.firstName,
+                        lastName: data.user.lastName,
+                    })
+                } catch (error) {
+                    console.warn("PostHog identify failed:", error)
+                }
+
+                clearStoredAuthReturnTo()
+                window.location.replace(getSafeAuthReturnTo(data.returnTo || state))
+            })
+            .catch((error) => {
+                console.error("Auth callback error:", error)
+                clearStoredAuthReturnTo()
+                window.location.replace("/")
+            })
+            .finally(() => {
+                if (activeAuthCallbackRequest?.code === code) {
+                    activeAuthCallbackRequest = null
+                }
+            })
+    }, [queryClient])
 
     return (
         <Container

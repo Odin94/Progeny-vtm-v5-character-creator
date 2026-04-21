@@ -14,7 +14,7 @@ import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrol
 type DisciplinesPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
-    nextStep: () => void
+    nextStep: (characterOverride?: Character) => void
 }
 
 const SectionDivider = ({ label }: { label: string }) => (
@@ -517,12 +517,13 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             }}
                             onClick={() => {
                                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                                setCharacter({
+                                const updatedCharacter = {
                                     ...character,
                                     disciplines: allPickedPowers,
                                     rituals: containsBloodSorcery(allPickedPowers) ? character.rituals : [],
-                                })
-                                nextStep()
+                                }
+                                setCharacter(updatedCharacter)
+                                nextStep(updatedCharacter)
                             }}
                         >
                             Confirm

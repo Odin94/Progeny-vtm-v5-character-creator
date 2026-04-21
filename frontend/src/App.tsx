@@ -1,6 +1,7 @@
 import { AppShell, BackgroundImage, Container, Loader, Text, useComputedColorScheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
+import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import "./App.css"
 import Generator from "./generator/Generator"
@@ -11,6 +12,7 @@ import Topbar from "./topbar/Topbar"
 import CharacterSheet from "./character_sheet/CharacterSheet"
 import BrokenSaveModal from "./components/BrokenSaveModal"
 import LoadModal from "./components/LoadModal"
+import NameCharacterBeforeSwitchModal from "./components/NameCharacterBeforeSwitchModal"
 import MePage from "./pages/MePage"
 
 import { useViewportSize } from "@mantine/hooks"
@@ -25,15 +27,20 @@ import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import { characterSchema, getEmptyCharacter, type Character as CharacterType } from "./data/Character"
-import { useAuth } from "./hooks/useAuth"
+import { clearStoredAuthReturnTo, getSafeAuthReturnTo, useAuth } from "./hooks/useAuth"
+import { useCharacters } from "./hooks/useCharacters"
 import { api } from "./utils/api"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
+type PendingSwitchAction = { type: "load"; characterId: string } | { type: "create" } | null
 
 function App() {
+    const queryClient = useQueryClient()
     const [pathname, setPathname] = useState(window.location.pathname)
     const { handleCallback, isHandlingCallback, isAuthenticated, user } = useAuth()
+    const { data: characters } = useCharacters(isAuthenticated)
     const callbackProcessedRef = useRef<string | null>(null)
+    const callbackReturnToRef = useRef<string>("/")
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search)
@@ -44,26 +51,28 @@ function App() {
         if (code && !isHandlingCallback && callbackProcessedRef.current !== code) {
             // Mark this code as being processed
             callbackProcessedRef.current = code
+            callbackReturnToRef.current = getSafeAuthReturnTo(state)
 
             // Update pathname to show loading state
             if (window.location.pathname === "/auth/callback") {
                 setPathname("/auth/callback")
             }
 
-            // Clean up URL immediately to prevent re-processing on re-render
-            // But keep the pathname as /auth/callback so the useEffect can detect it
-            window.history.replaceState({}, "", "/auth/callback")
-
             // We received the callback, call the backend via React Query
             // The redirect will be handled by the useEffect that watches for authentication
             handleCallback(
                 { code, state: state || undefined },
                 {
+                    onSuccess: (data) => {
+                        callbackReturnToRef.current = getSafeAuthReturnTo(data.returnTo || state)
+                        clearStoredAuthReturnTo()
+                    },
                     onError: (error) => {
                         console.error("Auth callback error:", error)
                         // Clean up URL even on error
                         window.history.replaceState({}, "", "/")
                         setPathname("/")
+                        clearStoredAuthReturnTo()
                         // Reset the ref so user can try again
                         callbackProcessedRef.current = null
                     },
@@ -84,7 +93,7 @@ function App() {
         // Redirect to /me once authenticated after callback
         if (pathname === "/auth/callback" && isAuthenticated && user && !isHandlingCallback) {
             console.log("Redirecting to /me after successful authentication", { isAuthenticated, user: user?.id })
-            window.location.href = "/me"
+            window.location.replace(callbackReturnToRef.current || "/")
         }
     }, [pathname, isAuthenticated, user, isHandlingCallback])
 
@@ -109,6 +118,11 @@ function App() {
     const [loadModalOpened, setLoadModalOpened] = useState(false)
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
+    const [pendingSwitchAction, setPendingSwitchAction] = useState<PendingSwitchAction>(null)
+    const [switchNameValue, setSwitchNameValue] = useState("")
+    const [isSavingBeforeSwitch, setIsSavingBeforeSwitch] = useState(false)
+    const userCharacters = ((characters as Array<{ id: string; name: string; shared?: boolean }>) || []).filter((candidate) => !candidate.shared)
+    const emptyCharacter = getEmptyCharacter()
 
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     useEffect(() => {
@@ -145,6 +159,180 @@ function App() {
             color: "green",
             autoClose: 3000,
         })
+    }
+
+    const saveCurrentCharacter = async () => {
+        const isEmptyCharacter = isCurrentCharacterEmpty()
+
+        if (isEmptyCharacter) {
+            return
+        }
+
+        if (!character.name.trim()) {
+            throw new Error("Please give the current character a name before switching.")
+        }
+
+        const targetCharacter = character.id ? userCharacters.find((candidate) => candidate.id === character.id) : null
+        const payload = {
+            name: character.name,
+            data: character,
+            version: character.version,
+        }
+
+        const savedCharacter = targetCharacter
+            ? await api.updateCharacter(targetCharacter.id, payload)
+            : await api.createCharacter(payload)
+
+        const saved = savedCharacter as {
+            id: string
+            data?: { characterVersion?: number }
+            characterVersion?: number
+        }
+
+        setCharacter({
+            ...character,
+            id: saved.id,
+            characterVersion: saved.characterVersion ?? saved.data?.characterVersion ?? character.characterVersion ?? 0,
+        } as CharacterType & { id: string; characterVersion: number })
+
+        await queryClient.invalidateQueries({ queryKey: ["characters"] })
+    }
+
+    const isCurrentCharacterEmpty = () =>
+        JSON.stringify({
+            ...character,
+            id: "",
+            name: "",
+            version: emptyCharacter.version,
+            characterVersion: emptyCharacter.characterVersion,
+        }) === JSON.stringify(emptyCharacter)
+
+    const completePendingSwitchAction = async (action: PendingSwitchAction) => {
+        if (!action) {
+            return
+        }
+
+        if (action.type === "load") {
+            await loadSavedCharacter(action.characterId)
+            return
+        }
+
+        setCharacter(getEmptyCharacter())
+        setSelectedStep("clan")
+    }
+
+    const openNameBeforeSwitchModal = (action: PendingSwitchAction) => {
+        setSwitchNameValue(character.name)
+        setPendingSwitchAction(action)
+    }
+
+    const closeNameBeforeSwitchModal = () => {
+        setPendingSwitchAction(null)
+        setSwitchNameValue("")
+        setIsSavingBeforeSwitch(false)
+    }
+
+    const handleLoadSavedCharacter = async (characterId: string) => {
+        if (characterId !== character.id) {
+            if (!character.name.trim() && !isCurrentCharacterEmpty()) {
+                openNameBeforeSwitchModal({ type: "load", characterId })
+                return
+            }
+
+            try {
+                await saveCurrentCharacter()
+            } catch (error) {
+                const notifiedError = error instanceof Error ? error : new Error("Failed to save current character")
+                notifications.show({
+                    title: "Error saving character",
+                    message: notifiedError.message,
+                    color: "red",
+                })
+                ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
+                throw notifiedError
+            }
+        }
+
+        await loadSavedCharacter(characterId)
+    }
+
+    const handleCreateCharacter = async () => {
+        if (!character.name.trim() && !isCurrentCharacterEmpty()) {
+            openNameBeforeSwitchModal({ type: "create" })
+            return
+        }
+
+        try {
+            await saveCurrentCharacter()
+        } catch (error) {
+            const notifiedError = error instanceof Error ? error : new Error("Failed to save current character")
+            notifications.show({
+                title: "Error saving character",
+                message: notifiedError.message,
+                color: "red",
+            })
+            ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
+            throw notifiedError
+        }
+
+        await completePendingSwitchAction({ type: "create" })
+    }
+
+    const handleSaveAndContinueSwitch = async () => {
+        if (!switchNameValue.trim()) {
+            notifications.show({
+                title: "Name required",
+                message: "Enter a character name before saving and switching.",
+                color: "red",
+            })
+            return
+        }
+
+        setIsSavingBeforeSwitch(true)
+
+        try {
+            const characterToSave = { ...character, name: switchNameValue }
+            setCharacter(characterToSave)
+            const targetCharacter = characterToSave.id ? userCharacters.find((candidate) => candidate.id === characterToSave.id) : null
+            const payload = {
+                name: characterToSave.name,
+                data: characterToSave,
+                version: characterToSave.version,
+            }
+            const savedCharacter = targetCharacter
+                ? await api.updateCharacter(targetCharacter.id, payload)
+                : await api.createCharacter(payload)
+            const saved = savedCharacter as {
+                id: string
+                data?: { characterVersion?: number }
+                characterVersion?: number
+            }
+
+            setCharacter({
+                ...characterToSave,
+                id: saved.id,
+                characterVersion: saved.characterVersion ?? saved.data?.characterVersion ?? characterToSave.characterVersion ?? 0,
+            } as CharacterType & { id: string; characterVersion: number })
+            await queryClient.invalidateQueries({ queryKey: ["characters"] })
+
+            const action = pendingSwitchAction
+            closeNameBeforeSwitchModal()
+            await completePendingSwitchAction(action)
+        } catch (error) {
+            notifications.show({
+                title: "Error saving character",
+                message: error instanceof Error ? error.message : "Failed to save current character",
+                color: "red",
+            })
+            setIsSavingBeforeSwitch(false)
+        }
+    }
+
+    const handleDeleteAndContinueSwitch = async () => {
+        const action = pendingSwitchAction
+        closeNameBeforeSwitchModal()
+        setCharacter(getEmptyCharacter())
+        await completePendingSwitchAction(action)
     }
 
     useEffect(() => {
@@ -223,6 +411,16 @@ function App() {
                 loadedFile={loadedFile}
                 setSelectedStep={setSelectedStep}
             />
+            <NameCharacterBeforeSwitchModal
+                opened={pendingSwitchAction !== null}
+                pendingActionLabel={pendingSwitchAction?.type === "load" ? "switch characters" : "create a new character"}
+                nameValue={switchNameValue}
+                setNameValue={setSwitchNameValue}
+                onClose={closeNameBeforeSwitchModal}
+                onSaveAndContinue={handleSaveAndContinueSwitch}
+                onDiscardAndContinue={handleDeleteAndContinueSwitch}
+                isSaving={isSavingBeforeSwitch}
+            />
             <AppShell
                 padding="0"
                 styles={(theme) => ({
@@ -240,7 +438,12 @@ function App() {
             >
                 {!globals.isSmallScreen && (
                     <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
-                        <Sidebar character={character} onLoadFromFile={openLoadModal} onLoadSavedCharacter={loadSavedCharacter} />
+                        <Sidebar
+                            character={character}
+                            onLoadFromFile={openLoadModal}
+                            onLoadSavedCharacter={handleLoadSavedCharacter}
+                            onCreateCharacter={handleCreateCharacter}
+                        />
                     </AppShell.Navbar>
                 )}
                 <AppShell.Header p="xs" h={75}>

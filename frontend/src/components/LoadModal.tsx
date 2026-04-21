@@ -48,9 +48,19 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, 
                             try {
                                 const fileData = await getUploadFile(loadedFile)
                                 const base64 = fileData.split(",")[1]
-                                const json = Buffer.from(base64, "base64").toString()
+                                if (!base64) {
+                                    throw new Error("Invalid file format")
+                                }
+
+                                let json: string
+                                try {
+                                    json = atob(base64)
+                                } catch (_decodeError) {
+                                    json = Buffer.from(base64, "base64").toString()
+                                }
+
                                 const loadedCharacter = await loadCharacterFromJson(json)
-                                setCharacter(loadedCharacter)
+                                setCharacter({ ...loadedCharacter, id: "" })
                                 setSelectedStep("final")
                                 closeLoadModal()
                             } catch (e) {
@@ -60,6 +70,12 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, 
                                         message: z.prettifyError(e),
                                         color: "red",
                                         autoClose: false,
+                                    })
+                                } else {
+                                    notifications.show({
+                                        title: "Error loading character",
+                                        message: e instanceof Error ? e.message : "Failed to load character from file",
+                                        color: "red",
                                     })
                                 }
                                 console.log({ e })

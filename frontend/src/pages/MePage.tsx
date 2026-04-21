@@ -64,6 +64,7 @@ import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
+const topbarHeight = 52
 
 type ShareCharacterModalContentProps = {
     characterToShare: { id: string; name: string } | null
@@ -1179,8 +1180,16 @@ const MePage = () => {
         return (
             <AppShell
                 padding="0"
+                header={{ height: topbarHeight }}
                 styles={(theme) => ({
                     root: { height: "100vh" },
+                    header: {
+                        background: "rgba(8, 7, 8, 0.7)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        zIndex: 200,
+                    },
                     main: {
                         backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
                         height: "100%",
@@ -1190,7 +1199,7 @@ const MePage = () => {
                     },
                 })}
             >
-                <AppShell.Header p="xs" h={75}>
+                <AppShell.Header>
                     <Topbar
                         asideBar={{
                             show: showAsideBar,
@@ -1210,8 +1219,16 @@ const MePage = () => {
         return (
             <AppShell
                 padding="0"
+                header={{ height: topbarHeight }}
                 styles={(theme) => ({
                     root: { height: "100vh" },
+                    header: {
+                        background: "rgba(8, 7, 8, 0.7)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        zIndex: 200,
+                    },
                     main: {
                         backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
                         height: "100%",
@@ -1221,7 +1238,7 @@ const MePage = () => {
                     },
                 })}
             >
-                <AppShell.Header p="xs" h={75}>
+                <AppShell.Header>
                     <Topbar
                         asideBar={{
                             show: showAsideBar,
@@ -1258,9 +1275,17 @@ const MePage = () => {
         <>
             <AppShell
                 padding="0"
+                header={{ height: topbarHeight }}
                 styles={(theme) => ({
                     root: {
                         height: "100vh",
+                    },
+                    header: {
+                        background: "rgba(8, 7, 8, 0.7)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        borderBottom: "1px solid rgba(201, 172, 102, 0.12)",
+                        zIndex: 200,
                     },
                     main: {
                         backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
@@ -1271,7 +1296,7 @@ const MePage = () => {
                     },
                 })}
             >
-                <AppShell.Header p="xs" h={75}>
+                <AppShell.Header>
                     <Topbar
                         asideBar={{
                             show: showAsideBar,
@@ -1279,15 +1304,17 @@ const MePage = () => {
                         }}
                     />
                 </AppShell.Header>
-                <BackgroundImage h={"100%"} src={backgrounds[backgroundIndex]} style={{ flex: 1, minHeight: 0 }}>
+                <BackgroundImage h="100%" src={backgrounds[backgroundIndex]} style={{ flex: 1, minHeight: 0, width: "100%" }}>
                     <div
                         style={{
                             backgroundColor: "rgba(0, 0, 0, 0.7)",
                             height: "100%",
+                            width: "100%",
+                            boxSizing: "border-box",
                             display: "flex",
                             flexDirection: "column",
                             overflow: "auto",
-                            paddingTop: "75px",
+                            paddingTop: topbarHeight,
                         }}
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>

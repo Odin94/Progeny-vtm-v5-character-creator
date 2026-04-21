@@ -5,16 +5,42 @@ import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
 
 const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
+const DEFAULT_POST_AUTH_PATH = "/"
 
 const getCurrentReturnTo = () => {
     const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
-    return returnTo === "/auth/callback" ? "/" : returnTo
+    return returnTo === "/auth/callback" ? DEFAULT_POST_AUTH_PATH : returnTo
 }
 
 export const getStoredAuthReturnTo = () => sessionStorage.getItem(AUTH_RETURN_TO_STORAGE_KEY)
 
 export const clearStoredAuthReturnTo = () => {
     sessionStorage.removeItem(AUTH_RETURN_TO_STORAGE_KEY)
+}
+
+export const getSafeAuthReturnTo = (candidate?: string | null) => {
+    const returnTo = candidate || getStoredAuthReturnTo() || DEFAULT_POST_AUTH_PATH
+
+    if (!returnTo.startsWith("/")) {
+        return DEFAULT_POST_AUTH_PATH
+    }
+
+    if (returnTo.startsWith("//")) {
+        return DEFAULT_POST_AUTH_PATH
+    }
+
+    try {
+        const parsed = new URL(returnTo, window.location.origin)
+
+        if (parsed.origin !== window.location.origin) {
+            return DEFAULT_POST_AUTH_PATH
+        }
+
+        const safePath = `${parsed.pathname}${parsed.search}${parsed.hash}`
+        return safePath === "/auth/callback" ? DEFAULT_POST_AUTH_PATH : safePath
+    } catch {
+        return DEFAULT_POST_AUTH_PATH
+    }
 }
 
 export const useAuth = () => {

@@ -133,7 +133,7 @@ export const api = {
         return response.json()
     },
     handleAuthCallback: (code: string, state?: string) =>
-        apiRequest<{ success: true; user: CurrentUser }>(
+        apiRequest<{ success: true; returnTo: string; user: CurrentUser }>(
             `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`,
         ),
     logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
