@@ -19,6 +19,10 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     const activeIndex = getGeneratorStepIndex(character, selectedStep)
 
     const isHigherLevelAccessible = (character: Character, step: (typeof steps)[number]) => {
+        if (step.id === "clan") {
+            return true
+        }
+
         if (!step.progressKey) {
             return true
         }

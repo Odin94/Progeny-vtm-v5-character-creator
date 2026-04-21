@@ -74,6 +74,14 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
     const selectedGeneration = availableOptions.find((option) => option.value === generation) ?? null
     const generationSummary = generation ? getGenerationSummary(parseInt(generation, 10)) : null
 
+    const handleGenerationChange = (value: string | null) => {
+        if (value === null && generation !== null) {
+            return
+        }
+
+        setGeneration(value)
+    }
+
     return (
         <div style={{ width: "100%" }}>
             <Stack gap={6} align="center" mb="md">
@@ -134,7 +142,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                 <FocusBorderWrapper colorValue={theme.colors.grape[6]} style={{ width: "100%", maxWidth: phoneScreen ? 320 : 430 }}>
                     <Select
                         value={generation}
-                        onChange={setGeneration}
+                        onChange={handleGenerationChange}
                         placeholder="Select your generation"
                         data={availableOptions}
                         styles={{

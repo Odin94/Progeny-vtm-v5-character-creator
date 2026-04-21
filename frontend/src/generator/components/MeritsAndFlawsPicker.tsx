@@ -330,9 +330,6 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     )
 
     const isConfirmDisabled = isThinBlood && remainingThinbloodMeritPoints < 0
-    const meritSpentPoints = meritPoints - remainingMerits
-    const flawSpentPoints = flawPoints - remainingFlaws
-
     const handleReset = () => {
         if (resetTarget === "merit") {
             setPickedMeritsAndFlaws((current) =>
@@ -408,7 +405,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                             <Grid.Col span={phoneScreen ? 12 : 4}>
                                 <PointCard
                                     label="Advantage Points"
-                                    value={`${meritSpentPoints}/${meritPoints}`}
+                                    value={`${remainingMerits}/${meritPoints}`}
                                     tone="merit"
                                     onReset={() => setResetTarget("merit")}
                                 />
@@ -416,7 +413,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                             <Grid.Col span={phoneScreen ? 12 : 4}>
                                 <PointCard
                                     label="Flaw Points"
-                                    value={`${flawSpentPoints}/${flawPoints}`}
+                                    value={`${remainingFlaws}/${flawPoints}`}
                                     tone="flaw"
                                     onReset={() => setResetTarget("flaw")}
                                 />

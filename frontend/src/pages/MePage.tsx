@@ -171,6 +171,7 @@ const MePage = () => {
     const { data: coteries } = useCoteries()
     const [character, setCharacter] = useCharacterLocalStorage()
     const computedColorScheme = useComputedColorScheme("dark", { getInitialValueInEffect: true })
+    const phoneScreen = globals.isPhoneScreen
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
     const theme = useMantineTheme()
@@ -1717,26 +1718,84 @@ const MePage = () => {
                 />
             </Modal>
 
-            <Modal opened={loadJsonModalOpened} onClose={() => setLoadJsonModalOpened(false)} title="" centered withCloseButton={false}>
-                <Stack>
-                    <Text fz="xl" ta="center">
-                        Overwrite current character and load from selected file?
-                    </Text>
-                    <Divider my="sm" />
+            <Modal
+                opened={loadJsonModalOpened}
+                onClose={() => setLoadJsonModalOpened(false)}
+                title=""
+                centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={{
+                    content: {
+                        border: "1px solid rgba(125, 91, 72, 0.38)",
+                        background: "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
+                        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+                    },
+                    body: {
+                        padding: phoneScreen ? "1.1rem" : "1.35rem",
+                    },
+                }}
+            >
+                <Stack gap="md">
+                    <Stack gap={6} align="center">
+                        <Text
+                            ta="center"
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                fontSize: phoneScreen ? "1.2rem" : "1.35rem",
+                                letterSpacing: "0.08em",
+                                textTransform: "uppercase",
+                                color: "rgba(244, 236, 232, 0.95)",
+                            }}
+                        >
+                            Load Character?
+                        </Text>
+                        <Text
+                            ta="center"
+                            style={{
+                                fontFamily: "Inter, Segoe UI, sans-serif",
+                                fontSize: "0.9rem",
+                                color: "rgba(214, 204, 198, 0.62)",
+                            }}
+                        >
+                            This will overwrite the current character with the selected file. This action cannot be undone.
+                        </Text>
+                    </Stack>
+
+                    <Divider color="rgba(125, 91, 72, 0.28)" />
+
                     <Group justify="space-between">
                         <Button
-                            color="yellow"
+                            color="gray"
                             variant="subtle"
-                            leftSection={<IconTrash size={16} />}
                             onClick={() => {
                                 setLoadJsonModalOpened(false)
                                 setLoadedFile(null)
                             }}
+                            styles={{
+                                root: {
+                                    letterSpacing: "0.08em",
+                                    textTransform: "uppercase",
+                                    fontFamily: "Cinzel, Georgia, serif",
+                                },
+                            }}
                         >
                             Cancel
                         </Button>
-                        <Button color="red" onClick={handleConfirmLoadJson}>
-                            Load/Overwrite character
+                        <Button
+                            color="red"
+                            onClick={handleConfirmLoadJson}
+                            styles={{
+                                root: {
+                                    background: "linear-gradient(180deg, rgba(224, 49, 49, 0.92) 0%, rgba(186, 38, 38, 0.95) 100%)",
+                                    letterSpacing: "0.08em",
+                                    textTransform: "uppercase",
+                                    fontFamily: "Cinzel, Georgia, serif",
+                                    boxShadow: "0 10px 24px rgba(224, 49, 49, 0.24)",
+                                },
+                            }}
+                        >
+                            Load
                         </Button>
                     </Group>
                 </Stack>

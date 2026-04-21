@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "../utils/api"
 
-export const useCharacters = () => {
+export const useCharacters = (enabled = true) => {
     return useQuery({
         queryKey: ["characters"],
         queryFn: () => api.getCharacters(),
+        enabled,
     })
 }
 
