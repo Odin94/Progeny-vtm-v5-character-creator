@@ -8,7 +8,12 @@ type PointPickerProps = {
     displayCount?: number
 }
 
-const PointPicker = ({ points, setPoints, maxLevel: maxPoints, displayCount }: PointPickerProps) => {
+const PointPicker = ({
+    points,
+    setPoints,
+    maxLevel: maxPoints,
+    displayCount
+}: PointPickerProps) => {
     const size = "1.25rem"
     const count = maxPoints ?? 5
     const slots = displayCount ?? count
@@ -32,13 +37,14 @@ const PointPicker = ({ points, setPoints, maxLevel: maxPoints, displayCount }: P
                             opacity: isClickable ? 1 : 0,
                             pointerEvents: isClickable ? "auto" : "none",
                             display: "flex",
-                            alignItems: "center",
+                            alignItems: "center"
                         }}
                     >
-                        {isActive
-                            ? <IconDroplet color="red" style={{ fill: "red" }} size={size} />
-                            : <IconDroplet color="gray" stroke={2.25} size={size} />
-                        }
+                        {isActive ? (
+                            <IconDroplet color="red" style={{ fill: "red" }} size={size} />
+                        ) : (
+                            <IconDroplet color="gray" stroke={2.25} size={size} />
+                        )}
                     </span>
                 )
             })}

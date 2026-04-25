@@ -67,8 +67,8 @@ const RemorseTestButton = ({
             humanity: newHumanity,
             ephemeral: {
                 ...character.ephemeral,
-                humanityStains: newHumanityStains,
-            },
+                humanityStains: newHumanityStains
+            }
         })
 
         const rollsText = rolls.join(", ")
@@ -82,7 +82,7 @@ const RemorseTestButton = ({
 
         notifications.show({
             message,
-            color: passed ? primaryColor : "red",
+            color: passed ? primaryColor : "red"
         })
 
         const autoShareDiceRolls = getAutoShareDiceRolls()
@@ -99,7 +99,7 @@ const RemorseTestButton = ({
                 humanity_before: character.humanity,
                 humanity_after: newHumanity,
                 stains_before: humanityStains,
-                stains_after: newHumanityStains,
+                stains_after: newHumanityStains
             })
         } catch (error) {
             console.warn("PostHog remorse-test tracking failed:", error)
@@ -120,7 +120,11 @@ const RemorseTestButton = ({
 
     return (
         <Tooltip
-            label={isDisabled ? "No stains to test" : `Roll remorse test (${diceCount} ${diceCount === 1 ? "die" : "dice"})`}
+            label={
+                isDisabled
+                    ? "No stains to test"
+                    : `Roll remorse test (${diceCount} ${diceCount === 1 ? "die" : "dice"})`
+            }
             zIndex={tooltipZIndex}
         >
             <ActionIcon
@@ -132,16 +136,20 @@ const RemorseTestButton = ({
             >
                 <motion.div
                     key={animationKey}
-                    animate={isSuccess ? {
-                        rotate: [0, -6, 6, -3, 3, 0],
-                        y: [0, 2, -2, 0],
-                    } : {
-                        x: [0, -2, 2, -2, 2, 0],
-                        rotate: [0, -8, 8, 0],
-                    }}
+                    animate={
+                        isSuccess
+                            ? {
+                                  rotate: [0, -6, 6, -3, 3, 0],
+                                  y: [0, 2, -2, 0]
+                              }
+                            : {
+                                  x: [0, -2, 2, -2, 2, 0],
+                                  rotate: [0, -8, 8, 0]
+                              }
+                    }
                     transition={{
                         duration: 0.6,
-                        ease: "easeInOut",
+                        ease: "easeInOut"
                     }}
                     style={{ display: "inline-block" }}
                 >

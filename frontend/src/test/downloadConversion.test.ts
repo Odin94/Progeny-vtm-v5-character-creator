@@ -7,23 +7,23 @@ import { getBasicTestCharacter } from "./testUtils"
 // Mock the notifications module
 vi.mock("@mantine/notifications", () => ({
     notifications: {
-        show: vi.fn(),
-    },
+        show: vi.fn()
+    }
 }))
 
 // Mock the PDF-lib and fontkit modules
 vi.mock("pdf-lib", () => ({
     PDFDocument: {
-        load: vi.fn(),
+        load: vi.fn()
     },
     PDFBool: {},
     PDFFont: {},
     PDFForm: {},
-    PDFName: {},
+    PDFName: {}
 }))
 
 vi.mock("@pdf-lib/fontkit", () => ({
-    default: vi.fn(),
+    default: vi.fn()
 }))
 
 // Mock fetch for font loading
@@ -32,19 +32,19 @@ global.fetch = vi.fn()
 // Mock window.atob for base64 decoding
 Object.defineProperty(window, "atob", {
     writable: true,
-    value: vi.fn((str: string) => Buffer.from(str, "base64").toString("binary")),
+    value: vi.fn((str: string) => Buffer.from(str, "base64").toString("binary"))
 })
 
 // Mock anchor element for download
 const mockAnchor = {
     href: "",
     download: "",
-    click: vi.fn(),
+    click: vi.fn()
 }
 
 Object.defineProperty(document, "createElement", {
     writable: true,
-    value: vi.fn(() => mockAnchor),
+    value: vi.fn(() => mockAnchor)
 })
 
 describe("Download Conversion Logic", () => {
@@ -129,7 +129,7 @@ describe("Download Conversion Logic", () => {
                 humanity: 0,
                 bloodPotency: 0,
                 maxHealth: 0,
-                willpower: 0,
+                willpower: 0
             }
 
             const result = createWoD5EVttJson(minimalCharacter)
@@ -154,8 +154,8 @@ describe("Download Conversion Logic", () => {
                 ...mockCharacter,
                 attributes: {
                     ...mockCharacter.attributes,
-                    strength: -1, // Invalid negative value
-                },
+                    strength: -1 // Invalid negative value
+                }
             } as Character
 
             const result = createWoD5EVttJson(invalidCharacter)
@@ -175,13 +175,13 @@ describe("Download Conversion Logic", () => {
                 embedFont: vi.fn().mockResolvedValue({}),
                 getForm: vi.fn().mockReturnValue({
                     getCheckBox: vi.fn().mockReturnValue({
-                        check: vi.fn(),
+                        check: vi.fn()
                     }),
                     getTextField: vi.fn().mockReturnValue({
-                        setText: vi.fn(),
-                    }),
+                        setText: vi.fn()
+                    })
                 }),
-                save: vi.fn().mockResolvedValue(mockPdfBytes),
+                save: vi.fn().mockResolvedValue(mockPdfBytes)
             }
 
             const { PDFDocument } = await import("pdf-lib")
@@ -189,7 +189,7 @@ describe("Download Conversion Logic", () => {
 
             // Mock fetch for font loading
             vi.mocked(fetch).mockResolvedValue({
-                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
             // Mock base64Pdf_nerdbert
@@ -197,7 +197,7 @@ describe("Download Conversion Logic", () => {
                 const actual = await vi.importActual("~/generator/pdfCreator")
                 return {
                     ...actual,
-                    base64Pdf_nerdbert: "mock-base64-pdf-data",
+                    base64Pdf_nerdbert: "mock-base64-pdf-data"
                 }
             })
 
@@ -219,9 +219,9 @@ describe("Download Conversion Logic", () => {
                 embedFont: vi.fn().mockResolvedValue({}),
                 getForm: vi.fn().mockReturnValue({
                     getTextField: vi.fn().mockReturnValue({
-                        setText: vi.fn(),
-                    }),
-                }),
+                        setText: vi.fn()
+                    })
+                })
             }
 
             const { PDFDocument } = await import("pdf-lib")
@@ -229,7 +229,7 @@ describe("Download Conversion Logic", () => {
 
             // Mock fetch for font loading
             vi.mocked(fetch).mockResolvedValue({
-                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
             const result = await testTemplate("mock-base64-pdf-data")
@@ -243,17 +243,17 @@ describe("Download Conversion Logic", () => {
             // Mock form operations
             const mockForm = {
                 getCheckBox: vi.fn().mockReturnValue({
-                    check: vi.fn(),
+                    check: vi.fn()
                 }),
                 getTextField: vi.fn().mockReturnValue({
-                    setText: vi.fn(),
-                }),
+                    setText: vi.fn()
+                })
             }
 
             const mockPdfDoc = {
                 registerFontkit: vi.fn(),
                 embedFont: vi.fn().mockResolvedValue({}),
-                getForm: vi.fn().mockReturnValue(mockForm),
+                getForm: vi.fn().mockReturnValue(mockForm)
             }
 
             const { PDFDocument } = await import("pdf-lib")
@@ -261,7 +261,7 @@ describe("Download Conversion Logic", () => {
 
             // Mock fetch for font loading
             vi.mocked(fetch).mockResolvedValue({
-                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
             try {
@@ -301,12 +301,12 @@ describe("Download Conversion Logic", () => {
                 embedFont: vi.fn().mockRejectedValue(new Error("Font embed failed")),
                 getForm: vi.fn().mockReturnValue({
                     getCheckBox: vi.fn().mockReturnValue({
-                        check: vi.fn(),
+                        check: vi.fn()
                     }),
                     getTextField: vi.fn().mockReturnValue({
-                        setText: vi.fn(),
-                    }),
-                }),
+                        setText: vi.fn()
+                    })
+                })
             }
 
             const { PDFDocument } = await import("pdf-lib")
@@ -326,7 +326,7 @@ describe("Download Conversion Logic", () => {
             })
             Object.defineProperty(window, "atob", {
                 writable: true,
-                value: mockAtob,
+                value: mockAtob
             })
 
             try {

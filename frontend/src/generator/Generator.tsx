@@ -110,7 +110,13 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                     />
                 )
             case "final":
-                return <Final character={character} setCharacter={setCharacter} setSelectedStep={setSelectedStep} />
+                return (
+                    <Final
+                        character={character}
+                        setCharacter={setCharacter}
+                        setSelectedStep={setSelectedStep}
+                    />
+                )
             default:
                 return <Text size={"xl"}>{`Error: Step ${selectedStep} is not implemented`}</Text>
         }
@@ -120,7 +126,19 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
         // position: relative is the anchor for ShellStyle-based steps that use position: absolute
         <div style={{ height: "100%", width: "100%", position: "relative", flex: 1, minHeight: 0 }}>
             {/* 960px centered wrapper for steps that don't use their own full-width shell */}
-            <div style={{ maxWidth: 960, marginLeft: "auto", marginRight: "auto", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 0 }}>
+            <div
+                style={{
+                    maxWidth: 960,
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: 0
+                }}
+            >
                 <ErrorBoundary key={selectedStep}>{getStepComponent()}</ErrorBoundary>
             </div>
         </div>

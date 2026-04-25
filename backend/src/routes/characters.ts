@@ -8,7 +8,7 @@ import {
     characterParamsSchema,
     CreateCharacterInput,
     CharacterParams,
-    UpdateCharacterInput,
+    UpdateCharacterInput
 } from "../schemas/character.js"
 import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
@@ -22,8 +22,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                body: zodToFastifySchema(createCharacterSchema),
-            },
+                body: zodToFastifySchema(createCharacterSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             try {
@@ -41,7 +41,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         endpoint: "/characters",
                         method: "POST",
                         userId,
-                        characterCount: characterCount[0]?.count,
+                        characterCount: characterCount[0]?.count
                     })
                     await trackEvent(
                         "character_limit_exceeded",
@@ -50,7 +50,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                             method: "POST",
                             userId,
                             characterCount: characterCount[0]?.count,
-                            limit: 100,
+                            limit: 100
                         },
                         userId,
                         request
@@ -58,7 +58,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     reply.code(403).send({
                         error: "Character limit reached",
                         message:
-                            "You have reached the maximum limit of 100 characters. Please delete some characters before creating new ones.",
+                            "You have reached the maximum limit of 100 characters. Please delete some characters before creating new ones."
                     })
                     return
                 }
@@ -68,7 +68,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
 
                 // Ensure user exists in database
                 const user = await db.query.users.findFirst({
-                    where: eq(schema.users.id, userId),
+                    where: eq(schema.users.id, userId)
                 })
 
                 if (!user) {
@@ -77,7 +77,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         id: userId,
                         email: request.user!.email,
                         firstName: request.user!.firstName,
-                        lastName: request.user!.lastName,
+                        lastName: request.user!.lastName
                     })
                 }
 
@@ -91,7 +91,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         name,
                         data: JSON.stringify(characterDataWithVersion),
                         version,
-                        characterVersion: 0,
+                        characterVersion: 0
                     })
                     .returning()
 
@@ -100,7 +100,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     method: "POST",
                     userId,
                     characterId,
-                    characterName: name,
+                    characterName: name
                 })
 
                 await trackEvent(
@@ -110,7 +110,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         characterId,
-                        characterName: name,
+                        characterName: name
                     },
                     userId,
                     request
@@ -119,17 +119,17 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const { userId: _, ...characterWithoutUserId } = character
                 reply.code(201).send({
                     ...characterWithoutUserId,
-                    data: JSON.parse(character.data),
+                    data: JSON.parse(character.data)
                 })
             } catch (error) {
                 logger.error("Failed to create character", error, {
                     endpoint: "/characters",
                     method: "POST",
-                    userId: request.user?.id ?? null,
+                    userId: request.user?.id ?? null
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to create character",
+                    message: error instanceof Error ? error.message : "Failed to create character"
                 })
             }
         }
@@ -139,14 +139,14 @@ export async function characterRoutes(fastify: FastifyInstance) {
     fastify.get(
         "/characters",
         {
-            preHandler: authenticateUser,
+            preHandler: authenticateUser
         },
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
 
             // Get owned characters
             const ownedCharacters = await db.query.characters.findMany({
-                where: eq(schema.characters.userId, userId),
+                where: eq(schema.characters.userId, userId)
             })
 
             // Get shared characters
@@ -154,8 +154,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 where: eq(schema.characterShares.sharedWithUserId, userId),
                 with: {
                     character: true,
-                    sharedBy: true,
-                },
+                    sharedBy: true
+                }
             })
 
             const sharedCharacters = sharedShares.map((share) => {
@@ -163,13 +163,16 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 return {
                     ...characterWithoutUserId,
                     shared: true,
-                    sharedBy: share.sharedBy?.nickname || null,
+                    sharedBy: share.sharedBy?.nickname || null
                 }
             })
 
-            const allCharacters = [...ownedCharacters.map((c) => ({ ...c, shared: false })), ...sharedCharacters].map((c) => ({
+            const allCharacters = [
+                ...ownedCharacters.map((c) => ({ ...c, shared: false })),
+                ...sharedCharacters
+            ].map((c) => ({
                 ...c,
-                data: JSON.parse(c.data),
+                data: JSON.parse(c.data)
             }))
 
             await trackEvent(
@@ -180,7 +183,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     userId,
                     ownedCount: ownedCharacters.length,
                     sharedCount: sharedCharacters.length,
-                    totalCount: allCharacters.length,
+                    totalCount: allCharacters.length
                 },
                 userId,
                 request
@@ -196,15 +199,15 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: zodToFastifySchema(characterParamsSchema),
-            },
+                params: zodToFastifySchema(characterParamsSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
             const { id } = request.params as CharacterParams
 
             const character = await db.query.characters.findFirst({
-                where: eq(schema.characters.id, id),
+                where: eq(schema.characters.id, id)
             })
 
             if (!character) {
@@ -215,11 +218,16 @@ export async function characterRoutes(fastify: FastifyInstance) {
             // Check if user owns or has access to character
             const isOwner = character.userId === userId
             const isShared = await db.query.characterShares.findFirst({
-                where: and(eq(schema.characterShares.characterId, id), eq(schema.characterShares.sharedWithUserId, userId)),
+                where: and(
+                    eq(schema.characterShares.characterId, id),
+                    eq(schema.characterShares.sharedWithUserId, userId)
+                )
             })
 
             if (!isOwner && !isShared) {
-                reply.code(403).send({ error: "Forbidden: You don't have access to this character" })
+                reply
+                    .code(403)
+                    .send({ error: "Forbidden: You don't have access to this character" })
                 return
             }
 
@@ -231,7 +239,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     userId,
                     characterId: id,
                     isOwner,
-                    isShared: !!isShared,
+                    isShared: !!isShared
                 },
                 userId,
                 request
@@ -241,7 +249,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
             reply.send({
                 ...characterWithoutUserId,
                 data: JSON.parse(character.data),
-                canEdit: isOwner,
+                canEdit: isOwner
             })
         }
     )
@@ -256,8 +264,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
             preHandler: authenticateUser,
             schema: {
                 params: zodToFastifySchema(characterParamsSchema),
-                body: zodToFastifySchema(updateCharacterSchema),
-            },
+                body: zodToFastifySchema(updateCharacterSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const { id: characterId } = request.params as CharacterParams
@@ -266,7 +274,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const userId = request.user!.id
 
                 const character = await db.query.characters.findFirst({
-                    where: eq(schema.characters.id, characterId),
+                    where: eq(schema.characters.id, characterId)
                 })
 
                 if (!character) {
@@ -274,7 +282,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         endpoint: "/characters/:id",
                         method: "PUT",
                         userId,
-                        characterId,
+                        characterId
                     })
                     reply.code(404).send({ error: "Character not found" })
                     return
@@ -286,20 +294,24 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "PUT",
                         userId,
                         characterId,
-                        characterOwnerId: character.userId,
+                        characterOwnerId: character.userId
                     })
-                    reply.code(403).send({ error: "Forbidden: You can only edit your own characters" })
+                    reply
+                        .code(403)
+                        .send({ error: "Forbidden: You can only edit your own characters" })
                     return
                 }
 
                 // Increment characterVersion on update
                 const currentCharacter = await db.query.characters.findFirst({
-                    where: eq(schema.characters.id, characterId),
+                    where: eq(schema.characters.id, characterId)
                 })
                 const newCharacterVersion = (currentCharacter?.characterVersion ?? 0) + 1
 
                 // Update character data to include characterVersion
-                const characterData = updateData.data ? { ...updateData.data, characterVersion: newCharacterVersion } : undefined
+                const characterData = updateData.data
+                    ? { ...updateData.data, characterVersion: newCharacterVersion }
+                    : undefined
 
                 const [updated] = await db
                     .update(schema.characters)
@@ -308,7 +320,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         ...(characterData && { data: JSON.stringify(characterData) }),
                         ...(updateData.version && { version: updateData.version }),
                         characterVersion: newCharacterVersion,
-                        updatedAt: new Date(),
+                        updatedAt: new Date()
                     })
                     .where(eq(schema.characters.id, characterId))
                     .returning()
@@ -318,7 +330,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     method: "PUT",
                     userId,
                     characterId,
-                    updatedFields: Object.keys(updateData),
+                    updatedFields: Object.keys(updateData)
                 })
 
                 await trackEvent(
@@ -328,7 +340,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "PUT",
                         userId,
                         characterId,
-                        updatedFields: Object.keys(updateData),
+                        updatedFields: Object.keys(updateData)
                     },
                     userId,
                     request
@@ -337,18 +349,18 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const { userId: _, ...characterWithoutUserId } = updated
                 reply.send({
                     ...characterWithoutUserId,
-                    data: JSON.parse(updated.data),
+                    data: JSON.parse(updated.data)
                 })
             } catch (error) {
                 logger.error("Failed to update character", error, {
                     endpoint: "/characters/:id",
                     method: "PUT",
                     userId: request.user?.id ?? null,
-                    characterId,
+                    characterId
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to update character",
+                    message: error instanceof Error ? error.message : "Failed to update character"
                 })
             }
         }
@@ -360,8 +372,8 @@ export async function characterRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: zodToFastifySchema(characterParamsSchema),
-            },
+                params: zodToFastifySchema(characterParamsSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const { id: characterId } = request.params as CharacterParams
@@ -369,7 +381,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const userId = request.user!.id
 
                 const character = await db.query.characters.findFirst({
-                    where: eq(schema.characters.id, characterId),
+                    where: eq(schema.characters.id, characterId)
                 })
 
                 if (!character) {
@@ -377,7 +389,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         endpoint: "/characters/:id",
                         method: "DELETE",
                         userId,
-                        characterId,
+                        characterId
                     })
                     reply.code(404).send({ error: "Character not found" })
                     return
@@ -389,9 +401,11 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "DELETE",
                         userId,
                         characterId,
-                        characterOwnerId: character.userId,
+                        characterOwnerId: character.userId
                     })
-                    reply.code(403).send({ error: "Forbidden: You can only delete your own characters" })
+                    reply
+                        .code(403)
+                        .send({ error: "Forbidden: You can only delete your own characters" })
                     return
                 }
 
@@ -402,7 +416,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     method: "DELETE",
                     userId,
                     characterId,
-                    character: JSON.stringify(character),
+                    character: JSON.stringify(character)
                 })
 
                 await trackEvent(
@@ -412,7 +426,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "DELETE",
                         userId,
                         characterId,
-                        character: JSON.stringify(character),
+                        character: JSON.stringify(character)
                     },
                     userId,
                     request
@@ -424,11 +438,11 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     endpoint: "/characters/:id",
                     method: "DELETE",
                     userId: request.user?.id ?? null,
-                    characterId,
+                    characterId
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to delete character",
+                    message: error instanceof Error ? error.message : "Failed to delete character"
                 })
             }
         }

@@ -48,8 +48,8 @@ const RouseCheckButton = ({
                 ...character,
                 ephemeral: {
                     ...character.ephemeral,
-                    hunger: newHunger,
-                },
+                    hunger: newHunger
+                }
             })
         }
 
@@ -63,7 +63,7 @@ const RouseCheckButton = ({
 
         notifications.show({
             message,
-            color: success ? primaryColor : "red",
+            color: success ? primaryColor : "red"
         })
 
         try {
@@ -71,7 +71,7 @@ const RouseCheckButton = ({
                 roll,
                 success,
                 hunger_before: hunger,
-                hunger_after: newHunger,
+                hunger_after: newHunger
             })
         } catch (error) {
             console.warn("PostHog rouse-check tracking failed:", error)
@@ -107,20 +107,23 @@ const RouseCheckButton = ({
             >
                 <motion.div
                     key={animationKey}
-                    animate={isSuccess ? {
-                        rotate: [0, -6, 6, -3, 3, 0],
-                        y: [0, 2, -2, 0],
-                    } : {
-                        x: [0, -2, 2, -2, 2, 0],
-                        rotate: [0, -8, 8, 0],
-                    }}
+                    animate={
+                        isSuccess
+                            ? {
+                                  rotate: [0, -6, 6, -3, 3, 0],
+                                  y: [0, 2, -2, 0]
+                              }
+                            : {
+                                  x: [0, -2, 2, -2, 2, 0],
+                                  rotate: [0, -8, 8, 0]
+                              }
+                    }
                     transition={{
                         duration: 0.6,
-                        ease: "easeInOut",
+                        ease: "easeInOut"
                     }}
                     style={{ display: "inline-block" }}
                 >
-
                     <IconDroplet size={iconSize} />
                 </motion.div>
             </ActionIcon>

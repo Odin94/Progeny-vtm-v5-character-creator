@@ -4,15 +4,18 @@ import { CSSProperties, ReactNode } from "react"
 import { RAW_GREY, rgba } from "~/theme/colors"
 import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 
-export const ConfirmationModalStyle = (phoneScreen: boolean): Partial<Record<ModalStylesNames, CSSProperties>> => ({
+export const ConfirmationModalStyle = (
+    phoneScreen: boolean
+): Partial<Record<ModalStylesNames, CSSProperties>> => ({
     content: {
         border: "1px solid rgba(125, 91, 72, 0.38)",
-        background: "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
-        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+        background:
+            "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
+        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
     },
     body: {
-        padding: phoneScreen ? "1.1rem" : "1.35rem",
-    },
+        padding: phoneScreen ? "1.1rem" : "1.35rem"
+    }
 })
 
 export const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
@@ -20,21 +23,21 @@ export const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
     fontSize: phoneScreen ? "1.2rem" : "1.35rem",
     letterSpacing: "0.08em",
     textTransform: "uppercase" as const,
-    color: "rgba(244, 236, 232, 0.95)",
+    color: "rgba(244, 236, 232, 0.95)"
 })
 
 export const confirmationModalBodyStyle = {
     fontFamily: "Inter, Segoe UI, sans-serif",
     fontSize: "0.9rem",
-    color: rgba(RAW_GREY, 0.62),
+    color: rgba(RAW_GREY, 0.62)
 } as const
 
 export const confirmationModalCancelButtonStyles = {
     root: {
         letterSpacing: "0.08em",
         textTransform: "uppercase" as const,
-        fontFamily: "Cinzel, Georgia, serif",
-    },
+        fontFamily: "Cinzel, Georgia, serif"
+    }
 } as const
 
 type ConfirmActionModalProps = {
@@ -62,7 +65,7 @@ const ConfirmActionModal = ({
     confirmColor = "red",
     loading = false,
     disabled = false,
-    children,
+    children
 }: ConfirmActionModalProps) => {
     const phoneScreen = useMediaQuery("(max-width: 48em)")
 
@@ -91,7 +94,12 @@ const ConfirmActionModal = ({
                 <Divider color="rgba(125, 91, 72, 0.28)" />
 
                 <Group justify="space-between">
-                    <Button color="gray" variant="subtle" onClick={onClose} styles={confirmationModalCancelButtonStyles}>
+                    <Button
+                        color="gray"
+                        variant="subtle"
+                        onClick={onClose}
+                        styles={confirmationModalCancelButtonStyles}
+                    >
                         {cancelLabel}
                     </Button>
                     <Button
@@ -99,7 +107,11 @@ const ConfirmActionModal = ({
                         onClick={onConfirm}
                         loading={loading}
                         disabled={disabled}
-                        styles={confirmColor === "red" ? confirmationModalDangerConfirmButtonStyles : undefined}
+                        styles={
+                            confirmColor === "red"
+                                ? confirmationModalDangerConfirmButtonStyles
+                                : undefined
+                        }
                     >
                         {confirmLabel}
                     </Button>

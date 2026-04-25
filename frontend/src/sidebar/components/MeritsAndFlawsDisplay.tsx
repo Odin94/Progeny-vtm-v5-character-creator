@@ -9,13 +9,13 @@ export type MeritsAndFlawsProps = {
 
 const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
     const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New",
+        fontFamily: "Courier New"
     }
     const nameStyle: React.CSSProperties = {
         ...textStyle,
         width: "8ch",
         flexShrink: 0,
-        display: "inline-block",
+        display: "inline-block"
     }
 
     return (
@@ -32,7 +32,10 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
                                             {merit.name.slice(0, 7)}:
                                         </Text>
                                         <Box style={textStyle}>
-                                            <Tally n={merit.level} style={{ color: "var(--mantine-color-green-6)" }} />
+                                            <Tally
+                                                n={merit.level}
+                                                style={{ color: "var(--mantine-color-green-6)" }}
+                                            />
                                         </Box>
                                     </Group>
                                 </List.Item>
@@ -51,7 +54,10 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
                                             {flaw.name.slice(0, 7)}:
                                         </Text>
                                         <Box style={textStyle}>
-                                            <Tally n={flaw.level} style={{ color: "var(--mantine-color-red-6)" }} />
+                                            <Tally
+                                                n={flaw.level}
+                                                style={{ color: "var(--mantine-color-red-6)" }}
+                                            />
                                         </Box>
                                     </Group>
                                 </List.Item>

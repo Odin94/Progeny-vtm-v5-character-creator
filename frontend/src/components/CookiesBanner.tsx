@@ -1,49 +1,48 @@
-import { Button, CloseButton, Group, Paper, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
-import { useEffect, useState } from 'react';
-import posthog from 'posthog-js';
-import { globals } from '~/globals';
-import { IconCookie } from '@tabler/icons-react';
-import { useAuth } from '~/hooks/useAuth';
+import { Button, CloseButton, Group, Paper, Text } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
+import { useEffect, useState } from "react"
+import posthog from "posthog-js"
+import { globals } from "~/globals"
+import { IconCookie } from "@tabler/icons-react"
+import { useAuth } from "~/hooks/useAuth"
 
 const LEARN_MORE_HREF = "https://odin-matthias.de/datenschutzerklaerung"
 
 export const CookiesBanner = () => {
-    const [showBanner, setShowBanner] = useState(false);
-    const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`);
-    const { isAuthenticated } = useAuth();
+    const [showBanner, setShowBanner] = useState(false)
+    const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
+    const { isAuthenticated } = useAuth()
 
-
-    const consentStatus = posthog.get_explicit_consent_status();
+    const consentStatus = posthog.get_explicit_consent_status()
 
     useEffect(() => {
-        setShowBanner(!isAuthenticated && consentStatus === "pending");
-    }, [consentStatus, isAuthenticated]);
+        setShowBanner(!isAuthenticated && consentStatus === "pending")
+    }, [consentStatus, isAuthenticated])
 
     const handleAccept = () => {
         try {
-            posthog.opt_in_capturing();
-            setShowBanner(false);
+            posthog.opt_in_capturing()
+            setShowBanner(false)
         } catch (error) {
-            console.warn("Failed to opt in PostHog capturing:", error);
+            console.warn("Failed to opt in PostHog capturing:", error)
         }
-    };
+    }
 
     const handleDecline = () => {
         try {
-            posthog.opt_out_capturing();
-            setShowBanner(false);
+            posthog.opt_out_capturing()
+            setShowBanner(false)
         } catch (error) {
-            console.warn("Failed to opt out PostHog capturing:", error);
+            console.warn("Failed to opt out PostHog capturing:", error)
         }
-    };
+    }
 
     const handleClose = () => {
-        setShowBanner(false);
-    };
+        setShowBanner(false)
+    }
 
     if (!showBanner) {
-        return null;
+        return null
     }
 
     return (
@@ -55,7 +54,7 @@ export const CookiesBanner = () => {
                 transform: "translateX(-50%)",
                 zIndex: 2500,
                 maxWidth: "400px",
-                width: "calc(100% - 2rem)",
+                width: "calc(100% - 2rem)"
             }}
         >
             <Paper withBorder p="lg" radius="md" shadow="md">
@@ -66,10 +65,16 @@ export const CookiesBanner = () => {
                         </Text>
                         <IconCookie size={25} />
                     </Group>
-                    <CloseButton mr={-9} mt={-9} aria-label="Close cookie banner" onClick={handleClose} />
+                    <CloseButton
+                        mr={-9}
+                        mt={-9}
+                        aria-label="Close cookie banner"
+                        onClick={handleClose}
+                    />
                 </Group>
                 <Text c="dimmed" fz="xs">
-                    I use cookies to get better insights on usage patterns, which helps me improve Progeny for everyone.
+                    I use cookies to get better insights on usage patterns, which helps me improve
+                    Progeny for everyone.
                     <br /> More info:{" "}
                     <a
                         href={LEARN_MORE_HREF}
@@ -91,5 +96,5 @@ export const CookiesBanner = () => {
                 </Group>
             </Paper>
         </div>
-    );
+    )
 }

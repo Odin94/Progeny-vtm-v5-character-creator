@@ -5,7 +5,11 @@ import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
 import { globals } from "../../globals"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
-import { GeneratorStepHero, generatorFieldStyles, getGeneratorFieldStyles } from "./sharedGeneratorUi"
+import {
+    GeneratorStepHero,
+    generatorFieldStyles,
+    getGeneratorFieldStyles
+} from "./sharedGeneratorUi"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type BasicsPickerProps = {
@@ -21,7 +25,7 @@ const inputStyles = {
         fontWeight: 800,
         letterSpacing: "0.16em",
         color: rgba(RAW_GOLD, 0.9),
-        marginBottom: 6,
+        marginBottom: 6
     },
     input: {
         ...generatorFieldStyles.input,
@@ -34,9 +38,9 @@ const inputStyles = {
         fontSize: "1rem",
         transition: "border-color 180ms ease",
         ":focus": {
-            borderColor: "rgba(190, 75, 219, 1)",
-        },
-    },
+            borderColor: "rgba(190, 75, 219, 1)"
+        }
+    }
 }
 
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
@@ -61,16 +65,19 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     opacity: 1;
                 }
             `}</style>
-            <ScrollArea h={height - 230} type="always" scrollbarSize={nightfallScrollbarSize} styles={nightfallScrollAreaStyles}>
-                <GeneratorStepHero leadText="Come up with the" accentText="Basics" marginBottom={phoneScreen ? 18 : 26} />
+            <ScrollArea
+                h={height - 230}
+                type="always"
+                scrollbarSize={nightfallScrollbarSize}
+                styles={nightfallScrollAreaStyles}
+            >
+                <GeneratorStepHero
+                    leadText="Come up with the"
+                    accentText="Basics"
+                    marginBottom={phoneScreen ? 18 : 26}
+                />
 
-                <Stack
-                    gap="lg"
-                    maw={420}
-                    mx="auto"
-                    px={phoneScreen ? 12 : 0}
-                    pb="xl"
-                >
+                <Stack gap="lg" maw={420} mx="auto" px={phoneScreen ? 12 : 0} pb="xl">
                     <TextInput
                         value={name}
                         onChange={(e) => setName(e.currentTarget.value)}
@@ -126,7 +133,14 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                         display="block"
                         styles={generatorConfirmButtonStyles}
                         onClick={() => {
-                            setCharacter({ ...character, name, sire, ambition, desire, description })
+                            setCharacter({
+                                ...character,
+                                name,
+                                sire,
+                                ambition,
+                                desire,
+                                description
+                            })
                             nextStep()
                         }}
                     >

@@ -48,7 +48,7 @@ export const generatorFieldStyles = {
         letterSpacing: "0.1em",
         textTransform: "uppercase" as const,
         color: rgba(RAW_GOLD, 1),
-        marginBottom: 8,
+        marginBottom: 8
     },
     mutedLabel: {
         fontFamily: "Cinzel, Georgia, serif",
@@ -56,26 +56,26 @@ export const generatorFieldStyles = {
         letterSpacing: "0.1em",
         textTransform: "uppercase" as const,
         color: rgba(RAW_GREY, 0.72),
-        marginBottom: 8,
+        marginBottom: 8
     },
     description: {
         fontFamily: "Inter, Segoe UI, sans-serif",
         fontSize: "0.76rem",
         color: rgba(RAW_GREY, 0.7),
-        marginBottom: 4,
+        marginBottom: 4
     },
     input: {
         background: "rgba(20, 16, 18, 0.82)",
         borderColor: "rgba(125, 91, 72, 0.4)",
         color: "rgba(244, 236, 232, 0.95)",
-        fontFamily: "Inter, Segoe UI, sans-serif",
-    },
+        fontFamily: "Inter, Segoe UI, sans-serif"
+    }
 } as const
 
 export const getGeneratorFieldStyles = (labelTone: "gold" | "muted" = "gold") => ({
     label: labelTone === "gold" ? generatorFieldStyles.goldLabel : generatorFieldStyles.mutedLabel,
     input: generatorFieldStyles.input,
-    description: generatorFieldStyles.description,
+    description: generatorFieldStyles.description
 })
 
 export const GeneratorStepHero = ({
@@ -86,7 +86,7 @@ export const GeneratorStepHero = ({
     maxWidth,
     mobileTitleSize = "1.95rem",
     desktopTitleSize = "2.35rem",
-    marginBottom = 26,
+    marginBottom = 26
 }: GeneratorStepHeroProps) => (
     <Stack gap={6} align="center" mb={marginBottom}>
         <Text
@@ -96,7 +96,7 @@ export const GeneratorStepHero = ({
                 fontFamily: "Crimson Text, Georgia, serif",
                 fontSize: `clamp(${mobileTitleSize}, 4vw, ${desktopTitleSize})`,
                 lineHeight: 1.1,
-                color: "rgba(244, 236, 232, 0.95)",
+                color: "rgba(244, 236, 232, 0.95)"
             }}
         >
             {leadText}{" "}
@@ -104,7 +104,7 @@ export const GeneratorStepHero = ({
                 style={{
                     fontFamily: "Cinzel, Georgia, serif",
                     letterSpacing: "0.05em",
-                    color: rgba(RAW_RED, 1),
+                    color: rgba(RAW_RED, 1)
                 }}
             >
                 {accentText}
@@ -118,7 +118,7 @@ export const GeneratorStepHero = ({
                     fontFamily: "Inter, Segoe UI, sans-serif",
                     fontSize: "clamp(0.82rem, 2vw, 0.9rem)",
                     letterSpacing: "0.04em",
-                    color: rgba(RAW_GREY, 0.5),
+                    color: rgba(RAW_GREY, 0.5)
                 }}
             >
                 {description}
@@ -132,7 +132,7 @@ export const GeneratorStepHero = ({
                     fontFamily: "Inter, Segoe UI, sans-serif",
                     fontSize: "0.76rem",
                     letterSpacing: "0.05em",
-                    color: rgba(RAW_GREY, 0.36),
+                    color: rgba(RAW_GREY, 0.36)
                 }}
             >
                 {secondaryDescription}
@@ -146,7 +146,7 @@ export const GeneratorSectionDivider = ({
     lineHeight = 2,
     accentAlpha = 0.3,
     titleSize = "0.95rem",
-    marginY = "lg",
+    marginY = "lg"
 }: GeneratorSectionDividerProps) => (
     <Box my={marginY}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -154,7 +154,7 @@ export const GeneratorSectionDivider = ({
                 style={{
                     flex: 1,
                     height: `${lineHeight}px`,
-                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, accentAlpha)} 50%, transparent 100%)`,
+                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, accentAlpha)} 50%, transparent 100%)`
                 }}
             />
             <Text
@@ -165,7 +165,7 @@ export const GeneratorSectionDivider = ({
                     letterSpacing: titleSize === "0.88rem" ? "0.2em" : "0.22em",
                     textTransform: "uppercase",
                     color: rgba(RAW_RED, 1),
-                    whiteSpace: "nowrap",
+                    whiteSpace: "nowrap"
                 }}
             >
                 {label}
@@ -174,7 +174,7 @@ export const GeneratorSectionDivider = ({
                 style={{
                     flex: 1,
                     height: `${lineHeight}px`,
-                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, accentAlpha)} 50%, transparent 100%)`,
+                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, accentAlpha)} 50%, transparent 100%)`
                 }}
             />
         </div>
@@ -188,7 +188,7 @@ export const GeneratorPhasePrompt = ({
     showChevron = true,
     footerText,
     caption,
-    marginBottom = "md",
+    marginBottom = "md"
 }: GeneratorPhasePromptProps) => (
     <Stack gap={6} align="center" mb={marginBottom}>
         {caption ? (
@@ -198,7 +198,7 @@ export const GeneratorPhasePrompt = ({
                     fontFamily: "Inter, Segoe UI, sans-serif",
                     fontSize: "0.78rem",
                     letterSpacing: "0.06em",
-                    color: rgba(RAW_GREY, 0.42),
+                    color: rgba(RAW_GREY, 0.42)
                 }}
             >
                 {caption}
@@ -214,7 +214,7 @@ export const GeneratorPhasePrompt = ({
                     style={{
                         position: "relative",
                         height: phoneScreen ? "1.9rem" : "2.35rem",
-                        width: "100%",
+                        width: "100%"
                     }}
                 >
                     <motion.div
@@ -226,27 +226,39 @@ export const GeneratorPhasePrompt = ({
                             inset: 0,
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
+                            justifyContent: "center"
                         }}
                     >
                         <Text
                             ta="center"
                             style={{
                                 fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: isActive ? (phoneScreen ? "1.15rem" : "1.45rem") : phoneScreen ? "0.95rem" : "1rem",
+                                fontSize: isActive
+                                    ? phoneScreen
+                                        ? "1.15rem"
+                                        : "1.45rem"
+                                    : phoneScreen
+                                      ? "0.95rem"
+                                      : "1rem",
                                 lineHeight: 1.1,
-                                color: isActive ? "rgba(244, 236, 232, 0.95)" : rgba(RAW_GREY, 0.56),
-                                transition: "all 220ms ease",
+                                color: isActive
+                                    ? "rgba(244, 236, 232, 0.95)"
+                                    : rgba(RAW_GREY, 0.56),
+                                transition: "all 220ms ease"
                             }}
                         >
                             {isActive && showChevron ? (
                                 <motion.span
                                     animate={{ opacity: [0.65, 1, 0.65] }}
-                                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                                    transition={{
+                                        duration: 1.8,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
                                     style={{
                                         fontFamily: "Cinzel, Georgia, serif",
                                         color: rgba(RAW_RED, 1),
-                                        marginRight: "0.4rem",
+                                        marginRight: "0.4rem"
                                     }}
                                 >
                                     {"›"}
@@ -258,7 +270,7 @@ export const GeneratorPhasePrompt = ({
                                     fontFamily: "Cinzel, Georgia, serif",
                                     letterSpacing: "0.05em",
                                     color: isActive ? rgba(RAW_RED, 1) : "inherit",
-                                    textDecoration: isPast ? "line-through" : "none",
+                                    textDecoration: isPast ? "line-through" : "none"
                                 }}
                             >
                                 {line.bold}
@@ -272,7 +284,7 @@ export const GeneratorPhasePrompt = ({
                                         fontSize: phoneScreen ? "0.68rem" : "0.72rem",
                                         letterSpacing: "0.11em",
                                         textTransform: "uppercase",
-                                        opacity: isActive ? 0.72 : 0.5,
+                                        opacity: isActive ? 0.72 : 0.5
                                     }}
                                 >
                                     lvl {line.level}
@@ -290,7 +302,7 @@ export const GeneratorPhasePrompt = ({
                     fontFamily: "Inter, Segoe UI, sans-serif",
                     fontSize: "0.78rem",
                     letterSpacing: "0.06em",
-                    color: rgba(RAW_GREY, 0.42),
+                    color: rgba(RAW_GREY, 0.42)
                 }}
             >
                 {footerText}

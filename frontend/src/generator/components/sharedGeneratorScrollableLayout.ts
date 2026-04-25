@@ -11,12 +11,12 @@ export const generatorScrollableShellStyle = {
     overflow: "hidden",
     paddingTop: 62,
     paddingBottom: 18,
-    boxSizing: "border-box" as const,
+    boxSizing: "border-box" as const
 }
 
 export const generatorScrollableAreaStyle = {
     flex: 1,
-    minHeight: 0,
+    minHeight: 0
 }
 
 // Center content inside a full-width ScrollArea at the same width as the non-scroll steps
@@ -24,5 +24,5 @@ export const generatorScrollableContentStyle = {
     maxWidth: 960,
     marginLeft: "auto",
     marginRight: "auto",
-    width: "100%",
+    width: "100%"
 } as const

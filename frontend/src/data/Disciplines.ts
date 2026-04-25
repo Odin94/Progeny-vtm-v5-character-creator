@@ -16,35 +16,35 @@ import { clanNameSchema, DisciplineName, disciplineNameSchema } from "./NameSche
 import { Character } from "./Character"
 
 export const amalgamPrerequisiteSchema = z.object({
-  discipline: disciplineNameSchema,
-  level: z.number().min(1).int(),
+    discipline: disciplineNameSchema,
+    level: z.number().min(1).int()
 })
 
 export type AmalgamPrerequisite = z.infer<typeof amalgamPrerequisiteSchema>
 
 export const powerSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  summary: z.string(),
-  dicePool: z.string(),
-  level: z.number().min(1).int(),
-  discipline: disciplineNameSchema,
-  rouseChecks: z.number().min(0).int(),
-  amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
-  isCustom: z.boolean().optional(),
+    name: z.string(),
+    description: z.string(),
+    summary: z.string(),
+    dicePool: z.string(),
+    level: z.number().min(1).int(),
+    discipline: disciplineNameSchema,
+    rouseChecks: z.number().min(0).int(),
+    amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
+    isCustom: z.boolean().optional()
 })
 
 export type Power = z.infer<typeof powerSchema>
 
 export const ritualSchema = z.object({
-  name: z.string(),
-  summary: z.string(),
-  rouseChecks: z.number().min(0).int(),
-  requiredTime: z.string(),
-  dicePool: z.string(),
-  ingredients: z.string(),
-  level: z.number().min(1).int(),
-  discipline: disciplineNameSchema.optional(),
+    name: z.string(),
+    summary: z.string(),
+    rouseChecks: z.number().min(0).int(),
+    requiredTime: z.string(),
+    dicePool: z.string(),
+    ingredients: z.string(),
+    level: z.number().min(1).int(),
+    discipline: disciplineNameSchema.optional()
 })
 
 export type Ritual = z.infer<typeof ritualSchema>
@@ -54,14 +54,14 @@ export const disciplineSchema = z.object({
     summary: z.string(),
     powers: powerSchema.array(),
     logo: z.string(),
-    isCustom: z.boolean().optional(),
+    isCustom: z.boolean().optional()
 })
 export type Discipline = z.infer<typeof disciplineSchema>
 
 export const customDisciplineSchema = z.object({
     name: z.string(),
     summary: z.string(),
-    logo: z.string().optional().default(""),
+    logo: z.string().optional().default("")
 })
 export type CustomDiscipline = z.infer<typeof customDisciplineSchema>
 
@@ -80,7 +80,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                     "bond an animal companion. It will listen to basic commands, but full communication is not possible (unless you have Feral Whispers)",
                 dicePool: "Charisma + Animal Ken",
                 level: 1,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Sense the Beast",
@@ -90,17 +90,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "sense hostility and supernatural traits in people",
                 dicePool: "Resolve + Animalism",
                 level: 1,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Feral Whispers",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "communicate with animals. You can also call for animals and if they are nearby, they will come.",
+                summary:
+                    "communicate with animals. You can also call for animals and if they are nearby, they will come.",
                 dicePool: "Manipulation / Charisma + Animalism",
                 level: 2,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Atavism",
@@ -110,7 +111,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make an animal enrage or flee",
                 dicePool: "Composure + Animalism",
                 level: 2,
-                discipline: "animalism",
+                discipline: "animalism"
             },
 
             {
@@ -118,10 +119,11 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "Feed more effectively on animals. You can consume your famulus to temporarily gain their aspect",
+                summary:
+                    "Feed more effectively on animals. You can consume your famulus to temporarily gain their aspect",
                 dicePool: "",
                 level: 3,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Scent of Prey",
@@ -131,7 +133,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "Detect Mortals who saw Masquerade breaches",
                 dicePool: "Resolve + Animalism",
                 level: 3,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Quell the Beast",
@@ -141,27 +143,29 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "Shut down a target's drives and desires, pull vampires out of frenzy",
                 dicePool: "Charisma + Animalism",
                 level: 3,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Unliving Hive",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [{ discipline: "obfuscate", level: 2 }],
-                summary: "extend animal influence to swarms of insects, treating a swarm as a single creature",
+                summary:
+                    "extend animal influence to swarms of insects, treating a swarm as a single creature",
                 dicePool: "",
                 level: 3,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Subsume the Spirit",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "transfer your mind into an animal's body, controlling it and using its senses",
+                summary:
+                    "transfer your mind into an animal's body, controlling it and using its senses",
                 dicePool: "Manipulation + Animalism",
                 level: 4,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Animal Dominion",
@@ -171,19 +175,20 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "command flocks and packs of animals as extensions of your own body",
                 dicePool: "Charisma + Animalism",
                 level: 5,
-                discipline: "animalism",
+                discipline: "animalism"
             },
             {
                 name: "Drawing Out the Beast",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "project your Beast at the moment of frenzy, transferring it into a nearby subject",
+                summary:
+                    "project your Beast at the moment of frenzy, transferring it into a nearby subject",
                 dicePool: "Wits + Animalism",
                 level: 5,
-                discipline: "animalism",
-            },
-        ],
+                discipline: "animalism"
+            }
+        ]
     },
     auspex: {
         clans: ["Toreador", "Tremere", "Malkavian", "Hecata", "Salubri"],
@@ -195,10 +200,11 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "your senses become supernaturally sharp; add Auspex rating to perception rolls",
+                summary:
+                    "your senses become supernaturally sharp; add Auspex rating to perception rolls",
                 dicePool: "",
                 level: 1,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Sense the Unseen",
@@ -208,7 +214,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "sense supernatural activity",
                 dicePool: "Wits / Resolve + Auspex",
                 level: 1,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Premonition",
@@ -218,7 +224,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "gain visions of the future",
                 dicePool: "",
                 level: 2,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Obeah",
@@ -228,7 +234,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "soothe a person's psychological turmoil",
                 dicePool: "Composure + Auspex",
                 level: 2,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Unerring Pursuit",
@@ -238,7 +244,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "create a bond with a target to spy on them",
                 dicePool: "Resolve + Auspex",
                 level: 2,
-                discipline: "auspex",
+                discipline: "auspex"
             },
 
             {
@@ -249,7 +255,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "determine a target's weakness",
                 dicePool: "Intelligence + Auspex",
                 level: 3,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Scry the Soul",
@@ -259,7 +265,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "see people's auras",
                 dicePool: "Intelligence + Auspex",
                 level: 3,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Share the Senses",
@@ -269,27 +275,29 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "sense through another person (eg. see through their eyes)",
                 dicePool: "Resolve + Auspex",
                 level: 3,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Spirit's Touch",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "sense emotional residue left by those who handled an object or visited a location",
+                summary:
+                    "sense emotional residue left by those who handled an object or visited a location",
                 dicePool: "Intelligence + Auspex",
                 level: 4,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Clairvoyance",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "gather information from a city-block sized area through mystical connection",
+                summary:
+                    "gather information from a city-block sized area through mystical connection",
                 dicePool: "Intelligence + Auspex",
                 level: 5,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Possession",
@@ -299,7 +307,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "strip the will of a mortal and completely possess their body",
                 dicePool: "Resolve + Auspex",
                 level: 5,
-                discipline: "auspex",
+                discipline: "auspex"
             },
             {
                 name: "Telepathy",
@@ -309,8 +317,8 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "read minds and project thoughts into the minds of others",
                 dicePool: "Resolve + Auspex",
                 level: 5,
-                discipline: "auspex",
-            },
+                discipline: "auspex"
+            }
         ]
     },
     celerity: {
@@ -326,7 +334,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "automatically pass balance tests",
                 dicePool: "",
                 level: 1,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Rapid Reflexes",
@@ -336,7 +344,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "faster reactions & free minor actions",
                 dicePool: "",
                 level: 1,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Fleetness",
@@ -346,7 +354,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "add Celerity rating for defense and Dexterity rolls",
                 dicePool: "",
                 level: 2,
-                discipline: "celerity",
+                discipline: "celerity"
             },
 
             {
@@ -357,7 +365,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "dash up to 50m at supernatural speed",
                 dicePool: "Dexterity + Athletics",
                 level: 3,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Traversal",
@@ -367,17 +375,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "run across liquids or walls",
                 dicePool: "Dexterity + Athletics",
                 level: 3,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Weaving",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "add Celerity rating to defense against ranged (Requires 'Rapid Reflexes')",
+                summary:
+                    "add Celerity rating to defense against ranged (Requires 'Rapid Reflexes')",
                 dicePool: "",
                 level: 3,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Draught of Elegance",
@@ -387,7 +396,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "convey temporary Celerity power to anyone who drinks your Blood",
                 dicePool: "",
                 level: 4,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Unerring Aim",
@@ -397,28 +406,30 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "aim and fire any weapon at a target as if the target were stationary",
                 dicePool: "",
                 level: 4,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Lightning Strike",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "strike with fist or melee weapon at such speed that the opponent cannot defend",
+                summary:
+                    "strike with fist or melee weapon at such speed that the opponent cannot defend",
                 dicePool: "",
                 level: 5,
-                discipline: "celerity",
+                discipline: "celerity"
             },
             {
                 name: "Split Second",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "react to events at a moment's notice, superseding the Storyteller's narration",
+                summary:
+                    "react to events at a moment's notice, superseding the Storyteller's narration",
                 dicePool: "",
                 level: 5,
-                discipline: "celerity",
-            },
+                discipline: "celerity"
+            }
         ]
     },
     dominate: {
@@ -434,7 +445,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make a person forget the past minute",
                 dicePool: "Charisma + Dominate",
                 level: 1,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Compel",
@@ -444,7 +455,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "a single, short command with an immediate effect",
                 dicePool: "Charisma + Dominate",
                 level: 1,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Mesmerize",
@@ -454,7 +465,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "allow issuing more complex commands",
                 dicePool: "Manipulation + Dominate",
                 level: 2,
-                discipline: "dominate",
+                discipline: "dominate"
             },
 
             {
@@ -465,17 +476,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make it harder for thralls to resist you",
                 dicePool: "",
                 level: 2,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Slavish Devotion",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [{ discipline: "presence", level: 1 }],
-                summary: "strengthen the mind of your dominated victims against interference from other kindred",
+                summary:
+                    "strengthen the mind of your dominated victims against interference from other kindred",
                 dicePool: "",
                 level: 2,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Dementation",
@@ -485,7 +497,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "trigger psychotic breaks or nervous breakdowns in others",
                 dicePool: "Manipulation + Dominate",
                 level: 2,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Forgetful Mind",
@@ -495,17 +507,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "Rewrite memories",
                 dicePool: "Manipulation + Dominate",
                 level: 3,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Submerged Directive",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "When using Mesmerize you can give a command that stays dormant until triggered (requires Mesmerize)",
+                summary:
+                    "When using Mesmerize you can give a command that stays dormant until triggered (requires Mesmerize)",
                 dicePool: "",
                 level: 3,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Rationalize",
@@ -515,7 +528,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "victims believe anything they do under Dominate was their own free will",
                 dicePool: "",
                 level: 4,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Mass Manipulation",
@@ -525,7 +538,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "amplify any Dominate power to affect a group of people at once",
                 dicePool: "",
                 level: 5,
-                discipline: "dominate",
+                discipline: "dominate"
             },
             {
                 name: "Terminal Decree",
@@ -535,8 +548,8 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "issue commands that directly lead to the harm or death of the victim",
                 dicePool: "",
                 level: 5,
-                discipline: "dominate",
-            },
+                discipline: "dominate"
+            }
         ]
     },
     fortitude: {
@@ -552,7 +565,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "add Fortitude rating to health track",
                 dicePool: "",
                 level: 1,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Unswayable Mind",
@@ -562,7 +575,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "add extra defense against mind-swaying",
                 dicePool: "",
                 level: 1,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Toughness",
@@ -572,7 +585,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "reduce Superficial physical damage sustained",
                 dicePool: "",
                 level: 2,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Valeren",
@@ -582,7 +595,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "use your blood to heal other vampires",
                 dicePool: "Intelligence + Fortitude",
                 level: 2,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Enduring Beasts",
@@ -592,7 +605,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "share a portion of your unnatural toughness with animals you influence",
                 dicePool: "Stamina + Animalism",
                 level: 2,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             // { name: "Obdurate", description: "", rouseChecks: 0, amalgamPrerequisites: [{ discipline: "potence", level: 2 }], summary: "maintain steady footing even when struck by massive force", dicePool: "", level: 2, discipline: "fortitude" },
 
@@ -604,7 +617,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "turn aggravated damage to superficial",
                 dicePool: "",
                 level: 3,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Fortify the Inner Facade",
@@ -614,7 +627,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "resist auspex and similar powers",
                 dicePool: "",
                 level: 3,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Seal the Beast's Maw",
@@ -624,7 +637,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "ignore hunger for one scene",
                 dicePool: "",
                 level: 3,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Draught of Endurance",
@@ -634,17 +647,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "convey temporary Fortitude power to anyone who drinks your Blood",
                 dicePool: "",
                 level: 4,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Flesh of Marble",
                 description: "",
                 rouseChecks: 2,
                 amalgamPrerequisites: [],
-                summary: "harden your skin to marble-like sheen, ignoring the first source of physical damage each turn",
+                summary:
+                    "harden your skin to marble-like sheen, ignoring the first source of physical damage each turn",
                 dicePool: "",
                 level: 5,
-                discipline: "fortitude",
+                discipline: "fortitude"
             },
             {
                 name: "Prowess from Pain",
@@ -655,9 +669,9 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                     "you no longer suffer dice penalties from health damage. Activate to increase a physical stat by 1 for each damaged health",
                 dicePool: "",
                 level: 5,
-                discipline: "fortitude",
-            },
-        ],
+                discipline: "fortitude"
+            }
+        ]
     },
     obfuscate: {
         clans: ["Nosferatu", "Malkavian", "Banu Haqim", "Ministry", "Ravnos"],
@@ -672,7 +686,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "blend into surroundings while motionless",
                 dicePool: "Wits + Obfuscate / Stealth",
                 level: 1,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Silence of Death",
@@ -682,7 +696,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "mute all sounds you make",
                 dicePool: "",
                 level: 1,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Unseen Passage",
@@ -692,7 +706,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "move while remaining hidden",
                 dicePool: "Wits + Obfuscate / Stealth",
                 level: 2,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Chimerstry",
@@ -702,7 +716,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "create brief sensory hallucinations",
                 dicePool: "Manipulation + Obfuscate",
                 level: 2,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Ghost's Passing",
@@ -712,7 +726,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "extend your obfuscate powers to animals under your influence",
                 dicePool: "Wits + Obfuscate",
                 level: 2,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             // { name: "Ventriloquism", description: "", rouseChecks: 0, amalgamPrerequisites: [{ discipline: "auspex", level: 2 }], summary: "choose who can and cannot hear you when speaking", dicePool: "", level: 2, discipline: "obfuscate" },
 
@@ -724,7 +738,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "Obfuscate affects technology (eg. hide yourself from recordings)",
                 dicePool: "",
                 level: 3,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Mask of a Thousand Faces",
@@ -734,7 +748,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make yourself appear as a non-descript stranger to others",
                 dicePool: "",
                 level: 3,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Mental Maze",
@@ -744,7 +758,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "prevent someone from perceiving any exits or means of escape",
                 dicePool: "Charisma + Obfuscate",
                 level: 3,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Conceal",
@@ -754,17 +768,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "cloak an inanimate object such as a door, car, or small house",
                 dicePool: "Intelligence + Obfuscate",
                 level: 4,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Vanish",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "activate Cloak of Shadows and Unseen Passage even while under direct observation",
+                summary:
+                    "activate Cloak of Shadows and Unseen Passage even while under direct observation",
                 dicePool: "Wits + Obfuscate",
                 level: 4,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Cloak the Gathering",
@@ -774,7 +789,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "shelter your companions under the cloak of Obfuscate",
                 dicePool: "",
                 level: 5,
-                discipline: "obfuscate",
+                discipline: "obfuscate"
             },
             {
                 name: "Impostor's Guise",
@@ -784,9 +799,9 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make yourself appear as a specific individual of any build and gender",
                 dicePool: "Wits + Obfuscate",
                 level: 5,
-                discipline: "obfuscate",
-            },
-        ],
+                discipline: "obfuscate"
+            }
+        ]
     },
     potence: {
         clans: ["Nosferatu", "Brujah", "Lasombra"],
@@ -801,7 +816,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "cause serious physical damage to a mortals",
                 dicePool: "",
                 level: 1,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Soaring Leap",
@@ -811,7 +826,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "jump over long distance",
                 dicePool: "",
                 level: 1,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Prowess",
@@ -821,7 +836,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "add Potence rating to strength checks",
                 dicePool: "",
                 level: 2,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Brutal Feed",
@@ -831,7 +846,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "drain a person in seconds",
                 dicePool: "",
                 level: 3,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Uncanny Grip",
@@ -841,59 +856,64 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "grip and hold onto any surface, including walls and ceilings",
                 dicePool: "",
                 level: 3,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Wrecker",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "add double Potence rating to strength when destroying objects (requires 'Prowess')",
+                summary:
+                    "add double Potence rating to strength when destroying objects (requires 'Prowess')",
                 dicePool: "",
                 level: 3,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Spark of Rage",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [{ discipline: "presence", level: 3 }],
-                summary: "add Potence to any roll to incite violence; force Vampires to make frenzy tests",
+                summary:
+                    "add Potence to any roll to incite violence; force Vampires to make frenzy tests",
                 dicePool: "Manipulation + Potence",
                 level: 3,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Draught of Might",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "temporarily convey half your Potence power to anyone who drinks your Blood",
+                summary:
+                    "temporarily convey half your Potence power to anyone who drinks your Blood",
                 dicePool: "",
                 level: 4,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Earthshock",
                 description: "",
                 rouseChecks: 2,
                 amalgamPrerequisites: [],
-                summary: "slam fist or foot into the ground, creating a shockwave that throws opponents prone",
+                summary:
+                    "slam fist or foot into the ground, creating a shockwave that throws opponents prone",
                 dicePool: "",
                 level: 5,
-                discipline: "potence",
+                discipline: "potence"
             },
             {
                 name: "Fist of Caine",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "bare hands can inflict grievous injuries, aggravated damage to both mortals and vampires",
+                summary:
+                    "bare hands can inflict grievous injuries, aggravated damage to both mortals and vampires",
                 dicePool: "",
                 level: 5,
-                discipline: "potence",
-            },
-        ],
+                discipline: "potence"
+            }
+        ]
     },
     presence: {
         clans: ["Toreador", "Brujah", "Ventrue", "Ministry", "Ravnos"],
@@ -905,20 +925,22 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "become attractive and charismatic; add Presence rating to Persuasion and Performance checks",
+                summary:
+                    "become attractive and charismatic; add Presence rating to Persuasion and Performance checks",
                 dicePool: "",
                 level: 1,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Daunt",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "push people away and intimidate; add Presence rating to Intimidation checks",
+                summary:
+                    "push people away and intimidate; add Presence rating to Intimidation checks",
                 dicePool: "",
                 level: 1,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Eyes of the Serpent",
@@ -928,7 +950,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "Immobilize someone with eye contact",
                 dicePool: "Charisma + Presence",
                 level: 1,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Lingering Kiss",
@@ -938,7 +960,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make mortals you feed from love you",
                 dicePool: "",
                 level: 2,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Melpominee",
@@ -948,27 +970,29 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "use Presence powers against targets that can't see, but only hear you.",
                 dicePool: "",
                 level: 2,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Dread Gaze",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "terrify an individual, causing them to submit, freeze, flee or terror-frenzy",
+                summary:
+                    "terrify an individual, causing them to submit, freeze, flee or terror-frenzy",
                 dicePool: "Charisma + Presence",
                 level: 3,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Entrancement",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "cause infatuation, making a target do almost anything to remain in your good graces",
+                summary:
+                    "cause infatuation, making a target do almost anything to remain in your good graces",
                 dicePool: "Charisma + Presence",
                 level: 3,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Thrown Voice",
@@ -978,7 +1002,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "project your voice to anywhere you can see",
                 dicePool: "",
                 level: 3,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Irresistible Voice",
@@ -988,39 +1012,42 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "use your voice alone to employ Dominate powers",
                 dicePool: "",
                 level: 4,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Summon",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "call to yourself any person upon whom you've previously used Awe, Entrancement, or Majesty",
+                summary:
+                    "call to yourself any person upon whom you've previously used Awe, Entrancement, or Majesty",
                 dicePool: "Manipulation + Presence",
                 level: 4,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Majesty",
                 description: "",
                 rouseChecks: 2,
                 amalgamPrerequisites: [],
-                summary: "amplify your countenance to supernatural levels, making everyone unable to act against you",
+                summary:
+                    "amplify your countenance to supernatural levels, making everyone unable to act against you",
                 dicePool: "Charisma + Presence",
                 level: 5,
-                discipline: "presence",
+                discipline: "presence"
             },
             {
                 name: "Star Magnetism",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "Presence powers affect people viewing you on live feeds or hearing you over the phone",
+                summary:
+                    "Presence powers affect people viewing you on live feeds or hearing you over the phone",
                 dicePool: "",
                 level: 5,
-                discipline: "presence",
-            },
-        ],
+                discipline: "presence"
+            }
+        ]
     },
     protean: {
         clans: ["Gangrel", "Ministry", "Tzimisce"],
@@ -1035,7 +1062,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "your eyes start glowing and you can see in total darkness",
                 dicePool: "",
                 level: 1,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "Weight of the Feather",
@@ -1045,7 +1072,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "become weightless",
                 dicePool: "",
                 level: 1,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "Feral Weapons",
@@ -1055,7 +1082,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "grow deadly claws",
                 dicePool: "",
                 level: 2,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "Vicissitude",
@@ -1065,7 +1092,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "reshape your own skin, muscles and bone at will",
                 dicePool: "Resolve + Protean",
                 level: 2,
-                discipline: "protean",
+                discipline: "protean"
             },
 
             {
@@ -1076,7 +1103,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "meld into the soil",
                 dicePool: "",
                 level: 3,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "Shapechange",
@@ -1086,7 +1113,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "turn into a human-sized animal",
                 dicePool: "",
                 level: 3,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "Metamorphosis",
@@ -1096,29 +1123,31 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "grant an additional animal form, enabling you to change your size",
                 dicePool: "",
                 level: 4,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "Mist Form",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "turn into a cloud of mist, perceivable but untouchable by anything save fire and sunlight",
+                summary:
+                    "turn into a cloud of mist, perceivable but untouchable by anything save fire and sunlight",
                 dicePool: "",
                 level: 5,
-                discipline: "protean",
+                discipline: "protean"
             },
             {
                 name: "The Unfettered Heart",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "your heart detaches and moves freely within your chest, making you exceedingly hard to stake",
+                summary:
+                    "your heart detaches and moves freely within your chest, making you exceedingly hard to stake",
                 dicePool: "",
                 level: 5,
-                discipline: "protean",
-            },
-        ],
+                discipline: "protean"
+            }
+        ]
     },
     "blood sorcery": {
         clans: ["Tremere", "Banu Haqim"],
@@ -1133,7 +1162,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "make your blood corrosive to dead substances",
                 dicePool: "",
                 level: 1,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "A Taste for Blood",
@@ -1143,7 +1172,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "Discern traits about someone by tasting a drop of their blood",
                 dicePool: "Resolve + Blood Sorcery",
                 level: 1,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Shape of the Sanguine Sacrament",
@@ -1153,7 +1182,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "manipulate blood to show simple messages or shapes",
                 dicePool: "Manipulation + Blood Sorcery",
                 level: 1,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Extinguish Vitae",
@@ -1163,7 +1192,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "increase another vampire's hunger",
                 dicePool: "Resolve + Blood Sorcery",
                 level: 2,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Scour Secrets",
@@ -1173,7 +1202,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "locate particular information in text",
                 dicePool: "Intelligence + Blood Sorcery",
                 level: 2,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
 
             {
@@ -1184,7 +1213,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "temporarily increase your Blood Potency",
                 dicePool: "Resolve + Blood Sorcery",
                 level: 3,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Scorpion's Touch",
@@ -1194,37 +1223,40 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "turn your blood into paralyzing poison",
                 dicePool: "Strength + Blood Sorcery",
                 level: 3,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Transitive Bond",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "your blood can retain Blood Bonding properties even when stored in an object or a ghoul",
+                summary:
+                    "your blood can retain Blood Bonding properties even when stored in an object or a ghoul",
                 dicePool: "Intelligence + Blood Sorcery",
                 level: 3,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Theft of Vitae",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "open a wound in a major artery of a mortal victim, blood shooting out toward your open mouth",
+                summary:
+                    "open a wound in a major artery of a mortal victim, blood shooting out toward your open mouth",
                 dicePool: "Wits + Blood Sorcery",
                 level: 4,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Baal's Caress",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "transmute your Blood into an extremely aggressive poison, lethal to mortal and Kindred alike",
+                summary:
+                    "transmute your Blood into an extremely aggressive poison, lethal to mortal and Kindred alike",
                 dicePool: "Strength + Blood Sorcery",
                 level: 5,
-                discipline: "blood sorcery",
+                discipline: "blood sorcery"
             },
             {
                 name: "Cauldron of Blood",
@@ -1235,9 +1267,9 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                     "boil the blood of a victim in their own veins, doing aggravated damage per margin over their Composure + Occult roll",
                 dicePool: "Resolve + Blood Sorcery",
                 level: 5,
-                discipline: "blood sorcery",
-            },
-        ],
+                discipline: "blood sorcery"
+            }
+        ]
     },
     oblivion: {
         clans: ["Lasombra", "Hecata"],
@@ -1252,7 +1284,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "manipulate shadows for stealth or intimidation",
                 dicePool: "",
                 level: 1,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Oblivion's Sight",
@@ -1262,7 +1294,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "see in darkness and see ghosts",
                 dicePool: "",
                 level: 1,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Ashes to Ashes",
@@ -1272,7 +1304,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "use your vitae to disintegrate non-vampire corpses",
                 dicePool: "Stamina + Oblivion",
                 level: 1,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "The Binding Fetter",
@@ -1282,7 +1314,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "identify objects and locations that are connected to ghosts",
                 dicePool: "",
                 level: 1,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Shadow Cast",
@@ -1292,7 +1324,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "summon a supernatural shadow you control",
                 dicePool: "",
                 level: 2,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Where the Shroud Thins",
@@ -1302,17 +1334,18 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "find places where ghosts can cross between worlds",
                 dicePool: "Intelligence + Oblivion",
                 level: 2,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Arms of Ahriman",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [{ discipline: "potence", level: 2 }],
-                summary: "conjures shadow appendages that the user can control but the user is unable to do anything else",
+                summary:
+                    "conjures shadow appendages that the user can control but the user is unable to do anything else",
                 dicePool: "Wits + Oblivion",
                 level: 2,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Fatal Precognition",
@@ -1322,7 +1355,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "see a vision of a non-vampires death",
                 dicePool: "Resolve + Oblivion",
                 level: 2,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Aura of Decay",
@@ -1332,7 +1365,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "decay everything around",
                 dicePool: "Stamina + Oblivion",
                 level: 3,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Shadow Perspective",
@@ -1342,7 +1375,7 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "project senses through shadows",
                 dicePool: "",
                 level: 3,
-                discipline: "oblivion",
+                discipline: "oblivion"
             },
             {
                 name: "Touch of Oblivion",
@@ -1352,9 +1385,9 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "decay a living or unliving body",
                 dicePool: "",
                 level: 3,
-                discipline: "oblivion",
-            },
-        ],
+                discipline: "oblivion"
+            }
+        ]
     },
     "thin-blood alchemy": {
         clans: [],
@@ -1366,20 +1399,22 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "use your mind to grab, hold, and push objects or people without touching them",
+                summary:
+                    "use your mind to grab, hold, and push objects or people without touching them",
                 dicePool: "Resolve + Alchemy",
                 level: 1,
-                discipline: "thin-blood alchemy",
+                discipline: "thin-blood alchemy"
             },
             {
                 name: "Haze",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "create a field of mist that follows you, rendering you more difficult to target with ranged weapons",
+                summary:
+                    "create a field of mist that follows you, rendering you more difficult to target with ranged weapons",
                 dicePool: "",
                 level: 1,
-                discipline: "thin-blood alchemy",
+                discipline: "thin-blood alchemy"
             },
             {
                 name: "Profane Hieros Gamos",
@@ -1389,94 +1424,102 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary: "change your gender permanently through alchemical transformation",
                 dicePool: "",
                 level: 1,
-                discipline: "thin-blood alchemy",
+                discipline: "thin-blood alchemy"
             },
             {
                 name: "Envelop",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "create a mist that clings to a victim, blinding them and causing suffocation in mortals",
+                summary:
+                    "create a mist that clings to a victim, blinding them and causing suffocation in mortals",
                 dicePool: "Wits + Alchemy",
                 level: 2,
-                discipline: "thin-blood alchemy",
+                discipline: "thin-blood alchemy"
             },
             {
                 name: "Defractionate",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "create an elixir that returns fractionated medical-supply blood to freshness",
+                summary:
+                    "create an elixir that returns fractionated medical-supply blood to freshness",
                 dicePool: "",
                 level: 3,
-                discipline: "thin-blood alchemy",
+                discipline: "thin-blood alchemy"
             },
             {
                 name: "Airborne Momentum",
                 description: "",
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
-                summary: "lift yourself from the ground, achieving a state of swift flight or floating",
+                summary:
+                    "lift yourself from the ground, achieving a state of swift flight or floating",
                 dicePool: "Strength + Alchemy",
                 level: 4,
-                discipline: "thin-blood alchemy",
+                discipline: "thin-blood alchemy"
             },
             {
                 name: "Awaken the Sleeper",
                 description: "",
                 rouseChecks: 0,
                 amalgamPrerequisites: [],
-                summary: "create an elixir which, when added to human blood, can awaken a vampire from Torpor",
+                summary:
+                    "create an elixir which, when added to human blood, can awaken a vampire from Torpor",
                 dicePool: "",
                 level: 5,
-                discipline: "thin-blood alchemy",
-            },
-        ],
+                discipline: "thin-blood alchemy"
+            }
+        ]
     },
     "": {
         clans: [],
         summary: "",
         logo: "",
-        powers: [],
-    },
+        powers: []
+    }
 }
 
 export const Rituals: Ritual[] = [
     {
         name: "Blood Walk",
-        summary: "Use blood to learn about a subjects generation, name, sire and - on a crit - any active Blood Bonds.",
+        summary:
+            "Use blood to learn about a subjects generation, name, sire and - on a crit - any active Blood Bonds.",
         rouseChecks: 1,
         requiredTime: "1 hour",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "Blood of the subject",
-        level: 1,
+        level: 1
     },
     {
         name: "Clinging of the Insect",
-        summary: "Drink blood mixed with a freshly crushed spider to cling to walls like an insect.",
+        summary:
+            "Drink blood mixed with a freshly crushed spider to cling to walls like an insect.",
         rouseChecks: 1,
         requiredTime: "5min",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "Living spider, your own blood",
-        level: 1,
+        level: 1
     },
     {
         name: "Craft Bloodstone",
-        summary: "Slowly soak blood into a small magnet. Once done, you sense the direction and rough distance of the stone for a week.",
+        summary:
+            "Slowly soak blood into a small magnet. Once done, you sense the direction and rough distance of the stone for a week.",
         rouseChecks: 1,
         requiredTime: "3 nights",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "Small magnet, your blood",
-        level: 1,
+        level: 1
     },
     {
         name: "Wake with Evenings Freshness",
-        summary: "When threatened during the day after performing this ritual, awaken and ignore daytime penalties for a scene.",
+        summary:
+            "When threatened during the day after performing this ritual, awaken and ignore daytime penalties for a scene.",
         rouseChecks: 1,
         requiredTime: "5min",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "Burnt bones of a rooster",
-        level: 1,
+        level: 1
     },
     {
         name: "Ward against Ghouls",
@@ -1486,15 +1529,17 @@ export const Rituals: Ritual[] = [
         requiredTime: "5min",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "asd",
-        level: 1,
-    },
+        level: 1
+    }
 ]
 
 export const powerIsRitual = (p: Power | Ritual): p is Ritual => {
     return (p as Ritual)["ingredients"] !== undefined
 }
 
-export const getAvailableDisciplines = (character: Character): Record<DisciplineName, Discipline> => {
+export const getAvailableDisciplines = (
+    character: Character
+): Record<DisciplineName, Discipline> => {
     const availableDisciplines: Record<string, Discipline> = {}
     for (const n of character.availableDisciplineNames) {
         if (disciplines[n]) {
@@ -1506,7 +1551,7 @@ export const getAvailableDisciplines = (character: Character): Record<Discipline
                 summary: customDiscipline.summary,
                 powers: character.disciplines.filter((p) => p.discipline === n && p.isCustom),
                 logo: customDiscipline.logo || "",
-                isCustom: true,
+                isCustom: true
             }
         }
     }

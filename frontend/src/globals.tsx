@@ -12,5 +12,5 @@ export const globals = {
     largeFontSize: "30px",
     smallFontSize: "25px",
     smallerFontSize: "20px",
-    heightBreakPoint: 930,
+    heightBreakPoint: 930
 }

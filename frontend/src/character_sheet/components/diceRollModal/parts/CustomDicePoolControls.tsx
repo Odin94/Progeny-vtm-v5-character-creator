@@ -13,7 +13,7 @@ const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) =
     const { diceCount, setDiceCount } = useDiceRollModalStore(
         useShallow((state) => ({
             diceCount: state.diceCount,
-            setDiceCount: state.setDiceCount,
+            setDiceCount: state.setDiceCount
         }))
     )
 
@@ -24,14 +24,31 @@ const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) =
     }
 
     return (
-        <Group justify="center" gap="md" style={{ flexShrink: 0, borderBottom: `1px solid ${colorValue}`, paddingBottom: "1rem" }}>
-            <Button variant="subtle" onClick={removeDie} color={primaryColor} disabled={diceCount <= 1}>
+        <Group
+            justify="center"
+            gap="md"
+            style={{
+                flexShrink: 0,
+                borderBottom: `1px solid ${colorValue}`,
+                paddingBottom: "1rem"
+            }}
+        >
+            <Button
+                variant="subtle"
+                onClick={removeDie}
+                color={primaryColor}
+                disabled={diceCount <= 1}
+            >
                 <IconMinus size={18} />
             </Button>
             <Text fw={600} fz="lg">
                 {diceCount} {diceCount === 1 ? "Die" : "Dice"}
             </Text>
-            <Button variant="subtle" onClick={() => setDiceCount(diceCount + 1)} color={primaryColor}>
+            <Button
+                variant="subtle"
+                onClick={() => setDiceCount(diceCount + 1)}
+                color={primaryColor}
+            >
                 <IconPlus size={18} />
             </Button>
         </Group>

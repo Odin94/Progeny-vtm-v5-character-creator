@@ -1,5 +1,6 @@
 // Use VITE_API_URL if provided, otherwise fallback to proxy in dev or localhost in production
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
+const API_URL =
+    import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "DELETE"
@@ -28,7 +29,7 @@ const ensureCsrfToken = async (): Promise<void> => {
     if (!getCsrfToken()) {
         // Make a GET request to trigger CSRF token generation
         await fetch(`${API_URL}/health`, {
-            credentials: "include",
+            credentials: "include"
         })
     }
 }
@@ -48,7 +49,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     }
 
     const requestHeaders: Record<string, string> = {
-        ...headers,
+        ...headers
     }
 
     if (body) {
@@ -68,7 +69,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
         method,
         headers: requestHeaders,
         credentials: "include",
-        ...(body ? { body: JSON.stringify(body) } : {}),
+        ...(body ? { body: JSON.stringify(body) } : {})
     })
 
     const csrfFromHeader = response.headers.get("X-CSRF-Token")
@@ -110,7 +111,7 @@ export const api = {
     // Auth
     getCurrentUser: async (): Promise<CurrentUser | null> => {
         const response = await fetch(`${API_URL}/auth/me`, {
-            credentials: "include",
+            credentials: "include"
         })
 
         const csrfFromHeader = response.headers.get("X-CSRF-Token")
@@ -134,10 +135,11 @@ export const api = {
     },
     handleAuthCallback: (code: string, state?: string) =>
         apiRequest<{ success: true; returnTo: string; user: CurrentUser }>(
-            `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`,
+            `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`
         ),
     logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
-    updateUserProfile: (data: { nickname?: string | null }) => apiRequest<CurrentUser>("/auth/me", { method: "PUT", body: data }),
+    updateUserProfile: (data: { nickname?: string | null }) =>
+        apiRequest<CurrentUser>("/auth/me", { method: "PUT", body: data }),
     getPreferences: () => apiRequest<UserPreferences>("/auth/preferences"),
     updatePreferences: (data: Partial<UserPreferences>) =>
         apiRequest<UserPreferences>("/auth/preferences", { method: "PUT", body: data }),
@@ -155,8 +157,10 @@ export const api = {
     // Coteries
     getCoteries: () => apiRequest<Array<unknown>>("/coteries"),
     getCoterie: (id: string) => apiRequest<unknown>(`/coteries/${id}`),
-    createCoterie: (data: { name: string }) => apiRequest<unknown>("/coteries", { method: "POST", body: data }),
-    updateCoterie: (id: string, data: { name?: string }) => apiRequest<unknown>(`/coteries/${id}`, { method: "PUT", body: data }),
+    createCoterie: (data: { name: string }) =>
+        apiRequest<unknown>("/coteries", { method: "POST", body: data }),
+    updateCoterie: (id: string, data: { name?: string }) =>
+        apiRequest<unknown>(`/coteries/${id}`, { method: "PUT", body: data }),
     deleteCoterie: (id: string) => apiRequest<void>(`/coteries/${id}`, { method: "DELETE" }),
     addCharacterToCoterie: (coterieId: string, data: { characterId: string }) =>
         apiRequest<unknown>(`/coteries/${coterieId}/characters`, { method: "POST", body: data }),
@@ -168,7 +172,8 @@ export const api = {
         apiRequest<unknown>(`/characters/${characterId}/share`, { method: "POST", body: data }),
     unshareCharacter: (characterId: string, userId: string) =>
         apiRequest<void>(`/characters/${characterId}/share/${userId}`, { method: "DELETE" }),
-    getCharacterShares: (characterId: string) => apiRequest<Array<unknown>>(`/characters/${characterId}/shares`),
+    getCharacterShares: (characterId: string) =>
+        apiRequest<Array<unknown>>(`/characters/${characterId}/shares`)
 }
 
 export { API_URL }

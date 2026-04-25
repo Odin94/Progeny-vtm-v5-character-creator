@@ -1,4 +1,11 @@
-import { AppShell, BackgroundImage, Container, Loader, Text, useComputedColorScheme } from "@mantine/core"
+import {
+    AppShell,
+    BackgroundImage,
+    Container,
+    Loader,
+    Text,
+    useComputedColorScheme
+} from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
@@ -26,7 +33,11 @@ import batWoman from "./resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsp
 import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
-import { characterSchema, getEmptyCharacter, type Character as CharacterType } from "./data/Character"
+import {
+    characterSchema,
+    getEmptyCharacter,
+    type Character as CharacterType
+} from "./data/Character"
 import { clearStoredAuthReturnTo, getSafeAuthReturnTo, useAuth } from "./hooks/useAuth"
 import { useCharacters } from "./hooks/useCharacters"
 import { api } from "./utils/api"
@@ -75,7 +86,7 @@ function App() {
                         clearStoredAuthReturnTo()
                         // Reset the ref so user can try again
                         callbackProcessedRef.current = null
-                    },
+                    }
                 }
             )
         }
@@ -92,7 +103,10 @@ function App() {
     useEffect(() => {
         // Redirect to /me once authenticated after callback
         if (pathname === "/auth/callback" && isAuthenticated && user && !isHandlingCallback) {
-            console.log("Redirecting to /me after successful authentication", { isAuthenticated, user: user?.id })
+            console.log("Redirecting to /me after successful authentication", {
+                isAuthenticated,
+                user: user?.id
+            })
             window.location.replace(callbackReturnToRef.current || "/")
         }
     }, [pathname, isAuthenticated, user, isHandlingCallback])
@@ -113,7 +127,7 @@ function App() {
     const [character, setCharacter] = useCharacterLocalStorage()
     const [selectedStep, setSelectedStep] = useLocalStorage<GeneratorStepId>({
         key: "selectedGeneratorStep",
-        defaultValue: defaultGeneratorStepId,
+        defaultValue: defaultGeneratorStepId
     })
     const [loadModalOpened, setLoadModalOpened] = useState(false)
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
@@ -121,7 +135,9 @@ function App() {
     const [pendingSwitchAction, setPendingSwitchAction] = useState<PendingSwitchAction>(null)
     const [switchNameValue, setSwitchNameValue] = useState("")
     const [isSavingBeforeSwitch, setIsSavingBeforeSwitch] = useState(false)
-    const userCharacters = ((characters as Array<{ id: string; name: string; shared?: boolean }>) || []).filter((candidate) => !candidate.shared)
+    const userCharacters = (
+        (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
+    ).filter((candidate) => !candidate.shared)
     const emptyCharacter = getEmptyCharacter()
 
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
@@ -149,7 +165,7 @@ function App() {
 
         setCharacter({
             ...loadedCharacter,
-            id: characterId,
+            id: characterId
         } as CharacterType & { id: string })
         setSelectedStep("final")
 
@@ -157,7 +173,7 @@ function App() {
             title: "Character loaded",
             message: `Loaded "${loadedCharacter.name}"`,
             color: "green",
-            autoClose: 3000,
+            autoClose: 3000
         })
     }
 
@@ -172,11 +188,13 @@ function App() {
             throw new Error("Please give the current character a name before switching.")
         }
 
-        const targetCharacter = character.id ? userCharacters.find((candidate) => candidate.id === character.id) : null
+        const targetCharacter = character.id
+            ? userCharacters.find((candidate) => candidate.id === character.id)
+            : null
         const payload = {
             name: character.name,
             data: character,
-            version: character.version,
+            version: character.version
         }
 
         const savedCharacter = targetCharacter
@@ -192,7 +210,11 @@ function App() {
         setCharacter({
             ...character,
             id: saved.id,
-            characterVersion: saved.characterVersion ?? saved.data?.characterVersion ?? character.characterVersion ?? 0,
+            characterVersion:
+                saved.characterVersion ??
+                saved.data?.characterVersion ??
+                character.characterVersion ??
+                0
         } as CharacterType & { id: string; characterVersion: number })
 
         await queryClient.invalidateQueries({ queryKey: ["characters"] })
@@ -204,7 +226,7 @@ function App() {
             id: "",
             name: "",
             version: emptyCharacter.version,
-            characterVersion: emptyCharacter.characterVersion,
+            characterVersion: emptyCharacter.characterVersion
         }) === JSON.stringify(emptyCharacter)
 
     const completePendingSwitchAction = async (action: PendingSwitchAction) => {
@@ -242,11 +264,12 @@ function App() {
             try {
                 await saveCurrentCharacter()
             } catch (error) {
-                const notifiedError = error instanceof Error ? error : new Error("Failed to save current character")
+                const notifiedError =
+                    error instanceof Error ? error : new Error("Failed to save current character")
                 notifications.show({
                     title: "Error saving character",
                     message: notifiedError.message,
-                    color: "red",
+                    color: "red"
                 })
                 ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
                 throw notifiedError
@@ -265,11 +288,12 @@ function App() {
         try {
             await saveCurrentCharacter()
         } catch (error) {
-            const notifiedError = error instanceof Error ? error : new Error("Failed to save current character")
+            const notifiedError =
+                error instanceof Error ? error : new Error("Failed to save current character")
             notifications.show({
                 title: "Error saving character",
                 message: notifiedError.message,
-                color: "red",
+                color: "red"
             })
             ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
             throw notifiedError
@@ -283,7 +307,7 @@ function App() {
             notifications.show({
                 title: "Name required",
                 message: "Enter a character name before saving and switching.",
-                color: "red",
+                color: "red"
             })
             return
         }
@@ -293,11 +317,13 @@ function App() {
         try {
             const characterToSave = { ...character, name: switchNameValue }
             setCharacter(characterToSave)
-            const targetCharacter = characterToSave.id ? userCharacters.find((candidate) => candidate.id === characterToSave.id) : null
+            const targetCharacter = characterToSave.id
+                ? userCharacters.find((candidate) => candidate.id === characterToSave.id)
+                : null
             const payload = {
                 name: characterToSave.name,
                 data: characterToSave,
-                version: characterToSave.version,
+                version: characterToSave.version
             }
             const savedCharacter = targetCharacter
                 ? await api.updateCharacter(targetCharacter.id, payload)
@@ -311,7 +337,11 @@ function App() {
             setCharacter({
                 ...characterToSave,
                 id: saved.id,
-                characterVersion: saved.characterVersion ?? saved.data?.characterVersion ?? characterToSave.characterVersion ?? 0,
+                characterVersion:
+                    saved.characterVersion ??
+                    saved.data?.characterVersion ??
+                    characterToSave.characterVersion ??
+                    0
             } as CharacterType & { id: string; characterVersion: number })
             await queryClient.invalidateQueries({ queryKey: ["characters"] })
 
@@ -321,8 +351,9 @@ function App() {
         } catch (error) {
             notifications.show({
                 title: "Error saving character",
-                message: error instanceof Error ? error.message : "Failed to save current character",
-                color: "red",
+                message:
+                    error instanceof Error ? error.message : "Failed to save current character",
+                color: "red"
             })
             setIsSavingBeforeSwitch(false)
         }
@@ -349,11 +380,11 @@ function App() {
 
                 if (isEmpty) {
                     posthog.capture("sheet-page-visit-empty", {
-                        page: "/sheet",
+                        page: "/sheet"
                     })
                 } else {
                     posthog.capture("sheet-page-visit-non-empty", {
-                        page: "/sheet",
+                        page: "/sheet"
                     })
                 }
             } catch (error) {
@@ -391,7 +422,7 @@ function App() {
                         justifyContent: "center",
                         alignItems: "center",
                         height: "100vh",
-                        gap: "1rem",
+                        gap: "1rem"
                     }}
                 >
                     <Loader size="lg" color="red" />
@@ -413,7 +444,11 @@ function App() {
             />
             <NameCharacterBeforeSwitchModal
                 opened={pendingSwitchAction !== null}
-                pendingActionLabel={pendingSwitchAction?.type === "load" ? "switch characters" : "create a new character"}
+                pendingActionLabel={
+                    pendingSwitchAction?.type === "load"
+                        ? "switch characters"
+                        : "create a new character"
+                }
                 nameValue={switchNameValue}
                 setNameValue={setSwitchNameValue}
                 onClose={closeNameBeforeSwitchModal}
@@ -425,15 +460,18 @@ function App() {
                 padding="0"
                 styles={(theme) => ({
                     root: {
-                        height: "100vh",
+                        height: "100vh"
                     },
                     main: {
-                        backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
+                        backgroundColor:
+                            computedColorScheme === "dark"
+                                ? theme.colors.dark[8]
+                                : theme.colors.gray[0],
                         height: "100%",
                         display: "flex",
                         flexDirection: "column",
-                        overflow: "hidden",
-                    },
+                        overflow: "hidden"
+                    }
                 })}
             >
                 {!globals.isSmallScreen && (
@@ -450,7 +488,7 @@ function App() {
                     <Topbar
                         asideBar={{
                             show: showAsideBar,
-                            onToggle: () => setShowAsideBar((prev) => !prev),
+                            onToggle: () => setShowAsideBar((prev) => !prev)
                         }}
                     />
                 </AppShell.Header>
@@ -478,8 +516,24 @@ function App() {
                         }
                     }}
                 >
-                    <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
-                        <Container h={"100%"} style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div
+                        style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <Container
+                            h={"100%"}
+                            style={{
+                                width: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                                flex: 1,
+                                minHeight: 0
+                            }}
+                        >
                             <Generator
                                 character={character}
                                 setCharacter={setCharacter}

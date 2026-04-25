@@ -6,7 +6,11 @@ import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
 import { Ritual, Rituals } from "../../data/Disciplines"
 import { upcase } from "../utils"
-import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import {
+    generatorScrollableAreaStyle,
+    generatorScrollableContentStyle,
+    generatorScrollableShellStyle
+} from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { globals } from "../../globals"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
@@ -35,7 +39,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                     ? "linear-gradient(180deg, rgba(40, 14, 18, 0.85) 0%, rgba(20, 7, 10, 0.9) 100%)"
                     : "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)",
                 transition: "background 180ms ease, border-color 180ms ease",
-                marginBottom: 10,
+                marginBottom: 10
             }}
         >
             <Group justify="space-between" align="flex-start" mb={6}>
@@ -46,7 +50,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                         fontWeight: 700,
                         color: "rgba(244, 236, 232, 0.95)",
                         letterSpacing: "0.04em",
-                        flex: 1,
+                        flex: 1
                     }}
                 >
                     {ritual.name}
@@ -63,7 +67,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                     color: rgba(RAW_GREY, 0.7),
                     lineHeight: 1.45,
                     marginBottom: 10,
-                    minHeight: "5.6rem",
+                    minHeight: "5.6rem"
                 }}
             >
                 {upcase(ritual.summary)}
@@ -78,7 +82,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                     padding: "8px 10px",
                     borderRadius: 6,
                     background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.05)",
+                    border: "1px solid rgba(255, 255, 255, 0.05)"
                 }}
             >
                 <DetailRow label="Dice Pool" value={ritual.dicePool} />
@@ -102,13 +106,16 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                         boxShadow: hovered
                             ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`
                             : "none",
-                        transform: hovered ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
-                        transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+                        transform: hovered
+                            ? "translateY(-1px) scale(1.01)"
+                            : "translateY(0) scale(1)",
+                        transition:
+                            "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
                         letterSpacing: "0.14em",
                         textTransform: "uppercase",
                         fontFamily: "Cinzel, Georgia, serif",
-                        fontSize: "0.72rem",
-                    },
+                        fontSize: "0.72rem"
+                    }
                 }}
                 onClick={onTake}
             >
@@ -127,12 +134,18 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
                 color: GOLD_LABEL_COLOR,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                marginBottom: 2,
+                marginBottom: 2
             }}
         >
             {label}
         </Text>
-        <Text style={{ fontFamily: "Inter, sans-serif", fontSize: "0.78rem", color: rgba(RAW_GREY, 0.6) }}>
+        <Text
+            style={{
+                fontFamily: "Inter, sans-serif",
+                fontSize: "0.78rem",
+                color: rgba(RAW_GREY, 0.6)
+            }}
+        >
             {value}
         </Text>
     </div>
@@ -176,7 +189,13 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                     />
 
                     <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl" w="100%">
-                        <GeneratorSectionDivider label="Level 1 Rituals" lineHeight={1} accentAlpha={0.38} titleSize="0.88rem" marginY="sm" />
+                        <GeneratorSectionDivider
+                            label="Level 1 Rituals"
+                            lineHeight={1}
+                            accentAlpha={0.38}
+                            titleSize="0.88rem"
+                            marginY="sm"
+                        />
 
                         <div
                             style={{
@@ -184,11 +203,15 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                                 gridTemplateColumns: phoneScreen ? "1fr" : "1fr 1fr",
                                 alignItems: "stretch",
                                 gap: 12,
-                                columnGap: 12,
+                                columnGap: 12
                             }}
                         >
                             {Rituals.map((ritual) => (
-                                <RitualCard key={ritual.name} ritual={ritual} onTake={() => handleTake(ritual)} />
+                                <RitualCard
+                                    key={ritual.name}
+                                    ritual={ritual}
+                                    onTake={() => handleTake(ritual)}
+                                />
                             ))}
                         </div>
                     </Box>

@@ -24,7 +24,16 @@ type SuccessResultsProps = {
     isMobile?: boolean
 }
 
-const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canReroll = false, selectedDiceCount = 0, rerollableDiceCount = 0, isMobile = false }: SuccessResultsProps) => {
+const SuccessResults = ({
+    results,
+    totalSuccesses,
+    primaryColor,
+    onReroll,
+    canReroll = false,
+    selectedDiceCount = 0,
+    rerollableDiceCount = 0,
+    isMobile = false
+}: SuccessResultsProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const totalSuccessesRef = useRef<HTMLDivElement>(null)
@@ -53,7 +62,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
             observer.observe(containerRef.current)
             mutationObserver.observe(containerRef.current, {
                 childList: true,
-                subtree: true,
+                subtree: true
             })
         }
 
@@ -77,7 +86,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
                 type: "spring",
                 stiffness: 300,
                 damping: 25,
-                duration: 0.5,
+                duration: 0.5
             }}
         >
             <Box
@@ -92,7 +101,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
                     display: "flex",
                     flexDirection: "column",
                     flexShrink: 0,
-                    overflow: "hidden",
+                    overflow: "hidden"
                 }}
             >
                 <Stack gap="sm" style={{ flex: 1 }}>
@@ -108,13 +117,11 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
                                             {rerollableDiceCount} WP rerollable
                                         </Badge>
                                     ) : null
-                                ) : (
-                                    selectedDiceCount > 0 ? (
-                                        <Badge size="sm" variant="filled" color={primaryColor}>
-                                            {selectedDiceCount}/3
-                                        </Badge>
-                                    ) : null
-                                )}
+                                ) : selectedDiceCount > 0 ? (
+                                    <Badge size="sm" variant="filled" color={primaryColor}>
+                                        {selectedDiceCount}/3
+                                    </Badge>
+                                ) : null}
                                 <Tooltip
                                     label={
                                         isMobile
@@ -122,8 +129,8 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
                                                 ? `Reroll ${rerollableDiceCount} non-success dice (1 willpower)`
                                                 : "No dice to reroll"
                                             : selectedDiceCount > 0
-                                                ? `Reroll ${selectedDiceCount} dice (1 willpower)`
-                                                : "Select up to 3 non-blood dice to reroll (1 willpower)"
+                                              ? `Reroll ${selectedDiceCount} dice (1 willpower)`
+                                              : "Select up to 3 non-blood dice to reroll (1 willpower)"
                                     }
                                     zIndex={2100}
                                 >
@@ -174,7 +181,7 @@ const SuccessResults = ({ results, totalSuccesses, primaryColor, onReroll, canRe
                                                 type: "spring",
                                                 stiffness: 400,
                                                 damping: 20,
-                                                delay: index * 0.05,
+                                                delay: index * 0.05
                                             }}
                                         />
                                     )

@@ -34,23 +34,36 @@ type DiceRollModalProps = {
 // * Roll history
 // * Share rolls with your session live
 
-const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter }: DiceRollModalProps) => {
+const DiceRollModal = ({
+    opened,
+    onClose,
+    primaryColor,
+    character,
+    setCharacter
+}: DiceRollModalProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     const { selectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedDicePool: state.selectedDicePool,
+            selectedDicePool: state.selectedDicePool
         }))
     )
-    const { dice, setDice, diceCount, activeTab, setActiveTab, reset: resetModal } = useDiceRollModalStore(
+    const {
+        dice,
+        setDice,
+        diceCount,
+        activeTab,
+        setActiveTab,
+        reset: resetModal
+    } = useDiceRollModalStore(
         useShallow((state) => ({
             dice: state.dice,
             setDice: state.setDice,
             diceCount: state.diceCount,
             activeTab: state.activeTab,
             setActiveTab: state.setActiveTab,
-            reset: state.reset,
+            reset: state.reset
         }))
     )
     const x = useMotionValue(0)
@@ -72,7 +85,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             skillOrDisciplineValue = character.skills[selectedDicePool.skill] || 0
             specialtyBonus = selectedDicePool.selectedSpecialties.length
         } else if (selectedDicePool.discipline) {
-            const disciplinePowers = character.disciplines.filter(p => p.discipline === selectedDicePool.discipline)
+            const disciplinePowers = character.disciplines.filter(
+                (p) => p.discipline === selectedDicePool.discipline
+            )
             skillOrDisciplineValue = disciplinePowers.length
         }
 
@@ -80,14 +95,22 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
 
         let disciplinePowerBonus = 0
         if (selectedDicePool.attribute) {
-            const applicablePowers = getApplicableDisciplinePowers(character, selectedDicePool.attribute, selectedDicePool.skill)
-            const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
+            const applicablePowers = getApplicableDisciplinePowers(
+                character,
+                selectedDicePool.attribute,
+                selectedDicePool.skill
+            )
+            const applicablePowerKeys = new Set(
+                applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`)
+            )
 
             for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
                 if (!applicablePowerKeys.has(powerKey)) continue
 
                 const [disciplineName, powerName] = powerKey.split("-", 2)
-                const disciplinePowers = character.disciplines.filter(p => p.discipline === disciplineName)
+                const disciplinePowers = character.disciplines.filter(
+                    (p) => p.discipline === disciplineName
+                )
                 const disciplineRating = disciplinePowers.length
 
                 if (powerName === "Wrecker") {
@@ -98,12 +121,20 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             }
         }
 
-        return attributeValue + skillOrDisciplineValue + specialtyBonus + bloodSurgeBonus + disciplinePowerBonus
+        return (
+            attributeValue +
+            skillOrDisciplineValue +
+            specialtyBonus +
+            bloodSurgeBonus +
+            disciplinePowerBonus
+        )
     }, [character, selectedDicePool])
 
     const skillSpecialties = useMemo(() => {
         if (!character || !selectedDicePool.skill) return []
-        return character.skillSpecialties.filter(s => s.skill === selectedDicePool.skill && s.name !== "")
+        return character.skillSpecialties.filter(
+            (s) => s.skill === selectedDicePool.skill && s.name !== ""
+        )
     }, [character, selectedDicePool.skill])
 
     useEffect(() => {
@@ -128,7 +159,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             // fully random numbers
             const array = new Uint32Array(1)
             crypto.getRandomValues(array)
-            const random = array[0] / (0xFFFFFFFF + 1)
+            const random = array[0] / (0xffffffff + 1)
             return Math.floor(random * 10) + 1
         }
         // Pseudo-random numbers
@@ -145,7 +176,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 id: Date.now() + i,
                 value: rollDie(),
                 isRolling: false,
-                isBloodDie: i < bloodDiceCount,
+                isBloodDie: i < bloodDiceCount
             }))
             setDice(newDice)
         } else {
@@ -157,7 +188,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         id: Date.now() + i,
                         value: 0,
                         isRolling: true,
-                        isBloodDie: i < bloodDiceCount,
+                        isBloodDie: i < bloodDiceCount
                     }))
                     setDice(newDice)
 
@@ -166,7 +197,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             prev.map((die) => ({
                                 ...die,
                                 value: rollDie(),
-                                isRolling: false,
+                                isRolling: false
                             }))
                         )
                     }, 1500)
@@ -177,7 +208,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     id: Date.now() + i,
                     value: 0,
                     isRolling: true,
-                    isBloodDie: i < bloodDiceCount,
+                    isBloodDie: i < bloodDiceCount
                 }))
                 setDice(newDice)
 
@@ -186,7 +217,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         prev.map((die) => ({
                             ...die,
                             value: rollDie(),
-                            isRolling: false,
+                            isRolling: false
                         }))
                     )
                 }, 1500)
@@ -204,7 +235,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
 
     const canReroll = useMemo(() => {
         if (!character || !setCharacter) return false
-        const totalWillpowerDamage = (character.ephemeral?.superficialWillpowerDamage ?? 0) + (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
+        const totalWillpowerDamage =
+            (character.ephemeral?.superficialWillpowerDamage ?? 0) +
+            (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
         const availableWillpower = character.willpower - totalWillpowerDamage
         if (isMobile) {
             return availableWillpower > 0 && rerollableDice.length > 0
@@ -229,7 +262,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     const handleReroll = () => {
         if (!character || !setCharacter || !canReroll) return
 
-        const totalWillpowerDamage = (character.ephemeral?.superficialWillpowerDamage ?? 0) + (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
+        const totalWillpowerDamage =
+            (character.ephemeral?.superficialWillpowerDamage ?? 0) +
+            (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
         const availableWillpower = character.willpower - totalWillpowerDamage
         if (availableWillpower <= 0) return
 
@@ -245,8 +280,9 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             ...character,
             ephemeral: {
                 ...character.ephemeral,
-                superficialWillpowerDamage: (character.ephemeral?.superficialWillpowerDamage ?? 0) + 1,
-            },
+                superficialWillpowerDamage:
+                    (character.ephemeral?.superficialWillpowerDamage ?? 0) + 1
+            }
         })
 
         if (isMobile) {
@@ -258,34 +294,52 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     return {
                         ...die,
                         value: rollDie(),
-                        isRolling: false,
+                        isRolling: false
                     }
                 }
                 return die
             })
 
-            const resultsText = rerolledDice.map((die) => {
-                const oldVal = oldValuesMap.get(die.id) ?? 0
-                const newDie = newDice.find((d) => d.id === die.id)
-                const newVal = newDie?.value ?? 0
-                const displayOld = oldVal === 10 ? "0" : oldVal.toString()
-                const displayNew = newVal === 10 ? "0" : newVal.toString()
-                return `${displayOld}→${displayNew}`
-            }).join(", ")
+            const resultsText = rerolledDice
+                .map((die) => {
+                    const oldVal = oldValuesMap.get(die.id) ?? 0
+                    const newDie = newDice.find((d) => d.id === die.id)
+                    const newVal = newDie?.value ?? 0
+                    const displayOld = oldVal === 10 ? "0" : oldVal.toString()
+                    const displayNew = newVal === 10 ? "0" : newVal.toString()
+                    return `${displayOld}→${displayNew}`
+                })
+                .join(", ")
 
             const newValues = rerolledDice.map((die) => {
                 const newDie = newDice.find((d) => d.id === die.id)
                 return newDie?.value ?? 0
             })
             const successCount = newValues.filter((v) => v >= 6).length
-            const successText = successCount > 0 ? ` (${successCount} ${successCount === 1 ? "success" : "successes"})` : ""
+            const successText =
+                successCount > 0
+                    ? ` (${successCount} ${successCount === 1 ? "success" : "successes"})`
+                    : ""
 
             setDice(newDice)
 
             const autoShareDiceRolls = getAutoShareDiceRolls()
-            if (autoShareDiceRolls && connectionStatus === "connected" && sessionId && currentRollIdRef.current) {
+            if (
+                autoShareDiceRolls &&
+                connectionStatus === "connected" &&
+                sessionId &&
+                currentRollIdRef.current
+            ) {
                 try {
-                    const results: Array<{ type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"; value: number }> = []
+                    const results: Array<{
+                        type:
+                            | "success"
+                            | "critical"
+                            | "blood-success"
+                            | "blood-critical"
+                            | "bestial-failure"
+                        value: number
+                    }> = []
                     const allTens: typeof newDice = []
                     let totalSuccesses = 0
 
@@ -313,35 +367,52 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         const die1 = allTens[i * 2]
                         const die2 = allTens[i * 2 + 1]
 
-                        results.push({ type: die1.isBloodDie ? "blood-critical" : "critical", value: 10 })
-                        results.push({ type: die2.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                        results.push({
+                            type: die1.isBloodDie ? "blood-critical" : "critical",
+                            value: 10
+                        })
+                        results.push({
+                            type: die2.isBloodDie ? "blood-critical" : "critical",
+                            value: 10
+                        })
                         totalSuccesses += 4
                     }
 
                     for (let i = 0; i < remainingTens; i++) {
                         const die = allTens[totalCritPairs * 2 + i]
-                        results.push({ type: die.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                        results.push({
+                            type: die.isBloodDie ? "blood-critical" : "critical",
+                            value: 10
+                        })
                         totalSuccesses += 1
                     }
 
                     let specialtyBonus = 0
                     let disciplinePowerBonus = 0
-                    
+
                     if (activeTab === "selected" && selectedDicePool.attribute) {
                         if (selectedDicePool.skill) {
                             specialtyBonus = selectedDicePool.selectedSpecialties.length
                         }
-                        
-                        const applicablePowers = getApplicableDisciplinePowers(character!, selectedDicePool.attribute, selectedDicePool.skill)
-                        const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
-                        
+
+                        const applicablePowers = getApplicableDisciplinePowers(
+                            character!,
+                            selectedDicePool.attribute,
+                            selectedDicePool.skill
+                        )
+                        const applicablePowerKeys = new Set(
+                            applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`)
+                        )
+
                         for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
                             if (!applicablePowerKeys.has(powerKey)) continue
-                            
+
                             const [disciplineName, powerName] = powerKey.split("-", 2)
-                            const disciplinePowers = character!.disciplines.filter(p => p.discipline === disciplineName)
+                            const disciplinePowers = character!.disciplines.filter(
+                                (p) => p.discipline === disciplineName
+                            )
                             const disciplineRating = disciplinePowers.length
-                            
+
                             if (powerName === "Wrecker") {
                                 disciplinePowerBonus += disciplineRating * 2
                             } else {
@@ -349,12 +420,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             }
                         }
                     }
-                    
+
                     const rollData = {
                         dice: newDice.map((d) => ({
                             id: d.id,
                             value: d.value,
-                            isBloodDie: d.isBloodDie,
+                            isBloodDie: d.isBloodDie
                         })),
                         totalSuccesses,
                         results,
@@ -363,19 +434,29 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         poolInfo:
                             activeTab === "selected" && selectedDicePool.attribute
                                 ? {
-                                    attribute: selectedDicePool.attribute ? String(selectedDicePool.attribute) : undefined,
-                                    skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
-                                    discipline: selectedDicePool.discipline ? String(selectedDicePool.discipline) : undefined,
-                                    diceCount: selectedPoolDiceCount,
-                                    bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
-                                    bloodSurge: selectedDicePool.bloodSurge,
-                                    specialtyBonus: specialtyBonus > 0 ? specialtyBonus : undefined,
-                                    disciplinePowerBonus: disciplinePowerBonus > 0 ? disciplinePowerBonus : undefined,
-                                }
+                                      attribute: selectedDicePool.attribute
+                                          ? String(selectedDicePool.attribute)
+                                          : undefined,
+                                      skill: selectedDicePool.skill
+                                          ? String(selectedDicePool.skill)
+                                          : undefined,
+                                      discipline: selectedDicePool.discipline
+                                          ? String(selectedDicePool.discipline)
+                                          : undefined,
+                                      diceCount: selectedPoolDiceCount,
+                                      bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
+                                      bloodSurge: selectedDicePool.bloodSurge,
+                                      specialtyBonus:
+                                          specialtyBonus > 0 ? specialtyBonus : undefined,
+                                      disciplinePowerBonus:
+                                          disciplinePowerBonus > 0
+                                              ? disciplinePowerBonus
+                                              : undefined
+                                  }
                                 : {
-                                    diceCount: diceCount,
-                                    bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
-                                },
+                                      diceCount: diceCount,
+                                      bloodDiceCount: newDice.filter((d) => d.isBloodDie).length
+                                  }
                     }
                     const characterName = character?.name || undefined
                     sendDiceRoll(rollData, characterName)
@@ -388,7 +469,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 title: "Willpower Reroll",
                 message: `${resultsText}${successText}`,
                 color: primaryColor,
-                autoClose: 4000,
+                autoClose: 4000
             })
         } else {
             setDice((prev) =>
@@ -397,7 +478,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         return {
                             ...die,
                             value: 0,
-                            isRolling: true,
+                            isRolling: true
                         }
                     }
                     return die
@@ -411,16 +492,29 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             return {
                                 ...die,
                                 value: rollDie(),
-                                isRolling: false,
+                                isRolling: false
                             }
                         }
                         return die
                     })
 
                     const autoShareDiceRolls = getAutoShareDiceRolls()
-                    if (autoShareDiceRolls && connectionStatus === "connected" && sessionId && currentRollIdRef.current) {
+                    if (
+                        autoShareDiceRolls &&
+                        connectionStatus === "connected" &&
+                        sessionId &&
+                        currentRollIdRef.current
+                    ) {
                         try {
-                            const results: Array<{ type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"; value: number }> = []
+                            const results: Array<{
+                                type:
+                                    | "success"
+                                    | "critical"
+                                    | "blood-success"
+                                    | "blood-critical"
+                                    | "bestial-failure"
+                                value: number
+                            }> = []
                             const allTens: typeof newDice = []
                             let totalSuccesses = 0
 
@@ -432,7 +526,10 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                         allTens.push(die)
                                     } else {
                                         if (die.isBloodDie) {
-                                            results.push({ type: "blood-success", value: die.value })
+                                            results.push({
+                                                type: "blood-success",
+                                                value: die.value
+                                            })
                                         } else {
                                             results.push({ type: "success", value: die.value })
                                         }
@@ -448,35 +545,54 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                 const die1 = allTens[i * 2]
                                 const die2 = allTens[i * 2 + 1]
 
-                                results.push({ type: die1.isBloodDie ? "blood-critical" : "critical", value: 10 })
-                                results.push({ type: die2.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                                results.push({
+                                    type: die1.isBloodDie ? "blood-critical" : "critical",
+                                    value: 10
+                                })
+                                results.push({
+                                    type: die2.isBloodDie ? "blood-critical" : "critical",
+                                    value: 10
+                                })
                                 totalSuccesses += 4
                             }
 
                             for (let i = 0; i < remainingTens; i++) {
                                 const die = allTens[totalCritPairs * 2 + i]
-                                results.push({ type: die.isBloodDie ? "blood-critical" : "critical", value: 10 })
+                                results.push({
+                                    type: die.isBloodDie ? "blood-critical" : "critical",
+                                    value: 10
+                                })
                                 totalSuccesses += 1
                             }
 
                             let specialtyBonus = 0
                             let disciplinePowerBonus = 0
-                            
+
                             if (activeTab === "selected" && selectedDicePool.attribute) {
                                 if (selectedDicePool.skill) {
                                     specialtyBonus = selectedDicePool.selectedSpecialties.length
                                 }
-                                
-                                const applicablePowers = getApplicableDisciplinePowers(character!, selectedDicePool.attribute, selectedDicePool.skill)
-                                const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
-                                
+
+                                const applicablePowers = getApplicableDisciplinePowers(
+                                    character!,
+                                    selectedDicePool.attribute,
+                                    selectedDicePool.skill
+                                )
+                                const applicablePowerKeys = new Set(
+                                    applicablePowers.map(
+                                        ({ power }) => `${power.discipline}-${power.name}`
+                                    )
+                                )
+
                                 for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
                                     if (!applicablePowerKeys.has(powerKey)) continue
-                                    
+
                                     const [disciplineName, powerName] = powerKey.split("-", 2)
-                                    const disciplinePowers = character!.disciplines.filter(p => p.discipline === disciplineName)
+                                    const disciplinePowers = character!.disciplines.filter(
+                                        (p) => p.discipline === disciplineName
+                                    )
                                     const disciplineRating = disciplinePowers.length
-                                    
+
                                     if (powerName === "Wrecker") {
                                         disciplinePowerBonus += disciplineRating * 2
                                     } else {
@@ -484,12 +600,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                     }
                                 }
                             }
-                            
+
                             const rollData = {
                                 dice: newDice.map((d) => ({
                                     id: d.id,
                                     value: d.value,
-                                    isBloodDie: d.isBloodDie,
+                                    isBloodDie: d.isBloodDie
                                 })),
                                 totalSuccesses,
                                 results,
@@ -498,22 +614,34 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                 poolInfo:
                                     activeTab === "selected" && selectedDicePool.attribute
                                         ? {
-                                            attribute: selectedDicePool.attribute ? String(selectedDicePool.attribute) : undefined,
-                                            skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
-                                            discipline: selectedDicePool.discipline ? String(selectedDicePool.discipline) : undefined,
-                                            diceCount: selectedPoolDiceCount,
-                                            bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
-                                            bloodSurge: selectedDicePool.bloodSurge,
-                                            specialtyBonus: specialtyBonus > 0 ? specialtyBonus : undefined,
-                                            disciplinePowerBonus: disciplinePowerBonus > 0 ? disciplinePowerBonus : undefined,
-                                        }
+                                              attribute: selectedDicePool.attribute
+                                                  ? String(selectedDicePool.attribute)
+                                                  : undefined,
+                                              skill: selectedDicePool.skill
+                                                  ? String(selectedDicePool.skill)
+                                                  : undefined,
+                                              discipline: selectedDicePool.discipline
+                                                  ? String(selectedDicePool.discipline)
+                                                  : undefined,
+                                              diceCount: selectedPoolDiceCount,
+                                              bloodDiceCount: newDice.filter((d) => d.isBloodDie)
+                                                  .length,
+                                              bloodSurge: selectedDicePool.bloodSurge,
+                                              specialtyBonus:
+                                                  specialtyBonus > 0 ? specialtyBonus : undefined,
+                                              disciplinePowerBonus:
+                                                  disciplinePowerBonus > 0
+                                                      ? disciplinePowerBonus
+                                                      : undefined
+                                          }
                                         : {
-                                            diceCount: diceCount,
-                                            bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
-                                        },
+                                              diceCount: diceCount,
+                                              bloodDiceCount: newDice.filter((d) => d.isBloodDie)
+                                                  .length
+                                          }
                             }
                             const characterName = character?.name || undefined
-                    sendDiceRoll(rollData, characterName)
+                            sendDiceRoll(rollData, characterName)
                         } catch (error) {
                             console.warn("Failed to share dice roll update:", error)
                         }
@@ -531,7 +659,10 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
             return { totalSuccesses: 0, results: [] }
         }
 
-        const results: Array<{ type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"; value: number }> = []
+        const results: Array<{
+            type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"
+            value: number
+        }> = []
         const allTens: DieResult[] = []
         let totalSuccesses = 0
 
@@ -574,7 +705,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
     }, [dice])
 
     useEffect(() => {
-        if (dice.length > 0 && !dice.some((d) => d.isRolling) && calculateSuccesses.totalSuccesses >= 0) {
+        if (
+            dice.length > 0 &&
+            !dice.some((d) => d.isRolling) &&
+            calculateSuccesses.totalSuccesses >= 0
+        ) {
             const currentRollId = dice[0]?.id || 0
             if (currentRollId !== lastRollTrackedRef.current) {
                 lastRollTrackedRef.current = currentRollId
@@ -586,8 +721,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             total_successes: calculateSuccesses.totalSuccesses,
                             blood_dice_count: dice.filter((d) => d.isBloodDie).length,
                             regular_dice_count: dice.filter((d) => !d.isBloodDie).length,
-                            has_criticals: calculateSuccesses.results.some((r) => r.type === "critical" || r.type === "blood-critical"),
-                            has_bestial_failure: calculateSuccesses.results.some((r) => r.type === "bestial-failure"),
+                            has_criticals: calculateSuccesses.results.some(
+                                (r) => r.type === "critical" || r.type === "blood-critical"
+                            ),
+                            has_bestial_failure: calculateSuccesses.results.some(
+                                (r) => r.type === "bestial-failure"
+                            )
                         })
                     } else {
                         const poolData: Record<string, string | number | boolean | string[]> = {
@@ -601,8 +740,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             dice_count: selectedPoolDiceCount,
                             blood_dice_count: dice.filter((d) => d.isBloodDie).length,
                             regular_dice_count: dice.filter((d) => !d.isBloodDie).length,
-                            has_criticals: calculateSuccesses.results.some((r) => r.type === "critical" || r.type === "blood-critical"),
-                            has_bestial_failure: calculateSuccesses.results.some((r) => r.type === "bestial-failure"),
+                            has_criticals: calculateSuccesses.results.some(
+                                (r) => r.type === "critical" || r.type === "blood-critical"
+                            ),
+                            has_bestial_failure: calculateSuccesses.results.some(
+                                (r) => r.type === "bestial-failure"
+                            )
                         }
                         posthog.capture("dice-roll-selected-pool", poolData)
                     }
@@ -615,22 +758,32 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     try {
                         let specialtyBonus = 0
                         let disciplinePowerBonus = 0
-                        
+
                         if (activeTab === "selected" && selectedDicePool.attribute) {
                             if (selectedDicePool.skill) {
                                 specialtyBonus = selectedDicePool.selectedSpecialties.length
                             }
-                            
-                            const applicablePowers = getApplicableDisciplinePowers(character!, selectedDicePool.attribute, selectedDicePool.skill)
-                            const applicablePowerKeys = new Set(applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`))
-                            
+
+                            const applicablePowers = getApplicableDisciplinePowers(
+                                character!,
+                                selectedDicePool.attribute,
+                                selectedDicePool.skill
+                            )
+                            const applicablePowerKeys = new Set(
+                                applicablePowers.map(
+                                    ({ power }) => `${power.discipline}-${power.name}`
+                                )
+                            )
+
                             for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
                                 if (!applicablePowerKeys.has(powerKey)) continue
-                                
+
                                 const [disciplineName, powerName] = powerKey.split("-", 2)
-                                const disciplinePowers = character!.disciplines.filter(p => p.discipline === disciplineName)
+                                const disciplinePowers = character!.disciplines.filter(
+                                    (p) => p.discipline === disciplineName
+                                )
                                 const disciplineRating = disciplinePowers.length
-                                
+
                                 if (powerName === "Wrecker") {
                                     disciplinePowerBonus += disciplineRating * 2
                                 } else {
@@ -638,12 +791,12 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                                 }
                             }
                         }
-                        
+
                         const rollData = {
                             dice: dice.map((d) => ({
                                 id: d.id,
                                 value: d.value,
-                                isBloodDie: d.isBloodDie,
+                                isBloodDie: d.isBloodDie
                             })),
                             totalSuccesses: calculateSuccesses.totalSuccesses,
                             results: calculateSuccesses.results,
@@ -651,40 +804,66 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             poolInfo:
                                 activeTab === "selected" && selectedDicePool.attribute
                                     ? {
-                                        attribute: selectedDicePool.attribute ? String(selectedDicePool.attribute) : undefined,
-                                        skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
-                                        discipline: selectedDicePool.discipline ? String(selectedDicePool.discipline) : undefined,
-                                        diceCount: selectedPoolDiceCount,
-                                        bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
-                                        bloodSurge: selectedDicePool.bloodSurge,
-                                        specialtyBonus: specialtyBonus > 0 ? specialtyBonus : undefined,
-                                        disciplinePowerBonus: disciplinePowerBonus > 0 ? disciplinePowerBonus : undefined,
-                                    }
+                                          attribute: selectedDicePool.attribute
+                                              ? String(selectedDicePool.attribute)
+                                              : undefined,
+                                          skill: selectedDicePool.skill
+                                              ? String(selectedDicePool.skill)
+                                              : undefined,
+                                          discipline: selectedDicePool.discipline
+                                              ? String(selectedDicePool.discipline)
+                                              : undefined,
+                                          diceCount: selectedPoolDiceCount,
+                                          bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
+                                          bloodSurge: selectedDicePool.bloodSurge,
+                                          specialtyBonus:
+                                              specialtyBonus > 0 ? specialtyBonus : undefined,
+                                          disciplinePowerBonus:
+                                              disciplinePowerBonus > 0
+                                                  ? disciplinePowerBonus
+                                                  : undefined
+                                      }
                                     : {
-                                        diceCount: diceCount,
-                                        bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
-                                    },
+                                          diceCount: diceCount,
+                                          bloodDiceCount: dice.filter((d) => d.isBloodDie).length
+                                      }
                         }
                         const characterName = character?.name || undefined
-                    sendDiceRoll(rollData, characterName)
+                        sendDiceRoll(rollData, characterName)
                     } catch (error) {
                         console.warn("Failed to share dice roll:", error)
                     }
                 }
             }
         }
-    }, [dice, calculateSuccesses, activeTab, diceCount, selectedDicePool, selectedPoolDiceCount, connectionStatus, sessionId, sendDiceRoll])
+    }, [
+        dice,
+        calculateSuccesses,
+        activeTab,
+        diceCount,
+        selectedDicePool,
+        selectedPoolDiceCount,
+        connectionStatus,
+        sessionId,
+        sendDiceRoll
+    ])
 
     if (!opened) return null
 
     const modalContent = (
         <>
-            <ModalHeader
-                primaryColor={primaryColor}
-                onClose={onClose}
-            />
+            <ModalHeader primaryColor={primaryColor} onClose={onClose} />
 
-            <Stack gap="lg" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+            <Stack
+                gap="lg"
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    flex: 1,
+                    minHeight: 0,
+                    overflow: "hidden"
+                }}
+            >
                 {activeTab === "custom" ? (
                     <CustomDicePoolControls primaryColor={primaryColor} />
                 ) : (
@@ -695,19 +874,26 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     />
                 )}
 
-                <Group gap="xs" justify="space-between" style={{ flexShrink: 0, position: "relative" }}>
+                <Group
+                    gap="xs"
+                    justify="space-between"
+                    style={{ flexShrink: 0, position: "relative" }}
+                >
                     <div style={{ width: character && setCharacter ? 36 : 0 }} />
                     <Button
                         size="md"
                         color={primaryColor}
                         onClick={rollDice}
-                        disabled={dice.some((d) => d.isRolling) || (activeTab === "selected" && selectedPoolDiceCount === 0)}
+                        disabled={
+                            dice.some((d) => d.isRolling) ||
+                            (activeTab === "selected" && selectedPoolDiceCount === 0)
+                        }
                     >
                         {dice.some((d) => d.isRolling)
                             ? "Rolling..."
                             : activeTab === "selected"
-                                ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
-                                : "Roll Dice"}
+                              ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
+                              : "Roll Dice"}
                     </Button>
                     {character && setCharacter ? (
                         <RouseCheckButton
@@ -723,12 +909,14 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     )}
                 </Group>
 
-                {isMobile ? null : <DiceContainer
-                    primaryColor={primaryColor}
-                    onDieClick={handleDieClick}
-                    selectedDiceIds={selectedDiceIds}
-                    isMobile={isMobile}
-                />}
+                {isMobile ? null : (
+                    <DiceContainer
+                        primaryColor={primaryColor}
+                        onDieClick={handleDieClick}
+                        selectedDiceIds={selectedDiceIds}
+                        isMobile={isMobile}
+                    />
+                )}
 
                 <AnimatePresence>
                     {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
@@ -737,7 +925,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                             results={calculateSuccesses.results}
                             totalSuccesses={calculateSuccesses.totalSuccesses}
                             primaryColor={primaryColor}
-                            onReroll={nonBloodDice.length > 0 && character && setCharacter ? handleReroll : undefined}
+                            onReroll={
+                                nonBloodDice.length > 0 && character && setCharacter
+                                    ? handleReroll
+                                    : undefined
+                            }
                             canReroll={canReroll}
                             selectedDiceCount={selectedDiceIds.size}
                             rerollableDiceCount={rerollableDice.length}
@@ -765,7 +957,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         bottom: 0,
                         backgroundColor: "rgba(0, 0, 0, 0.2)",
                         zIndex: 1999,
-                        pointerEvents: "none",
+                        pointerEvents: "none"
                     }}
                 />
                 <motion.div
@@ -793,7 +985,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                         padding: "1rem",
                         paddingTop: "0.5rem",
                         overflow: "hidden",
-                        pointerEvents: "auto",
+                        pointerEvents: "auto"
                     }}
                 >
                     <div style={{ overflowY: "auto", flex: 1, minHeight: 0, paddingTop: "0.5rem" }}>
@@ -817,7 +1009,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 height: "100%",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "center"
             }}
         >
             <motion.div
@@ -826,11 +1018,11 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                 dragConstraints={
                     typeof window !== "undefined"
                         ? {
-                            left: -window.innerWidth / 2 + 200,
-                            right: window.innerWidth / 2 - 200,
-                            top: -window.innerHeight / 2 + 200,
-                            bottom: window.innerHeight / 2 - 200,
-                        }
+                              left: -window.innerWidth / 2 + 200,
+                              right: window.innerWidth / 2 - 200,
+                              top: -window.innerHeight / 2 + 200,
+                              bottom: window.innerHeight / 2 - 200
+                          }
                         : undefined
                 }
                 style={{
@@ -849,7 +1041,7 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
                     border: `2px solid ${colorValue}`,
                     cursor: "move",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "column"
                 }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -861,6 +1053,5 @@ const DiceRollModal = ({ opened, onClose, primaryColor, character, setCharacter 
         </div>
     )
 }
-
 
 export default DiceRollModal

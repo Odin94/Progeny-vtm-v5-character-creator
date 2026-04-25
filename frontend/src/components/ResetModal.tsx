@@ -9,7 +9,12 @@ export type ResetModalProps = {
     closeResetModal: () => void
 }
 
-const ResetModal = ({ resetModalOpened, closeResetModal, setCharacter, setSelectedStep }: ResetModalProps) => {
+const ResetModal = ({
+    resetModalOpened,
+    closeResetModal,
+    setCharacter,
+    setSelectedStep
+}: ResetModalProps) => {
     return (
         <ConfirmActionModal
             opened={resetModalOpened}

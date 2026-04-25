@@ -1,7 +1,11 @@
 import { Box, ScrollArea, Stack, Text, UnstyledButton } from "@mantine/core"
 import { IconCheck } from "@tabler/icons-react"
 import { Character } from "../data/Character"
-import { GeneratorStepId, getGeneratorStepIndex, getVisibleGeneratorSteps } from "../generator/steps"
+import {
+    GeneratorStepId,
+    getGeneratorStepIndex,
+    getVisibleGeneratorSteps
+} from "../generator/steps"
 import { isDefault } from "../generator/utils"
 import { globals } from "../globals"
 
@@ -45,7 +49,7 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                         letterSpacing: "0.2em",
                         textTransform: "uppercase",
                         color: "var(--mantine-color-dimmed)",
-                        marginBottom: "1rem",
+                        marginBottom: "1rem"
                     }}
                 >
                     Stages
@@ -72,13 +76,18 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                                     borderRadius: "0.5rem",
                                     cursor: isAccessible ? "pointer" : "default",
                                     transition: "background-color 150ms ease",
-                                    backgroundColor: isCurrent ? "rgba(190, 75, 219, 0.12)" : "transparent",
-                                    border: isCurrent ? "1px solid rgba(190, 75, 219, 0.3)" : "1px solid transparent",
-                                    opacity: !isAccessible && !isCurrent && !isCompleted ? 0.4 : 1,
+                                    backgroundColor: isCurrent
+                                        ? "rgba(190, 75, 219, 0.12)"
+                                        : "transparent",
+                                    border: isCurrent
+                                        ? "1px solid rgba(190, 75, 219, 0.3)"
+                                        : "1px solid transparent",
+                                    opacity: !isAccessible && !isCurrent && !isCompleted ? 0.4 : 1
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!isCurrent && isAccessible) {
-                                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)"
+                                        e.currentTarget.style.backgroundColor =
+                                            "rgba(255, 255, 255, 0.05)"
                                     }
                                 }}
                                 onMouseLeave={(e) => {
@@ -103,31 +112,37 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                                             ? {
                                                   backgroundColor: "var(--mantine-color-grape-6)",
                                                   color: "white",
-                                                  boxShadow: "0 0 10px rgba(190, 75, 219, 0.4)",
+                                                  boxShadow: "0 0 10px rgba(190, 75, 219, 0.4)"
                                               }
                                             : isCompleted
                                               ? {
                                                     backgroundColor: "rgba(212, 175, 55, 0.2)",
                                                     color: "rgb(212, 175, 55)",
-                                                    border: "1px solid rgba(212, 175, 55, 0.3)",
+                                                    border: "1px solid rgba(212, 175, 55, 0.3)"
                                                 }
                                               : {
                                                     backgroundColor: "rgba(255, 255, 255, 0.08)",
                                                     color: "var(--mantine-color-dimmed)",
-                                                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                                                }),
+                                                    border: "1px solid rgba(255, 255, 255, 0.15)"
+                                                })
                                     }}
                                 >
-                                    {isCompleted && !isCurrent ? <IconCheck size={12} /> : index + 1}
+                                    {isCompleted && !isCurrent ? (
+                                        <IconCheck size={12} />
+                                    ) : (
+                                        index + 1
+                                    )}
                                 </Box>
 
                                 <Text
                                     size="sm"
                                     style={{
-                                        color: isCurrent ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
+                                        color: isCurrent
+                                            ? "var(--mantine-color-text)"
+                                            : "var(--mantine-color-dimmed)",
                                         fontWeight: isCurrent ? 500 : 400,
                                         lineHeight: 1.2,
-                                        transition: "color 150ms ease",
+                                        transition: "color 150ms ease"
                                     }}
                                 >
                                     {step.label}
@@ -140,7 +155,9 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                                         style={{
                                             width: "1px",
                                             height: "1.375rem",
-                                            backgroundColor: isCompleted ? "rgba(212, 175, 55, 0.3)" : "rgba(255, 255, 255, 0.1)",
+                                            backgroundColor: isCompleted
+                                                ? "rgba(212, 175, 55, 0.3)"
+                                                : "rgba(255, 255, 255, 0.1)"
                                         }}
                                     />
                                 </Box>
@@ -157,7 +174,11 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     return (
         <Stack gap="md" style={{ padding: "1rem", zIndex: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
-                {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStagesList()}</ScrollArea> : <>{getStagesList()}</>}
+                {height <= scrollerHeight ? (
+                    <ScrollArea h={height - 100}>{getStagesList()}</ScrollArea>
+                ) : (
+                    <>{getStagesList()}</>
+                )}
             </div>
         </Stack>
     )

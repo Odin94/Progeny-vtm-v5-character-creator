@@ -30,4 +30,3 @@ const FocusBorderWrapper = ({ children, colorValue, style }: FocusBorderWrapperP
 }
 
 export default FocusBorderWrapper
-

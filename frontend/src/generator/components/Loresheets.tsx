@@ -15,7 +15,11 @@ type LoresheetProps = {
 }
 
 // TODO: Create text-filter for loresheets?
-export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws }: LoresheetProps) => {
+export const Loresheets = ({
+    character,
+    getMeritOrFlawLine,
+    pickedMeritsAndFlaws
+}: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
 
@@ -36,24 +40,25 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                     radius="lg"
                     h={330}
                     style={{
-                        background: sheetPicked ? "linear-gradient(180deg, rgba(27, 58, 41, 0.72), rgba(14, 15, 18, 0.96))" : "linear-gradient(180deg, rgba(28, 28, 33, 0.92), rgba(12, 13, 16, 0.96))",
+                        background: sheetPicked
+                            ? "linear-gradient(180deg, rgba(27, 58, 41, 0.72), rgba(14, 15, 18, 0.96))"
+                            : "linear-gradient(180deg, rgba(28, 28, 33, 0.92), rgba(12, 13, 16, 0.96))",
                         border: `1px solid ${sheetPicked ? "rgba(63, 192, 120, 0.34)" : "rgba(255, 255, 255, 0.07)"}`,
-                        boxShadow: "0 20px 48px rgba(0, 0, 0, 0.22)",
+                        boxShadow: "0 20px 48px rgba(0, 0, 0, 0.22)"
                     }}
                 >
                     <Stack justify="space-between" h="100%" gap="md">
                         <ScrollArea
                             type="always"
-                           
                             scrollbarSize={6}
                             styles={{
                                 scrollbar: {
-                                    background: "transparent",
+                                    background: "transparent"
                                 },
                                 thumb: {
                                     background: rgba(RAW_RED, 0.22),
-                                    borderRadius: "999px",
-                                },
+                                    borderRadius: "999px"
+                                }
                             }}
                         >
                             <Group justify="space-between" align="flex-start" mb="sm">
@@ -65,7 +70,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                                         fontWeight: 600,
                                         color: "rgba(244, 236, 232, 0.95)",
                                         lineHeight: 1.3,
-                                        flex: 1,
+                                        flex: 1
                                     }}
                                 >
                                     {loresheet.title}
@@ -81,7 +86,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                                     fontFamily: "Crimson Text, Georgia, serif",
                                     fontSize: "1rem",
                                     lineHeight: 1.45,
-                                    color: rgba(RAW_GREY, 0.82),
+                                    color: rgba(RAW_GREY, 0.82)
                                 }}
                             >
                                 {loresheet.summary}
@@ -98,8 +103,8 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                                 label: {
                                     fontFamily: "Cinzel, Georgia, serif",
                                     letterSpacing: "0.08em",
-                                    textTransform: "uppercase",
-                                },
+                                    textTransform: "uppercase"
+                                }
                             }}
                         >
                             Open
@@ -118,7 +123,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
                 borderRadius: 20,
                 background: "rgba(14, 15, 18, 0.66)",
                 border: "1px solid rgba(255, 255, 255, 0.05)",
-                boxShadow: "0 24px 60px rgba(0, 0, 0, 0.24)",
+                boxShadow: "0 24px 60px rgba(0, 0, 0, 0.24)"
             }}
         >
             <Grid w={"100%"} m={0} gutter="lg">
@@ -139,7 +144,7 @@ export const Loresheets = ({ character, getMeritOrFlawLine, pickedMeritsAndFlaws
 const OpenedLoresheet = ({
     loresheet,
     getMeritOrFlawLine,
-    setOpenLoresheetTitle,
+    setOpenLoresheetTitle
 }: {
     loresheet: Loresheet
     getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element
@@ -163,11 +168,11 @@ const OpenedLoresheet = ({
                                     background: "rgba(255, 255, 255, 0.03)",
                                     border: "1px solid rgba(255, 255, 255, 0.05)",
                                     minWidth: 0,
-                                    height: 34,
+                                    height: 34
                                 },
                                 inner: {
-                                    justifyContent: "center",
-                                },
+                                    justifyContent: "center"
+                                }
                             }}
                         >
                             <IconChevronLeft size={16} stroke={2.2} />
@@ -178,7 +183,7 @@ const OpenedLoresheet = ({
                         style={{
                             fontFamily: "Cinzel, Georgia, serif",
                             fontSize: smallScreen ? "1.45rem" : "1.75rem",
-                            color: "rgba(244, 236, 232, 0.95)",
+                            color: "rgba(244, 236, 232, 0.95)"
                         }}
                     >
                         {loresheet.title}
@@ -189,7 +194,7 @@ const OpenedLoresheet = ({
                         style={{
                             fontFamily: "Crimson Text, Georgia, serif",
                             fontSize: "1.02rem",
-                            color: rgba(RAW_GREY, 0.82),
+                            color: rgba(RAW_GREY, 0.82)
                         }}
                     >
                         {loresheet.summary}
@@ -209,8 +214,8 @@ const OpenedLoresheet = ({
                             label: {
                                 fontFamily: "Cinzel, Georgia, serif",
                                 letterSpacing: "0.08em",
-                                textTransform: "uppercase",
-                            },
+                                textTransform: "uppercase"
+                            }
                         }}
                     >
                         Back

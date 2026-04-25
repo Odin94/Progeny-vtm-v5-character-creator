@@ -11,7 +11,11 @@ import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
 import { clans } from "~/data/Clans"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
-import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import {
+    generatorScrollableAreaStyle,
+    generatorScrollableContentStyle,
+    generatorScrollableShellStyle
+} from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { GeneratorStepHero } from "./sharedGeneratorUi"
 
@@ -43,7 +47,7 @@ const CATEGORIES: CategoryMeta[] = [
         borderColor: rgba(RAW_RED, 0.18),
         borderActiveColor: "rgba(250, 82, 82, 0.55)",
         lineColor: "rgba(250, 82, 82, 0.38)",
-        predatorTypes: ["Alleycat", "Extortionist", "Roadside Killer", "Montero"],
+        predatorTypes: ["Alleycat", "Extortionist", "Roadside Killer", "Montero"]
     },
     {
         label: "Sociable",
@@ -54,7 +58,7 @@ const CATEGORIES: CategoryMeta[] = [
         borderColor: "rgba(190, 75, 219, 0.18)",
         borderActiveColor: "rgba(190, 75, 219, 0.55)",
         lineColor: "rgba(190, 75, 219, 0.38)",
-        predatorTypes: ["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren"],
+        predatorTypes: ["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren"]
     },
     {
         label: "Stealth",
@@ -65,7 +69,7 @@ const CATEGORIES: CategoryMeta[] = [
         borderColor: "rgba(173, 181, 189, 0.18)",
         borderActiveColor: "rgba(222, 226, 230, 0.55)",
         lineColor: "rgba(173, 181, 189, 0.34)",
-        predatorTypes: ["Sandman", "Graverobber", "Grim Reaper", "Pursuer", "Trapdoor"],
+        predatorTypes: ["Sandman", "Graverobber", "Grim Reaper", "Pursuer", "Trapdoor"]
     },
     {
         label: "Excluding Mortals",
@@ -76,8 +80,8 @@ const CATEGORIES: CategoryMeta[] = [
         borderColor: "rgba(132, 94, 247, 0.18)",
         borderActiveColor: "rgba(132, 94, 247, 0.55)",
         lineColor: "rgba(132, 94, 247, 0.38)",
-        predatorTypes: ["Bagger", "Blood Leech", "Farmer"],
-    },
+        predatorTypes: ["Bagger", "Blood Leech", "Farmer"]
+    }
 ]
 
 const titleCase = (str: string) => str.replace(/\b\w/g, (c) => c.toUpperCase())
@@ -97,7 +101,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const [discipline, setDiscipline] = useState("")
 
     const createCard = (predatorTypeName: PredatorTypeName, meta: CategoryMeta) => {
-        const clanDisabled = clans[character.clan]?.excludedPredatorTypes?.includes(predatorTypeName) ?? false
+        const clanDisabled =
+            clans[character.clan]?.excludedPredatorTypes?.includes(predatorTypeName) ?? false
         const isDisabled = clanDisabled || isThinBlood
         const isSelected = character.predatorType.name === predatorTypeName
         const predatorType = PredatorTypes[predatorTypeName]
@@ -122,8 +127,12 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     }
                 }}
                 onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isSelected ? meta.bgActiveColor : meta.bgColor
-                    e.currentTarget.style.borderColor = isSelected ? meta.borderActiveColor : meta.borderColor
+                    e.currentTarget.style.background = isSelected
+                        ? meta.bgActiveColor
+                        : meta.bgColor
+                    e.currentTarget.style.borderColor = isSelected
+                        ? meta.borderActiveColor
+                        : meta.borderColor
                     e.currentTarget.style.transform = "translateY(0)"
                 }}
                 style={{
@@ -133,11 +142,12 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     background: isSelected ? meta.bgActiveColor : meta.bgColor,
                     cursor: isDisabled ? "not-allowed" : "pointer",
                     opacity: isDisabled ? 0.38 : 1,
-                    transition: "background 200ms ease, border-color 200ms ease, transform 160ms ease",
+                    transition:
+                        "background 200ms ease, border-color 200ms ease, transform 160ms ease",
                     display: "flex",
                     flexDirection: "column" as const,
                     gap: "6px",
-                    boxShadow: isSelected ? `0 0 18px ${meta.bgActiveColor}` : "none",
+                    boxShadow: isSelected ? `0 0 18px ${meta.bgActiveColor}` : "none"
                 }}
             >
                 <Text
@@ -146,7 +156,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                         fontSize: "0.95rem",
                         fontWeight: 800,
                         letterSpacing: "0.04em",
-                        color: "rgb(244, 236, 232)",
+                        color: "rgb(244, 236, 232)"
                     }}
                 >
                     {predatorTypeName}
@@ -158,7 +168,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                                 color: "rgba(244, 236, 232, 0.35)",
                                 fontFamily: "Inter, sans-serif",
                                 fontWeight: 400,
-                                letterSpacing: 0,
+                                letterSpacing: 0
                             }}
                         >
                             excluded for {character.clan}
@@ -171,13 +181,20 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "0.9rem",
                         color: rgba(RAW_GREY, 0.93),
-                        lineHeight: 1.4,
+                        lineHeight: 1.4
                     }}
                 >
                     {predatorType.summary}
                 </Text>
 
-                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" as const, marginTop: "3px" }}>
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "4px",
+                        flexWrap: "wrap" as const,
+                        marginTop: "3px"
+                    }}
+                >
                     {predatorType.disciplineOptions.map((disc) => (
                         <span
                             key={disc.name}
@@ -188,13 +205,11 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                                 borderRadius: "999px",
                                 background: meta.pillColor,
                                 border: `1px solid ${meta.borderColor}`,
-                                letterSpacing: "0.03em",
+                                letterSpacing: "0.03em"
                             }}
-                      >
-                        <Text fz={"xs"}>
-                          {titleCase(disc.name)}
-                        </Text>
-                      </span>
+                        >
+                            <Text fz={"xs"}>{titleCase(disc.name)}</Text>
+                        </span>
                     ))}
                 </div>
             </div>
@@ -212,7 +227,11 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
             {CATEGORIES.map((meta) => (
                 <Box key={meta.label} px={phoneScreen ? 4 : 12}>
-                    <CategoryHeading label={meta.label} color={meta.accentColor} lineColor={meta.lineColor} />
+                    <CategoryHeading
+                        label={meta.label}
+                        color={meta.accentColor}
+                        lineColor={meta.lineColor}
+                    />
                     <SimpleGrid cols={phoneScreen ? 1 : 2} spacing="sm">
                         {meta.predatorTypes.map((name) => createCard(name, meta))}
                     </SimpleGrid>
@@ -224,7 +243,15 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     return (
         <div style={generatorScrollableShellStyle}>
             {isThinBlood ? (
-                <div style={{ ...generatorScrollableAreaStyle, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+                <div
+                    style={{
+                        ...generatorScrollableAreaStyle,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center"
+                    }}
+                >
                     <Text fz={globals.largeFontSize} ta={"center"} component="span">
                         <b>Thin-bloods</b> do not have a predator type
                     </Text>
@@ -236,7 +263,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                             trackEvent({
                                 action: "predatortype confirm clicked",
                                 category: "predator type",
-                                label: "thin-blood - no predator type",
+                                label: "thin-blood - no predator type"
                             })
                             nextStep()
                         }}
@@ -252,7 +279,6 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     pt={4}
                     pb={8}
                     type="always"
-
                     scrollbarSize={nightfallScrollbarSize}
                     styles={nightfallScrollAreaStyles}
                 >
@@ -278,10 +304,24 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     )
 }
 
-const CategoryHeading = ({ label, color, lineColor }: { label: string; color: string; lineColor: string }) => (
+const CategoryHeading = ({
+    label,
+    color,
+    lineColor
+}: {
+    label: string
+    color: string
+    lineColor: string
+}) => (
     <Box mt="xs" mb="md">
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)` }} />
+            <div
+                style={{
+                    flex: 1,
+                    height: "1px",
+                    background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)`
+                }}
+            />
             <Text
                 ta="center"
                 style={{
@@ -290,12 +330,18 @@ const CategoryHeading = ({ label, color, lineColor }: { label: string; color: st
                     fontWeight: 600,
                     letterSpacing: "0.22em",
                     textTransform: "uppercase",
-                    color,
+                    color
                 }}
             >
                 {label}
             </Text>
-            <div style={{ flex: 1, height: "1px", background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)` }} />
+            <div
+                style={{
+                    flex: 1,
+                    height: "1px",
+                    background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)`
+                }}
+            />
         </div>
     </Box>
 )

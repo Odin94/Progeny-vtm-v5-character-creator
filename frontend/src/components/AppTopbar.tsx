@@ -41,7 +41,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                             fontFamily: "Cinzel, Georgia, serif",
                             letterSpacing: "0.18em",
                             textTransform: "uppercase",
-                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))",
+                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))"
                         }}
                     >
                         Progeny
@@ -59,7 +59,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                             fontSize: "0.78rem",
                             letterSpacing: "0.08em",
                             textTransform: "uppercase",
-                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))",
+                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))"
                         }}
                     >
                         Sheet
@@ -73,7 +73,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                             fontSize: "0.78rem",
                             letterSpacing: "0.08em",
                             textTransform: "uppercase",
-                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))",
+                            color: "var(--landing-text, rgba(244, 236, 232, 0.9))"
                         }}
                     >
                         {isAuthenticated ? "Account" : "Sign in"}

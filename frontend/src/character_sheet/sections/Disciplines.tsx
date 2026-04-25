@@ -13,7 +13,7 @@ import {
     Modal,
     Button,
     Tooltip,
-    useMantineTheme,
+    useMantineTheme
 } from "@mantine/core"
 import { useState } from "react"
 import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
@@ -44,7 +44,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
-            updateSelectedDicePool: state.updateSelectedDicePool,
+            updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
     const theme = useMantineTheme()
@@ -55,7 +55,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
-        { type: "power"; power: Power } | { type: "discipline"; disciplineName: DisciplineName } | null
+        | { type: "power"; power: Power }
+        | { type: "discipline"; disciplineName: DisciplineName }
+        | null
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
@@ -66,7 +68,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         if (!isClickable) return
         updateSelectedDicePool({
             discipline: selectedDicePool.discipline === disciplineName ? null : disciplineName,
-            skill: null,
+            skill: null
         })
     }
 
@@ -79,7 +81,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         if (!powersByDiscipline.has(power.discipline)) {
             powersByDiscipline.set(power.discipline, [power])
         } else {
-            powersByDiscipline.set(power.discipline, [...powersByDiscipline.get(power.discipline)!, power])
+            powersByDiscipline.set(power.discipline, [
+                ...powersByDiscipline.get(power.discipline)!,
+                power
+            ])
         }
     })
 
@@ -106,12 +111,14 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         if (itemToDelete.type === "power") {
             updatedCharacter = {
                 ...character,
-                disciplines: character.disciplines.filter((p) => p !== itemToDelete.power),
+                disciplines: character.disciplines.filter((p) => p !== itemToDelete.power)
             }
         } else {
             updatedCharacter = {
                 ...character,
-                disciplines: character.disciplines.filter((p) => p.discipline !== itemToDelete.disciplineName),
+                disciplines: character.disciplines.filter(
+                    (p) => p.discipline !== itemToDelete.disciplineName
+                )
             }
         }
 
@@ -128,198 +135,274 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                         Disciplines
                     </Title>
                     <Grid gutter="md">
-                        {Array.from(powersByDiscipline.entries()).map(([disciplineName, powers]) => {
-                            const isCustom = !isKnownDiscipline(disciplineName)
-                            const discipline = disciplines[disciplineName]
-                            const customDiscipline = character.customDisciplines?.[disciplineName]
-                            const logo = discipline?.logo || customDiscipline?.logo || ""
+                        {Array.from(powersByDiscipline.entries()).map(
+                            ([disciplineName, powers]) => {
+                                const isCustom = !isKnownDiscipline(disciplineName)
+                                const discipline = disciplines[disciplineName]
+                                const customDiscipline =
+                                    character.customDisciplines?.[disciplineName]
+                                const logo = discipline?.logo || customDiscipline?.logo || ""
 
-                            return (
-                                <Grid.Col key={disciplineName} span={{ base: 12, md: 6, lg: 4 }}>
-                                    <Paper
-                                        p="md"
-                                        withBorder
-                                        style={{
-                                            height: "100%",
-                                            backgroundColor: paperBg,
-                                            cursor: isClickable ? "pointer" : "default",
-                                        }}
-                                        onClick={() => handleDisciplineClick(disciplineName)}
+                                return (
+                                    <Grid.Col
+                                        key={disciplineName}
+                                        span={{ base: 12, md: 6, lg: 4 }}
                                     >
-                                        <Group gap="md" mb="md" align="center">
-                                            {logo ? (
-                                                <img
-                                                    src={logo}
-                                                    alt={upcase(disciplineName)}
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                        flexShrink: 0,
-                                                    }}
-                                                />
-                                            ) : null}
-                                            <Group justify="space-between" style={{ flex: 1 }} align="center">
-                                                <Title order={4} style={{ margin: 0 }}>
-                                                    {upcase(disciplineName)}
-                                                    {isCustom ? (
-                                                        <Badge size="xs" variant="dot" color={primaryColor} ml="xs">
-                                                            Custom
-                                                        </Badge>
-                                                    ) : null}
-                                                </Title>
-                                                <Group gap="xs" align="center">
-                                                    <Badge size="lg" variant="light" color={primaryColor} circle>
-                                                        {powers.length}
-                                                    </Badge>
-                                                    {isCustom && isFreeMode ? (
-                                                        <ActionIcon
-                                                            size="sm"
-                                                            variant="subtle"
+                                        <Paper
+                                            p="md"
+                                            withBorder
+                                            style={{
+                                                height: "100%",
+                                                backgroundColor: paperBg,
+                                                cursor: isClickable ? "pointer" : "default"
+                                            }}
+                                            onClick={() => handleDisciplineClick(disciplineName)}
+                                        >
+                                            <Group gap="md" mb="md" align="center">
+                                                {logo ? (
+                                                    <img
+                                                        src={logo}
+                                                        alt={upcase(disciplineName)}
+                                                        style={{
+                                                            width: "40px",
+                                                            height: "40px",
+                                                            flexShrink: 0
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                <Group
+                                                    justify="space-between"
+                                                    style={{ flex: 1 }}
+                                                    align="center"
+                                                >
+                                                    <Title order={4} style={{ margin: 0 }}>
+                                                        {upcase(disciplineName)}
+                                                        {isCustom ? (
+                                                            <Badge
+                                                                size="xs"
+                                                                variant="dot"
+                                                                color={primaryColor}
+                                                                ml="xs"
+                                                            >
+                                                                Custom
+                                                            </Badge>
+                                                        ) : null}
+                                                    </Title>
+                                                    <Group gap="xs" align="center">
+                                                        <Badge
+                                                            size="lg"
+                                                            variant="light"
                                                             color={primaryColor}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setEditingDisciplineName(disciplineName)
-                                                                setCustomDisciplineModalOpened(true)
-                                                            }}
+                                                            circle
                                                         >
-                                                            <IconEdit size={16} />
-                                                        </ActionIcon>
-                                                    ) : null}
-                                                    {isFreeMode && powers.length === 0 ? (
-                                                        <ActionIcon
-                                                            size="sm"
-                                                            variant="subtle"
-                                                            color="red"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                handleDeleteDiscipline(disciplineName)
-                                                            }}
-                                                        >
-                                                            <IconX size={16} />
-                                                        </ActionIcon>
-                                                    ) : null}
+                                                            {powers.length}
+                                                        </Badge>
+                                                        {isCustom && isFreeMode ? (
+                                                            <ActionIcon
+                                                                size="sm"
+                                                                variant="subtle"
+                                                                color={primaryColor}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setEditingDisciplineName(
+                                                                        disciplineName
+                                                                    )
+                                                                    setCustomDisciplineModalOpened(
+                                                                        true
+                                                                    )
+                                                                }}
+                                                            >
+                                                                <IconEdit size={16} />
+                                                            </ActionIcon>
+                                                        ) : null}
+                                                        {isFreeMode && powers.length === 0 ? (
+                                                            <ActionIcon
+                                                                size="sm"
+                                                                variant="subtle"
+                                                                color="red"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleDeleteDiscipline(
+                                                                        disciplineName
+                                                                    )
+                                                                }}
+                                                            >
+                                                                <IconX size={16} />
+                                                            </ActionIcon>
+                                                        ) : null}
+                                                    </Group>
                                                 </Group>
                                             </Group>
-                                        </Group>
-                                        <Divider mb="sm" />
-                                        <Stack gap="sm" onClick={(e) => isClickable && e.stopPropagation()}>
-                                            {powers
-                                                .sort((a, b) => a.level - b.level)
-                                                .map((power) => (
-                                                    <DisciplinePowerCard
-                                                        key={power.name}
-                                                        power={power}
-                                                        primaryColor={primaryColor}
-                                                        inModal={false}
-                                                        character={character}
-                                                        renderActions={
-                                                            isFreeMode
-                                                                ? () => (
-                                                                      <Group gap="xs">
-                                                                          {power.isCustom ? (
+                                            <Divider mb="sm" />
+                                            <Stack
+                                                gap="sm"
+                                                onClick={(e) => isClickable && e.stopPropagation()}
+                                            >
+                                                {powers
+                                                    .sort((a, b) => a.level - b.level)
+                                                    .map((power) => (
+                                                        <DisciplinePowerCard
+                                                            key={power.name}
+                                                            power={power}
+                                                            primaryColor={primaryColor}
+                                                            inModal={false}
+                                                            character={character}
+                                                            renderActions={
+                                                                isFreeMode
+                                                                    ? () => (
+                                                                          <Group gap="xs">
+                                                                              {power.isCustom ? (
+                                                                                  <ActionIcon
+                                                                                      size="sm"
+                                                                                      variant="subtle"
+                                                                                      color={
+                                                                                          primaryColor
+                                                                                      }
+                                                                                      onClick={(
+                                                                                          e
+                                                                                      ) => {
+                                                                                          e.stopPropagation()
+                                                                                          setEditingDisciplineName(
+                                                                                              disciplineName
+                                                                                          )
+                                                                                          setEditingPower(
+                                                                                              power
+                                                                                          )
+                                                                                          setCustomPowerModalOpened(
+                                                                                              true
+                                                                                          )
+                                                                                      }}
+                                                                                  >
+                                                                                      <IconEdit
+                                                                                          size={16}
+                                                                                      />
+                                                                                  </ActionIcon>
+                                                                              ) : null}
                                                                               <ActionIcon
                                                                                   size="sm"
                                                                                   variant="subtle"
-                                                                                  color={primaryColor}
+                                                                                  color="red"
                                                                                   onClick={(e) => {
                                                                                       e.stopPropagation()
-                                                                                      setEditingDisciplineName(disciplineName)
-                                                                                      setEditingPower(power)
-                                                                                      setCustomPowerModalOpened(true)
+                                                                                      handleDeletePower(
+                                                                                          power
+                                                                                      )
                                                                                   }}
                                                                               >
-                                                                                  <IconEdit size={16} />
+                                                                                  <IconX
+                                                                                      size={16}
+                                                                                  />
                                                                               </ActionIcon>
-                                                                          ) : null}
-                                                                          <ActionIcon
-                                                                              size="sm"
-                                                                              variant="subtle"
-                                                                              color="red"
-                                                                              onClick={(e) => {
-                                                                                  e.stopPropagation()
-                                                                                  handleDeletePower(power)
-                                                                              }}
-                                                                          >
-                                                                              <IconX size={16} />
-                                                                          </ActionIcon>
-                                                                      </Group>
-                                                                  )
-                                                                : undefined
+                                                                          </Group>
+                                                                      )
+                                                                    : undefined
+                                                            }
+                                                        />
+                                                    ))}
+                                                {isEditable ? (
+                                                    <Center
+                                                        mt="xs"
+                                                        onClick={(e) =>
+                                                            isClickable && e.stopPropagation()
                                                         }
-                                                    />
-                                                ))}
-                                            {isEditable ? (
-                                                <Center mt="xs" onClick={(e) => isClickable && e.stopPropagation()}>
-                                                    {isCustom ? (
-                                                        <ActionIcon
-                                                            size="lg"
-                                                            radius="xl"
-                                                            variant="light"
-                                                            color={primaryColor}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setEditingDisciplineName(disciplineName)
-                                                                setEditingPower(null)
-                                                                setCustomPowerModalOpened(true)
-                                                            }}
-                                                        >
-                                                            <IconPlus size={18} />
-                                                        </ActionIcon>
-                                                    ) : mode === "xp" ? (
-                                                        (() => {
-                                                            const cost = getDisciplineCost(character, disciplineName)
-                                                            const availableXP = getAvailableXP(character)
-                                                            const canAfford = canAffordUpgrade(availableXP, cost)
-                                                            const tooltipLabel = canAfford
-                                                                ? `${cost} XP`
-                                                                : `Insufficient XP. Need ${cost}, have ${availableXP}`
+                                                    >
+                                                        {isCustom ? (
+                                                            <ActionIcon
+                                                                size="lg"
+                                                                radius="xl"
+                                                                variant="light"
+                                                                color={primaryColor}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setEditingDisciplineName(
+                                                                        disciplineName
+                                                                    )
+                                                                    setEditingPower(null)
+                                                                    setCustomPowerModalOpened(true)
+                                                                }}
+                                                            >
+                                                                <IconPlus size={18} />
+                                                            </ActionIcon>
+                                                        ) : mode === "xp" ? (
+                                                            (() => {
+                                                                const cost = getDisciplineCost(
+                                                                    character,
+                                                                    disciplineName
+                                                                )
+                                                                const availableXP =
+                                                                    getAvailableXP(character)
+                                                                const canAfford = canAffordUpgrade(
+                                                                    availableXP,
+                                                                    cost
+                                                                )
+                                                                const tooltipLabel = canAfford
+                                                                    ? `${cost} XP`
+                                                                    : `Insufficient XP. Need ${cost}, have ${availableXP}`
 
-                                                            return (
-                                                                <Tooltip label={tooltipLabel}>
-                                                                    <span style={{ display: "inline-block" }}>
-                                                                        <ActionIcon
-                                                                            size="lg"
-                                                                            radius="xl"
-                                                                            variant="light"
-                                                                            color={primaryColor}
-                                                                            disabled={!canAfford}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation()
-                                                                                setInitialDiscipline(disciplineName)
-                                                                                setModalOpened(true)
-                                                                            }}
+                                                                return (
+                                                                    <Tooltip label={tooltipLabel}>
+                                                                        <span
                                                                             style={{
-                                                                                cursor: canAfford ? "pointer" : "default",
+                                                                                display:
+                                                                                    "inline-block"
                                                                             }}
                                                                         >
-                                                                            <IconPlus size={18} />
-                                                                        </ActionIcon>
-                                                                    </span>
-                                                                </Tooltip>
-                                                            )
-                                                        })()
-                                                    ) : (
-                                                        <ActionIcon
-                                                            size="lg"
-                                                            radius="xl"
-                                                            variant="light"
-                                                            color={primaryColor}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setInitialDiscipline(disciplineName)
-                                                                setModalOpened(true)
-                                                            }}
-                                                        >
-                                                            <IconPlus size={18} />
-                                                        </ActionIcon>
-                                                    )}
-                                                </Center>
-                                            ) : null}
-                                        </Stack>
-                                    </Paper>
-                                </Grid.Col>
-                            )
-                        })}
+                                                                            <ActionIcon
+                                                                                size="lg"
+                                                                                radius="xl"
+                                                                                variant="light"
+                                                                                color={primaryColor}
+                                                                                disabled={
+                                                                                    !canAfford
+                                                                                }
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    setInitialDiscipline(
+                                                                                        disciplineName
+                                                                                    )
+                                                                                    setModalOpened(
+                                                                                        true
+                                                                                    )
+                                                                                }}
+                                                                                style={{
+                                                                                    cursor: canAfford
+                                                                                        ? "pointer"
+                                                                                        : "default"
+                                                                                }}
+                                                                            >
+                                                                                <IconPlus
+                                                                                    size={18}
+                                                                                />
+                                                                            </ActionIcon>
+                                                                        </span>
+                                                                    </Tooltip>
+                                                                )
+                                                            })()
+                                                        ) : (
+                                                            <ActionIcon
+                                                                size="lg"
+                                                                radius="xl"
+                                                                variant="light"
+                                                                color={primaryColor}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setInitialDiscipline(
+                                                                        disciplineName
+                                                                    )
+                                                                    setModalOpened(true)
+                                                                }}
+                                                            >
+                                                                <IconPlus size={18} />
+                                                            </ActionIcon>
+                                                        )}
+                                                    </Center>
+                                                ) : null}
+                                            </Stack>
+                                        </Paper>
+                                    </Grid.Col>
+                                )
+                            }
+                        )}
                         {isEditable ? (
                             <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
                                 <Paper
@@ -330,26 +413,37 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        backgroundColor: paperBg,
+                                        backgroundColor: paperBg
                                     }}
                                 >
                                     <Center style={{ height: "100%" }}>
                                         {mode === "xp" ? (
                                             (() => {
                                                 const disciplinesAlreadyHave = new Set(
-                                                    character.disciplines.map((power) => power.discipline)
+                                                    character.disciplines.map(
+                                                        (power) => power.discipline
+                                                    )
                                                 )
-                                                const allDisciplines = Object.keys(disciplines) as DisciplineName[]
+                                                const allDisciplines = Object.keys(
+                                                    disciplines
+                                                ) as DisciplineName[]
                                                 const availableDisciplines = allDisciplines.filter(
-                                                    (disciplineName) => disciplineName !== "" && !disciplinesAlreadyHave.has(disciplineName)
+                                                    (disciplineName) =>
+                                                        disciplineName !== "" &&
+                                                        !disciplinesAlreadyHave.has(disciplineName)
                                                 )
 
-                                                const costs = availableDisciplines.map((disciplineName) =>
-                                                    getDisciplineCost(character, disciplineName)
+                                                const costs = availableDisciplines.map(
+                                                    (disciplineName) =>
+                                                        getDisciplineCost(character, disciplineName)
                                                 )
-                                                const minCost = costs.length > 0 ? Math.min(...costs) : 0
+                                                const minCost =
+                                                    costs.length > 0 ? Math.min(...costs) : 0
                                                 const availableXP = getAvailableXP(character)
-                                                const canAfford = canAffordUpgrade(availableXP, minCost)
+                                                const canAfford = canAffordUpgrade(
+                                                    availableXP,
+                                                    minCost
+                                                )
                                                 const tooltipLabel = canAfford
                                                     ? `${minCost} XP`
                                                     : `Insufficient XP. Need ${minCost}, have ${availableXP}`
@@ -371,7 +465,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                     display: "flex",
                                                                     alignItems: "center",
                                                                     justifyContent: "center",
-                                                                    cursor: canAfford ? "pointer" : "default",
+                                                                    cursor: canAfford
+                                                                        ? "pointer"
+                                                                        : "default"
                                                                 }}
                                                             >
                                                                 <IconPlus size={24} />
@@ -393,7 +489,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent: "center",
+                                                    justifyContent: "center"
                                                 }}
                                             >
                                                 <IconPlus size={24} />

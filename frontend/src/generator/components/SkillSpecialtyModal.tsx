@@ -28,7 +28,7 @@ export const SpecialtyModal = ({
     nextStep,
     character,
     pickedSkillNames,
-    skills,
+    skills
 }: SpecialtyModalProps) => {
     const phoneScreen = globals.isPhoneScreen
 
@@ -39,13 +39,19 @@ export const SpecialtyModal = ({
         [pickedSkillNames]
     )
     const freeSkills = useMemo(
-        () => pickedSkillNames.filter((s) => !BONUS_SPECIALTY_SKILLS.includes(s as (typeof BONUS_SPECIALTY_SKILLS)[number])),
+        () =>
+            pickedSkillNames.filter(
+                (s) =>
+                    !BONUS_SPECIALTY_SKILLS.includes(s as (typeof BONUS_SPECIALTY_SKILLS)[number])
+            ),
         [pickedSkillNames]
     )
 
-    const [freeEntries, setFreeEntries] = useState<{ skill: string; text: string }[]>([{ skill: "", text: "" }])
-    const [bonusTexts, setBonusTexts] = useState<Record<string, string>>(
-        () => Object.fromEntries(BONUS_SPECIALTY_SKILLS.map((s) => [s, ""]))
+    const [freeEntries, setFreeEntries] = useState<{ skill: string; text: string }[]>([
+        { skill: "", text: "" }
+    ])
+    const [bonusTexts, setBonusTexts] = useState<Record<string, string>>(() =>
+        Object.fromEntries(BONUS_SPECIALTY_SKILLS.map((s) => [s, ""]))
     )
 
     const usedFreeSkills = freeEntries.map((e) => e.skill).filter(Boolean)
@@ -62,7 +68,10 @@ export const SpecialtyModal = ({
         for (const entry of freeEntries) {
             const skill = lowcase(entry.skill)
             if (skill && entry.text.trim() && allSkills.includes(skill as SkillsKey)) {
-                result.push({ skill: skillsKeySchema.parse(skill), name: lowcase(entry.text.trim()) })
+                result.push({
+                    skill: skillsKeySchema.parse(skill),
+                    name: lowcase(entry.text.trim())
+                })
             }
         }
 
@@ -89,9 +98,9 @@ export const SpecialtyModal = ({
                 content: {
                     background: "rgba(18, 15, 14, 0.97)",
                     border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 12,
+                    borderRadius: 12
                 },
-                body: { padding: phoneScreen ? "16px" : "24px" },
+                body: { padding: phoneScreen ? "16px" : "24px" }
             }}
             overlayProps={{ backgroundOpacity: 0.7 }}
         >
@@ -100,18 +109,43 @@ export const SpecialtyModal = ({
                 <div>
                     <Group gap={8} mb={8}>
                         <IconSparkles size={18} color={RED} />
-                        <Text style={{ fontFamily: "Cinzel, Georgia, serif", fontSize: "1.15rem", fontWeight: 600, letterSpacing: "0.06em" }}>
+                        <Text
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                fontSize: "1.15rem",
+                                fontWeight: 600,
+                                letterSpacing: "0.06em"
+                            }}
+                        >
                             Skill Specialties
                         </Text>
                     </Group>
-                    <Text style={{ fontFamily: "Crimson Text, Georgia, serif", fontSize: "0.95rem", color: rgba(RAW_GREY, 0.55), lineHeight: 1.55 }}>
+                    <Text
+                        style={{
+                            fontFamily: "Crimson Text, Georgia, serif",
+                            fontSize: "0.95rem",
+                            color: rgba(RAW_GREY, 0.55),
+                            lineHeight: 1.55
+                        }}
+                    >
                         Specialties represent focused expertise within a skill —{" "}
-                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>Performance: Dancing</span> or{" "}
-                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>Academics: History</span>.
+                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
+                            Performance: Dancing
+                        </span>{" "}
+                        or{" "}
+                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
+                            Academics: History
+                        </span>
+                        .
                     </Text>
                 </div>
 
-                <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${rgba(RAW_RED, 0.25)}, transparent)` }} />
+                <div
+                    style={{
+                        height: 1,
+                        background: `linear-gradient(90deg, transparent, ${rgba(RAW_RED, 0.25)}, transparent)`
+                    }}
+                />
 
                 {/* Free specialty */}
                 <Stack gap={8}>
@@ -123,7 +157,9 @@ export const SpecialtyModal = ({
                                     value={entry.skill || null}
                                     onChange={(v) => updateFreeEntry(i, "skill", v ?? "")}
                                     data={freeSkills
-                                        .filter((s) => s === entry.skill || !usedFreeSkills.includes(s))
+                                        .filter(
+                                            (s) => s === entry.skill || !usedFreeSkills.includes(s)
+                                        )
                                         .map((s) => ({ value: s, label: upcase(s) }))}
                                     styles={{ input: { textTransform: "capitalize" } }}
                                 />
@@ -154,7 +190,7 @@ export const SpecialtyModal = ({
                                             letterSpacing: "0.04em",
                                             color: rgba(RAW_GOLD, 0.85),
                                             minWidth: phoneScreen ? 90 : 110,
-                                            textTransform: "capitalize",
+                                            textTransform: "capitalize"
                                         }}
                                     >
                                         {upcase(s)}
@@ -162,7 +198,12 @@ export const SpecialtyModal = ({
                                     <FocusBorderWrapper colorValue={RED} style={{ flex: 1 }}>
                                         <TextInput
                                             value={bonusTexts[s]}
-                                            onChange={(e) => setBonusTexts((prev) => ({ ...prev, [s]: e.currentTarget.value }))}
+                                            onChange={(e) =>
+                                                setBonusTexts((prev) => ({
+                                                    ...prev,
+                                                    [s]: e.currentTarget.value
+                                                }))
+                                            }
                                             placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
                                             maxLength={40}
                                         />
@@ -184,8 +225,8 @@ export const SpecialtyModal = ({
                         styles={{
                             root: {
                                 letterSpacing: "0.06em",
-                                textTransform: "uppercase",
-                            },
+                                textTransform: "uppercase"
+                            }
                         }}
                     >
                         Confirm

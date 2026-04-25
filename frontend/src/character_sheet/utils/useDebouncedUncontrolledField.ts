@@ -22,7 +22,7 @@ export const useDebouncedUncontrolledStringField = ({
     character,
     setCharacter,
     field,
-    delay = 150,
+    delay = 150
 }: UseDebouncedUncontrolledStringFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
     const characterRef = useRef<Character | null>(null)
@@ -59,7 +59,7 @@ export const useDebouncedUncontrolledStringField = ({
                 const currentCharacter = characterRef.current ?? character
                 setCharacter({
                     ...currentCharacter,
-                    [field]: value,
+                    [field]: value
                 })
                 timeoutRef.current = null
             }, delay)
@@ -81,7 +81,7 @@ export const useDebouncedUncontrolledStringField = ({
     return {
         defaultValue,
         onChange: handleChange,
-        key: `${field}-${keyRef.current}`,
+        key: `${field}-${keyRef.current}`
     }
 }
 
@@ -91,14 +91,17 @@ export const useDebouncedUncontrolledNumberField = ({
     field,
     delay = 150,
     getValue,
-    updateFn,
+    updateFn
 }: UseDebouncedUncontrolledNumberFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
     const characterRef = useRef<Character | null>(null)
     const keyRef = useRef(0)
     const pendingValueRef = useRef<number | null>(null)
 
-    const getValueFn = useMemo(() => getValue || ((char: Character) => char[field as keyof Character] as number), [getValue, field])
+    const getValueFn = useMemo(
+        () => getValue || ((char: Character) => char[field as keyof Character] as number),
+        [getValue, field]
+    )
 
     useEffect(() => {
         const currentValue = getValueFn(character)
@@ -136,7 +139,7 @@ export const useDebouncedUncontrolledNumberField = ({
                 } else {
                     setCharacter({
                         ...currentCharacter,
-                        [field as keyof Character]: transformedValue,
+                        [field as keyof Character]: transformedValue
                     })
                 }
                 timeoutRef.current = null
@@ -160,6 +163,6 @@ export const useDebouncedUncontrolledNumberField = ({
     return {
         defaultValue,
         onChange: handleChange,
-        key: `${field}-${keyRef.current}`,
+        key: `${field}-${keyRef.current}`
     }
 }

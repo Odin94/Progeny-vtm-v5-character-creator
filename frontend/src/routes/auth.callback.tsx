@@ -8,7 +8,7 @@ import { PREFERENCES_QUERY_KEY } from "~/hooks/useUserPreferences"
 import { api, type CurrentUser } from "~/utils/api"
 
 export const Route = createFileRoute("/auth/callback")({
-    component: AuthCallback,
+    component: AuthCallback
 })
 
 type AuthCallbackResponse = {
@@ -17,7 +17,8 @@ type AuthCallbackResponse = {
     user: CurrentUser
 }
 
-let activeAuthCallbackRequest: { code: string; promise: Promise<AuthCallbackResponse> } | null = null
+let activeAuthCallbackRequest: { code: string; promise: Promise<AuthCallbackResponse> } | null =
+    null
 
 // TODOdin: Give users a way out of here if they're stuck in `Completing sign in...`
 function AuthCallback() {
@@ -53,7 +54,7 @@ function AuthCallback() {
                     posthog.identify(data.user.id, {
                         email: data.user.email,
                         firstName: data.user.firstName,
-                        lastName: data.user.lastName,
+                        lastName: data.user.lastName
                     })
                 } catch (error) {
                     console.warn("PostHog identify failed:", error)
@@ -82,7 +83,7 @@ function AuthCallback() {
                 justifyContent: "center",
                 alignItems: "center",
                 height: "100vh",
-                gap: "1rem",
+                gap: "1rem"
             }}
         >
             <Loader size="lg" color="red" />

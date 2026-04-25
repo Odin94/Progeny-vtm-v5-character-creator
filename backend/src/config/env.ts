@@ -26,11 +26,13 @@ const envSchema = z.object({
     PUBLIC_POSTHOG_HOST: z.url().default("https://eu.i.posthog.com").optional(),
 
     // WorkOS AuthKit Session
-    WORKOS_COOKIE_PASSWORD: z.string().min(32, "WORKOS_COOKIE_PASSWORD must be at least 32 characters"),
+    WORKOS_COOKIE_PASSWORD: z
+        .string()
+        .min(32, "WORKOS_COOKIE_PASSWORD must be at least 32 characters"),
 
     // SSL (optional, for HTTPS)
     SSL_CERT_PATH: z.string().optional(),
-    SSL_KEY_PATH: z.string().optional(),
+    SSL_KEY_PATH: z.string().optional()
 })
 
 export type Env = z.infer<typeof envSchema>
@@ -40,12 +42,14 @@ function loadEnv(): Env {
         // Parse with defaults for optional fields
         const parsed = envSchema.parse({
             ...process.env,
-            PUBLIC_POSTHOG_HOST: process.env.PUBLIC_POSTHOG_HOST,
+            PUBLIC_POSTHOG_HOST: process.env.PUBLIC_POSTHOG_HOST
         })
         return parsed
     } catch (error) {
         if (error instanceof z.ZodError) {
-            const missingVars = error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("\n")
+            const missingVars = error.issues
+                .map((e) => `${e.path.join(".")}: ${e.message}`)
+                .join("\n")
             throw new Error(`Environment validation failed:\n${missingVars}`)
         }
         throw error

@@ -1,15 +1,15 @@
 {
-  "short_name": "VtM Creator",
-  "name": "Odin's Vampire the Masquerade v5 Character Creator",
-  "icons": [
-    {
-      "src": "favicon.svg",
-      "sizes": "512x512 192x192 64x64 32x32 24x24 16x16",
-      "type": "image/svg+xml"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+    "short_name": "VtM Creator",
+    "name": "Odin's Vampire the Masquerade v5 Character Creator",
+    "icons": [
+        {
+            "src": "favicon.svg",
+            "sizes": "512x512 192x192 64x64 32x32 24x24 16x16",
+            "type": "image/svg+xml"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
 }

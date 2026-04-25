@@ -1,6 +1,32 @@
-import { ActionIcon, Badge, Box, Button, Group, Indicator, Paper, ScrollArea, Stack, Text, TextInput, Tooltip, useMantineTheme } from "@mantine/core"
+import {
+    ActionIcon,
+    Badge,
+    Box,
+    Button,
+    Group,
+    Indicator,
+    Paper,
+    ScrollArea,
+    Stack,
+    Text,
+    TextInput,
+    Tooltip,
+    useMantineTheme
+} from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconAlertCircle, IconChevronDown, IconCopy, IconDice, IconDroplet, IconHeartHandshake, IconInfoCircle, IconMessageCircle, IconUsers, IconX, IconArrowLeft } from "@tabler/icons-react"
+import {
+    IconAlertCircle,
+    IconChevronDown,
+    IconCopy,
+    IconDice,
+    IconDroplet,
+    IconHeartHandshake,
+    IconInfoCircle,
+    IconMessageCircle,
+    IconUsers,
+    IconX,
+    IconArrowLeft
+} from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
@@ -23,9 +49,13 @@ type Coterie = {
 const ChatWindow = ({ options }: ChatWindowProps) => {
     const { primaryColor, character } = options
     const theme = useMantineTheme()
-    const colorValue = primaryColor.startsWith("#") ? primaryColor : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
+    const colorValue = primaryColor.startsWith("#")
+        ? primaryColor
+        : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const [expanded, { toggle: toggleExpanded }] = useDisclosure(false)
-    const [view, setView] = useState<"disconnected" | "creating" | "joining" | "joiningCoterie">("disconnected")
+    const [view, setView] = useState<"disconnected" | "creating" | "joining" | "joiningCoterie">(
+        "disconnected"
+    )
     const [sessionInput, setSessionInput] = useState("")
     const [sessionType, setSessionType] = useState<"temporary" | "coterie" | null>(null)
     const [copiedSessionId, setCopiedSessionId] = useState(false)
@@ -35,7 +65,6 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     const [joinError, setJoinError] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const { isAuthenticated, signIn } = useAuth()
-
 
     const {
         connectionStatus,
@@ -47,7 +76,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
         disconnect,
         joinSession,
         leaveSession,
-        sendChatMessage,
+        sendChatMessage
     } = useSessionChat()
 
     const characterName = character?.name || undefined
@@ -194,7 +223,9 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
             return "Connecting to chat..."
         }
         if (status === "disconnected") {
-            return !sessionId ? "Join or create a session to send messages" : "Not connected to chat"
+            return !sessionId
+                ? "Join or create a session to send messages"
+                : "Not connected to chat"
         }
         if (status === "error") {
             return "Connection error. Please try reconnecting."
@@ -206,7 +237,8 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     }
 
     if (!expanded) {
-        const isConnected = connectionStatus === "connected" && sessionId !== null && sessionId !== undefined
+        const isConnected =
+            connectionStatus === "connected" && sessionId !== null && sessionId !== undefined
         return (
             <Indicator
                 disabled={!isConnected}
@@ -219,7 +251,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                     position: "fixed",
                     bottom: "2rem",
                     right: "6rem",
-                    zIndex: 1000,
+                    zIndex: 1000
                 }}
             >
                 <ActionIcon
@@ -229,7 +261,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                     radius="xl"
                     onClick={toggleExpanded}
                     style={{
-                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)"
                     }}
                 >
                     <IconMessageCircle size={24} />
@@ -256,7 +288,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                     border: `2px solid ${colorValue}`,
                     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "column"
                 }}
             >
                 <Group justify="space-between" mb="xs">
@@ -264,14 +296,24 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         <Text fw={600} size="lg">
                             Chat
                         </Text>
-                        <Tooltip label="Chat messages are not stored on the server and will be lost when the chat is closed" withArrow zIndex={2000}>
-                            <ActionIcon size="xs" variant="subtle" color="gray" style={{ cursor: "help" }}>
+                        <Tooltip
+                            label="Chat messages are not stored on the server and will be lost when the chat is closed"
+                            withArrow
+                            zIndex={2000}
+                        >
+                            <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                color="gray"
+                                style={{ cursor: "help" }}
+                            >
                                 <IconInfoCircle size={14} />
                             </ActionIcon>
                         </Tooltip>
                         {connectionStatus === "connected" ? (
                             <Badge color={getConnectionStatusColor()} size="sm">
-                                {participants.length} {participants.length === 1 ? "player" : "players"}
+                                {participants.length}{" "}
+                                {participants.length === 1 ? "player" : "players"}
                             </Badge>
                         ) : (
                             <Badge color={getConnectionStatusColor()} size="sm">
@@ -281,11 +323,21 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                     </Group>
                     <Group gap="xs">
                         {connectionStatus === "connected" ? (
-                            <ActionIcon size="sm" variant="subtle" color="red" onClick={handleDisconnect}>
+                            <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color="red"
+                                onClick={handleDisconnect}
+                            >
                                 <IconX size={16} />
                             </ActionIcon>
                         ) : null}
-                        <ActionIcon size="sm" variant="subtle" color={primaryColor} onClick={toggleExpanded}>
+                        <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color={primaryColor}
+                            onClick={toggleExpanded}
+                        >
                             <IconChevronDown size={16} />
                         </ActionIcon>
                     </Group>
@@ -296,7 +348,12 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         {view === "creating" ? (
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                                 <Group gap="xs">
-                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack} color={primaryColor}>
+                                    <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        onClick={handleBack}
+                                        color={primaryColor}
+                                    >
                                         <IconArrowLeft size={16} />
                                     </ActionIcon>
                                     <Text fw={600} size="lg" style={{ flex: 1 }}>
@@ -309,7 +366,10 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             Session created! Share this ID with others to join:
                                         </Text>
                                         <Group gap="xs">
-                                            <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
+                                            <FocusBorderWrapper
+                                                colorValue={colorValue}
+                                                style={{ flex: 1 }}
+                                            >
                                                 <TextInput
                                                     value={sessionId}
                                                     readOnly
@@ -317,12 +377,20 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                     styles={{
                                                         input: {
                                                             fontFamily: "monospace",
-                                                            fontSize: "0.875rem",
-                                                        },
+                                                            fontSize: "0.875rem"
+                                                        }
                                                     }}
                                                 />
                                             </FocusBorderWrapper>
-                                            <Tooltip label={copiedSessionId ? "Copied!" : "Copy to clipboard"} withArrow zIndex={2000}>
+                                            <Tooltip
+                                                label={
+                                                    copiedSessionId
+                                                        ? "Copied!"
+                                                        : "Copy to clipboard"
+                                                }
+                                                withArrow
+                                                zIndex={2000}
+                                            >
                                                 <ActionIcon
                                                     color={copiedSessionId ? "green" : primaryColor}
                                                     variant="filled"
@@ -333,7 +401,11 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             </Tooltip>
                                         </Group>
                                         <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                            <Button variant="subtle" onClick={handleGoToChat} color="yellow">
+                                            <Button
+                                                variant="subtle"
+                                                onClick={handleGoToChat}
+                                                color="yellow"
+                                            >
                                                 Go to chat
                                             </Button>
                                         </Group>
@@ -341,10 +413,15 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                 ) : (
                                     <>
                                         <Text size="sm" c="dimmed">
-                                            Click the button below to create a new session. A unique session ID will be generated for you to share.
+                                            Click the button below to create a new session. A unique
+                                            session ID will be generated for you to share.
                                         </Text>
                                         <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                            <Button variant="subtle" onClick={handleBack} color="yellow">
+                                            <Button
+                                                variant="subtle"
+                                                onClick={handleBack}
+                                                color="yellow"
+                                            >
                                                 Cancel
                                             </Button>
                                             <Button color={primaryColor} onClick={handleConnect}>
@@ -357,7 +434,12 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         ) : view === "joining" ? (
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                                 <Group gap="xs">
-                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack} color={primaryColor}>
+                                    <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        onClick={handleBack}
+                                        color={primaryColor}
+                                    >
                                         <IconArrowLeft size={16} />
                                     </ActionIcon>
                                     <Text fw={600} size="lg" style={{ flex: 1 }}>
@@ -392,7 +474,10 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                     <Button
                                         color={primaryColor}
                                         onClick={handleConnect}
-                                        disabled={!sessionInput.trim() || connectionStatus === "connecting"}
+                                        disabled={
+                                            !sessionInput.trim() ||
+                                            connectionStatus === "connecting"
+                                        }
                                         loading={connectionStatus === "connecting"}
                                     >
                                         Join
@@ -402,7 +487,12 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         ) : view === "joiningCoterie" ? (
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                                 <Group gap="xs">
-                                    <ActionIcon size="sm" variant="subtle" onClick={handleBack} color={primaryColor}>
+                                    <ActionIcon
+                                        size="sm"
+                                        variant="subtle"
+                                        onClick={handleBack}
+                                        color={primaryColor}
+                                    >
                                         <IconArrowLeft size={16} />
                                     </ActionIcon>
                                     <Text fw={600} size="lg" style={{ flex: 1 }}>
@@ -419,7 +509,10 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 fullWidth
                                                 onClick={() => {
                                                     connect()
-                                                    joinSession({ coterieId: coterie.id, characterName })
+                                                    joinSession({
+                                                        coterieId: coterie.id,
+                                                        characterName
+                                                    })
                                                     setView("disconnected")
                                                 }}
                                             >
@@ -436,10 +529,22 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                             </Stack>
                         ) : null}
                     </Stack>
-                ) : connectionStatus === "disconnected" || (view === "disconnected" && !sessionId) ? (
+                ) : connectionStatus === "disconnected" ||
+                  (view === "disconnected" && !sessionId) ? (
                     <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                        <Text ta="center" c="dimmed" size="sm" style={{ marginTop: "auto", marginBottom: "auto" }}>
-                            {isAuthenticated ? "Join or create a session to start chatting" : <Text style={{ cursor: "pointer" }} onClick={() => signIn()}>Sign in to use chat</Text>}
+                        <Text
+                            ta="center"
+                            c="dimmed"
+                            size="sm"
+                            style={{ marginTop: "auto", marginBottom: "auto" }}
+                        >
+                            {isAuthenticated ? (
+                                "Join or create a session to start chatting"
+                            ) : (
+                                <Text style={{ cursor: "pointer" }} onClick={() => signIn()}>
+                                    Sign in to use chat
+                                </Text>
+                            )}
                         </Text>
                         {isAuthenticated ? (
                             <Stack gap="xs" style={{ marginTop: "auto" }}>
@@ -484,7 +589,15 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                 ) : (
                     <>
                         {participants.length > 0 ? (
-                            <Group gap="xs" mb="xs" p="xs" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", borderRadius: "4px" }}>
+                            <Group
+                                gap="xs"
+                                mb="xs"
+                                p="xs"
+                                style={{
+                                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                    borderRadius: "4px"
+                                }}
+                            >
                                 <IconUsers size={14} />
                                 <Text size="xs" c="dimmed">
                                     {participants.map((p) => p.userName).join(", ")}
@@ -497,10 +610,20 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                 {messages.map((msg, idx) => {
                                     if (msg.type === "chat_message") {
                                         return (
-                                            <Box key={idx} p="xs" style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", borderRadius: "4px" }}>
+                                            <Box
+                                                key={idx}
+                                                p="xs"
+                                                style={{
+                                                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                                    borderRadius: "4px"
+                                                }}
+                                            >
                                                 <Group gap="xs" mb={4}>
                                                     <Text size="sm" fw={600}>
-                                                        {formatMessageName(msg.userName, msg.characterName)}
+                                                        {formatMessageName(
+                                                            msg.userName,
+                                                            msg.characterName
+                                                        )}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}
@@ -510,9 +633,14 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             </Box>
                                         )
                                     } else if (msg.type === "dice_roll") {
-                                        const criticalCount = msg.rollData.results.filter((r) => r.type === "critical" || r.type === "blood-critical").length
+                                        const criticalCount = msg.rollData.results.filter(
+                                            (r) =>
+                                                r.type === "critical" || r.type === "blood-critical"
+                                        ).length
                                         const hasCriticals = criticalCount >= 2
-                                        const hasBestial = msg.rollData.results.some((r) => r.type === "bestial-failure")
+                                        const hasBestial = msg.rollData.results.some(
+                                            (r) => r.type === "bestial-failure"
+                                        )
                                         function getDiceBonusStr(rollData: RollData) {
                                             const bonuses: string[] = []
 
@@ -520,12 +648,22 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 bonuses.push("Blood Surge")
                                             }
 
-                                            if (rollData.poolInfo?.specialtyBonus && rollData.poolInfo.specialtyBonus > 0) {
-                                                bonuses.push(`${rollData.poolInfo.specialtyBonus} Specialty${rollData.poolInfo.specialtyBonus > 1 ? "ies" : ""}`)
+                                            if (
+                                                rollData.poolInfo?.specialtyBonus &&
+                                                rollData.poolInfo.specialtyBonus > 0
+                                            ) {
+                                                bonuses.push(
+                                                    `${rollData.poolInfo.specialtyBonus} Specialty${rollData.poolInfo.specialtyBonus > 1 ? "ies" : ""}`
+                                                )
                                             }
 
-                                            if (rollData.poolInfo?.disciplinePowerBonus && rollData.poolInfo.disciplinePowerBonus > 0) {
-                                                bonuses.push(`${rollData.poolInfo.disciplinePowerBonus} from Discipline Powers`)
+                                            if (
+                                                rollData.poolInfo?.disciplinePowerBonus &&
+                                                rollData.poolInfo.disciplinePowerBonus > 0
+                                            ) {
+                                                bonuses.push(
+                                                    `${rollData.poolInfo.disciplinePowerBonus} from Discipline Powers`
+                                                )
                                             }
 
                                             if (bonuses.length === 0) {
@@ -542,22 +680,39 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 style={{
                                                     backgroundColor: "rgba(192, 63, 63, 0.1)",
                                                     borderRadius: "4px",
-                                                    border: `1px solid ${colorValue}`,
+                                                    border: `1px solid ${colorValue}`
                                                 }}
                                             >
                                                 <Group gap="xs" mb={4}>
                                                     <IconDice size={14} />
                                                     <Text size="sm" fw={600}>
-                                                        {formatMessageName(msg.userName, msg.characterName)}
+                                                        {formatMessageName(
+                                                            msg.userName,
+                                                            msg.characterName
+                                                        )}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}
                                                     </Text>
                                                 </Group>
                                                 <Text size="sm">
-                                                    Rolled {msg.rollData.poolInfo?.diceCount || msg.rollData.dice.length} dice:{" "}
-                                                    <Text span fw={600} c={msg.rollData.totalSuccesses > 0 ? "green" : "red"}>
-                                                        {msg.rollData.totalSuccesses} {msg.rollData.totalSuccesses === 1 ? "success" : "successes"}
+                                                    Rolled{" "}
+                                                    {msg.rollData.poolInfo?.diceCount ||
+                                                        msg.rollData.dice.length}{" "}
+                                                    dice:{" "}
+                                                    <Text
+                                                        span
+                                                        fw={600}
+                                                        c={
+                                                            msg.rollData.totalSuccesses > 0
+                                                                ? "green"
+                                                                : "red"
+                                                        }
+                                                    >
+                                                        {msg.rollData.totalSuccesses}{" "}
+                                                        {msg.rollData.totalSuccesses === 1
+                                                            ? "success"
+                                                            : "successes"}
                                                     </Text>
                                                     {hasCriticals ? (
                                                         <Text span c="yellow" fw={600}>
@@ -594,13 +749,16 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 style={{
                                                     backgroundColor: "rgba(192, 63, 63, 0.1)",
                                                     borderRadius: "4px",
-                                                    border: `1px solid ${colorValue}`,
+                                                    border: `1px solid ${colorValue}`
                                                 }}
                                             >
                                                 <Group gap="xs" mb={4}>
                                                     <IconDroplet size={14} />
                                                     <Text size="sm" fw={600}>
-                                                        {formatMessageName(msg.userName, msg.characterName)}
+                                                        {formatMessageName(
+                                                            msg.userName,
+                                                            msg.characterName
+                                                        )}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}
@@ -608,7 +766,11 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 </Group>
                                                 <Text size="sm">
                                                     Rouse Check:{" "}
-                                                    <Text span fw={600} c={msg.success ? "green" : "red"}>
+                                                    <Text
+                                                        span
+                                                        fw={600}
+                                                        c={msg.success ? "green" : "red"}
+                                                    >
                                                         {msg.success ? "✓ Passed" : "✗ Failed"}
                                                     </Text>
                                                 </Text>
@@ -625,26 +787,37 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 style={{
                                                     backgroundColor: "rgba(192, 63, 63, 0.1)",
                                                     borderRadius: "4px",
-                                                    border: `1px solid ${colorValue}`,
+                                                    border: `1px solid ${colorValue}`
                                                 }}
                                             >
                                                 <Group gap="xs" mb={4}>
                                                     <IconHeartHandshake size={14} />
                                                     <Text size="sm" fw={600}>
-                                                        {formatMessageName(msg.userName, msg.characterName)}
+                                                        {formatMessageName(
+                                                            msg.userName,
+                                                            msg.characterName
+                                                        )}
                                                     </Text>
                                                     <Text size="xs" c="dimmed">
                                                         {formatTimestamp(msg.timestamp)}
                                                     </Text>
                                                 </Group>
                                                 <Text size="sm">
-                                                    Remorse Test: [{msg.rolls.join(", ")}] – {msg.successes} {msg.successes === 1 ? "success" : "successes"}
-                                                    <Text span fw={600} c={msg.passed ? "green" : "red"}>
+                                                    Remorse Test: [{msg.rolls.join(", ")}] –{" "}
+                                                    {msg.successes}{" "}
+                                                    {msg.successes === 1 ? "success" : "successes"}
+                                                    <Text
+                                                        span
+                                                        fw={600}
+                                                        c={msg.passed ? "green" : "red"}
+                                                    >
                                                         {msg.passed ? " ✓ Passed" : " ✗ Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
-                                                    {msg.passed ? "Stains cleared." : `Humanity decreased to ${msg.newHumanity}.`}
+                                                    {msg.passed
+                                                        ? "Stains cleared."
+                                                        : `Humanity decreased to ${msg.newHumanity}.`}
                                                 </Text>
                                             </Box>
                                         )
@@ -656,7 +829,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 style={{
                                                     backgroundColor: "rgba(255, 0, 0, 0.1)",
                                                     borderRadius: "4px",
-                                                    border: "1px solid rgba(255, 0, 0, 0.3)",
+                                                    border: "1px solid rgba(255, 0, 0, 0.3)"
                                                 }}
                                             >
                                                 <Group gap="xs" mb={4}>
@@ -713,7 +886,11 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                 color={primaryColor}
                                 variant="filled"
                                 onClick={handleSendMessage}
-                                disabled={connectionStatus !== "connected" || !sessionId || !messageInput.trim()}
+                                disabled={
+                                    connectionStatus !== "connected" ||
+                                    !sessionId ||
+                                    !messageInput.trim()
+                                }
                             >
                                 <IconMessageCircle size={18} />
                             </ActionIcon>
@@ -734,7 +911,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                         </Group>
                     </>
                 )}
-            </Paper >
+            </Paper>
         </>
     )
 }

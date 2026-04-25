@@ -49,7 +49,7 @@ export const useAuth = () => {
     const {
         data: user,
         isLoading,
-        refetch,
+        refetch
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
@@ -64,7 +64,7 @@ export const useAuth = () => {
             return false
         },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000 // 5 minutes
     })
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
@@ -74,7 +74,7 @@ export const useAuth = () => {
                 posthog.identify(user.id, {
                     email: user.email,
                     firstName: user.firstName,
-                    lastName: user.lastName,
+                    lastName: user.lastName
                 })
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
@@ -120,11 +120,12 @@ export const useAuth = () => {
 
             // Even on error, try to go home
             window.location.href = "/"
-        },
+        }
     })
 
     const handleCallbackMutation = useMutation({
-        mutationFn: ({ code, state }: { code: string; state?: string }) => api.handleAuthCallback(code, state),
+        mutationFn: ({ code, state }: { code: string; state?: string }) =>
+            api.handleAuthCallback(code, state),
         onSuccess: (data) => {
             // Update the auth query cache with the user data
             queryClient.setQueryData(["auth", "me"], data.user)
@@ -138,12 +139,12 @@ export const useAuth = () => {
                 posthog.identify(data.user.id, {
                     email: data.user.email,
                     firstName: data.user.firstName,
-                    lastName: data.user.lastName,
+                    lastName: data.user.lastName
                 })
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
-        },
+        }
     })
 
     const signIn = () => {
@@ -161,7 +162,7 @@ export const useAuth = () => {
         onSuccess: (data) => {
             queryClient.setQueryData(["auth", "me"], data)
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
-        },
+        }
     })
 
     return {
@@ -176,6 +177,6 @@ export const useAuth = () => {
         callbackError: handleCallbackMutation.error,
         updateProfile: updateProfileMutation.mutate,
         isUpdatingProfile: updateProfileMutation.isPending,
-        updateProfileError: updateProfileMutation.error,
+        updateProfileError: updateProfileMutation.error
     }
 }

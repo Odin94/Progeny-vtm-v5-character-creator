@@ -1,12 +1,24 @@
-import { Button, Divider, Group, Modal, Stack, Text, TextInput, useMantineTheme } from "@mantine/core"
+import {
+    Button,
+    Divider,
+    Group,
+    Modal,
+    Stack,
+    Text,
+    TextInput,
+    useMantineTheme
+} from "@mantine/core"
 import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import {
     ConfirmationModalStyle,
     confirmationModalBodyStyle,
     confirmationModalCancelButtonStyles,
-    confirmationModalHeadingStyle,
+    confirmationModalHeadingStyle
 } from "./ConfirmActionModal"
-import { confirmationModalDangerConfirmButtonStyles, generatorOutlineActionButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
+import {
+    confirmationModalDangerConfirmButtonStyles,
+    generatorOutlineActionButtonStyles
+} from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 import { getGeneratorFieldStyles } from "~/generator/components/sharedGeneratorUi"
 
 type NameCharacterBeforeSwitchModalProps = {
@@ -28,7 +40,7 @@ const NameCharacterBeforeSwitchModal = ({
     onClose,
     onSaveAndContinue,
     onDiscardAndContinue,
-    isSaving,
+    isSaving
 }: NameCharacterBeforeSwitchModalProps) => {
     const theme = useMantineTheme()
     const fieldStyles = getGeneratorFieldStyles("gold")
@@ -49,7 +61,8 @@ const NameCharacterBeforeSwitchModal = ({
                         Name Current Character?
                     </Text>
                     <Text ta="center" style={confirmationModalBodyStyle}>
-                        Before you {pendingActionLabel}, either give this character a name and save it, or discard it and continue.
+                        Before you {pendingActionLabel}, either give this character a name and save
+                        it, or discard it and continue.
                     </Text>
                 </Stack>
 
@@ -84,8 +97,8 @@ const NameCharacterBeforeSwitchModal = ({
                             disabled={isSaving}
                             styles={{
                                 root: {
-                                    ...generatorOutlineActionButtonStyles.root,
-                                },
+                                    ...generatorOutlineActionButtonStyles.root
+                                }
                             }}
                         >
                             Delete Current

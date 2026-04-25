@@ -39,7 +39,7 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
         const newTouchstone: Touchstone = {
             name: name.trim(),
             description: description.trim(),
-            conviction: conviction.trim(),
+            conviction: conviction.trim()
         }
 
         if (initialTouchstone) {
@@ -54,13 +54,13 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
                 updatedTouchstones[index] = newTouchstone
                 setCharacter({
                     ...character,
-                    touchstones: updatedTouchstones,
+                    touchstones: updatedTouchstones
                 })
             }
         } else {
             setCharacter({
                 ...character,
-                touchstones: [...character.touchstones, newTouchstone],
+                touchstones: [...character.touchstones, newTouchstone]
             })
         }
 
@@ -68,14 +68,33 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
     }
 
     return (
-        <Modal opened={opened} onClose={onClose} title={initialTouchstone ? "Edit Touchstone" : "Add Touchstone"} size="md">
+        <Modal
+            opened={opened}
+            onClose={onClose}
+            title={initialTouchstone ? "Edit Touchstone" : "Add Touchstone"}
+            size="md"
+        >
             <Stack gap="md">
                 <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                    <TextInput
+                        label="Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
                 </FocusBorderWrapper>
-                <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} minRows={3} />
+                <Textarea
+                    label="Description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    minRows={3}
+                />
                 <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput label="Conviction" value={conviction} onChange={(e) => setConviction(e.target.value)} />
+                    <TextInput
+                        label="Conviction"
+                        value={conviction}
+                        onChange={(e) => setConviction(e.target.value)}
+                    />
                 </FocusBorderWrapper>
                 <Group justify="flex-end" mt="md">
                     <Button variant="subtle" onClick={onClose} color={primaryColor}>

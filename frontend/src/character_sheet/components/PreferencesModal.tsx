@@ -1,4 +1,14 @@
-import { Box, ColorSwatch, Group, SimpleGrid, Stack, Text, Tooltip, UnstyledButton, useMantineTheme } from "@mantine/core"
+import {
+    Box,
+    ColorSwatch,
+    Group,
+    SimpleGrid,
+    Stack,
+    Text,
+    Tooltip,
+    UnstyledButton,
+    useMantineTheme
+} from "@mantine/core"
 import { IconCheck } from "@tabler/icons-react"
 import { type UserPreferences, ALLOWED_COLORS, BACKGROUND_IMAGES } from "../utils/preferences"
 
@@ -18,32 +28,43 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                     Color theme
                 </Text>
                 <Text size="xs" c="dimmed">
-                    Override the clan-based accent color. Select "Default" to use your character's clan color.
+                    Override the clan-based accent color. Select "Default" to use your character's
+                    clan color.
                 </Text>
                 <SimpleGrid cols={7} spacing="sm" mt="xs">
                     <Tooltip label="Default (clan)" withArrow>
                         <UnstyledButton
                             onClick={() => onUpdate({ colorTheme: null })}
-                            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
                         >
                             <Box
                                 style={{
                                     width: 32,
                                     height: 32,
                                     borderRadius: "50%",
-                                    background: "linear-gradient(135deg, #e63946 0%, #457b9d 50%, #2a9d8f 100%)",
+                                    background:
+                                        "linear-gradient(135deg, #e63946 0%, #457b9d 50%, #2a9d8f 100%)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    boxShadow: preferences.colorTheme === null
-                                        ? `0 0 0 2.5px ${theme.white}`
-                                        : "none",
+                                    boxShadow:
+                                        preferences.colorTheme === null
+                                            ? `0 0 0 2.5px ${theme.white}`
+                                            : "none",
                                     cursor: "pointer",
-                                    flexShrink: 0,
+                                    flexShrink: 0
                                 }}
                             >
                                 {preferences.colorTheme === null ? (
-                                    <IconCheck size={14} color="white" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }} />
+                                    <IconCheck
+                                        size={14}
+                                        color="white"
+                                        style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }}
+                                    />
                                 ) : null}
                             </Box>
                         </UnstyledButton>
@@ -56,18 +77,30 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                             <Tooltip key={value} label={label} withArrow>
                                 <UnstyledButton
                                     onClick={() => onUpdate({ colorTheme: value })}
-                                    style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center"
+                                    }}
                                 >
                                     <ColorSwatch
                                         color={colorValue}
                                         size={32}
                                         style={{
                                             cursor: "pointer",
-                                            boxShadow: isSelected ? `0 0 0 2.5px ${theme.white}` : "none",
+                                            boxShadow: isSelected
+                                                ? `0 0 0 2.5px ${theme.white}`
+                                                : "none"
                                         }}
                                     >
                                         {isSelected ? (
-                                            <IconCheck size={14} color="white" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }} />
+                                            <IconCheck
+                                                size={14}
+                                                color="white"
+                                                style={{
+                                                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))"
+                                                }}
+                                            />
                                         ) : null}
                                     </ColorSwatch>
                                 </UnstyledButton>
@@ -97,18 +130,21 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                                 style={{
                                     borderRadius: 8,
                                     overflow: "hidden",
-                                    border: preferences.backgroundImage === null
-                                        ? `3px solid ${theme.colors[primaryColor]?.[6] ?? theme.white}`
-                                        : "3px solid transparent",
+                                    border:
+                                        preferences.backgroundImage === null
+                                            ? `3px solid ${theme.colors[primaryColor]?.[6] ?? theme.white}`
+                                            : "3px solid transparent",
                                     position: "relative",
                                     aspectRatio: "16/9",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    backgroundColor: theme.colors.dark[6],
+                                    backgroundColor: theme.colors.dark[6]
                                 }}
                             >
-                                <Text size="xs" ta="center" c="dimmed">Default</Text>
+                                <Text size="xs" ta="center" c="dimmed">
+                                    Default
+                                </Text>
                                 {preferences.backgroundImage === null ? (
                                     <Box
                                         style={{
@@ -117,7 +153,7 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            backgroundColor: "rgba(0,0,0,0.4)",
+                                            backgroundColor: "rgba(0,0,0,0.4)"
                                         }}
                                     >
                                         <IconCheck size={20} color="white" />
@@ -139,7 +175,7 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                                                 ? `3px solid ${theme.colors[primaryColor]?.[6] ?? theme.white}`
                                                 : "3px solid transparent",
                                             position: "relative",
-                                            aspectRatio: "16/9",
+                                            aspectRatio: "16/9"
                                         }}
                                     >
                                         <img
@@ -149,7 +185,7 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                                                 width: "100%",
                                                 height: "100%",
                                                 objectFit: "cover",
-                                                display: "block",
+                                                display: "block"
                                             }}
                                         />
                                         {isSelected ? (
@@ -160,7 +196,7 @@ const PreferencesContent = ({ preferences, onUpdate, primaryColor }: Preferences
                                                     display: "flex",
                                                     alignItems: "center",
                                                     justifyContent: "center",
-                                                    backgroundColor: "rgba(0,0,0,0.4)",
+                                                    backgroundColor: "rgba(0,0,0,0.4)"
                                                 }}
                                             >
                                                 <IconCheck size={20} color="white" />

@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from "vitest"
-import { createPdf_nerdbert, setButtonImageOverlay, setHumanityTracker } from "~/generator/pdfCreator"
+import {
+    createPdf_nerdbert,
+    setButtonImageOverlay,
+    setHumanityTracker
+} from "~/generator/pdfCreator"
 import { getBasicTestCharacter } from "./testUtils"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 import { fileURLToPath } from "url"
-import { PDFDocument, PDFTextField } from "pdf-lib"
+import { PDFDocument, PDFPage, PDFTextField } from "pdf-lib"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
@@ -35,12 +39,12 @@ global.fetch = vi.fn((url: string | Request | URL) => {
     if (typeof url === "string") {
         if (url.includes("Roboto-Regular.ttf")) {
             return Promise.resolve({
-                arrayBuffer: () => Promise.resolve(getFontBytes().buffer),
+                arrayBuffer: () => Promise.resolve(getFontBytes().buffer)
             } as Response)
         }
         if (url.includes("CheckSolid.png")) {
             return Promise.resolve({
-                arrayBuffer: () => Promise.resolve(getImageBytes().buffer),
+                arrayBuffer: () => Promise.resolve(getImageBytes().buffer)
             } as Response)
         }
     }
@@ -49,7 +53,7 @@ global.fetch = vi.fn((url: string | Request | URL) => {
 
 Object.defineProperty(window, "atob", {
     writable: true,
-    value: (str: string) => Buffer.from(str, "base64").toString("binary"),
+    value: (str: string) => Buffer.from(str, "base64").toString("binary")
 })
 
 describe("createPdf_nerdbert", () => {
@@ -96,7 +100,9 @@ describe("createPdf_nerdbert", () => {
         expect(disc2Ability1Text).toContain("Corrosive Vitae")
 
         if (character.rituals.length > 0) {
-            const bloodSorceryPowers = character.disciplines.filter((d) => d.discipline === "blood sorcery")
+            const bloodSorceryPowers = character.disciplines.filter(
+                (d) => d.discipline === "blood sorcery"
+            )
             const ritualFieldIndex = bloodSorceryPowers.length + 1 // First ritual appears after all powers
             const ritualField = form.getTextField(`Disc2_Ability${ritualFieldIndex}`)
             const ritualText = ritualField.getText() || ""
@@ -117,12 +123,12 @@ describe("createPdf_nerdbert", () => {
         const character = getBasicTestCharacter()
         character.humanity = 4
 
-        const setHumanityTrackerSpy = vi.spyOn(await import("~/generator/pdfCreator"), "setHumanityTracker")
+        const drawImageSpy = vi.spyOn(PDFPage.prototype, "drawImage")
 
         await createPdf_nerdbert(character)
 
-        expect(setHumanityTrackerSpy).toHaveBeenCalled()
-        expect(setHumanityTrackerSpy.mock.calls[0][3]).toBe(4)
+        expect(drawImageSpy).toHaveBeenCalledTimes(character.humanity)
+        drawImageSpy.mockRestore()
     })
 })
 
@@ -133,18 +139,18 @@ describe("PDF humanity helpers", () => {
         const page = { ref: pageRef, drawImage }
         const widget = {
             P: () => pageRef,
-            getRectangle: () => ({ x: 10, y: 20, width: 30, height: 40 }),
+            getRectangle: () => ({ x: 10, y: 20, width: 30, height: 40 })
         }
         const button = {
             acroField: {
-                getWidgets: () => [widget],
-            },
+                getWidgets: () => [widget]
+            }
         }
         const pdfDoc = {
-            getPages: () => [page],
+            getPages: () => [page]
         }
         const form = {
-            getButton: vi.fn().mockReturnValue(button),
+            getButton: vi.fn().mockReturnValue(button)
         }
         const image = { id: "image" }
 
@@ -155,21 +161,36 @@ describe("PDF humanity helpers", () => {
             x: 12.4,
             y: 23.2,
             width: 25.2,
-            height: 33.6,
+            height: 33.6
         })
     })
 
     it("draws one humanity mark per filled humanity slot", async () => {
-        const pdfDoc = {} as PDFDocument
-        const form = {} as any
+        const drawImage = vi.fn()
+        const pageRef = { id: "page-1" }
+        const page = { ref: pageRef, drawImage }
+        const widget = {
+            P: () => pageRef,
+            getRectangle: () => ({ x: 0, y: 0, width: 10, height: 10 })
+        }
+        const button = {
+            acroField: {
+                getWidgets: () => [widget]
+            }
+        }
+        const pdfDoc = {
+            getPages: () => [page]
+        } as any
+        const form = {
+            getButton: vi.fn().mockReturnValue(button)
+        } as any
         const image = {} as any
-        const overlaySpy = vi.spyOn(await import("~/generator/pdfCreator"), "setButtonImageOverlay").mockImplementation(() => {})
 
         setHumanityTracker(pdfDoc, form, image, 3)
 
-        expect(overlaySpy).toHaveBeenCalledTimes(3)
-        expect(overlaySpy).toHaveBeenNthCalledWith(1, pdfDoc, form, "Humanity-1", image)
-        expect(overlaySpy).toHaveBeenNthCalledWith(2, pdfDoc, form, "Humanity-2", image)
-        expect(overlaySpy).toHaveBeenNthCalledWith(3, pdfDoc, form, "Humanity-3", image)
+        expect(form.getButton).toHaveBeenNthCalledWith(1, "Humanity-1")
+        expect(form.getButton).toHaveBeenNthCalledWith(2, "Humanity-2")
+        expect(form.getButton).toHaveBeenNthCalledWith(3, "Humanity-3")
+        expect(drawImage).toHaveBeenCalledTimes(3)
     })
 })

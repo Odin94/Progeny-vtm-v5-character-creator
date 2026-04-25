@@ -29,7 +29,7 @@ const getCharacterFromStorage = () => {
 class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
-        error: undefined,
+        error: undefined
     }
 
     public static getDerivedStateFromError(e: Error): State {
@@ -47,7 +47,7 @@ class ErrorBoundary extends Component<Props, State> {
                 $exception_type: error.name,
                 $exception_stack_trace_raw: error.stack,
                 $exception_stack_trace: errorInfo.componentStack,
-                character: character,
+                character: character
             })
         } catch (posthogError) {
             console.warn("Failed to capture error in PostHog:", posthogError)
@@ -58,7 +58,13 @@ class ErrorBoundary extends Component<Props, State> {
         if (this.state.hasError) {
             return (
                 <Center>
-                    <Alert mt={"50px"} icon={<IconAlertCircle size="1rem" />} color="red" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
+                    <Alert
+                        mt={"50px"}
+                        icon={<IconAlertCircle size="1rem" />}
+                        color="red"
+                        variant="outline"
+                        bg={"rgba(0, 0, 0, 0.6)"}
+                    >
                         {this.state.error ? <ErrorDetails error={this.state.error} /> : null}
                     </Alert>
                 </Center>
