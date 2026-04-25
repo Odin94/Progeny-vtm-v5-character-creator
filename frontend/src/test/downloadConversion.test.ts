@@ -16,10 +16,14 @@ vi.mock("pdf-lib", () => ({
     PDFDocument: {
         load: vi.fn()
     },
-    PDFBool: {},
+    PDFBool: {
+        True: true
+    },
     PDFFont: {},
     PDFForm: {},
-    PDFName: {}
+    PDFName: {
+        of: vi.fn((name: string) => name)
+    }
 }))
 
 vi.mock("@pdf-lib/fontkit", () => ({
@@ -42,6 +46,36 @@ const mockAnchor = {
     click: vi.fn()
 }
 
+const createMockPdfForm = () => ({
+    acroForm: {
+        dict: {
+            set: vi.fn()
+        }
+    },
+    getButton: vi.fn().mockReturnValue({
+        acroField: {
+            getWidgets: () => []
+        }
+    }),
+    getCheckBox: vi.fn().mockReturnValue({
+        check: vi.fn()
+    }),
+    getTextField: vi.fn().mockReturnValue({
+        disableRichFormatting: vi.fn(),
+        setText: vi.fn()
+    }),
+    updateFieldAppearances: vi.fn()
+})
+
+const createMockPdfDoc = (mockForm = createMockPdfForm()) => ({
+    embedFont: vi.fn().mockResolvedValue({}),
+    embedPng: vi.fn().mockResolvedValue({}),
+    getForm: vi.fn().mockReturnValue(mockForm),
+    getPages: vi.fn().mockReturnValue([]),
+    registerFontkit: vi.fn(),
+    save: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3, 4, 5]))
+})
+
 Object.defineProperty(document, "createElement", {
     writable: true,
     value: vi.fn(() => mockAnchor)
@@ -52,6 +86,8 @@ describe("Download Conversion Logic", () => {
 
     beforeEach(() => {
         vi.clearAllMocks()
+        mockAnchor.href = ""
+        mockAnchor.download = ""
 
         mockCharacter = getBasicTestCharacter()
     })
@@ -168,66 +204,23 @@ describe("Download Conversion Logic", () => {
 
     describe("PDF Download Conversion", () => {
         it("should handle PDF creation without errors", async () => {
-            // Mock the PDF creation process
-            const mockPdfBytes = new Uint8Array([1, 2, 3, 4, 5])
-            const mockPdfDoc = {
-                registerFontkit: vi.fn(),
-                embedFont: vi.fn().mockResolvedValue({}),
-                getForm: vi.fn().mockReturnValue({
-                    getCheckBox: vi.fn().mockReturnValue({
-                        check: vi.fn()
-                    }),
-                    getTextField: vi.fn().mockReturnValue({
-                        setText: vi.fn()
-                    })
-                }),
-                save: vi.fn().mockResolvedValue(mockPdfBytes)
-            }
-
             const { PDFDocument } = await import("pdf-lib")
-            vi.mocked(PDFDocument.load).mockResolvedValue(mockPdfDoc as any)
+            vi.mocked(PDFDocument.load).mockResolvedValue(createMockPdfDoc() as any)
 
-            // Mock fetch for font loading
             vi.mocked(fetch).mockResolvedValue({
                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
-            // Mock base64Pdf_nerdbert
-            vi.doMock("~/generator/pdfCreator", async () => {
-                const actual = await vi.importActual("~/generator/pdfCreator")
-                return {
-                    ...actual,
-                    base64Pdf_nerdbert: "mock-base64-pdf-data"
-                }
-            })
+            await downloadCharacterSheet(mockCharacter)
 
-            try {
-                await downloadCharacterSheet(mockCharacter)
-                // If we get here without throwing, the function executed successfully
-                expect(true).toBe(true)
-            } catch (error) {
-                // PDF creation might fail in test environment due to missing resources
-                // This is expected and acceptable for unit testing
-                expect(error).toBeDefined()
-            }
+            expect(mockAnchor.click).toHaveBeenCalled()
+            expect(mockAnchor.download).toBe("progeny_Test Vampire.pdf")
         })
 
         it("should handle testTemplate function", async () => {
-            // Mock the PDF creation process
-            const mockPdfDoc = {
-                registerFontkit: vi.fn(),
-                embedFont: vi.fn().mockResolvedValue({}),
-                getForm: vi.fn().mockReturnValue({
-                    getTextField: vi.fn().mockReturnValue({
-                        setText: vi.fn()
-                    })
-                })
-            }
-
             const { PDFDocument } = await import("pdf-lib")
-            vi.mocked(PDFDocument.load).mockResolvedValue(mockPdfDoc as any)
+            vi.mocked(PDFDocument.load).mockResolvedValue(createMockPdfDoc() as any)
 
-            // Mock fetch for font loading
             vi.mocked(fetch).mockResolvedValue({
                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
@@ -240,40 +233,20 @@ describe("Download Conversion Logic", () => {
         })
 
         it("should handle PDF form field operations", async () => {
-            // Mock form operations
-            const mockForm = {
-                getCheckBox: vi.fn().mockReturnValue({
-                    check: vi.fn()
-                }),
-                getTextField: vi.fn().mockReturnValue({
-                    setText: vi.fn()
-                })
-            }
-
-            const mockPdfDoc = {
-                registerFontkit: vi.fn(),
-                embedFont: vi.fn().mockResolvedValue({}),
-                getForm: vi.fn().mockReturnValue(mockForm)
-            }
+            const mockForm = createMockPdfForm()
 
             const { PDFDocument } = await import("pdf-lib")
-            vi.mocked(PDFDocument.load).mockResolvedValue(mockPdfDoc as any)
+            vi.mocked(PDFDocument.load).mockResolvedValue(createMockPdfDoc(mockForm) as any)
 
-            // Mock fetch for font loading
             vi.mocked(fetch).mockResolvedValue({
                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
-            try {
-                await downloadCharacterSheet(mockCharacter)
+            await downloadCharacterSheet(mockCharacter)
 
-                // Verify form operations were called
-                expect(mockForm.getCheckBox).toHaveBeenCalled()
-                expect(mockForm.getTextField).toHaveBeenCalled()
-            } catch (error) {
-                // Expected in test environment
-                expect(error).toBeDefined()
-            }
+            expect(mockForm.getCheckBox).toHaveBeenCalled()
+            expect(mockForm.getTextField).toHaveBeenCalled()
+            expect(mockForm.getButton).toHaveBeenCalled()
         })
     })
 
@@ -283,40 +256,17 @@ describe("Download Conversion Logic", () => {
             const { PDFDocument } = await import("pdf-lib")
             vi.mocked(PDFDocument.load).mockRejectedValue(new Error("PDF load failed"))
 
-            try {
-                await downloadCharacterSheet(mockCharacter)
-            } catch (error) {
-                expect(error).toBeDefined()
-                // The error might be wrapped or transformed, so just check it exists
-                expect(error instanceof Error).toBe(true)
-            }
+            await expect(downloadCharacterSheet(mockCharacter)).rejects.toThrow("PDF load failed")
         })
 
         it("should handle font loading errors", async () => {
             // Mock fetch to reject
             vi.mocked(fetch).mockRejectedValue(new Error("Font load failed"))
 
-            const mockPdfDoc = {
-                registerFontkit: vi.fn(),
-                embedFont: vi.fn().mockRejectedValue(new Error("Font embed failed")),
-                getForm: vi.fn().mockReturnValue({
-                    getCheckBox: vi.fn().mockReturnValue({
-                        check: vi.fn()
-                    }),
-                    getTextField: vi.fn().mockReturnValue({
-                        setText: vi.fn()
-                    })
-                })
-            }
-
             const { PDFDocument } = await import("pdf-lib")
-            vi.mocked(PDFDocument.load).mockResolvedValue(mockPdfDoc as any)
+            vi.mocked(PDFDocument.load).mockResolvedValue(createMockPdfDoc() as any)
 
-            try {
-                await downloadCharacterSheet(mockCharacter)
-            } catch (error) {
-                expect(error).toBeDefined()
-            }
+            await expect(downloadCharacterSheet(mockCharacter)).rejects.toThrow("Font load failed")
         })
 
         it("should handle invalid base64 data", async () => {
@@ -329,11 +279,10 @@ describe("Download Conversion Logic", () => {
                 value: mockAtob
             })
 
-            try {
-                await testTemplate("invalid-base64-data")
-            } catch (error) {
-                expect(error).toBeDefined()
-            }
+            const result = await testTemplate("invalid-base64-data")
+
+            expect(result.success).toBe(false)
+            expect(result.error).toBeInstanceOf(Error)
         })
     })
 })

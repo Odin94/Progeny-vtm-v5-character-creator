@@ -122,12 +122,12 @@ describe("Broken Character Logic", () => {
                 await new Promise((resolve) => setTimeout(resolve, 0))
             })
 
-            expect(screen.getByText("Character Data Error")).toBeDefined()
+            expect(screen.getByRole("dialog", { name: "Character Data Error" })).toBeDefined()
             expect(screen.getByText("Failed to load character from saved data")).toBeDefined()
-            expect(screen.getByText("Download Broken Save Data")).toBeDefined()
-            expect(screen.getByText("Reset to Empty Character")).toBeDefined()
 
-            const downloadButton = screen.getByText("Download Broken Save Data")
+            const downloadButton = screen.getByRole("button", {
+                name: /download broken save data/i
+            })
             await act(async () => {
                 await userEvent.click(downloadButton)
             })
@@ -156,7 +156,7 @@ describe("Broken Character Logic", () => {
 
             linkClickSpy.mockRestore()
 
-            const resetButton = screen.getByText("Reset to Empty Character")
+            const resetButton = screen.getByRole("button", { name: /reset to empty character/i })
             await act(async () => {
                 await userEvent.click(resetButton)
             })

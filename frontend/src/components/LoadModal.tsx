@@ -16,7 +16,6 @@ export type LoadModalProps = {
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
     const parsed = JSON.parse(json)
-    console.log({ loadedCharacter: parsed })
 
     applyCharacterCompatibilityPatches(parsed)
     const loadedCharacter = characterSchema.parse(parsed)
@@ -36,7 +35,6 @@ const LoadModal = ({
             onClose={closeLoadModal}
             onConfirm={async () => {
                 if (!loadedFile) {
-                    console.log("Error: No file loaded!")
                     return
                 }
                 try {
@@ -75,7 +73,6 @@ const LoadModal = ({
                             color: "red"
                         })
                     }
-                    console.log({ e })
                 }
             }}
             title="Load Character?"
