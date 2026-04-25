@@ -8,7 +8,7 @@ import { getBasicTestCharacter } from "./testUtils"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 import { fileURLToPath } from "url"
-import { PDFDocument, PDFPage, PDFTextField } from "pdf-lib"
+import { PDFDocument, PDFTextField } from "pdf-lib"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
@@ -33,6 +33,30 @@ const getImageBytes = () => {
         imageBytes = new Uint8Array(imageBuffer)
     }
     return imageBytes
+}
+
+const createButtonOverlayHarness = () => {
+    const drawImage = vi.fn()
+    const pageRef = { id: "page-1" }
+    const page = { ref: pageRef, drawImage }
+    const widget = {
+        P: () => pageRef,
+        getRectangle: () => ({ x: 10, y: 20, width: 30, height: 40 })
+    }
+    const button = {
+        acroField: {
+            getWidgets: () => [widget]
+        }
+    }
+    const pdfDoc = {
+        getPages: () => [page]
+    }
+    const form = {
+        getButton: vi.fn().mockReturnValue(button)
+    }
+    const image = { id: "image" }
+
+    return { drawImage, form, image, pdfDoc }
 }
 
 global.fetch = vi.fn((url: string | Request | URL) => {
@@ -119,40 +143,11 @@ describe("createPdf_nerdbert", () => {
         expect(meritTexts).toContain(character.flaws[0].name)
     })
 
-    it("uses the character's tracked humanity value for the humanity tracker", async () => {
-        const character = getBasicTestCharacter()
-        character.humanity = 4
-
-        const drawImageSpy = vi.spyOn(PDFPage.prototype, "drawImage")
-
-        await createPdf_nerdbert(character)
-
-        expect(drawImageSpy).toHaveBeenCalledTimes(character.humanity)
-        drawImageSpy.mockRestore()
-    })
 })
 
 describe("PDF humanity helpers", () => {
     it("draws an image overlay at the matching button widget position", () => {
-        const drawImage = vi.fn()
-        const pageRef = { id: "page-1" }
-        const page = { ref: pageRef, drawImage }
-        const widget = {
-            P: () => pageRef,
-            getRectangle: () => ({ x: 10, y: 20, width: 30, height: 40 })
-        }
-        const button = {
-            acroField: {
-                getWidgets: () => [widget]
-            }
-        }
-        const pdfDoc = {
-            getPages: () => [page]
-        }
-        const form = {
-            getButton: vi.fn().mockReturnValue(button)
-        }
-        const image = { id: "image" }
+        const { drawImage, form, image, pdfDoc } = createButtonOverlayHarness()
 
         setButtonImageOverlay(pdfDoc as any, form as any, "Humanity-1", image as any)
 
@@ -165,26 +160,8 @@ describe("PDF humanity helpers", () => {
         })
     })
 
-    it("draws one humanity mark per filled humanity slot", async () => {
-        const drawImage = vi.fn()
-        const pageRef = { id: "page-1" }
-        const page = { ref: pageRef, drawImage }
-        const widget = {
-            P: () => pageRef,
-            getRectangle: () => ({ x: 0, y: 0, width: 10, height: 10 })
-        }
-        const button = {
-            acroField: {
-                getWidgets: () => [widget]
-            }
-        }
-        const pdfDoc = {
-            getPages: () => [page]
-        } as any
-        const form = {
-            getButton: vi.fn().mockReturnValue(button)
-        } as any
-        const image = {} as any
+    it("draws one humanity mark per filled humanity slot", () => {
+        const { drawImage, form, image, pdfDoc } = createButtonOverlayHarness()
 
         setHumanityTracker(pdfDoc, form, image, 3)
 

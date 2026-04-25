@@ -9,13 +9,20 @@ import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from "../data/Attributes"
 import { Power, Ritual, powerIsRitual } from "../data/Disciplines"
-import base64Pdf_nerdbert from "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw"
 import { upcase } from "./utils"
 import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 
 let customFont: PDFFont
+let nerdbertTemplatePromise: Promise<string> | null = null
+
+const getNerdbertTemplate = () => {
+    nerdbertTemplatePromise ??= import(
+        "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw"
+    ).then((module) => module.default)
+    return nerdbertTemplatePromise
+}
 
 const initPDFDocument = async (bytes: ArrayBufferLike): Promise<PDFDocument> => {
     const pdfDoc = await PDFDocument.load(bytes as ArrayBuffer)
@@ -127,7 +134,7 @@ export const setHumanityTracker = (
 }
 
 export const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
-    const bytes = base64ToArrayBuffer(base64Pdf_nerdbert)
+    const bytes = base64ToArrayBuffer(await getNerdbertTemplate())
 
     const pdfDoc = await initPDFDocument(bytes)
     const form = pdfDoc.getForm()
