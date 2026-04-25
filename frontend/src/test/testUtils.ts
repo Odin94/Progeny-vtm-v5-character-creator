@@ -16,17 +16,19 @@ export const getBasicTestCharacter = (): Character => {
             pickedSpecialties: [
                 {
                     skill: "medicine",
-                    name: "Anesthetics",
-                },
+                    name: "Anesthetics"
+                }
             ],
-            pickedMeritsAndFlaws: [{ name: "Resources", level: 1, summary: "", type: "merit", excludes: [] }],
+            pickedMeritsAndFlaws: [
+                { name: "Resources", level: 1, summary: "", type: "merit", excludes: [] }
+            ]
         },
         touchstones: [
             {
                 name: "Test Touchstone",
                 description: "A test touchstone",
-                conviction: "Test conviction",
-            },
+                conviction: "Test conviction"
+            }
         ],
         ambition: "Test ambition",
         desire: "Test desire",
@@ -39,7 +41,7 @@ export const getBasicTestCharacter = (): Character => {
             composure: 2,
             intelligence: 2,
             wits: 2,
-            resolve: 2,
+            resolve: 2
         },
         skills: {
             athletics: 2,
@@ -68,13 +70,13 @@ export const getBasicTestCharacter = (): Character => {
             occult: 0,
             politics: 0,
             science: 0,
-            technology: 1,
+            technology: 1
         },
         skillSpecialties: [
             {
                 skill: "intimidation",
-                name: "Direct Specialty",
-            },
+                name: "Direct Specialty"
+            }
         ],
         availableDisciplineNames: ["potence", "blood sorcery"],
         customDisciplines: {},
@@ -87,7 +89,7 @@ export const getBasicTestCharacter = (): Character => {
                 description: "A test prowess power description",
                 dicePool: "Strength + Brawl",
                 rouseChecks: 1,
-                amalgamPrerequisites: [],
+                amalgamPrerequisites: []
             },
             {
                 name: "Corrosive Vitae",
@@ -97,8 +99,8 @@ export const getBasicTestCharacter = (): Character => {
                 summary: "make your blood corrosive to dead substances",
                 dicePool: "",
                 level: 1,
-                discipline: "blood sorcery",
-            },
+                discipline: "blood sorcery"
+            }
         ],
         rituals: [
             {
@@ -108,8 +110,8 @@ export const getBasicTestCharacter = (): Character => {
                 rouseChecks: 1,
                 dicePool: "Intelligence + Blood Sorcery",
                 requiredTime: "1 hour",
-                ingredients: "Blood of the subject",
-            },
+                ingredients: "Blood of the subject"
+            }
         ],
         bloodPotency: 1,
         generation: 13,
@@ -123,8 +125,8 @@ export const getBasicTestCharacter = (): Character => {
                 level: 3,
                 summary: "A direct merit",
                 type: "merit",
-                excludes: [],
-            },
+                excludes: []
+            }
         ],
         flaws: [
             {
@@ -132,8 +134,8 @@ export const getBasicTestCharacter = (): Character => {
                 level: 2,
                 summary: "A direct flaw",
                 type: "flaw",
-                excludes: [],
-            },
+                excludes: []
+            }
         ],
         notes: "",
         ephemeral: {
@@ -143,9 +145,9 @@ export const getBasicTestCharacter = (): Character => {
             superficialWillpowerDamage: 0,
             aggravatedWillpowerDamage: 0,
             humanityStains: 0,
-            experienceSpent: 0,
+            experienceSpent: 0
         },
         version: 1,
-        characterVersion: 1,
+        characterVersion: 1
     }
 }

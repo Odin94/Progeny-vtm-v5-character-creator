@@ -23,7 +23,13 @@ export const loadCharacterFromJson = async (json: string): Promise<Character> =>
     return loadedCharacter
 }
 
-const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, setSelectedStep }: LoadModalProps) => {
+const LoadModal = ({
+    loadModalOpened,
+    closeLoadModal,
+    setCharacter,
+    loadedFile,
+    setSelectedStep
+}: LoadModalProps) => {
     return (
         <ConfirmActionModal
             opened={loadModalOpened}
@@ -57,13 +63,16 @@ const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, 
                             title: "JSON content error loading character",
                             message: z.prettifyError(e),
                             color: "red",
-                            autoClose: false,
+                            autoClose: false
                         })
                     } else {
                         notifications.show({
                             title: "Error loading character",
-                            message: e instanceof Error ? e.message : "Failed to load character from file",
-                            color: "red",
+                            message:
+                                e instanceof Error
+                                    ? e.message
+                                    : "Failed to load character from file",
+                            color: "red"
                         })
                     }
                     console.log({ e })

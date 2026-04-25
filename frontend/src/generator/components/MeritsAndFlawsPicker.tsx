@@ -1,18 +1,40 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Box, Button, Divider, Grid, Group, ScrollArea, Stack, Tabs, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import {
+    Box,
+    Button,
+    Divider,
+    Grid,
+    Group,
+    ScrollArea,
+    Stack,
+    Tabs,
+    Text,
+    Tooltip,
+    useMantineTheme
+} from "@mantine/core"
 import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
-import { isThinbloodFlaw, isThinbloodMerit, MeritOrFlaw, meritsAndFlaws, thinbloodMeritsAndFlaws } from "../../data/MeritsAndFlaws"
+import {
+    isThinbloodFlaw,
+    isThinbloodMerit,
+    MeritOrFlaw,
+    meritsAndFlaws,
+    thinbloodMeritsAndFlaws
+} from "../../data/MeritsAndFlaws"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import { Loresheets } from "./Loresheets"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
-import { generatorScrollableAreaStyle, generatorScrollableContentStyle, generatorScrollableShellStyle } from "./sharedGeneratorScrollableLayout"
+import {
+    generatorScrollableAreaStyle,
+    generatorScrollableContentStyle,
+    generatorScrollableShellStyle
+} from "./sharedGeneratorScrollableLayout"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -49,171 +71,190 @@ type MeritOrFlawCardProps = {
     setRemainingThinbloodMeritPoints: Dispatch<SetStateAction<number>>
 }
 
-const MeritOrFlawCard = memo(({
-    meritOrFlaw,
-    type,
-    pickedByName,
-    exclusionMap,
-    predatorTypeMeritsByName,
-    remainingMerits,
-    remainingFlaws,
-    remainingThinbloodMeritPoints,
-    phoneScreen,
-    setPickedMeritsAndFlaws,
-    setRemainingMerits,
-    setRemainingFlaws,
-    setRemainingThinbloodMeritPoints,
-}: MeritOrFlawCardProps) => {
-    const buttonColor = type === "flaw" ? "red" : "teal"
-    const icon = type === "flaw" ? flawIcon() : meritIcon()
-    const lineKey = `${type}-${meritOrFlaw.name}`
-    const accentColor = type === "flaw" ? "rgba(250, 82, 82, 0.92)" : "rgba(63, 192, 120, 0.92)"
-    const selectedBg = type === "flaw" ? rgba(RAW_RED, 0.18) : "rgba(46, 160, 67, 0.16)"
-    const selectedBorder = type === "flaw" ? "rgba(250, 82, 82, 0.38)" : "rgba(63, 192, 120, 0.32)"
-    const baseBg = "rgba(255, 255, 255, 0.03)"
-    const baseBorder = "rgba(255, 255, 255, 0.06)"
+const MeritOrFlawCard = memo(
+    ({
+        meritOrFlaw,
+        type,
+        pickedByName,
+        exclusionMap,
+        predatorTypeMeritsByName,
+        remainingMerits,
+        remainingFlaws,
+        remainingThinbloodMeritPoints,
+        phoneScreen,
+        setPickedMeritsAndFlaws,
+        setRemainingMerits,
+        setRemainingFlaws,
+        setRemainingThinbloodMeritPoints
+    }: MeritOrFlawCardProps) => {
+        const buttonColor = type === "flaw" ? "red" : "teal"
+        const icon = type === "flaw" ? flawIcon() : meritIcon()
+        const lineKey = `${type}-${meritOrFlaw.name}`
+        const accentColor = type === "flaw" ? "rgba(250, 82, 82, 0.92)" : "rgba(63, 192, 120, 0.92)"
+        const selectedBg = type === "flaw" ? rgba(RAW_RED, 0.18) : "rgba(46, 160, 67, 0.16)"
+        const selectedBorder =
+            type === "flaw" ? "rgba(250, 82, 82, 0.38)" : "rgba(63, 192, 120, 0.32)"
+        const baseBg = "rgba(255, 255, 255, 0.03)"
+        const baseBorder = "rgba(255, 255, 255, 0.06)"
 
-    const alreadyPickedItem = pickedByName.get(meritOrFlaw.name)
-    const wasPickedLevel = alreadyPickedItem?.level ?? 0
-    const excludingItems = exclusionMap.get(meritOrFlaw.name) ?? []
-    const isExcluded = excludingItems.length > 0
+        const alreadyPickedItem = pickedByName.get(meritOrFlaw.name)
+        const wasPickedLevel = alreadyPickedItem?.level ?? 0
+        const excludingItems = exclusionMap.get(meritOrFlaw.name) ?? []
+        const isExcluded = excludingItems.length > 0
 
-    const meritInPredatorType = predatorTypeMeritsByName.get(meritOrFlaw.name)
-    const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
+        const meritInPredatorType = predatorTypeMeritsByName.get(meritOrFlaw.name)
+        const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
 
-    const createButton = (level: number) => {
-        const cost = level - meritInPredatorTypeLevel
-        return (
-            <Button
-                key={meritOrFlaw.name + level}
-                disabled={
-                    isExcluded ||
-                    (meritInPredatorType && meritInPredatorType.level >= level) ||
-                    wasPickedLevel === level
-                }
-                onClick={() => {
-                    if (isThinbloodFlaw(meritOrFlaw.name)) {
-                        setRemainingThinbloodMeritPoints((prev) => prev + 1)
-                    } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                        if (remainingThinbloodMeritPoints < cost) return
-                        setRemainingThinbloodMeritPoints((prev) => prev - 1)
-                    } else if (type === "flaw") {
-                        if (remainingFlaws + wasPickedLevel < cost) return
-                        setRemainingFlaws((prev) => prev + wasPickedLevel - cost)
-                    } else {
-                        if (remainingMerits + wasPickedLevel < cost) return
-                        setRemainingMerits((prev) => prev + wasPickedLevel - cost)
+        const createButton = (level: number) => {
+            const cost = level - meritInPredatorTypeLevel
+            return (
+                <Button
+                    key={meritOrFlaw.name + level}
+                    disabled={
+                        isExcluded ||
+                        (meritInPredatorType && meritInPredatorType.level >= level) ||
+                        wasPickedLevel === level
                     }
-                    setPickedMeritsAndFlaws((prev) => [
-                        ...prev.filter((m) => m.name !== meritOrFlaw.name),
-                        { name: meritOrFlaw.name, level, type, summary: meritOrFlaw.summary, excludes: meritOrFlaw.excludes },
-                    ])
-                }}
-                style={{ marginRight: "5px" }}
-                size="xs"
-                variant={alreadyPickedItem?.level === level ? "filled" : "outline"}
-                color={buttonColor}
-                styles={{
-                    root: {
-                        minWidth: 36,
-                        borderColor: type === "flaw" ? "rgba(250, 82, 82, 0.45)" : "rgba(63, 192, 120, 0.4)",
-                        background: alreadyPickedItem?.level === level ? accentColor : "transparent",
-                        color: "rgba(244, 236, 232, 0.92)",
-                    },
-                }}
-            >
-                {level}
-            </Button>
-        )
-    }
-
-    const cost = wasPickedLevel - meritInPredatorTypeLevel
-    const summaryText = meritInPredatorType
-        ? "Already picked in Predator Type"
-        : isExcluded
-          ? `Excluded by: ${excludingItems.join(", ")}`
-          : meritOrFlaw.summary
-
-    const textContent = (
-        <Box
-            key={lineKey}
-            style={{
-                padding: phoneScreen ? "12px" : "14px 16px",
-                borderRadius: 14,
-                border: `1px solid ${alreadyPickedItem ? selectedBorder : baseBorder}`,
-                background: alreadyPickedItem ? selectedBg : baseBg,
-                opacity: isExcluded ? 0.5 : 1,
-                transition: "background 180ms ease, border-color 180ms ease",
-            }}
-        >
-            <Group justify="space-between" align="flex-start" gap="sm" mb={6}>
-                <Text
-                    style={{
-                        fontFamily: "Cinzel, Georgia, serif",
-                        fontSize: phoneScreen ? "0.88rem" : "0.94rem",
-                        fontWeight: 600,
-                        lineHeight: 1.3,
-                        color: alreadyPickedItem ? accentColor : "rgba(244, 236, 232, 0.94)",
-                        flex: 1,
+                    onClick={() => {
+                        if (isThinbloodFlaw(meritOrFlaw.name)) {
+                            setRemainingThinbloodMeritPoints((prev) => prev + 1)
+                        } else if (isThinbloodMerit(meritOrFlaw.name)) {
+                            if (remainingThinbloodMeritPoints < cost) return
+                            setRemainingThinbloodMeritPoints((prev) => prev - 1)
+                        } else if (type === "flaw") {
+                            if (remainingFlaws + wasPickedLevel < cost) return
+                            setRemainingFlaws((prev) => prev + wasPickedLevel - cost)
+                        } else {
+                            if (remainingMerits + wasPickedLevel < cost) return
+                            setRemainingMerits((prev) => prev + wasPickedLevel - cost)
+                        }
+                        setPickedMeritsAndFlaws((prev) => [
+                            ...prev.filter((m) => m.name !== meritOrFlaw.name),
+                            {
+                                name: meritOrFlaw.name,
+                                level,
+                                type,
+                                summary: meritOrFlaw.summary,
+                                excludes: meritOrFlaw.excludes
+                            }
+                        ])
+                    }}
+                    style={{ marginRight: "5px" }}
+                    size="xs"
+                    variant={alreadyPickedItem?.level === level ? "filled" : "outline"}
+                    color={buttonColor}
+                    styles={{
+                        root: {
+                            minWidth: 36,
+                            borderColor:
+                                type === "flaw"
+                                    ? "rgba(250, 82, 82, 0.45)"
+                                    : "rgba(63, 192, 120, 0.4)",
+                            background:
+                                alreadyPickedItem?.level === level ? accentColor : "transparent",
+                            color: "rgba(244, 236, 232, 0.92)"
+                        }
                     }}
                 >
-                    {icon} &nbsp;<span>{meritOrFlaw.name}</span>
-                </Text>
-            </Group>
+                    {level}
+                </Button>
+            )
+        }
 
-            <Text
+        const cost = wasPickedLevel - meritInPredatorTypeLevel
+        const summaryText = meritInPredatorType
+            ? "Already picked in Predator Type"
+            : isExcluded
+              ? `Excluded by: ${excludingItems.join(", ")}`
+              : meritOrFlaw.summary
+
+        const textContent = (
+            <Box
+                key={lineKey}
                 style={{
-                    fontFamily: "Crimson Text, Georgia, serif",
-                    fontSize: phoneScreen ? "0.95rem" : "1rem",
-                    lineHeight: 1.45,
-                    color: meritInPredatorType
-                        ? "rgba(212, 176, 105, 0.88)"
-                        : isExcluded
-                          ? rgba(RAW_GREY, 0.72)
-                          : rgba(RAW_GREY, 0.88),
+                    padding: phoneScreen ? "12px" : "14px 16px",
+                    borderRadius: 14,
+                    border: `1px solid ${alreadyPickedItem ? selectedBorder : baseBorder}`,
+                    background: alreadyPickedItem ? selectedBg : baseBg,
+                    opacity: isExcluded ? 0.5 : 1,
+                    transition: "background 180ms ease, border-color 180ms ease"
                 }}
             >
-                {summaryText}
-            </Text>
-
-            <Group gap={6} mt={10}>
-                {meritOrFlaw.cost.map((i) => createButton(i))}
-                {alreadyPickedItem ? (
-                    <Button
-                        onClick={() => {
-                            setPickedMeritsAndFlaws((prev) => prev.filter((m) => m.name !== meritOrFlaw.name))
-                            if (isThinbloodFlaw(meritOrFlaw.name)) {
-                                setRemainingThinbloodMeritPoints((prev) => prev - 1)
-                            } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                                setRemainingThinbloodMeritPoints((prev) => prev + 1)
-                            } else {
-                                type === "flaw"
-                                    ? setRemainingFlaws((prev) => prev + cost)
-                                    : setRemainingMerits((prev) => prev + cost)
-                            }
+                <Group justify="space-between" align="flex-start" gap="sm" mb={6}>
+                    <Text
+                        style={{
+                            fontFamily: "Cinzel, Georgia, serif",
+                            fontSize: phoneScreen ? "0.88rem" : "0.94rem",
+                            fontWeight: 600,
+                            lineHeight: 1.3,
+                            color: alreadyPickedItem ? accentColor : "rgba(244, 236, 232, 0.94)",
+                            flex: 1
                         }}
-                        size="xs"
-                        variant="subtle"
-                        color="yellow"
-                        styles={{ root: { paddingLeft: 8, paddingRight: 8 } }}
                     >
-                        Unpick
-                    </Button>
-                ) : null}
-            </Group>
-        </Box>
-    )
+                        {icon} &nbsp;<span>{meritOrFlaw.name}</span>
+                    </Text>
+                </Group>
 
-    if (isExcluded) {
-        return (
-            <Tooltip key={lineKey} label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`} withArrow>
-                {textContent}
-            </Tooltip>
+                <Text
+                    style={{
+                        fontFamily: "Crimson Text, Georgia, serif",
+                        fontSize: phoneScreen ? "0.95rem" : "1rem",
+                        lineHeight: 1.45,
+                        color: meritInPredatorType
+                            ? "rgba(212, 176, 105, 0.88)"
+                            : isExcluded
+                              ? rgba(RAW_GREY, 0.72)
+                              : rgba(RAW_GREY, 0.88)
+                    }}
+                >
+                    {summaryText}
+                </Text>
+
+                <Group gap={6} mt={10}>
+                    {meritOrFlaw.cost.map((i) => createButton(i))}
+                    {alreadyPickedItem ? (
+                        <Button
+                            onClick={() => {
+                                setPickedMeritsAndFlaws((prev) =>
+                                    prev.filter((m) => m.name !== meritOrFlaw.name)
+                                )
+                                if (isThinbloodFlaw(meritOrFlaw.name)) {
+                                    setRemainingThinbloodMeritPoints((prev) => prev - 1)
+                                } else if (isThinbloodMerit(meritOrFlaw.name)) {
+                                    setRemainingThinbloodMeritPoints((prev) => prev + 1)
+                                } else if (type === "flaw") {
+                                    setRemainingFlaws((prev) => prev + cost)
+                                } else {
+                                    setRemainingMerits((prev) => prev + cost)
+                                }
+                            }}
+                            size="xs"
+                            variant="subtle"
+                            color="yellow"
+                            styles={{ root: { paddingLeft: 8, paddingRight: 8 } }}
+                        >
+                            Unpick
+                        </Button>
+                    ) : null}
+                </Group>
+            </Box>
         )
-    }
 
-    return textContent
-})
+        if (isExcluded) {
+            return (
+                <Tooltip
+                    key={lineKey}
+                    label={`This ${type} is excluded because you already have: ${excludingItems.join(", ")}`}
+                    withArrow
+                >
+                    {textContent}
+                </Tooltip>
+            )
+        }
+
+        return textContent
+    }
+)
 
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
     useEffect(() => {
@@ -227,12 +268,16 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([
         ...character.merits,
-        ...character.flaws,
+        ...character.flaws
     ])
 
     const predatorTypeProvidedNames = useMemo(() => {
-        const autoPredatorTypeNames = PredatorTypes[character.predatorType.name]?.meritsAndFlaws.map((item) => item.name) ?? []
-        const pickedPredatorTypeNames = character.predatorType.pickedMeritsAndFlaws.map((item) => item.name)
+        const autoPredatorTypeNames =
+            PredatorTypes[character.predatorType.name]?.meritsAndFlaws.map((item) => item.name) ??
+            []
+        const pickedPredatorTypeNames = character.predatorType.pickedMeritsAndFlaws.map(
+            (item) => item.name
+        )
 
         return new Set([...autoPredatorTypeNames, ...pickedPredatorTypeNames])
     }, [character.predatorType.name, character.predatorType.pickedMeritsAndFlaws])
@@ -253,7 +298,9 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const isThinBlood = character.clan === "Thin-blood"
     const tbMeritCount = character.merits.filter((m) => isThinbloodMerit(m.name)).length
     const tbFlawCount = character.flaws.filter((f) => isThinbloodFlaw(f.name)).length
-    const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(tbFlawCount - tbMeritCount)
+    const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(
+        tbFlawCount - tbMeritCount
+    )
 
     const predatorTypePickedNames = useMemo(
         () => new Set(character.predatorType.pickedMeritsAndFlaws.map((item) => item.name)),
@@ -319,36 +366,45 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         setPickedMeritsAndFlaws,
         setRemainingMerits,
         setRemainingFlaws,
-        setRemainingThinbloodMeritPoints,
+        setRemainingThinbloodMeritPoints
     }
 
     const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => (
-        <MeritOrFlawCard key={`${type}-${meritOrFlaw.name}`} meritOrFlaw={meritOrFlaw} type={type} {...cardProps} />
+        <MeritOrFlawCard
+            key={`${type}-${meritOrFlaw.name}`}
+            meritOrFlaw={meritOrFlaw}
+            type={type}
+            {...cardProps}
+        />
     )
 
     const isConfirmDisabled = isThinBlood && remainingThinbloodMeritPoints < 0
     const handleReset = () => {
         if (resetTarget === "merit") {
-            const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter((item) => item.type !== "merit")
+            const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter(
+                (item) => item.type !== "merit"
+            )
             setPickedMeritsAndFlaws(nextPickedMeritsAndFlaws)
             setRemainingMerits(meritPoints)
             setRemainingThinbloodMeritPoints(tbFlawCount)
             setCharacter({
                 ...character,
                 merits: [],
-                flaws: nextPickedMeritsAndFlaws.filter((item) => item.type === "flaw"),
+                flaws: nextPickedMeritsAndFlaws.filter((item) => item.type === "flaw")
             })
         }
 
         if (resetTarget === "flaw") {
-            const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter((item) => item.type !== "flaw")
+            const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter(
+                (item) => item.type !== "flaw"
+            )
             setPickedMeritsAndFlaws(nextPickedMeritsAndFlaws)
             setRemainingFlaws(flawPoints)
             setRemainingThinbloodMeritPoints(-tbMeritCount)
             setCharacter({
                 ...character,
                 merits: nextPickedMeritsAndFlaws.filter((item) => item.type === "merit"),
-                flaws: [],
+                flaws: []
             })
         }
 
@@ -357,7 +413,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     return (
         <div style={generatorScrollableShellStyle}>
-            <Stack align="center" gap="md" style={{ ...generatorScrollableAreaStyle, width: "100%" }}>
+            <Stack
+                align="center"
+                gap="md"
+                style={{ ...generatorScrollableAreaStyle, width: "100%" }}
+            >
                 <ScrollArea
                     style={generatorScrollableAreaStyle}
                     w="100%"
@@ -365,7 +425,6 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                     pt={4}
                     pb={8}
                     type="always"
-                   
                     scrollbarSize={nightfallScrollbarSize}
                     styles={nightfallScrollAreaStyles}
                 >
@@ -379,29 +438,33 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 marginBottom={phoneScreen ? 12 : 16}
                             />
 
-                        <Grid m={0} gutter="sm">
-                            <Grid.Col span={phoneScreen ? 12 : 4}>
-                                <PointCard
-                                    label="Advantage Points"
-                                    value={`${remainingMerits}/${meritPoints}`}
-                                    tone="merit"
-                                    onReset={() => setResetTarget("merit")}
-                                />
-                            </Grid.Col>
-                            <Grid.Col span={phoneScreen ? 12 : 4}>
-                                <PointCard
-                                    label="Flaw Points"
-                                    value={`${remainingFlaws}/${flawPoints}`}
-                                    tone="flaw"
-                                    onReset={() => setResetTarget("flaw")}
-                                />
-                            </Grid.Col>
+                            <Grid m={0} gutter="sm">
+                                <Grid.Col span={phoneScreen ? 12 : 4}>
+                                    <PointCard
+                                        label="Advantage Points"
+                                        value={`${remainingMerits}/${meritPoints}`}
+                                        tone="merit"
+                                        onReset={() => setResetTarget("merit")}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={phoneScreen ? 12 : 4}>
+                                    <PointCard
+                                        label="Flaw Points"
+                                        value={`${remainingFlaws}/${flawPoints}`}
+                                        tone="flaw"
+                                        onReset={() => setResetTarget("flaw")}
+                                    />
+                                </Grid.Col>
                                 {isThinBlood ? (
                                     <Grid.Col span={phoneScreen ? 12 : 4}>
                                         <PointCard
                                             label="Thin-blood Balance"
                                             value={remainingThinbloodMeritPoints}
-                                            tone={remainingThinbloodMeritPoints < 0 ? "warning" : "neutral"}
+                                            tone={
+                                                remainingThinbloodMeritPoints < 0
+                                                    ? "warning"
+                                                    : "neutral"
+                                            }
                                             helper="Gain merit points by taking thin-blood flaws."
                                         />
                                     </Grid.Col>
@@ -416,7 +479,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                     list: {
                                         gap: 10,
                                         borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-                                        paddingBottom: 10,
+                                        paddingBottom: 10
                                     },
                                     tab: {
                                         borderRadius: 999,
@@ -428,39 +491,50 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         textTransform: "uppercase",
                                         fontSize: "0.78rem",
                                         fontWeight: 600,
-                                        transition: "background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
+                                        transition:
+                                            "background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease"
                                     },
                                     panel: {
-                                        paddingTop: 18,
-                                    },
+                                        paddingTop: 18
+                                    }
                                 }}
                             >
-                            <Tabs.List>
-                                <Tabs.Tab
-                                    value="merits"
-                                    style={activeTab === "merits" ? {
-                                        background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
-                                        border: `1px solid ${rgba(RAW_RED, 0.6)}`,
-                                        color: "rgba(248, 240, 235, 0.96)",
-                                        boxShadow: "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                        transform: "translateY(-1px)",
-                                    } : undefined}
-                                >
-                                    Merits & Flaws
-                                </Tabs.Tab>
-                                <Tabs.Tab
-                                    value="loresheets"
-                                    style={activeTab === "loresheets" ? {
-                                        background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
-                                        border: `1px solid ${rgba(RAW_RED, 0.6)}`,
-                                        color: "rgba(248, 240, 235, 0.96)",
-                                        boxShadow: "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                        transform: "translateY(-1px)",
-                                    } : undefined}
-                                >
-                                    Loresheets
-                                </Tabs.Tab>
-                            </Tabs.List>
+                                <Tabs.List>
+                                    <Tabs.Tab
+                                        value="merits"
+                                        style={
+                                            activeTab === "merits"
+                                                ? {
+                                                      background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
+                                                      border: `1px solid ${rgba(RAW_RED, 0.6)}`,
+                                                      color: "rgba(248, 240, 235, 0.96)",
+                                                      boxShadow:
+                                                          "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                                      transform: "translateY(-1px)"
+                                                  }
+                                                : undefined
+                                        }
+                                    >
+                                        Merits & Flaws
+                                    </Tabs.Tab>
+                                    <Tabs.Tab
+                                        value="loresheets"
+                                        style={
+                                            activeTab === "loresheets"
+                                                ? {
+                                                      background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
+                                                      border: `1px solid ${rgba(RAW_RED, 0.6)}`,
+                                                      color: "rgba(248, 240, 235, 0.96)",
+                                                      boxShadow:
+                                                          "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                                      transform: "translateY(-1px)"
+                                                  }
+                                                : undefined
+                                        }
+                                    >
+                                        Loresheets
+                                    </Tabs.Tab>
+                                </Tabs.List>
 
                                 <Tabs.Panel value="merits">
                                     <Box
@@ -469,7 +543,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                             borderRadius: 20,
                                             background: "rgba(14, 15, 18, 0.66)",
                                             border: "1px solid rgba(255, 255, 255, 0.05)",
-                                            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.24)",
+                                            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.24)"
                                         }}
                                     >
                                         {isThinBlood ? (
@@ -478,11 +552,14 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                     ta="center"
                                                     style={{
                                                         fontFamily: "Crimson Text, Georgia, serif",
-                                                        fontSize: phoneScreen ? "1.1rem" : "1.25rem",
-                                                        color: theme.colors.grape[3],
+                                                        fontSize: phoneScreen
+                                                            ? "1.1rem"
+                                                            : "1.25rem",
+                                                        color: theme.colors.grape[3]
                                                     }}
                                                 >
-                                                    Pick Thin-blood flaws to gain Thin-blood merit points
+                                                    Pick Thin-blood flaws to gain Thin-blood merit
+                                                    points
                                                 </Text>
                                                 <Text
                                                     ta="center"
@@ -491,7 +568,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                         fontSize: "0.8rem",
                                                         letterSpacing: "0.06em",
                                                         color: rgba(RAW_GREY, 0.56),
-                                                        textTransform: "uppercase",
+                                                        textTransform: "uppercase"
                                                     }}
                                                 >
                                                     Balance: {remainingThinbloodMeritPoints}
@@ -500,15 +577,33 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         ) : null}
 
                                         <Grid m={0} gutter="lg">
-                                            {isThinBlood ? thinBloodMeritsAndFlawsComponent(getMeritOrFlawLine, phoneScreen) : null}
+                                            {isThinBlood
+                                                ? thinBloodMeritsAndFlawsComponent(
+                                                      getMeritOrFlawLine,
+                                                      phoneScreen
+                                                  )
+                                                : null}
 
                                             {meritsAndFlaws.map((category) => {
                                                 return (
-                                                    <Grid.Col span={phoneScreen ? 12 : 6} key={category.title}>
+                                                    <Grid.Col
+                                                        span={phoneScreen ? 12 : 6}
+                                                        key={category.title}
+                                                    >
                                                         <Stack gap="sm">
-                                                            <GeneratorSectionDivider label={category.title} accentAlpha={0.32} titleSize="0.96rem" lineHeight={1} marginY="xs" />
-                                                            {category.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
-                                                            {category.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
+                                                            <GeneratorSectionDivider
+                                                                label={category.title}
+                                                                accentAlpha={0.32}
+                                                                titleSize="0.96rem"
+                                                                lineHeight={1}
+                                                                marginY="xs"
+                                                            />
+                                                            {category.merits.map((merit) =>
+                                                                getMeritOrFlawLine(merit, "merit")
+                                                            )}
+                                                            {category.flaws.map((flaw) =>
+                                                                getMeritOrFlawLine(flaw, "flaw")
+                                                            )}
                                                         </Stack>
                                                     </Grid.Col>
                                                 )
@@ -543,13 +638,15 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                             setCharacter({
                                 ...character,
                                 merits: pickedMeritsAndFlaws.filter((l) => l.type === "merit"),
-                                flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw"),
+                                flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw")
                             })
 
                             trackEvent({
                                 action: "merits confirm clicked",
                                 category: "merits",
-                                label: pickedMeritsAndFlaws.map((m) => `${m.name}: ${m.level}`).join(", "),
+                                label: pickedMeritsAndFlaws
+                                    .map((m) => `${m.name}: ${m.level}`)
+                                    .join(", ")
                             })
 
                             nextStep()
@@ -578,7 +675,7 @@ const PointCard = ({
     value,
     tone,
     helper,
-    onReset,
+    onReset
 }: {
     label: string
     value: number | string
@@ -590,23 +687,23 @@ const PointCard = ({
         merit: {
             border: "rgba(63, 192, 120, 0.24)",
             bg: "rgba(46, 160, 67, 0.1)",
-            value: "rgba(96, 230, 156, 0.95)",
+            value: "rgba(96, 230, 156, 0.95)"
         },
         flaw: {
             border: "rgba(250, 82, 82, 0.24)",
             bg: rgba(RAW_RED, 0.1),
-            value: "rgba(255, 135, 135, 0.95)",
+            value: "rgba(255, 135, 135, 0.95)"
         },
         warning: {
             border: "rgba(250, 176, 5, 0.28)",
             bg: "rgba(250, 176, 5, 0.08)",
-            value: "rgba(255, 212, 117, 0.95)",
+            value: "rgba(255, 212, 117, 0.95)"
         },
         neutral: {
             border: "rgba(183, 148, 246, 0.24)",
             bg: "rgba(132, 94, 247, 0.09)",
-            value: rgba(RAW_GREY, 0.94),
-        },
+            value: rgba(RAW_GREY, 0.94)
+        }
     }[tone]
 
     return (
@@ -616,7 +713,7 @@ const PointCard = ({
                 padding: "14px 16px",
                 borderRadius: 16,
                 border: `1px solid ${palette.border}`,
-                background: palette.bg,
+                background: palette.bg
             }}
         >
             <Text
@@ -626,7 +723,7 @@ const PointCard = ({
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: rgba(RAW_GREY, 0.54),
-                    marginBottom: 6,
+                    marginBottom: 6
                 }}
             >
                 {label}
@@ -636,7 +733,7 @@ const PointCard = ({
                     fontFamily: "Cinzel, Georgia, serif",
                     fontSize: "1.55rem",
                     lineHeight: 1,
-                    color: palette.value,
+                    color: palette.value
                 }}
             >
                 {value}
@@ -652,14 +749,14 @@ const PointCard = ({
                         root: {
                             paddingLeft: 0,
                             paddingRight: 0,
-                            height: "auto",
+                            height: "auto"
                         },
                         label: {
                             fontFamily: "Cinzel, Georgia, serif",
                             fontSize: "0.72rem",
                             letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                        },
+                            textTransform: "uppercase"
+                        }
                     }}
                 >
                     Reset
@@ -671,7 +768,7 @@ const PointCard = ({
                     style={{
                         fontFamily: "Crimson Text, Georgia, serif",
                         fontSize: "0.95rem",
-                        color: rgba(RAW_GREY, 0.72),
+                        color: rgba(RAW_GREY, 0.72)
                     }}
                 >
                     {helper}
@@ -689,13 +786,27 @@ function thinBloodMeritsAndFlawsComponent(
         <>
             <Grid.Col span={phoneScreen ? 12 : 6}>
                 <Stack gap={"sm"}>
-                    <GeneratorSectionDivider label="Thin-blood merits" accentAlpha={0.32} titleSize="0.96rem" lineHeight={1} marginY="xs" />
-                    {thinbloodMeritsAndFlaws.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+                    <GeneratorSectionDivider
+                        label="Thin-blood merits"
+                        accentAlpha={0.32}
+                        titleSize="0.96rem"
+                        lineHeight={1}
+                        marginY="xs"
+                    />
+                    {thinbloodMeritsAndFlaws.merits.map((merit) =>
+                        getMeritOrFlawLine(merit, "merit")
+                    )}
                 </Stack>
             </Grid.Col>
             <Grid.Col span={phoneScreen ? 12 : 6}>
                 <Stack gap={"sm"}>
-                    <GeneratorSectionDivider label="Thin-blood flaws" accentAlpha={0.32} titleSize="0.96rem" lineHeight={1} marginY="xs" />
+                    <GeneratorSectionDivider
+                        label="Thin-blood flaws"
+                        accentAlpha={0.32}
+                        titleSize="0.96rem"
+                        lineHeight={1}
+                        marginY="xs"
+                    />
                     {thinbloodMeritsAndFlaws.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
                 </Stack>
             </Grid.Col>

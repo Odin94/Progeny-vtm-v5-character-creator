@@ -94,7 +94,7 @@ class MetricsCollector {
                 route,
                 method,
                 duration,
-                timestamp: Date.now(),
+                timestamp: Date.now()
             })
 
             // Keep only last 10 minutes of data
@@ -130,7 +130,7 @@ class MetricsCollector {
             nice: 0,
             sys: 0,
             idle: 0,
-            irq: 0,
+            irq: 0
         }
 
         // Sum up CPU times from all cores
@@ -191,14 +191,16 @@ class MetricsCollector {
                     'wmic logicaldisk where "DeviceID=\\"C:\\"" get Size,FreeSpace /format:csv',
                     {
                         encoding: "utf8",
-                        stdio: ["ignore", "pipe", "ignore"],
+                        stdio: ["ignore", "pipe", "ignore"]
                     }
                 )
                     .toString()
                     .trim()
                     .split("\n")
 
-                const dataLine = lines.find((line) => line && line.includes(",") && !line.toLowerCase().startsWith("node"))
+                const dataLine = lines.find(
+                    (line) => line && line.includes(",") && !line.toLowerCase().startsWith("node")
+                )
                 if (!dataLine) {
                     return null
                 }
@@ -223,13 +225,13 @@ class MetricsCollector {
                 return {
                     usedMB,
                     totalMB,
-                    percentage,
+                    percentage
                 }
             }
 
             const lines = execSync("df -kP .", {
                 encoding: "utf8",
-                stdio: ["ignore", "pipe", "ignore"],
+                stdio: ["ignore", "pipe", "ignore"]
             })
                 .toString()
                 .trim()
@@ -258,7 +260,7 @@ class MetricsCollector {
             return {
                 usedMB,
                 totalMB,
-                percentage,
+                percentage
             }
         } catch {
             return null
@@ -302,23 +304,23 @@ class MetricsCollector {
                 used: usedMemory,
                 total: totalMemory,
                 percentage: memoryPercentage,
-                maxPercentage: this.maxMemoryUsage,
+                maxPercentage: this.maxMemoryUsage
             },
             backendMemoryUsage: {
                 used: backendUsedMemory,
-                percentage: backendMemoryPercentage,
+                percentage: backendMemoryPercentage
             },
             cpuUsage: {
                 percentage: cpuUsage,
-                maxPercentage: this.maxCpuUsage,
+                maxPercentage: this.maxCpuUsage
             },
             diskUsage: diskUsage ?? undefined,
             responseTimes: {
                 p50,
                 p90,
-                p99,
+                p99
             },
-            requestCount: recentResponseTimes.length,
+            requestCount: recentResponseTimes.length
         }
     }
 
@@ -340,7 +342,7 @@ class MetricsCollector {
                     ? {
                           usedDiskMB: Math.round(diskUsage.usedMB * 100) / 100,
                           totalDiskMB: Math.round(diskUsage.totalMB * 100) / 100,
-                          usedDiskPercentage: Math.round(diskUsage.percentage * 100) / 100,
+                          usedDiskPercentage: Math.round(diskUsage.percentage * 100) / 100
                       }
                     : {}
 
@@ -350,9 +352,13 @@ class MetricsCollector {
                     memory_used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
                     memory_total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
                     memory_percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
-                    memory_max_percentage: Math.round(metrics.memoryUsage.maxPercentage * 100) / 100,
-                    backend_memory_used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
-                    backend_memory_percentage: Math.round(metrics.backendMemoryUsage.percentage * 100) / 100,
+                    memory_max_percentage:
+                        Math.round(metrics.memoryUsage.maxPercentage * 100) / 100,
+                    backend_memory_used_mb: Math.round(
+                        metrics.backendMemoryUsage.used / 1024 / 1024
+                    ),
+                    backend_memory_percentage:
+                        Math.round(metrics.backendMemoryUsage.percentage * 100) / 100,
                     cpu_percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
                     cpu_max_percentage: Math.round(metrics.cpuUsage.maxPercentage * 100) / 100,
                     response_time_p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
@@ -360,7 +366,7 @@ class MetricsCollector {
                     response_time_p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
                     request_count: metrics.requestCount,
                     ...diskProps,
-                    environment: env.NODE_ENV,
+                    environment: env.NODE_ENV
                 },
                 "backend_metrics"
             )
@@ -381,7 +387,7 @@ class MetricsCollector {
             nice: 0,
             sys: 0,
             idle: 0,
-            irq: 0,
+            irq: 0
         }
         for (const cpu of cpus) {
             this.lastCpuTimes.user += cpu.times.user
@@ -398,55 +404,69 @@ class MetricsCollector {
         }, 1000)
 
         // Send metrics every 10 minutes
-        this.intervalId = setInterval(async () => {
-            const metrics = this.collectMetrics()
-            
-            // Log metrics for debugging
-            this.fastify.log.info({
-                metrics: {
-                    memory: {
-                        used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
-                        total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
-                        percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
-                        max_percentage: Math.round(metrics.memoryUsage.maxPercentage * 100) / 100,
-                    },
-                    backend_memory: {
-                        used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
-                        percentage: Math.round(metrics.backendMemoryUsage.percentage * 100) / 100,
-                    },
-                    cpu: {
-                        percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
-                        max_percentage: Math.round(metrics.cpuUsage.maxPercentage * 100) / 100,
-                    },
-                    ...(metrics.diskUsage
-                        ? {
-                              disk: {
-                                  used_gb: Math.round((metrics.diskUsage.usedMB / 1024) * 100) / 100,
-                                  total_gb: Math.round((metrics.diskUsage.totalMB / 1024) * 100) / 100,
-                                  percentage: Math.round(metrics.diskUsage.percentage * 100) / 100,
-                              },
-                          }
-                        : {}),
-                    response_times: {
-                        p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
-                        p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
-                        p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100,
-                    },
-                    request_count: metrics.requestCount,
-                },
-            }, "System metrics collected")
-            
-            await this.sendToPostHog(metrics)
+        this.intervalId = setInterval(
+            async () => {
+                const metrics = this.collectMetrics()
 
-            // Clear old response times (keep last 10 minutes for next aggregation)
-            const tenMinutesAgo = Date.now() - 10 * 60 * 1000
-            this.responseTimes = this.responseTimes.filter((rt) => rt.timestamp > tenMinutesAgo)
+                // Log metrics for debugging
+                this.fastify.log.info(
+                    {
+                        metrics: {
+                            memory: {
+                                used_mb: Math.round(metrics.memoryUsage.used / 1024 / 1024),
+                                total_mb: Math.round(metrics.memoryUsage.total / 1024 / 1024),
+                                percentage: Math.round(metrics.memoryUsage.percentage * 100) / 100,
+                                max_percentage:
+                                    Math.round(metrics.memoryUsage.maxPercentage * 100) / 100
+                            },
+                            backend_memory: {
+                                used_mb: Math.round(metrics.backendMemoryUsage.used / 1024 / 1024),
+                                percentage:
+                                    Math.round(metrics.backendMemoryUsage.percentage * 100) / 100
+                            },
+                            cpu: {
+                                percentage: Math.round(metrics.cpuUsage.percentage * 100) / 100,
+                                max_percentage:
+                                    Math.round(metrics.cpuUsage.maxPercentage * 100) / 100
+                            },
+                            ...(metrics.diskUsage
+                                ? {
+                                      disk: {
+                                          used_gb:
+                                              Math.round((metrics.diskUsage.usedMB / 1024) * 100) /
+                                              100,
+                                          total_gb:
+                                              Math.round((metrics.diskUsage.totalMB / 1024) * 100) /
+                                              100,
+                                          percentage:
+                                              Math.round(metrics.diskUsage.percentage * 100) / 100
+                                      }
+                                  }
+                                : {}),
+                            response_times: {
+                                p50_ms: Math.round(metrics.responseTimes.p50 * 100) / 100,
+                                p90_ms: Math.round(metrics.responseTimes.p90 * 100) / 100,
+                                p99_ms: Math.round(metrics.responseTimes.p99 * 100) / 100
+                            },
+                            request_count: metrics.requestCount
+                        }
+                    },
+                    "System metrics collected"
+                )
 
-            // Clear CPU history and reset maximums after sending
-            this.cpuUsageHistory = []
-            this.maxCpuUsage = 0
-            this.maxMemoryUsage = 0
-        }, 10 * 60 * 1000) // 10 minutes
+                await this.sendToPostHog(metrics)
+
+                // Clear old response times (keep last 10 minutes for next aggregation)
+                const tenMinutesAgo = Date.now() - 10 * 60 * 1000
+                this.responseTimes = this.responseTimes.filter((rt) => rt.timestamp > tenMinutesAgo)
+
+                // Clear CPU history and reset maximums after sending
+                this.cpuUsageHistory = []
+                this.maxCpuUsage = 0
+                this.maxMemoryUsage = 0
+            },
+            10 * 60 * 1000
+        ) // 10 minutes
 
         this.fastify.log.info("Metrics collection started (sending to PostHog every 10 minutes)")
     }

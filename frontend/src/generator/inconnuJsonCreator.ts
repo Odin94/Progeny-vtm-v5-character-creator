@@ -67,7 +67,7 @@ const attributeNameToInconnu: Record<AttributesKey, string> = {
     composure: "Composure",
     intelligence: "Intelligence",
     wits: "Wits",
-    resolve: "Resolve",
+    resolve: "Resolve"
 }
 
 const skillNameToInconnu: Record<SkillsKey, string> = {
@@ -97,7 +97,7 @@ const skillNameToInconnu: Record<SkillsKey, string> = {
     occult: "Occult",
     politics: "Politics",
     science: "Science",
-    technology: "Technology",
+    technology: "Technology"
 }
 
 const disciplineNameToInconnu: Record<DisciplineName, string> = {
@@ -113,7 +113,7 @@ const disciplineNameToInconnu: Record<DisciplineName, string> = {
     "blood sorcery": "BloodSorcery",
     oblivion: "Oblivion",
     "thin-blood alchemy": "ThinBloodAlchemy",
-    "": "",
+    "": ""
 }
 
 const customDisciplineNameToInconnu = (name: string): string => {
@@ -138,7 +138,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
             traits.push({
                 name: inconnuName,
                 rating: value,
-                type: "attribute",
+                type: "attribute"
             })
         }
     }
@@ -162,7 +162,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
                     name: inconnuName,
                     rating: value,
                     type: "skill",
-                    subtraits: allSpecialties.length > 0 ? allSpecialties : undefined,
+                    subtraits: allSpecialties.length > 0 ? allSpecialties : undefined
                 })
             }
         }
@@ -195,7 +195,9 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
                 disciplineMap.set(inconnuDisciplineName, { rating: 0, powers: [] })
             }
             const disc = disciplineMap.get(inconnuDisciplineName)!
-            const customPowers = character.disciplines.filter((power) => power.discipline === discName && power.isCustom)
+            const customPowers = character.disciplines.filter(
+                (power) => power.discipline === discName && power.isCustom
+            )
             for (const power of customPowers) {
                 disc.powers.push(power.name)
                 disc.rating = Math.max(disc.rating, power.level)
@@ -217,7 +219,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
             name: disciplineName,
             rating,
             type: "discipline",
-            subtraits: powers.length > 0 ? powers : undefined,
+            subtraits: powers.length > 0 ? powers : undefined
         })
     }
 
@@ -225,7 +227,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
         traits.push({
             name: merit.name,
             rating: merit.level,
-            type: "custom",
+            type: "custom"
         })
     }
 
@@ -233,7 +235,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
         traits.push({
             name: flaw.name,
             rating: flaw.level,
-            type: "custom",
+            type: "custom"
         })
     }
 
@@ -241,7 +243,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
         traits.push({
             name: meritFlaw.name,
             rating: meritFlaw.level,
-            type: "custom",
+            type: "custom"
         })
     }
 
@@ -267,7 +269,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
         character.sire ? `Sire: ${character.sire}` : "",
         character.ambition ? `Ambition: ${character.ambition}` : "",
         character.desire ? `Desire: ${character.desire}` : "",
-        character.notes ? `Notes: ${character.notes}` : "",
+        character.notes ? `Notes: ${character.notes}` : ""
     ]
         .filter(Boolean)
         .join("\n\n")
@@ -280,14 +282,14 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
 
     const meritsText = [
         ...character.merits,
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "merit") || []),
+        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "merit") || [])
     ]
         .map((m) => `${m.name} (${m.level})`)
         .join(", ")
 
     const flawsText = [
         ...character.flaws,
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "flaw") || []),
+        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "flaw") || [])
     ]
         .map((f) => `${f.name} (${f.level})`)
         .join(", ")
@@ -314,7 +316,7 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
         profile: {
             biography,
             description,
-            images: [],
+            images: []
         },
         convictions,
         header: {
@@ -322,15 +324,15 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
             location: "",
             merits: meritsText,
             flaws: flawsText,
-            temp: "",
+            temp: ""
         },
         macros: [],
         experience: {
             unspent: character.experience - character.ephemeral.experienceSpent,
             lifetime: character.experience,
-            log: [],
+            log: []
         },
-        stat_log: {},
+        stat_log: {}
     }
 
     return inconnuJson

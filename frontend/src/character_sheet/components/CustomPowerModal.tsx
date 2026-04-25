@@ -1,9 +1,23 @@
-import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea, useMantineTheme } from "@mantine/core"
+import {
+    Alert,
+    Button,
+    Group,
+    Modal,
+    NumberInput,
+    Stack,
+    TextInput,
+    Textarea,
+    useMantineTheme
+} from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Power } from "~/data/Disciplines"
 import { DisciplineName } from "~/data/NameSchemas"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { attributeNameTo_WoD5EVtt_Key, skillNameTo_WoD5EVtt_Key, disciplineNameTo_WoD5EVtt_Key } from "~/generator/foundryWoDJsonCreator"
+import {
+    attributeNameTo_WoD5EVtt_Key,
+    skillNameTo_WoD5EVtt_Key,
+    disciplineNameTo_WoD5EVtt_Key
+} from "~/generator/foundryWoDJsonCreator"
 import { AttributesKey } from "~/data/Attributes"
 import { SkillsKey } from "~/data/Skills"
 import { SheetOptions } from "../CharacterSheet"
@@ -18,7 +32,13 @@ type CustomPowerModalProps = {
     editingPower?: Power | null
 }
 
-const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPower }: CustomPowerModalProps) => {
+const CustomPowerModal = ({
+    opened,
+    onClose,
+    options,
+    disciplineName,
+    editingPower
+}: CustomPowerModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
@@ -35,18 +55,26 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
             return null
         }
 
-        const components = dicePoolString.split("+").map((comp) => comp.trim()).filter((comp) => comp !== "")
+        const components = dicePoolString
+            .split("+")
+            .map((comp) => comp.trim())
+            .filter((comp) => comp !== "")
 
         if (components.length === 0) {
             return null
         }
 
-        const customDisciplineNames = character.customDisciplines ? Object.keys(character.customDisciplines).map((name) => name.toLowerCase()) : []
+        const customDisciplineNames = character.customDisciplines
+            ? Object.keys(character.customDisciplines).map((name) => name.toLowerCase())
+            : []
 
         const invalidKeys: string[] = []
 
         for (const component of components) {
-            const alternatives = component.split("/").map((alt) => alt.trim().toLowerCase()).filter((alt) => alt !== "")
+            const alternatives = component
+                .split("/")
+                .map((alt) => alt.trim().toLowerCase())
+                .filter((alt) => alt !== "")
 
             if (alternatives.length === 0) {
                 invalidKeys.push(component)
@@ -89,7 +117,9 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
                 setError(null)
                 setDicePoolWarning(validateDicePool(editingPower.dicePool))
             } else {
-                const currentLevel = character.disciplines.filter((p) => p.discipline === disciplineName).length
+                const currentLevel = character.disciplines.filter(
+                    (p) => p.discipline === disciplineName
+                ).length
                 setName("")
                 setSummary("")
                 setDicePool("")
@@ -108,7 +138,8 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
         }
 
         const levelNum = typeof level === "string" ? parseInt(level) || 1 : level
-        const rouseChecksNum = typeof rouseChecks === "string" ? parseInt(rouseChecks) || 0 : rouseChecks
+        const rouseChecksNum =
+            typeof rouseChecks === "string" ? parseInt(rouseChecks) || 0 : rouseChecks
 
         if (levelNum < 1) {
             setError("Level must be at least 1")
@@ -129,26 +160,26 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
             discipline: disciplineName,
             rouseChecks: rouseChecksNum,
             amalgamPrerequisites: [],
-            isCustom: true,
+            isCustom: true
         }
 
         let updatedCharacter
         if (editingPower) {
             updatedCharacter = {
                 ...character,
-                disciplines: character.disciplines.map((p) => (p === editingPower ? power : p)),
+                disciplines: character.disciplines.map((p) => (p === editingPower ? power : p))
             }
         } else {
             updatedCharacter = {
                 ...character,
-                disciplines: [...character.disciplines, power],
+                disciplines: [...character.disciplines, power]
             }
 
             if (mode === "xp") {
                 const cost = getDisciplineCost(character, disciplineName)
                 updatedCharacter.ephemeral = {
                     ...updatedCharacter.ephemeral,
-                    experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost,
+                    experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost
                 }
             }
         }
@@ -163,7 +194,7 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
 
         const updatedCharacter = {
             ...character,
-            disciplines: character.disciplines.filter((p) => p !== editingPower),
+            disciplines: character.disciplines.filter((p) => p !== editingPower)
         }
 
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
@@ -172,7 +203,12 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
     }
 
     return (
-        <Modal opened={opened} onClose={onClose} title={editingPower ? "Edit Custom Power" : "Create Custom Power"} size="md">
+        <Modal
+            opened={opened}
+            onClose={onClose}
+            title={editingPower ? "Edit Custom Power" : "Create Custom Power"}
+            size="md"
+        >
             <Stack gap="md">
                 <FocusBorderWrapper colorValue={colorValue}>
                     <TextInput
@@ -215,7 +251,13 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
                     <NumberInput label="Level" value={level} onChange={setLevel} min={1} required />
                 </FocusBorderWrapper>
                 <FocusBorderWrapper colorValue={colorValue}>
-                    <NumberInput label="Rouse Checks" value={rouseChecks} onChange={setRouseChecks} min={0} required />
+                    <NumberInput
+                        label="Rouse Checks"
+                        value={rouseChecks}
+                        onChange={setRouseChecks}
+                        min={0}
+                        required
+                    />
                 </FocusBorderWrapper>
                 <Group justify="space-between">
                     {editingPower ? (
@@ -229,7 +271,9 @@ const CustomPowerModal = ({ opened, onClose, options, disciplineName, editingPow
                         <Button variant="subtle" onClick={onClose} color={primaryColor}>
                             Cancel
                         </Button>
-                        <Button onClick={handleSave} color={primaryColor}>Save</Button>
+                        <Button onClick={handleSave} color={primaryColor}>
+                            Save
+                        </Button>
                     </Group>
                 </Group>
             </Stack>

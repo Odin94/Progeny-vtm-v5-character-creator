@@ -26,8 +26,8 @@ If you want to buy me a coffee, you can toss me some coins over here: https://ko
 ### Frontend
 ```bash
 cd frontend
-npm install
-npm start
+pnpm install
+pnpm start
 ```
 
 * (optional) create `frontend/.env` file and enter environment variables like `VITE_VARIABLE_NAME = 'some value'`
@@ -35,12 +35,12 @@ npm start
 ### Backend
 ```bash
 cd backend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 You can optionally run both conveniently with `mprocs` (only tested on Windows):
-* `npm install -g mprocs`
+* `pnpm add -g mprocs`
 * `mprocs`
 
 

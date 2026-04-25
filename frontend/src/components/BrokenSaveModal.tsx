@@ -8,9 +8,13 @@ import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { getEmptyCharacter } from "~/data/Character"
 
 const BrokenSaveModal = () => {
-    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } = useBrokenCharacter()
+    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
+        useBrokenCharacter()
     const [, setCharacter] = useCharacterLocalStorage()
-    const [, setSelectedStep] = useLocalStorage<GeneratorStepId>({ key: "selectedGeneratorStep", defaultValue: defaultGeneratorStepId })
+    const [, setSelectedStep] = useLocalStorage<GeneratorStepId>({
+        key: "selectedGeneratorStep",
+        defaultValue: defaultGeneratorStepId
+    })
 
     const onDownload = () => {
         if (brokenData) {
@@ -46,8 +50,8 @@ const BrokenSaveModal = () => {
                     Failed to load character from saved data
                 </Text>
                 <Text size="sm" c="dimmed">
-                    The saved character data could not be parsed, even after applying compatibility patches. This may happen if the data
-                    format has changed significantly.
+                    The saved character data could not be parsed, even after applying compatibility
+                    patches. This may happen if the data format has changed significantly.
                 </Text>
                 <Text size="sm" c="dimmed">
                     {`(You can safely refresh this page if download isn't working)`}
@@ -61,11 +65,19 @@ const BrokenSaveModal = () => {
                 </Code>
                 <Divider my="sm" />
                 <Group justify="space-between">
-                    <Button color="grape" leftSection={<FontAwesomeIcon icon={faDownload} />} onClick={onDownload}>
+                    <Button
+                        color="grape"
+                        leftSection={<FontAwesomeIcon icon={faDownload} />}
+                        onClick={onDownload}
+                    >
                         Download Broken Save Data
                     </Button>
                     <Group>
-                        <Button color="red" leftSection={<FontAwesomeIcon icon={faTrash} />} onClick={onReset}>
+                        <Button
+                            color="red"
+                            leftSection={<FontAwesomeIcon icon={faTrash} />}
+                            onClick={onReset}
+                        >
                             Reset to Empty Character
                         </Button>
                     </Group>

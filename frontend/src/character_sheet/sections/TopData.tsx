@@ -1,11 +1,26 @@
-import { Grid, Group, Stack, Text, Title, Box, TextInput, Textarea, NumberInput, useMantineTheme, Select } from "@mantine/core"
+import {
+    Grid,
+    Group,
+    Stack,
+    Text,
+    Title,
+    Box,
+    TextInput,
+    Textarea,
+    NumberInput,
+    useMantineTheme,
+    Select
+} from "@mantine/core"
 import { clans } from "~/data/Clans"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
 import { PredatorTypes } from "~/data/PredatorType"
 import { SheetOptions } from "../CharacterSheet"
 import FocusBorderWrapper from "../components/FocusBorderWrapper"
 import { hexToRgba, inputAlpha } from "../utils/style"
-import { useDebouncedUncontrolledStringField, useDebouncedUncontrolledNumberField } from "../utils/useDebouncedUncontrolledField"
+import {
+    useDebouncedUncontrolledStringField,
+    useDebouncedUncontrolledNumberField
+} from "../utils/useDebouncedUncontrolledField"
 
 type TopDataProps = {
     options: SheetOptions
@@ -18,20 +33,51 @@ const TopData = ({ options }: TopDataProps) => {
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isFreeMode = mode === "free"
 
-    const nameField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "name" })
-    const descriptionField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "description" })
-    const ambitionField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "ambition" })
-    const desireField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "desire" })
-    const playerField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "player" })
-    const generationField = useDebouncedUncontrolledNumberField({ character, setCharacter, field: "generation" })
-    const sireField = useDebouncedUncontrolledStringField({ character, setCharacter, field: "sire" })
+    const nameField = useDebouncedUncontrolledStringField({
+        character,
+        setCharacter,
+        field: "name"
+    })
+    const descriptionField = useDebouncedUncontrolledStringField({
+        character,
+        setCharacter,
+        field: "description"
+    })
+    const ambitionField = useDebouncedUncontrolledStringField({
+        character,
+        setCharacter,
+        field: "ambition"
+    })
+    const desireField = useDebouncedUncontrolledStringField({
+        character,
+        setCharacter,
+        field: "desire"
+    })
+    const playerField = useDebouncedUncontrolledStringField({
+        character,
+        setCharacter,
+        field: "player"
+    })
+    const generationField = useDebouncedUncontrolledNumberField({
+        character,
+        setCharacter,
+        field: "generation"
+    })
+    const sireField = useDebouncedUncontrolledStringField({
+        character,
+        setCharacter,
+        field: "sire"
+    })
 
     return (
         <>
             <Box>
                 <Group gap="md" justify="center" align="center" mb="md">
                     {isFreeMode ? (
-                        <FocusBorderWrapper colorValue={colorValue} style={{ width: "100%", maxWidth: "600px" }}>
+                        <FocusBorderWrapper
+                            colorValue={colorValue}
+                            style={{ width: "100%", maxWidth: "600px" }}
+                        >
                             <TextInput
                                 key={nameField.key}
                                 defaultValue={nameField.defaultValue}
@@ -48,8 +94,8 @@ const TopData = ({ options }: TopDataProps) => {
                                         borderBottom: `2px solid transparent`,
                                         borderRadius: 0,
                                         padding: "0.5rem",
-                                        backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                    },
+                                        backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha)
+                                    }
                                 }}
                                 style={{ width: "100%" }}
                             />
@@ -72,7 +118,7 @@ const TopData = ({ options }: TopDataProps) => {
                                 WebkitMaskImage: `url(${clan.logo})`,
                                 WebkitMaskSize: "contain",
                                 WebkitMaskRepeat: "no-repeat",
-                                WebkitMaskPosition: "center",
+                                WebkitMaskPosition: "center"
                             }}
                         />
                     ) : null}
@@ -91,8 +137,8 @@ const TopData = ({ options }: TopDataProps) => {
                                 input: {
                                     textAlign: "center",
                                     color: "var(--mantine-color-dimmed)",
-                                    backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                },
+                                    backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha)
+                                }
                             }}
                             mb="lg"
                         />
@@ -117,7 +163,7 @@ const TopData = ({ options }: TopDataProps) => {
                                             .filter((clanName) => clanName !== "")
                                             .map((clanName) => ({
                                                 value: clanName,
-                                                label: clanName,
+                                                label: clanName
                                             }))}
                                         value={character.clan || null}
                                         onChange={(value) => {
@@ -126,7 +172,8 @@ const TopData = ({ options }: TopDataProps) => {
                                                 setCharacter({
                                                     ...character,
                                                     clan: selectedClan,
-                                                    availableDisciplineNames: clans[selectedClan].nativeDisciplines,
+                                                    availableDisciplineNames:
+                                                        clans[selectedClan].nativeDisciplines
                                                 })
                                             }
                                         }}
@@ -135,8 +182,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "200px" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>
@@ -156,18 +206,19 @@ const TopData = ({ options }: TopDataProps) => {
                                             .filter((predatorTypeName) => predatorTypeName !== "")
                                             .map((predatorTypeName) => ({
                                                 value: predatorTypeName,
-                                                label: predatorTypeName,
+                                                label: predatorTypeName
                                             }))}
                                         value={character.predatorType.name || null}
                                         onChange={(value) => {
                                             if (value) {
-                                                const selectedPredatorType = value as PredatorTypeName
+                                                const selectedPredatorType =
+                                                    value as PredatorTypeName
                                                 setCharacter({
                                                     ...character,
                                                     predatorType: {
                                                         ...character.predatorType,
-                                                        name: selectedPredatorType,
-                                                    },
+                                                        name: selectedPredatorType
+                                                    }
                                                 })
                                             }
                                         }}
@@ -176,8 +227,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "200px" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>
@@ -203,8 +257,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "100%" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>
@@ -226,8 +283,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "100%" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>
@@ -249,8 +309,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "100%" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>
@@ -270,7 +333,10 @@ const TopData = ({ options }: TopDataProps) => {
                                         key={generationField.key}
                                         defaultValue={generationField.defaultValue}
                                         onChange={(value) => {
-                                            const numValue = typeof value === "string" ? parseInt(value) || 0 : value || 0
+                                            const numValue =
+                                                typeof value === "string"
+                                                    ? parseInt(value) || 0
+                                                    : value || 0
                                             generationField.onChange(numValue)
                                         }}
                                         min={0}
@@ -279,8 +345,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "100px" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>
@@ -302,8 +371,11 @@ const TopData = ({ options }: TopDataProps) => {
                                         style={{ width: "50%" }}
                                         styles={{
                                             input: {
-                                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha),
-                                            },
+                                                backgroundColor: hexToRgba(
+                                                    theme.colors.dark[7],
+                                                    inputAlpha
+                                                )
+                                            }
                                         }}
                                     />
                                 </FocusBorderWrapper>

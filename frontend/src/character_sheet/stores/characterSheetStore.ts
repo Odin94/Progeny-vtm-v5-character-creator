@@ -25,7 +25,7 @@ const defaultDicePool: SelectedDicePool = {
     discipline: null,
     selectedSpecialties: [],
     bloodSurge: false,
-    selectedDisciplinePowers: [],
+    selectedDisciplinePowers: []
 }
 
 export const useCharacterSheetStore = create<CharacterSheetStore>((set) => ({
@@ -34,6 +34,6 @@ export const useCharacterSheetStore = create<CharacterSheetStore>((set) => ({
     resetSelectedDicePool: () => set({ selectedDicePool: defaultDicePool }),
     updateSelectedDicePool: (updates) =>
         set((state) => ({
-            selectedDicePool: { ...state.selectedDicePool, ...updates },
-        })),
+            selectedDicePool: { ...state.selectedDicePool, ...updates }
+        }))
 }))

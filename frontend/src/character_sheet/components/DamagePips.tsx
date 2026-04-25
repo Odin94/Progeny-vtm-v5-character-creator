@@ -9,7 +9,13 @@ type DamagePipsProps = {
     color?: string
 }
 
-const DamagePips = ({ maxValue, superficial, aggravated, onChange, color = "grape" }: DamagePipsProps) => {
+const DamagePips = ({
+    maxValue,
+    superficial,
+    aggravated,
+    onChange,
+    color = "grape"
+}: DamagePipsProps) => {
     const getPipState = (pipIndex: number): "none" | "superficial" | "aggravated" => {
         const pipNumber = pipIndex + 1
         if (pipNumber <= aggravated) {
@@ -55,7 +61,11 @@ const DamagePips = ({ maxValue, superficial, aggravated, onChange, color = "grap
                         key={index}
                         onClick={() => handlePipClick(index)}
                         damageState={pipState}
-                        style={(index + 1) % 5 === 0 && index < maxValue - 1 ? { marginRight: 8 } : undefined}
+                        style={
+                            (index + 1) % 5 === 0 && index < maxValue - 1
+                                ? { marginRight: 8 }
+                                : undefined
+                        }
                         color={color}
                     />
                 )

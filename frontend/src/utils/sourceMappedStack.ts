@@ -32,12 +32,13 @@ const sourceMapCache = new Map<string, Promise<LoadedSourceMap | null>>()
 
 const STACK_PATTERNS = [
     /^\s*at (?<functionName>.+?) \((?<url>.+):(?<line>\d+):(?<column>\d+)\)\s*$/u,
-    /^\s*at (?<url>.+):(?<line>\d+):(?<column>\d+)\s*$/u,
+    /^\s*at (?<url>.+):(?<line>\d+):(?<column>\d+)\s*$/u
 ]
 
 const SOURCE_MAPPING_URL_PATTERN = /\/\/# sourceMappingURL=(?<sourceMap>.+)\s*$/mu
 
-const formatLocation = (source: string, line: number, column: number) => `${source}:${line}:${column}`
+const formatLocation = (source: string, line: number, column: number) =>
+    `${source}:${line}:${column}`
 
 const parseStackFrame = (line: string): ParsedStackFrame | null => {
     for (const pattern of STACK_PATTERNS) {
@@ -57,7 +58,7 @@ const parseStackFrame = (line: string): ParsedStackFrame | null => {
             url: match.groups.url,
             line: lineNumber,
             column: columnNumber,
-            raw: line.trim(),
+            raw: line.trim()
         }
     }
 
@@ -106,7 +107,7 @@ const loadSourceMap = async (scriptUrl: string) => {
             return {
                 traceMap: new TraceMap(rawSourceMap as ConstructorParameters<typeof TraceMap>[0]),
                 sources: rawSourceMap.sources ?? [],
-                sourcesContent: rawSourceMap.sourcesContent ?? [],
+                sourcesContent: rawSourceMap.sourcesContent ?? []
             }
         } catch (_error) {
             return null
@@ -144,31 +145,44 @@ const mapStackFrame = async (frame: ParsedStackFrame): Promise<SourceMappedFrame
         return {
             functionName: frame.functionName,
             generatedLocation,
-            originalLocation: generatedLocation,
+            originalLocation: generatedLocation
         }
     }
 
     const originalPosition = originalPositionFor(loadedSourceMap.traceMap, {
         line: frame.line,
-        column: frame.column - 1,
+        column: frame.column - 1
     })
 
-    if (!originalPosition.source || originalPosition.line == null || originalPosition.column == null) {
+    if (
+        !originalPosition.source ||
+        originalPosition.line == null ||
+        originalPosition.column == null
+    ) {
         return {
             functionName: frame.functionName,
             generatedLocation,
-            originalLocation: generatedLocation,
+            originalLocation: generatedLocation
         }
     }
 
-    const sourceIndex = loadedSourceMap.sources.findIndex((source) => source === originalPosition.source)
-    const sourceExcerpt = sourceIndex >= 0 ? getSourceExcerpt(loadedSourceMap.sourcesContent[sourceIndex], originalPosition.line) : undefined
+    const sourceIndex = loadedSourceMap.sources.findIndex(
+        (source) => source === originalPosition.source
+    )
+    const sourceExcerpt =
+        sourceIndex >= 0
+            ? getSourceExcerpt(loadedSourceMap.sourcesContent[sourceIndex], originalPosition.line)
+            : undefined
 
     return {
         functionName: frame.functionName,
         generatedLocation,
-        originalLocation: formatLocation(originalPosition.source, originalPosition.line, originalPosition.column + 1),
-        sourceExcerpt,
+        originalLocation: formatLocation(
+            originalPosition.source,
+            originalPosition.line,
+            originalPosition.column + 1
+        ),
+        sourceExcerpt
     }
 }
 
@@ -178,14 +192,16 @@ export const getSourceMappedStack = async (error: Error): Promise<SourceMappedSt
     }
 
     const stackLines = error.stack.split("\n")
-    const parsedFrames = stackLines.map(parseStackFrame).filter((frame): frame is ParsedStackFrame => frame !== null)
+    const parsedFrames = stackLines
+        .map(parseStackFrame)
+        .filter((frame): frame is ParsedStackFrame => frame !== null)
 
     if (parsedFrames.length === 0) {
         return {
             name: error.name,
             message: error.message,
             frames: [],
-            rawStack: error.stack,
+            rawStack: error.stack
         }
     }
 
@@ -195,6 +211,6 @@ export const getSourceMappedStack = async (error: Error): Promise<SourceMappedSt
         name: error.name,
         message: error.message,
         frames,
-        rawStack: error.stack,
+        rawStack: error.stack
     }
 }

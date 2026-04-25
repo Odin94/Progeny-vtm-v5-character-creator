@@ -8,10 +8,10 @@ import { vi } from "vitest"
 // Mock URL.createObjectURL and revokeObjectURL globally for all tests
 Object.defineProperty(URL, "createObjectURL", {
     writable: true,
-    value: vi.fn(() => "blob:mock-url"),
+    value: vi.fn(() => "blob:mock-url")
 })
 
 Object.defineProperty(URL, "revokeObjectURL", {
     writable: true,
-    value: vi.fn(),
+    value: vi.fn()
 })

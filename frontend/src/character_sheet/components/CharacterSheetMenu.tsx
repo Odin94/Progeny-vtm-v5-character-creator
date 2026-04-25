@@ -1,9 +1,21 @@
-import { faFileArrowUp, faFileExport, faFilePdf, faFloppyDisk } from "@fortawesome/free-solid-svg-icons"
+import {
+    faFileArrowUp,
+    faFileExport,
+    faFilePdf,
+    faFloppyDisk
+} from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text, Divider, Group } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconMenu2, IconAlertCircle, IconExternalLink, IconArrowRight, IconPalette, IconChevronLeft } from "@tabler/icons-react"
+import {
+    IconMenu2,
+    IconAlertCircle,
+    IconExternalLink,
+    IconArrowRight,
+    IconPalette,
+    IconChevronLeft
+} from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { Buffer } from "buffer"
 import { AnimatePresence, motion } from "framer-motion"
@@ -16,7 +28,11 @@ import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
-import { downloadJson, getUploadFile, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
+import {
+    downloadJson,
+    getUploadFile,
+    updateHealthAndWillpowerAndBloodPotencyAndHumanity
+} from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
 import PreferencesContent from "./PreferencesModal"
@@ -30,15 +46,17 @@ type CharacterSheetMenuProps = {
 const slideVariants = {
     enter: (dir: number) => ({ x: dir * 40, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir * -40, opacity: 0 }),
+    exit: (dir: number) => ({ x: dir * -40, opacity: 0 })
 }
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
     const { isLoading: authLoading, isAuthenticated, signIn } = useAuth()
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
-    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
-    const [disclaimerOpened, { open: openDisclaimer, close: closeDisclaimer }] = useDisclosure(false)
+    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
+        useDisclosure(false)
+    const [disclaimerOpened, { open: openDisclaimer, close: closeDisclaimer }] =
+        useDisclosure(false)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
@@ -106,7 +124,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     title: "Validation Warning",
                     message: `The exported JSON may not be fully compatible with Foundry VTT. ${message}`,
                     color: "orange",
-                    autoClose: 10000,
+                    autoClose: 10000
                 })
             }
 
@@ -122,7 +140,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
             const inconnuJson = createInconnuJson(character)
-            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], { type: "application/json" })
+            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], {
+                type: "application/json"
+            })
             const link = document.createElement("a")
             link.href = window.URL.createObjectURL(blob)
             link.download = `inconnu_${character.name}.json`
@@ -163,7 +183,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 title: "Character loaded",
                 message: `Successfully loaded ${loadedCharacter.name}`,
                 color: "green",
-                autoClose: 3000,
+                autoClose: 3000
             })
         } catch (e) {
             if (e instanceof z.ZodError) {
@@ -171,29 +191,33 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     title: "JSON content error loading character",
                     message: z.prettifyError(e),
                     color: "red",
-                    autoClose: false,
+                    autoClose: false
                 })
             } else {
                 notifications.show({
                     title: "Error loading character",
                     message: e instanceof Error ? e.message : "Unknown error occurred",
                     color: "red",
-                    autoClose: false,
+                    autoClose: false
                 })
             }
             console.error(e)
         }
     }
 
-    const menuTitle = view === "menu" ? "Menu" : <Button
-        leftSection={<IconChevronLeft size={16} />}
-        size="sm"
-        color="gray"
-        variant="subtle"
-        onClick={() => navigateTo("menu")}
-        style={{ alignSelf: "flex-start" }}
-    >
-    </Button>
+    const menuTitle =
+        view === "menu" ? (
+            "Menu"
+        ) : (
+            <Button
+                leftSection={<IconChevronLeft size={16} />}
+                size="sm"
+                color="gray"
+                variant="subtle"
+                onClick={() => navigateTo("menu")}
+                style={{ alignSelf: "flex-start" }}
+            ></Button>
+        )
 
     return (
         <>
@@ -207,21 +231,20 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     position: "fixed",
                     bottom: "2rem",
                     right: "2rem",
-                    zIndex: 1000,
+                    zIndex: 1000
                 }}
             >
                 <IconMenu2 size={24} />
             </ActionIcon>
 
-            <Modal
-                opened={menuOpened}
-                onClose={handleMenuClose}
-                title={menuTitle}
-                centered
-            >
+            <Modal opened={menuOpened} onClose={handleMenuClose} title={menuTitle} centered>
                 <div
                     ref={wrapperRef}
-                    style={{ overflow: "hidden", position: "relative", minHeight: wrapperMinHeight }}
+                    style={{
+                        overflow: "hidden",
+                        position: "relative",
+                        minHeight: wrapperMinHeight
+                    }}
                 >
                     <AnimatePresence mode="wait" custom={direction.current}>
                         <motion.div
@@ -255,10 +278,15 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                         >
                                             Save JSON
                                         </Button>
-                                        <FileButton onChange={handleLoadFromFile} accept="application/json">
+                                        <FileButton
+                                            onChange={handleLoadFromFile}
+                                            accept="application/json"
+                                        >
                                             {(props) => (
                                                 <Button
-                                                    leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
+                                                    leftSection={
+                                                        <FontAwesomeIcon icon={faFileArrowUp} />
+                                                    }
                                                     size="lg"
                                                     color="green"
                                                     variant="light"
@@ -293,7 +321,13 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                             Generator
                                         </Button>
                                         {authLoading ? (
-                                            <Button size="lg" color="gray" variant="outline" loading leftSection={<IconArrowRight size={18} />}>
+                                            <Button
+                                                size="lg"
+                                                color="gray"
+                                                variant="outline"
+                                                loading
+                                                leftSection={<IconArrowRight size={18} />}
+                                            >
                                                 Loading...
                                             </Button>
                                         ) : !isAuthenticated ? (
@@ -377,7 +411,12 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 </div>
             </Modal>
 
-            <Modal opened={exportModalOpened} onClose={closeExportModal} title="Export to other platforms" centered>
+            <Modal
+                opened={exportModalOpened}
+                onClose={closeExportModal}
+                title="Export to other platforms"
+                centered
+            >
                 <Stack gap="md">
                     <Text fz="lg" mb="md">
                         Progeny can export file formats compatible with the following platforms:
@@ -437,11 +476,17 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 </Stack>
             </Modal>
 
-            <Modal opened={disclaimerOpened} onClose={closeDisclaimer} title="Disclaimer" centered size="lg">
+            <Modal
+                opened={disclaimerOpened}
+                onClose={closeDisclaimer}
+                title="Disclaimer"
+                centered
+                size="lg"
+            >
                 <Stack gap="md">
                     <Text>
-                        This is an independent production and is not affiliated with or endorsed by World of Darkness, Paradox Interactive,
-                        or any of their subsidiaries.
+                        This is an independent production and is not affiliated with or endorsed by
+                        World of Darkness, Paradox Interactive, or any of their subsidiaries.
                     </Text>
                     <Text>
                         This tool is created under the{" "}
@@ -455,10 +500,18 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         </a>
                         .
                     </Text>
-                    <Text>Vampire: The Masquerade and World of Darkness are trademarks of Paradox Interactive. All rights reserved.</Text>
+                    <Text>
+                        Vampire: The Masquerade and World of Darkness are trademarks of Paradox
+                        Interactive. All rights reserved.
+                    </Text>
                     <Text c="dimmed" size="sm">
                         The PDF template used for exporting is kindly provided by{" "}
-                        <a href="https://linktr.ee/nerdbert" target="_blank" rel="noopener noreferrer" style={{ color: "#9c36b5" }}>
+                        <a
+                            href="https://linktr.ee/nerdbert"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#9c36b5" }}
+                        >
                             Nerdbert
                         </a>
                         .
@@ -476,7 +529,12 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             />
 
             {downloadError ? (
-                <Modal opened={!!downloadError} onClose={() => setDownloadError(undefined)} title="Download Error" centered>
+                <Modal
+                    opened={!!downloadError}
+                    onClose={() => setDownloadError(undefined)}
+                    title="Download Error"
+                    centered
+                >
                     <ErrorDetails error={downloadError} linkColor="#9c36b5" />
                 </Modal>
             ) : null}

@@ -41,7 +41,7 @@ const allGeneratorSteps: GeneratorStep[] = [
     { id: "rituals", label: "Rituals" },
     { id: "touchstones", label: "Touchstones", progressKey: "touchstones" },
     { id: "merits", label: "Merits", progressKey: "merits" },
-    { id: "final", label: "Final" },
+    { id: "final", label: "Final" }
 ]
 
 export const defaultGeneratorStepId: GeneratorStepId = "clan"
@@ -54,13 +54,17 @@ const isStepAvailable = (character: Character, stepId: GeneratorStepId) => {
     return true
 }
 
-export const getVisibleGeneratorSteps = (character: Character) => allGeneratorSteps.filter((step) => isStepAvailable(character, step.id))
+export const getVisibleGeneratorSteps = (character: Character) =>
+    allGeneratorSteps.filter((step) => isStepAvailable(character, step.id))
 
 export const isGeneratorStepId = (value: string): value is GeneratorStepId => {
     return allGeneratorSteps.some((step) => step.id === value)
 }
 
-export const normalizeGeneratorStepId = (stepId: string | null | undefined, character: Character): GeneratorStepId => {
+export const normalizeGeneratorStepId = (
+    stepId: string | null | undefined,
+    character: Character
+): GeneratorStepId => {
     if (!stepId || !isGeneratorStepId(stepId)) {
         return defaultGeneratorStepId
     }
@@ -74,7 +78,9 @@ export const normalizeGeneratorStepId = (stepId: string | null | undefined, char
     const desiredIndex = allGeneratorSteps.findIndex((step) => step.id === stepId)
     const nextVisibleStep = allGeneratorSteps
         .slice(desiredIndex + 1)
-        .find((step) => visibleSteps.some((visibleStepCandidate) => visibleStepCandidate.id === step.id))
+        .find((step) =>
+            visibleSteps.some((visibleStepCandidate) => visibleStepCandidate.id === step.id)
+        )
 
     if (nextVisibleStep) {
         return nextVisibleStep.id
@@ -82,7 +88,9 @@ export const normalizeGeneratorStepId = (stepId: string | null | undefined, char
 
     const previousVisibleStep = [...allGeneratorSteps]
         .reverse()
-        .find((step) => visibleSteps.some((visibleStepCandidate) => visibleStepCandidate.id === step.id))
+        .find((step) =>
+            visibleSteps.some((visibleStepCandidate) => visibleStepCandidate.id === step.id)
+        )
 
     return previousVisibleStep?.id ?? defaultGeneratorStepId
 }

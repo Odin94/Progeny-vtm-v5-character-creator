@@ -12,24 +12,29 @@ const ModalHeader = ({ primaryColor, onClose }: ModalHeaderProps) => {
     const { activeTab, setActiveTab } = useDiceRollModalStore(
         useShallow((state) => ({
             activeTab: state.activeTab,
-            setActiveTab: state.setActiveTab,
+            setActiveTab: state.setActiveTab
         }))
     )
 
     return (
         <Group justify="center" mb="md" style={{ position: "relative", paddingRight: "40px" }}>
-            <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor} style={{ width: "100%" }}>
+            <Tabs
+                value={activeTab}
+                onChange={setActiveTab}
+                color={primaryColor}
+                style={{ width: "100%" }}
+            >
                 <Tabs.List grow>
                     <Tabs.Tab value="custom">Custom</Tabs.Tab>
                     <Tabs.Tab value="selected">Selected Pool</Tabs.Tab>
                 </Tabs.List>
             </Tabs>
-            <ActionIcon 
-                variant="subtle" 
-                color="gray" 
+            <ActionIcon
+                variant="subtle"
+                color="gray"
                 onClick={onClose}
-                style={{ 
-                    position: "absolute", 
+                style={{
+                    position: "absolute",
                     right: 0,
                     top: 0,
                     zIndex: 10,

@@ -1,4 +1,14 @@
-import { ActionIcon, Badge, Box, Checkbox, Group, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import {
+    ActionIcon,
+    Badge,
+    Box,
+    Checkbox,
+    Group,
+    Stack,
+    Text,
+    Tooltip,
+    useMantineTheme
+} from "@mantine/core"
 import { IconInfoCircle, IconRotateClockwise } from "@tabler/icons-react"
 import { Character } from "~/data/Character"
 import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
@@ -16,21 +26,26 @@ type SelectedDicePoolDisplayProps = {
 const SelectedDicePoolDisplay = ({
     character,
     primaryColor,
-    skillSpecialties,
+    skillSpecialties
 }: SelectedDicePoolDisplayProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const { selectedDicePool, resetSelectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
-        useShallow((state) => ({
-            selectedDicePool: state.selectedDicePool,
-            resetSelectedDicePool: state.resetSelectedDicePool,
-            updateSelectedDicePool: state.updateSelectedDicePool,
-        }))
-    )
+    const { selectedDicePool, resetSelectedDicePool, updateSelectedDicePool } =
+        useCharacterSheetStore(
+            useShallow((state) => ({
+                selectedDicePool: state.selectedDicePool,
+                resetSelectedDicePool: state.resetSelectedDicePool,
+                updateSelectedDicePool: state.updateSelectedDicePool
+            }))
+        )
 
     const applicablePowers = useMemo(() => {
         if (!character || !selectedDicePool.attribute) return []
-        return getApplicableDisciplinePowers(character, selectedDicePool.attribute, selectedDicePool.skill)
+        return getApplicableDisciplinePowers(
+            character,
+            selectedDicePool.attribute,
+            selectedDicePool.skill
+        )
     }, [character, selectedDicePool.attribute, selectedDicePool.skill])
     return (
         <Box
@@ -39,7 +54,7 @@ const SelectedDicePoolDisplay = ({
                 borderRadius: "8px",
                 padding: "1rem",
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
-                flexShrink: 0,
+                flexShrink: 0
             }}
         >
             <Stack gap="xs">
@@ -66,7 +81,9 @@ const SelectedDicePoolDisplay = ({
                             </ActionIcon>
                         </Tooltip>
                     </Group>
-                    {(selectedDicePool.attribute || selectedDicePool.skill || selectedDicePool.discipline) ? (
+                    {selectedDicePool.attribute ||
+                    selectedDicePool.skill ||
+                    selectedDicePool.discipline ? (
                         <ActionIcon
                             variant="subtle"
                             color={primaryColor}
@@ -80,21 +97,30 @@ const SelectedDicePoolDisplay = ({
                 <Group gap="xs">
                     {selectedDicePool.attribute ? (
                         <Badge variant="light" color={primaryColor} size="lg">
-                            {upcase(selectedDicePool.attribute)}: {character?.attributes[selectedDicePool.attribute] || 0}
+                            {upcase(selectedDicePool.attribute)}:{" "}
+                            {character?.attributes[selectedDicePool.attribute] || 0}
                         </Badge>
                     ) : (
-                        <Text c="dimmed" size="sm">No attribute selected</Text>
+                        <Text c="dimmed" size="sm">
+                            No attribute selected
+                        </Text>
                     )}
                     {selectedDicePool.skill ? (
                         <Badge variant="light" color={primaryColor} size="lg">
-                            {upcase(selectedDicePool.skill)}: {character?.skills[selectedDicePool.skill] || 0}
+                            {upcase(selectedDicePool.skill)}:{" "}
+                            {character?.skills[selectedDicePool.skill] || 0}
                         </Badge>
                     ) : selectedDicePool.discipline ? (
                         <Badge variant="light" color={primaryColor} size="lg">
-                            {upcase(selectedDicePool.discipline)}: {character?.disciplines.filter(p => p.discipline === selectedDicePool.discipline).length || 0}
+                            {upcase(selectedDicePool.discipline)}:{" "}
+                            {character?.disciplines.filter(
+                                (p) => p.discipline === selectedDicePool.discipline
+                            ).length || 0}
                         </Badge>
                     ) : (
-                        <Text c="dimmed" size="sm">No skill/discipline selected</Text>
+                        <Text c="dimmed" size="sm">
+                            No skill/discipline selected
+                        </Text>
                     )}
                 </Group>
                 {skillSpecialties.length > 0 && selectedDicePool.skill ? (
@@ -107,15 +133,23 @@ const SelectedDicePoolDisplay = ({
                                 <Checkbox
                                     key={specialty.name}
                                     label={specialty.name}
-                                    checked={selectedDicePool.selectedSpecialties.includes(specialty.name)}
+                                    checked={selectedDicePool.selectedSpecialties.includes(
+                                        specialty.name
+                                    )}
                                     onChange={(e) => {
                                         if (e.currentTarget.checked) {
                                             updateSelectedDicePool({
-                                                selectedSpecialties: [...selectedDicePool.selectedSpecialties, specialty.name],
+                                                selectedSpecialties: [
+                                                    ...selectedDicePool.selectedSpecialties,
+                                                    specialty.name
+                                                ]
                                             })
                                         } else {
                                             updateSelectedDicePool({
-                                                selectedSpecialties: selectedDicePool.selectedSpecialties.filter(s => s !== specialty.name),
+                                                selectedSpecialties:
+                                                    selectedDicePool.selectedSpecialties.filter(
+                                                        (s) => s !== specialty.name
+                                                    )
                                             })
                                         }
                                     }}
@@ -125,7 +159,7 @@ const SelectedDicePoolDisplay = ({
                         </Group>
                     </Stack>
                 ) : null}
-                {(applicablePowers.length > 0 || true) ? (
+                {applicablePowers.length > 0 || true ? (
                     <Stack gap="xs" mt="sm">
                         <Text fw={600} fz="sm" c={primaryColor}>
                             The Blood:
@@ -136,16 +170,19 @@ const SelectedDicePoolDisplay = ({
                                 checked={selectedDicePool.bloodSurge}
                                 onChange={(e) => {
                                     updateSelectedDicePool({
-                                        bloodSurge: e.currentTarget.checked,
+                                        bloodSurge: e.currentTarget.checked
                                     })
                                 }}
                                 color={primaryColor}
                             />
                             {applicablePowers.map(({ power, disciplineRating }) => {
                                 const isWrecker = power.name === "Wrecker"
-                                const bonusDice = isWrecker ? disciplineRating * 2 : disciplineRating
+                                const bonusDice = isWrecker
+                                    ? disciplineRating * 2
+                                    : disciplineRating
                                 const powerKey = `${power.discipline}-${power.name}`
-                                const isChecked = selectedDicePool.selectedDisciplinePowers.includes(powerKey)
+                                const isChecked =
+                                    selectedDicePool.selectedDisciplinePowers.includes(powerKey)
 
                                 return (
                                     <Checkbox
@@ -155,11 +192,17 @@ const SelectedDicePoolDisplay = ({
                                         onChange={(e) => {
                                             if (e.currentTarget.checked) {
                                                 updateSelectedDicePool({
-                                                    selectedDisciplinePowers: [...selectedDicePool.selectedDisciplinePowers, powerKey],
+                                                    selectedDisciplinePowers: [
+                                                        ...selectedDicePool.selectedDisciplinePowers,
+                                                        powerKey
+                                                    ]
                                                 })
                                             } else {
                                                 updateSelectedDicePool({
-                                                    selectedDisciplinePowers: selectedDicePool.selectedDisciplinePowers.filter(p => p !== powerKey),
+                                                    selectedDisciplinePowers:
+                                                        selectedDicePool.selectedDisciplinePowers.filter(
+                                                            (p) => p !== powerKey
+                                                        )
                                                 })
                                             }
                                         }}

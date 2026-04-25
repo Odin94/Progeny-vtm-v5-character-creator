@@ -11,8 +11,8 @@ export default defineConfig({
         outDir: "build",
         sourcemap: true,
         rollupOptions: {
-            external: [],
-        },
+            external: []
+        }
     },
     server: {
         port: 3000,
@@ -28,23 +28,23 @@ export default defineConfig({
                             proxyReq.setHeader("Cookie", req.headers.cookie)
                         }
                     })
-                },
-            },
-        },
+                }
+            }
+        }
     },
     plugins: [
         react({
             jsxImportSource: "@emotion/react",
             babel: {
-                plugins: ["@emotion/babel-plugin"],
-            },
+                plugins: ["@emotion/babel-plugin"]
+            }
         }),
-        tanstackRouter(),
+        tanstackRouter()
     ],
     base: "/",
     resolve: {
         alias: {
-            "~": path.resolve(__dirname, "src"),
-        },
-    },
+            "~": path.resolve(__dirname, "src")
+        }
+    }
 })

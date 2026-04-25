@@ -52,11 +52,21 @@ const ErrorDetails = ({ error, linkColor }: ErrorDetailsProps) => {
             </Text>
             <Text fz="lg" ta="center">
                 Send a screenshot of this to me on{" "}
-                <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer" c={linkColor}>
+                <Anchor
+                    href={CONTACT_LINKS.reddit.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    c={linkColor}
+                >
                     {CONTACT_LINKS.reddit.label}
                 </Anchor>{" "}
                 or{" "}
-                <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer" c={linkColor}>
+                <Anchor
+                    href={CONTACT_LINKS.bluesky.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    c={linkColor}
+                >
                     {CONTACT_LINKS.bluesky.label}
                 </Anchor>{" "}
                 to help me fix it
@@ -70,16 +80,36 @@ const ErrorDetails = ({ error, linkColor }: ErrorDetailsProps) => {
                 </Stack>
             ) : null}
             {mappedStack?.frames.length ? (
-                <Text size="xs" c="dimmed" style={{ fontFamily: "monospace", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
+                <Text
+                    size="xs"
+                    c="dimmed"
+                    style={{
+                        fontFamily: "monospace",
+                        wordBreak: "break-word",
+                        whiteSpace: "pre-wrap"
+                    }}
+                >
                     {mappedStack.frames.map(renderFrameLabel).join("\n")}
                 </Text>
             ) : (
-                <Text size="xs" c="dimmed" style={{ fontFamily: "monospace", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
+                <Text
+                    size="xs"
+                    c="dimmed"
+                    style={{
+                        fontFamily: "monospace",
+                        wordBreak: "break-word",
+                        whiteSpace: "pre-wrap"
+                    }}
+                >
                     {error.stack}
                 </Text>
             )}
             {sourceFrame?.sourceExcerpt ? (
-                <Text size="xs" c="dimmed" style={{ fontFamily: "monospace", whiteSpace: "pre-wrap", overflowX: "auto" }}>
+                <Text
+                    size="xs"
+                    c="dimmed"
+                    style={{ fontFamily: "monospace", whiteSpace: "pre-wrap", overflowX: "auto" }}
+                >
                     {sourceFrame.sourceExcerpt}
                 </Text>
             ) : null}

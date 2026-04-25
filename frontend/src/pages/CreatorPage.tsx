@@ -7,9 +7,17 @@ import { useLocation, useNavigate } from "@tanstack/react-router"
 import React, { useEffect, useState } from "react"
 import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
-import { characterSchema, getEmptyCharacter, type Character as CharacterType } from "~/data/Character"
+import {
+    characterSchema,
+    getEmptyCharacter,
+    type Character as CharacterType
+} from "~/data/Character"
 import Generator from "~/generator/Generator"
-import { defaultGeneratorStepId, normalizeGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
+import {
+    defaultGeneratorStepId,
+    normalizeGeneratorStepId,
+    type GeneratorStepId
+} from "~/generator/steps"
 import { rndInt } from "~/generator/utils"
 import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
@@ -51,7 +59,7 @@ export default function CreatorPage() {
     const [character, setCharacter] = useCharacterLocalStorage()
     const [storedSelectedStep, setStoredSelectedStep] = useLocalStorage<GeneratorStepId>({
         key: "selectedGeneratorStep",
-        defaultValue: defaultGeneratorStepId,
+        defaultValue: defaultGeneratorStepId
     })
     const [loadModalOpened, setLoadModalOpened] = useState(false)
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
@@ -59,7 +67,9 @@ export default function CreatorPage() {
     const [pendingSwitchAction, setPendingSwitchAction] = useState<PendingSwitchAction>(null)
     const [switchNameValue, setSwitchNameValue] = useState("")
     const [isSavingBeforeSwitch, setIsSavingBeforeSwitch] = useState(false)
-    const userCharacters = ((characters as Array<{ id: string; name: string; shared?: boolean }>) || []).filter((candidate) => !candidate.shared)
+    const userCharacters = (
+        (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
+    ).filter((candidate) => !candidate.shared)
     const emptyCharacter = getEmptyCharacter()
 
     const routeHash = location.hash.replace(/^#/, "")
@@ -79,7 +89,7 @@ export default function CreatorPage() {
         navigate({
             to: "/create",
             hash: step,
-            replace: options?.replace ?? false,
+            replace: options?.replace ?? false
         })
     }
 
@@ -108,7 +118,7 @@ export default function CreatorPage() {
 
         setCharacter({
             ...loadedCharacter,
-            id: characterId,
+            id: characterId
         } as CharacterType & { id: string })
         setSelectedStep("final")
 
@@ -116,7 +126,7 @@ export default function CreatorPage() {
             title: "Character loaded",
             message: `Loaded "${loadedCharacter.name}"`,
             color: "green",
-            autoClose: 3000,
+            autoClose: 3000
         })
     }
 
@@ -131,11 +141,13 @@ export default function CreatorPage() {
             throw new Error("Please give the current character a name before switching.")
         }
 
-        const targetCharacter = character.id ? userCharacters.find((candidate) => candidate.id === character.id) : null
+        const targetCharacter = character.id
+            ? userCharacters.find((candidate) => candidate.id === character.id)
+            : null
         const payload = {
             name: character.name,
             data: character,
-            version: character.version,
+            version: character.version
         }
 
         const savedCharacter = targetCharacter
@@ -151,7 +163,11 @@ export default function CreatorPage() {
         setCharacter({
             ...character,
             id: saved.id,
-            characterVersion: saved.characterVersion ?? saved.data?.characterVersion ?? character.characterVersion ?? 0,
+            characterVersion:
+                saved.characterVersion ??
+                saved.data?.characterVersion ??
+                character.characterVersion ??
+                0
         } as CharacterType & { id: string; characterVersion: number })
 
         await queryClient.invalidateQueries({ queryKey: ["characters"] })
@@ -163,7 +179,7 @@ export default function CreatorPage() {
             id: "",
             name: "",
             version: emptyCharacter.version,
-            characterVersion: emptyCharacter.characterVersion,
+            characterVersion: emptyCharacter.characterVersion
         }) === JSON.stringify(emptyCharacter)
 
     const completePendingSwitchAction = async (action: PendingSwitchAction) => {
@@ -201,11 +217,12 @@ export default function CreatorPage() {
             try {
                 await saveCurrentCharacter()
             } catch (error) {
-                const notifiedError = error instanceof Error ? error : new Error("Failed to save current character")
+                const notifiedError =
+                    error instanceof Error ? error : new Error("Failed to save current character")
                 notifications.show({
                     title: "Error saving character",
                     message: notifiedError.message,
-                    color: "red",
+                    color: "red"
                 })
                 ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
                 throw notifiedError
@@ -224,11 +241,12 @@ export default function CreatorPage() {
         try {
             await saveCurrentCharacter()
         } catch (error) {
-            const notifiedError = error instanceof Error ? error : new Error("Failed to save current character")
+            const notifiedError =
+                error instanceof Error ? error : new Error("Failed to save current character")
             notifications.show({
                 title: "Error saving character",
                 message: notifiedError.message,
-                color: "red",
+                color: "red"
             })
             ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
             throw notifiedError
@@ -242,7 +260,7 @@ export default function CreatorPage() {
             notifications.show({
                 title: "Name required",
                 message: "Enter a character name before saving and switching.",
-                color: "red",
+                color: "red"
             })
             return
         }
@@ -252,11 +270,13 @@ export default function CreatorPage() {
         try {
             setCharacter({ ...character, name: switchNameValue })
             const characterToSave = { ...character, name: switchNameValue }
-            const targetCharacter = characterToSave.id ? userCharacters.find((candidate) => candidate.id === characterToSave.id) : null
+            const targetCharacter = characterToSave.id
+                ? userCharacters.find((candidate) => candidate.id === characterToSave.id)
+                : null
             const payload = {
                 name: characterToSave.name,
                 data: characterToSave,
-                version: characterToSave.version,
+                version: characterToSave.version
             }
             const savedCharacter = targetCharacter
                 ? await api.updateCharacter(targetCharacter.id, payload)
@@ -270,7 +290,11 @@ export default function CreatorPage() {
             setCharacter({
                 ...characterToSave,
                 id: saved.id,
-                characterVersion: saved.characterVersion ?? saved.data?.characterVersion ?? characterToSave.characterVersion ?? 0,
+                characterVersion:
+                    saved.characterVersion ??
+                    saved.data?.characterVersion ??
+                    characterToSave.characterVersion ??
+                    0
             } as CharacterType & { id: string; characterVersion: number })
             await queryClient.invalidateQueries({ queryKey: ["characters"] })
 
@@ -280,8 +304,9 @@ export default function CreatorPage() {
         } catch (error) {
             notifications.show({
                 title: "Error saving character",
-                message: error instanceof Error ? error.message : "Failed to save current character",
-                color: "red",
+                message:
+                    error instanceof Error ? error.message : "Failed to save current character",
+                color: "red"
             })
             setIsSavingBeforeSwitch(false)
         }
@@ -301,11 +326,13 @@ export default function CreatorPage() {
     }, [selectedStep, setStoredSelectedStep, storedSelectedStep])
 
     useEffect(() => {
-      // TODOdin: This fixes that we get linked back here right after linking to /me by clicking account button
-      // Find a cleaner fix for this
+        // TODOdin: This fixes that we get linked back here right after linking to /me by clicking account button
+        // Find a cleaner fix for this
         if (location.pathname !== "/create") return
 
-        const normalizedHash = routeHash ? normalizeGeneratorStepId(routeHash, character) : fallbackStep
+        const normalizedHash = routeHash
+            ? normalizeGeneratorStepId(routeHash, character)
+            : fallbackStep
 
         if (normalizedHash !== selectedStep || location.hash !== `#${selectedStep}`) {
             setSelectedStep(normalizedHash, { replace: true })
@@ -323,7 +350,11 @@ export default function CreatorPage() {
             />
             <NameCharacterBeforeSwitchModal
                 opened={pendingSwitchAction !== null}
-                pendingActionLabel={pendingSwitchAction?.type === "load" ? "switch characters" : "create a new character"}
+                pendingActionLabel={
+                    pendingSwitchAction?.type === "load"
+                        ? "switch characters"
+                        : "create a new character"
+                }
                 nameValue={switchNameValue}
                 setNameValue={setSwitchNameValue}
                 onClose={closeNameBeforeSwitchModal}
@@ -336,14 +367,14 @@ export default function CreatorPage() {
                 header={{ height: 52 }}
                 styles={(theme) => ({
                     root: {
-                        height: "100vh",
+                        height: "100vh"
                     },
                     header: {
                         background: "rgba(8, 7, 8, 0.7)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
                         borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
-                        zIndex: 200,
+                        zIndex: 200
                     },
                     navbar: {
                         top: 52,
@@ -351,7 +382,7 @@ export default function CreatorPage() {
                         background: "rgba(8, 7, 8, 0.72)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderRight: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
+                        borderRight: `1px solid ${rgba(RAW_GOLD, 0.12)}`
                     },
                     aside: {
                         top: 52,
@@ -359,19 +390,27 @@ export default function CreatorPage() {
                         background: "rgba(8, 7, 8, 0.72)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
-                        borderLeft: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
+                        borderLeft: `1px solid ${rgba(RAW_GOLD, 0.12)}`
                     },
                     main: {
-                        backgroundColor: computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
+                        backgroundColor:
+                            computedColorScheme === "dark"
+                                ? theme.colors.dark[8]
+                                : theme.colors.gray[0],
                         height: "100%",
                         display: "flex",
                         flexDirection: "column",
-                        overflow: "hidden",
-                    },
+                        overflow: "hidden"
+                    }
                 })}
             >
                 <AppShell.Header>
-                    <Topbar asideBar={{ show: showAsideBar, onToggle: () => setShowAsideBar(!showAsideBar) }} />
+                    <Topbar
+                        asideBar={{
+                            show: showAsideBar,
+                            onToggle: () => setShowAsideBar(!showAsideBar)
+                        }}
+                    />
                 </AppShell.Header>
                 {!globals.isSmallScreen && (
                     <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
@@ -407,8 +446,28 @@ export default function CreatorPage() {
                         }
                     }}
                 >
-                    <div style={{ backgroundColor: "rgba(0, 0, 0, 0.7)", height: "100%", display: "flex", flexDirection: "column" }}>
-                        <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0, "--aside-offset": showAsideBar ? "200px" : "0px", "--navbar-offset": globals.isSmallScreen ? "0px" : "250px" } as React.CSSProperties}>
+                    <div
+                        style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <div
+                            style={
+                                {
+                                    width: "100%",
+                                    height: "100%",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    flex: 1,
+                                    minHeight: 0,
+                                    "--aside-offset": showAsideBar ? "200px" : "0px",
+                                    "--navbar-offset": globals.isSmallScreen ? "0px" : "250px"
+                                } as React.CSSProperties
+                            }
+                        >
                             <Generator
                                 character={character}
                                 setCharacter={setCharacter}

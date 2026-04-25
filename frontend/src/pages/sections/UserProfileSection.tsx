@@ -29,7 +29,7 @@ const UserProfileSection = ({
     isUpdatingProfile,
     redColorValue,
     handleSaveNickname,
-    handleCancelNickname,
+    handleCancelNickname
 }: UserProfileSectionProps) => {
     const [emailVisible, setEmailVisible] = useState(false)
 
@@ -75,10 +75,21 @@ const UserProfileSection = ({
                                 />
                             </FocusBorderWrapper>
                             <Group gap="xs">
-                                <Button size="xs" color="red" onClick={handleSaveNickname} loading={isUpdatingProfile}>
+                                <Button
+                                    size="xs"
+                                    color="red"
+                                    onClick={handleSaveNickname}
+                                    loading={isUpdatingProfile}
+                                >
                                     Save
                                 </Button>
-                                <Button size="xs" variant="subtle" onClick={handleCancelNickname} disabled={isUpdatingProfile} color="gray">
+                                <Button
+                                    size="xs"
+                                    variant="subtle"
+                                    onClick={handleCancelNickname}
+                                    disabled={isUpdatingProfile}
+                                    color="gray"
+                                >
                                     Cancel
                                 </Button>
                             </Group>
@@ -86,7 +97,12 @@ const UserProfileSection = ({
                     ) : (
                         <Group gap="xs" style={{ flex: 1 }}>
                             <Text>{user?.nickname || <Text c="dimmed">No nickname set</Text>}</Text>
-                            <ActionIcon color="red" size="sm" variant="subtle" onClick={() => setIsEditingNickname(true)}>
+                            <ActionIcon
+                                color="red"
+                                size="sm"
+                                variant="subtle"
+                                onClick={() => setIsEditingNickname(true)}
+                            >
                                 <IconEdit size={16} />
                             </ActionIcon>
                         </Group>

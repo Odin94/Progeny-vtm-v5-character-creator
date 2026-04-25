@@ -1,4 +1,15 @@
-import { Box, Button, Center, FileButton, Group, Modal, Paper, ScrollArea, Stack, Text } from "@mantine/core"
+import {
+    Box,
+    Button,
+    Center,
+    FileButton,
+    Group,
+    Modal,
+    Paper,
+    ScrollArea,
+    Stack,
+    Text
+} from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { notifications } from "@mantine/notifications"
 import { IconChevronRight, IconFilePlus, IconFileUpload, IconUser } from "@tabler/icons-react"
@@ -27,20 +38,29 @@ type SidebarCharacterOption = {
     label: string
 }
 
-const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateCharacter }: SidebarProps) => {
+const Sidebar = ({
+    character,
+    onLoadFromFile,
+    onLoadSavedCharacter,
+    onCreateCharacter
+}: SidebarProps) => {
     const height = globals.viewportHeightPx
     const phoneScreen = globals.isPhoneScreen
     const { isAuthenticated } = useAuth()
     const { data: characters, isLoading: charactersLoading } = useCharacters(isAuthenticated)
-    const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(character.id || null)
+    const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
+        character.id || null
+    )
     const [isLoadingSelectedCharacter, setIsLoadingSelectedCharacter] = useState(false)
     const [switchCharacterModalOpened, setSwitchCharacterModalOpened] = useState(false)
 
-    const characterOptions: SidebarCharacterOption[] = ((characters as Array<{ id: string; name: string; shared?: boolean }>) || [])
+    const characterOptions: SidebarCharacterOption[] = (
+        (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
+    )
         .filter((candidate) => !candidate.shared)
         .map((candidate) => ({
             value: candidate.id,
-            label: candidate.name || "Untitled character",
+            label: candidate.name || "Untitled character"
         }))
 
     const showCharacterSelect = isAuthenticated
@@ -62,11 +82,20 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
             await onLoadSavedCharacter(value)
         } catch (error) {
             setSelectedCharacterId(character.id || null)
-            if (!(error instanceof Error && "alreadyNotified" in error && error.alreadyNotified === true)) {
+            if (
+                !(
+                    error instanceof Error &&
+                    "alreadyNotified" in error &&
+                    error.alreadyNotified === true
+                )
+            ) {
                 notifications.show({
                     title: "Error loading character",
-                    message: error instanceof Error ? error.message : "Failed to load selected character",
-                    color: "red",
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to load selected character",
+                    color: "red"
                 })
             }
         } finally {
@@ -81,7 +110,8 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
             borderColor: rgba(RAW_RED, 0.4),
             background: rgba(RAW_RED, 0.08),
             boxShadow: "none",
-            transition: "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+            transition:
+                "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             fontFamily: "Cinzel, Georgia, serif",
@@ -91,17 +121,17 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                 borderColor: "rgba(250, 82, 82, 0.85)",
                 background: rgba(RAW_RED, 0.24),
                 boxShadow: `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`,
-                transform: "translateY(-1px) scale(1.01)",
-            },
+                transform: "translateY(-1px) scale(1.01)"
+            }
         },
         section: {
-            color: rgba(RAW_RED, 1),
+            color: rgba(RAW_RED, 1)
         },
         label: {
             overflow: "hidden",
             textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-        },
+            whiteSpace: "nowrap"
+        }
     } as const
 
     const activeCharacterLabel =
@@ -119,12 +149,14 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                 styles={{
                     content: {
                         border: "1px solid rgba(125, 91, 72, 0.38)",
-                        background: "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
-                        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+                        background:
+                            "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
+                        boxShadow:
+                            "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
                     },
                     body: {
-                        padding: phoneScreen ? "1.1rem" : "1.35rem",
-                    },
+                        padding: phoneScreen ? "1.1rem" : "1.35rem"
+                    }
                 }}
             >
                 <Stack gap="md">
@@ -136,7 +168,7 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                 fontSize: phoneScreen ? "1.2rem" : "1.35rem",
                                 letterSpacing: "0.08em",
                                 textTransform: "uppercase",
-                                color: "rgba(244, 236, 232, 0.95)",
+                                color: "rgba(244, 236, 232, 0.95)"
                             }}
                         >
                             Switch Character
@@ -146,7 +178,7 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                             style={{
                                 fontFamily: "Inter, Segoe UI, sans-serif",
                                 fontSize: "0.9rem",
-                                color: rgba(RAW_GREY, 0.62),
+                                color: rgba(RAW_GREY, 0.62)
                             }}
                         >
                             Choose one of your saved characters to load into the generator.
@@ -160,7 +192,8 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                 withBorder
                                 style={{
                                     borderColor: "rgba(125, 91, 72, 0.32)",
-                                    background: "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)",
+                                    background:
+                                        "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)"
                                 }}
                             >
                                 <Group justify="space-between" align="center" wrap="nowrap">
@@ -171,7 +204,7 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                                 fontSize: "0.92rem",
                                                 letterSpacing: "0.06em",
                                                 textTransform: "uppercase",
-                                                color: "rgba(244, 236, 232, 0.95)",
+                                                color: "rgba(244, 236, 232, 0.95)"
                                             }}
                                         >
                                             New Character
@@ -191,11 +224,20 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                                 await onCreateCharacter()
                                                 setSwitchCharacterModalOpened(false)
                                             } catch (error) {
-                                                if (!(error instanceof Error && "alreadyNotified" in error && error.alreadyNotified === true)) {
+                                                if (
+                                                    !(
+                                                        error instanceof Error &&
+                                                        "alreadyNotified" in error &&
+                                                        error.alreadyNotified === true
+                                                    )
+                                                ) {
                                                     notifications.show({
                                                         title: "Error creating character",
-                                                        message: error instanceof Error ? error.message : "Failed to create a new character",
-                                                        color: "red",
+                                                        message:
+                                                            error instanceof Error
+                                                                ? error.message
+                                                                : "Failed to create a new character",
+                                                        color: "red"
                                                     })
                                                 }
                                             } finally {
@@ -217,11 +259,15 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                         p="sm"
                                         withBorder
                                         style={{
-                                            borderColor: isActive ? rgba(RAW_RED, 0.45) : "rgba(125, 91, 72, 0.32)",
+                                            borderColor: isActive
+                                                ? rgba(RAW_RED, 0.45)
+                                                : "rgba(125, 91, 72, 0.32)",
                                             background: isActive
                                                 ? "linear-gradient(180deg, rgba(58, 18, 22, 0.9) 0%, rgba(32, 14, 17, 0.96) 100%)"
                                                 : "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)",
-                                            boxShadow: isActive ? `0 12px 24px ${rgba(RAW_RED, 0.14)}` : "none",
+                                            boxShadow: isActive
+                                                ? `0 12px 24px ${rgba(RAW_RED, 0.14)}`
+                                                : "none"
                                         }}
                                     >
                                         <Group justify="space-between" align="center" wrap="nowrap">
@@ -232,13 +278,15 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                                         fontSize: "0.92rem",
                                                         letterSpacing: "0.06em",
                                                         textTransform: "uppercase",
-                                                        color: "rgba(244, 236, 232, 0.95)",
+                                                        color: "rgba(244, 236, 232, 0.95)"
                                                     }}
                                                 >
                                                     {option.label}
                                                 </Text>
                                                 <Text size="xs" c="dimmed">
-                                                    {isActive ? "Currently loaded" : "Load this character"}
+                                                    {isActive
+                                                        ? "Currently loaded"
+                                                        : "Load this character"}
                                                 </Text>
                                             </Box>
                                             <Button
@@ -246,7 +294,10 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                                                 variant={isActive ? "light" : "outline"}
                                                 color="red"
                                                 disabled={isLoadingSelectedCharacter}
-                                                loading={isLoadingSelectedCharacter && option.value === selectedCharacterId}
+                                                loading={
+                                                    isLoadingSelectedCharacter &&
+                                                    option.value === selectedCharacterId
+                                                }
                                                 onClick={async () => {
                                                     await handleSelectCharacter(option.value)
                                                     setSwitchCharacterModalOpened(false)
@@ -269,7 +320,13 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                     <Stack gap="xs">
                         <FileButton onChange={onLoadFromFile} accept="application/json">
                             {(props) => (
-                                <Button size="sm" variant="outline" leftSection={<IconFileUpload size={16} />} styles={actionButtonStyles} {...props}>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    leftSection={<IconFileUpload size={16} />}
+                                    styles={actionButtonStyles}
+                                    {...props}
+                                >
                                     Load From File
                                 </Button>
                             )}
@@ -278,7 +335,13 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                             <Button
                                 size="sm"
                                 variant="outline"
-                                leftSection={characterOptions.length > 0 ? <IconUser size={16} /> : <IconFilePlus size={16} />}
+                                leftSection={
+                                    characterOptions.length > 0 ? (
+                                        <IconUser size={16} />
+                                    ) : (
+                                        <IconFilePlus size={16} />
+                                    )
+                                }
                                 rightSection={<IconChevronRight size={14} />}
                                 disabled={charactersLoading || isLoadingSelectedCharacter}
                                 loading={charactersLoading}
@@ -296,8 +359,12 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                         </Center>
                     ) : null}
                     {notDefault(character, "name") ? <BasicsDisplay character={character} /> : null}
-                    {notDefault(character, "attributes") ? <AttributesDisplay attributes={character.attributes} /> : null}
-                    {notDefault(character, "skills") ? <SkillDisplay skills={character.skills} /> : null}
+                    {notDefault(character, "attributes") ? (
+                        <AttributesDisplay attributes={character.attributes} />
+                    ) : null}
+                    {notDefault(character, "skills") ? (
+                        <SkillDisplay skills={character.skills} />
+                    ) : null}
                     {notDefault(character, "generation") ? (
                         <Text>
                             <b>Generation:</b> {character.generation}
@@ -309,9 +376,14 @@ const Sidebar = ({ character, onLoadFromFile, onLoadSavedCharacter, onCreateChar
                         </Text>
                     ) : null}
                     {notDefault(character, "disciplines") ? (
-                        <DisciplineDisplay powers={character.disciplines} rituals={character.rituals} />
+                        <DisciplineDisplay
+                            powers={character.disciplines}
+                            rituals={character.rituals}
+                        />
                     ) : null}
-                    {notDefault(character, "touchstones") ? <TouchstoneDisplay touchstones={character.touchstones} /> : null}
+                    {notDefault(character, "touchstones") ? (
+                        <TouchstoneDisplay touchstones={character.touchstones} />
+                    ) : null}
                     {notDefault(character, "merits") || notDefault(character, "flaws") ? (
                         <MeritsAndFlawsDisplay merits={character.merits} flaws={character.flaws} />
                     ) : null}

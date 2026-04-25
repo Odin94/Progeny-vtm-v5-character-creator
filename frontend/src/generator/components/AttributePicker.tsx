@@ -27,10 +27,18 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         ReactGA.send({ hitType: "pageview", title: "Attribute Picker" })
     }, [])
 
-    const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({ strongest: null, weakest: null, medium: [] })
+    const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({
+        strongest: null,
+        weakest: null,
+        medium: []
+    })
 
     const createButton = (attribute: AttributesKey, i: number) => {
-        const alreadyPicked = [pickedAttributes.strongest, pickedAttributes.weakest, ...pickedAttributes.medium].includes(attribute)
+        const alreadyPicked = [
+            pickedAttributes.strongest,
+            pickedAttributes.weakest,
+            ...pickedAttributes.medium
+        ].includes(attribute)
         const assignedLevel = (() => {
             if (attribute === pickedAttributes.strongest) return 4
             if (attribute === pickedAttributes.weakest) return 1
@@ -42,9 +50,13 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         if (alreadyPicked) {
             onClick = () => {
                 setPickedAttributes({
-                    strongest: pickedAttributes.strongest === attribute ? null : pickedAttributes.strongest,
+                    strongest:
+                        pickedAttributes.strongest === attribute
+                            ? null
+                            : pickedAttributes.strongest,
                     medium: pickedAttributes.medium.filter((it) => it !== attribute),
-                    weakest: pickedAttributes.weakest === attribute ? null : pickedAttributes.weakest,
+                    weakest:
+                        pickedAttributes.weakest === attribute ? null : pickedAttributes.weakest
                 })
             }
         } else if (!pickedAttributes.strongest) {
@@ -57,11 +69,17 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             }
         } else if (pickedAttributes.medium.length < 2) {
             onClick = () => {
-                setPickedAttributes({ ...pickedAttributes, medium: [...pickedAttributes.medium, attribute] })
+                setPickedAttributes({
+                    ...pickedAttributes,
+                    medium: [...pickedAttributes.medium, attribute]
+                })
             }
         } else {
             onClick = () => {
-                const finalPick = { ...pickedAttributes, medium: [...pickedAttributes.medium, attribute] }
+                const finalPick = {
+                    ...pickedAttributes,
+                    medium: [...pickedAttributes.medium, attribute]
+                }
                 const attributes = {
                     strength: 2,
                     charisma: 2,
@@ -71,7 +89,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                     wits: 2,
                     stamina: 2,
                     composure: 2,
-                    resolve: 2,
+                    resolve: 2
                 }
                 attributes[finalPick.strongest!] = 4
                 attributes[finalPick.weakest!] = 1
@@ -87,7 +105,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             trackEvent({
                 action: "attribute clicked",
                 category: "attributes",
-                label: attribute,
+                label: attribute
             })
         }
 
@@ -104,21 +122,26 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                         variant={alreadyPicked ? "outline" : "filled"}
                         color="grape"
                         fullWidth={false}
-                        style={{ width: "88%", marginLeft: "auto", marginRight: "auto", minHeight: phoneScreen ? 36 : 40 }}
+                        style={{
+                            width: "88%",
+                            marginLeft: "auto",
+                            marginRight: "auto",
+                            minHeight: phoneScreen ? 36 : 40
+                        }}
                         styles={{
                             inner: {
                                 alignItems: "center",
                                 justifyContent: phoneScreen ? "center" : "space-between",
                                 paddingTop: 2,
-                                paddingBottom: 3,
+                                paddingBottom: 3
                             },
                             label: {
                                 lineHeight: 1.3,
                                 overflow: "visible",
-                                flex: 1,
+                                flex: 1
                             },
                             section: {
-                                overflow: "visible",
+                                overflow: "visible"
                             },
                             root: {
                                 justifyContent: "space-between",
@@ -138,8 +161,8 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                           : assignedLevel === 1
                                             ? "rgba(180, 180, 180, 0.42)"
                                             : undefined,
-                                color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined,
-                            },
+                                color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
+                            }
                         }}
                         rightSection={
                             !phoneScreen && assignedLevel ? (
@@ -162,7 +185,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                                                 boxShadow:
                                                     dotIndex < assignedLevel && assignedLevel === 4
                                                         ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
-                                                        : "none",
+                                                        : "none"
                                             }}
                                         />
                                     ))}
@@ -174,7 +197,12 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                             onClick()
                         }}
                     >
-                        <Text fz={phoneScreen ? 12 : "inherit"} lh={1.3} ta={phoneScreen ? "center" : "left"} style={{ width: "100%" }}>
+                        <Text
+                            fz={phoneScreen ? 12 : "inherit"}
+                            lh={1.3}
+                            ta={phoneScreen ? "center" : "left"}
+                            style={{ width: "100%" }}
+                        >
                             {upcase(attribute)}
                         </Text>
                     </Button>
@@ -192,16 +220,30 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
     })()
 
     const phases = [
-        { key: "strongest", prompt: "Pick your", bold: "strongest", suffix: "attribute", level: 4, done: !!pickedAttributes.strongest },
-        { key: "weakest", prompt: "Pick your", bold: "weakest", suffix: "attribute", level: 1, done: !!pickedAttributes.weakest },
+        {
+            key: "strongest",
+            prompt: "Pick your",
+            bold: "strongest",
+            suffix: "attribute",
+            level: 4,
+            done: !!pickedAttributes.strongest
+        },
+        {
+            key: "weakest",
+            prompt: "Pick your",
+            bold: "weakest",
+            suffix: "attribute",
+            level: 1,
+            done: !!pickedAttributes.weakest
+        },
         {
             key: "medium",
             prompt: `Pick ${3 - pickedAttributes.medium.length}`,
             bold: "medium",
             suffix: `attribute${pickedAttributes.medium.length < 2 ? "s" : ""}`,
             level: 3,
-            done: pickedAttributes.medium.length === 2,
-        },
+            done: pickedAttributes.medium.length === 2
+        }
     ]
 
     return (
@@ -232,7 +274,17 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                             Mental
                         </Text>
                     </Grid.Col>
-                    {["strength", "charisma", "intelligence", "dexterity", "manipulation", "wits", "stamina", "composure", "resolve"]
+                    {[
+                        "strength",
+                        "charisma",
+                        "intelligence",
+                        "dexterity",
+                        "manipulation",
+                        "wits",
+                        "stamina",
+                        "composure",
+                        "resolve"
+                    ]
                         .map((a) => attributesKeySchema.parse(a))
                         .map((clan, i) => createButton(clan, i))}
                 </Grid>

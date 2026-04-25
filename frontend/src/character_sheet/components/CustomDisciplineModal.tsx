@@ -14,7 +14,13 @@ type CustomDisciplineModalProps = {
     onSave?: () => void
 }
 
-const CustomDisciplineModal = ({ opened, onClose, options, editingDisciplineName, onSave }: CustomDisciplineModalProps) => {
+const CustomDisciplineModal = ({
+    opened,
+    onClose,
+    options,
+    editingDisciplineName,
+    onSave
+}: CustomDisciplineModalProps) => {
     const { character, setCharacter, primaryColor } = options
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
@@ -50,12 +56,12 @@ const CustomDisciplineModal = ({ opened, onClose, options, editingDisciplineName
         const customDiscipline: CustomDiscipline = {
             name: name.trim(),
             summary: summary.trim(),
-            logo: logo.trim(),
+            logo: logo.trim()
         }
 
         const updatedCustomDisciplines = {
-            ...(character.customDisciplines || {}),
-            [disciplineNameKey]: customDiscipline,
+            ...character.customDisciplines,
+            [disciplineNameKey]: customDiscipline
         }
 
         if (editingDisciplineName && editingDisciplineName !== disciplineNameKey) {
@@ -64,11 +70,14 @@ const CustomDisciplineModal = ({ opened, onClose, options, editingDisciplineName
 
         const updatedCharacter = {
             ...character,
-            customDisciplines: updatedCustomDisciplines,
+            customDisciplines: updatedCustomDisciplines
         }
 
         if (!character.availableDisciplineNames.includes(disciplineNameKey)) {
-            updatedCharacter.availableDisciplineNames = [...character.availableDisciplineNames, disciplineNameKey]
+            updatedCharacter.availableDisciplineNames = [
+                ...character.availableDisciplineNames,
+                disciplineNameKey
+            ]
         }
 
         setCharacter(updatedCharacter)
@@ -82,14 +91,16 @@ const CustomDisciplineModal = ({ opened, onClose, options, editingDisciplineName
     const handleDelete = () => {
         if (!editingDisciplineName) return
 
-        const updatedCustomDisciplines = { ...(character.customDisciplines || {}) }
+        const updatedCustomDisciplines = { ...character.customDisciplines }
         delete updatedCustomDisciplines[editingDisciplineName]
 
         const updatedCharacter = {
             ...character,
             customDisciplines: updatedCustomDisciplines,
-            availableDisciplineNames: character.availableDisciplineNames.filter((n) => n !== editingDisciplineName),
-            disciplines: character.disciplines.filter((p) => p.discipline !== editingDisciplineName),
+            availableDisciplineNames: character.availableDisciplineNames.filter(
+                (n) => n !== editingDisciplineName
+            ),
+            disciplines: character.disciplines.filter((p) => p.discipline !== editingDisciplineName)
         }
 
         setCharacter(updatedCharacter)

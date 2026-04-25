@@ -28,7 +28,10 @@ export const getDisciplineCost = (character: Character, disciplineName: Discipli
         return newLevel * 6
     }
 
-    if (character.availableDisciplineNames.includes(disciplineName) || character.predatorType.pickedDiscipline === disciplineName) {
+    if (
+        character.availableDisciplineNames.includes(disciplineName) ||
+        character.predatorType.pickedDiscipline === disciplineName
+    ) {
         return newLevel * 5
     } else {
         return newLevel * 7
@@ -43,11 +46,13 @@ export const canAffordUpgrade = (availableXP: number, cost: number): boolean => 
     return availableXP >= cost
 }
 
-export const costFunctionByFieldName: Partial<Record<keyof Character, (newLevel: number) => number>> = {
+export const costFunctionByFieldName: Partial<
+    Record<keyof Character, (newLevel: number) => number>
+> = {
     bloodPotency: getBloodPotencyCost,
     attributes: getAttributeCost,
     skills: getSkillCost,
-    skillSpecialties: getSpecialtyCost,
+    skillSpecialties: getSpecialtyCost
 }
 
 // Rituals & formulas cost 3 x level

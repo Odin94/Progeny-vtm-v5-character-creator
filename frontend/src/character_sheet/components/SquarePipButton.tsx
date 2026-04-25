@@ -10,7 +10,12 @@ type SquarePipButtonProps = {
 }
 
 // TODOdin: Consider highlighting clickable buttons or low-lighting non-clickable buttons
-const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape" }: SquarePipButtonProps) => {
+const SquarePipButton = ({
+    onClick,
+    style,
+    damageState = "none",
+    color = "grape"
+}: SquarePipButtonProps) => {
     const theme = useMantineTheme()
     const prevState = useRef(damageState)
     const keyCounter = useRef(0)
@@ -28,7 +33,7 @@ const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape"
 
         return {
             superficialKey: isNewSuperficial ? `superficial-${keyCounter.current}` : "superficial",
-            aggravatedKey: isNewAggravated ? `aggravated-${keyCounter.current}` : "aggravated",
+            aggravatedKey: isNewAggravated ? `aggravated-${keyCounter.current}` : "aggravated"
         }
     }, [damageState])
 
@@ -41,7 +46,7 @@ const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape"
         transition: "transform 0.2s ease",
         position: "relative",
         overflow: "visible",
-        ...style,
+        ...style
     }
 
     return (
@@ -71,7 +76,7 @@ const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape"
                     position: "absolute",
                     width: "100%",
                     height: "100%",
-                    pointerEvents: "none",
+                    pointerEvents: "none"
                 }}
             >
                 {(damageState === "superficial" || damageState === "aggravated") && (
@@ -85,7 +90,7 @@ const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape"
                         animate={{ pathLength: 1 }}
                         transition={{
                             duration: 0.2,
-                            ease: "easeOut",
+                            ease: "easeOut"
                         }}
                         stroke={strokeColor}
                         strokeWidth="3"
@@ -103,7 +108,7 @@ const SquarePipButton = ({ onClick, style, damageState = "none", color = "grape"
                         animate={{ pathLength: 1 }}
                         transition={{
                             duration: 0.2,
-                            ease: "easeOut",
+                            ease: "easeOut"
                         }}
                         stroke={strokeColor}
                         strokeWidth="3"

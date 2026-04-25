@@ -80,7 +80,12 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(8, 7, 8, 0.56) 0%, rgba(8, 7, 8, 0.34) 18%, rgba(8, 7, 8, 0.86) 100%),
+        linear-gradient(
+            180deg,
+            rgba(8, 7, 8, 0.56) 0%,
+            rgba(8, 7, 8, 0.34) 18%,
+            rgba(8, 7, 8, 0.86) 100%
+        ),
         radial-gradient(circle at center, rgba(179, 39, 56, 0.15), transparent 40%);
 }
 
@@ -110,7 +115,12 @@
     width: 96px;
     height: 1px;
     margin: 1rem auto;
-    background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 100, 0.9) 50%, transparent 100%);
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(212, 175, 100, 0.9) 50%,
+        transparent 100%
+    );
 }
 
 .landing-page__lede,

@@ -47,7 +47,10 @@ export const testTemplate = async (basePdf: string) => {
 
         form = pdfDoc.getForm()
     } catch (_err) {
-        return { success: false, error: new Error("Can't get form from pdf - is it a fillable pdf?") }
+        return {
+            success: false,
+            error: new Error("Can't get form from pdf - is it a fillable pdf?")
+        }
     }
     try {
         form.getTextField("Name").setText("")
@@ -57,7 +60,9 @@ export const testTemplate = async (basePdf: string) => {
     } catch (_err) {
         return {
             success: false,
-            error: new Error("PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?"),
+            error: new Error(
+                "PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?"
+            )
         }
     }
 
@@ -78,7 +83,12 @@ const downloadPdf = (fileName: string, bytes: Uint8Array) => {
     }, 100)
 }
 
-export const setButtonImageOverlay = (pdfDoc: PDFDocument, form: PDFForm, fieldName: string, image: PDFImage) => {
+export const setButtonImageOverlay = (
+    pdfDoc: PDFDocument,
+    form: PDFForm,
+    fieldName: string,
+    image: PDFImage
+) => {
     const button = form.getButton(fieldName)
     const widget = button.acroField.getWidgets()[0]
 
@@ -97,11 +107,16 @@ export const setButtonImageOverlay = (pdfDoc: PDFDocument, form: PDFForm, fieldN
         x: x + insetX,
         y: y + insetY,
         width: width - insetX * 2,
-        height: height - insetY * 2,
+        height: height - insetY * 2
     })
 }
 
-export const setHumanityTracker = (pdfDoc: PDFDocument, form: PDFForm, image: PDFImage, humanity: number) => {
+export const setHumanityTracker = (
+    pdfDoc: PDFDocument,
+    form: PDFForm,
+    image: PDFImage,
+    humanity: number
+) => {
     const clampedHumanity = Math.max(0, Math.min(10, humanity))
 
     for (let i = 1; i <= clampedHumanity; i++) {
@@ -119,7 +134,17 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Attributes
     const attributes = character.attributes
-    ;["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"]
+    ;[
+        "strength",
+        "dexterity",
+        "stamina",
+        "charisma",
+        "manipulation",
+        "composure",
+        "intelligence",
+        "wits",
+        "resolve"
+    ]
         .map((a) => attributesKeySchema.parse(a))
         .forEach((attr) => {
             const lvl = attributes[attr]
@@ -130,7 +155,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Skills
     const setSpecialty = (skillName: SkillsKey, textFieldKey: string) => {
-        const allSpecialties = [...character.skillSpecialties, ...character.predatorType.pickedSpecialties]
+        const allSpecialties = [
+            ...character.skillSpecialties,
+            ...character.predatorType.pickedSpecialties
+        ]
         const specialties = allSpecialties
             .filter((s) => s.skill === skillName)
             .filter((s) => s.name !== "")
@@ -197,7 +225,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         "occult",
         "politics",
         "science",
-        "technology",
+        "technology"
     ]
         .map((s) => skillsKeySchema.parse(s))
         .forEach((skill) => {
@@ -212,7 +240,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     // Health
     let health = 3 + character.attributes["stamina"]
     if (character.disciplines.find((power) => power.name === "Resilience")) {
-        const fortitudeLevel = character.disciplines.filter((power) => power.discipline === "fortitude").length
+        const fortitudeLevel = character.disciplines.filter(
+            (power) => power.discipline === "fortitude"
+        ).length
         health += fortitudeLevel
     }
     for (let i = 1; i <= health; i++) {
@@ -253,7 +283,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
-    const baneText = clans[character.clan].bane.replace("BANE_SEVERITY", `${effects.bane} (bane severity)`)
+    const baneText = clans[character.clan].bane.replace(
+        "BANE_SEVERITY",
+        `${effects.bane} (bane severity)`
+    )
     form.getTextField("ClanBane").setText(baneText)
     form.getTextField("ClanCompulsion").setText(clans[character.clan].compulsion)
 
@@ -306,11 +339,15 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Merits & flaws
     const characterMeritsFlaws = [...character.merits, ...character.flaws]
-    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws.filter(
-        (m) => !characterMeritsFlaws.map((cm) => cm.name).includes(m.name)
-    )
+    const predatorTypeMeritsFlaws = PredatorTypes[
+        character.predatorType.name
+    ].meritsAndFlaws.filter((m) => !characterMeritsFlaws.map((cm) => cm.name).includes(m.name))
     const pickedPredatorTypeMeritsFlaws = character.predatorType.pickedMeritsAndFlaws
-    const meritsAndFlaws = [...predatorTypeMeritsFlaws, ...pickedPredatorTypeMeritsFlaws, ...characterMeritsFlaws]
+    const meritsAndFlaws = [
+        ...predatorTypeMeritsFlaws,
+        ...pickedPredatorTypeMeritsFlaws,
+        ...characterMeritsFlaws
+    ]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
         form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)
@@ -321,7 +358,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Touchstones & Convictions
     form.getTextField("Convictions").setText(
-        character.touchstones.map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`).join("\n\n")
+        character.touchstones
+            .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
+            .join("\n\n")
     )
 
     // Experience
@@ -362,7 +401,7 @@ export const downloadCharacterSheet = async (character: Character) => {
         title: "PDF template kindly provided by Nerdbert!",
         message: "https://linktr.ee/nerdbert",
         autoClose: 5000,
-        color: "grape",
+        color: "grape"
     })
 
     downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)

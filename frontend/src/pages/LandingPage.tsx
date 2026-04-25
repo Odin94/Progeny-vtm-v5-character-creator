@@ -1,12 +1,20 @@
 import AppTopbar from "~/components/AppTopbar"
-import { Anchor, Box, Button, Card, Container, Grid, Group, List, Modal, Stack, Text, Title } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
 import {
-    IconBook2,
-    IconChevronDown,
-    IconDropletFilled,
-    IconSparkles,
-} from "@tabler/icons-react"
+    Anchor,
+    Box,
+    Button,
+    Card,
+    Container,
+    Grid,
+    Group,
+    List,
+    Modal,
+    Stack,
+    Text,
+    Title
+} from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
+import { IconBook2, IconChevronDown, IconDropletFilled, IconSparkles } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { motion } from "framer-motion"
 import { useRef, type ReactNode } from "react"
@@ -24,7 +32,14 @@ type FeatureCardProps = {
     onSecondaryClick?: () => void
 }
 
-function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick, secondaryLabel, onSecondaryClick }: FeatureCardProps) {
+function FeatureCard({
+    title,
+    bullets,
+    primaryLabel,
+    onPrimaryClick,
+    secondaryLabel,
+    onSecondaryClick
+}: FeatureCardProps) {
     return (
         <Card radius="lg" p="xl" className="landing-page__feature-card">
             <Stack gap="xl" className="landing-page__feature-card-inner">
@@ -45,11 +60,21 @@ function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick, secondaryLa
                     </List>
                 </Box>
                 <Group gap="lg" className="landing-page__feature-actions">
-                    <Button color="red" variant="transparent" className="landing-page__card-button" onClick={onPrimaryClick}>
+                    <Button
+                        color="red"
+                        variant="transparent"
+                        className="landing-page__card-button"
+                        onClick={onPrimaryClick}
+                    >
                         {primaryLabel}
                     </Button>
                     {secondaryLabel && onSecondaryClick ? (
-                        <Button color="red" variant="transparent" className="landing-page__card-button" onClick={onSecondaryClick}>
+                        <Button
+                            color="red"
+                            variant="transparent"
+                            className="landing-page__card-button"
+                            onClick={onSecondaryClick}
+                        >
                             {secondaryLabel}
                         </Button>
                     ) : null}
@@ -88,7 +113,10 @@ export default function LandingPage() {
             </Box>
 
             <Box className="landing-page__section landing-page__hero">
-                <Box className="landing-page__hero-bg" style={{ backgroundImage: `url(${alley})` }} />
+                <Box
+                    className="landing-page__hero-bg"
+                    style={{ backgroundImage: `url(${alley})` }}
+                />
                 <Container size="md" className="landing-page__hero-content">
                     <motion.div
                         initial={{ opacity: 0, y: 28 }}
@@ -97,17 +125,18 @@ export default function LandingPage() {
                     >
                         <Stack gap="lg" align="center">
                             <Text size="xs" className="landing-page__eyebrow">
-                              Vampire: The Masquerade V5
+                                Vampire: The Masquerade V5
                             </Text>
                             <Title order={1} size="3.8rem" className="landing-page__title">
-                              Progeny
+                                Progeny
                             </Title>
                             <div className="landing-page__divider" />
                             <Text size="2rem" maw={760} className="landing-page__lede">
-                              Guided and simplified character creation
+                                Guided and simplified character creation
                             </Text>
                             <Text size="sm" maw={680} className="landing-page__kicker">
-                              Create your character here and use it anywhere - Export to PDF, Virtual Tabletops or use the Progeny Online Character Sheet
+                                Create your character here and use it anywhere - Export to PDF,
+                                Virtual Tabletops or use the Progeny Online Character Sheet
                             </Text>
                             <Group gap="md" justify="center" className="landing-page__cta-group">
                                 <Button
@@ -127,28 +156,48 @@ export default function LandingPage() {
                                     variant="default"
                                     className="landing-page__secondary-button"
                                     leftSection={<IconBook2 size={18} />}
-                                    onClick={() => featureSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                                    onClick={() =>
+                                        featureSectionRef.current?.scrollIntoView({
+                                            behavior: "smooth",
+                                            block: "start"
+                                        })
+                                    }
                                 >
-                                  Explore more
+                                    Explore more
                                 </Button>
                             </Group>
                             <Stack gap={4} mt="lg" align="center">
                                 <Text size="sm" className="landing-page__hero-meta">
                                     Feedback, requests or questions? Reach out to Odin on{" "}
-                                    <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                    <Anchor
+                                        href={CONTACT_LINKS.reddit.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
                                         {CONTACT_LINKS.reddit.label}
                                     </Anchor>
                                     {", "}
-                                    <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                    <Anchor
+                                        href={CONTACT_LINKS.bluesky.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
                                         {CONTACT_LINKS.bluesky.label}
                                     </Anchor>
                                     {" or "}
-                                    <Anchor href={CONTACT_LINKS.kofi.href} target="_blank" rel="noreferrer" className="landing-page__hero-meta-link">
+                                    <Anchor
+                                        href={CONTACT_LINKS.kofi.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
                                         {CONTACT_LINKS.kofi.label}
                                     </Anchor>
                                 </Text>
                                 <Text size="sm" className="landing-page__hero-meta">
-                                    Find source code on {" "}
+                                    Find source code on{" "}
                                     <Anchor
                                         href={CONTACT_LINKS.github.href}
                                         target="_blank"
@@ -172,14 +221,22 @@ export default function LandingPage() {
                         variant="subtle"
                         color="gray"
                         radius="xl"
-                        onClick={() => featureSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        onClick={() =>
+                            featureSectionRef.current?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start"
+                            })
+                        }
                     >
                         <IconChevronDown size={22} />
                     </Button>
                 </motion.div>
             </Box>
 
-            <Box ref={featureSectionRef} className="landing-page__section landing-page__grid-section">
+            <Box
+                ref={featureSectionRef}
+                className="landing-page__section landing-page__grid-section"
+            >
                 <Container size="lg">
                     <Stack gap="xl" mb="xl">
                         <Text size="xs" className="landing-page__small-label">
@@ -189,8 +246,9 @@ export default function LandingPage() {
                             Everything Progeny has to offer
                         </Title>
                         <Text size="xl" maw={780} className="landing-page__body">
-                            The creator is the first step. Progeny also gives you a dedicated sheet for active play and account features for keeping your
-                            chronicles organized.
+                            The creator is the first step. Progeny also gives you a dedicated sheet
+                            for active play and account features for keeping your chronicles
+                            organized.
                         </Text>
                     </Stack>
 
@@ -201,7 +259,7 @@ export default function LandingPage() {
                                 bullets={[
                                     "Dead simple character creation",
                                     "Save and edit your character in your browser",
-                                    "Export to PDF, an importable save file or to Foundry",
+                                    "Export to PDF, an importable save file or to Foundry"
                                 ]}
                                 primaryLabel="Start creating"
                                 onPrimaryClick={() => navigate({ to: "/create" })}
@@ -213,7 +271,7 @@ export default function LandingPage() {
                                 bullets={[
                                     "Highly automated online character sheet",
                                     "Use free-edit or XP-spending mode to grow your character",
-                                    "Powerful dice roller, including one-click rouse check and remorse rolls",
+                                    "Powerful dice roller, including one-click rouse check and remorse rolls"
                                 ]}
                                 primaryLabel="Open sheet"
                                 onPrimaryClick={() => navigate({ to: "/sheet" })}
@@ -227,7 +285,7 @@ export default function LandingPage() {
                                 bullets={[
                                     "Create an account to manage your characters in the cloud",
                                     "Share your characters with your coterie",
-                                    "Chat and auto-share dice rolls in play sessions",
+                                    "Chat and auto-share dice rolls in play sessions"
                                 ]}
                                 primaryLabel={isAuthenticated ? "Account" : "Sign in"}
                                 onPrimaryClick={openAccountArea}
@@ -241,7 +299,13 @@ export default function LandingPage() {
 
             <Box className="landing-page__section landing-page__explainers">
                 <Container size="md">
-                    <Card id="sheet-explainer" radius="lg" p="xl" mb="xl" className="landing-page__explainer">
+                    <Card
+                        id="sheet-explainer"
+                        radius="lg"
+                        p="xl"
+                        mb="xl"
+                        className="landing-page__explainer"
+                    >
                         <Stack gap="md" className="landing-page__explainer-inner">
                             <Text size="xs" className="landing-page__small-label">
                                 Character sheet
@@ -250,15 +314,23 @@ export default function LandingPage() {
                                 Move from creation into play
                             </Title>
                             <Text size="xl" className="landing-page__body">
-                                The sheet is where a finished character becomes a table companion. Open it to review stats, manage disciplines and merits,
-                                track play-state changes, and keep the character in front of you during sessions.
+                                The sheet is where a finished character becomes a table companion.
+                                Open it to review stats, manage disciplines and merits, track
+                                play-state changes, and keep the character in front of you during
+                                sessions.
                             </Text>
                             <Text size="lg" className="landing-page__body">
-                                It is designed as the next step after creation: build the character, open the sheet, and use that page as the place you return
-                                to during play.
+                                It is designed as the next step after creation: build the character,
+                                open the sheet, and use that page as the place you return to during
+                                play.
                             </Text>
                             <Group gap="lg" mt="xs">
-                                <Anchor component={Link} to="/sheet" underline="never" className="landing-page__link">
+                                <Anchor
+                                    component={Link}
+                                    to="/sheet"
+                                    underline="never"
+                                    className="landing-page__link"
+                                >
                                     Open the sheet
                                 </Anchor>
                             </Group>
@@ -270,7 +342,10 @@ export default function LandingPage() {
                         radius="lg"
                         p="xl"
                         className="landing-page__explainer"
-                        style={{ backgroundImage: `linear-gradient(180deg, rgba(35, 27, 27, 0.9), rgba(12, 10, 10, 0.96)), url(${alley})`, backgroundSize: "cover" }}
+                        style={{
+                            backgroundImage: `linear-gradient(180deg, rgba(35, 27, 27, 0.9), rgba(12, 10, 10, 0.96)), url(${alley})`,
+                            backgroundSize: "cover"
+                        }}
                     >
                         <Stack gap="md" className="landing-page__explainer-inner">
                             <Text size="xs" className="landing-page__small-label">
@@ -280,12 +355,14 @@ export default function LandingPage() {
                                 Keep your chronicles organized online
                             </Title>
                             <Text size="xl" className="landing-page__body">
-                                Signing in opens the account hub at <code>/me</code>, where you can save characters to your account, revisit them later,
-                                arrange them into coteries, and share read-only versions with other users.
+                                Signing in opens the account hub at <code>/me</code>, where you can
+                                save characters to your account, revisit them later, arrange them
+                                into coteries, and share read-only versions with other users.
                             </Text>
                             <Text size="lg" className="landing-page__body">
-                                It also gives you a place to manage your profile details while keeping the creator and sheet connected to the same ongoing set
-                                of characters.
+                                It also gives you a place to manage your profile details while
+                                keeping the creator and sheet connected to the same ongoing set of
+                                characters.
                             </Text>
                             <Group gap="lg" mt="xs">
                                 <Anchor
@@ -297,7 +374,7 @@ export default function LandingPage() {
                                         openAccountArea()
                                     }}
                                 >
-                                  Sign In
+                                    Sign In
                                 </Anchor>
                             </Group>
                         </Stack>
@@ -307,19 +384,41 @@ export default function LandingPage() {
 
             <Box component="footer" className="landing-page__footer">
                 <Container size="lg">
-                    <Group justify="space-between" align="flex-start" gap="xl" className="landing-page__footer-layout">
+                    <Group
+                        justify="space-between"
+                        align="flex-start"
+                        gap="xl"
+                        className="landing-page__footer-layout"
+                    >
                         <Stack gap="xs">
-                            <Button variant="subtle" color="gray" className="landing-page__footer-button" onClick={openCredits}>
+                            <Button
+                                variant="subtle"
+                                color="gray"
+                                className="landing-page__footer-button"
+                                onClick={openCredits}
+                            >
                                 Credits
                             </Button>
                         </Stack>
 
                         <Group gap="lg" className="landing-page__footer-links">
-                          <Text className="landing-page__link">Contact me:</Text>
-                            <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                            <Text className="landing-page__link">Contact me:</Text>
+                            <Anchor
+                                href={CONTACT_LINKS.reddit.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
                                 {CONTACT_LINKS.reddit.label}
                             </Anchor>
-                            <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                            <Anchor
+                                href={CONTACT_LINKS.bluesky.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
                                 {CONTACT_LINKS.bluesky.label}
                             </Anchor>
                             <Anchor
@@ -331,10 +430,22 @@ export default function LandingPage() {
                             >
                                 {CONTACT_LINKS.github.label}
                             </Anchor>
-                            <Anchor href={CONTACT_LINKS.kofi.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                            <Anchor
+                                href={CONTACT_LINKS.kofi.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
                                 {CONTACT_LINKS.kofi.label}
                             </Anchor>
-                            <Anchor href={CONTACT_LINKS.website.href} target="_blank" rel="noreferrer" underline="never" className="landing-page__link">
+                            <Anchor
+                                href={CONTACT_LINKS.website.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
                                 {CONTACT_LINKS.website.label}
                             </Anchor>
                         </Group>
@@ -355,7 +466,7 @@ export default function LandingPage() {
                     content: "landing-page__modal",
                     header: "landing-page__modal-header",
                     title: "landing-page__modal-title",
-                    body: "landing-page__modal-body",
+                    body: "landing-page__modal-body"
                 }}
             >
                 <Stack gap="xl">
@@ -376,7 +487,8 @@ export default function LandingPage() {
                         </Anchor>
                     </Text>
                     <Text className="landing-page__body">
-                        Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
+                        Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus
+                        Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
                         <Anchor href="https://unsplash.com" target="_blank" rel="noreferrer">
                             Unsplash.
                         </Anchor>

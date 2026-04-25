@@ -13,7 +13,7 @@ import {
     IconShare,
     IconTrash,
     IconUserPlus,
-    IconX,
+    IconX
 } from "@tabler/icons-react"
 import { useAuth } from "../../hooks/useAuth"
 import { Alert } from "@mantine/core"
@@ -51,7 +51,7 @@ const COLORS = {
     borderSoft: "rgba(125, 91, 72, 0.3)",
     cardBg: "rgba(30, 21, 24, 0.85)",
     cardBgHover: "rgba(40, 28, 32, 0.95)",
-    background: "rgba(14, 10, 12, 0.98)",
+    background: "rgba(14, 10, 12, 0.98)"
 }
 
 const FONT_DISPLAY = "Cinzel, Georgia, serif"
@@ -64,8 +64,10 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     }, [])
 
     const [downloadError, setDownloadError] = useState<Error | undefined>()
-    const [resetModalOpened, { open: openResetModal, close: closeResetModal }] = useDisclosure(false)
-    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] = useDisclosure(false)
+    const [resetModalOpened, { open: openResetModal, close: closeResetModal }] =
+        useDisclosure(false)
+    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
+        useDisclosure(false)
     const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
 
     const charName = character.name?.trim() || ""
@@ -84,7 +86,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         trackEvent({
             action: "PDF downloaded",
             category: "downloads",
-            label: JSON.stringify(character),
+            label: JSON.stringify(character)
         })
     }
 
@@ -97,7 +99,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         trackEvent({
             action: "JSON downloaded (progeny)",
             category: "downloads",
-            label: JSON.stringify(character),
+            label: JSON.stringify(character)
         })
     }
 
@@ -111,7 +113,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 paddingBottom: 40,
                 paddingLeft: 16,
                 paddingRight: 16,
-                boxSizing: "border-box",
+                boxSizing: "border-box"
             }}
         >
             <style>{`
@@ -378,7 +380,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     margin: "0 auto",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 40,
+                    gap: 40
                 }}
             >
                 {/* Header */}
@@ -387,7 +389,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         textAlign: "center",
                         display: "flex",
                         flexDirection: "column",
-                        gap: 12,
+                        gap: 12
                     }}
                 >
                     <h2
@@ -398,7 +400,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             letterSpacing: "0.05em",
                             color: COLORS.foreground,
                             margin: 0,
-                            fontWeight: 600,
+                            fontWeight: 600
                         }}
                     >
                         {displayTitle}
@@ -412,11 +414,11 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             margin: "0 auto",
                             lineHeight: 1.45,
                             fontWeight: 600,
-                            textShadow: `0 0 18px ${rgba(RAW_RED, 0.14)}`,
+                            textShadow: `0 0 18px ${rgba(RAW_RED, 0.14)}`
                         }}
                     >
-                        Character creation complete. Save your work, export for your favourite tools, or jump straight
-                        into play.
+                        Character creation complete. Save your work, export for your favourite
+                        tools, or jump straight into play.
                     </p>
                 </div>
 
@@ -425,7 +427,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     style={{
                         display: "grid",
                         gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                        gap: 16,
+                        gap: 16
                     }}
                 >
                     <ActionCard
@@ -461,7 +463,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         opacity: !authLoading && !isAuthenticated ? 1 : 0,
                         maxHeight: !authLoading && !isAuthenticated ? 400 : 0,
                         overflow: "hidden",
-                        pointerEvents: !authLoading && !isAuthenticated ? "auto" : "none",
+                        pointerEvents: !authLoading && !isAuthenticated ? "auto" : "none"
                     }}
                 >
                     <div className="nf-account-card">
@@ -471,7 +473,9 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             </div>
                             <div>
                                 <p className="nf-account-title">Create a free account</p>
-                                <p className="nf-account-subtitle">Unlock the full companion experience</p>
+                                <p className="nf-account-subtitle">
+                                    Unlock the full companion experience
+                                </p>
                             </div>
                         </div>
                         <ul className="nf-account-list">
@@ -500,7 +504,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         height: 1,
                         margin: "0 auto",
                         background:
-                            "linear-gradient(90deg, transparent 0%, rgba(125, 91, 72, 0.4) 50%, transparent 100%)",
+                            "linear-gradient(90deg, transparent 0%, rgba(125, 91, 72, 0.4) 50%, transparent 100%)"
                     }}
                 />
 
@@ -510,7 +514,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
-                        gap: 16,
+                        gap: 16
                     }}
                 >
                     <a
@@ -527,7 +531,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                                     fontFamily: FONT_DISPLAY,
                                     fontSize: "0.88rem",
                                     letterSpacing: "0.06em",
-                                    color: COLORS.gold,
+                                    color: COLORS.gold
                                 }}
                             >
                                 Support on Ko-Fi
@@ -537,7 +541,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                                     margin: 0,
                                     fontFamily: FONT_UI,
                                     fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.5),
+                                    color: rgba(RAW_GREY, 0.5)
                                 }}
                             >
                                 Help keep Progeny growing
@@ -552,7 +556,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             fontSize: 12,
                             color: rgba(RAW_GREY, 0.4),
                             textAlign: "center",
-                            margin: 0,
+                            margin: 0
                         }}
                     >
                         Feedback or ideas? Find Odin on{" "}
@@ -586,7 +590,12 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 </div>
 
                 {downloadError ? (
-                    <Alert icon={<IconAlertCircle size="1rem" />} color="red" variant="outline" bg="rgba(0, 0, 0, 0.6)">
+                    <Alert
+                        icon={<IconAlertCircle size="1rem" />}
+                        color="red"
+                        variant="outline"
+                        bg="rgba(0, 0, 0, 0.6)"
+                    >
                         <ErrorDetails error={downloadError} />
                     </Alert>
                 ) : null}
@@ -598,7 +607,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         color: rgba(RAW_GREY, 0.35),
                         textAlign: "center",
                         margin: 0,
-                        letterSpacing: "0.02em",
+                        letterSpacing: "0.02em"
                     }}
                 >
                     You may need to refresh your browser to trigger multiple downloads.
@@ -627,7 +636,7 @@ function ActionCard({
     icon,
     label,
     description,
-    onClick,
+    onClick
 }: {
     icon: React.ReactNode
     label: string
@@ -644,7 +653,7 @@ function ActionCard({
                         fontFamily: FONT_DISPLAY,
                         fontSize: "0.88rem",
                         letterSpacing: "0.06em",
-                        color: COLORS.foreground,
+                        color: COLORS.foreground
                     }}
                 >
                     {label}
@@ -654,7 +663,7 @@ function ActionCard({
                         margin: "2px 0 0 0",
                         fontFamily: FONT_UI,
                         fontSize: 11,
-                        color: rgba(RAW_GREY, 0.55),
+                        color: rgba(RAW_GREY, 0.55)
                     }}
                 >
                     {description}
@@ -667,7 +676,7 @@ function ActionCard({
 function ExportModal({
     character,
     onClose,
-    setDownloadError,
+    setDownloadError
 }: {
     character: Character
     onClose: () => void
@@ -697,14 +706,14 @@ function ExportModal({
                     title: "Validation Warning",
                     message: `The exported JSON may not be fully compatible with Foundry VTT. ${message}`,
                     color: "orange",
-                    autoClose: 10000,
+                    autoClose: 10000
                 })
             }
 
             trackEvent({
                 action: "JSON downloaded (foundry_wod5e vtt)",
                 category: "downloads",
-                label: JSON.stringify(character),
+                label: JSON.stringify(character)
             })
             onClose()
         } catch (e) {
@@ -717,7 +726,9 @@ function ExportModal({
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
             const inconnuJson = createInconnuJson(character)
-            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], { type: "application/json" })
+            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], {
+                type: "application/json"
+            })
             const link = document.createElement("a")
             link.href = window.URL.createObjectURL(blob)
             link.download = `inconnu_${character.name}.json`
@@ -727,7 +738,7 @@ function ExportModal({
             trackEvent({
                 action: "JSON downloaded (inconnu)",
                 category: "downloads",
-                label: JSON.stringify(character),
+                label: JSON.stringify(character)
             })
             onClose()
         } catch (e) {
@@ -745,7 +756,7 @@ function ExportModal({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        marginBottom: 16,
+                        marginBottom: 16
                     }}
                 >
                     <h3
@@ -755,7 +766,7 @@ function ExportModal({
                             fontSize: "1.1rem",
                             letterSpacing: "0.05em",
                             color: COLORS.foreground,
-                            fontWeight: 600,
+                            fontWeight: 600
                         }}
                     >
                         Export Character
@@ -770,7 +781,7 @@ function ExportModal({
                         fontFamily: FONT_BODY,
                         fontSize: 12,
                         color: rgba(RAW_GREY, 0.6),
-                        margin: "0 0 20px 0",
+                        margin: "0 0 20px 0"
                     }}
                 >
                     Export your character for use in other VtM platforms and tools.
@@ -786,7 +797,7 @@ function ExportModal({
                                         fontFamily: FONT_DISPLAY,
                                         fontSize: "0.88rem",
                                         letterSpacing: "0.05em",
-                                        color: COLORS.foreground,
+                                        color: COLORS.foreground
                                     }}
                                 >
                                     <a
@@ -814,7 +825,7 @@ function ExportModal({
                                     margin: "2px 0 0 0",
                                     fontFamily: FONT_UI,
                                     fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.4),
+                                    color: rgba(RAW_GREY, 0.4)
                                 }}
                             >
                                 Download a JSON file compatible with the WoD5E Foundry module
@@ -830,7 +841,7 @@ function ExportModal({
                                         fontFamily: FONT_UI,
                                         fontSize: 11,
                                         color: COLORS.mutedForeground,
-                                        lineHeight: 1.7,
+                                        lineHeight: 1.7
                                     }}
                                 >
                                     <div>1. Export to JSON</div>
@@ -851,7 +862,7 @@ function ExportModal({
                                     fontFamily: FONT_DISPLAY,
                                     fontSize: "0.88rem",
                                     letterSpacing: "0.05em",
-                                    color: COLORS.foreground,
+                                    color: COLORS.foreground
                                 }}
                             >
                                 <a
@@ -869,7 +880,7 @@ function ExportModal({
                                     margin: "2px 0 0 0",
                                     fontFamily: FONT_UI,
                                     fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.4),
+                                    color: rgba(RAW_GREY, 0.4)
                                 }}
                             >
                                 Export for use with the Inconnu Discord character manager
@@ -886,7 +897,7 @@ function ExportModal({
                         fontFamily: FONT_UI,
                         fontSize: 10,
                         color: rgba(RAW_GREY, 0.3),
-                        textAlign: "center",
+                        textAlign: "center"
                     }}
                 >
                     More export options coming soon

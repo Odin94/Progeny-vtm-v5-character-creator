@@ -4,20 +4,20 @@ export const nightfallScrollbarSize = 11
 
 export const nightfallScrollAreaStyles = {
     scrollbar: {
-        background: "transparent",
+        background: "transparent"
     },
     thumb: {
         background: rgba(RAW_RED, 0.3),
         borderRadius: "999px",
         transition: "background 140ms ease",
         "&:hover": {
-            background: rgba(RAW_RED, 0.52),
+            background: rgba(RAW_RED, 0.52)
         },
         "&:active": {
-            background: rgba(RAW_RED, 0.7),
-        },
+            background: rgba(RAW_RED, 0.7)
+        }
     },
     corner: {
-        background: "transparent",
-    },
+        background: "transparent"
+    }
 } as const
