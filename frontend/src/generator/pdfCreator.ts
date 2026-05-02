@@ -439,7 +439,7 @@ const getFields = (form: PDFForm): Record<string, string> => {
 }
 
 export const printFieldNames = async () => {
-    const basePdf = base64Pdf_nerdbert
+    const basePdf = await getNerdbertTemplate()
     const bytes = base64ToArrayBuffer(basePdf)
 
     const pdfDoc = await initPDFDocument(bytes)

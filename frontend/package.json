@@ -14,7 +14,8 @@
         "format:check": "oxfmt --check .",
         "pdf-to-base64": "pnpm exec ts-node --project ./scripts/tsconfig.json ./scripts/pdfToBase64.ts",
         "test": "vitest",
-        "test:run": "vitest run"
+        "test:run": "vitest run",
+        "test:e2e": "node ./node_modules/@playwright/test/cli.js test"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
@@ -53,6 +54,7 @@
         "zustand": "^5.0.10"
     },
     "devDependencies": {
+        "@playwright/test": "^1.59.1",
         "@typescript-eslint/eslint-plugin": "^8.0.0",
         "@typescript-eslint/parser": "^8.0.0",
         "@vitejs/plugin-react": "^4.3.1",

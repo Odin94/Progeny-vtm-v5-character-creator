@@ -163,7 +163,7 @@ describe("PDF humanity helpers", () => {
     it("draws one humanity mark per filled humanity slot", () => {
         const { drawImage, form, image, pdfDoc } = createButtonOverlayHarness()
 
-        setHumanityTracker(pdfDoc, form, image, 3)
+        setHumanityTracker(pdfDoc as any, form as any, image as any, 3)
 
         expect(form.getButton).toHaveBeenNthCalledWith(1, "Humanity-1")
         expect(form.getButton).toHaveBeenNthCalledWith(2, "Humanity-2")
