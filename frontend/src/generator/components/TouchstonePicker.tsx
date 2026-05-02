@@ -7,8 +7,7 @@ import {
     Stack,
     Text,
     TextInput,
-    Textarea,
-    useMantineTheme
+    Textarea
 } from "@mantine/core"
 import { RAW_GOLD, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
@@ -19,7 +18,6 @@ import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
-import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import {
     generatorConfirmButtonStyles,
@@ -36,19 +34,16 @@ import {
     GeneratorStepHero,
     getGeneratorFieldStyles
 } from "./sharedGeneratorUi"
-
 type TouchstonePickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
 }
-
 type TouchstonePlaceholder = {
     name: string
     conviction: string
     description: string
 }
-
 const touchstonePlaceholderOptions: TouchstonePlaceholder[] = [
     {
         name: "Max Mustermann",
@@ -75,20 +70,14 @@ const touchstonePlaceholderOptions: TouchstonePlaceholder[] = [
             "An investigative journalist and former lover whose faith in honesty still cuts through your excuses"
     }
 ]
-
 const getRandomTouchstonePlaceholder = (): TouchstonePlaceholder =>
     touchstonePlaceholderOptions[Math.floor(Math.random() * touchstonePlaceholderOptions.length)]
-
 const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePickerProps) => {
-    const theme = useMantineTheme()
-    const colorValue = theme.colors.grape[6]
     const phoneScreen = globals.isPhoneScreen
     const smallScreen = globals.isSmallScreen
-
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Touchstone Picker" })
     }, [])
-
     const initial =
         character.touchstones.length > 0
             ? character.touchstones
@@ -102,11 +91,9 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
     const [touchstoneToDelete, setTouchstoneToDelete] = useState<number | null>(null)
     const [addButtonHovered, setAddButtonHovered] = useState(false)
     const touchstoneFieldStyles = getGeneratorFieldStyles("gold")
-
     const persistTouchstones = (updatedTouchstones: Touchstone[]) => {
         setCharacter({ ...character, touchstones: updatedTouchstones })
     }
-
     const updateTouchstone = (
         i: number,
         updatedTouchstone: { name?: string; description?: string; conviction?: string }
@@ -115,7 +102,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
         newTouchstones[i] = { ...touchstones[i], ...updatedTouchstone }
         setTouchstones(newTouchstones)
     }
-
     return (
         <div style={generatorScrollableShellStyle}>
             <Stack
@@ -142,11 +128,9 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                 secondaryDescription="Connect a conviction to each relationship"
                                 marginBottom={phoneScreen ? 18 : 26}
                             />
-
                             <Box w="100%">
                                 <GeneratorSectionDivider label="Touchstones" />
                             </Box>
-
                             {touchstones.map((touchstone, i) => {
                                 return (
                                     <Box
@@ -169,100 +153,78 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                 <Grid.Col span={12}>
                                                     <Grid>
                                                         <Grid.Col span={phoneScreen ? 12 : 6}>
-                                                            <FocusBorderWrapper
-                                                                colorValue={colorValue}
-                                                                style={{ width: "100%" }}
-                                                            >
-                                                                <TextInput
-                                                                    value={touchstone.name}
-                                                                    onChange={(event) =>
-                                                                        updateTouchstone(i, {
-                                                                            name: event
-                                                                                .currentTarget.value
-                                                                        })
-                                                                    }
-                                                                    onBlur={() =>
-                                                                        persistTouchstones(
-                                                                            touchstones
-                                                                        )
-                                                                    }
-                                                                    placeholder={
-                                                                        touchstonePlaceholders[i]
-                                                                            ?.name ??
-                                                                        touchstonePlaceholderOptions[0]
-                                                                            .name
-                                                                    }
-                                                                    label="Touchstone Name"
-                                                                    styles={touchstoneFieldStyles}
-                                                                />
-                                                            </FocusBorderWrapper>
+                                                            <TextInput
+                                                                value={touchstone.name}
+                                                                onChange={(event) =>
+                                                                    updateTouchstone(i, {
+                                                                        name: event.currentTarget
+                                                                            .value
+                                                                    })
+                                                                }
+                                                                onBlur={() =>
+                                                                    persistTouchstones(touchstones)
+                                                                }
+                                                                placeholder={
+                                                                    touchstonePlaceholders[i]
+                                                                        ?.name ??
+                                                                    touchstonePlaceholderOptions[0]
+                                                                        .name
+                                                                }
+                                                                label="Touchstone Name"
+                                                                styles={touchstoneFieldStyles}
+                                                            />
                                                         </Grid.Col>
                                                         <Grid.Col span={phoneScreen ? 12 : 6}>
-                                                            <FocusBorderWrapper
-                                                                colorValue={colorValue}
-                                                                style={{ width: "100%" }}
-                                                            >
-                                                                <TextInput
-                                                                    value={touchstone.conviction}
-                                                                    onChange={(event) =>
-                                                                        updateTouchstone(i, {
-                                                                            conviction:
-                                                                                event.currentTarget
-                                                                                    .value
-                                                                        })
-                                                                    }
-                                                                    onBlur={() =>
-                                                                        persistTouchstones(
-                                                                            touchstones
-                                                                        )
-                                                                    }
-                                                                    placeholder={
-                                                                        touchstonePlaceholders[i]
-                                                                            ?.conviction ??
-                                                                        touchstonePlaceholderOptions[0]
-                                                                            .conviction
-                                                                    }
-                                                                    label="Conviction"
-                                                                    styles={touchstoneFieldStyles}
-                                                                />
-                                                            </FocusBorderWrapper>
+                                                            <TextInput
+                                                                value={touchstone.conviction}
+                                                                onChange={(event) =>
+                                                                    updateTouchstone(i, {
+                                                                        conviction:
+                                                                            event.currentTarget
+                                                                                .value
+                                                                    })
+                                                                }
+                                                                onBlur={() =>
+                                                                    persistTouchstones(touchstones)
+                                                                }
+                                                                placeholder={
+                                                                    touchstonePlaceholders[i]
+                                                                        ?.conviction ??
+                                                                    touchstonePlaceholderOptions[0]
+                                                                        .conviction
+                                                                }
+                                                                label="Conviction"
+                                                                styles={touchstoneFieldStyles}
+                                                            />
                                                         </Grid.Col>
                                                         <Grid.Col span={12}>
-                                                            <FocusBorderWrapper
-                                                                colorValue={colorValue}
-                                                                style={{ width: "100%" }}
-                                                            >
-                                                                <Textarea
-                                                                    value={touchstone.description}
-                                                                    onChange={(event) =>
-                                                                        updateTouchstone(i, {
-                                                                            description:
-                                                                                event.currentTarget
-                                                                                    .value
-                                                                        })
-                                                                    }
-                                                                    onBlur={() =>
-                                                                        persistTouchstones(
-                                                                            touchstones
-                                                                        )
-                                                                    }
-                                                                    placeholder={
-                                                                        touchstonePlaceholders[i]
-                                                                            ?.description ??
-                                                                        touchstonePlaceholderOptions[0]
-                                                                            .description
-                                                                    }
-                                                                    label="Description"
-                                                                    autosize
-                                                                    minRows={3}
-                                                                    styles={touchstoneFieldStyles}
-                                                                />
-                                                            </FocusBorderWrapper>
+                                                            <Textarea
+                                                                value={touchstone.description}
+                                                                onChange={(event) =>
+                                                                    updateTouchstone(i, {
+                                                                        description:
+                                                                            event.currentTarget
+                                                                                .value
+                                                                    })
+                                                                }
+                                                                onBlur={() =>
+                                                                    persistTouchstones(touchstones)
+                                                                }
+                                                                placeholder={
+                                                                    touchstonePlaceholders[i]
+                                                                        ?.description ??
+                                                                    touchstonePlaceholderOptions[0]
+                                                                        .description
+                                                                }
+                                                                label="Description"
+                                                                autosize
+                                                                minRows={3}
+                                                                styles={touchstoneFieldStyles}
+                                                            />
                                                         </Grid.Col>
                                                     </Grid>
                                                 </Grid.Col>
                                             </Grid>
-
                                             <Group>
                                                 <Button
                                                     leftSection={<FontAwesomeIcon icon={faTrash} />}
@@ -299,7 +261,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     </Box>
                                 )
                             })}
-
                             <Button
                                 leftSection={<FontAwesomeIcon icon={faPlus} />}
                                 color="red"
@@ -344,20 +305,17 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                         </Stack>
                     </div>
                 </ScrollArea>
-
                 <Group justify="center">
                     <Button
                         color="grape"
                         styles={generatorConfirmButtonStyles}
                         onClick={() => {
                             persistTouchstones(touchstones)
-
                             trackEvent({
                                 action: "touchstone confirm clicked",
                                 category: "touchstones",
                                 label: `${touchstones.length}`
                             })
-
                             nextStep()
                         }}
                     >
@@ -365,7 +323,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                     </Button>
                 </Group>
             </Stack>
-
             <ConfirmActionModal
                 opened={deleteModalOpened}
                 onClose={closeDeleteModal}
@@ -414,5 +371,4 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
         </div>
     )
 }
-
 export default TouchstonePicker

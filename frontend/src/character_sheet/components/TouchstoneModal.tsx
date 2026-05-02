@@ -1,8 +1,7 @@
-import { Button, Group, Modal, Stack, TextInput, Textarea, useMantineTheme } from "@mantine/core"
+import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { Touchstone } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
-import FocusBorderWrapper from "./FocusBorderWrapper"
 
 type TouchstoneModalProps = {
     opened: boolean
@@ -13,8 +12,6 @@ type TouchstoneModalProps = {
 
 const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: TouchstoneModalProps) => {
     const { character, setCharacter, primaryColor } = options
-    const theme = useMantineTheme()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [conviction, setConviction] = useState("")
@@ -75,27 +72,26 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
             size="md"
         >
             <Stack gap="md">
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput
-                        label="Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                </FocusBorderWrapper>
+                <TextInput
+                    label="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    color={primaryColor}
+                />
                 <Textarea
                     label="Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     minRows={3}
+                    color={primaryColor}
                 />
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput
-                        label="Conviction"
-                        value={conviction}
-                        onChange={(e) => setConviction(e.target.value)}
-                    />
-                </FocusBorderWrapper>
+                <TextInput
+                    label="Conviction"
+                    value={conviction}
+                    onChange={(e) => setConviction(e.target.value)}
+                    color={primaryColor}
+                />
                 <Group justify="flex-end" mt="md">
                     <Button variant="subtle" onClick={onClose} color={primaryColor}>
                         Cancel

@@ -1,4 +1,4 @@
-import { Box, Button, Group, Select, Stack, Text, Title, useMantineTheme } from "@mantine/core"
+import { Box, Button, Group, Select, Stack, Text, Title } from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useMemo, useState } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
@@ -6,7 +6,6 @@ import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { calculateBloodPotency } from "../../data/BloodPotency"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
-import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 import { globals } from "../../globals"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
@@ -61,7 +60,6 @@ const getGenerationSummary = (generation: number) => {
 
 const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    const theme = useMantineTheme()
 
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Generation Picker" })
@@ -112,35 +110,32 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
             <GeneratorSectionDivider label="Generation" />
 
             <Stack align="center" gap="xl">
-                <FocusBorderWrapper
-                    colorValue={theme.colors.grape[6]}
+                <Select
+                    value={generation}
+                    onChange={handleGenerationChange}
+                    placeholder="Select your generation"
+                    data={availableOptions}
+                    color="grape"
                     style={{ width: "100%", maxWidth: phoneScreen ? 320 : 430 }}
-                >
-                    <Select
-                        value={generation}
-                        onChange={handleGenerationChange}
-                        placeholder="Select your generation"
-                        data={availableOptions}
-                        styles={{
-                            ...getGeneratorFieldStyles("muted"),
-                            input: {
-                                ...generatorFieldStyles.input,
-                                minHeight: 44,
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: phoneScreen ? "1rem" : "1.08rem",
-                                textAlign: "center"
-                            },
-                            dropdown: {
-                                background: "rgba(24, 18, 21, 0.98)",
-                                borderColor: "rgba(125, 91, 72, 0.45)"
-                            },
-                            option: {
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: "1rem"
-                            }
-                        }}
-                    />
-                </FocusBorderWrapper>
+                    styles={{
+                        ...getGeneratorFieldStyles("muted"),
+                        input: {
+                            ...generatorFieldStyles.input,
+                            minHeight: 44,
+                            fontFamily: "Crimson Text, Georgia, serif",
+                            fontSize: phoneScreen ? "1rem" : "1.08rem",
+                            textAlign: "center"
+                        },
+                        dropdown: {
+                            background: "rgba(24, 18, 21, 0.98)",
+                            borderColor: "rgba(125, 91, 72, 0.45)"
+                        },
+                        option: {
+                            fontFamily: "Crimson Text, Georgia, serif",
+                            fontSize: "1rem"
+                        }
+                    }}
+                />
 
                 {selectedGeneration && generationSummary ? (
                     <Box

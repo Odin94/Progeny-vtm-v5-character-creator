@@ -44,7 +44,7 @@
 
 ## Generator Step Footgun
 
-The Blood Sorcery ritual step (step 8) is **conditional** — it only appears when the character has Blood Sorcery disciplines. `Generator.tsx` compensates with a `patchedSelectedStep` offset: when Blood Sorcery is absent and `selectedStep >= 8`, it adds 1 to align the switch case.
+The Blood Sorcery ritual step (step 8) is **conditional** Ã¢â‚¬â€ it only appears when the character has Blood Sorcery disciplines. `Generator.tsx` compensates with a `patchedSelectedStep` offset: when Blood Sorcery is absent and `selectedStep >= 8`, it adds 1 to align the switch case.
 
 **Impact:** adding, removing, or reordering steps near index 8 requires updating both the switch in `src/generator/Generator.tsx` and the stepper in `src/sidebar/AsideBar.tsx`. A step added at index 8 without accounting for this offset will silently render the wrong component for non-Blood-Sorcery characters.
 
@@ -53,12 +53,12 @@ The Blood Sorcery ritual step (step 8) is **conditional** — it only appears wh
 - UI components: use Mantine (`@mantine/core`, `@mantine/hooks`, `@mantine/notifications`). Do not introduce custom modal, overlay, or notification implementations when a Mantine primitive exists.
 - Icons: use `@tabler/icons-react`. FontAwesome icons are present in the codebase but Tabler is preferred for new work.
 - Frontend validation: use Zod where validation logic is needed (already a dependency). Keep Zod schemas co-located with the code that uses them.
-- Input focus rings: always wrap `TextInput` and `Textarea` elements with the `FocusBorderWrapper` component (`src/character_sheet/components/FocusBorderWrapper.tsx`). It sets the `--input-bd` CSS variable on focus to show a colored border ring. Pass `colorValue` to match the surrounding UI — `theme.colors.grape[6]` in the generator, the selected theme color in the character sheet. Never render a bare Mantine text input without this wrapper.
+- Input focus borders come from Mantine theme input styles. Inputs use their own Mantine `color` prop when present and fall back to the current theme primary color. The root theme defaults to grape for the generator and authenticated UI, and the character sheet provides a nested `MantineProvider` with the selected clan/preference color. Render Mantine inputs directly; do not add per-input focus wrappers.
 
 ## Verification Triggers
 
-- UI or route changes: `pnpm run build` — a clean build with no TypeScript errors is the minimum bar.
+- UI or route changes: `pnpm run build` Ã¢â‚¬â€ a clean build with no TypeScript errors is the minimum bar.
 - API or hook changes: `pnpm run build` and confirm the matching backend route accepts the same payload shape.
-- Character model or export/import changes: `pnpm run test:run` — all tests must pass. The suite covers PDF, Foundry, and Inconnu export output; a build-only check is not sufficient here.
+- Character model or export/import changes: `pnpm run test:run` Ã¢â‚¬â€ all tests must pass. The suite covers PDF, Foundry, and Inconnu export output; a build-only check is not sufficient here.
 - Character schema changes: increment `schemaVersion`, add a `patchVnToVn+1Compatibility` function in `src/data/Character.ts`, call it from `applyCharacterCompatibilityPatches`, and add a backwards-compatibility test in `src/test/` before running `pnpm run test:run`.
 - Large UI refactors: `pnpm run lint` in addition to the build. Fix all lint errors before considering the task done.

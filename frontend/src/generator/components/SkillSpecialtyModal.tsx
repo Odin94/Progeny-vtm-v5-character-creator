@@ -7,7 +7,6 @@ import { Skills, SkillsKey, allSkills, skillsKeySchema } from "../../data/Skills
 import { Specialty } from "../../data/Specialties"
 import { globals } from "../../globals"
 import { lowcase, upcase } from "../utils"
-import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
 
 type SpecialtyModalProps = {
     modalOpened: boolean
@@ -78,7 +77,10 @@ export const SpecialtyModal = ({
         for (const s of bonusSkills) {
             const text = bonusTexts[s]
             if (text.trim()) {
-                result.push({ skill: skillsKeySchema.parse(s), name: lowcase(text.trim()) })
+                result.push({
+                    skill: skillsKeySchema.parse(s),
+                    name: lowcase(text.trim())
+                })
             }
         }
 
@@ -128,7 +130,7 @@ export const SpecialtyModal = ({
                             lineHeight: 1.55
                         }}
                     >
-                        Specialties represent focused expertise within a skill —{" "}
+                        Specialties represent focused expertise within a skill Ã¢â‚¬â€{" "}
                         <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
                             Performance: Dancing
                         </span>{" "}
@@ -151,27 +153,25 @@ export const SpecialtyModal = ({
                 <Stack gap={8}>
                     {freeEntries.map((entry, i) => (
                         <Group key={i} gap={8} wrap="nowrap">
-                            <FocusBorderWrapper colorValue={RED} style={{ flex: 1 }}>
-                                <Select
-                                    placeholder="Choose a skill…"
-                                    value={entry.skill || null}
-                                    onChange={(v) => updateFreeEntry(i, "skill", v ?? "")}
-                                    data={freeSkills
-                                        .filter(
-                                            (s) => s === entry.skill || !usedFreeSkills.includes(s)
-                                        )
-                                        .map((s) => ({ value: s, label: upcase(s) }))}
-                                    styles={{ input: { textTransform: "capitalize" } }}
-                                />
-                            </FocusBorderWrapper>
-                            <FocusBorderWrapper colorValue={RED} style={{ flex: 1 }}>
-                                <TextInput
-                                    value={entry.text}
-                                    onChange={(e) => updateFreeEntry(i, "text", e.target.value)}
-                                    placeholder="e.g. Dancing"
-                                    maxLength={40}
-                                />
-                            </FocusBorderWrapper>
+                            <Select
+                                placeholder="Choose a skillÃ¢â‚¬Â¦"
+                                value={entry.skill || null}
+                                onChange={(v) => updateFreeEntry(i, "skill", v ?? "")}
+                                data={freeSkills
+                                    .filter((s) => s === entry.skill || !usedFreeSkills.includes(s))
+                                    .map((s) => ({ value: s, label: upcase(s) }))}
+                                color={RED}
+                                style={{ flex: 1 }}
+                                styles={{ input: { textTransform: "capitalize" } }}
+                            />{" "}
+                            <TextInput
+                                value={entry.text}
+                                onChange={(e) => updateFreeEntry(i, "text", e.target.value)}
+                                placeholder="e.g. Dancing"
+                                maxLength={40}
+                                color={RED}
+                                style={{ flex: 1 }}
+                            />
                         </Group>
                     ))}
                 </Stack>
@@ -195,19 +195,19 @@ export const SpecialtyModal = ({
                                     >
                                         {upcase(s)}
                                     </Text>
-                                    <FocusBorderWrapper colorValue={RED} style={{ flex: 1 }}>
-                                        <TextInput
-                                            value={bonusTexts[s]}
-                                            onChange={(e) =>
-                                                setBonusTexts((prev) => ({
-                                                    ...prev,
-                                                    [s]: e.currentTarget.value
-                                                }))
-                                            }
-                                            placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
-                                            maxLength={40}
-                                        />
-                                    </FocusBorderWrapper>
+                                    <TextInput
+                                        value={bonusTexts[s]}
+                                        onChange={(e) =>
+                                            setBonusTexts((prev) => ({
+                                                ...prev,
+                                                [s]: e.currentTarget.value
+                                            }))
+                                        }
+                                        placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
+                                        maxLength={40}
+                                        color={RED}
+                                        style={{ flex: 1 }}
+                                    />
                                 </Group>
                             ))}
                         </Stack>

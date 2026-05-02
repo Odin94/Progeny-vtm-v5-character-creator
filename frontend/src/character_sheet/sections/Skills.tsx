@@ -14,7 +14,6 @@ import { useRef, useEffect, useState } from "react"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
-import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
@@ -216,15 +215,20 @@ const SkillRow = ({
                                     editingSpecialty?.skill === skill &&
                                     editingSpecialty?.index === index
                                 return isEditing ? (
-                                    <FocusBorderWrapper
-                                        key={`${skill}-${index}-edit`}
-                                        colorValue={colorValue}
-                                        style={{ width: "100px" }}
-                                    >
-                                        <TextInput
-                                            value={editingValue}
-                                            onChange={(e) => setEditingValue(e.target.value)}
-                                            onBlur={() => {
+                                    <TextInput
+                                        value={editingValue}
+                                        onChange={(e) => setEditingValue(e.target.value)}
+                                        onBlur={() => {
+                                            if (editingValue.trim() === "") {
+                                                removeSpecialty(skill, index)
+                                            } else {
+                                                updateSpecialty(skill, index, editingValue)
+                                            }
+                                            setEditingSpecialty(null)
+                                            setEditingValue("")
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
                                                 if (editingValue.trim() === "") {
                                                     removeSpecialty(skill, index)
                                                 } else {
@@ -232,23 +236,12 @@ const SkillRow = ({
                                                 }
                                                 setEditingSpecialty(null)
                                                 setEditingValue("")
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    if (editingValue.trim() === "") {
-                                                        removeSpecialty(skill, index)
-                                                    } else {
-                                                        updateSpecialty(skill, index, editingValue)
-                                                    }
-                                                    setEditingSpecialty(null)
-                                                    setEditingValue("")
-                                                }
-                                            }}
-                                            size="xs"
-                                            autoFocus
-                                            style={{ width: "100%" }}
-                                        />
-                                    </FocusBorderWrapper>
+                                            }
+                                        }}
+                                        size="xs"
+                                        autoFocus
+                                        style={{ width: "100%" }}
+                                    />
                                 ) : (
                                     <Badge
                                         key={`${skill}-${specialty.name}-${index}`}
@@ -305,15 +298,20 @@ const SkillRow = ({
                         const isEditing =
                             editingSpecialty?.skill === skill && editingSpecialty?.index === index
                         return isEditing ? (
-                            <FocusBorderWrapper
-                                key={`${skill}-${index}-edit`}
-                                colorValue={colorValue}
-                                style={{ width: "100px" }}
-                            >
-                                <TextInput
-                                    value={editingValue}
-                                    onChange={(e) => setEditingValue(e.target.value)}
-                                    onBlur={() => {
+                            <TextInput
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => {
+                                    if (editingValue.trim() === "") {
+                                        removeSpecialty(skill, index)
+                                    } else {
+                                        updateSpecialty(skill, index, editingValue)
+                                    }
+                                    setEditingSpecialty(null)
+                                    setEditingValue("")
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
                                         if (editingValue.trim() === "") {
                                             removeSpecialty(skill, index)
                                         } else {
@@ -321,23 +319,12 @@ const SkillRow = ({
                                         }
                                         setEditingSpecialty(null)
                                         setEditingValue("")
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            if (editingValue.trim() === "") {
-                                                removeSpecialty(skill, index)
-                                            } else {
-                                                updateSpecialty(skill, index, editingValue)
-                                            }
-                                            setEditingSpecialty(null)
-                                            setEditingValue("")
-                                        }
-                                    }}
-                                    size="xs"
-                                    autoFocus
-                                    style={{ width: "100%" }}
-                                />
-                            </FocusBorderWrapper>
+                                    }
+                                }}
+                                size="xs"
+                                autoFocus
+                                style={{ width: "100%" }}
+                            />
                         ) : (
                             <Badge
                                 key={`${skill}-${specialty.name}-${index}`}

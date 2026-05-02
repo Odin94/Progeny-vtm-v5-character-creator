@@ -1,7 +1,6 @@
 import { ActionIcon, Button, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core"
 import { IconEdit, IconEye, IconEyeOff, IconUser } from "@tabler/icons-react"
 import { useState } from "react"
-import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 
 type UserProfileSectionProps = {
     user: {
@@ -65,15 +64,13 @@ const UserProfileSection = ({
                     </Text>
                     {isEditingNickname ? (
                         <Stack gap="xs" style={{ flex: 1 }}>
-                            <FocusBorderWrapper colorValue={redColorValue}>
-                                <TextInput
-                                    value={nicknameValue}
-                                    onChange={(e) => setNicknameValue(e.target.value)}
-                                    placeholder="Enter nickname"
-                                    maxLength={255}
-                                    disabled={isUpdatingProfile}
-                                />
-                            </FocusBorderWrapper>
+                            <TextInput
+                                value={nicknameValue}
+                                onChange={(e) => setNicknameValue(e.target.value)}
+                                placeholder="Enter nickname"
+                                maxLength={255}
+                                disabled={isUpdatingProfile}
+                            />
                             <Group gap="xs">
                                 <Button
                                     size="xs"
