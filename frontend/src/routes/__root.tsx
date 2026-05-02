@@ -7,6 +7,7 @@ import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { CookiesBanner } from "~/components/CookiesBanner"
+import { inputFocusTheme } from "~/theme/inputFocus"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -72,6 +73,8 @@ export const Route = createRootRoute({
                             red: generateColors("#e03131"),
                             grape: generateColors("#7e4ac9")
                         },
+                        primaryColor: "grape",
+                        components: inputFocusTheme,
                         breakpoints: {
                             xs: "576px",
                             sm: "768px",

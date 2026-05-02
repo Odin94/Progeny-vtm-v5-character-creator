@@ -21,7 +21,6 @@ import { globals } from "../globals"
 import usePointStates from "../hooks/usePointStates"
 import PointPicker from "./PointPicker"
 import Tally from "./Tally"
-import FocusBorderWrapper from "../character_sheet/components/FocusBorderWrapper"
 import { useEffect, useState } from "react"
 import { DisciplineName, disciplineNameSchema, PredatorTypeName } from "~/data/NameSchemas"
 
@@ -103,7 +102,14 @@ const SectionDivider = ({
     color?: string
     lineColor: string
 }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", margin: "16px 0" }}>
+    <div
+        style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.85rem",
+            margin: "16px 0"
+        }}
+    >
         <div
             style={{
                 flex: 1,
@@ -614,14 +620,13 @@ const PredatorTypeModal = ({
                             (s) => `${s.skill}_${s.name}` === specialty
                         )
                         return selectedSpecialtyOption?.customInput ? (
-                            <FocusBorderWrapper colorValue={cat.accentColor}>
-                                <TextInput
-                                    placeholder={selectedSpecialtyOption.customInput}
-                                    value={customSpecialtyText}
-                                    onChange={(e) => setCustomSpecialtyText(e.target.value)}
-                                    mt="xs"
-                                />
-                            </FocusBorderWrapper>
+                            <TextInput
+                                placeholder={selectedSpecialtyOption.customInput}
+                                value={customSpecialtyText}
+                                onChange={(e) => setCustomSpecialtyText(e.target.value)}
+                                color={cat.accentColor}
+                                mt="xs"
+                            />
                         ) : null
                     })()}
                 </div>

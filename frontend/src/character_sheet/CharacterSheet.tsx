@@ -1,4 +1,14 @@
-import { ActionIcon, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
+import {
+    ActionIcon,
+    Box,
+    Container,
+    createTheme,
+    Divider,
+    MantineProvider,
+    Paper,
+    SegmentedControl,
+    Stack
+} from "@mantine/core"
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
@@ -60,6 +70,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     const resetSelectedDicePool = useCharacterSheetStore((state) => state.resetSelectedDicePool)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
+    const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
@@ -83,7 +94,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     )
 
     return (
-        <>
+        <MantineProvider theme={sheetTheme}>
             <Box
                 style={{
                     position: "fixed",
@@ -240,7 +251,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 character={character}
                 setCharacter={setCharacter}
             />
-        </>
+        </MantineProvider>
     )
 }
 

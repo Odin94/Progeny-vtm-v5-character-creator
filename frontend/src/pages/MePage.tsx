@@ -36,7 +36,6 @@ import { useEffect, useState } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
-import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
@@ -128,15 +127,13 @@ const ShareCharacterModalContent = ({
             <Text c="dimmed" size="sm">
                 They can see updates you have made to your character by clicking "Load".
             </Text>
-            <FocusBorderWrapper colorValue={redColorValue}>
-                <TextInput
-                    label="User Nickname"
-                    placeholder="Enter the user's nickname"
-                    value={shareNickname}
-                    onChange={(e) => setShareNickname(e.target.value)}
-                    disabled={isSharing}
-                />
-            </FocusBorderWrapper>
+            <TextInput
+                label="User Nickname"
+                placeholder="Enter the user's nickname"
+                value={shareNickname}
+                onChange={(e) => setShareNickname(e.target.value)}
+                disabled={isSharing}
+            />
             {isLoadingShares ? (
                 <Text c="dimmed" size="sm">
                     Loading...
@@ -205,7 +202,9 @@ const MePage = () => {
     const { data: characters } = useCharacters()
     const { data: coteries } = useCoteries()
     const [character, setCharacter] = useCharacterLocalStorage()
-    const computedColorScheme = useComputedColorScheme("dark", { getInitialValueInEffect: true })
+    const computedColorScheme = useComputedColorScheme("dark", {
+        getInitialValueInEffect: true
+    })
     const phoneScreen = globals.isPhoneScreen
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
@@ -248,12 +247,14 @@ const MePage = () => {
         feVersion: number
         message: string
     } | null>(null)
-    const [characterToDelete, setCharacterToDelete] = useState<{ id: string; name: string } | null>(
-        null
-    )
-    const [coterieToDelete, setCoterieToDelete] = useState<{ id: string; name: string } | null>(
-        null
-    )
+    const [characterToDelete, setCharacterToDelete] = useState<{
+        id: string
+        name: string
+    } | null>(null)
+    const [coterieToDelete, setCoterieToDelete] = useState<{
+        id: string
+        name: string
+    } | null>(null)
     const [characterToLoad, setCharacterToLoad] = useState<{
         id: string
         name: string
@@ -261,9 +262,10 @@ const MePage = () => {
     } | null>(null)
     const [newCharacterName, setNewCharacterName] = useState("")
     const [shareCharacterModalOpened, setShareCharacterModalOpened] = useState(false)
-    const [characterToShare, setCharacterToShare] = useState<{ id: string; name: string } | null>(
-        null
-    )
+    const [characterToShare, setCharacterToShare] = useState<{
+        id: string
+        name: string
+    } | null>(null)
     const [shareNickname, setShareNickname] = useState("")
     const [isSharing, setIsSharing] = useState(false)
     const [newCoterieName, setNewCoterieName] = useState("")
@@ -678,7 +680,11 @@ const MePage = () => {
                                 feVersion,
                                 message: `(Saving ${character.name}): Character version in database (${beCharacter.characterVersion}) is higher than in browser (${feVersion}) - saving might overwrite changes you made on another device.`
                             })
-                            setCharacterToLoad({ id: char.id, name: char.name, data: charData })
+                            setCharacterToLoad({
+                                id: char.id,
+                                name: char.name,
+                                data: charData
+                            })
                             setVersionConflictModalOpened(true)
                             return
                         }
@@ -742,7 +748,11 @@ const MePage = () => {
         }
 
         // Load the character (using helper function)
-        await performLoadCharacter({ id: char.id, name: char.name, data: charData })
+        await performLoadCharacter({
+            id: char.id,
+            name: char.name,
+            data: charData
+        })
     }
 
     const handleConfirmLoadCharacter = () => {
@@ -999,7 +1009,9 @@ const MePage = () => {
             await api.shareCharacter(characterToShare.id, {
                 sharedWithUserNickname: shareNickname.trim()
             })
-            queryClient.invalidateQueries({ queryKey: ["shares", characterToShare.id] })
+            queryClient.invalidateQueries({
+                queryKey: ["shares", characterToShare.id]
+            })
             notifications.show({
                 title: "Success",
                 message: `Character shared with ${shareNickname}`,
@@ -1518,19 +1530,17 @@ const MePage = () => {
                 centered
             >
                 <Stack gap="md">
-                    <FocusBorderWrapper colorValue={redColorValue}>
-                        <TextInput
-                            label="Character Name"
-                            placeholder="Enter character name"
-                            value={newCharacterName}
-                            onChange={(e) => setNewCharacterName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleCreateEmptyCharacter()
-                                }
-                            }}
-                        />
-                    </FocusBorderWrapper>
+                    <TextInput
+                        label="Character Name"
+                        placeholder="Enter character name"
+                        value={newCharacterName}
+                        onChange={(e) => setNewCharacterName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleCreateEmptyCharacter()
+                            }
+                        }}
+                    />
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
@@ -1560,19 +1570,17 @@ const MePage = () => {
                 centered
             >
                 <Stack gap="md">
-                    <FocusBorderWrapper colorValue={redColorValue}>
-                        <TextInput
-                            label="Coterie Name"
-                            placeholder="Enter coterie name"
-                            value={newCoterieName}
-                            onChange={(e) => setNewCoterieName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleCreateCoterie()
-                                }
-                            }}
-                        />
-                    </FocusBorderWrapper>
+                    <TextInput
+                        label="Coterie Name"
+                        placeholder="Enter coterie name"
+                        value={newCoterieName}
+                        onChange={(e) => setNewCoterieName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleCreateCoterie()
+                            }
+                        }}
+                    />
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
@@ -1603,19 +1611,17 @@ const MePage = () => {
                 centered
             >
                 <Stack gap="md">
-                    <FocusBorderWrapper colorValue={redColorValue}>
-                        <TextInput
-                            label="Coterie Name"
-                            placeholder="Enter coterie name"
-                            value={newCoterieName}
-                            onChange={(e) => setNewCoterieName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleUpdateCoterie()
-                                }
-                            }}
-                        />
-                    </FocusBorderWrapper>
+                    <TextInput
+                        label="Coterie Name"
+                        placeholder="Enter coterie name"
+                        value={newCoterieName}
+                        onChange={(e) => setNewCoterieName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleUpdateCoterie()
+                            }
+                        }}
+                    />
                     <Group justify="flex-end">
                         <Button
                             variant="subtle"
@@ -2068,7 +2074,12 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
                   ? "social"
                   : "mental"
 
-        return { physical: physicalScore, social: socialScore, mental: mentalScore, dominant }
+        return {
+            physical: physicalScore,
+            social: socialScore,
+            mental: mentalScore,
+            dominant
+        }
     }
 
     const getBackgroundColor = (dominant: "physical" | "social" | "mental"): string => {
@@ -2211,7 +2222,7 @@ const CharacterSummaryContent = ({
     ] as const
 
     const renderPips = (level: number, minLevel: number = 0) => {
-        return "●".repeat(level) + "○".repeat(5 - level)
+        return "Ã¢â€”Â".repeat(level) + "Ã¢â€”â€¹".repeat(5 - level)
     }
 
     const disciplineGroups = character.disciplines.reduce(
@@ -2263,13 +2274,13 @@ const CharacterSummaryContent = ({
                                         <Text fw={500} size="sm" c="dimmed">
                                             Clan
                                         </Text>
-                                        <Text fw={500}>{clan?.name || character.clan || "—"}</Text>
+                                        <Text fw={500}>{clan?.name || character.clan || "Ã¢â‚¬â€"}</Text>
                                     </Group>
                                     <Group justify="space-between">
                                         <Text fw={500} size="sm" c="dimmed">
                                             Predator Type
                                         </Text>
-                                        <Text>{character.predatorType.name || "—"}</Text>
+                                        <Text>{character.predatorType.name || "Ã¢â‚¬â€"}</Text>
                                     </Group>
                                 </Stack>
                             </Grid.Col>
@@ -2279,13 +2290,13 @@ const CharacterSummaryContent = ({
                                         <Text fw={500} size="sm" c="dimmed">
                                             Ambition
                                         </Text>
-                                        <Text>{character.ambition || "—"}</Text>
+                                        <Text>{character.ambition || "Ã¢â‚¬â€"}</Text>
                                     </Group>
                                     <Group justify="space-between">
                                         <Text fw={500} size="sm" c="dimmed">
                                             Desire
                                         </Text>
-                                        <Text>{character.desire || "—"}</Text>
+                                        <Text>{character.desire || "Ã¢â‚¬â€"}</Text>
                                     </Group>
                                     {character.player ? (
                                         <Group justify="space-between">

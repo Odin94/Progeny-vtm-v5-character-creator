@@ -1,14 +1,4 @@
-import {
-    Button,
-    Divider,
-    Group,
-    Modal,
-    Stack,
-    Text,
-    TextInput,
-    useMantineTheme
-} from "@mantine/core"
-import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
+import { Button, Divider, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
 import {
     ConfirmationModalStyle,
     confirmationModalBodyStyle,
@@ -42,7 +32,6 @@ const NameCharacterBeforeSwitchModal = ({
     onDiscardAndContinue,
     isSaving
 }: NameCharacterBeforeSwitchModalProps) => {
-    const theme = useMantineTheme()
     const fieldStyles = getGeneratorFieldStyles("gold")
 
     return (
@@ -65,16 +54,15 @@ const NameCharacterBeforeSwitchModal = ({
                         it, or discard it and continue.
                     </Text>
                 </Stack>
-
-                <FocusBorderWrapper colorValue={theme.colors.grape[6]} style={{ width: "100%" }}>
-                    <TextInput
-                        value={nameValue}
-                        onChange={(event) => setNameValue(event.currentTarget.value)}
-                        label="Character Name"
-                        placeholder="Name your character"
-                        styles={fieldStyles}
-                    />
-                </FocusBorderWrapper>
+                <TextInput
+                    value={nameValue}
+                    onChange={(event) => setNameValue(event.currentTarget.value)}
+                    label="Character Name"
+                    placeholder="Name your character"
+                    color="grape"
+                    style={{ width: "100%" }}
+                    styles={fieldStyles}
+                />
 
                 <Divider color="rgba(125, 91, 72, 0.28)" />
 

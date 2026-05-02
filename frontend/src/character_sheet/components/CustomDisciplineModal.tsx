@@ -1,10 +1,9 @@
-import { Button, Group, Modal, Stack, TextInput, Textarea, useMantineTheme } from "@mantine/core"
+import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
 import { CustomDiscipline } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
-import FocusBorderWrapper from "./FocusBorderWrapper"
 
 type CustomDisciplineModalProps = {
     opened: boolean
@@ -22,8 +21,6 @@ const CustomDisciplineModal = ({
     onSave
 }: CustomDisciplineModalProps) => {
     const { character, setCharacter, primaryColor } = options
-    const theme = useMantineTheme()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [logo, setLogo] = useState("")
@@ -115,33 +112,30 @@ const CustomDisciplineModal = ({
             size="md"
         >
             <Stack gap="md">
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput
-                        label="Discipline Name"
-                        placeholder="e.g., Chronomancy"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        error={error}
-                        required
-                    />
-                </FocusBorderWrapper>
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <Textarea
-                        label="Summary"
-                        placeholder="Brief description of the discipline"
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
-                        rows={3}
-                    />
-                </FocusBorderWrapper>
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput
-                        label="Logo URL (optional)"
-                        placeholder="URL to an image for the discipline logo"
-                        value={logo}
-                        onChange={(e) => setLogo(e.target.value)}
-                    />
-                </FocusBorderWrapper>
+                <TextInput
+                    label="Discipline Name"
+                    placeholder="e.g., Chronomancy"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={error}
+                    required
+                    color={primaryColor}
+                />
+                <Textarea
+                    label="Summary"
+                    placeholder="Brief description of the discipline"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    rows={3}
+                    color={primaryColor}
+                />
+                <TextInput
+                    label="Logo URL (optional)"
+                    placeholder="URL to an image for the discipline logo"
+                    value={logo}
+                    onChange={(e) => setLogo(e.target.value)}
+                    color={primaryColor}
+                />
                 <Group justify="space-between">
                     {editingDisciplineName ? (
                         <Button color="red" variant="subtle" onClick={handleDelete}>

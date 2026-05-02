@@ -34,7 +34,6 @@ import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
 import { RollData } from "../stores/sessionChatStore"
-import FocusBorderWrapper from "./FocusBorderWrapper"
 
 type ChatWindowProps = {
     options: SheetOptions
@@ -366,22 +365,17 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                             Session created! Share this ID with others to join:
                                         </Text>
                                         <Group gap="xs">
-                                            <FocusBorderWrapper
-                                                colorValue={colorValue}
+                                            <TextInput
+                                                value={sessionId}
+                                                readOnly
                                                 style={{ flex: 1 }}
-                                            >
-                                                <TextInput
-                                                    value={sessionId}
-                                                    readOnly
-                                                    style={{ flex: 1 }}
-                                                    styles={{
-                                                        input: {
-                                                            fontFamily: "monospace",
-                                                            fontSize: "0.875rem"
-                                                        }
-                                                    }}
-                                                />
-                                            </FocusBorderWrapper>
+                                                styles={{
+                                                    input: {
+                                                        fontFamily: "monospace",
+                                                        fontSize: "0.875rem"
+                                                    }
+                                                }}
+                                            />
                                             <Tooltip
                                                 label={
                                                     copiedSessionId
@@ -446,22 +440,20 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                         Join Session
                                     </Text>
                                 </Group>
-                                <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
-                                    <TextInput
-                                        placeholder="Session ID"
-                                        value={sessionInput}
-                                        onChange={(e) => {
-                                            setSessionInput(e.target.value)
-                                            setJoinError(null)
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                handleConnect()
-                                            }
-                                        }}
-                                        error={joinError || undefined}
-                                    />
-                                </FocusBorderWrapper>
+                                <TextInput
+                                    placeholder="Session ID"
+                                    value={sessionInput}
+                                    onChange={(e) => {
+                                        setSessionInput(e.target.value)
+                                        setJoinError(null)
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            handleConnect()
+                                        }
+                                    }}
+                                    error={joinError || undefined}
+                                />
                                 {joinError ? (
                                     <Text size="sm" c="red" style={{ marginTop: "-0.5rem" }}>
                                         {joinError}
@@ -771,7 +763,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         fw={600}
                                                         c={msg.success ? "green" : "red"}
                                                     >
-                                                        {msg.success ? "✓ Passed" : "✗ Failed"}
+                                                        {msg.success ? "Ã¢Å“â€œ Passed" : "Ã¢Å“â€” Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
@@ -803,7 +795,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                     </Text>
                                                 </Group>
                                                 <Text size="sm">
-                                                    Remorse Test: [{msg.rolls.join(", ")}] –{" "}
+                                                    Remorse Test: [{msg.rolls.join(", ")}] Ã¢â‚¬â€œ{" "}
                                                     {msg.successes}{" "}
                                                     {msg.successes === 1 ? "success" : "successes"}
                                                     <Text
@@ -811,7 +803,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         fw={600}
                                                         c={msg.passed ? "green" : "red"}
                                                     >
-                                                        {msg.passed ? " ✓ Passed" : " ✗ Failed"}
+                                                        {msg.passed ? " Ã¢Å“â€œ Passed" : " Ã¢Å“â€” Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
@@ -860,27 +852,25 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                 withArrow
                                 zIndex={2000}
                             >
-                                <FocusBorderWrapper colorValue={colorValue} style={{ flex: 1 }}>
-                                    <TextInput
-                                        placeholder="Type a message..."
-                                        value={messageInput}
-                                        onChange={(e) => {
-                                            const value = e.target.value
-                                            if (value.length <= 5000) {
-                                                setMessageInput(value)
-                                            }
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter" && !e.shiftKey) {
-                                                e.preventDefault()
-                                                handleSendMessage()
-                                            }
-                                        }}
-                                        style={{ flex: 1 }}
-                                        disabled={connectionStatus !== "connected" || !sessionId}
-                                        maxLength={5000}
-                                    />
-                                </FocusBorderWrapper>
+                                <TextInput
+                                    placeholder="Type a message..."
+                                    value={messageInput}
+                                    onChange={(e) => {
+                                        const value = e.target.value
+                                        if (value.length <= 5000) {
+                                            setMessageInput(value)
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault()
+                                            handleSendMessage()
+                                        }
+                                    }}
+                                    style={{ flex: 1 }}
+                                    disabled={connectionStatus !== "connected" || !sessionId}
+                                    maxLength={5000}
+                                />
                             </Tooltip>
                             <ActionIcon
                                 color={primaryColor}

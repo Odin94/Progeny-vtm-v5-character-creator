@@ -22,7 +22,6 @@ import { AttributesKey } from "~/data/Attributes"
 import { SkillsKey } from "~/data/Skills"
 import { SheetOptions } from "../CharacterSheet"
 import { getDisciplineCost } from "../utils/xp"
-import FocusBorderWrapper from "./FocusBorderWrapper"
 
 type CustomPowerModalProps = {
     opened: boolean
@@ -40,8 +39,6 @@ const CustomPowerModal = ({
     editingPower
 }: CustomPowerModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
-    const theme = useMantineTheme()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -210,55 +207,55 @@ const CustomPowerModal = ({
             size="md"
         >
             <Stack gap="md">
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput
-                        label="Power Name"
-                        placeholder="e.g., Time Stop"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        error={error}
-                        required
-                    />
-                </FocusBorderWrapper>
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <Textarea
-                        label="Summary"
-                        placeholder="Brief description of the power"
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
-                        rows={2}
-                    />
-                </FocusBorderWrapper>
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <TextInput
-                        label="Dice Pool"
-                        placeholder="e.g., Intelligence + Occult"
-                        value={dicePool}
-                        onChange={(e) => {
-                            setDicePool(e.target.value)
-                        }}
-                        onBlur={() => {
-                            setDicePoolWarning(validateDicePool(dicePool))
-                        }}
-                    />
-                </FocusBorderWrapper>
+                <TextInput
+                    label="Power Name"
+                    placeholder="e.g., Time Stop"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={error}
+                    required
+                    color={primaryColor}
+                />
+                <Textarea
+                    label="Summary"
+                    placeholder="Brief description of the power"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    rows={2}
+                    color={primaryColor}
+                />
+                <TextInput
+                    label="Dice Pool"
+                    placeholder="e.g., Intelligence + Occult"
+                    value={dicePool}
+                    onChange={(e) => {
+                        setDicePool(e.target.value)
+                    }}
+                    onBlur={() => {
+                        setDicePoolWarning(validateDicePool(dicePool))
+                    }}
+                    color={primaryColor}
+                />
                 {dicePoolWarning ? (
                     <Alert color="yellow" title="Dice Pool Warning">
                         {dicePoolWarning}
                     </Alert>
                 ) : null}
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <NumberInput label="Level" value={level} onChange={setLevel} min={1} required />
-                </FocusBorderWrapper>
-                <FocusBorderWrapper colorValue={colorValue}>
-                    <NumberInput
-                        label="Rouse Checks"
-                        value={rouseChecks}
-                        onChange={setRouseChecks}
-                        min={0}
-                        required
-                    />
-                </FocusBorderWrapper>
+                <NumberInput
+                    label="Level"
+                    value={level}
+                    onChange={setLevel}
+                    min={1}
+                    required
+                    color={primaryColor}
+                />
+                <NumberInput
+                    label="Rouse Checks"
+                    value={rouseChecks}
+                    onChange={setRouseChecks}
+                    min={0}
+                    required
+                />
                 <Group justify="space-between">
                     {editingPower ? (
                         <Button color="red" variant="subtle" onClick={handleDelete}>
