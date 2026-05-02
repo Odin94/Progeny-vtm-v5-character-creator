@@ -1,5 +1,5 @@
 import { Button, ScrollArea, Stack, Text, Textarea, TextInput } from "@mantine/core"
-import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
+import { RAW_RED, RAW_GOLD, RAW_GRAPE, RAW_GREY, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
 import ReactGA from "react-ga4"
@@ -38,7 +38,7 @@ const inputStyles = {
         fontSize: "1rem",
         transition: "border-color 180ms ease",
         ":focus": {
-            borderColor: "rgba(190, 75, 219, 1)"
+            borderColor: rgba(RAW_GRAPE, 1)
         }
     }
 }

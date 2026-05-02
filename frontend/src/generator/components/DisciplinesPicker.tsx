@@ -201,7 +201,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             fontFamily: "Cinzel, Georgia, serif",
                             fontSize: "0.82rem",
                             fontWeight: 600,
-                            color: picked ? "rgba(250, 82, 82, 0.95)" : "rgba(244, 236, 232, 0.92)",
+                            color: picked ? rgba(RAW_RED, 0.95) : "rgba(244, 236, 232, 0.92)",
                             letterSpacing: "0.03em",
                             flex: 1
                         }}
@@ -237,7 +237,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             style={{
                                 fontFamily: "Inter, sans-serif",
                                 fontSize: "0.72rem",
-                                color: "rgba(250, 82, 82, 0.7)",
+                                color: rgba(RAW_RED, 0.7),
                                 marginBottom: 2
                             }}
                         >
@@ -281,7 +281,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             root: {
                                 alignSelf: "center",
                                 borderColor: takeButtonHovered
-                                    ? "rgba(250, 82, 82, 0.85)"
+                                    ? rgba(RAW_RED, 0.85)
                                     : rgba(RAW_RED, 0.4),
                                 background: takeButtonHovered
                                     ? rgba(RAW_RED, 0.24)
