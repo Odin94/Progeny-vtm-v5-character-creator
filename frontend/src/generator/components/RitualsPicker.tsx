@@ -101,7 +101,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                 onMouseLeave={() => setHovered(false)}
                 styles={{
                     root: {
-                        borderColor: hovered ? "rgba(250, 82, 82, 0.85)" : rgba(RAW_RED, 0.4),
+                        borderColor: hovered ? rgba(RAW_RED, 0.85) : rgba(RAW_RED, 0.4),
                         background: hovered ? rgba(RAW_RED, 0.24) : rgba(RAW_RED, 0.08),
                         boxShadow: hovered
                             ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`

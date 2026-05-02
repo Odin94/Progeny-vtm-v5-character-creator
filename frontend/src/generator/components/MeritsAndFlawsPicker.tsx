@@ -1,5 +1,5 @@
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
-import { RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
+import { COLOR_RED, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
     Box,
@@ -49,7 +49,7 @@ type MeritsAndFlawsPickerProps = {
 type ResetTarget = "merit" | "flaw" | null
 
 const flawIcon = () => {
-    return <FontAwesomeIcon icon={faPlay} rotation={90} style={{ color: "#e03131" }} />
+    return <FontAwesomeIcon icon={faPlay} rotation={90} style={{ color: COLOR_RED }} />
 }
 const meritIcon = () => {
     return <FontAwesomeIcon icon={faPlay} rotation={270} style={{ color: "rgb(47, 158, 68)" }} />
@@ -90,10 +90,10 @@ const MeritOrFlawCard = memo(
         const buttonColor = type === "flaw" ? "red" : "teal"
         const icon = type === "flaw" ? flawIcon() : meritIcon()
         const lineKey = `${type}-${meritOrFlaw.name}`
-        const accentColor = type === "flaw" ? "rgba(250, 82, 82, 0.92)" : "rgba(63, 192, 120, 0.92)"
+        const accentColor = type === "flaw" ? rgba(RAW_RED, 0.92) : "rgba(63, 192, 120, 0.92)"
         const selectedBg = type === "flaw" ? rgba(RAW_RED, 0.18) : "rgba(46, 160, 67, 0.16)"
         const selectedBorder =
-            type === "flaw" ? "rgba(250, 82, 82, 0.38)" : "rgba(63, 192, 120, 0.32)"
+            type === "flaw" ? rgba(RAW_RED, 0.38) : "rgba(63, 192, 120, 0.32)"
         const baseBg = "rgba(255, 255, 255, 0.03)"
         const baseBorder = "rgba(255, 255, 255, 0.06)"
 
@@ -148,7 +148,7 @@ const MeritOrFlawCard = memo(
                             minWidth: 36,
                             borderColor:
                                 type === "flaw"
-                                    ? "rgba(250, 82, 82, 0.45)"
+                                    ? rgba(RAW_RED, 0.45)
                                     : "rgba(63, 192, 120, 0.4)",
                             background:
                                 alreadyPickedItem?.level === level ? accentColor : "transparent",
@@ -690,7 +690,7 @@ const PointCard = ({
             value: "rgba(96, 230, 156, 0.95)"
         },
         flaw: {
-            border: "rgba(250, 82, 82, 0.24)",
+            border: rgba(RAW_RED, 0.24),
             bg: rgba(RAW_RED, 0.1),
             value: "rgba(255, 135, 135, 0.95)"
         },
@@ -700,8 +700,8 @@ const PointCard = ({
             value: "rgba(255, 212, 117, 0.95)"
         },
         neutral: {
-            border: "rgba(183, 148, 246, 0.24)",
-            bg: "rgba(132, 94, 247, 0.09)",
+            border: rgba(RAW_GRAPE, 0.24),
+            bg: rgba(RAW_GRAPE, 0.09),
             value: rgba(RAW_GREY, 0.94)
         }
     }[tone]

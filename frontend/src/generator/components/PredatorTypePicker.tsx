@@ -1,5 +1,5 @@
 import { Box, Button, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
-import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
@@ -40,24 +40,24 @@ type CategoryMeta = {
 const CATEGORIES: CategoryMeta[] = [
     {
         label: "Violent",
-        accentColor: "rgba(250, 82, 82, 0.95)",
+        accentColor: rgba(RAW_RED, 0.95),
         bgColor: rgba(RAW_RED, 0.22),
         bgActiveColor: rgba(RAW_RED, 0.39),
         pillColor: rgba(RAW_RED, 0.39),
         borderColor: rgba(RAW_RED, 0.18),
-        borderActiveColor: "rgba(250, 82, 82, 0.55)",
-        lineColor: "rgba(250, 82, 82, 0.38)",
+        borderActiveColor: rgba(RAW_RED, 0.55),
+        lineColor: rgba(RAW_RED, 0.38),
         predatorTypes: ["Alleycat", "Extortionist", "Roadside Killer", "Montero"]
     },
     {
         label: "Sociable",
-        accentColor: "rgba(190, 75, 219, 0.95)",
-        bgColor: "rgba(190, 75, 219, 0.3)",
-        bgActiveColor: "rgba(190, 75, 219, 0.48)",
-        pillColor: "rgba(190, 75, 219, 0.38)",
-        borderColor: "rgba(190, 75, 219, 0.18)",
-        borderActiveColor: "rgba(190, 75, 219, 0.55)",
-        lineColor: "rgba(190, 75, 219, 0.38)",
+        accentColor: rgba(RAW_GRAPE, 0.95),
+        bgColor: rgba(RAW_GRAPE, 0.3),
+        bgActiveColor: rgba(RAW_GRAPE, 0.48),
+        pillColor: rgba(RAW_GRAPE, 0.38),
+        borderColor: rgba(RAW_GRAPE, 0.18),
+        borderActiveColor: rgba(RAW_GRAPE, 0.55),
+        lineColor: rgba(RAW_GRAPE, 0.38),
         predatorTypes: ["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren"]
     },
     {
@@ -73,13 +73,13 @@ const CATEGORIES: CategoryMeta[] = [
     },
     {
         label: "Excluding Mortals",
-        accentColor: "rgba(153, 105, 229, 0.95)",
-        bgColor: "rgba(132, 94, 247, 0.35)",
-        bgActiveColor: "rgba(132, 94, 247, 0.48)",
-        pillColor: "rgba(132, 94, 247, 0.4)",
-        borderColor: "rgba(132, 94, 247, 0.18)",
-        borderActiveColor: "rgba(132, 94, 247, 0.55)",
-        lineColor: "rgba(132, 94, 247, 0.38)",
+        accentColor: rgba(RAW_GRAPE, 0.95),
+        bgColor: rgba(RAW_GRAPE, 0.35),
+        bgActiveColor: rgba(RAW_GRAPE, 0.48),
+        pillColor: rgba(RAW_GRAPE, 0.4),
+        borderColor: rgba(RAW_GRAPE, 0.18),
+        borderActiveColor: rgba(RAW_GRAPE, 0.55),
+        lineColor: rgba(RAW_GRAPE, 0.38),
         predatorTypes: ["Bagger", "Blood Leech", "Farmer"]
     }
 ]

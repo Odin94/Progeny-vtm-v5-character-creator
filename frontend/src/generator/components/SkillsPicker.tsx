@@ -246,7 +246,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                               ? "rgba(180, 180, 180, 0.42)"
                                               : pickedDistribution === null
                                                 ? "rgba(180, 180, 180, 0.24)"
-                                                : "rgba(183, 148, 246, 0.45)",
+                                                : rgba(RAW_GRAPE, 0.45),
                                 color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
                             }
                         }}

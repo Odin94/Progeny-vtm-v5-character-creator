@@ -285,7 +285,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                         ...generatorOutlineActionButtonStyles.root,
                                         alignSelf: "center",
                                         borderColor: addButtonHovered
-                                            ? "rgba(250, 82, 82, 0.85)"
+                                            ? rgba(RAW_RED, 0.85)
                                             : rgba(RAW_RED, 0.4),
                                         background: addButtonHovered
                                             ? rgba(RAW_RED, 0.24)
