@@ -13,14 +13,22 @@ import {
     Text,
     Title
 } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
-import { IconBook2, IconChevronDown, IconDropletFilled, IconSparkles } from "@tabler/icons-react"
+import { useDisclosure, useLocalStorage } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
+import { useQueryClient } from "@tanstack/react-query"
+import { IconBook2, IconChevronDown, IconSparkles } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { motion } from "framer-motion"
-import { useRef, type ReactNode } from "react"
+import { useRef, useState } from "react"
+import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
+import { getEmptyCharacter, type Character } from "~/data/Character"
+import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { useAuth } from "~/hooks/useAuth"
+import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
+import { useCharacters } from "~/hooks/useCharacters"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
+import { api } from "~/utils/api"
 import "./LandingPage.css"
 
 type FeatureCardProps = {
@@ -86,9 +94,35 @@ function FeatureCard({
 
 export default function LandingPage() {
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
     const { isAuthenticated, signIn } = useAuth()
+    const [character, setCharacter] = useCharacterLocalStorage()
+    const [, setStoredSelectedStep] = useLocalStorage<GeneratorStepId>({
+        key: "selectedGeneratorStep",
+        defaultValue: defaultGeneratorStepId
+    })
+    const { data: characters } = useCharacters(isAuthenticated)
     const featureSectionRef = useRef<HTMLDivElement | null>(null)
     const [creditsOpened, { open: openCredits, close: closeCredits }] = useDisclosure(false)
+    const [
+        startNewCharacterModalOpened,
+        { open: openStartNewCharacterModal, close: closeStartNewCharacterModal }
+    ] = useDisclosure(false)
+    const [currentCharacterName, setCurrentCharacterName] = useState(character.name)
+    const [isSavingCurrentCharacter, setIsSavingCurrentCharacter] = useState(false)
+    const emptyCharacter = getEmptyCharacter()
+    const userCharacters = (
+        (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
+    ).filter((candidate) => !candidate.shared)
+
+    const isCurrentCharacterEmpty = () =>
+        JSON.stringify({
+            ...character,
+            id: "",
+            name: "",
+            version: emptyCharacter.version,
+            characterVersion: emptyCharacter.characterVersion
+        }) === JSON.stringify(emptyCharacter)
 
     const scrollToSelector = (selector: string) => {
         const target = document.querySelector(selector)
@@ -104,6 +138,81 @@ export default function LandingPage() {
         }
 
         signIn()
+    }
+
+    const continueCurrentCharacter = () => {
+        closeStartNewCharacterModal()
+        navigate({ to: "/create" })
+    }
+
+    const startNewCharacter = () => {
+        closeStartNewCharacterModal()
+        setCharacter(getEmptyCharacter())
+        setStoredSelectedStep(defaultGeneratorStepId)
+        navigate({ to: "/create", hash: defaultGeneratorStepId })
+    }
+
+    const openGenerator = () => {
+        if (!isAuthenticated || isCurrentCharacterEmpty()) {
+            navigate({ to: "/create" })
+            return
+        }
+
+        setCurrentCharacterName(character.name)
+        openStartNewCharacterModal()
+    }
+
+    const saveCurrentCharacterAndStartNew = async () => {
+        const trimmedName = currentCharacterName.trim()
+
+        if (!trimmedName) {
+            notifications.show({
+                title: "Name required",
+                message: "Give the current character a name before saving it to your account.",
+                color: "red"
+            })
+            return
+        }
+
+        setIsSavingCurrentCharacter(true)
+
+        try {
+            const characterToSave: Character = { ...character, name: trimmedName }
+            const targetCharacter = characterToSave.id
+                ? userCharacters.find((candidate) => candidate.id === characterToSave.id)
+                : null
+            const payload = {
+                name: characterToSave.name,
+                data: characterToSave,
+                version: characterToSave.version
+            }
+
+            if (targetCharacter) {
+                await api.updateCharacter(targetCharacter.id, payload)
+            } else {
+                await api.createCharacter(payload)
+            }
+
+            await queryClient.invalidateQueries({ queryKey: ["characters"] })
+
+            notifications.show({
+                title: "Character saved",
+                message: `"${trimmedName}" was saved to your account.`,
+                color: "green",
+                autoClose: 3000
+            })
+
+            startNewCharacter()
+        } catch (error) {
+            notifications.show({
+                title: "Error saving character",
+                message:
+                    error instanceof Error ? error.message : "Failed to save current character",
+                color: "red"
+            })
+        } finally {
+            setIsSavingCurrentCharacter(false)
+        }
     }
 
     return (
@@ -145,7 +254,7 @@ export default function LandingPage() {
                                     px="xl"
                                     className="landing-page__primary-button"
                                     leftSection={<IconSparkles size={18} />}
-                                    onClick={() => navigate({ to: "/create" })}
+                                    onClick={openGenerator}
                                 >
                                     Embrace a new character
                                 </Button>
@@ -262,7 +371,7 @@ export default function LandingPage() {
                                     "Export to PDF, an importable save file or to Foundry"
                                 ]}
                                 primaryLabel="Start creating"
-                                onPrimaryClick={() => navigate({ to: "/create" })}
+                                onPrimaryClick={openGenerator}
                             />
                         </Grid.Col>
                         <Grid.Col span={{ base: 12, md: 4 }}>
@@ -495,6 +604,17 @@ export default function LandingPage() {
                     </Text>
                 </Stack>
             </Modal>
+
+            <StartNewCharacterModal
+                opened={startNewCharacterModalOpened}
+                onClose={closeStartNewCharacterModal}
+                characterName={currentCharacterName}
+                setCharacterName={setCurrentCharacterName}
+                isSaving={isSavingCurrentCharacter}
+                onContinueCurrent={continueCurrentCharacter}
+                onStartWithoutSaving={startNewCharacter}
+                onSaveAndStartNew={saveCurrentCharacterAndStartNew}
+            />
         </Box>
     )
 }
