@@ -23,7 +23,7 @@ import { useMemo } from "react"
 type SelectedDicePoolDisplayProps = {
     character?: Character
     primaryColor: string
-    skillSpecialties: Array<{ name: string; skill: string }>
+    skillSpecialties: Array<{ name: string; skill: string; fromPredatorType?: boolean }>
 }
 
 const SelectedDicePoolDisplay = ({
@@ -178,8 +178,12 @@ const SelectedDicePoolDisplay = ({
                                 <Group gap="xs">
                                     {skillSpecialties.map((specialty) => (
                                         <Checkbox
-                                            key={specialty.name}
-                                            label={specialty.name}
+                                            key={`${specialty.fromPredatorType ? "predator" : "direct"}-${specialty.skill}-${specialty.name}`}
+                                            label={
+                                                specialty.fromPredatorType
+                                                    ? `${specialty.name} (Predator Type)`
+                                                    : specialty.name
+                                            }
                                             checked={selectedDicePool.selectedSpecialties.includes(
                                                 specialty.name
                                             )}

@@ -151,9 +151,13 @@ const DiceRollModal = ({
 
     const skillSpecialties = useMemo(() => {
         if (!character || !selectedDicePool.skill) return []
-        return character.skillSpecialties.filter(
-            (s) => s.skill === selectedDicePool.skill && s.name !== ""
-        )
+        return [
+            ...character.skillSpecialties,
+            ...character.predatorType.pickedSpecialties.map((specialty) => ({
+                ...specialty,
+                fromPredatorType: true
+            }))
+        ].filter((s) => s.skill === selectedDicePool.skill && s.name !== "")
     }, [character, selectedDicePool.skill])
 
     useEffect(() => {
