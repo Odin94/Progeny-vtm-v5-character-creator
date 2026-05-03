@@ -38,6 +38,10 @@ export const getDisciplineCost = (character: Character, disciplineName: Discipli
     }
 }
 
+export const getRitualCost = (level: number): number => {
+    return level * 3
+}
+
 export const getMeritCost = (level: number, previousLevel: number): number => {
     return (level - previousLevel) * 3
 }
@@ -54,5 +58,3 @@ export const costFunctionByFieldName: Partial<
     skills: getSkillCost,
     skillSpecialties: getSpecialtyCost
 }
-
-// Rituals & formulas cost 3 x level

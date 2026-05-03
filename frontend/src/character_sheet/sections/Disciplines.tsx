@@ -18,15 +18,21 @@ import {
 import { useState } from "react"
 import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { disciplines, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
+import {
+    disciplines,
+    Power,
+    Ritual,
+    Rituals,
+    sanitizeCustomDisciplineLogoUrl
+} from "~/data/Disciplines"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
 import CustomDisciplineModal from "../components/CustomDisciplineModal"
 import CustomPowerModal from "../components/CustomPowerModal"
+import RitualSelectModal from "../components/RitualSelectModal"
 import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
-import { Power } from "~/data/Disciplines"
-import { getDisciplineCost, getAvailableXP, canAffordUpgrade } from "../utils/xp"
+import { getDisciplineCost, getAvailableXP, canAffordUpgrade, getRitualCost } from "../utils/xp"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useShallow } from "zustand/react/shallow"
@@ -52,10 +58,12 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
     const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
+    const [ritualModalOpened, setRitualModalOpened] = useState(false)
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
         | { type: "power"; power: Power }
+        | { type: "ritual"; ritual: Ritual }
         | { type: "discipline"; disciplineName: DisciplineName }
         | null
     >(null)
@@ -63,6 +71,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const isFreeMode = mode === "free"
     const isClickable = diceModalOpened
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
+    const bloodSorceryLevel = character.disciplines.filter(
+        (power) => power.discipline === "blood sorcery"
+    ).length
+    const canAddRituals = isEditable && bloodSorceryLevel > 0
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
         if (!isClickable) return
@@ -100,6 +112,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         setItemToDelete({ type: "power", power })
     }
 
+    const handleDeleteRitual = (ritual: Ritual) => {
+        setItemToDelete({ type: "ritual", ritual })
+    }
+
     const handleDeleteDiscipline = (disciplineName: DisciplineName) => {
         setItemToDelete({ type: "discipline", disciplineName })
     }
@@ -112,6 +128,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             updatedCharacter = {
                 ...character,
                 disciplines: character.disciplines.filter((p) => p !== itemToDelete.power)
+            }
+        } else if (itemToDelete.type === "ritual") {
+            updatedCharacter = {
+                ...character,
+                rituals: character.rituals.filter((ritual) => ritual !== itemToDelete.ritual)
             }
         } else {
             updatedCharacter = {
@@ -506,12 +527,70 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 </Box>
             ) : null}
 
-            {character.rituals.length > 0 ? (
+            {character.rituals.length > 0 || canAddRituals ? (
                 <Box mt="xl">
                     {character.disciplines.length > 0 ? <Divider mb="lg" /> : null}
-                    <Title order={2} mb="lg" ta="center">
-                        Rituals
-                    </Title>
+                    <Group justify="center" gap="sm" mb="lg">
+                        <Title order={2} ta="center">
+                            Rituals
+                        </Title>
+                        {canAddRituals ? (
+                            mode === "xp" ? (
+                                (() => {
+                                    const ownedRitualNames = new Set(
+                                        character.rituals.map((ritual) => ritual.name)
+                                    )
+                                    const availableCosts = Rituals.filter(
+                                        (ritual) =>
+                                            ritual.level <= bloodSorceryLevel &&
+                                            !ownedRitualNames.has(ritual.name)
+                                    ).map((ritual) => getRitualCost(ritual.level))
+                                    const minCost =
+                                        availableCosts.length > 0 ? Math.min(...availableCosts) : 0
+                                    const availableXP = getAvailableXP(character)
+                                    const hasAvailableRituals = availableCosts.length > 0
+                                    const canAfford =
+                                        hasAvailableRituals &&
+                                        canAffordUpgrade(availableXP, minCost)
+                                    const tooltipLabel = !hasAvailableRituals
+                                        ? "No available rituals to add"
+                                        : canAfford
+                                          ? `${minCost} XP`
+                                          : `Insufficient XP. Need ${minCost}, have ${availableXP}`
+
+                                    return (
+                                        <Tooltip label={tooltipLabel}>
+                                            <span style={{ display: "inline-block" }}>
+                                                <ActionIcon
+                                                    size="lg"
+                                                    radius="xl"
+                                                    variant="light"
+                                                    color={primaryColor}
+                                                    disabled={!canAfford}
+                                                    onClick={() => setRitualModalOpened(true)}
+                                                    style={{
+                                                        cursor: canAfford ? "pointer" : "default"
+                                                    }}
+                                                >
+                                                    <IconPlus size={18} />
+                                                </ActionIcon>
+                                            </span>
+                                        </Tooltip>
+                                    )
+                                })()
+                            ) : (
+                                <ActionIcon
+                                    size="lg"
+                                    radius="xl"
+                                    variant="light"
+                                    color={primaryColor}
+                                    onClick={() => setRitualModalOpened(true)}
+                                >
+                                    <IconPlus size={18} />
+                                </ActionIcon>
+                            )
+                        ) : null}
+                    </Group>
                     <Grid gutter="md">
                         {character.rituals.map((ritual) => (
                             <Grid.Col key={ritual.name} span={{ base: 12, md: 6 }}>
@@ -523,6 +602,16 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                         <Badge variant="light" color={primaryColor}>
                                             Ritual
                                         </Badge>
+                                        {isFreeMode ? (
+                                            <ActionIcon
+                                                size="sm"
+                                                variant="subtle"
+                                                color="red"
+                                                onClick={() => handleDeleteRitual(ritual)}
+                                            >
+                                                <IconX size={16} />
+                                            </ActionIcon>
+                                        ) : null}
                                     </Group>
                                     {ritual.summary ? (
                                         <Text size="sm" c="dimmed" mt="xs">
@@ -544,6 +633,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 options={options}
                 initialDiscipline={initialDiscipline}
                 hideBackButton={initialDiscipline !== null}
+            />
+            <RitualSelectModal
+                opened={ritualModalOpened}
+                onClose={() => setRitualModalOpened(false)}
+                options={options}
             />
             <CustomDisciplineModal
                 opened={customDisciplineModalOpened}
@@ -578,7 +672,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     <Text fz="xl" ta="center">
                         {itemToDelete?.type === "power"
                             ? `Delete power "${itemToDelete.power.name}"?`
-                            : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
+                            : itemToDelete?.type === "ritual"
+                              ? `Delete ritual "${itemToDelete.ritual.name}"?`
+                              : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
                     </Text>
                     <Divider my="sm" />
                     <Group justify="space-between">
