@@ -11,6 +11,7 @@ import {
     type UserJoinedMessage
 } from "../sessionChatTypes.js"
 import { temporarySessions, coterieSessions } from "../sessionChat.js"
+import { recordSessionJoin } from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, broadcastToSession } from "../sessionChatUtils.js"
 
 export async function handleJoinSession(
@@ -76,9 +77,11 @@ export async function handleJoinSession(
                 id: coterieId,
                 type: "coterie",
                 coterieId,
+                creatorUserId: userId,
                 participants: new Map(),
                 createdAt: Date.now(),
-                lastActivity: Date.now()
+                lastActivity: Date.now(),
+                maxParticipantCount: 0
             })
         }
 
@@ -108,9 +111,11 @@ export async function handleJoinSession(
         const newSession: Session = {
             id: newSessionId,
             type: "temporary",
+            creatorUserId: userId,
             participants: new Map(),
             createdAt: Date.now(),
-            lastActivity: Date.now()
+            lastActivity: Date.now(),
+            maxParticipantCount: 0
         }
         temporarySessions.set(newSessionId, newSession)
         currentSession = newSession
@@ -135,7 +140,9 @@ export async function handleJoinSession(
         }
 
         currentSession.participants.set(userId, participant)
-        currentSession.lastActivity = Date.now()
+        const joinedAt = Date.now()
+        currentSession.lastActivity = joinedAt
+        recordSessionJoin(currentSession, userId, joinedAt)
 
         const participants = Array.from(currentSession.participants.values()).map((p) => ({
             userId: p.userId,
@@ -149,7 +156,10 @@ export async function handleJoinSession(
                 {
                     session_type: currentSession.type,
                     session_id: currentSession.id,
-                    participant_count: participants.length
+                    creator_user_id: currentSession.creatorUserId,
+                    participant_count: participants.length,
+                    player_count: participants.length,
+                    max_participant_count: currentSession.maxParticipantCount
                 },
                 userId
             )

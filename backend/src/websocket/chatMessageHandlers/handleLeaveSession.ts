@@ -1,5 +1,6 @@
 import { type Session, type UserLeftMessage } from "../sessionChatTypes.js"
 import { temporarySessions, coterieSessions } from "../sessionChat.js"
+import { trackSessionClosed } from "../sessionChatLifecycle.js"
 import { broadcastToSession } from "../sessionChatUtils.js"
 
 export function handleLeaveSession(userId: string, currentSession: Session | null): Session | null {
@@ -8,6 +9,7 @@ export function handleLeaveSession(userId: string, currentSession: Session | nul
         currentSession.lastActivity = Date.now()
 
         if (currentSession.participants.size === 0) {
+            trackSessionClosed(currentSession, "empty", userId)
             if (currentSession.type === "temporary") {
                 temporarySessions.delete(currentSession.id)
             } else {
