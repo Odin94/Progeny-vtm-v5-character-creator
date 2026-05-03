@@ -223,7 +223,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     }}
                                 />
                             ) : (
-                                <Text>{character.predatorType.name || "Ã¢â‚¬â€"}</Text>
+                                <Text>{character.predatorType.name || "—"}</Text>
                             )}
                         </Group>
                     </Stack>
@@ -237,7 +237,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     key={ambitionField.key}
                                     defaultValue={ambitionField.defaultValue}
                                     onChange={(e) => ambitionField.onChange(e.target.value)}
-                                    placeholder="Ã¢â‚¬â€"
+                                    placeholder="—"
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100%" }}
@@ -251,7 +251,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     }}
                                 />
                             ) : (
-                                <Text>{character.ambition || "Ã¢â‚¬â€"}</Text>
+                                <Text>{character.ambition || "—"}</Text>
                             )}
                         </Group>
                         <Group gap="xs">
@@ -261,7 +261,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     key={desireField.key}
                                     defaultValue={desireField.defaultValue}
                                     onChange={(e) => desireField.onChange(e.target.value)}
-                                    placeholder="Ã¢â‚¬â€"
+                                    placeholder="—"
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100%" }}
@@ -275,7 +275,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     }}
                                 />
                             ) : (
-                                <Text>{character.desire || "Ã¢â‚¬â€"}</Text>
+                                <Text>{character.desire || "—"}</Text>
                             )}
                         </Group>
                         <Group gap="xs">
@@ -285,7 +285,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     key={playerField.key}
                                     defaultValue={playerField.defaultValue}
                                     onChange={(e) => playerField.onChange(e.target.value)}
-                                    placeholder="Ã¢â‚¬â€"
+                                    placeholder="—"
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100%" }}
@@ -299,7 +299,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     }}
                                 />
                             ) : (
-                                <Text>{character.player || "Ã¢â‚¬â€"}</Text>
+                                <Text>{character.player || "—"}</Text>
                             )}
                         </Group>
                     </Stack>
@@ -333,7 +333,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     }}
                                 />
                             ) : (
-                                <Text>{character.generation || "Ã¢â‚¬â€"}</Text>
+                                <Text>{character.generation || "—"}</Text>
                             )}
                         </Group>
                         <Group gap="xs">
@@ -343,7 +343,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     key={sireField.key}
                                     defaultValue={sireField.defaultValue}
                                     onChange={(e) => sireField.onChange(e.target.value)}
-                                    placeholder="Ã¢â‚¬â€"
+                                    placeholder="—"
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "50%" }}
@@ -357,7 +357,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     }}
                                 />
                             ) : (
-                                <Text>{character.sire || "Ã¢â‚¬â€"}</Text>
+                                <Text>{character.sire || "—"}</Text>
                             )}
                         </Group>
                     </Stack>

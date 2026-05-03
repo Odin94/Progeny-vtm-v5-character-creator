@@ -2222,7 +2222,7 @@ const CharacterSummaryContent = ({
     ] as const
 
     const renderPips = (level: number, minLevel: number = 0) => {
-        return "Ã¢â€”Â".repeat(level) + "Ã¢â€”â€¹".repeat(5 - level)
+        return "●".repeat(level) + "○".repeat(5 - level)
     }
 
     const disciplineGroups = character.disciplines.reduce(
@@ -2275,14 +2275,14 @@ const CharacterSummaryContent = ({
                                             Clan
                                         </Text>
                                         <Text fw={500}>
-                                            {clan?.name || character.clan || "Ã¢â‚¬â€"}
+                                            {clan?.name || character.clan || "—"}
                                         </Text>
                                     </Group>
                                     <Group justify="space-between">
                                         <Text fw={500} size="sm" c="dimmed">
                                             Predator Type
                                         </Text>
-                                        <Text>{character.predatorType.name || "Ã¢â‚¬â€"}</Text>
+                                        <Text>{character.predatorType.name || "—"}</Text>
                                     </Group>
                                 </Stack>
                             </Grid.Col>
@@ -2292,13 +2292,13 @@ const CharacterSummaryContent = ({
                                         <Text fw={500} size="sm" c="dimmed">
                                             Ambition
                                         </Text>
-                                        <Text>{character.ambition || "Ã¢â‚¬â€"}</Text>
+                                        <Text>{character.ambition || "—"}</Text>
                                     </Group>
                                     <Group justify="space-between">
                                         <Text fw={500} size="sm" c="dimmed">
                                             Desire
                                         </Text>
-                                        <Text>{character.desire || "Ã¢â‚¬â€"}</Text>
+                                        <Text>{character.desire || "—"}</Text>
                                     </Group>
                                     {character.player ? (
                                         <Group justify="space-between">

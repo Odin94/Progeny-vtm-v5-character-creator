@@ -130,7 +130,7 @@ export const SpecialtyModal = ({
                             lineHeight: 1.55
                         }}
                     >
-                        Specialties represent focused expertise within a skill Ã¢â‚¬â€{" "}
+                        Specialties represent focused expertise within a skill —{" "}
                         <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
                             Performance: Dancing
                         </span>{" "}
@@ -154,7 +154,7 @@ export const SpecialtyModal = ({
                     {freeEntries.map((entry, i) => (
                         <Group key={i} gap={8} wrap="nowrap">
                             <Select
-                                placeholder="Choose a skillÃ¢â‚¬Â¦"
+                                placeholder="Choose a skill…"
                                 value={entry.skill || null}
                                 onChange={(v) => updateFreeEntry(i, "skill", v ?? "")}
                                 data={freeSkills
