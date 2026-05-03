@@ -19,13 +19,14 @@ test.beforeEach(async ({ page }) => {
 
 test("creates a Brujah character and downloads the PDF sheet", async ({ page }) => {
     await page.goto("/create")
+    await page.getByTestId("cookie-banner-close").click()
 
-    await expect(page.getByRole("heading", { name: /pick your clan/i })).toBeVisible()
-    await page.getByText("Brujah", { exact: true }).click()
+    await expect(page.getByTestId("clan-picker-heading")).toBeVisible()
+    await page.getByTestId("clan-brujah-card").click()
 
     await pickButtons(page, ["Strength", "Manipulation", "Dexterity", "Charisma", "Wits"])
 
-    await page.getByRole("button", { name: "Balanced" }).click()
+    await page.getByTestId("skill-distribution-balanced-button").click()
     await pickButtons(page, [
         "Athletics",
         "Brawl",
@@ -43,38 +44,40 @@ test("creates a Brujah character and downloads the PDF sheet", async ({ page }) 
         "Occult",
         "Technology"
     ])
-    await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("skill-specialty-confirm-button").click()
 
-    await page.getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("generation-confirm-button").click()
 
-    await page.getByText("Sandman", { exact: true }).click()
-    await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("predator-type-sandman-card").click()
+    await page.getByTestId("predator-type-confirm-button").click()
 
-    await page.getByLabel("Full name").fill(characterName)
-    await page.getByLabel("Sire").fill("Mara Voss")
-    await page.getByLabel("Long term ambition").fill("Break the baron's grip on the city")
-    await page.getByLabel("Short term desire").fill("Protect tonight's informant")
+    await page.getByTestId("basic-full-name-input").fill(characterName)
+    await page.getByTestId("basic-sire-input").fill("Mara Voss")
+    await page.getByTestId("basic-ambition-input").fill("Break the baron's grip on the city")
+    await page.getByTestId("basic-desire-input").fill("Protect tonight's informant")
     await page
-        .getByLabel("Description & appearance")
+        .getByTestId("basic-description-input")
         .fill("A sharp-eyed Brujah courier with a battered leather jacket.")
-    await page.getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("basics-confirm-button").click()
 
     await takePower(page, "POTENCE", "Lethal Body")
     await takePower(page, "POTENCE", "Prowess")
     await takePower(page, "PRESENCE", "Awe")
     await takePower(page, "AUSPEX", "Heightened Senses")
-    await page.getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("disciplines-confirm-button").click()
 
-    await page.getByLabel("Touchstone Name").fill("Jonah Reyes")
-    await page.getByLabel("Conviction").fill("Never abandon the vulnerable")
-    await page.getByLabel("Description").fill("A street medic who still believes Evelyn can help.")
-    await page.getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("touchstone-0-name-input").fill("Jonah Reyes")
+    await page.getByTestId("touchstone-0-conviction-input").fill("Never abandon the vulnerable")
+    await page
+        .getByTestId("touchstone-0-description-input")
+        .fill("A street medic who still believes Evelyn can help.")
+    await page.getByTestId("touchstones-confirm-button").click()
 
-    await page.getByRole("button", { name: "Confirm" }).click()
+    await page.getByTestId("merits-confirm-button").click()
 
-    await expect(page.getByRole("heading", { name: characterName })).toBeVisible()
+    await expect(page.getByTestId("final-character-name")).toHaveText(characterName)
     const downloadPromise = page.waitForEvent("download")
-    await page.getByRole("button", { name: /download pdf/i }).click()
+    await page.getByTestId("final-download-pdf-button").click()
     const download = await downloadPromise
     const downloadedPath = await download.path()
 
@@ -87,21 +90,30 @@ test("creates a Brujah character and downloads the PDF sheet", async ({ page }) 
 
 async function pickButtons(page: Page, names: string[]) {
     for (const name of names) {
-        await page.getByRole("button", { name }).click()
+        await page.getByTestId(`${buttonType(name)}-${slug(name)}-button`).click()
     }
 }
 
 async function takePower(page: Page, disciplineName: string, powerName: string) {
-    await page.getByRole("button", { name: new RegExp(disciplineName, "i") }).click()
-    await powerCard(page, powerName).getByRole("button", { name: "Take" }).click()
+    const card = powerCard(page, powerName)
+    if (!(await card.isVisible())) {
+        await page.getByTestId(`discipline-${slug(disciplineName)}-accordion`).click()
+    }
+    await card.getByTestId(`take-power-${slug(powerName)}-button`).click()
 }
 
 function powerCard(page: Page, powerName: string): Locator {
-    return page
-        .locator("div")
-        .filter({ has: page.getByText(powerName, { exact: true }) })
-        .filter({ has: page.getByRole("button", { name: "Take" }) })
-        .first()
+    return page.getByTestId(`power-card-${slug(powerName)}`)
+}
+
+function buttonType(name: string) {
+    return ["Strength", "Manipulation", "Dexterity", "Charisma", "Wits"].includes(name)
+        ? "attribute"
+        : "skill"
+}
+
+function slug(name: string) {
+    return name.toLowerCase().replace(/\s+/g, "-")
 }
 
 async function expectPdfDownload(downloadedPath: string) {

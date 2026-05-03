@@ -628,6 +628,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                         </Text>
                     ) : null}
                     <Button
+                        data-testid="merits-confirm-button"
                         color="grape"
                         disabled={isConfirmDisabled}
                         onClick={() => {

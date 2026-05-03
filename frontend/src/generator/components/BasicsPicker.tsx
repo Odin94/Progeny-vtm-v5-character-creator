@@ -79,6 +79,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
 
                 <Stack gap="lg" maw={420} mx="auto" px={phoneScreen ? 12 : 0} pb="xl">
                     <TextInput
+                        data-testid="basic-full-name-input"
                         value={name}
                         onChange={(e) => setName(e.currentTarget.value)}
                         placeholder="Erika Mustermann"
@@ -88,6 +89,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     />
 
                     <TextInput
+                        data-testid="basic-sire-input"
                         value={sire}
                         onChange={(e) => setSire(e.currentTarget.value)}
                         placeholder="Your sire"
@@ -98,6 +100,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     />
 
                     <TextInput
+                        data-testid="basic-ambition-input"
                         value={ambition}
                         onChange={(e) => setAmbition(e.currentTarget.value)}
                         placeholder="Break free from my sire's clutches"
@@ -107,6 +110,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     />
 
                     <TextInput
+                        data-testid="basic-desire-input"
                         value={desire}
                         onChange={(e) => setDesire(e.currentTarget.value)}
                         placeholder="Embarrass my rival in court"
@@ -116,6 +120,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     />
 
                     <Textarea
+                        data-testid="basic-description-input"
                         value={description}
                         onChange={(e) => setDescription(e.currentTarget.value)}
                         placeholder="Young alt-rock musician with a black vegan-leather jacket and long black hair"
@@ -127,6 +132,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     />
 
                     <Button
+                        data-testid="basics-confirm-button"
                         color="grape"
                         mt="sm"
                         mx="auto"

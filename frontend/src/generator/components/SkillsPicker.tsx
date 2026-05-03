@@ -195,6 +195,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     events={globals.tooltipTriggerEvents}
                 >
                     <Button
+                        data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
                         disabled={pickedDistribution === null}
@@ -432,6 +433,9 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                         events={globals.tooltipTriggerEvents}
                                     >
                                         <Button
+                                            data-testid={`skill-distribution-${distribution
+                                                .toLowerCase()
+                                                .replace(/\s+/g, "-")}-button`}
                                             p={phoneScreen ? 0 : "default"}
                                             disabled={pickedDistribution !== null}
                                             color="red"
