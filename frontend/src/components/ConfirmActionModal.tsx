@@ -1,7 +1,7 @@
 import { useMediaQuery } from "@mantine/hooks"
 import { Button, Divider, Group, Modal, ModalStylesNames, Stack, Text } from "@mantine/core"
 import { CSSProperties, ReactNode } from "react"
-import { RAW_GREY, rgba } from "~/theme/colors"
+import { COLOR_MODAL_DIVIDER, RAW_GREY, rgba } from "~/theme/colors"
 import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 
 export const ConfirmationModalStyle = (
@@ -91,7 +91,7 @@ const ConfirmActionModal = ({
 
                 {children}
 
-                <Divider color="rgba(125, 91, 72, 0.28)" />
+                <Divider color={COLOR_MODAL_DIVIDER} />
 
                 <Group justify="space-between">
                     <Button

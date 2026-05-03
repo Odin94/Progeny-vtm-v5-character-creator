@@ -2,7 +2,6 @@ import { Button, Divider, Group, Modal, Stack, Text, TextInput } from "@mantine/
 import {
     ConfirmationModalStyle,
     confirmationModalBodyStyle,
-    confirmationModalCancelButtonStyles,
     confirmationModalHeadingStyle
 } from "./ConfirmActionModal"
 import {
@@ -10,6 +9,7 @@ import {
     generatorOutlineActionButtonStyles
 } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 import { getGeneratorFieldStyles } from "~/generator/components/sharedGeneratorUi"
+import { COLOR_MODAL_DIVIDER } from "~/theme/colors"
 
 type NameCharacterBeforeSwitchModalProps = {
     opened: boolean
@@ -33,6 +33,7 @@ const NameCharacterBeforeSwitchModal = ({
     isSaving
 }: NameCharacterBeforeSwitchModalProps) => {
     const fieldStyles = getGeneratorFieldStyles("gold")
+    const hasEnteredName = nameValue.trim().length > 0
 
     return (
         <Modal
@@ -40,6 +41,7 @@ const NameCharacterBeforeSwitchModal = ({
             onClose={onClose}
             title=""
             centered
+            size="lg"
             withCloseButton={false}
             overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
             styles={ConfirmationModalStyle(false)}
@@ -64,42 +66,30 @@ const NameCharacterBeforeSwitchModal = ({
                     styles={fieldStyles}
                 />
 
-                <Divider color="rgba(125, 91, 72, 0.28)" />
+                <Divider m={"sm"} color={COLOR_MODAL_DIVIDER} />
 
-                <Group justify="space-between">
+                <Group justify="space-between" gap="sm" wrap="nowrap">
                     <Button
-                        color="gray"
-                        variant="subtle"
-                        onClick={onClose}
-                        disabled={isSaving}
-                        styles={confirmationModalCancelButtonStyles}
+                        color="red"
+                        variant="outline"
+                        onClick={onDiscardAndContinue}
+                        disabled={isSaving || hasEnteredName}
+                        styles={{
+                            root: {
+                                ...generatorOutlineActionButtonStyles.root
+                            }
+                        }}
                     >
-                        Cancel
+                        Delete Current
                     </Button>
-
-                    <Group gap="xs">
-                        <Button
-                            color="red"
-                            variant="outline"
-                            onClick={onDiscardAndContinue}
-                            disabled={isSaving}
-                            styles={{
-                                root: {
-                                    ...generatorOutlineActionButtonStyles.root
-                                }
-                            }}
-                        >
-                            Delete Current
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={onSaveAndContinue}
-                            loading={isSaving}
-                            styles={confirmationModalDangerConfirmButtonStyles}
-                        >
-                            Save And Continue
-                        </Button>
-                    </Group>
+                    <Button
+                        color="red"
+                        onClick={onSaveAndContinue}
+                        loading={isSaving}
+                        styles={confirmationModalDangerConfirmButtonStyles}
+                    >
+                        Save and continue
+                    </Button>
                 </Group>
             </Stack>
         </Modal>

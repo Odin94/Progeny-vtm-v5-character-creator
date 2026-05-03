@@ -1,14 +1,15 @@
 import { Badge, Button, Divider, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
-import { IconDeviceFloppy, IconPencil, IconPlus } from "@tabler/icons-react"
+import { IconDeviceFloppy, IconPencil } from "@tabler/icons-react"
+import { COLOR_MODAL_DIVIDER } from "~/theme/colors"
 
 type StartNewCharacterModalProps = {
     opened: boolean
     characterName: string
     setCharacterName: (value: string) => void
+    isCharacterNameEditable: boolean
     isSaving: boolean
     onClose: () => void
     onContinueCurrent: () => void
-    onStartWithoutSaving: () => void
     onSaveAndStartNew: () => void
 }
 
@@ -16,10 +17,10 @@ const StartNewCharacterModal = ({
     opened,
     characterName,
     setCharacterName,
+    isCharacterNameEditable,
     isSaving,
     onClose,
     onContinueCurrent,
-    onStartWithoutSaving,
     onSaveAndStartNew
 }: StartNewCharacterModalProps) => {
     return (
@@ -40,13 +41,13 @@ const StartNewCharacterModal = ({
             }}
         >
             <Stack gap="lg">
-                <Group gap="sm">
-                    <Badge color="green" variant="light">
-                        Signed in
-                    </Badge>
+                <Group justify="space-between" align="center" gap="sm">
                     <Text className="landing-page__body">
                         You already have a character in progress.
                     </Text>
+                    <Badge color="green" variant="light">
+                        Signed in
+                    </Badge>
                 </Group>
 
                 <Text className="landing-page__body">
@@ -54,15 +55,24 @@ const StartNewCharacterModal = ({
                     over.
                 </Text>
 
-                <TextInput
-                    value={characterName}
-                    onChange={(event) => setCharacterName(event.currentTarget.value)}
-                    label="Current character name"
-                    placeholder="Name your character before saving"
-                    color="red"
-                />
+                {isCharacterNameEditable ? (
+                    <TextInput
+                        value={characterName}
+                        onChange={(event) => setCharacterName(event.currentTarget.value)}
+                        label="Current character name"
+                        placeholder="Name your character before saving"
+                        color="red"
+                    />
+                ) : (
+                    <Stack gap={4}>
+                        <Text fw={700} size="sm">
+                            Current character name
+                        </Text>
+                        <Text className="landing-page__body">{characterName}</Text>
+                    </Stack>
+                )}
 
-                <Divider color="rgba(125, 91, 72, 0.28)" />
+                <Divider color={COLOR_MODAL_DIVIDER} />
 
                 <Group justify="space-between" align="center">
                     <Button
@@ -76,15 +86,6 @@ const StartNewCharacterModal = ({
                     </Button>
 
                     <Group gap="sm">
-                        <Button
-                            variant="outline"
-                            color="red"
-                            leftSection={<IconPlus size={18} />}
-                            onClick={onStartWithoutSaving}
-                            disabled={isSaving}
-                        >
-                            Start without saving
-                        </Button>
                         <Button
                             color="red"
                             leftSection={<IconDeviceFloppy size={18} />}

@@ -10,6 +10,7 @@ export const RAW_GREY = "214, 204, 198"
 export const COLOR_RED = `rgb(${RAW_RED})` // #e03131
 export const COLOR_GRAPE = `rgb(${RAW_GRAPE})` // #7e4ac9
 export const COLOR_GOLD = `rgb(${RAW_GOLD})` // #d4af64
+export const COLOR_MODAL_DIVIDER = "rgba(125, 91, 72, 0.28)"
 
 /** Builds "rgba(r, g, b, alpha)" from a RAW_* constant. */
 export const rgba = (raw: string, alpha: number) => `rgba(${raw}, ${alpha})`
