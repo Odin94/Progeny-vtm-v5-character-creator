@@ -18,7 +18,7 @@ import {
 import { useState } from "react"
 import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { disciplines } from "~/data/Disciplines"
+import { disciplines, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
@@ -141,7 +141,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                 const discipline = disciplines[disciplineName]
                                 const customDiscipline =
                                     character.customDisciplines?.[disciplineName]
-                                const logo = discipline?.logo || customDiscipline?.logo || ""
+                                const logo =
+                                    discipline?.logo ||
+                                    sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
 
                                 return (
                                     <Grid.Col
@@ -163,6 +165,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     <img
                                                         src={logo}
                                                         alt={upcase(disciplineName)}
+                                                        referrerPolicy="no-referrer"
                                                         style={{
                                                             width: "40px",
                                                             height: "40px",

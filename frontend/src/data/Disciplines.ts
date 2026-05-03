@@ -49,6 +49,24 @@ export const ritualSchema = z.object({
 
 export type Ritual = z.infer<typeof ritualSchema>
 
+export const sanitizeCustomDisciplineLogoUrl = (value: string | undefined): string => {
+    const trimmed = value?.trim() ?? ""
+    if (!trimmed) return ""
+
+    try {
+        const parsed = new URL(trimmed)
+        return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : ""
+    } catch {
+        return ""
+    }
+}
+
+const customDisciplineLogoSchema = z
+    .string()
+    .optional()
+    .default("")
+    .transform((value) => sanitizeCustomDisciplineLogoUrl(value))
+
 export const disciplineSchema = z.object({
     clans: clanNameSchema.array(),
     summary: z.string(),
@@ -61,7 +79,7 @@ export type Discipline = z.infer<typeof disciplineSchema>
 export const customDisciplineSchema = z.object({
     name: z.string(),
     summary: z.string(),
-    logo: z.string().optional().default("")
+    logo: customDisciplineLogoSchema
 })
 export type CustomDiscipline = z.infer<typeof customDisciplineSchema>
 
@@ -1550,7 +1568,7 @@ export const getAvailableDisciplines = (
                 clans: [],
                 summary: customDiscipline.summary,
                 powers: character.disciplines.filter((p) => p.discipline === n && p.isCustom),
-                logo: customDiscipline.logo || "",
+                logo: sanitizeCustomDisciplineLogoUrl(customDiscipline.logo),
                 isCustom: true
             }
         }
