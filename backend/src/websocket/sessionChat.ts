@@ -11,6 +11,7 @@ import { handleLeaveSession } from "./chatMessageHandlers/handleLeaveSession.js"
 import { handleRemorseCheck } from "./chatMessageHandlers/handleRemorseCheck.js"
 import { handleRouseCheck } from "./chatMessageHandlers/handleRouseCheck.js"
 import { type Session, type UserLeftMessage, clientMessageSchema } from "./sessionChatTypes.js"
+import { trackSessionClosed } from "./sessionChatLifecycle.js"
 import {
     MAX_JSON_SIZE,
     broadcastToSession,
@@ -28,6 +29,7 @@ const updateSessionExpiry = () => {
     const now = Date.now()
     for (const [sessionId, session] of temporarySessions.entries()) {
         if (now - session.lastActivity > SESSION_EXPIRY_MS) {
+            trackSessionClosed(session, "timeout")
             temporarySessions.delete(sessionId)
         }
     }
@@ -171,6 +173,7 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
                         currentSession.lastActivity = Date.now()
 
                         if (currentSession.participants.size === 0) {
+                            trackSessionClosed(currentSession, "empty", userId)
                             if (currentSession.type === "temporary") {
                                 temporarySessions.delete(currentSession.id)
                             } else {

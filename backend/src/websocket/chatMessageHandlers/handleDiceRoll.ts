@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify"
 import { trackEvent } from "../../utils/tracker.js"
 import { type Session, type DiceRollMessage, type DiceRollReceived } from "../sessionChatTypes.js"
+import { recordSessionMessage } from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, checkRateLimit, broadcastToSession } from "../sessionChatUtils.js"
 
 export async function handleDiceRoll(
@@ -55,15 +56,16 @@ export async function handleDiceRoll(
         return currentSession
     }
 
+    const timestamp = recordSessionMessage(currentSession)
+
     const message: DiceRollReceived = {
         type: "dice_roll",
         userName: participant.userName,
         characterName: data.characterName ?? participant.characterName,
         rollData: data.rollData,
-        timestamp: Date.now()
+        timestamp
     }
 
-    currentSession.lastActivity = Date.now()
     broadcastToSession(currentSession, message, userId)
     socket.send(JSON.stringify(message))
     return currentSession

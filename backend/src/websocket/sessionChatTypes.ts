@@ -13,9 +13,14 @@ export type Session = {
     id: string
     type: "temporary" | "coterie"
     coterieId?: string
+    creatorUserId: string
     participants: Map<string, Participant>
     createdAt: number
     lastActivity: number
+    activeStartedAt?: number
+    lastMessageAt?: number
+    maxParticipantCount: number
+    closedTrackedAt?: number
 }
 
 export type JoinSessionMessage = {
