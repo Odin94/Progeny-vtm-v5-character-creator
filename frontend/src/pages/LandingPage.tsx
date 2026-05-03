@@ -16,10 +16,10 @@ import {
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
-import { IconBook2, IconChevronDown, IconSparkles } from "@tabler/icons-react"
+import { IconSparkles } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { motion } from "framer-motion"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { getEmptyCharacter, type Character } from "~/data/Character"
@@ -36,18 +36,9 @@ type FeatureCardProps = {
     bullets: string[]
     primaryLabel: string
     onPrimaryClick: () => void
-    secondaryLabel?: string
-    onSecondaryClick?: () => void
 }
 
-function FeatureCard({
-    title,
-    bullets,
-    primaryLabel,
-    onPrimaryClick,
-    secondaryLabel,
-    onSecondaryClick
-}: FeatureCardProps) {
+function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick }: FeatureCardProps) {
     return (
         <Card radius="lg" p="xl" className="landing-page__feature-card">
             <Stack gap="xl" className="landing-page__feature-card-inner">
@@ -76,16 +67,6 @@ function FeatureCard({
                     >
                         {primaryLabel}
                     </Button>
-                    {secondaryLabel && onSecondaryClick ? (
-                        <Button
-                            color="red"
-                            variant="transparent"
-                            className="landing-page__card-button"
-                            onClick={onSecondaryClick}
-                        >
-                            {secondaryLabel}
-                        </Button>
-                    ) : null}
                 </Group>
             </Stack>
         </Card>
@@ -102,7 +83,6 @@ export default function LandingPage() {
         defaultValue: defaultGeneratorStepId
     })
     const { data: characters } = useCharacters(isAuthenticated)
-    const featureSectionRef = useRef<HTMLDivElement | null>(null)
     const [creditsOpened, { open: openCredits, close: closeCredits }] = useDisclosure(false)
     const [
         startNewCharacterModalOpened,
@@ -123,13 +103,6 @@ export default function LandingPage() {
             version: emptyCharacter.version,
             characterVersion: emptyCharacter.characterVersion
         }) === JSON.stringify(emptyCharacter)
-
-    const scrollToSelector = (selector: string) => {
-        const target = document.querySelector(selector)
-        if (target instanceof HTMLElement) {
-            target.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
-    }
 
     const openAccountArea = () => {
         if (isAuthenticated) {
@@ -258,22 +231,6 @@ export default function LandingPage() {
                                 >
                                     Embrace a new character
                                 </Button>
-                                <Button
-                                    size="lg"
-                                    radius="md"
-                                    px="xl"
-                                    variant="default"
-                                    className="landing-page__secondary-button"
-                                    leftSection={<IconBook2 size={18} />}
-                                    onClick={() =>
-                                        featureSectionRef.current?.scrollIntoView({
-                                            behavior: "smooth",
-                                            block: "start"
-                                        })
-                                    }
-                                >
-                                    Explore more
-                                </Button>
                             </Group>
                             <Stack gap={4} mt="lg" align="center">
                                 <Text size="sm" className="landing-page__hero-meta">
@@ -320,32 +277,9 @@ export default function LandingPage() {
                         </Stack>
                     </motion.div>
                 </Container>
-
-                <motion.div
-                    className="landing-page__scroll-button"
-                    animate={{ y: [0, 9, 0] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                >
-                    <Button
-                        variant="subtle"
-                        color="gray"
-                        radius="xl"
-                        onClick={() =>
-                            featureSectionRef.current?.scrollIntoView({
-                                behavior: "smooth",
-                                block: "start"
-                            })
-                        }
-                    >
-                        <IconChevronDown size={22} />
-                    </Button>
-                </motion.div>
             </Box>
 
-            <Box
-                ref={featureSectionRef}
-                className="landing-page__section landing-page__grid-section"
-            >
+            <Box className="landing-page__section landing-page__grid-section">
                 <Container size="lg">
                     <Stack gap="xl" mb="xl">
                         <Text size="xs" className="landing-page__small-label">
@@ -384,8 +318,6 @@ export default function LandingPage() {
                                 ]}
                                 primaryLabel="Open sheet"
                                 onPrimaryClick={() => navigate({ to: "/sheet" })}
-                                secondaryLabel="Learn more"
-                                onSecondaryClick={() => scrollToSelector("#sheet-explainer")}
                             />
                         </Grid.Col>
                         <Grid.Col span={{ base: 12, md: 4 }}>
@@ -398,8 +330,6 @@ export default function LandingPage() {
                                 ]}
                                 primaryLabel={isAuthenticated ? "Account" : "Sign in"}
                                 onPrimaryClick={openAccountArea}
-                                secondaryLabel="Learn more"
-                                onSecondaryClick={() => scrollToSelector("#account-explainer")}
                             />
                         </Grid.Col>
                     </Grid>
@@ -430,8 +360,8 @@ export default function LandingPage() {
                             </Text>
                             <Text size="lg" className="landing-page__body">
                                 It is designed as the next step after creation: build the character,
-                                open the sheet, and use that page as the place you return to during
-                                play.
+                                open the sheet, connect to your coterie and do dice rolls, XP
+                                spending or free editing.
                             </Text>
                             <Group gap="lg" mt="xs">
                                 <Anchor
@@ -464,14 +394,12 @@ export default function LandingPage() {
                                 Keep your chronicles organized online
                             </Title>
                             <Text size="xl" className="landing-page__body">
-                                Signing in opens the account hub at <code>/me</code>, where you can
-                                save characters to your account, revisit them later, arrange them
-                                into coteries, and share read-only versions with other users.
+                                Signing in opens the account hub, where you can save characters to
+                                your account, revisit them later, arrange them into coteries, and
+                                share read-only versions with your friends.
                             </Text>
                             <Text size="lg" className="landing-page__body">
-                                It also gives you a place to manage your profile details while
-                                keeping the creator and sheet connected to the same ongoing set of
-                                characters.
+                                Accont features, like all of Progeny, are completely free.
                             </Text>
                             <Group gap="lg" mt="xs">
                                 <Anchor

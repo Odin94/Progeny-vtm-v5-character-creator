@@ -158,8 +158,7 @@
     color: var(--landing-gold);
 }
 
-.landing-page__primary-button,
-.landing-page__secondary-button {
+.landing-page__primary-button {
     font-family: var(--landing-ui-font);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -179,25 +178,6 @@
 .landing-page__primary-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 0 36px rgba(219, 65, 83, 0.22);
-}
-
-.landing-page__secondary-button {
-    background: rgba(17, 13, 13, 0.78);
-    border-color: rgba(212, 175, 100, 0.2);
-}
-
-.landing-page__secondary-button:hover {
-    transform: translateY(-1px);
-    border-color: rgba(212, 175, 100, 0.4);
-    background: rgba(28, 21, 21, 0.92);
-}
-
-.landing-page__scroll-button {
-    position: absolute;
-    left: 50%;
-    bottom: 1.5rem;
-    transform: translateX(-50%);
-    z-index: 1;
 }
 
 .landing-page__grid-section {
@@ -434,9 +414,5 @@
 
     .landing-page__title {
         letter-spacing: 0.06em;
-    }
-
-    .landing-page__scroll-button {
-        bottom: 1rem;
     }
 }

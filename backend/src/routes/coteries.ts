@@ -473,11 +473,9 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         coterieId,
                         coterieOwnerId: coterie.ownerId
                     })
-                    reply
-                        .code(403)
-                        .send({
-                            error: "Forbidden: You can only add characters to your own coteries"
-                        })
+                    reply.code(403).send({
+                        error: "Forbidden: You can only add characters to your own coteries"
+                    })
                     return
                 }
 

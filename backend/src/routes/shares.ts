@@ -201,11 +201,9 @@ export async function shareRoutes(fastify: FastifyInstance) {
             const isSharedWithUser = userId === sharedWithUserId
 
             if (!isCharacterOwner && !isSharedWithUser) {
-                reply
-                    .code(403)
-                    .send({
-                        error: "Forbidden: You can only unshare characters you own or that are shared with you"
-                    })
+                reply.code(403).send({
+                    error: "Forbidden: You can only unshare characters you own or that are shared with you"
+                })
                 return
             }
 
