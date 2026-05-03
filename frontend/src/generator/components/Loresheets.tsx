@@ -2,7 +2,7 @@ import { Badge, Box, Button, Card, Grid, Group, ScrollArea, Stack, Text } from "
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconChevronLeft } from "@tabler/icons-react"
 import { useState } from "react"
-import { Loresheet, MeritOrFlaw, loresheets } from "../../data/MeritsAndFlaws"
+import { essentialLoresheets, Loresheet, MeritOrFlaw } from "../../data/MeritsAndFlaws"
 import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
@@ -21,7 +21,7 @@ export const Loresheets = ({
     pickedMeritsAndFlaws
 }: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
-    const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const openLoresheet = essentialLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
 
     const getLoresheetCol = (loresheet: Loresheet) => {
         const sheetPicked =
@@ -134,7 +134,7 @@ export const Loresheets = ({
                         setOpenLoresheetTitle={setOpenLoresheetTitle}
                     />
                 ) : (
-                    loresheets.map(getLoresheetCol)
+                    essentialLoresheets.map(getLoresheetCol)
                 )}
             </Grid>
         </Box>

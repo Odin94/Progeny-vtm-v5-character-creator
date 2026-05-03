@@ -20,11 +20,11 @@ import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import {
+    essentialMeritsAndFlaws,
+    essentialThinbloodMeritsAndFlaws,
     isThinbloodFlaw,
     isThinbloodMerit,
-    MeritOrFlaw,
-    meritsAndFlaws,
-    thinbloodMeritsAndFlaws
+    MeritOrFlaw
 } from "../../data/MeritsAndFlaws"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
@@ -581,7 +581,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                   )
                                                 : null}
 
-                                            {meritsAndFlaws.map((category) => {
+                                            {essentialMeritsAndFlaws.map((category) => {
                                                 return (
                                                     <Grid.Col
                                                         span={phoneScreen ? 12 : 6}
@@ -791,7 +791,7 @@ function thinBloodMeritsAndFlawsComponent(
                         lineHeight={1}
                         marginY="xs"
                     />
-                    {thinbloodMeritsAndFlaws.merits.map((merit) =>
+                    {essentialThinbloodMeritsAndFlaws.merits.map((merit) =>
                         getMeritOrFlawLine(merit, "merit")
                     )}
                 </Stack>
@@ -805,7 +805,9 @@ function thinBloodMeritsAndFlawsComponent(
                         lineHeight={1}
                         marginY="xs"
                     />
-                    {thinbloodMeritsAndFlaws.flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
+                    {essentialThinbloodMeritsAndFlaws.flaws.map((flaw) =>
+                        getMeritOrFlawLine(flaw, "flaw")
+                    )}
                 </Stack>
             </Grid.Col>
 

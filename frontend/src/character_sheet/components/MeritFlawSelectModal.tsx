@@ -20,10 +20,10 @@ import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import {
-    MeritOrFlaw,
-    loresheets,
-    meritsAndFlaws,
-    thinbloodMeritsAndFlaws
+    essentialLoresheets,
+    essentialMeritsAndFlaws,
+    essentialThinbloodMeritsAndFlaws,
+    MeritOrFlaw
 } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
 import { intersection } from "~/generator/utils"
@@ -63,8 +63,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
     const allMeritsAndFlaws =
         character.clan === "Thin-blood"
-            ? [thinbloodMeritsAndFlaws, ...meritsAndFlaws]
-            : meritsAndFlaws
+            ? [essentialThinbloodMeritsAndFlaws, ...essentialMeritsAndFlaws]
+            : essentialMeritsAndFlaws
     const characterMeritFlawNames = new Set(
         type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name)
     )
@@ -375,7 +375,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         return getMeritCost(level, previousLevel)
     }
 
-    const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const openLoresheet = essentialLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
     const pickedMeritsAndFlaws = [...character.merits, ...character.flaws]
 
     const renderLoresheetsContent = () => {
@@ -493,7 +493,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             )
         }
 
-        const availableLoresheets = loresheets.filter((loresheet) => {
+        const availableLoresheets = essentialLoresheets.filter((loresheet) => {
             const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
             if (!requirementsMet) return false
             const sheetPicked =
