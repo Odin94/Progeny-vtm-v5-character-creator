@@ -44,7 +44,7 @@
 
 ## Generator Step Footgun
 
-The Blood Sorcery ritual step (step 8) is **conditional** Ã¢â‚¬â€ it only appears when the character has Blood Sorcery disciplines. `Generator.tsx` compensates with a `patchedSelectedStep` offset: when Blood Sorcery is absent and `selectedStep >= 8`, it adds 1 to align the switch case.
+The Blood Sorcery ritual step (step 8) is **conditional** — it only appears when the character has Blood Sorcery disciplines. `Generator.tsx` compensates with a `patchedSelectedStep` offset: when Blood Sorcery is absent and `selectedStep >= 8`, it adds 1 to align the switch case.
 
 **Impact:** adding, removing, or reordering steps near index 8 requires updating both the switch in `src/generator/Generator.tsx` and the stepper in `src/sidebar/AsideBar.tsx`. A step added at index 8 without accounting for this offset will silently render the wrong component for non-Blood-Sorcery characters.
 
@@ -57,8 +57,8 @@ The Blood Sorcery ritual step (step 8) is **conditional** Ã¢â‚¬â€ it 
 
 ## Verification Triggers
 
-- UI or route changes: `pnpm run build` Ã¢â‚¬â€ a clean build with no TypeScript errors is the minimum bar.
+- UI or route changes: `pnpm run build` — a clean build with no TypeScript errors is the minimum bar.
 - API or hook changes: `pnpm run build` and confirm the matching backend route accepts the same payload shape.
-- Character model or export/import changes: `pnpm run test:run` Ã¢â‚¬â€ all tests must pass. The suite covers PDF, Foundry, and Inconnu export output; a build-only check is not sufficient here.
+- Character model or export/import changes: `pnpm run test:run` — all tests must pass. The suite covers PDF, Foundry, and Inconnu export output; a build-only check is not sufficient here.
 - Character schema changes: increment `schemaVersion`, add a `patchVnToVn+1Compatibility` function in `src/data/Character.ts`, call it from `applyCharacterCompatibilityPatches`, and add a backwards-compatibility test in `src/test/` before running `pnpm run test:run`.
 - Large UI refactors: `pnpm run lint` in addition to the build. Fix all lint errors before considering the task done.

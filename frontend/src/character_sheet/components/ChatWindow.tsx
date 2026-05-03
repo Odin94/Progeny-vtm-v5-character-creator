@@ -763,9 +763,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         fw={600}
                                                         c={msg.success ? "green" : "red"}
                                                     >
-                                                        {msg.success
-                                                            ? "Ã¢Å“â€œ Passed"
-                                                            : "Ã¢Å“â€” Failed"}
+                                                        {msg.success ? "✓ Passed" : "✗ Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
@@ -797,7 +795,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                     </Text>
                                                 </Group>
                                                 <Text size="sm">
-                                                    Remorse Test: [{msg.rolls.join(", ")}] Ã¢â‚¬â€œ{" "}
+                                                    Remorse Test: [{msg.rolls.join(", ")}] –{" "}
                                                     {msg.successes}{" "}
                                                     {msg.successes === 1 ? "success" : "successes"}
                                                     <Text
@@ -806,8 +804,8 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         c={msg.passed ? "green" : "red"}
                                                     >
                                                         {msg.passed
-                                                            ? " Ã¢Å“â€œ Passed"
-                                                            : " Ã¢Å“â€” Failed"}
+                                                            ? " ✓ Passed"
+                                                            : " ✗ Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
