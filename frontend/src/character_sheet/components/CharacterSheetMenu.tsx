@@ -102,7 +102,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
             const { json: vtt, validationErrors } = createWoD5EVttJson(character)
-            const blob = new Blob([JSON.stringify(vtt, null, 2)], { type: "application/json" })
+            const blob = new Blob([JSON.stringify(vtt, null, 2)], {
+                type: "application/json"
+            })
             const link = document.createElement("a")
             link.href = window.URL.createObjectURL(blob)
             link.download = `foundry_wod5e_${character.name}.json`
@@ -426,7 +428,10 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         justify="space-between"
                         align="center"
                         p="md"
-                        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: "8px" }}
+                        style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.4)",
+                            borderRadius: "8px"
+                        }}
                     >
                         <Stack gap="xs" style={{ flex: 1 }}>
                             <Text fw={600} size="md">
@@ -452,7 +457,10 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         justify="space-between"
                         align="center"
                         p="md"
-                        style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: "8px" }}
+                        style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.4)",
+                            borderRadius: "8px"
+                        }}
                     >
                         <Stack gap="xs" style={{ flex: 1 }}>
                             <Text fw={600} size="md">
@@ -523,9 +531,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 opened={loadModalOpened}
                 onClose={closeLoadModal}
                 onConfirm={handleConfirmLoad}
-                title="Load Character?"
+                title="Overwrite Character?"
                 body="This will overwrite the current character with the selected file. This action cannot be undone."
-                confirmLabel="Load"
+                confirmLabel="Overwrite"
             />
 
             {downloadError ? (

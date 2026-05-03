@@ -763,7 +763,9 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         fw={600}
                                                         c={msg.success ? "green" : "red"}
                                                     >
-                                                        {msg.success ? "Ã¢Å“â€œ Passed" : "Ã¢Å“â€” Failed"}
+                                                        {msg.success
+                                                            ? "Ã¢Å“â€œ Passed"
+                                                            : "Ã¢Å“â€” Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>
@@ -803,7 +805,9 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         fw={600}
                                                         c={msg.passed ? "green" : "red"}
                                                     >
-                                                        {msg.passed ? " Ã¢Å“â€œ Passed" : " Ã¢Å“â€” Failed"}
+                                                        {msg.passed
+                                                            ? " Ã¢Å“â€œ Passed"
+                                                            : " Ã¢Å“â€” Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>

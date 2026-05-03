@@ -18,9 +18,10 @@ let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
 
 const getNerdbertTemplate = () => {
-    nerdbertTemplatePromise ??= import(
-        "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw"
-    ).then((module) => module.default)
+    nerdbertTemplatePromise ??=
+        import("../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw").then(
+            (module) => module.default
+        )
     return nerdbertTemplatePromise
 }
 

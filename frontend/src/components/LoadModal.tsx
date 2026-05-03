@@ -75,9 +75,9 @@ const LoadModal = ({
                     }
                 }
             }}
-            title="Load Character?"
+            title="Overwrite Character?"
             body="This will overwrite the current character with the selected file. This action cannot be undone."
-            confirmLabel="Load"
+            confirmLabel="Overwrite"
         />
     )
 }

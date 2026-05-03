@@ -39,7 +39,9 @@ export default defineConfig({
                 plugins: ["@emotion/babel-plugin"]
             }
         }),
-        tanstackRouter()
+        tanstackRouter({
+            routeTreeFileHeader: ["// @ts-nocheck", "// noinspection JSUnusedGlobalSymbols"]
+        })
     ],
     base: "/",
     resolve: {
