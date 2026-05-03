@@ -15,3 +15,13 @@ Object.defineProperty(URL, "revokeObjectURL", {
     writable: true,
     value: vi.fn()
 })
+
+Object.defineProperty(window.URL, "createObjectURL", {
+    writable: true,
+    value: vi.fn(() => "blob:mock-url")
+})
+
+Object.defineProperty(window.URL, "revokeObjectURL", {
+    writable: true,
+    value: vi.fn()
+})

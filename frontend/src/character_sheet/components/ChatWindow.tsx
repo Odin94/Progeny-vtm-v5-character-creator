@@ -803,9 +803,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                         fw={600}
                                                         c={msg.passed ? "green" : "red"}
                                                     >
-                                                        {msg.passed
-                                                            ? " ✓ Passed"
-                                                            : " ✗ Failed"}
+                                                        {msg.passed ? " ✓ Passed" : " ✗ Failed"}
                                                     </Text>
                                                 </Text>
                                                 <Text size="xs" c="dimmed" mt={4}>

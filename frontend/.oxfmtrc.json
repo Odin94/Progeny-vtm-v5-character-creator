@@ -4,5 +4,5 @@
     "semi": false,
     "tabWidth": 4,
     "trailingComma": "none",
-    "ignorePatterns": ["build/**", "node_modules/**"]
+    "ignorePatterns": ["build/**", "node_modules/**", "src/routeTree.gen.ts", "test-results/**"]
 }

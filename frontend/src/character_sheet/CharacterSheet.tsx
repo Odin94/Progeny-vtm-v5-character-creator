@@ -94,7 +94,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     )
 
     return (
-        <MantineProvider theme={sheetTheme}>
+        <MantineProvider theme={sheetTheme} forceColorScheme="dark">
             <Box
                 style={{
                     position: "fixed",

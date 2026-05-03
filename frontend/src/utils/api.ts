@@ -1,6 +1,21 @@
-// Use VITE_API_URL if provided, otherwise fallback to proxy in dev or localhost in production
+// Use the Vite proxy for local dev so browser navigation, cookies, and IPv4/IPv6
+// localhost resolution all stay on the same origin. Production still honors the
+// configured API endpoint.
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim()
+
+const isLocalDevApiUrl = (url: string): boolean => {
+    try {
+        const parsed = new URL(url)
+        return ["localhost", "127.0.0.1", "::1"].includes(parsed.hostname) && parsed.port === "3001"
+    } catch {
+        return false
+    }
+}
+
 const API_URL =
-    import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
+    import.meta.env.DEV && (!configuredApiUrl || isLocalDevApiUrl(configuredApiUrl))
+        ? "/api"
+        : configuredApiUrl || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "DELETE"

@@ -2274,9 +2274,7 @@ const CharacterSummaryContent = ({
                                         <Text fw={500} size="sm" c="dimmed">
                                             Clan
                                         </Text>
-                                        <Text fw={500}>
-                                            {clan?.name || character.clan || "—"}
-                                        </Text>
+                                        <Text fw={500}>{clan?.name || character.clan || "—"}</Text>
                                     </Group>
                                     <Group justify="space-between">
                                         <Text fw={500} size="sm" c="dimmed">
