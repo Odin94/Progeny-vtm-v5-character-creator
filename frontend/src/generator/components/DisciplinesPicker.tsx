@@ -182,6 +182,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         return (
             <div
+                data-testid={`power-card-${power.name.toLowerCase().replace(/\s+/g, "-")}`}
                 key={power.name}
                 style={{
                     padding: "12px 14px",
@@ -269,6 +270,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
                 {!picked && (
                     <Button
+                        data-testid={`take-power-${power.name.toLowerCase().replace(/\s+/g, "-")}-button`}
                         disabled={disabled}
                         size="xs"
                         variant="outline"
@@ -403,6 +405,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                 value={disciplineName + isPredatorType}
             >
                 <Accordion.Control
+                    data-testid={`discipline-${disciplineName.toLowerCase().replace(/\s+/g, "-")}-accordion`}
                     icon={<Image src={discipline.logo} w={20} h={20} fit="contain" />}
                     styles={{
                         label: {
@@ -608,6 +611,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
                         <Group justify="center" mt="xl">
                             <Button
+                                data-testid="disciplines-confirm-button"
                                 disabled={confirmDisabled}
                                 color="grape"
                                 styles={{

@@ -69,6 +69,7 @@ export const CookiesBanner = () => {
                         mr={-9}
                         mt={-9}
                         aria-label="Close cookie banner"
+                        data-testid="cookie-banner-close"
                         onClick={handleClose}
                     />
                 </Group>

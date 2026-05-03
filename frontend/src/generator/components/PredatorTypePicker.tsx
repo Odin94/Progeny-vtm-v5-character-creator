@@ -109,6 +109,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
 
         return (
             <div
+                data-testid={`predator-type-${predatorTypeName.toLowerCase().replace(/\s+/g, "-")}-card`}
                 key={predatorTypeName}
                 onClick={() => {
                     if (isDisabled) return

@@ -393,6 +393,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     }}
                 >
                     <h2
+                        data-testid="final-character-name"
                         className="nf-text-glow"
                         style={{
                             fontFamily: FONT_DISPLAY,
@@ -431,6 +432,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     }}
                 >
                     <ActionCard
+                        testId="final-download-pdf-button"
                         icon={<IconFileText size={20} />}
                         label="Download PDF"
                         description="Print-ready character sheet"
@@ -636,15 +638,17 @@ function ActionCard({
     icon,
     label,
     description,
-    onClick
+    onClick,
+    testId
 }: {
     icon: React.ReactNode
     label: string
     description: string
     onClick?: () => void
+    testId?: string
 }) {
     return (
-        <button className="nf-action-card" onClick={onClick}>
+        <button className="nf-action-card" data-testid={testId} onClick={onClick}>
             <div className="nf-icon-wrap">{icon}</div>
             <div>
                 <p

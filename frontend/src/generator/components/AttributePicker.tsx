@@ -118,6 +118,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                     events={globals.tooltipTriggerEvents}
                 >
                     <Button
+                        data-testid={`attribute-${attribute}-button`}
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
                         color="grape"

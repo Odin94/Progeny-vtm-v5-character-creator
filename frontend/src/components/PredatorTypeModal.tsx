@@ -675,6 +675,7 @@ const PredatorTypeModal = ({
                     </Button>
 
                     <Button
+                        data-testid="predator-type-confirm-button"
                         color={cat.mantineColor}
                         disabled={!canConfirm}
                         onClick={async () => {

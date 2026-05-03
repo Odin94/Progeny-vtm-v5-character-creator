@@ -154,6 +154,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                     <Grid>
                                                         <Grid.Col span={phoneScreen ? 12 : 6}>
                                                             <TextInput
+                                                                data-testid={`touchstone-${i}-name-input`}
                                                                 value={touchstone.name}
                                                                 onChange={(event) =>
                                                                     updateTouchstone(i, {
@@ -176,6 +177,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                         </Grid.Col>
                                                         <Grid.Col span={phoneScreen ? 12 : 6}>
                                                             <TextInput
+                                                                data-testid={`touchstone-${i}-conviction-input`}
                                                                 value={touchstone.conviction}
                                                                 onChange={(event) =>
                                                                     updateTouchstone(i, {
@@ -199,6 +201,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                         </Grid.Col>
                                                         <Grid.Col span={12}>
                                                             <Textarea
+                                                                data-testid={`touchstone-${i}-description-input`}
                                                                 value={touchstone.description}
                                                                 onChange={(event) =>
                                                                     updateTouchstone(i, {
@@ -307,6 +310,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                 </ScrollArea>
                 <Group justify="center">
                     <Button
+                        data-testid="touchstones-confirm-button"
                         color="grape"
                         styles={generatorConfirmButtonStyles}
                         onClick={() => {

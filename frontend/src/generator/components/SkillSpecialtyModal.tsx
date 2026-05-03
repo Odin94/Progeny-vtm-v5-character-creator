@@ -220,6 +220,7 @@ export const SpecialtyModal = ({
                         Back
                     </Button>
                     <Button
+                        data-testid="skill-specialty-confirm-button"
                         onClick={handleConfirm}
                         color="red"
                         styles={{

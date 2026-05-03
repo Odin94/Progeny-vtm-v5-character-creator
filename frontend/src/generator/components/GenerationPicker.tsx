@@ -290,6 +290,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                 ) : null}
 
                 <Button
+                    data-testid="generation-confirm-button"
                     disabled={generation === null}
                     color="grape"
                     styles={generatorConfirmButtonStyles}

@@ -50,6 +50,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         return (
             <Grid.Col key={clan} span={4}>
                 <Card
+                    data-testid={`clan-${clan.toLowerCase().replace(/\s+/g, "-")}-card`}
                     shadow="sm"
                     padding="lg"
                     radius="md"
@@ -156,6 +157,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                 <div style={generatorScrollableContentStyle}>
                     <Stack gap={4} align="center" mb={globals.isPhoneScreen ? 18 : 26}>
                         <Title
+                            data-testid="clan-picker-heading"
                             order={2}
                             ta="center"
                             style={{
