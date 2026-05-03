@@ -610,9 +610,9 @@ export default function LandingPage() {
                 onClose={closeStartNewCharacterModal}
                 characterName={currentCharacterName}
                 setCharacterName={setCurrentCharacterName}
+                isCharacterNameEditable={!character.name.trim()}
                 isSaving={isSavingCurrentCharacter}
                 onContinueCurrent={continueCurrentCharacter}
-                onStartWithoutSaving={startNewCharacter}
                 onSaveAndStartNew={saveCurrentCharacterAndStartNew}
             />
         </Box>
