@@ -633,6 +633,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             {ritual.summary}
                                         </Text>
                                     ) : null}
+                                    {ritual.dicePool ? (
+                                        <Text size="xs" c="dimmed" mt="sm">
+                                            {ritual.dicePool.toUpperCase()}
+                                        </Text>
+                                    ) : null}
                                 </Paper>
                             </Grid.Col>
                         ))}
