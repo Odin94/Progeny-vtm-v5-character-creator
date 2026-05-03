@@ -22,10 +22,29 @@ export const powerSchema = z.object({
 
 export type Power = z.infer<typeof powerSchema>
 
+export const sanitizeCustomDisciplineLogoUrl = (value: string | undefined): string => {
+    const trimmed = value?.trim() ?? ""
+    if (!trimmed) return ""
+
+    try {
+        const parsed = new URL(trimmed)
+        return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : ""
+    } catch {
+        return ""
+    }
+}
+
+const customDisciplineLogoSchema = z
+    .string()
+    .max(2048)
+    .regex(/^(https?:\/\/\S+)?$/i, "Logo URL must start with http:// or https://")
+    .optional()
+    .default("")
+
 export const customDisciplineSchema = z.object({
     name: z.string(),
     summary: z.string(),
-    logo: z.string().optional().default("")
+    logo: customDisciplineLogoSchema
 })
 export type CustomDiscipline = z.infer<typeof customDisciplineSchema>
 

@@ -1,7 +1,7 @@
 import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
-import { CustomDiscipline } from "~/data/Disciplines"
+import { CustomDiscipline, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
 
@@ -25,6 +25,10 @@ const CustomDisciplineModal = ({
     const [summary, setSummary] = useState("")
     const [logo, setLogo] = useState("")
     const [error, setError] = useState<string | null>(null)
+    const trimmedLogo = logo.trim()
+    const sanitizedLogo = sanitizeCustomDisciplineLogoUrl(trimmedLogo)
+    const logoError =
+        trimmedLogo && !sanitizedLogo ? "Logo URL must start with http:// or https://" : null
 
     useEffect(() => {
         if (opened) {
@@ -49,11 +53,13 @@ const CustomDisciplineModal = ({
             return
         }
 
+        if (logoError) return
+
         const disciplineNameKey = editingDisciplineName || name.toLowerCase().trim()
         const customDiscipline: CustomDiscipline = {
             name: name.trim(),
             summary: summary.trim(),
-            logo: logo.trim()
+            logo: sanitizedLogo
         }
 
         const updatedCustomDisciplines = {
@@ -134,6 +140,8 @@ const CustomDisciplineModal = ({
                     placeholder="URL to an image for the discipline logo"
                     value={logo}
                     onChange={(e) => setLogo(e.target.value)}
+                    error={logoError}
+                    description="Only http:// and https:// image URLs are allowed."
                     color={primaryColor}
                 />
                 <Group justify="space-between">
