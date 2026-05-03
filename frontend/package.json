@@ -21,6 +21,8 @@
         "@fortawesome/free-regular-svg-icons": "^6.4.0",
         "@fortawesome/free-solid-svg-icons": "^6.4.0",
         "@fortawesome/react-fontawesome": "^0.2.0",
+        "@emotion/babel-plugin": "^11.13.5",
+        "@emotion/react": "^11.14.0",
         "@jridgewell/trace-mapping": "^0.3.31",
         "@mantine/colors-generator": "^9.0.2",
         "@mantine/core": "^8.3.10",
