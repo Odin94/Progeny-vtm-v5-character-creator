@@ -92,8 +92,7 @@ const MeritOrFlawCard = memo(
         const lineKey = `${type}-${meritOrFlaw.name}`
         const accentColor = type === "flaw" ? rgba(RAW_RED, 0.92) : "rgba(63, 192, 120, 0.92)"
         const selectedBg = type === "flaw" ? rgba(RAW_RED, 0.18) : "rgba(46, 160, 67, 0.16)"
-        const selectedBorder =
-            type === "flaw" ? rgba(RAW_RED, 0.38) : "rgba(63, 192, 120, 0.32)"
+        const selectedBorder = type === "flaw" ? rgba(RAW_RED, 0.38) : "rgba(63, 192, 120, 0.32)"
         const baseBg = "rgba(255, 255, 255, 0.03)"
         const baseBorder = "rgba(255, 255, 255, 0.06)"
 
@@ -147,9 +146,7 @@ const MeritOrFlawCard = memo(
                         root: {
                             minWidth: 36,
                             borderColor:
-                                type === "flaw"
-                                    ? rgba(RAW_RED, 0.45)
-                                    : "rgba(63, 192, 120, 0.4)",
+                                type === "flaw" ? rgba(RAW_RED, 0.45) : "rgba(63, 192, 120, 0.4)",
                             background:
                                 alreadyPickedItem?.level === level ? accentColor : "transparent",
                             color: "rgba(244, 236, 232, 0.92)"

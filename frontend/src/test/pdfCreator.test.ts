@@ -142,7 +142,6 @@ describe("createPdf_nerdbert", () => {
         expect(meritTexts).toContain(character.merits[0].name)
         expect(meritTexts).toContain(character.flaws[0].name)
     })
-
 })
 
 describe("PDF humanity helpers", () => {

@@ -9,13 +9,12 @@
         "serve": "vite preview",
         "lint": "oxlint src",
         "lint:fix": "oxlint src --fix",
-        "lint:eslint": "eslint src/**/*.ts src/**/*.tsx",
-        "format": "oxfmt --write .",
-        "format:check": "oxfmt --check .",
+        "fmt": "oxfmt --write .",
+        "fmt:check": "oxfmt --check .",
         "pdf-to-base64": "pnpm exec ts-node --project ./scripts/tsconfig.json ./scripts/pdfToBase64.ts",
         "test": "vitest",
         "test:run": "vitest run",
-        "test:e2e": "node ./node_modules/@playwright/test/cli.js test"
+        "test:e2e": "playwright test"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
@@ -55,14 +54,9 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.59.1",
-        "@typescript-eslint/eslint-plugin": "^8.0.0",
-        "@typescript-eslint/parser": "^8.0.0",
         "@vitejs/plugin-react": "^4.3.1",
         "@vitest/ui": "^3.2.4",
         "baseline-browser-mapping": "^2.9.11",
-        "eslint": "^8.41.0",
-        "eslint-plugin-prettier": "^4.2.1",
-        "eslint-plugin-react": "^7.32.2",
         "jsdom": "^27.0.0",
         "oxfmt": "^0.46.0",
         "oxlint": "^1.61.0",
@@ -84,12 +78,6 @@
             "last 1 chrome version",
             "last 1 firefox version",
             "last 1 safari version"
-        ]
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
         ]
     },
     "engines": {
