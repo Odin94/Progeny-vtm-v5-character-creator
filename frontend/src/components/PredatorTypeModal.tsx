@@ -230,7 +230,9 @@ const PredatorTypeModal = ({
                         "linear-gradient(to bottom, hsl(0 0% 13%), hsl(0 0% 13%), hsl(0 0% 10%))",
                     backgroundColor: "hsl(0 0% 10%)",
                     border: "1px solid rgba(255, 255, 255, 0.06)",
-                    overflow: "hidden"
+                    maxHeight: "calc(100dvh - 32px)",
+                    overflowX: "hidden",
+                    overflowY: "auto"
                 },
                 overlay: { backdropFilter: "blur(6px)" },
                 body: { padding: 0 }
