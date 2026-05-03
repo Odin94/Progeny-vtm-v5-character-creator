@@ -28,7 +28,8 @@ const Attributes = ({ options }: AttributesProps) => {
         if (!isClickable) return
         updateSelectedDicePool({
             attribute: selectedDicePool.attribute === attribute ? null : attribute,
-            selectedDisciplinePowers: []
+            selectedDisciplinePowers: [],
+            selectedMeritFlaws: []
         })
     }
 

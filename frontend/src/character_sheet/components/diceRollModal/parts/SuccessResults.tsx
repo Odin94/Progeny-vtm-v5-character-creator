@@ -88,6 +88,7 @@ const SuccessResults = ({
                 damping: 25,
                 duration: 0.5
             }}
+            style={{ flexShrink: 0, marginTop: "auto" }}
         >
             <Box
                 ref={containerRef}

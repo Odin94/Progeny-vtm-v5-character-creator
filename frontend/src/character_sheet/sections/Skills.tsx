@@ -83,7 +83,8 @@ const SkillRow = ({
             skill: newSkill,
             discipline: null,
             selectedSpecialties: [],
-            selectedDisciplinePowers: []
+            selectedDisciplinePowers: [],
+            selectedMeritFlaws: []
         })
     }
 

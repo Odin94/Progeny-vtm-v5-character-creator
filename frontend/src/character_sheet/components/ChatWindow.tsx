@@ -658,6 +658,15 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                                                 )
                                             }
 
+                                            if (
+                                                rollData.poolInfo?.meritFlawBonus &&
+                                                rollData.poolInfo.meritFlawBonus !== 0
+                                            ) {
+                                                bonuses.push(
+                                                    `${rollData.poolInfo.meritFlawBonus > 0 ? "+" : ""}${rollData.poolInfo.meritFlawBonus} from Merits/Flaws`
+                                                )
+                                            }
+
                                             if (bonuses.length === 0) {
                                                 return ""
                                             }

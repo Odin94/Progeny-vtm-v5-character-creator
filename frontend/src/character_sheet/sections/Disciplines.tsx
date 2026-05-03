@@ -80,7 +80,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         if (!isClickable) return
         updateSelectedDicePool({
             discipline: selectedDicePool.discipline === disciplineName ? null : disciplineName,
-            skill: null
+            skill: null,
+            selectedMeritFlaws: []
         })
     }
 

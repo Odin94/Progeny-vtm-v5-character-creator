@@ -29,6 +29,7 @@ export type RollData = {
         bloodSurge?: boolean
         specialtyBonus?: number
         disciplinePowerBonus?: number
+        meritFlawBonus?: number
     }
     rollId?: string
     isReroll?: boolean
@@ -151,6 +152,10 @@ type SessionChatStore = {
                 discipline?: string
                 diceCount: number
                 bloodDiceCount: number
+                bloodSurge?: boolean
+                specialtyBonus?: number
+                disciplinePowerBonus?: number
+                meritFlawBonus?: number
             }
         },
         characterName?: string
@@ -511,6 +516,9 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 diceCount: number
                 bloodDiceCount: number
                 bloodSurge?: boolean
+                specialtyBonus?: number
+                disciplinePowerBonus?: number
+                meritFlawBonus?: number
             }
             rollId?: string
             isReroll?: boolean

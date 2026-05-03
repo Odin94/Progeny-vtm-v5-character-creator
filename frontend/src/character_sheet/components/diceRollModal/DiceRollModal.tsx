@@ -16,6 +16,7 @@ import ModalHeader from "./parts/ModalHeader"
 import SelectedDicePoolDisplay from "./parts/SelectedDicePoolDisplay"
 import SuccessResults from "./parts/SuccessResults"
 import { getApplicableDisciplinePowers } from "../../utils/disciplinePowerMatcher"
+import { getSelectedMeritFlawModifierBonus } from "../../utils/meritFlawMatcher"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 
@@ -75,15 +76,60 @@ const DiceRollModal = ({
 
     const hunger = character?.ephemeral?.hunger ?? 0
 
+    const selectedPoolBonuses = useMemo(() => {
+        if (!character || !selectedDicePool.attribute) {
+            return { specialtyBonus: 0, disciplinePowerBonus: 0, meritFlawBonus: 0 }
+        }
+
+        let specialtyBonus = 0
+
+        if (selectedDicePool.skill) {
+            specialtyBonus = selectedDicePool.selectedSpecialties.length
+        }
+
+        let disciplinePowerBonus = 0
+        const applicablePowers = getApplicableDisciplinePowers(
+            character,
+            selectedDicePool.attribute,
+            selectedDicePool.skill
+        )
+        const applicablePowerKeys = new Set(
+            applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`)
+        )
+
+        for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
+            if (!applicablePowerKeys.has(powerKey)) continue
+
+            const [disciplineName, powerName] = powerKey.split("-", 2)
+            const disciplinePowers = character.disciplines.filter(
+                (p) => p.discipline === disciplineName
+            )
+            const disciplineRating = disciplinePowers.length
+
+            if (powerName === "Wrecker") {
+                disciplinePowerBonus += disciplineRating * 2
+            } else {
+                disciplinePowerBonus += disciplineRating
+            }
+        }
+
+        const meritFlawBonus = getSelectedMeritFlawModifierBonus(
+            character,
+            selectedDicePool.attribute,
+            selectedDicePool.skill,
+            selectedDicePool.selectedMeritFlaws
+        )
+
+        return { specialtyBonus, disciplinePowerBonus, meritFlawBonus }
+    }, [character, selectedDicePool])
+
     const selectedPoolDiceCount = useMemo(() => {
         if (!character || !selectedDicePool.attribute) return 0
         const attributeValue = character.attributes[selectedDicePool.attribute] || 0
         let skillOrDisciplineValue = 0
-        let specialtyBonus = 0
 
         if (selectedDicePool.skill) {
             skillOrDisciplineValue = character.skills[selectedDicePool.skill] || 0
-            specialtyBonus = selectedDicePool.selectedSpecialties.length
         } else if (selectedDicePool.discipline) {
             const disciplinePowers = character.disciplines.filter(
                 (p) => p.discipline === selectedDicePool.discipline
@@ -92,43 +138,16 @@ const DiceRollModal = ({
         }
 
         const bloodSurgeBonus = selectedDicePool.bloodSurge ? 2 : 0
-
-        let disciplinePowerBonus = 0
-        if (selectedDicePool.attribute) {
-            const applicablePowers = getApplicableDisciplinePowers(
-                character,
-                selectedDicePool.attribute,
-                selectedDicePool.skill
-            )
-            const applicablePowerKeys = new Set(
-                applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`)
-            )
-
-            for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
-                if (!applicablePowerKeys.has(powerKey)) continue
-
-                const [disciplineName, powerName] = powerKey.split("-", 2)
-                const disciplinePowers = character.disciplines.filter(
-                    (p) => p.discipline === disciplineName
-                )
-                const disciplineRating = disciplinePowers.length
-
-                if (powerName === "Wrecker") {
-                    disciplinePowerBonus += disciplineRating * 2
-                } else {
-                    disciplinePowerBonus += disciplineRating
-                }
-            }
-        }
-
-        return (
+        const totalDice =
             attributeValue +
             skillOrDisciplineValue +
-            specialtyBonus +
+            selectedPoolBonuses.specialtyBonus +
             bloodSurgeBonus +
-            disciplinePowerBonus
-        )
-    }, [character, selectedDicePool])
+            selectedPoolBonuses.disciplinePowerBonus +
+            selectedPoolBonuses.meritFlawBonus
+
+        return Math.max(0, totalDice)
+    }, [character, selectedDicePool, selectedPoolBonuses])
 
     const skillSpecialties = useMemo(() => {
         if (!character || !selectedDicePool.skill) return []
@@ -387,40 +406,6 @@ const DiceRollModal = ({
                         totalSuccesses += 1
                     }
 
-                    let specialtyBonus = 0
-                    let disciplinePowerBonus = 0
-
-                    if (activeTab === "selected" && selectedDicePool.attribute) {
-                        if (selectedDicePool.skill) {
-                            specialtyBonus = selectedDicePool.selectedSpecialties.length
-                        }
-
-                        const applicablePowers = getApplicableDisciplinePowers(
-                            character!,
-                            selectedDicePool.attribute,
-                            selectedDicePool.skill
-                        )
-                        const applicablePowerKeys = new Set(
-                            applicablePowers.map(({ power }) => `${power.discipline}-${power.name}`)
-                        )
-
-                        for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
-                            if (!applicablePowerKeys.has(powerKey)) continue
-
-                            const [disciplineName, powerName] = powerKey.split("-", 2)
-                            const disciplinePowers = character!.disciplines.filter(
-                                (p) => p.discipline === disciplineName
-                            )
-                            const disciplineRating = disciplinePowers.length
-
-                            if (powerName === "Wrecker") {
-                                disciplinePowerBonus += disciplineRating * 2
-                            } else {
-                                disciplinePowerBonus += disciplineRating
-                            }
-                        }
-                    }
-
                     const rollData = {
                         dice: newDice.map((d) => ({
                             id: d.id,
@@ -447,10 +432,16 @@ const DiceRollModal = ({
                                       bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
                                       bloodSurge: selectedDicePool.bloodSurge,
                                       specialtyBonus:
-                                          specialtyBonus > 0 ? specialtyBonus : undefined,
+                                          selectedPoolBonuses.specialtyBonus > 0
+                                              ? selectedPoolBonuses.specialtyBonus
+                                              : undefined,
                                       disciplinePowerBonus:
-                                          disciplinePowerBonus > 0
-                                              ? disciplinePowerBonus
+                                          selectedPoolBonuses.disciplinePowerBonus > 0
+                                              ? selectedPoolBonuses.disciplinePowerBonus
+                                              : undefined,
+                                      meritFlawBonus:
+                                          selectedPoolBonuses.meritFlawBonus !== 0
+                                              ? selectedPoolBonuses.meritFlawBonus
                                               : undefined
                                   }
                                 : {
@@ -565,42 +556,6 @@ const DiceRollModal = ({
                                 totalSuccesses += 1
                             }
 
-                            let specialtyBonus = 0
-                            let disciplinePowerBonus = 0
-
-                            if (activeTab === "selected" && selectedDicePool.attribute) {
-                                if (selectedDicePool.skill) {
-                                    specialtyBonus = selectedDicePool.selectedSpecialties.length
-                                }
-
-                                const applicablePowers = getApplicableDisciplinePowers(
-                                    character!,
-                                    selectedDicePool.attribute,
-                                    selectedDicePool.skill
-                                )
-                                const applicablePowerKeys = new Set(
-                                    applicablePowers.map(
-                                        ({ power }) => `${power.discipline}-${power.name}`
-                                    )
-                                )
-
-                                for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
-                                    if (!applicablePowerKeys.has(powerKey)) continue
-
-                                    const [disciplineName, powerName] = powerKey.split("-", 2)
-                                    const disciplinePowers = character!.disciplines.filter(
-                                        (p) => p.discipline === disciplineName
-                                    )
-                                    const disciplineRating = disciplinePowers.length
-
-                                    if (powerName === "Wrecker") {
-                                        disciplinePowerBonus += disciplineRating * 2
-                                    } else {
-                                        disciplinePowerBonus += disciplineRating
-                                    }
-                                }
-                            }
-
                             const rollData = {
                                 dice: newDice.map((d) => ({
                                     id: d.id,
@@ -628,10 +583,16 @@ const DiceRollModal = ({
                                                   .length,
                                               bloodSurge: selectedDicePool.bloodSurge,
                                               specialtyBonus:
-                                                  specialtyBonus > 0 ? specialtyBonus : undefined,
+                                                  selectedPoolBonuses.specialtyBonus > 0
+                                                      ? selectedPoolBonuses.specialtyBonus
+                                                      : undefined,
                                               disciplinePowerBonus:
-                                                  disciplinePowerBonus > 0
-                                                      ? disciplinePowerBonus
+                                                  selectedPoolBonuses.disciplinePowerBonus > 0
+                                                      ? selectedPoolBonuses.disciplinePowerBonus
+                                                      : undefined,
+                                              meritFlawBonus:
+                                                  selectedPoolBonuses.meritFlawBonus !== 0
+                                                      ? selectedPoolBonuses.meritFlawBonus
                                                       : undefined
                                           }
                                         : {
@@ -756,42 +717,6 @@ const DiceRollModal = ({
                 const autoShareDiceRolls = getAutoShareDiceRolls()
                 if (autoShareDiceRolls && connectionStatus === "connected" && sessionId) {
                     try {
-                        let specialtyBonus = 0
-                        let disciplinePowerBonus = 0
-
-                        if (activeTab === "selected" && selectedDicePool.attribute) {
-                            if (selectedDicePool.skill) {
-                                specialtyBonus = selectedDicePool.selectedSpecialties.length
-                            }
-
-                            const applicablePowers = getApplicableDisciplinePowers(
-                                character!,
-                                selectedDicePool.attribute,
-                                selectedDicePool.skill
-                            )
-                            const applicablePowerKeys = new Set(
-                                applicablePowers.map(
-                                    ({ power }) => `${power.discipline}-${power.name}`
-                                )
-                            )
-
-                            for (const powerKey of selectedDicePool.selectedDisciplinePowers) {
-                                if (!applicablePowerKeys.has(powerKey)) continue
-
-                                const [disciplineName, powerName] = powerKey.split("-", 2)
-                                const disciplinePowers = character!.disciplines.filter(
-                                    (p) => p.discipline === disciplineName
-                                )
-                                const disciplineRating = disciplinePowers.length
-
-                                if (powerName === "Wrecker") {
-                                    disciplinePowerBonus += disciplineRating * 2
-                                } else {
-                                    disciplinePowerBonus += disciplineRating
-                                }
-                            }
-                        }
-
                         const rollData = {
                             dice: dice.map((d) => ({
                                 id: d.id,
@@ -817,10 +742,16 @@ const DiceRollModal = ({
                                           bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
                                           bloodSurge: selectedDicePool.bloodSurge,
                                           specialtyBonus:
-                                              specialtyBonus > 0 ? specialtyBonus : undefined,
+                                              selectedPoolBonuses.specialtyBonus > 0
+                                                  ? selectedPoolBonuses.specialtyBonus
+                                                  : undefined,
                                           disciplinePowerBonus:
-                                              disciplinePowerBonus > 0
-                                                  ? disciplinePowerBonus
+                                              selectedPoolBonuses.disciplinePowerBonus > 0
+                                                  ? selectedPoolBonuses.disciplinePowerBonus
+                                                  : undefined,
+                                          meritFlawBonus:
+                                              selectedPoolBonuses.meritFlawBonus !== 0
+                                                  ? selectedPoolBonuses.meritFlawBonus
                                                   : undefined
                                       }
                                     : {
@@ -843,6 +774,7 @@ const DiceRollModal = ({
         diceCount,
         selectedDicePool,
         selectedPoolDiceCount,
+        selectedPoolBonuses,
         connectionStatus,
         sessionId,
         sendDiceRoll

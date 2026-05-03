@@ -10,6 +10,7 @@ export type SelectedDicePool = {
     selectedSpecialties: string[]
     bloodSurge: boolean
     selectedDisciplinePowers: string[]
+    selectedMeritFlaws: string[]
 }
 
 type CharacterSheetStore = {
@@ -25,7 +26,8 @@ const defaultDicePool: SelectedDicePool = {
     discipline: null,
     selectedSpecialties: [],
     bloodSurge: false,
-    selectedDisciplinePowers: []
+    selectedDisciplinePowers: [],
+    selectedMeritFlaws: []
 }
 
 export const useCharacterSheetStore = create<CharacterSheetStore>((set) => ({
