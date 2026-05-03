@@ -44,7 +44,8 @@ export const ritualSchema = z.object({
     dicePool: z.string(),
     ingredients: z.string(),
     level: z.number().min(1).int(),
-    discipline: disciplineNameSchema.optional()
+    discipline: disciplineNameSchema.optional(),
+    isCustom: z.boolean().optional()
 })
 
 export type Ritual = z.infer<typeof ritualSchema>

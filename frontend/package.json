@@ -17,12 +17,12 @@
         "test:e2e": "playwright test"
     },
     "dependencies": {
+        "@emotion/babel-plugin": "^11.13.5",
+        "@emotion/react": "^11.14.0",
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
         "@fortawesome/free-regular-svg-icons": "^6.4.0",
         "@fortawesome/free-solid-svg-icons": "^6.4.0",
         "@fortawesome/react-fontawesome": "^0.2.0",
-        "@emotion/babel-plugin": "^11.13.5",
-        "@emotion/react": "^11.14.0",
         "@jridgewell/trace-mapping": "^0.3.31",
         "@mantine/colors-generator": "^9.0.2",
         "@mantine/core": "^8.3.10",
@@ -34,7 +34,6 @@
         "@tanstack/react-query": "^5.90.16",
         "@tanstack/react-router": "^1.145.7",
         "@tanstack/router-devtools": "^1.145.7",
-        "@tanstack/router-vite-plugin": "^1.145.7",
         "@testing-library/jest-dom": "^5.16.5",
         "@testing-library/react": "^13.4.0",
         "@testing-library/user-event": "^13.5.0",

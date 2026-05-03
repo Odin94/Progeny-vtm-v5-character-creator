@@ -29,12 +29,10 @@ describe("merit/flaw dice pool modifiers", () => {
 
         const modifiers = getApplicableMeritFlawModifiers(character, "charisma", null)
 
-        expect(modifiers.map((modifier) => modifier.meritFlaw.name)).toEqual([
-            "Beautiful",
-            "Ugly"
-        ])
-        expect(getSelectedMeritFlawModifierBonus(character, "charisma", null, ["merit-Beautiful"]))
-            .toBe(1)
+        expect(modifiers.map((modifier) => modifier.meritFlaw.name)).toEqual(["Beautiful", "Ugly"])
+        expect(
+            getSelectedMeritFlawModifierBonus(character, "charisma", null, ["merit-Beautiful"])
+        ).toBe(1)
         expect(getSelectedMeritFlawModifierBonus(character, "charisma", null, ["flaw-Ugly"])).toBe(
             -1
         )

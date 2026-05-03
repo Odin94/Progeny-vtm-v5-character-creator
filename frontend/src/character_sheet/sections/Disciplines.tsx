@@ -31,6 +31,7 @@ import DisciplinePowerCard from "../components/DisciplinePowerCard"
 import CustomDisciplineModal from "../components/CustomDisciplineModal"
 import CustomPowerModal from "../components/CustomPowerModal"
 import RitualSelectModal from "../components/RitualSelectModal"
+import CustomRitualModal from "../components/CustomRitualModal"
 import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade, getRitualCost } from "../utils/xp"
 import { bgAlpha, hexToRgba } from "../utils/style"
@@ -59,8 +60,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
     const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
     const [ritualModalOpened, setRitualModalOpened] = useState(false)
+    const [customRitualModalOpened, setCustomRitualModalOpened] = useState(false)
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
+    const [editingRitual, setEditingRitual] = useState<Ritual | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
         | { type: "power"; power: Power }
         | { type: "ritual"; ritual: Ritual }
@@ -546,18 +549,14 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             ritual.level <= bloodSorceryLevel &&
                                             !ownedRitualNames.has(ritual.name)
                                     ).map((ritual) => getRitualCost(ritual.level))
+                                    availableCosts.push(getRitualCost(1))
                                     const minCost =
                                         availableCosts.length > 0 ? Math.min(...availableCosts) : 0
                                     const availableXP = getAvailableXP(character)
-                                    const hasAvailableRituals = availableCosts.length > 0
-                                    const canAfford =
-                                        hasAvailableRituals &&
-                                        canAffordUpgrade(availableXP, minCost)
-                                    const tooltipLabel = !hasAvailableRituals
-                                        ? "No available rituals to add"
-                                        : canAfford
-                                          ? `${minCost} XP`
-                                          : `Insufficient XP. Need ${minCost}, have ${availableXP}`
+                                    const canAfford = canAffordUpgrade(availableXP, minCost)
+                                    const tooltipLabel = canAfford
+                                        ? `${minCost} XP`
+                                        : `Insufficient XP. Need ${minCost}, have ${availableXP}`
 
                                     return (
                                         <Tooltip label={tooltipLabel}>
@@ -600,19 +599,34 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                         <Text fw={700} size="lg">
                                             {ritual.name}
                                         </Text>
-                                        <Badge variant="light" color={primaryColor}>
-                                            Ritual
-                                        </Badge>
-                                        {isFreeMode ? (
-                                            <ActionIcon
-                                                size="sm"
-                                                variant="subtle"
-                                                color="red"
-                                                onClick={() => handleDeleteRitual(ritual)}
-                                            >
-                                                <IconX size={16} />
-                                            </ActionIcon>
-                                        ) : null}
+                                        <Group gap="xs">
+                                            <Badge variant="light" color={primaryColor}>
+                                                {ritual.isCustom ? "Custom Ritual" : "Ritual"}
+                                            </Badge>
+                                            {ritual.isCustom && isFreeMode ? (
+                                                <ActionIcon
+                                                    size="sm"
+                                                    variant="subtle"
+                                                    color={primaryColor}
+                                                    onClick={() => {
+                                                        setEditingRitual(ritual)
+                                                        setCustomRitualModalOpened(true)
+                                                    }}
+                                                >
+                                                    <IconEdit size={16} />
+                                                </ActionIcon>
+                                            ) : null}
+                                            {isFreeMode ? (
+                                                <ActionIcon
+                                                    size="sm"
+                                                    variant="subtle"
+                                                    color="red"
+                                                    onClick={() => handleDeleteRitual(ritual)}
+                                                >
+                                                    <IconX size={16} />
+                                                </ActionIcon>
+                                            ) : null}
+                                        </Group>
                                     </Group>
                                     {ritual.summary ? (
                                         <Text size="sm" c="dimmed" mt="xs">
@@ -639,6 +653,15 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 opened={ritualModalOpened}
                 onClose={() => setRitualModalOpened(false)}
                 options={options}
+            />
+            <CustomRitualModal
+                opened={customRitualModalOpened}
+                onClose={() => {
+                    setCustomRitualModalOpened(false)
+                    setEditingRitual(null)
+                }}
+                options={options}
+                editingRitual={editingRitual}
             />
             <CustomDisciplineModal
                 opened={customDisciplineModalOpened}

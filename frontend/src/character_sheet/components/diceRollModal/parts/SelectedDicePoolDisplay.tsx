@@ -304,7 +304,9 @@ const SelectedDicePoolDisplay = ({
                                         {applicableMeritFlawModifiers.map(
                                             ({ meritFlaw, bonusDice, reason, key }) => {
                                                 const isChecked =
-                                                    selectedDicePool.selectedMeritFlaws.includes(key)
+                                                    selectedDicePool.selectedMeritFlaws.includes(
+                                                        key
+                                                    )
 
                                                 return (
                                                     <Checkbox
