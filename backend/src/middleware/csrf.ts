@@ -24,7 +24,7 @@ export function setCsrfToken(reply: FastifyReply, token: string, request: Fastif
     }
 
     reply.setCookie(CSRF_TOKEN_COOKIE_NAME, token, {
-        httpOnly: false,
+        httpOnly: true,
         secure: env.NODE_ENV === "production",
         sameSite: env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
