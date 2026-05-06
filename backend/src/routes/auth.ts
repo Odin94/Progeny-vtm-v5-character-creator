@@ -9,6 +9,7 @@ import { zodToFastifySchema } from "../utils/schema.js"
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.js"
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
+import { clearSessionCookie, setSessionCookie } from "../utils/sessionCookie.js"
 
 const DEFAULT_POST_AUTH_PATH = "/"
 
@@ -203,14 +204,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             // For cross-origin requests (frontend on different subdomain), we need:
             // - sameSite: "none" (allows cross-origin cookies)
             // - secure: true (required when sameSite is "none")
-            const cookieOptions = {
-                path: "/",
-                httpOnly: true,
-                secure: env.NODE_ENV === "production",
-                sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax"
-            }
-
-            reply.setCookie("wos-session", sealedSession, cookieOptions)
+            setSessionCookie(reply, sealedSession)
 
             if (env.NODE_ENV === "development") {
                 fastify.log.info(
@@ -309,12 +303,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 }
 
                 // Clear the session cookie
-                reply.clearCookie("wos-session", {
-                    path: "/",
-                    httpOnly: true,
-                    secure: env.NODE_ENV === "production",
-                    sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax"
-                })
+                clearSessionCookie(reply)
 
                 await trackEvent(
                     "auth_logout",
@@ -340,12 +329,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     method: "GET"
                 })
                 // Clear cookie even on error
-                reply.clearCookie("wos-session", {
-                    path: "/",
-                    httpOnly: true,
-                    secure: env.NODE_ENV === "production",
-                    sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax"
-                })
+                clearSessionCookie(reply)
                 reply.send({
                     success: true,
                     logoutUrl: null
@@ -380,16 +364,25 @@ export async function authRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const session = workos.userManagement.loadSealedSession({
-                sessionData,
-                cookiePassword
-            })
+            let sessionUser: {
+                id: string
+                email: string
+                firstName?: string | null
+                lastName?: string | null
+            }
+            let sessionRefreshed = false
 
-            const authResult = await session.authenticate()
+            try {
+                const session = workos.userManagement.loadSealedSession({
+                    sessionData,
+                    cookiePassword
+                })
 
-            if (!authResult.authenticated || !("user" in authResult)) {
-                // Try to refresh the session
-                try {
+                const authResult = await session.authenticate()
+
+                if (authResult.authenticated && "user" in authResult) {
+                    sessionUser = authResult.user
+                } else {
                     const refreshResult = await session.refresh()
                     if (
                         refreshResult.authenticated &&
@@ -397,50 +390,20 @@ export async function authRoutes(fastify: FastifyInstance) {
                         "user" in refreshResult &&
                         refreshResult.sealedSession
                     ) {
-                        // Update the cookie with the new session
-                        reply.setCookie("wos-session", refreshResult.sealedSession, {
-                            path: "/",
-                            httpOnly: true,
-                            secure: env.NODE_ENV === "production",
-                            sameSite: (env.NODE_ENV === "production" ? "none" : "lax") as
-                                | "none"
-                                | "lax"
-                        })
-
-                        // Get user from database to include nickname
-                        const dbUser = await db.query.users.findFirst({
-                            where: eq(schema.users.id, refreshResult.user.id)
-                        })
-
-                        await trackEvent(
-                            "auth_me_success",
-                            {
-                                endpoint: "/auth/me",
-                                method: "GET",
-                                userId: refreshResult.user.id,
-                                sessionRefreshed: true
-                            },
-                            refreshResult.user.id,
-                            request
-                        )
-
-                        reply.send({
-                            id: refreshResult.user.id,
-                            email: refreshResult.user.email,
-                            firstName: refreshResult.user.firstName,
-                            lastName: refreshResult.user.lastName,
-                            nickname: dbUser?.nickname || null
-                        })
-                        return
+                        setSessionCookie(reply, refreshResult.sealedSession)
+                        sessionUser = refreshResult.user
+                        sessionRefreshed = true
+                    } else {
+                        throw new Error("Session is invalid")
                     }
-                } catch (_refreshError) {
-                    // Refresh failed, return unauthorized
                 }
-
+            } catch (error) {
                 logger.warn("Session is invalid", {
                     endpoint: "/auth/me",
-                    method: "GET"
+                    method: "GET",
+                    error: error instanceof Error ? error.message : String(error)
                 })
+                clearSessionCookie(reply)
                 reply.code(401).send({
                     error: "Unauthorized",
                     message: "Session is invalid"
@@ -448,36 +411,30 @@ export async function authRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            if ("user" in authResult) {
-                // Get user from database to include nickname
-                const dbUser = await db.query.users.findFirst({
-                    where: eq(schema.users.id, authResult.user.id)
-                })
+            // Get user from database to include nickname
+            const dbUser = await db.query.users.findFirst({
+                where: eq(schema.users.id, sessionUser.id)
+            })
 
-                await trackEvent(
-                    "auth_me_success",
-                    {
-                        endpoint: "/auth/me",
-                        method: "GET",
-                        userId: authResult.user.id
-                    },
-                    authResult.user.id,
-                    request
-                )
+            await trackEvent(
+                "auth_me_success",
+                {
+                    endpoint: "/auth/me",
+                    method: "GET",
+                    userId: sessionUser.id,
+                    ...(sessionRefreshed ? { sessionRefreshed: true } : {})
+                },
+                sessionUser.id,
+                request
+            )
 
-                reply.send({
-                    id: authResult.user.id,
-                    email: authResult.user.email,
-                    firstName: authResult.user.firstName,
-                    lastName: authResult.user.lastName,
-                    nickname: dbUser?.nickname || null
-                })
-            } else {
-                reply.code(401).send({
-                    error: "Unauthorized",
-                    message: "Session is invalid"
-                })
-            }
+            reply.send({
+                id: sessionUser.id,
+                email: sessionUser.email,
+                firstName: sessionUser.firstName,
+                lastName: sessionUser.lastName,
+                nickname: dbUser?.nickname || null
+            })
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to get user"
             fastify.log.error({ err: error }, "Get user error")

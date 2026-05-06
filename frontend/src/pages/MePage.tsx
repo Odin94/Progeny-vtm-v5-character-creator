@@ -199,8 +199,8 @@ const MePage = () => {
         isUpdatingProfile,
         signOut
     } = useAuth()
-    const { data: characters } = useCharacters()
-    const { data: coteries } = useCoteries()
+    const { data: characters } = useCharacters(isAuthenticated)
+    const { data: coteries } = useCoteries(isAuthenticated)
     const [character, setCharacter] = useCharacterLocalStorage()
     const computedColorScheme = useComputedColorScheme("dark", {
         getInitialValueInEffect: true
