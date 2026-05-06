@@ -4,7 +4,10 @@ import { env } from "../config/env.js"
 import { logger } from "./logger.js"
 import { getRequestId } from "../middleware/requestId.js"
 
-type EventProperties = Record<string, string | number | boolean | string[] | number[] | boolean[] | null | undefined>
+type EventProperties = Record<
+    string,
+    string | number | boolean | string[] | number[] | boolean[] | null | undefined
+>
 
 let posthogClient: PostHog | null = null
 
@@ -21,12 +24,12 @@ const getPostHogClient = (): PostHog | null => {
         posthogClient = new PostHog(env.PUBLIC_POSTHOG_KEY, {
             host: env.PUBLIC_POSTHOG_HOST,
             flushAt: 20,
-            flushInterval: 10000,
+            flushInterval: 10000
         })
         return posthogClient
     } catch (error) {
         logger.error("Failed to initialize PostHog client", error as Error, {
-            component: "tracker",
+            component: "tracker"
         })
         return null
     }
@@ -55,13 +58,13 @@ export const trackEvent = async (
             properties: {
                 ...properties,
                 environment: env.NODE_ENV,
-                ...(requestId ? { requestId } : {}),
-            },
+                ...(requestId ? { requestId } : {})
+            }
         })
     } catch (error) {
         logger.warn("Failed to track event", {
             eventName,
-            error: error instanceof Error ? error.message : String(error),
+            error: error instanceof Error ? error.message : String(error)
         })
     }
 }
@@ -73,7 +76,7 @@ export const shutdownPostHogTracking = async (): Promise<void> => {
             posthogClient = null
         } catch (error) {
             logger.error("Failed to shutdown PostHog client", error as Error, {
-                component: "tracker",
+                component: "tracker"
             })
         }
     }

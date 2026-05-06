@@ -1,6 +1,6 @@
-import { ActionIcon, Button, Card, Group, Stack, Text, TextInput, Title, useMantineTheme } from "@mantine/core"
-import { IconEdit, IconUser } from "@tabler/icons-react"
-import FocusBorderWrapper from "~/character_sheet/components/FocusBorderWrapper"
+import { ActionIcon, Button, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core"
+import { IconEdit, IconEye, IconEyeOff, IconUser } from "@tabler/icons-react"
+import { useState } from "react"
 
 type UserProfileSectionProps = {
     user: {
@@ -28,8 +28,10 @@ const UserProfileSection = ({
     isUpdatingProfile,
     redColorValue,
     handleSaveNickname,
-    handleCancelNickname,
+    handleCancelNickname
 }: UserProfileSectionProps) => {
+    const [emailVisible, setEmailVisible] = useState(false)
+
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
             <Group gap="md" mb="md">
@@ -37,9 +39,18 @@ const UserProfileSection = ({
                 <Title order={2}>User Profile</Title>
             </Group>
             <Stack gap="sm">
-                <Group gap="xs">
+                <Group gap="xs" align="center">
                     <Text fw={500}>Email:</Text>
-                    <Text>{user?.email}</Text>
+                    <Text>{emailVisible ? (user?.email ?? "No email available") : "Hidden"}</Text>
+                    <ActionIcon
+                        color="red"
+                        size="sm"
+                        variant="subtle"
+                        onClick={() => setEmailVisible((current) => !current)}
+                        aria-label={emailVisible ? "Hide email" : "Show email"}
+                    >
+                        {emailVisible ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                    </ActionIcon>
                 </Group>
                 {user?.firstName || user?.lastName ? (
                     <Group gap="xs">
@@ -53,20 +64,29 @@ const UserProfileSection = ({
                     </Text>
                     {isEditingNickname ? (
                         <Stack gap="xs" style={{ flex: 1 }}>
-                            <FocusBorderWrapper colorValue={redColorValue}>
-                                <TextInput
-                                    value={nicknameValue}
-                                    onChange={(e) => setNicknameValue(e.target.value)}
-                                    placeholder="Enter nickname"
-                                    maxLength={255}
-                                    disabled={isUpdatingProfile}
-                                />
-                            </FocusBorderWrapper>
+                            <TextInput
+                                value={nicknameValue}
+                                onChange={(e) => setNicknameValue(e.target.value)}
+                                placeholder="Enter nickname"
+                                maxLength={255}
+                                disabled={isUpdatingProfile}
+                            />
                             <Group gap="xs">
-                                <Button size="xs" color="red" onClick={handleSaveNickname} loading={isUpdatingProfile}>
+                                <Button
+                                    size="xs"
+                                    color="red"
+                                    onClick={handleSaveNickname}
+                                    loading={isUpdatingProfile}
+                                >
                                     Save
                                 </Button>
-                                <Button size="xs" variant="subtle" onClick={handleCancelNickname} disabled={isUpdatingProfile} color="gray">
+                                <Button
+                                    size="xs"
+                                    variant="subtle"
+                                    onClick={handleCancelNickname}
+                                    disabled={isUpdatingProfile}
+                                    color="gray"
+                                >
                                     Cancel
                                 </Button>
                             </Group>
@@ -74,7 +94,12 @@ const UserProfileSection = ({
                     ) : (
                         <Group gap="xs" style={{ flex: 1 }}>
                             <Text>{user?.nickname || <Text c="dimmed">No nickname set</Text>}</Text>
-                            <ActionIcon color="red" size="sm" variant="subtle" onClick={() => setIsEditingNickname(true)}>
+                            <ActionIcon
+                                color="red"
+                                size="sm"
+                                variant="subtle"
+                                onClick={() => setIsEditingNickname(true)}
+                            >
                                 <IconEdit size={16} />
                             </ActionIcon>
                         </Group>

@@ -6,7 +6,9 @@ export const inputAlpha = 0.7
 
 export const hexToRgb = (hex: string): [number, number, number] | null => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null
+    return result
+        ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+        : null
 }
 
 export const hexToRgba = (hex: string, alpha: number): string => {
@@ -32,9 +34,9 @@ export const getPrimaryColor = (clan: ClanName): string => {
         Salubri: "teal",
         Caitiff: "grape",
         "Thin-blood": "grape",
-        "": "red",
+        "": "red"
     }
     return clanColorMap[clan] || "red"
 }
 
-export const vtmRed = "#c03f3f"
+export const vtmRed = "#e03131"

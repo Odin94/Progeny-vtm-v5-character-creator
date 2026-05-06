@@ -24,8 +24,8 @@ Object.defineProperty(window, "matchMedia", {
         removeListener: vi.fn(),
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-    })),
+        dispatchEvent: vi.fn()
+    }))
 })
 
 describe("Broken Character Logic", () => {
@@ -49,14 +49,16 @@ describe("Broken Character Logic", () => {
             const invalidCharacter = JSON.stringify({
                 name: "Test",
                 clan: "InvalidClan",
-                attributes: { strength: "not a number" },
+                attributes: { strength: "not a number" }
             })
             localStorage.setItem("character", invalidCharacter)
 
             const { result } = renderHook(() => useCharacterLocalStorage())
 
             expect(result.current[0]).toEqual(getEmptyCharacter())
-            expect(localStorage.getItem("character_broken_save")).toBe(JSON.stringify(invalidCharacter))
+            expect(localStorage.getItem("character_broken_save")).toBe(
+                JSON.stringify(invalidCharacter)
+            )
             expect(localStorage.getItem("character_broken_save_error")).toBeTruthy()
         })
 
@@ -102,10 +104,12 @@ describe("Broken Character Logic", () => {
             const mockCreateObjectURL = URL.createObjectURL as ReturnType<typeof vi.fn>
 
             let createdLink: HTMLAnchorElement | null = null
-            const linkClickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function () {
-                // @ts-expect-error - this is a mock
-                createdLink = this as HTMLAnchorElement
-            })
+            const linkClickSpy = vi
+                .spyOn(HTMLAnchorElement.prototype, "click")
+                .mockImplementation(function () {
+                    // @ts-expect-error - this is a mock
+                    createdLink = this as HTMLAnchorElement
+                })
 
             const { result: brokenHook } = renderHook(() => useBrokenCharacter())
             expect(brokenHook.current.hasBrokenCharacter).toBe(true)
@@ -118,12 +122,12 @@ describe("Broken Character Logic", () => {
                 await new Promise((resolve) => setTimeout(resolve, 0))
             })
 
-            expect(screen.getByText("Character Data Error")).toBeDefined()
+            expect(screen.getByRole("dialog", { name: "Character Data Error" })).toBeDefined()
             expect(screen.getByText("Failed to load character from saved data")).toBeDefined()
-            expect(screen.getByText("Download Broken Save Data")).toBeDefined()
-            expect(screen.getByText("Reset to Empty Character")).toBeDefined()
 
-            const downloadButton = screen.getByText("Download Broken Save Data")
+            const downloadButton = screen.getByRole("button", {
+                name: /download broken save data/i
+            })
             await act(async () => {
                 await userEvent.click(downloadButton)
             })
@@ -152,7 +156,7 @@ describe("Broken Character Logic", () => {
 
             linkClickSpy.mockRestore()
 
-            const resetButton = screen.getByText("Reset to Empty Character")
+            const resetButton = screen.getByRole("button", { name: /reset to empty character/i })
             await act(async () => {
                 await userEvent.click(resetButton)
             })

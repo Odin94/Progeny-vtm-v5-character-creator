@@ -13,7 +13,7 @@ import {
     Modal,
     Button,
     Divider,
-    Tooltip,
+    Tooltip
 } from "@mantine/core"
 import { useState, useMemo } from "react"
 import { SheetOptions } from "../CharacterSheet"
@@ -33,7 +33,10 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const [meritModalOpened, setMeritModalOpened] = useState(false)
     const [flawModalOpened, setFlawModalOpened] = useState(false)
-    const [itemToDelete, setItemToDelete] = useState<{ type: "merit" | "flaw"; item: MeritFlaw } | null>(null)
+    const [itemToDelete, setItemToDelete] = useState<{
+        type: "merit" | "flaw"
+        item: MeritFlaw
+    } | null>(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
 
@@ -41,14 +44,16 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     // TODOdin: Make descriptions of merits and flaws editable
     const predatorTypeMerits = useMemo(() => {
         if (!character.predatorType?.name) return []
-        const predatorType = PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
+        const predatorType =
+            PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
         if (!predatorType) return []
         return predatorType.meritsAndFlaws.filter((mf) => mf.type === "merit")
     }, [character.predatorType?.name])
 
     const predatorTypeFlaws = useMemo(() => {
         if (!character.predatorType?.name) return []
-        const predatorType = PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
+        const predatorType =
+            PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
         if (!predatorType) return []
         return predatorType.meritsAndFlaws.filter((mf) => mf.type === "flaw")
     }, [character.predatorType?.name])
@@ -67,7 +72,10 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
 
     // Combine regular merits with predator type merits (both automatic and picked)
     const allMerits = useMemo(() => {
-        const regularMerits = character.merits.map((merit) => ({ merit, isFromPredatorType: false }))
+        const regularMerits = character.merits.map((merit) => ({
+            merit,
+            isFromPredatorType: false
+        }))
         const autoMerits = predatorTypeMerits.map((merit) => ({ merit, isFromPredatorType: true }))
         return [...regularMerits, ...autoMerits]
     }, [character.merits, predatorTypeMerits])
@@ -103,12 +111,12 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
         if (itemToDelete.type === "merit") {
             setCharacter({
                 ...character,
-                merits: character.merits.filter((m) => m !== itemToDelete.item),
+                merits: character.merits.filter((m) => m !== itemToDelete.item)
             })
         } else {
             setCharacter({
                 ...character,
-                flaws: character.flaws.filter((f) => f !== itemToDelete.item),
+                flaws: character.flaws.filter((f) => f !== itemToDelete.item)
             })
         }
 
@@ -130,7 +138,15 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                             <Stack gap="xs">
                                 {allMerits.map(({ merit, isFromPredatorType }, index) => {
                                     const meritPaper = (
-                                        <Paper key={index} p="sm" withBorder style={{ backgroundColor: paperBg, position: "relative" }}>
+                                        <Paper
+                                            key={index}
+                                            p="sm"
+                                            withBorder
+                                            style={{
+                                                backgroundColor: paperBg,
+                                                position: "relative"
+                                            }}
+                                        >
                                             {isFreeMode && !isFromPredatorType ? (
                                                 <ActionIcon
                                                     size="sm"
@@ -140,14 +156,23 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     style={{
                                                         position: "absolute",
                                                         top: "8px",
-                                                        right: "8px",
+                                                        right: "8px"
                                                     }}
                                                 >
                                                     <IconX size={16} />
                                                 </ActionIcon>
                                             ) : null}
-                                            <Group justify={isFreeMode ? "flex-start" : "space-between"}>
-                                                <Text fw={700} style={{ paddingRight: isFreeMode ? "60px" : "0" }}>
+                                            <Group
+                                                justify={
+                                                    isFreeMode ? "flex-start" : "space-between"
+                                                }
+                                            >
+                                                <Text
+                                                    fw={700}
+                                                    style={{
+                                                        paddingRight: isFreeMode ? "60px" : "0"
+                                                    }}
+                                                >
                                                     {merit.name}
                                                 </Text>
                                                 {!isFreeMode ? (
@@ -163,7 +188,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     style={{
                                                         position: "absolute",
                                                         top: "8px",
-                                                        right: "40px",
+                                                        right: "40px"
                                                     }}
                                                 >
                                                     {merit.level}
@@ -171,7 +196,8 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             ) : null}
                                             {merit.summary ? (
                                                 <Text size="sm" c="dimmed" mt="xs">
-                                                    {merit.summary.charAt(0).toUpperCase() + merit.summary.slice(1)}
+                                                    {merit.summary.charAt(0).toUpperCase() +
+                                                        merit.summary.slice(1)}
                                                 </Text>
                                             ) : null}
                                         </Paper>
@@ -179,7 +205,11 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
 
                                     if (isFromPredatorType) {
                                         return (
-                                            <Tooltip key={index} label="Added by predator type" withArrow>
+                                            <Tooltip
+                                                key={index}
+                                                label="Added by predator type"
+                                                withArrow
+                                            >
                                                 <Box>{meritPaper}</Box>
                                             </Tooltip>
                                         )
@@ -196,7 +226,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            backgroundColor: paperBg,
+                                            backgroundColor: paperBg
                                         }}
                                     >
                                         <Center style={{ height: "100%" }}>
@@ -209,7 +239,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent: "center",
+                                                    justifyContent: "center"
                                                 }}
                                             >
                                                 <IconPlus size={24} />
@@ -228,7 +258,15 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                             <Stack gap="xs">
                                 {allFlaws.map(({ flaw, isFromPredatorType }, index) => {
                                     const flawPaper = (
-                                        <Paper key={index} p="sm" withBorder style={{ backgroundColor: paperBg, position: "relative" }}>
+                                        <Paper
+                                            key={index}
+                                            p="sm"
+                                            withBorder
+                                            style={{
+                                                backgroundColor: paperBg,
+                                                position: "relative"
+                                            }}
+                                        >
                                             {isFreeMode && !isFromPredatorType ? (
                                                 <ActionIcon
                                                     size="sm"
@@ -238,14 +276,23 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     style={{
                                                         position: "absolute",
                                                         top: "8px",
-                                                        right: "8px",
+                                                        right: "8px"
                                                     }}
                                                 >
                                                     <IconX size={16} />
                                                 </ActionIcon>
                                             ) : null}
-                                            <Group justify={isFreeMode ? "flex-start" : "space-between"}>
-                                                <Text fw={700} style={{ paddingRight: isFreeMode ? "60px" : "0" }}>
+                                            <Group
+                                                justify={
+                                                    isFreeMode ? "flex-start" : "space-between"
+                                                }
+                                            >
+                                                <Text
+                                                    fw={700}
+                                                    style={{
+                                                        paddingRight: isFreeMode ? "60px" : "0"
+                                                    }}
+                                                >
                                                     {flaw.name}
                                                 </Text>
                                                 {!isFreeMode ? (
@@ -261,7 +308,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     style={{
                                                         position: "absolute",
                                                         top: "8px",
-                                                        right: "40px",
+                                                        right: "40px"
                                                     }}
                                                 >
                                                     {flaw.level}
@@ -269,7 +316,8 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             ) : null}
                                             {flaw.summary ? (
                                                 <Text size="sm" c="dimmed" mt="xs">
-                                                    {flaw.summary.charAt(0).toUpperCase() + flaw.summary.slice(1)}
+                                                    {flaw.summary.charAt(0).toUpperCase() +
+                                                        flaw.summary.slice(1)}
                                                 </Text>
                                             ) : null}
                                         </Paper>
@@ -277,7 +325,11 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
 
                                     if (isFromPredatorType) {
                                         return (
-                                            <Tooltip key={index} label="Added by predator type" withArrow>
+                                            <Tooltip
+                                                key={index}
+                                                label="Added by predator type"
+                                                withArrow
+                                            >
                                                 <Box>{flawPaper}</Box>
                                             </Tooltip>
                                         )
@@ -294,7 +346,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            backgroundColor: paperBg,
+                                            backgroundColor: paperBg
                                         }}
                                     >
                                         <Center style={{ height: "100%" }}>
@@ -307,7 +359,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                 style={{
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent: "center",
+                                                    justifyContent: "center"
                                                 }}
                                             >
                                                 <IconPlus size={24} />
@@ -320,8 +372,18 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                     ) : null}
                 </Grid>
             </Box>
-            <MeritFlawSelectModal opened={meritModalOpened} onClose={() => setMeritModalOpened(false)} options={options} type="merit" />
-            <MeritFlawSelectModal opened={flawModalOpened} onClose={() => setFlawModalOpened(false)} options={options} type="flaw" />
+            <MeritFlawSelectModal
+                opened={meritModalOpened}
+                onClose={() => setMeritModalOpened(false)}
+                options={options}
+                type="merit"
+            />
+            <MeritFlawSelectModal
+                opened={flawModalOpened}
+                onClose={() => setFlawModalOpened(false)}
+                options={options}
+                type="flaw"
+            />
             <Modal
                 opened={!!itemToDelete}
                 onClose={() => {

@@ -10,6 +10,7 @@ export type SelectedDicePool = {
     selectedSpecialties: string[]
     bloodSurge: boolean
     selectedDisciplinePowers: string[]
+    selectedMeritFlaws: string[]
 }
 
 type CharacterSheetStore = {
@@ -26,6 +27,7 @@ const defaultDicePool: SelectedDicePool = {
     selectedSpecialties: [],
     bloodSurge: false,
     selectedDisciplinePowers: [],
+    selectedMeritFlaws: []
 }
 
 export const useCharacterSheetStore = create<CharacterSheetStore>((set) => ({
@@ -34,6 +36,6 @@ export const useCharacterSheetStore = create<CharacterSheetStore>((set) => ({
     resetSelectedDicePool: () => set({ selectedDicePool: defaultDicePool }),
     updateSelectedDicePool: (updates) =>
         set((state) => ({
-            selectedDicePool: { ...state.selectedDicePool, ...updates },
-        })),
+            selectedDicePool: { ...state.selectedDicePool, ...updates }
+        }))
 }))

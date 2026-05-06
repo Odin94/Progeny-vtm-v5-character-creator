@@ -14,7 +14,10 @@ const DisciplineDisplay = ({ powers, rituals }: DisciplinesProps) => {
         if (!powersByDisciplines.has(power.discipline)) {
             powersByDisciplines.set(power.discipline, [power])
         } else {
-            powersByDisciplines.set(power.discipline, [...powersByDisciplines.get(power.discipline)!, power])
+            powersByDisciplines.set(power.discipline, [
+                ...powersByDisciplines.get(power.discipline)!,
+                power
+            ])
         }
     })
 

@@ -22,7 +22,7 @@ These files produce structured output from the character model and have regressi
 - Foundry VTT export: `src/generator/foundryWoDJsonCreator.ts`
 - Inconnu export: `src/generator/inconnuJsonCreator.ts`
 
-Run `npm run test:run` after any change to these files or to `src/data/Character.ts`. A passing build is not sufficient — the test suite checks actual output shape.
+Run `pnpm run test:run` after any change to these files or to `src/data/Character.ts`. A passing build is not sufficient — the test suite checks actual output shape.
 
 ## Character sheet flow
 

@@ -20,14 +20,14 @@ const powerMatchingRules: Array<{
         discipline: "auspex",
         matches: (attribute, skill) => {
             return skill === "awareness"
-        },
+        }
     },
     {
         powerName: "Fleetness",
         discipline: "celerity",
         matches: (attribute, skill) => {
             return attribute === "dexterity"
-        },
+        }
     },
     {
         powerName: "Weaving",
@@ -35,14 +35,14 @@ const powerMatchingRules: Array<{
         matches: (attribute, skill) => {
             return skill === null
         },
-        requiresPrerequisite: "Rapid Reflexes",
+        requiresPrerequisite: "Rapid Reflexes"
     },
     {
         powerName: "Prowess",
         discipline: "potence",
         matches: (attribute, skill) => {
             return attribute === "strength"
-        },
+        }
     },
     {
         powerName: "Wrecker",
@@ -50,36 +50,43 @@ const powerMatchingRules: Array<{
         matches: (attribute, skill) => {
             return attribute === "strength"
         },
-        requiresPrerequisite: "Prowess",
+        requiresPrerequisite: "Prowess"
     },
     {
         powerName: "Spark of Rage",
         discipline: "potence",
         matches: (attribute, skill) => {
             return attribute === "manipulation" || attribute === "charisma"
-        },
+        }
     },
     {
         powerName: "Awe",
         discipline: "presence",
         matches: (attribute, skill) => {
-            return attribute === "charisma" || attribute === "manipulation" || skill === "persuasion" || skill === "performance"
-        },
+            return (
+                attribute === "charisma" ||
+                attribute === "manipulation" ||
+                skill === "persuasion" ||
+                skill === "performance"
+            )
+        }
     },
     {
         powerName: "Daunt",
         discipline: "presence",
         matches: (attribute, skill) => {
-            return attribute === "charisma" || attribute === "manipulation" || skill === "intimidation"
-        },
+            return (
+                attribute === "charisma" || attribute === "manipulation" || skill === "intimidation"
+            )
+        }
     },
     {
         powerName: "Unswayable Mind",
         discipline: "fortitude",
         matches: (attribute, skill) => {
             return attribute === "resolve" || attribute === "composure"
-        },
-    },
+        }
+    }
 ]
 
 export const getApplicableDisciplinePowers = (
@@ -112,12 +119,14 @@ export const getApplicableDisciplinePowers = (
             if (!hasPrerequisite) continue
         }
 
-        const disciplinePowers = character.disciplines.filter((p) => p.discipline === rule.discipline)
+        const disciplinePowers = character.disciplines.filter(
+            (p) => p.discipline === rule.discipline
+        )
         const disciplineRating = disciplinePowers.length
 
         applicablePowers.push({
             power,
-            disciplineRating,
+            disciplineRating
         })
     }
 

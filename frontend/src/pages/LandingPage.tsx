@@ -1,0 +1,548 @@
+import AppTopbar from "~/components/AppTopbar"
+import {
+    Anchor,
+    Box,
+    Button,
+    Card,
+    Container,
+    Grid,
+    Group,
+    List,
+    Modal,
+    Stack,
+    Text,
+    Title
+} from "@mantine/core"
+import { useDisclosure, useLocalStorage } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
+import { useQueryClient } from "@tanstack/react-query"
+import { IconSparkles } from "@tabler/icons-react"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { motion } from "framer-motion"
+import { useState } from "react"
+import StartNewCharacterModal from "~/components/StartNewCharacterModal"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
+import { getEmptyCharacter, type Character } from "~/data/Character"
+import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
+import { useAuth } from "~/hooks/useAuth"
+import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
+import { useCharacters } from "~/hooks/useCharacters"
+import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
+import { api } from "~/utils/api"
+import "./LandingPage.css"
+
+type FeatureCardProps = {
+    title: string
+    bullets: string[]
+    primaryLabel: string
+    onPrimaryClick: () => void
+}
+
+function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick }: FeatureCardProps) {
+    return (
+        <Card radius="lg" p="xl" className="landing-page__feature-card">
+            <Stack gap="xl" className="landing-page__feature-card-inner">
+                <Box className="landing-page__feature-heading">
+                    <Title order={3} size="h2" className="landing-page__card-title">
+                        {title}
+                    </Title>
+                </Box>
+                <Box className="landing-page__feature-bullets">
+                    <List spacing="sm" className="landing-page__feature-list">
+                        {bullets.map((bullet) => (
+                            <List.Item key={bullet}>
+                                <Text size="lg" className="landing-page__body">
+                                    {bullet}
+                                </Text>
+                            </List.Item>
+                        ))}
+                    </List>
+                </Box>
+                <Group gap="lg" className="landing-page__feature-actions">
+                    <Button
+                        color="red"
+                        variant="transparent"
+                        className="landing-page__card-button"
+                        onClick={onPrimaryClick}
+                    >
+                        {primaryLabel}
+                    </Button>
+                </Group>
+            </Stack>
+        </Card>
+    )
+}
+
+export default function LandingPage() {
+    const navigate = useNavigate()
+    const queryClient = useQueryClient()
+    const { isAuthenticated, signIn } = useAuth()
+    const [character, setCharacter] = useCharacterLocalStorage()
+    const [, setStoredSelectedStep] = useLocalStorage<GeneratorStepId>({
+        key: "selectedGeneratorStep",
+        defaultValue: defaultGeneratorStepId
+    })
+    const { data: characters } = useCharacters(isAuthenticated)
+    const [creditsOpened, { open: openCredits, close: closeCredits }] = useDisclosure(false)
+    const [
+        startNewCharacterModalOpened,
+        { open: openStartNewCharacterModal, close: closeStartNewCharacterModal }
+    ] = useDisclosure(false)
+    const [currentCharacterName, setCurrentCharacterName] = useState(character.name)
+    const [isSavingCurrentCharacter, setIsSavingCurrentCharacter] = useState(false)
+    const emptyCharacter = getEmptyCharacter()
+    const userCharacters = (
+        (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
+    ).filter((candidate) => !candidate.shared)
+
+    const isCurrentCharacterEmpty = () =>
+        JSON.stringify({
+            ...character,
+            id: "",
+            name: "",
+            version: emptyCharacter.version,
+            characterVersion: emptyCharacter.characterVersion
+        }) === JSON.stringify(emptyCharacter)
+
+    const openAccountArea = () => {
+        if (isAuthenticated) {
+            navigate({ to: "/me" })
+            return
+        }
+
+        signIn()
+    }
+
+    const continueCurrentCharacter = () => {
+        closeStartNewCharacterModal()
+        navigate({ to: "/create" })
+    }
+
+    const startNewCharacter = () => {
+        closeStartNewCharacterModal()
+        setCharacter(getEmptyCharacter())
+        setStoredSelectedStep(defaultGeneratorStepId)
+        navigate({ to: "/create", hash: defaultGeneratorStepId })
+    }
+
+    const openGenerator = () => {
+        if (!isAuthenticated || isCurrentCharacterEmpty()) {
+            navigate({ to: "/create" })
+            return
+        }
+
+        setCurrentCharacterName(character.name)
+        openStartNewCharacterModal()
+    }
+
+    const saveCurrentCharacterAndStartNew = async () => {
+        const trimmedName = currentCharacterName.trim()
+
+        if (!trimmedName) {
+            notifications.show({
+                title: "Name required",
+                message: "Give the current character a name before saving it to your account.",
+                color: "red"
+            })
+            return
+        }
+
+        setIsSavingCurrentCharacter(true)
+
+        try {
+            const characterToSave: Character = { ...character, name: trimmedName }
+            const targetCharacter = characterToSave.id
+                ? userCharacters.find((candidate) => candidate.id === characterToSave.id)
+                : null
+            const payload = {
+                name: characterToSave.name,
+                data: characterToSave,
+                version: characterToSave.version
+            }
+
+            if (targetCharacter) {
+                await api.updateCharacter(targetCharacter.id, payload)
+            } else {
+                await api.createCharacter(payload)
+            }
+
+            await queryClient.invalidateQueries({ queryKey: ["characters"] })
+
+            notifications.show({
+                title: "Character saved",
+                message: `"${trimmedName}" was saved to your account.`,
+                color: "green",
+                autoClose: 3000
+            })
+
+            startNewCharacter()
+        } catch (error) {
+            notifications.show({
+                title: "Error saving character",
+                message:
+                    error instanceof Error ? error.message : "Failed to save current character",
+                color: "red"
+            })
+        } finally {
+            setIsSavingCurrentCharacter(false)
+        }
+    }
+
+    return (
+        <Box className="landing-page">
+            <Box className="landing-page__nav">
+                <AppTopbar />
+            </Box>
+
+            <Box className="landing-page__section landing-page__hero">
+                <Box
+                    className="landing-page__hero-bg"
+                    style={{ backgroundImage: `url(${alley})` }}
+                />
+                <Container size="md" className="landing-page__hero-content">
+                    <motion.div
+                        initial={{ opacity: 0, y: 28 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.55, ease: "easeOut" }}
+                    >
+                        <Stack gap="lg" align="center">
+                            <Text size="xs" className="landing-page__eyebrow">
+                                Vampire: The Masquerade V5
+                            </Text>
+                            <Title order={1} size="3.8rem" className="landing-page__title">
+                                Progeny
+                            </Title>
+                            <div className="landing-page__divider" />
+                            <Text size="2rem" maw={760} className="landing-page__lede">
+                                Guided and simplified character creation
+                            </Text>
+                            <Text size="sm" maw={680} className="landing-page__kicker">
+                                Create your character here and use it anywhere - Export to PDF,
+                                Virtual Tabletops or use the Progeny Online Character Sheet
+                            </Text>
+                            <Group gap="md" justify="center" className="landing-page__cta-group">
+                                <Button
+                                    size="lg"
+                                    radius="md"
+                                    px="xl"
+                                    className="landing-page__primary-button"
+                                    leftSection={<IconSparkles size={18} />}
+                                    onClick={openGenerator}
+                                >
+                                    Embrace a new character
+                                </Button>
+                            </Group>
+                            <Stack gap={4} mt="lg" align="center">
+                                <Text size="sm" className="landing-page__hero-meta">
+                                    Feedback, requests or questions? Reach out to Odin on{" "}
+                                    <Anchor
+                                        href={CONTACT_LINKS.reddit.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
+                                        {CONTACT_LINKS.reddit.label}
+                                    </Anchor>
+                                    {", "}
+                                    <Anchor
+                                        href={CONTACT_LINKS.bluesky.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
+                                        {CONTACT_LINKS.bluesky.label}
+                                    </Anchor>
+                                    {" or "}
+                                    <Anchor
+                                        href={CONTACT_LINKS.kofi.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
+                                        {CONTACT_LINKS.kofi.label}
+                                    </Anchor>
+                                </Text>
+                                <Text size="sm" className="landing-page__hero-meta">
+                                    Find source code on{" "}
+                                    <Anchor
+                                        href={CONTACT_LINKS.github.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="landing-page__hero-meta-link"
+                                    >
+                                        {CONTACT_LINKS.github.label}
+                                    </Anchor>
+                                </Text>
+                            </Stack>
+                        </Stack>
+                    </motion.div>
+                </Container>
+            </Box>
+
+            <Box className="landing-page__section landing-page__grid-section">
+                <Container size="lg">
+                    <Stack gap="xl" mb="xl">
+                        <Text size="xs" className="landing-page__small-label">
+                            Continue the night
+                        </Text>
+                        <Title order={2} size="2.5rem" className="landing-page__section-title">
+                            Everything Progeny has to offer
+                        </Title>
+                        <Text size="xl" maw={780} className="landing-page__body">
+                            The creator is the first step. Progeny also gives you a dedicated sheet
+                            for active play and account features for keeping your chronicles
+                            organized.
+                        </Text>
+                    </Stack>
+
+                    <Grid gutter="xl">
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <FeatureCard
+                                title="Guided character creation"
+                                bullets={[
+                                    "Dead simple character creation",
+                                    "Save and edit your character in your browser",
+                                    "Export to PDF, an importable save file or to Foundry"
+                                ]}
+                                primaryLabel="Start creating"
+                                onPrimaryClick={openGenerator}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <FeatureCard
+                                title="Character sheet"
+                                bullets={[
+                                    "Highly automated online character sheet",
+                                    "Use free-edit or XP-spending mode to grow your character",
+                                    "Powerful dice roller, including one-click rouse check and remorse rolls"
+                                ]}
+                                primaryLabel="Open sheet"
+                                onPrimaryClick={() => navigate({ to: "/sheet" })}
+                            />
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, md: 4 }}>
+                            <FeatureCard
+                                title="Play online"
+                                bullets={[
+                                    "Create an account to manage your characters in the cloud",
+                                    "Share your characters with your coterie",
+                                    "Chat and auto-share dice rolls in play sessions"
+                                ]}
+                                primaryLabel={isAuthenticated ? "Account" : "Sign in"}
+                                onPrimaryClick={openAccountArea}
+                            />
+                        </Grid.Col>
+                    </Grid>
+                </Container>
+            </Box>
+
+            <Box className="landing-page__section landing-page__explainers">
+                <Container size="md">
+                    <Card
+                        id="sheet-explainer"
+                        radius="lg"
+                        p="xl"
+                        mb="xl"
+                        className="landing-page__explainer"
+                    >
+                        <Stack gap="md" className="landing-page__explainer-inner">
+                            <Text size="xs" className="landing-page__small-label">
+                                Character sheet
+                            </Text>
+                            <Title order={2} size="2.15rem" className="landing-page__section-title">
+                                Move from creation into play
+                            </Title>
+                            <Text size="xl" className="landing-page__body">
+                                The sheet is where a finished character becomes a table companion.
+                                Open it to review stats, manage disciplines and merits, track
+                                play-state changes, and keep the character in front of you during
+                                sessions.
+                            </Text>
+                            <Text size="lg" className="landing-page__body">
+                                It is designed as the next step after creation: build the character,
+                                open the sheet, connect to your coterie and do dice rolls, XP
+                                spending or free editing.
+                            </Text>
+                            <Group gap="lg" mt="xs">
+                                <Anchor
+                                    component={Link}
+                                    to="/sheet"
+                                    underline="never"
+                                    className="landing-page__link"
+                                >
+                                    Open the sheet
+                                </Anchor>
+                            </Group>
+                        </Stack>
+                    </Card>
+
+                    <Card
+                        id="account-explainer"
+                        radius="lg"
+                        p="xl"
+                        className="landing-page__explainer"
+                        style={{
+                            backgroundImage: `linear-gradient(180deg, rgba(35, 27, 27, 0.9), rgba(12, 10, 10, 0.96)), url(${alley})`,
+                            backgroundSize: "cover"
+                        }}
+                    >
+                        <Stack gap="md" className="landing-page__explainer-inner">
+                            <Text size="xs" className="landing-page__small-label">
+                                Logged-in account
+                            </Text>
+                            <Title order={2} size="2.15rem" className="landing-page__section-title">
+                                Keep your chronicles organized online
+                            </Title>
+                            <Text size="xl" className="landing-page__body">
+                                Signing in opens the account hub, where you can save characters to
+                                your account, revisit them later, arrange them into coteries, and
+                                share read-only versions with your friends.
+                            </Text>
+                            <Text size="lg" className="landing-page__body">
+                                Accont features, like all of Progeny, are completely free.
+                            </Text>
+                            <Group gap="lg" mt="xs">
+                                <Anchor
+                                    href="#"
+                                    underline="never"
+                                    className="landing-page__link"
+                                    onClick={(event) => {
+                                        event.preventDefault()
+                                        openAccountArea()
+                                    }}
+                                >
+                                    Sign In
+                                </Anchor>
+                            </Group>
+                        </Stack>
+                    </Card>
+                </Container>
+            </Box>
+
+            <Box component="footer" className="landing-page__footer">
+                <Container size="lg">
+                    <Group
+                        justify="space-between"
+                        align="flex-start"
+                        gap="xl"
+                        className="landing-page__footer-layout"
+                    >
+                        <Stack gap="xs">
+                            <Button
+                                variant="subtle"
+                                color="gray"
+                                className="landing-page__footer-button"
+                                onClick={openCredits}
+                            >
+                                Credits
+                            </Button>
+                        </Stack>
+
+                        <Group gap="lg" className="landing-page__footer-links">
+                            <Text className="landing-page__link">Contact me:</Text>
+                            <Anchor
+                                href={CONTACT_LINKS.reddit.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
+                                {CONTACT_LINKS.reddit.label}
+                            </Anchor>
+                            <Anchor
+                                href={CONTACT_LINKS.bluesky.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
+                                {CONTACT_LINKS.bluesky.label}
+                            </Anchor>
+                            <Anchor
+                                href={CONTACT_LINKS.github.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
+                                {CONTACT_LINKS.github.label}
+                            </Anchor>
+                            <Anchor
+                                href={CONTACT_LINKS.kofi.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
+                                {CONTACT_LINKS.kofi.label}
+                            </Anchor>
+                            <Anchor
+                                href={CONTACT_LINKS.website.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="never"
+                                className="landing-page__link"
+                            >
+                                {CONTACT_LINKS.website.label}
+                            </Anchor>
+                        </Group>
+                    </Group>
+                </Container>
+            </Box>
+
+            <Modal
+                opened={creditsOpened}
+                onClose={closeCredits}
+                centered
+                title="Credits"
+                radius="xl"
+                padding="xl"
+                size="lg"
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                classNames={{
+                    content: "landing-page__modal",
+                    header: "landing-page__modal-header",
+                    title: "landing-page__modal-title",
+                    body: "landing-page__modal-body"
+                }}
+            >
+                <Stack gap="xl">
+                    <Text className="landing-page__body">
+                        PDF template, FavIcon, discipline icons, and dice result icons by{" "}
+                        <Anchor href="https://linktr.ee/nerdbert" target="_blank" rel="noreferrer">
+                            Nerdbert.
+                        </Anchor>
+                    </Text>
+                    <Text className="landing-page__body">
+                        Progeny is an independent project and created under the{" "}
+                        <Anchor
+                            href="https://www.paradoxinteractive.com/games/world-of-darkness/community/dark-pack-agreement"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Dark Pack License.
+                        </Anchor>
+                    </Text>
+                    <Text className="landing-page__body">
+                        Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus
+                        Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
+                        <Anchor href="https://unsplash.com" target="_blank" rel="noreferrer">
+                            Unsplash.
+                        </Anchor>
+                    </Text>
+                </Stack>
+            </Modal>
+
+            <StartNewCharacterModal
+                opened={startNewCharacterModalOpened}
+                onClose={closeStartNewCharacterModal}
+                characterName={currentCharacterName}
+                setCharacterName={setCurrentCharacterName}
+                isCharacterNameEditable={!character.name.trim()}
+                isSaving={isSavingCurrentCharacter}
+                onContinueCurrent={continueCurrentCharacter}
+                onSaveAndStartNew={saveCurrentCharacterAndStartNew}
+            />
+        </Box>
+    )
+}

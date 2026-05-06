@@ -3,7 +3,11 @@ import { Attributes, AttributesKey } from "../data/Attributes"
 import { Character, getEmptyCharacter } from "../data/Character"
 import { Skills, SkillsKey } from "../data/Skills"
 import { DisciplineName } from "~/data/NameSchemas"
-import { attributeNameTo_WoD5EVtt_Key, skillNameTo_WoD5EVtt_Key, disciplineNameTo_WoD5EVtt_Key } from "./foundryWoDJsonCreator"
+import {
+    attributeNameTo_WoD5EVtt_Key,
+    skillNameTo_WoD5EVtt_Key,
+    disciplineNameTo_WoD5EVtt_Key
+} from "./foundryWoDJsonCreator"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 
 // The maximum is exclusive and the minimum is inclusive
@@ -16,7 +20,8 @@ export const rndInt = (min: number, max: number) => {
 export const upcase = (str: string) => (str[0] ? str[0].toUpperCase() + str.slice(1) : str)
 export const lowcase = (str: string) => (str[0] ? str[0].toLowerCase() + str.slice(1) : str)
 
-export const intersection = <T>(arr1: T[], arr2: T[]) => arr1.filter((value) => arr2.includes(value))
+export const intersection = <T>(arr1: T[], arr2: T[]) =>
+    arr1.filter((value) => arr2.includes(value))
 
 export const isEmptyList = (maybeList: unknown) => {
     if (Array.isArray(maybeList)) {
@@ -29,7 +34,9 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     // Health
     let health = 3 + character.attributes["stamina"]
     if (character.disciplines.find((power) => power.name === "Resilience")) {
-        const fortitudeLevel = character.disciplines.filter((power) => power.discipline === "fortitude").length
+        const fortitudeLevel = character.disciplines.filter(
+            (power) => power.discipline === "fortitude"
+        ).length
         health += fortitudeLevel
     }
 
@@ -87,7 +94,8 @@ export const notDefault = (character: Character, attribute: keyof Character) => 
     if (attribute === "predatorType") return isNonDefaultPredatorType(character[attribute])
     return character[attribute] !== emptyCharacter[attribute]
 }
-export const isDefault = (character: Character, attribute: keyof Character) => !notDefault(character, attribute)
+export const isDefault = (character: Character, attribute: keyof Character) =>
+    !notDefault(character, attribute)
 export const getValueForKey = (key: string, character: Character): number => {
     if (attributeNameTo_WoD5EVtt_Key[key as AttributesKey]) {
         return character.attributes[key as AttributesKey] || 0

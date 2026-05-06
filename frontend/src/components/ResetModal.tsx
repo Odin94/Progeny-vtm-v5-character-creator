@@ -1,42 +1,33 @@
-import { faXmark } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { Character, getEmptyCharacter } from "../data/Character"
+import { defaultGeneratorStepId, GeneratorStepId } from "../generator/steps"
+import ConfirmActionModal from "./ConfirmActionModal"
 
 export type ResetModalProps = {
     setCharacter: (character: Character) => void
-    setSelectedStep: (step: number) => void
+    setSelectedStep: (step: GeneratorStepId) => void
     resetModalOpened: boolean
     closeResetModal: () => void
 }
 
-const ResetModal = ({ resetModalOpened, closeResetModal, setCharacter, setSelectedStep }: ResetModalProps) => {
+const ResetModal = ({
+    resetModalOpened,
+    closeResetModal,
+    setCharacter,
+    setSelectedStep
+}: ResetModalProps) => {
     return (
-        <Modal opened={resetModalOpened} onClose={closeResetModal} title="" centered withCloseButton={false}>
-            <Stack>
-                <Text fz={"xl"} ta="center">
-                    Reset current character?
-                </Text>
-                <Divider my="sm" />
-                <Group justify="space-between">
-                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeResetModal}>
-                        Cancel
-                    </Button>
-
-                    <Button
-                        color="red"
-                        onClick={async () => {
-                            setCharacter(getEmptyCharacter())
-                            setSelectedStep(0)
-
-                            closeResetModal()
-                        }}
-                    >
-                        Reset character
-                    </Button>
-                </Group>
-            </Stack>
-        </Modal>
+        <ConfirmActionModal
+            opened={resetModalOpened}
+            onClose={closeResetModal}
+            onConfirm={() => {
+                setCharacter(getEmptyCharacter())
+                setSelectedStep(defaultGeneratorStepId)
+                closeResetModal()
+            }}
+            title="Reset Character?"
+            body="This will clear the current character and return you to the first generator step. This action cannot be undone."
+            confirmLabel="Reset"
+        />
     )
 }
 

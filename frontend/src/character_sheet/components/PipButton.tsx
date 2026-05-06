@@ -24,7 +24,7 @@ const PipButton = ({
     isFilling: isFillingProp = false,
     options,
     disabledReason,
-    xpCost,
+    xpCost
 }: PipButtonProps) => {
     const theme = useMantineTheme()
     const color = options?.primaryColor || "grape"
@@ -66,7 +66,7 @@ const PipButton = ({
         transition: "transform 0.2s ease",
         position: "relative",
         overflow: "visible",
-        ...style,
+        ...style
     }
 
     const actionIcon = (
@@ -74,7 +74,7 @@ const PipButton = ({
             animate={
                 !isDisabled
                     ? {
-                          scale: [1, 1.1, 1],
+                          scale: [1, 1.1, 1]
                       }
                     : { scale: 1 }
             }
@@ -83,13 +83,16 @@ const PipButton = ({
                     ? {
                           duration: 2,
                           repeat: Infinity,
-                          ease: "easeInOut",
+                          ease: "easeInOut"
                       }
                     : undefined
             }
             style={{ display: "inline-block" }}
         >
-            <motion.div whileHover={!isDisabled && onClick ? { scale: 1.15 } : undefined} style={{ display: "inline-block" }}>
+            <motion.div
+                whileHover={!isDisabled && onClick ? { scale: 1.15 } : undefined}
+                style={{ display: "inline-block" }}
+            >
                 <ActionIcon
                     variant="subtle"
                     color={color}
@@ -104,13 +107,13 @@ const PipButton = ({
                         transition={{
                             duration: 0.3,
                             ease: "easeOut",
-                            delay: delay,
+                            delay: delay
                         }}
                         style={{
                             position: "absolute",
                             inset: 0,
                             backgroundColor: baseColor,
-                            borderRadius: "50%",
+                            borderRadius: "50%"
                         }}
                     />
                 </ActionIcon>

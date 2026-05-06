@@ -10,7 +10,7 @@ export const meritFlawSchema = z.object({
     level: z.number().min(1).int(),
     summary: z.string(),
     excludes: z.string().array(),
-    type: z.union([z.literal("merit"), z.literal("flaw")]),
+    type: z.union([z.literal("merit"), z.literal("flaw")])
 })
 
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
@@ -18,7 +18,7 @@ export type MeritFlaw = z.infer<typeof meritFlawSchema>
 export const touchstoneSchema = z.object({
     name: z.string(),
     description: z.string(),
-    conviction: z.string(),
+    conviction: z.string()
 })
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
@@ -39,7 +39,7 @@ export const characterSchema = z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
         pickedSpecialties: specialtySchema.array(),
-        pickedMeritsAndFlaws: meritFlawSchema.array(),
+        pickedMeritsAndFlaws: meritFlawSchema.array()
     }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
@@ -51,7 +51,10 @@ export const characterSchema = z.object({
     availableDisciplineNames: disciplineNameSchema.array(),
     disciplines: powerSchema.array(),
     rituals: ritualSchema.array(),
-    customDisciplines: z.record(disciplineNameSchema, customDisciplineSchema).optional().default({}),
+    customDisciplines: z
+        .record(disciplineNameSchema, customDisciplineSchema)
+        .optional()
+        .default({}),
 
     bloodPotency: z.number().min(0).int(),
     generation: z.number().min(0).int(),
@@ -73,9 +76,9 @@ export const characterSchema = z.object({
         superficialWillpowerDamage: z.number().min(0).int(),
         aggravatedWillpowerDamage: z.number().min(0).int(),
         humanityStains: z.number().min(0).int(),
-        experienceSpent: z.number().min(0).int(),
+        experienceSpent: z.number().min(0).int()
     }),
-    version: z.number().int().positive().optional().default(schemaVersion),
+    version: z.number().int().positive().optional().default(schemaVersion)
 })
 
 export type Character = z.infer<typeof characterSchema>

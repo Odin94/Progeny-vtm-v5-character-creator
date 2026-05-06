@@ -20,9 +20,17 @@ type DisciplineSelectModalProps = {
 }
 
 // TODOdin: Fix discipline card height
-const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hideBackButton }: DisciplineSelectModalProps) => {
+const DisciplineSelectModal = ({
+    opened,
+    onClose,
+    options,
+    initialDiscipline,
+    hideBackButton
+}: DisciplineSelectModalProps) => {
     const { character, primaryColor, setCharacter } = options
-    const [selectedDiscipline, setSelectedDiscipline] = useState<DisciplineName | null>(initialDiscipline || null)
+    const [selectedDiscipline, setSelectedDiscipline] = useState<DisciplineName | null>(
+        initialDiscipline || null
+    )
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
 
     useEffect(() => {
@@ -41,7 +49,9 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
     }, [opened])
 
     const getCurrentDisciplineLevel = (disciplineName: DisciplineName): number => {
-        const disciplinePowers = character.disciplines.filter((p) => p.discipline === disciplineName)
+        const disciplinePowers = character.disciplines.filter(
+            (p) => p.discipline === disciplineName
+        )
         return disciplinePowers.length
     }
 
@@ -53,11 +63,16 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
         const maxLevel = currentLevel === 0 ? 1 : currentLevel + 1
         const characterPowerNames = new Set(character.disciplines.map((p) => p.name))
 
-        return discipline.powers.filter((power) => !characterPowerNames.has(power.name) && power.level <= maxLevel)
+        return discipline.powers.filter(
+            (power) => !characterPowerNames.has(power.name) && power.level <= maxLevel
+        )
     }
 
     const hasAmalgamPrerequisites = (power: Power): boolean => {
-        for (const { discipline: requiredDiscipline, level: requiredLevel } of power.amalgamPrerequisites) {
+        for (const {
+            discipline: requiredDiscipline,
+            level: requiredLevel
+        } of power.amalgamPrerequisites) {
             const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
             if (characterDisciplineLevel < requiredLevel) {
                 return false
@@ -68,7 +83,10 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
 
     const getAmalgamTooltip = (power: Power): string | null => {
         const missingPrereqs: string[] = []
-        for (const { discipline: requiredDiscipline, level: requiredLevel } of power.amalgamPrerequisites) {
+        for (const {
+            discipline: requiredDiscipline,
+            level: requiredLevel
+        } of power.amalgamPrerequisites) {
             const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
             if (characterDisciplineLevel < requiredLevel) {
                 missingPrereqs.push(`${upcase(requiredDiscipline)} Level ${requiredLevel}`)
@@ -103,7 +121,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
     const handleSelectPower = (power: Power) => {
         const updatedCharacter = {
             ...character,
-            disciplines: [...character.disciplines, power],
+            disciplines: [...character.disciplines, power]
         }
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
 
@@ -111,7 +129,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
             const cost = getDisciplineCost(character, power.discipline)
             updatedCharacter.ephemeral = {
                 ...updatedCharacter.ephemeral,
-                experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost,
+                experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost
             }
         }
 
@@ -122,7 +140,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                 power_name: power.name,
                 discipline: power.discipline,
                 level: power.level,
-                mode: options.mode,
+                mode: options.mode
             })
         } catch (error) {
             console.warn("PostHog sheet-power-pick tracking failed:", error)
@@ -145,7 +163,11 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                 onClose()
                 setSelectedDiscipline(null)
             }}
-            title={selectedDiscipline ? `Select a Power - ${upcase(selectedDiscipline)}` : "Select a Discipline"}
+            title={
+                selectedDiscipline
+                    ? `Select a Power - ${upcase(selectedDiscipline)}`
+                    : "Select a Discipline"
+            }
             size="lg"
         >
             <Stack gap="md">
@@ -174,24 +196,32 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
 
                                     return (
                                         <Grid.Col key={disciplineName} span={{ base: 12, sm: 6 }}>
-                                            <Box style={{ position: "relative", minHeight: "180px" }}>
+                                            <Box
+                                                style={{ position: "relative", minHeight: "180px" }}
+                                            >
                                                 <Button
                                                     variant="light"
                                                     color={primaryColor}
                                                     fullWidth
                                                     h="auto"
                                                     p="md"
-                                                    onClick={() => handleSelectDiscipline(disciplineName)}
+                                                    onClick={() =>
+                                                        handleSelectDiscipline(disciplineName)
+                                                    }
                                                     style={{ height: "100%", minHeight: "180px" }}
                                                 >
-                                                    <Stack gap="xs" align="center" style={{ width: "100%" }}>
+                                                    <Stack
+                                                        gap="xs"
+                                                        align="center"
+                                                        style={{ width: "100%" }}
+                                                    >
                                                         <Box
                                                             style={{
                                                                 width: "60px",
                                                                 height: "60px",
                                                                 display: "flex",
                                                                 alignItems: "center",
-                                                                justifyContent: "center",
+                                                                justifyContent: "center"
                                                             }}
                                                         >
                                                             {discipline.logo ? (
@@ -200,7 +230,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                                                                     alt={upcase(disciplineName)}
                                                                     style={{
                                                                         width: "60px",
-                                                                        height: "60px",
+                                                                        height: "60px"
                                                                     }}
                                                                 />
                                                             ) : null}
@@ -213,11 +243,16 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                                                                 minHeight: "40px",
                                                                 display: "flex",
                                                                 alignItems: "center",
-                                                                justifyContent: "center",
+                                                                justifyContent: "center"
                                                             }}
                                                         >
                                                             {discipline.summary ? (
-                                                                <Text size="sm" c="dimmed" ta="center" lineClamp={2}>
+                                                                <Text
+                                                                    size="sm"
+                                                                    c="dimmed"
+                                                                    ta="center"
+                                                                    lineClamp={2}
+                                                                >
                                                                     {discipline.summary}
                                                                 </Text>
                                                             ) : null}
@@ -232,7 +267,7 @@ const DisciplineSelectModal = ({ opened, onClose, options, initialDiscipline, hi
                                                         style={{
                                                             position: "absolute",
                                                             top: "8px",
-                                                            right: "8px",
+                                                            right: "8px"
                                                         }}
                                                     >
                                                         Clan
@@ -293,7 +328,7 @@ const PowerPicker = ({
     hideBackButton,
     character,
     hasAmalgamPrerequisites,
-    getAmalgamTooltip,
+    getAmalgamTooltip
 }: PowerPickerProps) => {
     const powersByLevel = new Map<number, Power[]>()
     availablePowers.forEach((power) => {
@@ -337,7 +372,11 @@ const PowerPicker = ({
                                                 <DisciplinePowerCard
                                                     power={power}
                                                     primaryColor={primaryColor}
-                                                    onClick={hasAmalgams ? () => onSelectPower(power) : undefined}
+                                                    onClick={
+                                                        hasAmalgams
+                                                            ? () => onSelectPower(power)
+                                                            : undefined
+                                                    }
                                                     inModal={true}
                                                     character={character}
                                                     disabled={!hasAmalgams}

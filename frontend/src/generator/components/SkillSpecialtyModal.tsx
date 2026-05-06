@@ -1,13 +1,12 @@
-import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Group, Modal, Select, Stack, Text, TextInput, useMantineTheme } from "@mantine/core"
-import { useState } from "react"
+import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { IconSparkles } from "@tabler/icons-react"
+import { useMemo, useState } from "react"
 import { Character } from "../../data/Character"
-import { Skills, SkillsKey, skillsKeySchema, allSkills } from "../../data/Skills"
+import { Skills, SkillsKey, allSkills, skillsKeySchema } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
 import { globals } from "../../globals"
-import { intersection, lowcase, upcase } from "../utils"
-import FocusBorderWrapper from "../../character_sheet/components/FocusBorderWrapper"
+import { lowcase, upcase } from "../utils"
 
 type SpecialtyModalProps = {
     modalOpened: boolean
@@ -19,7 +18,7 @@ type SpecialtyModalProps = {
     nextStep: () => void
 }
 
-type SpecialtySkill = "academics" | "craft" | "performance" | "science"
+const BONUS_SPECIALTY_SKILLS = ["academics", "craft", "performance", "science"] as const
 
 export const SpecialtyModal = ({
     modalOpened,
@@ -28,126 +27,207 @@ export const SpecialtyModal = ({
     nextStep,
     character,
     pickedSkillNames,
-    skills,
+    skills
 }: SpecialtyModalProps) => {
-    const theme = useMantineTheme()
-    const colorValue = theme.colors.grape[6]
-    const smallScreen = globals.isSmallScreen
     const phoneScreen = globals.isPhoneScreen
 
-    const [pickedSkillDisplay, setPickedSkillDisplay] = useState<string>(/*pickedSkillNames[0]*/ "") // Need to define this and set it in parent-component to automatically select the first one (see PredatorTypePicker)
-    const [pickedSkillSpecialty, setPickedSkillSpecialty] = useState("")
+    const RED = rgba(RAW_RED, 1)
 
-    const [academicsSpecialty, setAcademicsSpecialty] = useState("")
-    const [craftSpecialty, setCraftSpecialty] = useState("")
-    const [performanceSpecialty, setPerformanceSpecialty] = useState("")
-    const [scienceSpecialty, setScienceSpecialty] = useState("")
+    const bonusSkills = useMemo(
+        () => BONUS_SPECIALTY_SKILLS.filter((s) => pickedSkillNames.includes(s as SkillsKey)),
+        [pickedSkillNames]
+    )
+    const freeSkills = useMemo(
+        () =>
+            pickedSkillNames.filter(
+                (s) =>
+                    !BONUS_SPECIALTY_SKILLS.includes(s as (typeof BONUS_SPECIALTY_SKILLS)[number])
+            ),
+        [pickedSkillNames]
+    )
 
-    const specialtySkills = ["academics", "craft", "performance", "science"]
+    const [freeEntries, setFreeEntries] = useState<{ skill: string; text: string }[]>([
+        { skill: "", text: "" }
+    ])
+    const [bonusTexts, setBonusTexts] = useState<Record<string, string>>(() =>
+        Object.fromEntries(BONUS_SPECIALTY_SKILLS.map((s) => [s, ""]))
+    )
 
-    const specialtyStates: Record<SpecialtySkill, { value: string; setValue: (s: string) => void }> = {
-        academics: { value: academicsSpecialty, setValue: setAcademicsSpecialty },
-        craft: { value: craftSpecialty, setValue: setCraftSpecialty },
-        performance: { value: performanceSpecialty, setValue: setPerformanceSpecialty },
-        science: { value: scienceSpecialty, setValue: setScienceSpecialty },
+    const usedFreeSkills = freeEntries.map((e) => e.skill).filter(Boolean)
+
+    const updateFreeEntry = (i: number, field: "skill" | "text", value: string) => {
+        const next = [...freeEntries]
+        next[i] = { ...next[i], [field]: value }
+        setFreeEntries(next)
     }
 
-    const pickedSpecialtySkills = intersection(specialtySkills, pickedSkillNames) as SpecialtySkill[]
-    const pickedSkill = lowcase(pickedSkillDisplay)
+    const handleConfirm = () => {
+        const result: Specialty[] = []
 
-    const inputW = phoneScreen ? 140 : 200
+        for (const entry of freeEntries) {
+            const skill = lowcase(entry.skill)
+            if (skill && entry.text.trim() && allSkills.includes(skill as SkillsKey)) {
+                result.push({
+                    skill: skillsKeySchema.parse(skill),
+                    name: lowcase(entry.text.trim())
+                })
+            }
+        }
+
+        for (const s of bonusSkills) {
+            const text = bonusTexts[s]
+            if (text.trim()) {
+                result.push({
+                    skill: skillsKeySchema.parse(s),
+                    name: lowcase(text.trim())
+                })
+            }
+        }
+
+        closeModal()
+        setCharacter({ ...character, skills, skillSpecialties: result })
+        nextStep()
+    }
+
     return (
         <Modal
             withCloseButton={false}
-            size="lg"
+            size="md"
             opened={modalOpened}
             onClose={closeModal}
-            title={
+            centered
+            styles={{
+                content: {
+                    background: "rgba(18, 15, 14, 0.97)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 12
+                },
+                body: { padding: phoneScreen ? "16px" : "24px" }
+            }}
+            overlayProps={{ backgroundOpacity: 0.7 }}
+        >
+            <Stack gap="lg">
+                {/* Header */}
                 <div>
-                    <Text w={smallScreen ? "300px" : "600px"} fw={700} fz={"30px"} ta="center">
-                        Specialties
-                    </Text>
-                    <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">
-                        Specialties are additional abilities that apply to some uses of a skill (Eg. Performance: Dancing)
-                    </Text>
-                    <Text fw={400} fz={"md"} ta="center" mt={"md"} color="grey">
-                        A specialty should not be so broad that it applies to most uses of the skill
+                    <Group gap={8} mb={8}>
+                        <IconSparkles size={18} color={RED} />
+                        <Text
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                fontSize: "1.15rem",
+                                fontWeight: 600,
+                                letterSpacing: "0.06em"
+                            }}
+                        >
+                            Skill Specialties
+                        </Text>
+                    </Group>
+                    <Text
+                        style={{
+                            fontFamily: "Crimson Text, Georgia, serif",
+                            fontSize: "0.95rem",
+                            color: rgba(RAW_GREY, 0.55),
+                            lineHeight: 1.55
+                        }}
+                    >
+                        Specialties represent focused expertise within a skill —{" "}
+                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
+                            Performance: Dancing
+                        </span>{" "}
+                        or{" "}
+                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
+                            Academics: History
+                        </span>
+                        .
                     </Text>
                 </div>
-            }
-            centered
-        >
-            <Stack style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
-                <Divider my="sm" />
-                <Text fw={700} fz={"xl"}>
-                    Select a Skill for a free Specialty
-                </Text>
 
-                <Group justify="space-between">
-                    <Select
-                        w={inputW}
-                        // label="Pick a free specialty"
-                        placeholder="Pick one"
-                        searchable
-                        value={pickedSkillDisplay}
-                        onChange={(value) => {
-                            setPickedSkillDisplay(value ?? "")
-                        }}
-                        onSearchChange={setPickedSkillDisplay}
-                        searchValue={pickedSkillDisplay}
-                        data={pickedSkillNames.filter((s) => !specialtySkills.includes(s)).map(upcase)}
-                    />
+                <div
+                    style={{
+                        height: 1,
+                        background: `linear-gradient(90deg, transparent, ${rgba(RAW_RED, 0.25)}, transparent)`
+                    }}
+                />
 
-                    <FocusBorderWrapper colorValue={colorValue} style={{ width: inputW }}>
-                        <TextInput
-                            style={{ width: "100%" }}
-                            value={pickedSkillSpecialty}
-                            onChange={(event) => setPickedSkillSpecialty(event.currentTarget.value)}
-                        />
-                    </FocusBorderWrapper>
-                </Group>
-                <Divider my="sm" variant="dotted" />
-
-                {pickedSpecialtySkills.map((s) => (
-                    <div key={s}>
-                        <Group justify="space-between">
-                            <Text fw={700} fz={phoneScreen ? "sm" : "xl"}>
-                                {upcase(s)}:
-                            </Text>
-                            <FocusBorderWrapper colorValue={colorValue} style={{ width: inputW }}>
-                                <TextInput
-                                    style={{ width: "100%" }}
-                                    value={specialtyStates[s].value}
-                                    onChange={(event) => specialtyStates[s].setValue(event.currentTarget.value)}
-                                />
-                            </FocusBorderWrapper>
+                {/* Free specialty */}
+                <Stack gap={8}>
+                    {freeEntries.map((entry, i) => (
+                        <Group key={i} gap={8} wrap="nowrap">
+                            <Select
+                                placeholder="Choose a skill…"
+                                value={entry.skill || null}
+                                onChange={(v) => updateFreeEntry(i, "skill", v ?? "")}
+                                data={freeSkills
+                                    .filter((s) => s === entry.skill || !usedFreeSkills.includes(s))
+                                    .map((s) => ({ value: s, label: upcase(s) }))}
+                                color={RED}
+                                style={{ flex: 1 }}
+                                styles={{ input: { textTransform: "capitalize" } }}
+                            />{" "}
+                            <TextInput
+                                value={entry.text}
+                                onChange={(e) => updateFreeEntry(i, "text", e.target.value)}
+                                placeholder="e.g. Dancing"
+                                maxLength={40}
+                                color={RED}
+                                style={{ flex: 1 }}
+                            />
                         </Group>
-                        <Divider my="sm" variant="dotted" />
-                    </div>
-                ))}
+                    ))}
+                </Stack>
 
-                <Group justify="space-between" style={{ marginTop: "auto" }}>
-                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faChevronLeft} />} onClick={closeModal}>
+                {/* Bonus specialties (academics, craft, performance, science) */}
+                {bonusSkills.length > 0 && (
+                    <>
+                        <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
+                        <Stack gap={8}>
+                            {bonusSkills.map((s) => (
+                                <Group key={s} gap={8} align="center" wrap="nowrap">
+                                    <Text
+                                        style={{
+                                            fontFamily: "Cinzel, Georgia, serif",
+                                            fontSize: "0.82rem",
+                                            letterSpacing: "0.04em",
+                                            color: rgba(RAW_GOLD, 0.85),
+                                            minWidth: phoneScreen ? 90 : 110,
+                                            textTransform: "capitalize"
+                                        }}
+                                    >
+                                        {upcase(s)}
+                                    </Text>
+                                    <TextInput
+                                        value={bonusTexts[s]}
+                                        onChange={(e) =>
+                                            setBonusTexts((prev) => ({
+                                                ...prev,
+                                                [s]: e.currentTarget.value
+                                            }))
+                                        }
+                                        placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
+                                        maxLength={40}
+                                        color={RED}
+                                        style={{ flex: 1 }}
+                                    />
+                                </Group>
+                            ))}
+                        </Stack>
+                    </>
+                )}
+
+                {/* Footer */}
+                <Group justify="space-between" mt={4}>
+                    <Button variant="subtle" color="gray" onClick={closeModal}>
                         Back
                     </Button>
-
                     <Button
-                        color="grape"
-                        onClick={async () => {
-                            let pickedSpecialties = specialtySkills.reduce<Specialty[]>((acc, s) => {
-                                return [...acc, { skill: skillsKeySchema.parse(s), name: specialtyStates[s as SpecialtySkill].value }]
-                            }, [])
-
-                            if (pickedSkill && pickedSkillSpecialty.trim() && allSkills.includes(pickedSkill as SkillsKey)) {
-                                pickedSpecialties = [
-                                    ...pickedSpecialties,
-                                    { skill: skillsKeySchema.parse(pickedSkill), name: lowcase(pickedSkillSpecialty) },
-                                ]
+                        data-testid="skill-specialty-confirm-button"
+                        onClick={handleConfirm}
+                        color="red"
+                        styles={{
+                            root: {
+                                letterSpacing: "0.06em",
+                                textTransform: "uppercase"
                             }
-
-                            closeModal()
-                            setCharacter({ ...character, skills: skills, skillSpecialties: pickedSpecialties })
-                            nextStep()
                         }}
                     >
                         Confirm

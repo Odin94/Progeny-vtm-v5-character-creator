@@ -1,4 +1,16 @@
-import { Badge, Box, Divider, Grid, Group, NumberInput, Paper, Stack, Text, Title, useMantineTheme } from "@mantine/core"
+import {
+    Badge,
+    Box,
+    Divider,
+    Grid,
+    Group,
+    NumberInput,
+    Paper,
+    Stack,
+    Text,
+    Title,
+    useMantineTheme
+} from "@mantine/core"
 import { clans } from "~/data/Clans"
 import { potencyEffects } from "~/data/BloodPotency"
 import Pips from "~/character_sheet/components/Pips"
@@ -16,7 +28,9 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const effects = potencyEffects[Math.min(character.bloodPotency, 5)] || potencyEffects[0]
     const clan = clans[character.clan] || clans[""]
-    const baneText = clan.bane ? clan.bane.replace(/BANE_SEVERITY/g, `${effects.bane} (bane severity)`) : ""
+    const baneText = clan.bane
+        ? clan.bane.replace(/BANE_SEVERITY/g, `${effects.bane} (bane severity)`)
+        : ""
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     const isExperienceEditable = mode === "xp" || mode === "free"
@@ -31,16 +45,16 @@ const TheBlood = ({ options }: TheBloodProps) => {
             ...char,
             ephemeral: {
                 ...char.ephemeral,
-                experienceSpent: value,
-            },
-        }),
+                experienceSpent: value
+            }
+        })
     })
 
     const experienceField = useDebouncedUncontrolledNumberField({
         character,
         setCharacter,
         field: "experience",
-        getValue: (char) => char.experience,
+        getValue: (char) => char.experience
     })
 
     return (
@@ -54,7 +68,13 @@ const TheBlood = ({ options }: TheBloodProps) => {
                     <Text fw={700} size="lg" style={{ minWidth: "fit-content" }}>
                         Blood Potency:
                     </Text>
-                    <Pips level={character.bloodPotency} maxLevel={10} minLevel={0} options={options} field="bloodPotency" />
+                    <Pips
+                        level={character.bloodPotency}
+                        maxLevel={10}
+                        minLevel={0}
+                        options={options}
+                        field="bloodPotency"
+                    />
                 </Group>
             </Box>
 
@@ -77,7 +97,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                     style={{
                                         width: "1px",
                                         height: "1.5rem",
-                                        backgroundColor: "var(--mantine-color-gray-3)",
+                                        backgroundColor: "var(--mantine-color-gray-3)"
                                     }}
                                 />
                                 <Group gap="xs" align="center">
@@ -107,8 +127,8 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                                     fontSize: "1.125rem",
                                                     fontWeight: 700,
                                                     color: colorValue,
-                                                    textAlign: "center",
-                                                },
+                                                    textAlign: "center"
+                                                }
                                             }}
                                         />
                                         <Text size="lg" c={primaryColor} fw={700}>
@@ -138,8 +158,8 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                                 fontSize: "1.125rem",
                                                 fontWeight: 700,
                                                 color: `var(--mantine-color-${primaryColor}-6)`,
-                                                textAlign: "center",
-                                            },
+                                                textAlign: "center"
+                                            }
                                         }}
                                     />
                                 ) : (

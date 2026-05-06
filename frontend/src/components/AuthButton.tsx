@@ -2,9 +2,9 @@ import { Button, Group } from "@mantine/core"
 import { useAuth } from "../hooks/useAuth"
 
 export const AuthButton = () => {
-    const { user, loading, isAuthenticated, signIn, signOut } = useAuth()
+    const { user, isLoading, isAuthenticated, signIn, signOut } = useAuth()
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Button loading color="gray">
                 Loading...

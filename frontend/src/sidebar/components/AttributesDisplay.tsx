@@ -9,7 +9,7 @@ export type AttributesProps = {
 
 const AttributesDisplay = ({ attributes }: AttributesProps) => {
     const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New",
+        fontFamily: "Courier New"
     }
 
     return (
@@ -24,7 +24,8 @@ const AttributesDisplay = ({ attributes }: AttributesProps) => {
                         .map((attribute) => {
                             return (
                                 <Text style={textStyle} key={attribute}>
-                                    {upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} />
+                                    {upcase(attribute).slice(0, 3)}:{" "}
+                                    <Tally n={attributes[attribute]} />
                                 </Text>
                             )
                         })}
@@ -37,7 +38,8 @@ const AttributesDisplay = ({ attributes }: AttributesProps) => {
                         .map((attribute) => {
                             return (
                                 <Text style={textStyle} key={attribute}>
-                                    {upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} />
+                                    {upcase(attribute).slice(0, 3)}:{" "}
+                                    <Tally n={attributes[attribute]} />
                                 </Text>
                             )
                         })}
@@ -50,7 +52,8 @@ const AttributesDisplay = ({ attributes }: AttributesProps) => {
                         .map((attribute) => {
                             return (
                                 <Text style={textStyle} key={attribute}>
-                                    {upcase(attribute).slice(0, 3)}: <Tally n={attributes[attribute]} />
+                                    {upcase(attribute).slice(0, 3)}:{" "}
+                                    <Tally n={attributes[attribute]} />
                                 </Text>
                             )
                         })}

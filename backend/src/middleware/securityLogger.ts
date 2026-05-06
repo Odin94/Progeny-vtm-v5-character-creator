@@ -2,7 +2,12 @@ import { FastifyRequest, FastifyReply, FastifyError } from "fastify"
 import { getRequestId } from "./requestId.js"
 import { logger } from "../utils/logger.js"
 
-type SecurityEventType = "authentication_failure" | "authorization_failure" | "csrf_failure" | "rate_limit_exceeded" | "suspicious_activity"
+type SecurityEventType =
+    | "authentication_failure"
+    | "authorization_failure"
+    | "csrf_failure"
+    | "rate_limit_exceeded"
+    | "suspicious_activity"
 
 interface SecurityLogEntry {
     type: SecurityEventType
@@ -36,14 +41,14 @@ export function logSecurityEvent(
         userAgent,
         userId,
         details,
-        timestamp: Date.now(),
+        timestamp: Date.now()
     }
 
     logger.warn(type, {
         securityEvent: JSON.stringify(logEntry),
         endpoint: request.url,
         method: request.method,
-        userId: userId ?? null,
+        userId: userId ?? null
     })
 }
 
@@ -65,7 +70,7 @@ export function logRequest(request: FastifyRequest, reply: FastifyReply): void {
         ip,
         userAgent: userAgent ?? null,
         userId: userId ?? null,
-        statusCode,
+        statusCode
     })
 }
 
@@ -90,6 +95,6 @@ export function logError(request: FastifyRequest, reply: FastifyReply, error: Fa
         userAgent: userAgent ?? null,
         userId: userId ?? null,
         statusCode,
-        stack: error.stack ?? null,
+        stack: error.stack ?? null
     })
 }

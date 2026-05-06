@@ -1,4 +1,16 @@
-import { ActionIcon, Badge, Button, Card, FileButton, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core"
+import {
+    ActionIcon,
+    Badge,
+    Button,
+    Card,
+    FileButton,
+    Group,
+    Menu,
+    Paper,
+    Stack,
+    Text,
+    Title
+} from "@mantine/core"
 import {
     IconDots,
     IconDownload,
@@ -9,7 +21,7 @@ import {
     IconPlus,
     IconShare,
     IconTrash,
-    IconUpload,
+    IconUpload
 } from "@tabler/icons-react"
 import { Character as CharacterType } from "~/data/Character"
 
@@ -55,7 +67,7 @@ const CharactersSection = ({
     handleSaveJson,
     handleDownloadPdf,
     handleDeleteCharacter,
-    handleUnshareCharacter,
+    handleUnshareCharacter
 }: CharactersSectionProps) => {
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
@@ -68,7 +80,11 @@ const CharactersSection = ({
                     </Badge>
                 </Group>
                 <Group gap="xs">
-                    <Button leftSection={<IconPlus size={16} />} color="red" onClick={() => setCreateCharacterModalOpened(true)}>
+                    <Button
+                        leftSection={<IconPlus size={16} />}
+                        color="red"
+                        onClick={() => setCreateCharacterModalOpened(true)}
+                    >
                         Create Empty
                     </Button>
                     {showSaveCurrentButton ? (
@@ -98,7 +114,10 @@ const CharactersSection = ({
                                 accept="application/json"
                             >
                                 {(props) => (
-                                    <Menu.Item leftSection={<IconFileUpload size={16} />} {...props}>
+                                    <Menu.Item
+                                        leftSection={<IconFileUpload size={16} />}
+                                        {...props}
+                                    >
                                         Load JSON
                                     </Menu.Item>
                                 )}
@@ -121,7 +140,9 @@ const CharactersSection = ({
                                 p="md"
                                 withBorder
                                 style={{
-                                    backgroundColor: isSelected ? "rgba(139, 0, 0, 0.15)" : "rgba(0, 0, 0, 0.4)",
+                                    backgroundColor: isSelected
+                                        ? "rgba(139, 0, 0, 0.15)"
+                                        : "rgba(0, 0, 0, 0.4)"
                                 }}
                             >
                                 <Group justify="space-between">
@@ -154,7 +175,10 @@ const CharactersSection = ({
                                                             e.stopPropagation()
                                                             handleSaveCurrentCharacter()
                                                         }}
-                                                        disabled={!character.name.trim() || isAnyOperationInFlight}
+                                                        disabled={
+                                                            !character.name.trim() ||
+                                                            isAnyOperationInFlight
+                                                        }
                                                         loading={isSavingCharacter}
                                                     >
                                                         Save
@@ -188,13 +212,19 @@ const CharactersSection = ({
                                                 </Button>
                                                 <Menu>
                                                     <Menu.Target>
-                                                        <ActionIcon color="red" variant="light" onClick={(e) => e.stopPropagation()}>
+                                                        <ActionIcon
+                                                            color="red"
+                                                            variant="light"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
                                                             <IconDots size={16} />
                                                         </ActionIcon>
                                                     </Menu.Target>
                                                     <Menu.Dropdown>
                                                         <Menu.Item
-                                                            leftSection={<IconInfoCircle size={14} />}
+                                                            leftSection={
+                                                                <IconInfoCircle size={14} />
+                                                            }
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleShowSummary(char)
@@ -213,7 +243,9 @@ const CharactersSection = ({
                                                             Save JSON
                                                         </Menu.Item>
                                                         <Menu.Item
-                                                            leftSection={<IconFileTypePdf size={14} />}
+                                                            leftSection={
+                                                                <IconFileTypePdf size={14} />
+                                                            }
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleDownloadPdf(char)
@@ -227,7 +259,10 @@ const CharactersSection = ({
                                                             color="red"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                handleDeleteCharacter(char.id, char.name)
+                                                                handleDeleteCharacter(
+                                                                    char.id,
+                                                                    char.name
+                                                                )
                                                             }}
                                                         >
                                                             Delete
@@ -252,13 +287,19 @@ const CharactersSection = ({
                                                 </Button>
                                                 <Menu>
                                                     <Menu.Target>
-                                                        <ActionIcon color="red" variant="light" onClick={(e) => e.stopPropagation()}>
+                                                        <ActionIcon
+                                                            color="red"
+                                                            variant="light"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
                                                             <IconDots size={16} />
                                                         </ActionIcon>
                                                     </Menu.Target>
                                                     <Menu.Dropdown>
                                                         <Menu.Item
-                                                            leftSection={<IconInfoCircle size={14} />}
+                                                            leftSection={
+                                                                <IconInfoCircle size={14} />
+                                                            }
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleShowSummary(char)
@@ -277,7 +318,9 @@ const CharactersSection = ({
                                                             Save JSON
                                                         </Menu.Item>
                                                         <Menu.Item
-                                                            leftSection={<IconFileTypePdf size={14} />}
+                                                            leftSection={
+                                                                <IconFileTypePdf size={14} />
+                                                            }
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleDownloadPdf(char)

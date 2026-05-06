@@ -17,29 +17,34 @@ TypeScript Fastify backend for Progeny VTM V5 Character Creator.
 ### Local Development
 
 1. Install dependencies:
+
 ```bash
-npm install
+pnpm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your WorkOS credentials, correct backend/frontend urls and posthog config
 ```
 
 3. Generate database migrations:
+
 ```bash
-npm run db:generate
+pnpm run db:generate
 ```
 
 4. Run migrations:
+
 ```bash
-npm run db:migrate
+pnpm run db:migrate
 ```
 
 5. Start development server:
+
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Production Server Setup (Ubuntu/Hetzner)
@@ -47,11 +52,13 @@ npm run dev
 For setting up on an Ubuntu Hetzner server, use the provided setup script:
 
 1. Copy the setup script to your server:
+
 ```bash
 scp backend/setupServer.sh root@your-server:/root/
 ```
 
 2. SSH into your server and run the setup:
+
 ```bash
 ssh root@your-server
 chmod +x setupServer.sh
@@ -59,6 +66,7 @@ chmod +x setupServer.sh
 ```
 
 The script will:
+
 - Update system packages
 - Install Node.js 22.x
 - Install PM2 process manager
@@ -81,6 +89,7 @@ The script will:
 ## API Endpoints
 
 ### Characters
+
 - `POST /characters` - Create character
 - `GET /characters` - List all characters (owned + shared)
 - `GET /characters/:id` - Get character
@@ -88,6 +97,7 @@ The script will:
 - `DELETE /characters/:id` - Delete character
 
 ### Coteries
+
 - `POST /coteries` - Create coterie
 - `GET /coteries` - List all coteries
 - `GET /coteries/:id` - Get coterie
@@ -97,11 +107,13 @@ The script will:
 - `DELETE /coteries/:id/characters/:characterId` - Remove character from coterie
 
 ### Sharing
+
 - `POST /characters/:characterId/share` - Share character with user
 - `DELETE /characters/:characterId/share/:userId` - Unshare character
 - `GET /characters/:characterId/shares` - List shares for character
 
 ### WebSocket
+
 - `WS /ws/characters` - WebSocket connection for live character sync
 
 ## Authentication
@@ -115,6 +127,7 @@ Authorization: Bearer <workos_token>
 ## Database
 
 The database uses SQLite with the following main tables:
+
 - `users` - User accounts (linked to WorkOS)
 - `characters` - Character data
 - `coteries` - Character groups
@@ -128,56 +141,66 @@ Connect to `/ws/characters` with Bearer token authentication.
 ### Messages
 
 **Subscribe to character:**
+
 ```json
 {
-  "type": "subscribe",
-  "characterId": "character_id"
+    "type": "subscribe",
+    "characterId": "character_id"
 }
 ```
 
 **Unsubscribe from character:**
+
 ```json
 {
-  "type": "unsubscribe",
-  "characterId": "character_id"
+    "type": "unsubscribe",
+    "characterId": "character_id"
 }
 ```
 
 **Update character:**
+
 ```json
 {
-  "type": "character_update",
-  "characterId": "character_id",
-  "data": { /* character data */ },
-  "version": 1
+    "type": "character_update",
+    "characterId": "character_id",
+    "data": {
+        /* character data */
+    },
+    "version": 1
 }
 ```
 
 ### Server Messages
 
 **Subscribed:**
+
 ```json
 {
-  "type": "subscribed",
-  "characterId": "character_id"
+    "type": "subscribed",
+    "characterId": "character_id"
 }
 ```
 
 **Character Updated:**
+
 ```json
 {
-  "type": "character_updated",
-  "characterId": "character_id",
-  "data": { /* character data */ },
-  "version": 1,
-  "updatedBy": "user_id"
+    "type": "character_updated",
+    "characterId": "character_id",
+    "data": {
+        /* character data */
+    },
+    "version": 1,
+    "updatedBy": "user_id"
 }
 ```
 
 **Update Confirmed:**
+
 ```json
 {
-  "type": "update_confirmed",
-  "characterId": "character_id"
+    "type": "update_confirmed",
+    "characterId": "character_id"
 }
 ```

@@ -1,0 +1,43 @@
+import { describe, expect, it } from "vitest"
+import { customDisciplineSchema, sanitizeCustomDisciplineLogoUrl } from "./Disciplines.js"
+
+describe("custom discipline logo URLs", () => {
+    it("keeps http and https logo URLs", () => {
+        expect(sanitizeCustomDisciplineLogoUrl(" https://example.com/logo.png ")).toBe(
+            "https://example.com/logo.png"
+        )
+        expect(sanitizeCustomDisciplineLogoUrl("http://example.com/logo.svg")).toBe(
+            "http://example.com/logo.svg"
+        )
+    })
+
+    it("removes non-web URL schemes", () => {
+        expect(sanitizeCustomDisciplineLogoUrl("javascript:alert(1)")).toBe("")
+        expect(
+            sanitizeCustomDisciplineLogoUrl(
+                "data:image/svg+xml,<svg><script>alert(1)</script></svg>"
+            )
+        ).toBe("")
+        expect(sanitizeCustomDisciplineLogoUrl("file:///C:/secret.png")).toBe("")
+    })
+
+    it("rejects unsafe schema input", () => {
+        expect(() =>
+            customDisciplineSchema.parse({
+                name: "Chronomancy",
+                summary: "Time tricks",
+                logo: "javascript:alert(1)"
+            })
+        ).toThrow()
+    })
+
+    it("allows safe schema input", () => {
+        const parsed = customDisciplineSchema.parse({
+            name: "Chronomancy",
+            summary: "Time tricks",
+            logo: "https://example.com/logo.png"
+        })
+
+        expect(parsed.logo).toBe("https://example.com/logo.png")
+    })
+})

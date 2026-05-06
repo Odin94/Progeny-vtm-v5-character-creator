@@ -37,5 +37,5 @@ Schemas live in `src/schemas/`. The `zodToFastifySchema` helper is in `src/utils
 
 - **Auth behavior**: inspect both `src/routes/auth.ts` (login/callback/logout) and `src/middleware/auth.ts` (per-request validation) — they share state assumptions.
 - **Route payloads**: inspect the corresponding frontend API helper in `frontend/src/utils/api.ts` and the consumer hook.
-- **DB schema**: generate a migration (`npm run db:generate`) and inspect affected routes for JSON parse/stringify logic.
+- **DB schema**: generate a migration (`pnpm run db:generate`) and inspect affected routes for JSON parse/stringify logic.
 - **WebSocket messages**: inspect the paired frontend Zustand store before finalizing — both sides must agree on the payload shape.

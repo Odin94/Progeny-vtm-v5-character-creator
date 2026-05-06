@@ -15,7 +15,14 @@ type BottomDataProps = {
 const BottomData = ({ options }: BottomDataProps) => {
     const { character, setCharacter, primaryColor } = options
     const theme = useMantineTheme()
-    const { superficialDamage, aggravatedDamage, superficialWillpowerDamage, aggravatedWillpowerDamage, hunger, humanityStains } = character.ephemeral
+    const {
+        superficialDamage,
+        aggravatedDamage,
+        superficialWillpowerDamage,
+        aggravatedWillpowerDamage,
+        hunger,
+        humanityStains
+    } = character.ephemeral
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const emptyHumanityPips = 10 - character.humanity
 
@@ -28,7 +35,12 @@ const BottomData = ({ options }: BottomDataProps) => {
                     </Text>
                     <Stack gap="xs">
                         <Group gap="xs">
-                            <Pips level={character.maxHealth} maxLevel={10} options={options} field="maxHealth" />
+                            <Pips
+                                level={character.maxHealth}
+                                maxLevel={10}
+                                options={options}
+                                field="maxHealth"
+                            />
                         </Group>
                         <DamagePips
                             maxValue={character.maxHealth}
@@ -40,8 +52,8 @@ const BottomData = ({ options }: BottomDataProps) => {
                                     ephemeral: {
                                         ...character.ephemeral,
                                         superficialDamage: newSuperficial,
-                                        aggravatedDamage: newAggravated,
-                                    },
+                                        aggravatedDamage: newAggravated
+                                    }
                                 })
                             }
                             color={options.primaryColor}
@@ -56,7 +68,12 @@ const BottomData = ({ options }: BottomDataProps) => {
                     </Text>
                     <Stack gap="xs">
                         <Group gap="xs">
-                            <Pips level={character.willpower} maxLevel={10} options={options} field="willpower" />
+                            <Pips
+                                level={character.willpower}
+                                maxLevel={10}
+                                options={options}
+                                field="willpower"
+                            />
                         </Group>
                         <DamagePips
                             maxValue={character.willpower}
@@ -68,8 +85,8 @@ const BottomData = ({ options }: BottomDataProps) => {
                                     ephemeral: {
                                         ...character.ephemeral,
                                         superficialWillpowerDamage: newSuperficial,
-                                        aggravatedWillpowerDamage: newAggravated,
-                                    },
+                                        aggravatedWillpowerDamage: newAggravated
+                                    }
                                 })
                             }
                             color={options.primaryColor}
@@ -92,10 +109,21 @@ const BottomData = ({ options }: BottomDataProps) => {
                     <Stack gap="xs">
                         <div style={{ maxWidth: "226px" }}>
                             <div>
-                                <SquarePips value={character.humanity} options={options} field="humanity" maxLevel={10} groupSize={5} />
+                                <SquarePips
+                                    value={character.humanity}
+                                    options={options}
+                                    field="humanity"
+                                    maxLevel={10}
+                                    groupSize={5}
+                                />
                             </div>
                             {emptyHumanityPips > 0 ? (
-                                <HumanityStainsPips value={humanityStains} maxLevel={emptyHumanityPips} filledHumanity={character.humanity} options={options} />
+                                <HumanityStainsPips
+                                    value={humanityStains}
+                                    maxLevel={emptyHumanityPips}
+                                    filledHumanity={character.humanity}
+                                    options={options}
+                                />
                             ) : null}
                         </div>
                     </Stack>
@@ -114,7 +142,12 @@ const BottomData = ({ options }: BottomDataProps) => {
                             iconSize={16}
                         />
                     </Group>
-                    <SquarePips value={hunger} options={options} field="ephemeral.hunger" maxLevel={5} />
+                    <SquarePips
+                        value={hunger}
+                        options={options}
+                        field="ephemeral.hunger"
+                        maxLevel={5}
+                    />
                 </Paper>
             </Grid.Col>
         </Grid>

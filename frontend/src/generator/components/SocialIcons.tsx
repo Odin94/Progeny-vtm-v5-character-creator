@@ -1,5 +1,6 @@
 import { ActionIcon, Text } from "@mantine/core"
 import { IconBrandReddit, IconButterfly } from "@tabler/icons-react"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 
 export const SocialIcons = () => {
     return (
@@ -7,7 +8,7 @@ export const SocialIcons = () => {
             For feature requests, bug reports and general feedback, message me on:{" "}
             <ActionIcon
                 component="a"
-                href="https://www.reddit.com/user/ProgenyDev/"
+                href={CONTACT_LINKS.reddit.href}
                 variant="default"
                 c={"#ff6314"}
                 target="_blank"
@@ -18,7 +19,7 @@ export const SocialIcons = () => {
             </ActionIcon>{" "}
             <ActionIcon
                 component="a"
-                href="https://bsky.app/profile/odinmatthias.bsky.social"
+                href={CONTACT_LINKS.bluesky.href}
                 variant="default"
                 c={"#208BFE"}
                 target="_blank"

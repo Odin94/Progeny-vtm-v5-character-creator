@@ -1,5 +1,11 @@
 import { Text } from "@mantine/core"
-import { IconTallymark1, IconTallymark2, IconTallymark3, IconTallymark4, IconTallymarks } from "@tabler/icons-react"
+import {
+    IconTallymark1,
+    IconTallymark2,
+    IconTallymark3,
+    IconTallymark4,
+    IconTallymarks
+} from "@tabler/icons-react"
 
 export type TallyProps = {
     n: number
@@ -10,7 +16,7 @@ export type TallyProps = {
 const Tally = ({ n, style, size }: TallyProps) => {
     const tallyStyle: React.CSSProperties = {
         ...style,
-        verticalAlign: "middle",
+        verticalAlign: "middle"
     }
 
     switch (n) {

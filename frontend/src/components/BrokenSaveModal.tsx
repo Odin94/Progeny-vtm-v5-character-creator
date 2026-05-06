@@ -2,14 +2,19 @@ import { faDownload, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button, Code, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
+import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { getEmptyCharacter } from "~/data/Character"
 
 const BrokenSaveModal = () => {
-    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } = useBrokenCharacter()
+    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
+        useBrokenCharacter()
     const [, setCharacter] = useCharacterLocalStorage()
-    const [, setSelectedStep] = useLocalStorage({ key: "selectedStep", defaultValue: 0 })
+    const [, setSelectedStep] = useLocalStorage<GeneratorStepId>({
+        key: "selectedGeneratorStep",
+        defaultValue: defaultGeneratorStepId
+    })
 
     const onDownload = () => {
         if (brokenData) {
@@ -27,7 +32,7 @@ const BrokenSaveModal = () => {
     const onReset = () => {
         clearBrokenCharacter()
         setCharacter(getEmptyCharacter())
-        setSelectedStep(0)
+        setSelectedStep(defaultGeneratorStepId)
     }
 
     return (
@@ -45,8 +50,8 @@ const BrokenSaveModal = () => {
                     Failed to load character from saved data
                 </Text>
                 <Text size="sm" c="dimmed">
-                    The saved character data could not be parsed, even after applying compatibility patches. This may happen if the data
-                    format has changed significantly.
+                    The saved character data could not be parsed, even after applying compatibility
+                    patches. This may happen if the data format has changed significantly.
                 </Text>
                 <Text size="sm" c="dimmed">
                     {`(You can safely refresh this page if download isn't working)`}
@@ -60,11 +65,19 @@ const BrokenSaveModal = () => {
                 </Code>
                 <Divider my="sm" />
                 <Group justify="space-between">
-                    <Button color="grape" leftSection={<FontAwesomeIcon icon={faDownload} />} onClick={onDownload}>
+                    <Button
+                        color="grape"
+                        leftSection={<FontAwesomeIcon icon={faDownload} />}
+                        onClick={onDownload}
+                    >
                         Download Broken Save Data
                     </Button>
                     <Group>
-                        <Button color="red" leftSection={<FontAwesomeIcon icon={faTrash} />} onClick={onReset}>
+                        <Button
+                            color="red"
+                            leftSection={<FontAwesomeIcon icon={faTrash} />}
+                            onClick={onReset}
+                        >
                             Reset to Empty Character
                         </Button>
                     </Group>

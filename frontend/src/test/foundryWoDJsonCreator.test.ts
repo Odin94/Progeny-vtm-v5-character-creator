@@ -92,24 +92,30 @@ describe("createWoD5EVttJson", () => {
         // Should have discipline power item
         const powerItem = json.items.find((item: any) => item.type === "power")
         expect(powerItem).toBeDefined()
-        expect(powerItem?.name).toBe("Prowess")
-        expect((powerItem?.system as any).discipline).toBe("potence")
-        expect((powerItem?.system as any).level).toBe(1)
+        expect(powerItem!.name).toBe("Prowess")
+        expect((powerItem!.system as any).discipline).toBe("potence")
+        expect((powerItem!.system as any).level).toBe(1)
 
         // Should have ritual item
-        const ritualItem = json.items.find((item: any) => item.type === "power" && (item.system as any).discipline === "rituals")
+        const ritualItem = json.items.find(
+            (item: any) => item.type === "power" && (item.system as any).discipline === "rituals"
+        )
         expect(ritualItem).toBeDefined()
-        expect(ritualItem?.name).toBe("Test Ritual")
-        expect((ritualItem?.system as any).cost).toBe("1 Rouse Check")
+        expect(ritualItem!.name).toBe("Test Ritual")
+        expect((ritualItem!.system as any).cost).toBe("1 Rouse Check")
 
         // Should have merit items
-        const meritItems = json.items.filter((item: any) => item.type === "feature" && item.system.featuretype === "merit")
+        const meritItems = json.items.filter(
+            (item: any) => item.type === "feature" && item.system.featuretype === "merit"
+        )
         expect(meritItems.length).toBeGreaterThan(0)
         expect(meritItems.some((item: any) => item.name === "Direct Merit")).toBe(true)
         expect(meritItems.some((item: any) => item.name === "Resources")).toBe(true)
 
         // Should have flaw items
-        const flawItems = json.items.filter((item: any) => item.type === "feature" && item.system.featuretype === "flaw")
+        const flawItems = json.items.filter(
+            (item: any) => item.type === "feature" && item.system.featuretype === "flaw"
+        )
         expect(flawItems.length).toBeGreaterThan(0)
         expect(flawItems.some((item: any) => item.name === "Direct Flaw")).toBe(true)
     })
@@ -125,7 +131,7 @@ describe("createWoD5EVttJson", () => {
                 name: "Invalid Predator",
                 pickedDiscipline: "invalid discipline",
                 pickedSpecialties: [],
-                pickedMeritsAndFlaws: [],
+                pickedMeritsAndFlaws: []
             },
             touchstones: [],
             ambition: "",
@@ -139,7 +145,7 @@ describe("createWoD5EVttJson", () => {
                 composure: 1,
                 intelligence: 1,
                 wits: 1,
-                resolve: 1,
+                resolve: 1
             },
             skills: {
                 athletics: 0,
@@ -168,7 +174,7 @@ describe("createWoD5EVttJson", () => {
                 occult: 0,
                 politics: 0,
                 science: 0,
-                technology: 0,
+                technology: 0
             },
             skillSpecialties: [],
             availableDisciplineNames: [],
@@ -181,7 +187,7 @@ describe("createWoD5EVttJson", () => {
             experience: 0,
             humanity: 7,
             merits: [],
-            flaws: [],
+            flaws: []
         } as Character
 
         const result = createWoD5EVttJson(invalidCharacter)

@@ -15,7 +15,7 @@ export const PREFERENCES_LOCALSTORAGE_KEY = "userPreferences"
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
     colorTheme: null,
-    backgroundImage: null,
+    backgroundImage: null
 }
 
 export const ALLOWED_COLORS: Array<{ value: string; label: string }> = [
@@ -30,7 +30,7 @@ export const ALLOWED_COLORS: Array<{ value: string; label: string }> = [
     { value: "green", label: "Green" },
     { value: "lime", label: "Lime" },
     { value: "yellow", label: "Yellow" },
-    { value: "orange", label: "Orange" },
+    { value: "orange", label: "Orange" }
 ]
 
 export type BackgroundImageOption = {
@@ -46,7 +46,7 @@ export const BACKGROUND_IMAGES: BackgroundImageOption[] = [
     { id: "bg_city", label: "City", src: city },
     { id: "bg_blood_guy", label: "Blood", src: bloodGuy },
     { id: "bg_bat_woman", label: "Bat Woman", src: batWoman },
-    { id: "bg_alley", label: "Alley", src: alley },
+    { id: "bg_alley", label: "Alley", src: alley }
 ]
 
 export const getBackgroundSrc = (id: string | null): string | null => {
@@ -62,7 +62,7 @@ export const loadPreferences = (): UserPreferences => {
         const parsed = JSON.parse(raw)
         return {
             colorTheme: parsed.colorTheme ?? null,
-            backgroundImage: parsed.backgroundImage ?? null,
+            backgroundImage: parsed.backgroundImage ?? null
         }
     } catch {
         return DEFAULT_PREFERENCES

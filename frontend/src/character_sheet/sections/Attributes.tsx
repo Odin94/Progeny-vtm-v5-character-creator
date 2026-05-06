@@ -15,11 +15,11 @@ const Attributes = ({ options }: AttributesProps) => {
     const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
-            updateSelectedDicePool: state.updateSelectedDicePool,
+            updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
     const textStyle = {
-        fontFamily: "Courier New",
+        fontFamily: "Courier New"
     }
 
     const isClickable = diceModalOpened
@@ -29,6 +29,7 @@ const Attributes = ({ options }: AttributesProps) => {
         updateSelectedDicePool({
             attribute: selectedDicePool.attribute === attribute ? null : attribute,
             selectedDisciplinePowers: [],
+            selectedMeritFlaws: []
         })
     }
 
@@ -45,8 +46,10 @@ const Attributes = ({ options }: AttributesProps) => {
                               cursor: "pointer",
                               padding: "4px 8px",
                               borderRadius: "4px",
-                              backgroundColor: isSelected ? `${options.primaryColor}33` : "transparent",
-                              transition: "background-color 0.2s",
+                              backgroundColor: isSelected
+                                  ? `${options.primaryColor}33`
+                                  : "transparent",
+                              transition: "background-color 0.2s"
                           }
                         : undefined
                 }

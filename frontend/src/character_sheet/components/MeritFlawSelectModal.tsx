@@ -13,13 +13,18 @@ import {
     Textarea,
     TextInput,
     Title,
-    Tooltip,
+    Tooltip
 } from "@mantine/core"
 import posthog from "posthog-js"
 import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
 import { clans } from "~/data/Clans"
-import { MeritOrFlaw, loresheets, meritsAndFlaws, thinbloodMeritsAndFlaws } from "~/data/MeritsAndFlaws"
+import {
+    essentialLoresheets,
+    essentialMeritsAndFlaws,
+    essentialThinbloodMeritsAndFlaws,
+    MeritOrFlaw
+} from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
 import { intersection } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
@@ -56,8 +61,13 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         }
     }, [opened])
 
-    const allMeritsAndFlaws = character.clan === "Thin-blood" ? [thinbloodMeritsAndFlaws, ...meritsAndFlaws] : meritsAndFlaws
-    const characterMeritFlawNames = new Set(type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name))
+    const allMeritsAndFlaws =
+        character.clan === "Thin-blood"
+            ? [essentialThinbloodMeritsAndFlaws, ...essentialMeritsAndFlaws]
+            : essentialMeritsAndFlaws
+    const characterMeritFlawNames = new Set(
+        type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name)
+    )
 
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
@@ -106,7 +116,13 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             })
         }
         return map
-    }, [character.merits, character.flaws, character.predatorType.pickedMeritsAndFlaws, character.predatorType.name, character.clan])
+    }, [
+        character.merits,
+        character.flaws,
+        character.predatorType.pickedMeritsAndFlaws,
+        character.predatorType.name,
+        character.clan
+    ])
 
     useEffect(() => {
         if (selectedMeritFlaw) {
@@ -135,7 +151,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             level: level,
             summary: meritFlaw.summary,
             excludes: meritFlaw.excludes,
-            type,
+            type
         }
 
         if (mode === "xp" && type === "merit") {
@@ -147,14 +163,16 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 return
             }
             if (existingMerit) {
-                const updatedMerits = character.merits.map((m) => (m === existingMerit ? newMeritFlaw : m))
+                const updatedMerits = character.merits.map((m) =>
+                    m === existingMerit ? newMeritFlaw : m
+                )
                 setCharacter({
                     ...character,
                     merits: updatedMerits,
                     ephemeral: {
                         ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost,
-                    },
+                        experienceSpent: character.ephemeral.experienceSpent + cost
+                    }
                 })
             } else {
                 setCharacter({
@@ -162,37 +180,41 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     merits: [...character.merits, newMeritFlaw],
                     ephemeral: {
                         ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost,
-                    },
+                        experienceSpent: character.ephemeral.experienceSpent + cost
+                    }
                 })
             }
         } else {
             if (type === "merit") {
                 const existingMerit = character.merits.find((m) => m.name === meritFlaw.name)
                 if (existingMerit) {
-                    const updatedMerits = character.merits.map((m) => (m === existingMerit ? newMeritFlaw : m))
+                    const updatedMerits = character.merits.map((m) =>
+                        m === existingMerit ? newMeritFlaw : m
+                    )
                     setCharacter({
                         ...character,
-                        merits: updatedMerits,
+                        merits: updatedMerits
                     })
                 } else {
                     setCharacter({
                         ...character,
-                        merits: [...character.merits, newMeritFlaw],
+                        merits: [...character.merits, newMeritFlaw]
                     })
                 }
             } else {
                 const existingFlaw = character.flaws.find((f) => f.name === meritFlaw.name)
                 if (existingFlaw) {
-                    const updatedFlaws = character.flaws.map((f) => (f === existingFlaw ? newMeritFlaw : f))
+                    const updatedFlaws = character.flaws.map((f) =>
+                        f === existingFlaw ? newMeritFlaw : f
+                    )
                     setCharacter({
                         ...character,
-                        flaws: updatedFlaws,
+                        flaws: updatedFlaws
                     })
                 } else {
                     setCharacter({
                         ...character,
-                        flaws: [...character.flaws, newMeritFlaw],
+                        flaws: [...character.flaws, newMeritFlaw]
                     })
                 }
             }
@@ -203,7 +225,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 name: meritFlaw.name,
                 type: type,
                 level: level,
-                mode: mode,
+                mode: mode
             })
         } catch (error) {
             console.warn("PostHog sheet-merit-flaw-pick tracking failed:", error)
@@ -227,7 +249,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             level: customLevel,
             summary: customDescription.trim(),
             excludes: [],
-            type,
+            type
         }
 
         if (mode === "xp" && type === "merit") {
@@ -239,14 +261,16 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 return
             }
             if (existingMerit) {
-                const updatedMerits = character.merits.map((m) => (m === existingMerit ? customMeritFlaw : m))
+                const updatedMerits = character.merits.map((m) =>
+                    m === existingMerit ? customMeritFlaw : m
+                )
                 setCharacter({
                     ...character,
                     merits: updatedMerits,
                     ephemeral: {
                         ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost,
-                    },
+                        experienceSpent: character.ephemeral.experienceSpent + cost
+                    }
                 })
             } else {
                 setCharacter({
@@ -254,37 +278,41 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     merits: [...character.merits, customMeritFlaw],
                     ephemeral: {
                         ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost,
-                    },
+                        experienceSpent: character.ephemeral.experienceSpent + cost
+                    }
                 })
             }
         } else {
             if (type === "merit") {
                 const existingMerit = character.merits.find((m) => m.name === customName.trim())
                 if (existingMerit) {
-                    const updatedMerits = character.merits.map((m) => (m === existingMerit ? customMeritFlaw : m))
+                    const updatedMerits = character.merits.map((m) =>
+                        m === existingMerit ? customMeritFlaw : m
+                    )
                     setCharacter({
                         ...character,
-                        merits: updatedMerits,
+                        merits: updatedMerits
                     })
                 } else {
                     setCharacter({
                         ...character,
-                        merits: [...character.merits, customMeritFlaw],
+                        merits: [...character.merits, customMeritFlaw]
                     })
                 }
             } else {
                 const existingFlaw = character.flaws.find((f) => f.name === customName.trim())
                 if (existingFlaw) {
-                    const updatedFlaws = character.flaws.map((f) => (f === existingFlaw ? customMeritFlaw : f))
+                    const updatedFlaws = character.flaws.map((f) =>
+                        f === existingFlaw ? customMeritFlaw : f
+                    )
                     setCharacter({
                         ...character,
-                        flaws: updatedFlaws,
+                        flaws: updatedFlaws
                     })
                 } else {
                     setCharacter({
                         ...character,
-                        flaws: [...character.flaws, customMeritFlaw],
+                        flaws: [...character.flaws, customMeritFlaw]
                     })
                 }
             }
@@ -295,7 +323,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 name: customName.trim(),
                 type: type,
                 level: customLevel,
-                mode: mode,
+                mode: mode
             })
         } catch (error) {
             console.warn("PostHog sheet-merit-flaw-custom tracking failed:", error)
@@ -347,12 +375,14 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         return getMeritCost(level, previousLevel)
     }
 
-    const openLoresheet = loresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const openLoresheet = essentialLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
     const pickedMeritsAndFlaws = [...character.merits, ...character.flaws]
 
     const renderLoresheetsContent = () => {
         if (openLoresheet) {
-            const availableMerits = openLoresheet.merits.filter((merit) => !characterMeritFlawNames.has(merit.name))
+            const availableMerits = openLoresheet.merits.filter(
+                (merit) => !characterMeritFlawNames.has(merit.name)
+            )
 
             return (
                 <Stack gap="md">
@@ -368,7 +398,11 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                 Source: {openLoresheet.source}
                             </Text>
                         </Box>
-                        <Button variant="subtle" onClick={() => setOpenLoresheetTitle("")} color={primaryColor}>
+                        <Button
+                            variant="subtle"
+                            onClick={() => setOpenLoresheetTitle("")}
+                            color={primaryColor}
+                        >
                             Back
                         </Button>
                     </Group>
@@ -382,9 +416,11 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                 const excludingItems = exclusionMap.get(merit.name) ?? []
                                 const isExcluded = excludingItems.length > 0
                                 const lowestLevel = merit.cost[0]
-                                const lowestCost = mode === "xp" ? getCostForItem(merit, lowestLevel) : 0
+                                const lowestCost =
+                                    mode === "xp" ? getCostForItem(merit, lowestLevel) : 0
                                 const availableXP = getAvailableXP(character)
-                                const canAffordLowest = mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
+                                const canAffordLowest =
+                                    mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
                                 const canClick = !isExcluded && canAffordLowest
                                 const tooltipLabel = isExcluded
                                     ? `Excluded by: ${excludingItems.join(", ")}`
@@ -401,7 +437,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             borderRadius: "var(--mantine-radius-sm)",
                                             cursor: canClick ? "pointer" : "default",
                                             transition: "background-color 0.2s",
-                                            opacity: isExcluded ? 0.5 : 1,
+                                            opacity: isExcluded ? 0.5 : 1
                                         }}
                                         onMouseEnter={(e) => {
                                             if (canClick) {
@@ -414,7 +450,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     >
                                         <Stack gap="xs">
                                             <Group justify="space-between" align="flex-start">
-                                                <Text fw={600} size="sm" style={{ flex: 1 }} c={isExcluded ? "dimmed" : undefined}>
+                                                <Text
+                                                    fw={600}
+                                                    size="sm"
+                                                    style={{ flex: 1 }}
+                                                    c={isExcluded ? "dimmed" : undefined}
+                                                >
                                                     {merit.name}
                                                 </Text>
                                                 <Badge size="sm" variant="dot" color={primaryColor}>
@@ -452,7 +493,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             )
         }
 
-        const availableLoresheets = loresheets.filter((loresheet) => {
+        const availableLoresheets = essentialLoresheets.filter((loresheet) => {
             const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
             if (!requirementsMet) return false
             const sheetPicked =
@@ -460,7 +501,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     pickedMeritsAndFlaws.map((m) => m.name),
                     loresheet.merits.map((m) => m.name)
                 ).length > 0
-            const hasAvailableMerits = loresheet.merits.some((merit) => !characterMeritFlawNames.has(merit.name))
+            const hasAvailableMerits = loresheet.merits.some(
+                (merit) => !characterMeritFlawNames.has(merit.name)
+            )
             return hasAvailableMerits || sheetPicked
         })
 
@@ -488,7 +531,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     h={250}
                                     style={{
                                         backgroundColor: "rgba(26, 27, 30, 0.90)",
-                                        borderColor: sheetPicked ? "green" : "black",
+                                        borderColor: sheetPicked ? "green" : "black"
                                     }}
                                     withBorder={sheetPicked}
                                 >
@@ -496,7 +539,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                         <Text fw={600} size="sm" ta="center">
                                             {loresheet.title}
                                         </Text>
-                                        <Text size="xs" c="dimmed" lineClamp={4} style={{ flex: 1 }}>
+                                        <Text
+                                            size="xs"
+                                            c="dimmed"
+                                            lineClamp={4}
+                                            style={{ flex: 1 }}
+                                        >
                                             {loresheet.summary}
                                         </Text>
                                         <Text size="xs" c="dimmed">
@@ -522,7 +570,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     }
 
     return (
-        <Modal opened={opened} onClose={onClose} title={`Select a ${type === "merit" ? "Merit" : "Flaw"}`} size="lg">
+        <Modal
+            opened={opened}
+            onClose={onClose}
+            title={`Select a ${type === "merit" ? "Merit" : "Flaw"}`}
+            size="lg"
+        >
             <Stack gap="md">
                 {selectedMeritFlaw ? (
                     <>
@@ -541,7 +594,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     const level = index + 1
                                     const cost = getCostForLevel(level)
                                     const availableXP = getAvailableXP(character)
-                                    const canAfford = type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, cost)
+                                    const canAfford =
+                                        type === "flaw" ||
+                                        mode !== "xp" ||
+                                        canAffordUpgrade(availableXP, cost)
                                     const disabledReason =
                                         type === "flaw" || mode !== "xp"
                                             ? undefined
@@ -556,14 +612,20 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             onClick={() => setSelectedLevel(level)}
                                             options={options}
                                             disabledReason={disabledReason}
-                                            xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
+                                            xpCost={
+                                                type === "flaw" || mode !== "xp" ? undefined : cost
+                                            }
                                         />
                                     )
                                 })}
                             </Group>
                         </Box>
                         <Group justify="flex-end" mt="md">
-                            <Button variant="subtle" onClick={() => setSelectedMeritFlaw(null)} color={primaryColor}>
+                            <Button
+                                variant="subtle"
+                                onClick={() => setSelectedMeritFlaw(null)}
+                                color={primaryColor}
+                            >
                                 Back
                             </Button>
                             <Button
@@ -572,7 +634,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                 disabled={
                                     mode === "xp" &&
                                     type === "merit" &&
-                                    !canAffordUpgrade(getAvailableXP(character), getCostForLevel(selectedLevel))
+                                    !canAffordUpgrade(
+                                        getAvailableXP(character),
+                                        getCostForLevel(selectedLevel)
+                                    )
                                 }
                             >
                                 Add
@@ -582,8 +647,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 ) : (
                     <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
                         <Tabs.List>
-                            <Tabs.Tab value="regular">{type === "merit" ? "Merits" : "Flaws"}</Tabs.Tab>
-                            {type === "merit" ? <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab> : null}
+                            <Tabs.Tab value="regular">
+                                {type === "merit" ? "Merits" : "Flaws"}
+                            </Tabs.Tab>
+                            {type === "merit" ? (
+                                <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
+                            ) : null}
                             {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
                         </Tabs.List>
 
@@ -595,8 +664,11 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                             ) : (
                                 <Stack gap="lg">
                                     {allMeritsAndFlaws.map((category) => {
-                                        const items = type === "merit" ? category.merits : category.flaws
-                                        const availableCategoryItems = items.filter((item) => !characterMeritFlawNames.has(item.name))
+                                        const items =
+                                            type === "merit" ? category.merits : category.flaws
+                                        const availableCategoryItems = items.filter(
+                                            (item) => !characterMeritFlawNames.has(item.name)
+                                        )
 
                                         if (availableCategoryItems.length === 0) return null
 
@@ -607,31 +679,49 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                 </Title>
                                                 <Grid gutter="md">
                                                     {availableCategoryItems.map((item) => {
-                                                        const excludingItems = exclusionMap.get(item.name) ?? []
+                                                        const excludingItems =
+                                                            exclusionMap.get(item.name) ?? []
                                                         const isExcluded = excludingItems.length > 0
                                                         const lowestLevel = item.cost[0]
                                                         const lowestCost =
-                                                            mode === "xp" && type === "merit" ? getCostForItem(item, lowestLevel) : 0
-                                                        const availableXP = getAvailableXP(character)
+                                                            mode === "xp" && type === "merit"
+                                                                ? getCostForItem(item, lowestLevel)
+                                                                : 0
+                                                        const availableXP =
+                                                            getAvailableXP(character)
                                                         const canAffordLowest =
-                                                            type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
-                                                        const canClick = !isExcluded && canAffordLowest
+                                                            type === "flaw" ||
+                                                            mode !== "xp" ||
+                                                            canAffordUpgrade(
+                                                                availableXP,
+                                                                lowestCost
+                                                            )
+                                                        const canClick =
+                                                            !isExcluded && canAffordLowest
                                                         const tooltipLabel = isExcluded
                                                             ? `Excluded by: ${excludingItems.join(", ")}`
-                                                            : mode === "xp" && type === "merit" && !canAffordLowest
+                                                            : mode === "xp" &&
+                                                                type === "merit" &&
+                                                                !canAffordLowest
                                                               ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
                                                               : undefined
 
                                                         const boxContent = (
                                                             <Box
                                                                 p="xs"
-                                                                onClick={() => handleItemClick(item)}
+                                                                onClick={() =>
+                                                                    handleItemClick(item)
+                                                                }
                                                                 style={{
                                                                     border: "1px solid var(--mantine-color-gray-8)",
-                                                                    borderRadius: "var(--mantine-radius-sm)",
-                                                                    cursor: canClick ? "pointer" : "default",
-                                                                    transition: "background-color 0.2s",
-                                                                    opacity: isExcluded ? 0.5 : 1,
+                                                                    borderRadius:
+                                                                        "var(--mantine-radius-sm)",
+                                                                    cursor: canClick
+                                                                        ? "pointer"
+                                                                        : "default",
+                                                                    transition:
+                                                                        "background-color 0.2s",
+                                                                    opacity: isExcluded ? 0.5 : 1
                                                                 }}
                                                                 onMouseEnter={(e) => {
                                                                     if (canClick) {
@@ -639,29 +729,45 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                                     }
                                                                 }}
                                                                 onMouseLeave={(e) => {
-                                                                    e.currentTarget.style.backgroundColor = "transparent"
+                                                                    e.currentTarget.style.backgroundColor =
+                                                                        "transparent"
                                                                 }}
                                                             >
                                                                 <Stack gap="xs">
-                                                                    <Group justify="space-between" align="flex-start">
+                                                                    <Group
+                                                                        justify="space-between"
+                                                                        align="flex-start"
+                                                                    >
                                                                         <Text
                                                                             fw={600}
                                                                             size="sm"
                                                                             style={{ flex: 1 }}
-                                                                            c={isExcluded ? "dimmed" : undefined}
+                                                                            c={
+                                                                                isExcluded
+                                                                                    ? "dimmed"
+                                                                                    : undefined
+                                                                            }
                                                                         >
                                                                             {item.name}
                                                                         </Text>
                                                                         <Badge
                                                                             size="sm"
                                                                             variant="dot"
-                                                                            color={type === "flaw" ? "red" : primaryColor}
+                                                                            color={
+                                                                                type === "flaw"
+                                                                                    ? "red"
+                                                                                    : primaryColor
+                                                                            }
                                                                         >
                                                                             {item.cost.join("/")}
                                                                         </Badge>
                                                                     </Group>
                                                                     {item.summary ? (
-                                                                        <Text size="xs" c="dimmed" lineClamp={3}>
+                                                                        <Text
+                                                                            size="xs"
+                                                                            c="dimmed"
+                                                                            lineClamp={3}
+                                                                        >
                                                                             {item.summary}
                                                                         </Text>
                                                                     ) : null}
@@ -671,8 +777,14 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
                                                         if (tooltipLabel) {
                                                             return (
-                                                                <Grid.Col key={item.name} span={{ base: 12, sm: 6 }}>
-                                                                    <Tooltip label={tooltipLabel} withArrow>
+                                                                <Grid.Col
+                                                                    key={item.name}
+                                                                    span={{ base: 12, sm: 6 }}
+                                                                >
+                                                                    <Tooltip
+                                                                        label={tooltipLabel}
+                                                                        withArrow
+                                                                    >
                                                                         {boxContent}
                                                                     </Tooltip>
                                                                 </Grid.Col>
@@ -680,7 +792,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                         }
 
                                                         return (
-                                                            <Grid.Col key={item.name} span={{ base: 12, sm: 6 }}>
+                                                            <Grid.Col
+                                                                key={item.name}
+                                                                span={{ base: 12, sm: 6 }}
+                                                            >
                                                                 {boxContent}
                                                             </Grid.Col>
                                                         )
@@ -723,7 +838,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             {[1, 2, 3, 4, 5].map((level) => {
                                                 const cost = getCustomMeritCost(level)
                                                 const availableXP = getAvailableXP(character)
-                                                const canAfford = type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, cost)
+                                                const canAfford =
+                                                    type === "flaw" ||
+                                                    mode !== "xp" ||
+                                                    canAffordUpgrade(availableXP, cost)
                                                 const disabledReason =
                                                     type === "flaw" || mode !== "xp"
                                                         ? undefined
@@ -738,7 +856,11 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                         onClick={() => setCustomLevel(level)}
                                                         options={options}
                                                         disabledReason={disabledReason}
-                                                        xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
+                                                        xpCost={
+                                                            type === "flaw" || mode !== "xp"
+                                                                ? undefined
+                                                                : cost
+                                                        }
                                                     />
                                                 )
                                             })}
@@ -752,7 +874,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                 !customName.trim() ||
                                                 (mode === "xp" &&
                                                     type === "merit" &&
-                                                    !canAffordUpgrade(getAvailableXP(character), getCustomMeritCost(customLevel)))
+                                                    !canAffordUpgrade(
+                                                        getAvailableXP(character),
+                                                        getCustomMeritCost(customLevel)
+                                                    ))
                                             }
                                         >
                                             Add

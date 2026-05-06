@@ -1,13 +1,16 @@
 import { posthogLogger } from "./posthogLogger.js"
 
-type LogAttributes = Record<string, string | number | boolean | string[] | number[] | boolean[] | null>
+type LogAttributes = Record<
+    string,
+    string | number | boolean | string[] | number[] | boolean[] | null
+>
 
 export const logger = {
     trace: (message: string, attributes?: LogAttributes) => {
         posthogLogger.emit({
             severityText: "trace",
             body: message,
-            attributes: attributes ?? {},
+            attributes: attributes ?? {}
         })
     },
 
@@ -15,7 +18,7 @@ export const logger = {
         posthogLogger.emit({
             severityText: "debug",
             body: message,
-            attributes: attributes ?? {},
+            attributes: attributes ?? {}
         })
     },
 
@@ -23,7 +26,7 @@ export const logger = {
         posthogLogger.emit({
             severityText: "info",
             body: message,
-            attributes: attributes ?? {},
+            attributes: attributes ?? {}
         })
     },
 
@@ -31,13 +34,13 @@ export const logger = {
         posthogLogger.emit({
             severityText: "warn",
             body: message,
-            attributes: attributes ?? {},
+            attributes: attributes ?? {}
         })
     },
 
     error: (message: string, error?: Error | unknown, attributes?: LogAttributes) => {
         const errorAttributes: LogAttributes = {
-            ...attributes,
+            ...attributes
         }
 
         if (error instanceof Error) {
@@ -51,13 +54,13 @@ export const logger = {
         posthogLogger.emit({
             severityText: "error",
             body: message,
-            attributes: errorAttributes,
+            attributes: errorAttributes
         })
     },
 
     fatal: (message: string, error?: Error | unknown, attributes?: LogAttributes) => {
         const errorAttributes: LogAttributes = {
-            ...attributes,
+            ...attributes
         }
 
         if (error instanceof Error) {
@@ -71,7 +74,7 @@ export const logger = {
         posthogLogger.emit({
             severityText: "fatal",
             body: message,
-            attributes: errorAttributes,
+            attributes: errorAttributes
         })
-    },
+    }
 }

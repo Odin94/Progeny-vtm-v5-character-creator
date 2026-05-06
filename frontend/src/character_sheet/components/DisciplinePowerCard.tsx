@@ -16,7 +16,10 @@ type DisciplinePowerCardProps = {
     disabledTooltip?: string | null
 }
 
-export const calculateDicePoolValues = (dicePoolString: string, character: Character): string | null => {
+export const calculateDicePoolValues = (
+    dicePoolString: string,
+    character: Character
+): string | null => {
     if (!dicePoolString || dicePoolString.trim() === "" || dicePoolString === "-") {
         return null
     }
@@ -54,13 +57,17 @@ const DisciplinePowerCard = ({
     renderActions,
     character,
     disabled = false,
-    disabledTooltip,
+    disabledTooltip
 }: DisciplinePowerCardProps) => {
     const theme = useMantineTheme()
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const content = (
         <Stack gap="xs" style={{ height: "100%", minHeight: "135px" }}>
-            <Text fw={600} size="sm" style={{ paddingRight: renderActions || !inModal ? "60px" : "0" }}>
+            <Text
+                fw={600}
+                size="sm"
+                style={{ paddingRight: renderActions || !inModal ? "60px" : "0" }}
+            >
                 {power.name}
             </Text>
             {power.summary ? (
@@ -91,7 +98,11 @@ const DisciplinePowerCard = ({
                 <Group gap="xs" align="center">
                     <Text size="xs">Rouses:</Text>
                     {power.rouseChecks > 0 ? (
-                        <Tally n={power.rouseChecks} size={16} style={{ color: "var(--mantine-color-red-6)" }} />
+                        <Tally
+                            n={power.rouseChecks}
+                            size={16}
+                            style={{ color: "var(--mantine-color-red-6)" }}
+                        />
                     ) : (
                         <Text size="xs">FREE</Text>
                     )}
@@ -124,7 +135,7 @@ const DisciplinePowerCard = ({
                     minHeight: "140px",
                     display: "flex",
                     position: "relative",
-                    opacity: disabled ? 0.6 : 1,
+                    opacity: disabled ? 0.6 : 1
                 }}
                 onMouseEnter={(e) => {
                     if (!disabled) {
@@ -161,7 +172,7 @@ const DisciplinePowerCard = ({
                 minHeight: "140px",
                 display: "flex",
                 backgroundColor: paperBg,
-                position: "relative",
+                position: "relative"
             }}
         >
             {content}

@@ -1,80 +1,84 @@
-import { faXmark } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { Buffer } from "buffer"
 import { z } from "zod"
-import { applyCharacterCompatibilityPatches, Character, characterSchema, containsBloodSorcery } from "../data/Character"
+import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
+import { GeneratorStepId } from "../generator/steps"
 import { getUploadFile } from "../generator/utils"
+import ConfirmActionModal from "./ConfirmActionModal"
 
 export type LoadModalProps = {
     setCharacter: (character: Character) => void
     loadModalOpened: boolean
     closeLoadModal: () => void
     loadedFile: File | null
-    setSelectedStep: (step: number) => void
+    setSelectedStep: (step: GeneratorStepId) => void
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
     const parsed = JSON.parse(json)
-    console.log({ loadedCharacter: parsed })
 
     applyCharacterCompatibilityPatches(parsed)
     const loadedCharacter = characterSchema.parse(parsed)
     return loadedCharacter
 }
 
-const LoadModal = ({ loadModalOpened, closeLoadModal, setCharacter, loadedFile, setSelectedStep }: LoadModalProps) => {
+const LoadModal = ({
+    loadModalOpened,
+    closeLoadModal,
+    setCharacter,
+    loadedFile,
+    setSelectedStep
+}: LoadModalProps) => {
     return (
-        <Modal opened={loadModalOpened} onClose={closeLoadModal} title="" centered withCloseButton={false}>
-            <Stack>
-                <Text fz={"xl"} ta={"center"}>
-                    Overwrite current character and load from selected file?
-                </Text>
-                <Divider my="sm" />
-                <Group justify="space-between">
-                    <Button color="yellow" variant="subtle" leftSection={<FontAwesomeIcon icon={faXmark} />} onClick={closeLoadModal}>
-                        Cancel
-                    </Button>
+        <ConfirmActionModal
+            opened={loadModalOpened}
+            onClose={closeLoadModal}
+            onConfirm={async () => {
+                if (!loadedFile) {
+                    return
+                }
+                try {
+                    const fileData = await getUploadFile(loadedFile)
+                    const base64 = fileData.split(",")[1]
+                    if (!base64) {
+                        throw new Error("Invalid file format")
+                    }
 
-                    <Button
-                        color="red"
-                        onClick={async () => {
-                            if (!loadedFile) {
-                                console.log("Error: No file loaded!")
-                                return
-                            }
-                            try {
-                                const fileData = await getUploadFile(loadedFile)
-                                const base64 = fileData.split(",")[1]
-                                const json = Buffer.from(base64, "base64").toString()
-                                const loadedCharacter = await loadCharacterFromJson(json)
-                                setCharacter(loadedCharacter)
-                                // Navigate to Final step
-                                // Final is at case 11, but due to patching logic:
-                                // - If character has blood sorcery: step 11 → case 11 (Final)
-                                // - If character doesn't have blood sorcery: step 10 → case 11 (Final) after patching
-                                const finalStep = containsBloodSorcery(loadedCharacter.disciplines) ? 11 : 10
-                                setSelectedStep(finalStep)
-                                closeLoadModal()
-                            } catch (e) {
-                                if (e instanceof z.ZodError) {
-                                    notifications.show({
-                                        title: "JSON content error loading character",
-                                        message: z.prettifyError(e),
-                                        color: "red",
-                                        autoClose: false,
-                                    })
-                                }
-                                console.log({ e })
-                            }
-                        }}
-                    >
-                        Load/Overwrite character
-                    </Button>
-                </Group>
-            </Stack>
-        </Modal>
+                    let json: string
+                    try {
+                        json = atob(base64)
+                    } catch (_decodeError) {
+                        json = Buffer.from(base64, "base64").toString()
+                    }
+
+                    const loadedCharacter = await loadCharacterFromJson(json)
+                    setCharacter({ ...loadedCharacter, id: "" })
+                    setSelectedStep("final")
+                    closeLoadModal()
+                } catch (e) {
+                    if (e instanceof z.ZodError) {
+                        notifications.show({
+                            title: "JSON content error loading character",
+                            message: z.prettifyError(e),
+                            color: "red",
+                            autoClose: false
+                        })
+                    } else {
+                        notifications.show({
+                            title: "Error loading character",
+                            message:
+                                e instanceof Error
+                                    ? e.message
+                                    : "Failed to load character from file",
+                            color: "red"
+                        })
+                    }
+                }
+            }}
+            title="Overwrite Character?"
+            body="This will overwrite the current character with the selected file. This action cannot be undone."
+            confirmLabel="Overwrite"
+        />
     )
 }
 
