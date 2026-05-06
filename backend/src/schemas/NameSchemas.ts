@@ -17,7 +17,7 @@ export const clanNameSchema = z.union([
     z.literal("Salubri"),
     z.literal("Caitiff"),
     z.literal("Thin-blood"),
-    z.literal(""),
+    z.literal("")
 ])
 
 export type ClanName = z.infer<typeof clanNameSchema>
@@ -35,7 +35,7 @@ export const knownDisciplineNameSchema = z.union([
     z.literal("blood sorcery"),
     z.literal("oblivion"),
     z.literal("thin-blood alchemy"),
-    z.literal(""),
+    z.literal("")
 ])
 
 export type KnownDisciplineName = z.infer<typeof knownDisciplineNameSchema>
@@ -61,7 +61,7 @@ export const predatorTypeNameSchema = z.union([
     z.literal("Bagger"),
     z.literal("Blood Leech"),
     z.literal("Farmer"),
-    z.literal(""),
+    z.literal("")
 ])
 
 export type PredatorTypeName = z.infer<typeof predatorTypeNameSchema>

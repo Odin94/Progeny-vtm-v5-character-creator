@@ -8,7 +8,7 @@ import { env } from "../config/env.js"
 let sdk: NodeSDK | null = null
 // Initialize with empty logger
 export let posthogLogger: ReturnType<typeof logs.getLogger> = {
-    emit: () => {},
+    emit: () => {}
 }
 
 export const initializePostHogLogging = () => {
@@ -31,16 +31,16 @@ export const initializePostHogLogging = () => {
         sdk = new NodeSDK({
             resource: resourceFromAttributes({
                 "service.name": "progeny-backend",
-                "service.environment": env.NODE_ENV,
+                "service.environment": env.NODE_ENV
             }),
             logRecordProcessor: new BatchLogRecordProcessor(
                 new OTLPLogExporter({
                     url: logsUrl,
                     headers: {
-                        Authorization: `Bearer ${env.PUBLIC_POSTHOG_KEY}`,
-                    },
+                        Authorization: `Bearer ${env.PUBLIC_POSTHOG_KEY}`
+                    }
                 })
-            ),
+            )
         })
 
         sdk.start()
@@ -58,7 +58,7 @@ export const shutdownPostHogLogging = async () => {
         await sdk.shutdown()
         sdk = null
         posthogLogger = {
-            emit: () => {},
+            emit: () => {}
         }
     }
 }

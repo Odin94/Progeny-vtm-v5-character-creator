@@ -1,20 +1,22 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { MantineProvider } from "@mantine/core"
+import { createTheme, MantineProvider } from "@mantine/core"
+import { generateColors } from "@mantine/colors-generator"
 import { Notifications } from "@mantine/notifications"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { CookiesBanner } from "~/components/CookiesBanner"
+import { inputFocusTheme } from "~/theme/inputFocus"
 
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 5 * 60 * 1000,
             retry: 1,
-            refetchOnWindowFocus: false,
-        },
-    },
+            refetchOnWindowFocus: false
+        }
+    }
 })
 
 export const Route = createRootRoute({
@@ -33,15 +35,20 @@ export const Route = createRootRoute({
                             const exceptionMessage = event.properties?.$exception_message
                             const exceptionValue = event.properties?.$exception_values?.[0]
 
-                            if (exceptionType === "CustomEvent" ||
-                                (typeof exceptionValue === "string" && exceptionValue.includes("CustomEvent"))) {
+                            if (
+                                exceptionType === "CustomEvent" ||
+                                (typeof exceptionValue === "string" &&
+                                    exceptionValue.includes("CustomEvent"))
+                            ) {
                                 return null
                             }
 
-                            if (exceptionType === "NotFoundError" &&
+                            if (
+                                exceptionType === "NotFoundError" &&
                                 typeof exceptionMessage === "string" &&
                                 exceptionMessage.includes("removeChild") &&
-                                exceptionMessage.includes("not a child of this node")) {
+                                exceptionMessage.includes("not a child of this node")
+                            ) {
                                 return null
                             }
 
@@ -57,19 +64,25 @@ export const Route = createRootRoute({
                             }
                         }
                         return event
-                    },
+                    }
                 }}
             >
                 <MantineProvider
-                    theme={{
+                    theme={createTheme({
+                        colors: {
+                            red: generateColors("#e03131"),
+                            grape: generateColors("#7e4ac9")
+                        },
+                        primaryColor: "grape",
+                        components: inputFocusTheme,
                         breakpoints: {
                             xs: "576px",
                             sm: "768px",
                             md: "992px",
                             lg: `${globals.smallScreenW}px`,
-                            xl: `${globals.largeScreenW}px`,
-                        },
-                    }}
+                            xl: `${globals.largeScreenW}px`
+                        }
+                    })}
                     forceColorScheme="dark"
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
@@ -79,5 +92,5 @@ export const Route = createRootRoute({
                 </MantineProvider>
             </PostHogProvider>
         </QueryClientProvider>
-    ),
+    )
 })

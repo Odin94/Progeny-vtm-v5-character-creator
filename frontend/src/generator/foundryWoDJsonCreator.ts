@@ -24,13 +24,13 @@ const WoD5EVttJsonSchema = z.object({
         bio: z.object({
             age: z.object({
                 trueage: z.string(),
-                apparent: z.string(),
+                apparent: z.string()
             }),
             dateof: z.object({
                 birth: z.string(),
-                death: z.string(),
+                death: z.string()
             }),
-            history: z.string(),
+            history: z.string()
         }),
         headers: z.object({
             concept: z.string(),
@@ -40,35 +40,35 @@ const WoD5EVttJsonSchema = z.object({
             touchstones: z.string(),
             tenets: z.string(),
             sire: z.string(),
-            generation: z.string(),
+            generation: z.string()
         }),
         exp: z.object({
             value: z.number(),
-            max: z.number(),
+            max: z.number()
         }),
         humanity: z.object({
             value: z.number(),
-            stains: z.number(),
+            stains: z.number()
         }),
         hunger: z.object({
             value: z.number(),
-            max: z.number(),
+            max: z.number()
         }),
         health: z.object({
             aggravated: z.number(),
             superficial: z.number(),
             max: z.number(),
-            value: z.number(),
+            value: z.number()
         }),
         willpower: z.object({
             aggravated: z.number(),
             superficial: z.number(),
             max: z.number(),
-            value: z.number(),
+            value: z.number()
         }),
         blood: z.object({
             potency: z.number(),
-            resonance: z.string(),
+            resonance: z.string()
         }),
         attributes: z.object({
             strength: z.object({ value: z.number() }),
@@ -79,13 +79,13 @@ const WoD5EVttJsonSchema = z.object({
             wits: z.object({ value: z.number() }),
             stamina: z.object({ value: z.number() }),
             composure: z.object({ value: z.number() }),
-            resolve: z.object({ value: z.number() }),
+            resolve: z.object({ value: z.number() })
         }),
         skills: z.record(
             z.string(),
             z.object({
                 value: z.number(),
-                bonuses: z.array(z.record(z.string(), z.unknown())),
+                bonuses: z.array(z.record(z.string(), z.unknown()))
             })
         ),
         disciplines: z.object({
@@ -99,7 +99,7 @@ const WoD5EVttJsonSchema = z.object({
             presence: z.object({ value: z.number(), powers: z.array(z.string()) }),
             protean: z.object({ value: z.number(), powers: z.array(z.string()) }),
             sorcery: z.object({ value: z.number(), powers: z.array(z.string()) }),
-            oblivion: z.object({ value: z.number(), powers: z.array(z.string()) }),
+            oblivion: z.object({ value: z.number(), powers: z.array(z.string()) })
         }),
         settings: z.object({
             headerbg: z.string(),
@@ -108,12 +108,12 @@ const WoD5EVttJsonSchema = z.object({
                 biography: z.boolean(),
                 appearance: z.boolean(),
                 touchstones: z.boolean(),
-                tenets: z.boolean(),
+                tenets: z.boolean()
             }),
-            skillAttributeInputs: z.boolean(),
-        }),
+            skillAttributeInputs: z.boolean()
+        })
     }),
-    items: z.array(z.record(z.string(), z.unknown())),
+    items: z.array(z.record(z.string(), z.unknown()))
 })
 
 // TypeScript type derived from the Zod schema
@@ -135,7 +135,10 @@ type WoD5EVtt_DisciplineKey =
     | "rituals"
     | "ceremonies"
 
-export const disciplineNameTo_WoD5EVtt_Key: Record<DisciplineName, WoD5EVtt_DisciplineKey | undefined> = {
+export const disciplineNameTo_WoD5EVtt_Key: Record<
+    DisciplineName,
+    WoD5EVtt_DisciplineKey | undefined
+> = {
     animalism: "animalism",
     auspex: "auspex",
     celerity: "celerity",
@@ -148,7 +151,7 @@ export const disciplineNameTo_WoD5EVtt_Key: Record<DisciplineName, WoD5EVtt_Disc
     "blood sorcery": "sorcery",
     oblivion: "oblivion",
     "thin-blood alchemy": "alchemy",
-    "": undefined,
+    "": undefined
 }
 
 type WoD5EVtt_AttributesKey =
@@ -162,7 +165,10 @@ type WoD5EVtt_AttributesKey =
     | "wits"
     | "resolve"
 
-export const attributeNameTo_WoD5EVtt_Key: Record<AttributesKey, WoD5EVtt_AttributesKey | undefined> = {
+export const attributeNameTo_WoD5EVtt_Key: Record<
+    AttributesKey,
+    WoD5EVtt_AttributesKey | undefined
+> = {
     strength: "strength",
     dexterity: "dexterity",
     stamina: "stamina",
@@ -171,7 +177,7 @@ export const attributeNameTo_WoD5EVtt_Key: Record<AttributesKey, WoD5EVtt_Attrib
     composure: "composure",
     intelligence: "intelligence",
     wits: "wits",
-    resolve: "resolve",
+    resolve: "resolve"
 }
 
 type WoD5EVtt_SkillsKey =
@@ -230,10 +236,13 @@ export const skillNameTo_WoD5EVtt_Key: Record<SkillsKey, WoD5EVtt_SkillsKey> = {
     larceny: "larceny",
     melee: "melee",
     firearms: "firearms",
-    finance: "finance",
+    finance: "finance"
 }
 
-const parseDicePool = (dicePoolString: string, character: Character): Record<string, { path: string }> => {
+const parseDicePool = (
+    dicePoolString: string,
+    character: Character
+): Record<string, { path: string }> => {
     // This assumes that dicePoolStrings are in one of these formats:
     // "Thing [ / Thing]"
     // "Thing [ / Thing] + Thing [ / Thing]"
@@ -298,7 +307,9 @@ const findPathForKey = (key: string): string | null => {
     return null
 }
 
-export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; validationErrors: string[] } => {
+export const createWoD5EVttJson = (
+    character: Character
+): { json: WoD5EVttJson; validationErrors: string[] } => {
     // JSON for https://foundryvtt.com/packages/vtm5e
     // Based on template at https://github.com/WoD5E-Developers/wod5e/blob/main/template.json (commit 5e35fc1 / Version 5.2.2)
     const disciplineValues: Record<WoD5EVtt_DisciplineKey, { value: number; powers: string[] }> = {
@@ -315,7 +326,7 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
         oblivion: { value: 0, powers: [] },
         alchemy: { value: 0, powers: [] },
         rituals: { value: 0, powers: [] },
-        ceremonies: { value: 0, powers: [] },
+        ceremonies: { value: 0, powers: [] }
     }
 
     for (const disc of character.disciplines) {
@@ -337,7 +348,10 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
 
     const specialtySources = [
         ...(character.skillSpecialties || []),
-        ...((character.predatorType?.pickedSpecialties as unknown as { skill?: string; name?: string }[]) || []),
+        ...((character.predatorType?.pickedSpecialties as unknown as {
+            skill?: string
+            name?: string
+        }[]) || [])
     ]
     for (const spec of specialtySources) {
         const foundrySkillKey = skillNameTo_WoD5EVtt_Key[spec.skill as SkillsKey]
@@ -347,7 +361,7 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
             value: 1,
             paths: [`skills.${foundrySkillKey}`],
             displayWhenInactive: true,
-            activeWhen: { check: "never" },
+            activeWhen: { check: "never" }
         }
         skills[foundrySkillKey].bonuses.push(foundrySpecialty)
     }
@@ -364,8 +378,8 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 description: clanDef?.description ?? "",
                 gamesystem: "vampire",
                 bane: clanDef?.bane ?? "",
-                bonuses: [],
-            },
+                bonuses: []
+            }
         })
     }
 
@@ -379,8 +393,8 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 description: predDef?.summary ?? "",
                 gamesystem: "vampire",
                 bonuses: [],
-                dicepool: { path: "", value: 0 },
-            },
+                dicepool: { path: "", value: 0 }
+            }
         })
     }
 
@@ -400,15 +414,15 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 cost: "",
                 dicepool: parseDicePool(p.dicePool, character),
                 bonuses: [],
-                uses: { max: 0, current: 0, enabled: false },
-            },
+                uses: { max: 0, current: 0, enabled: false }
+            }
         })
     }
 
     // Merit items
     const allMerits = [
         ...(character.merits || []),
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "merit") || []),
+        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "merit") || [])
     ]
     for (const merit of allMerits) {
         items.push({
@@ -419,13 +433,16 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 featuretype: "merit",
                 points: merit.level,
                 bonuses: [],
-                uses: { max: 0, current: 0, enabled: false },
-            },
+                uses: { max: 0, current: 0, enabled: false }
+            }
         })
     }
 
     // Flaw items
-    const allFlaws = [...(character.flaws || []), ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "flaw") || [])]
+    const allFlaws = [
+        ...(character.flaws || []),
+        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "flaw") || [])
+    ]
     for (const flaw of allFlaws) {
         items.push({
             name: flaw.name,
@@ -435,8 +452,8 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 featuretype: "flaw",
                 points: flaw.level,
                 bonuses: [],
-                uses: { max: 0, current: 0, enabled: false },
-            },
+                uses: { max: 0, current: 0, enabled: false }
+            }
         })
     }
 
@@ -451,10 +468,13 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 discipline: "rituals",
                 level: ritual.level,
                 duration: "",
-                cost: ritual.rouseChecks > 0 ? `${ritual.rouseChecks} Rouse Check${ritual.rouseChecks > 1 ? "s" : ""}` : "Free",
+                cost:
+                    ritual.rouseChecks > 0
+                        ? `${ritual.rouseChecks} Rouse Check${ritual.rouseChecks > 1 ? "s" : ""}`
+                        : "Free",
                 dicepool: {},
-                bonuses: [],
-            },
+                bonuses: []
+            }
         })
     }
 
@@ -474,7 +494,7 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
             bio: {
                 age: { trueage: "", apparent: "" },
                 dateof: { birth: "", death: "" },
-                history: "",
+                history: ""
             },
 
             headers: {
@@ -482,15 +502,17 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 chronicle: "",
                 ambition: character.ambition ?? "",
                 desire: character.desire ?? "",
-                touchstones: character.touchstones.map((t) => `${t.name} (${t.conviction})`).join(", "),
+                touchstones: character.touchstones
+                    .map((t) => `${t.name} (${t.conviction})`)
+                    .join(", "),
                 tenets: "",
                 sire: character.sire ?? "",
-                generation: String(character.generation ?? ""),
+                generation: String(character.generation ?? "")
             },
 
             exp: {
                 value: character.experience ?? 0,
-                max: 0,
+                max: 0
             },
 
             humanity: { value: character.humanity ?? 7, stains: 0 },
@@ -499,13 +521,13 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 aggravated: 0,
                 superficial: 0,
                 max: character.maxHealth ?? 5,
-                value: character.maxHealth ?? 5,
+                value: character.maxHealth ?? 5
             },
             willpower: {
                 aggravated: 0,
                 superficial: 0,
                 max: character.willpower ?? 5,
-                value: character.willpower ?? 5,
+                value: character.willpower ?? 5
             },
 
             blood: { potency: character.bloodPotency ?? 0, resonance: "" },
@@ -519,7 +541,7 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 wits: { value: character.attributes.wits },
                 stamina: { value: character.attributes.stamina },
                 composure: { value: character.attributes.composure },
-                resolve: { value: character.attributes.resolve },
+                resolve: { value: character.attributes.resolve }
             },
 
             skills,
@@ -535,18 +557,18 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
                 presence: disciplineValues.presence,
                 protean: disciplineValues.protean,
                 sorcery: disciplineValues.sorcery,
-                oblivion: disciplineValues.oblivion,
+                oblivion: disciplineValues.oblivion
             },
 
             settings: {
                 headerbg: "",
                 background: "",
                 limited: { biography: true, appearance: true, touchstones: false, tenets: false },
-                skillAttributeInputs: false,
-            },
+                skillAttributeInputs: false
+            }
         },
 
-        items,
+        items
     }
 
     try {
@@ -558,10 +580,15 @@ export const createWoD5EVttJson = (character: Character): { json: WoD5EVttJson; 
 
         const validationErrors: string[] = []
         if (validationError && typeof validationError === "object" && "issues" in validationError) {
-            const zodError = validationError as { issues: Array<{ path: string[]; message: string }> }
-            validationErrors.push(...zodError.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`))
+            const zodError = validationError as {
+                issues: Array<{ path: string[]; message: string }>
+            }
+            validationErrors.push(
+                ...zodError.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+            )
         } else {
-            const errorMessage = validationError instanceof Error ? validationError.message : String(validationError)
+            const errorMessage =
+                validationError instanceof Error ? validationError.message : String(validationError)
             validationErrors.push(errorMessage)
         }
 

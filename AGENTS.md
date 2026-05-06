@@ -16,15 +16,15 @@
 - Database schema and migrations: `backend/src/db/schema.ts`, `backend/src/db/migrations/`
 
 ## Commands That Must Work
-- Frontend install: `cd frontend && npm install`
-- Frontend dev: `cd frontend && npm start`
-- Frontend build: `cd frontend && npm run build`
-- Frontend lint: `cd frontend && npm run lint`
-- Frontend tests: `cd frontend && npm run test:run`
-- Backend install: `cd backend && npm install`
-- Backend dev: `cd backend && npm run dev`
-- Backend build: `cd backend && npm run build`
-- Backend migrations: `cd backend && npm run db:generate && npm run db:migrate`
+- Frontend install: `cd frontend && pnpm install`
+- Frontend dev: `cd frontend && pnpm start`
+- Frontend build: `cd frontend && pnpm run build`
+- Frontend lint: `cd frontend && pnpm run lint`
+- Frontend tests: `cd frontend && pnpm run test:run`
+- Backend install: `cd backend && pnpm install`
+- Backend dev: `cd backend && pnpm run dev`
+- Backend build: `cd backend && pnpm run build`
+- Backend migrations: `cd backend && pnpm run db:generate && pnpm run db:migrate`
 
 ## Non-Negotiable Invariants
 - Frontend REST calls should go through `frontend/src/utils/api.ts`. It carries `credentials: "include"` and the CSRF header flow for mutating requests.
@@ -42,11 +42,11 @@
 
 ## Verification
 When the task description below says "run the build" or "verify", these are the bars to clear — not just that the command exits 0:
-- Frontend build: no TypeScript errors (`cd frontend && npm run build`)
-- Frontend tests: all tests pass (`cd frontend && npm run test:run`) — required for any character model or export change
-- Backend build: no TypeScript errors (`cd backend && npm run build`)
-- Backend tests: health check passes (`cd backend && npm run test:run`) — required after any route or middleware change
-- DB migrations: snapshot is consistent (`cd backend && npm run db:generate`) — required after any schema change
+- Frontend build: no TypeScript errors (`cd frontend && pnpm run build`)
+- Frontend tests: all tests pass (`cd frontend && pnpm run test:run`) — required for any character model or export change
+- Backend build: no TypeScript errors (`cd backend && pnpm run build`)
+- Backend tests: health check passes (`cd backend && pnpm run test:run`) — required after any route or middleware change
+- DB migrations: snapshot is consistent (`cd backend && pnpm run db:generate`) — required after any schema change
 
 ## Scoped Guidance
 - When working mostly in `frontend/`, read `frontend/AGENTS.md`.

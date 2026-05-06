@@ -109,12 +109,25 @@ if [ "$NODE_VERSION" -lt 24 ]; then
 fi
 
 echo -e "${GREEN}✓ Node.js $(node --version) installed${NC}"
-echo -e "${GREEN}✓ npm $(npm --version) installed${NC}"
+
+# Install pnpm via Corepack
+echo -e "${YELLOW}📦 Installing pnpm package manager...${NC}"
+export PNPM_HOME="/usr/local/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+mkdir -p "$PNPM_HOME"
+corepack enable
+corepack prepare pnpm@10.33.0 --activate
+cat > /etc/profile.d/pnpm.sh << 'PNPM_PROFILE_EOF'
+export PNPM_HOME="/usr/local/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+PNPM_PROFILE_EOF
+chmod 644 /etc/profile.d/pnpm.sh
+echo -e "${GREEN}✓ pnpm $(pnpm --version) installed${NC}"
 
 # Install PM2 globally for process management
 echo -e "${YELLOW}📦 Installing PM2 process manager...${NC}"
 if ! command -v pm2 &> /dev/null; then
-    npm install -g pm2
+    pnpm add -g pm2
 else
     echo -e "${GREEN}PM2 is already installed${NC}"
 fi
@@ -153,30 +166,30 @@ fi
 
 # Install dependencies
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm install"
+runuser -u "$APP_USER" -- bash -lc "cd $APP_DIR/backend && pnpm install --frozen-lockfile"
 
 # Build backend
 echo -e "${YELLOW}🔨 Building backend...${NC}"
-runuser -u "$APP_USER" -- bash -c "cd $APP_DIR/backend && npm run build"
+runuser -u "$APP_USER" -- bash -lc "cd $APP_DIR/backend && pnpm run build"
 
 # Create systemd service for PM2
 echo -e "${YELLOW}⚙️  Setting up PM2 startup script...${NC}"
-PM2_STARTUP=$(runuser -u "$APP_USER" -- pm2 startup systemd -u "$APP_USER" --hp "$APP_DIR" | grep -v "PM2" | tail -n 1)
+PM2_STARTUP=$(runuser -u "$APP_USER" -- bash -lc "pm2 startup systemd -u $APP_USER --hp $APP_DIR" | grep -v "PM2" | tail -n 1)
 eval "$PM2_STARTUP"
 
 # Install and configure PM2 log rotation
 echo -e "${YELLOW}📦 Installing PM2 log rotation...${NC}"
-runuser -u "$APP_USER" -- pm2 install pm2-logrotate 2>/dev/null || {
+runuser -u "$APP_USER" -- bash -lc "pm2 install pm2-logrotate" 2>/dev/null || {
     echo -e "${YELLOW}Note: PM2 log rotation will be configured when PM2 is first started${NC}"
 }
 
 # Configure log rotation to keep logs for 1 month (30 days)
 echo -e "${YELLOW}⚙️  Configuring log rotation (30 days retention, 20M max size)...${NC}"
-runuser -u "$APP_USER" -- pm2 set pm2-logrotate:max_size 20M 2>/dev/null || true
-runuser -u "$APP_USER" -- pm2 set pm2-logrotate:retain 30 2>/dev/null || true
-runuser -u "$APP_USER" -- pm2 set pm2-logrotate:rotateInterval '0 0 * * *' 2>/dev/null || true
-runuser -u "$APP_USER" -- pm2 set pm2-logrotate:workerInterval 30 2>/dev/null || true
-runuser -u "$APP_USER" -- pm2 save 2>/dev/null || true
+runuser -u "$APP_USER" -- bash -lc "pm2 set pm2-logrotate:max_size 20M" 2>/dev/null || true
+runuser -u "$APP_USER" -- bash -lc "pm2 set pm2-logrotate:retain 30" 2>/dev/null || true
+runuser -u "$APP_USER" -- bash -lc "pm2 set pm2-logrotate:rotateInterval '0 0 * * *'" 2>/dev/null || true
+runuser -u "$APP_USER" -- bash -lc "pm2 set pm2-logrotate:workerInterval 30" 2>/dev/null || true
+runuser -u "$APP_USER" -- bash -lc "pm2 save" 2>/dev/null || true
 
 # Create environment file template
 echo -e "${YELLOW}📝 Creating environment file template...${NC}"
@@ -227,8 +240,8 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
 
 3. **Generate and run database migrations:**
    ```bash
-   npm run db:generate
-   npm run db:migrate
+   pnpm run db:generate
+   pnpm run db:migrate
    ```
 
 4. **Enable Caddy (after DNS is configured):**

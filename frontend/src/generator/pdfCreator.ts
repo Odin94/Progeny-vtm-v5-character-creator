@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
-import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFName } from "pdf-lib"
+import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
 import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
@@ -9,13 +9,21 @@ import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from "../data/Attributes"
 import { Power, Ritual, powerIsRitual } from "../data/Disciplines"
-import base64Pdf_nerdbert from "../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw"
 import { upcase } from "./utils"
 import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 
 let customFont: PDFFont
+let nerdbertTemplatePromise: Promise<string> | null = null
+
+const getNerdbertTemplate = () => {
+    nerdbertTemplatePromise ??=
+        import("../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw").then(
+            (module) => module.default
+        )
+    return nerdbertTemplatePromise
+}
 
 const initPDFDocument = async (bytes: ArrayBufferLike): Promise<PDFDocument> => {
     const pdfDoc = await PDFDocument.load(bytes as ArrayBuffer)
@@ -47,7 +55,10 @@ export const testTemplate = async (basePdf: string) => {
 
         form = pdfDoc.getForm()
     } catch (_err) {
-        return { success: false, error: new Error("Can't get form from pdf - is it a fillable pdf?") }
+        return {
+            success: false,
+            error: new Error("Can't get form from pdf - is it a fillable pdf?")
+        }
     }
     try {
         form.getTextField("Name").setText("")
@@ -57,7 +68,9 @@ export const testTemplate = async (basePdf: string) => {
     } catch (_err) {
         return {
             success: false,
-            error: new Error("PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?"),
+            error: new Error(
+                "PDF doesn't contain required fields - is it v5_charactersheet_fillable_v3.pdf from renegadegamestudios?"
+            )
         }
     }
 
@@ -78,15 +91,68 @@ const downloadPdf = (fileName: string, bytes: Uint8Array) => {
     }, 100)
 }
 
+export const setButtonImageOverlay = (
+    pdfDoc: PDFDocument,
+    form: PDFForm,
+    fieldName: string,
+    image: PDFImage
+) => {
+    const button = form.getButton(fieldName)
+    const widget = button.acroField.getWidgets()[0]
+
+    if (!widget) return
+
+    const pageRef = widget.P()
+    const page = pdfDoc.getPages().find((candidate) => candidate.ref === pageRef)
+
+    if (!page) return
+
+    const { x, y, width, height } = widget.getRectangle()
+    const insetX = width * 0.08
+    const insetY = height * 0.08
+
+    page.drawImage(image, {
+        x: x + insetX,
+        y: y + insetY,
+        width: width - insetX * 2,
+        height: height - insetY * 2
+    })
+}
+
+export const setHumanityTracker = (
+    pdfDoc: PDFDocument,
+    form: PDFForm,
+    image: PDFImage,
+    humanity: number
+) => {
+    const clampedHumanity = Math.max(0, Math.min(10, humanity))
+
+    for (let i = 1; i <= clampedHumanity; i++) {
+        // Humanity widgets in the template are push buttons, so we draw directly on the page
+        // instead of setting a button image that can be lost when appearances are regenerated.
+        setButtonImageOverlay(pdfDoc, form, `Humanity-${i}`, image)
+    }
+}
+
 export const createPdf_nerdbert = async (character: Character): Promise<Uint8Array> => {
-    const bytes = base64ToArrayBuffer(base64Pdf_nerdbert)
+    const bytes = base64ToArrayBuffer(await getNerdbertTemplate())
 
     const pdfDoc = await initPDFDocument(bytes)
     const form = pdfDoc.getForm()
 
     // Attributes
     const attributes = character.attributes
-    ;["strength", "dexterity", "stamina", "charisma", "manipulation", "composure", "intelligence", "wits", "resolve"]
+    ;[
+        "strength",
+        "dexterity",
+        "stamina",
+        "charisma",
+        "manipulation",
+        "composure",
+        "intelligence",
+        "wits",
+        "resolve"
+    ]
         .map((a) => attributesKeySchema.parse(a))
         .forEach((attr) => {
             const lvl = attributes[attr]
@@ -97,7 +163,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Skills
     const setSpecialty = (skillName: SkillsKey, textFieldKey: string) => {
-        const allSpecialties = [...character.skillSpecialties, ...character.predatorType.pickedSpecialties]
+        const allSpecialties = [
+            ...character.skillSpecialties,
+            ...character.predatorType.pickedSpecialties
+        ]
         const specialties = allSpecialties
             .filter((s) => s.skill === skillName)
             .filter((s) => s.name !== "")
@@ -164,7 +233,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         "occult",
         "politics",
         "science",
-        "technology",
+        "technology"
     ]
         .map((s) => skillsKeySchema.parse(s))
         .forEach((skill) => {
@@ -179,7 +248,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     // Health
     let health = 3 + character.attributes["stamina"]
     if (character.disciplines.find((power) => power.name === "Resilience")) {
-        const fortitudeLevel = character.disciplines.filter((power) => power.discipline === "fortitude").length
+        const fortitudeLevel = character.disciplines.filter(
+            (power) => power.discipline === "fortitude"
+        ).length
         health += fortitudeLevel
     }
     for (let i = 1; i <= health; i++) {
@@ -207,13 +278,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("BaneSev").setText(`${effects.bane}`)
 
     //Humanity
-    const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
+    const humanity = Math.max(0, Math.min(10, character.humanity))
     const checkImageBytes = await fetch(checkPng).then((res) => res.arrayBuffer())
     const checkImage = await pdfDoc.embedPng(checkImageBytes)
-    for (let i = 1; i <= humanity; i++) {
-        // Broken by setting "NeedAppearances" to true
-        form.getButton(`Humanity-${i}`).setImage(checkImage)
-    }
+    setHumanityTracker(pdfDoc, form, checkImage, humanity)
 
     // Top fields
     form.getTextField("Name").setText(character.name)
@@ -223,7 +291,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
-    const baneText = clans[character.clan].bane.replace("BANE_SEVERITY", `${effects.bane} (bane severity)`)
+    const baneText = clans[character.clan].bane.replace(
+        "BANE_SEVERITY",
+        `${effects.bane} (bane severity)`
+    )
     form.getTextField("ClanBane").setText(baneText)
     form.getTextField("ClanCompulsion").setText(clans[character.clan].compulsion)
 
@@ -276,11 +347,15 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Merits & flaws
     const characterMeritsFlaws = [...character.merits, ...character.flaws]
-    const predatorTypeMeritsFlaws = PredatorTypes[character.predatorType.name].meritsAndFlaws.filter(
-        (m) => !characterMeritsFlaws.map((cm) => cm.name).includes(m.name)
-    )
+    const predatorTypeMeritsFlaws = PredatorTypes[
+        character.predatorType.name
+    ].meritsAndFlaws.filter((m) => !characterMeritsFlaws.map((cm) => cm.name).includes(m.name))
     const pickedPredatorTypeMeritsFlaws = character.predatorType.pickedMeritsAndFlaws
-    const meritsAndFlaws = [...predatorTypeMeritsFlaws, ...pickedPredatorTypeMeritsFlaws, ...characterMeritsFlaws]
+    const meritsAndFlaws = [
+        ...predatorTypeMeritsFlaws,
+        ...pickedPredatorTypeMeritsFlaws,
+        ...characterMeritsFlaws
+    ]
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
         form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)
@@ -291,7 +366,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Touchstones & Convictions
     form.getTextField("Convictions").setText(
-        character.touchstones.map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`).join("\n\n")
+        character.touchstones
+            .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
+            .join("\n\n")
     )
 
     // Experience
@@ -329,10 +406,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 export const downloadCharacterSheet = async (character: Character) => {
     const pdfBytes = await createPdf_nerdbert(character)
     notifications.show({
-        title: "PDF base kindly provided by Nerdbert!",
+        title: "PDF template kindly provided by Nerdbert!",
         message: "https://linktr.ee/nerdbert",
-        autoClose: 10000,
-        color: "grape",
+        autoClose: 5000,
+        color: "grape"
     })
 
     downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)
@@ -363,7 +440,7 @@ const getFields = (form: PDFForm): Record<string, string> => {
 }
 
 export const printFieldNames = async () => {
-    const basePdf = base64Pdf_nerdbert
+    const basePdf = await getNerdbertTemplate()
     const bytes = base64ToArrayBuffer(basePdf)
 
     const pdfDoc = await initPDFDocument(bytes)

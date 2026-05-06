@@ -1,18 +1,55 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { api, API_URL } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
 
+const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
+const DEFAULT_POST_AUTH_PATH = "/"
+
+const getCurrentReturnTo = () => {
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    return returnTo === "/auth/callback" ? DEFAULT_POST_AUTH_PATH : returnTo
+}
+
+export const getStoredAuthReturnTo = () => sessionStorage.getItem(AUTH_RETURN_TO_STORAGE_KEY)
+
+export const clearStoredAuthReturnTo = () => {
+    sessionStorage.removeItem(AUTH_RETURN_TO_STORAGE_KEY)
+}
+
+export const getSafeAuthReturnTo = (candidate?: string | null) => {
+    const returnTo = candidate || getStoredAuthReturnTo() || DEFAULT_POST_AUTH_PATH
+
+    if (!returnTo.startsWith("/")) {
+        return DEFAULT_POST_AUTH_PATH
+    }
+
+    if (returnTo.startsWith("//")) {
+        return DEFAULT_POST_AUTH_PATH
+    }
+
+    try {
+        const parsed = new URL(returnTo, window.location.origin)
+
+        if (parsed.origin !== window.location.origin) {
+            return DEFAULT_POST_AUTH_PATH
+        }
+
+        const safePath = `${parsed.pathname}${parsed.search}${parsed.hash}`
+        return safePath === "/auth/callback" ? DEFAULT_POST_AUTH_PATH : safePath
+    } catch {
+        return DEFAULT_POST_AUTH_PATH
+    }
+}
+
 export const useAuth = () => {
     const queryClient = useQueryClient()
-    const navigate = useNavigate()
 
     const {
         data: user,
-        isLoading: loading,
-        refetch,
+        isLoading,
+        refetch
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
@@ -27,7 +64,7 @@ export const useAuth = () => {
             return false
         },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000 // 5 minutes
     })
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
@@ -37,7 +74,7 @@ export const useAuth = () => {
                 posthog.identify(user.id, {
                     email: user.email,
                     firstName: user.firstName,
-                    lastName: user.lastName,
+                    lastName: user.lastName
                 })
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
@@ -68,7 +105,7 @@ export const useAuth = () => {
             if (data.logoutUrl) {
                 window.location.href = data.logoutUrl
             } else {
-                navigate({ to: "/" })
+                window.location.href = "/"
             }
         },
         onError: () => {
@@ -82,12 +119,13 @@ export const useAuth = () => {
             }
 
             // Even on error, try to go home
-            navigate({ to: "/" })
-        },
+            window.location.href = "/"
+        }
     })
 
     const handleCallbackMutation = useMutation({
-        mutationFn: ({ code, state }: { code: string; state?: string }) => api.handleAuthCallback(code, state),
+        mutationFn: ({ code, state }: { code: string; state?: string }) =>
+            api.handleAuthCallback(code, state),
         onSuccess: (data) => {
             // Update the auth query cache with the user data
             queryClient.setQueryData(["auth", "me"], data.user)
@@ -101,20 +139,18 @@ export const useAuth = () => {
                 posthog.identify(data.user.id, {
                     email: data.user.email,
                     firstName: data.user.firstName,
-                    lastName: data.user.lastName,
+                    lastName: data.user.lastName
                 })
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
-
-            // Redirect to /me after successful authentication
-            // This ensures redirect happens even if the component's onSuccess callback doesn't fire
-            navigate({ to: "/" })
-        },
+        }
     })
 
     const signIn = () => {
-        window.location.href = `${API_URL}/auth/login`
+        const returnTo = getCurrentReturnTo()
+        sessionStorage.setItem(AUTH_RETURN_TO_STORAGE_KEY, returnTo)
+        window.location.href = `${API_URL}/auth/login?returnTo=${encodeURIComponent(returnTo)}`
     }
 
     const signOut = () => {
@@ -126,12 +162,12 @@ export const useAuth = () => {
         onSuccess: (data) => {
             queryClient.setQueryData(["auth", "me"], data)
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
-        },
+        }
     })
 
     return {
-        user: user || null,
-        loading,
+        user: user ?? null,
+        isLoading,
         isAuthenticated: !!user,
         signIn,
         signOut,
@@ -141,6 +177,6 @@ export const useAuth = () => {
         callbackError: handleCallbackMutation.error,
         updateProfile: updateProfileMutation.mutate,
         isUpdatingProfile: updateProfileMutation.isPending,
-        updateProfileError: updateProfileMutation.error,
+        updateProfileError: updateProfileMutation.error
     }
 }

@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 // @ts-nocheck
 
 // noinspection JSUnusedGlobalSymbols
@@ -11,6 +9,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SheetRouteImport } from './routes/sheet'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
@@ -22,6 +21,11 @@ const SheetRoute = SheetRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +41,14 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/sheet': typeof SheetRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/sheet': typeof SheetRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -50,20 +56,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/sheet': typeof SheetRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/me' | '/sheet' | '/auth/callback'
+  fullPaths: '/' | '/create' | '/me' | '/sheet' | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/me' | '/sheet' | '/auth/callback'
-  id: '__root__' | '/' | '/me' | '/sheet' | '/auth/callback'
+  to: '/' | '/create' | '/me' | '/sheet' | '/auth/callback'
+  id: '__root__' | '/' | '/create' | '/me' | '/sheet' | '/auth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateRoute: typeof CreateRoute
   MeRoute: typeof MeRoute
   SheetRoute: typeof SheetRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -85,6 +93,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +119,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateRoute: CreateRoute,
   MeRoute: MeRoute,
   SheetRoute: SheetRoute,
   AuthCallbackRoute: AuthCallbackRoute,

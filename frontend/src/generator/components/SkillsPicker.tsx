@@ -1,13 +1,25 @@
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
+import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
-import { Skills, SkillsKey, emptySkills, skillsDescriptions, skillsKeySchema } from "../../data/Skills"
+import {
+    Skills,
+    SkillsKey,
+    emptySkills,
+    skillsDescriptions,
+    skillsKeySchema
+} from "../../data/Skills"
 import { globals } from "../../globals"
 import { upcase } from "../utils"
 import { SpecialtyModal } from "./SkillSpecialtyModal"
+import {
+    GeneratorPhasePrompt,
+    GeneratorSectionDivider,
+    GeneratorStepHero
+} from "./sharedGeneratorUi"
 
 type SkillsPickerProps = {
     character: Character
@@ -29,7 +41,7 @@ type SkillDistribution = { strongest: number; decent: number; acceptable: number
 const distributionDescriptions: Record<DistributionKey, string> = {
     "Jack of All Trades": "Decent at many things, good at none (1/8/10)",
     Balanced: "Best default choice (3/5/7)",
-    Specialist: "Uniquely great at one thing, bad at most (1/3/3/3)",
+    Specialist: "Uniquely great at one thing, bad at most (1/3/3/3)"
 }
 
 const distributionByType: Record<DistributionKey, SkillDistribution> = {
@@ -37,20 +49,20 @@ const distributionByType: Record<DistributionKey, SkillDistribution> = {
         special: 0,
         strongest: 1,
         decent: 8,
-        acceptable: 10,
+        acceptable: 10
     },
     Balanced: {
         special: 0,
         strongest: 3,
         decent: 5,
-        acceptable: 7,
+        acceptable: 7
     },
     Specialist: {
         special: 1,
         strongest: 3,
         decent: 3,
-        acceptable: 3,
-    },
+        acceptable: 3
+    }
 }
 
 const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
@@ -66,17 +78,31 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
     const [skills, setSkills] = useState(emptySkills)
-    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({ special: [], strongest: [], decent: [], acceptable: [] })
+    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({
+        special: [],
+        strongest: [],
+        decent: [],
+        acceptable: []
+    })
     const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
-    const distr = pickedDistribution ? distributionByType[pickedDistribution] : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
+    const distr = pickedDistribution
+        ? distributionByType[pickedDistribution]
+        : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
 
     const createButton = (skill: SkillsKey, i: number) => {
         const alreadyPicked = [
             ...pickedSkills.special,
             ...pickedSkills.strongest,
             ...pickedSkills.decent,
-            ...pickedSkills.acceptable,
+            ...pickedSkills.acceptable
         ].includes(skill)
+        const assignedLevel = (() => {
+            if (pickedSkills.special.includes(skill)) return 4
+            if (pickedSkills.strongest.includes(skill)) return 3
+            if (pickedSkills.decent.includes(skill)) return 2
+            if (pickedSkills.acceptable.includes(skill)) return 1
+            return null
+        })()
 
         let onClick: () => void
         if (alreadyPicked) {
@@ -85,7 +111,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     special: pickedSkills.special.filter((it) => it !== skill),
                     strongest: pickedSkills.strongest.filter((it) => it !== skill),
                     decent: pickedSkills.decent.filter((it) => it !== skill),
-                    acceptable: pickedSkills.acceptable.filter((it) => it !== skill),
+                    acceptable: pickedSkills.acceptable.filter((it) => it !== skill)
                 })
             }
         } else if (pickedSkills.special.length < distr.special) {
@@ -101,9 +127,11 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
         } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {
-            // -1 so the very last pick opens modal
             onClick = () => {
-                setPickedSkills({ ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] })
+                setPickedSkills({
+                    ...pickedSkills,
+                    acceptable: [...pickedSkills.acceptable, skill]
+                })
             }
         } else {
             const finalPick = { ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] }
@@ -137,7 +165,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     occult: 0,
                     politics: 0,
                     science: 0,
-                    technology: 0,
+                    technology: 0
                 }
                 finalPick.special.forEach((special) => (skills[special] = 4))
                 finalPick.strongest.forEach((strongest) => (skills[strongest] = 3))
@@ -146,24 +174,15 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
 
                 setPickedSkills(finalPick)
                 setSkills(skills)
-
                 openModal()
             }
         }
-
-        const dots = (() => {
-            if (pickedSkills.special.includes(skill)) return "🚀"
-            if (pickedSkills.strongest.includes(skill)) return "🥇"
-            if (pickedSkills.decent.includes(skill)) return "🥈"
-            if (pickedSkills.acceptable.includes(skill)) return "🥉"
-            return ""
-        })()
 
         const trackClick = () => {
             trackEvent({
                 action: "skill clicked",
                 category: "skills",
-                label: skill,
+                label: skill
             })
         }
 
@@ -176,18 +195,104 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     events={globals.tooltipTriggerEvents}
                 >
                     <Button
+                        data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
-                        leftSection={dots}
                         disabled={pickedDistribution === null}
                         color="grape"
-                        fullWidth
+                        fullWidth={false}
+                        style={{
+                            width: "88%",
+                            marginLeft: "auto",
+                            marginRight: "auto",
+                            minHeight: phoneScreen ? 36 : 40
+                        }}
+                        styles={{
+                            inner: {
+                                alignItems: "center",
+                                justifyContent: phoneScreen ? "center" : "space-between",
+                                paddingTop: 2,
+                                paddingBottom: 3
+                            },
+                            label: {
+                                lineHeight: 1.3,
+                                overflow: "visible",
+                                flex: 1
+                            },
+                            section: {
+                                overflow: "visible"
+                            },
+                            root: {
+                                justifyContent: "space-between",
+                                background:
+                                    assignedLevel === 4
+                                        ? rgba(RAW_RED, 0.38)
+                                        : assignedLevel === 3
+                                          ? rgba(RAW_RED, 0.2)
+                                          : assignedLevel === 2
+                                            ? "rgba(204, 166, 51, 0.4)"
+                                            : assignedLevel === 1
+                                              ? "rgba(43, 43, 43, 0.5)"
+                                              : pickedDistribution === null
+                                                ? "rgba(43, 43, 43, 0.3)"
+                                                : rgba(RAW_GRAPE, 0.8),
+                                borderColor:
+                                    assignedLevel === 4
+                                        ? rgba(RAW_RED, 1)
+                                        : assignedLevel === 3
+                                          ? rgba(RAW_RED, 0.95)
+                                          : assignedLevel === 2
+                                            ? rgba(RAW_GOLD, 0.9)
+                                            : assignedLevel === 1
+                                              ? "rgba(180, 180, 180, 0.42)"
+                                              : pickedDistribution === null
+                                                ? "rgba(180, 180, 180, 0.24)"
+                                                : rgba(RAW_GRAPE, 0.45),
+                                color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
+                            }
+                        }}
+                        rightSection={
+                            !phoneScreen && assignedLevel ? (
+                                <Group gap={4} wrap="nowrap">
+                                    {Array.from({ length: 5 }).map((_, dotIndex) => (
+                                        <div
+                                            key={`${skill}-dot-${dotIndex}`}
+                                            style={{
+                                                width: 6,
+                                                height: 6,
+                                                borderRadius: "999px",
+                                                background:
+                                                    dotIndex < assignedLevel
+                                                        ? assignedLevel === 4 || assignedLevel === 3
+                                                            ? rgba(RAW_RED, 1)
+                                                            : assignedLevel === 2
+                                                              ? "rgba(232, 204, 92, 0.98)"
+                                                              : "rgba(210, 210, 210, 0.85)"
+                                                        : "rgba(255, 255, 255, 0.14)",
+                                                boxShadow:
+                                                    dotIndex < assignedLevel &&
+                                                    (assignedLevel === 4 || assignedLevel === 3)
+                                                        ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
+                                                        : "none"
+                                            }}
+                                        />
+                                    ))}
+                                </Group>
+                            ) : undefined
+                        }
                         onClick={() => {
                             trackClick()
                             onClick()
                         }}
                     >
-                        <Text fz={phoneScreen ? 12 : "inherit"}>{upcase(skill)}</Text>
+                        <Text
+                            fz={phoneScreen ? 12 : "inherit"}
+                            lh={1.3}
+                            ta={phoneScreen ? "center" : "left"}
+                            style={{ width: "100%" }}
+                        >
+                            {upcase(skill)}
+                        </Text>
                     </Button>
                 </Tooltip>
                 {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
@@ -199,14 +304,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         if (pickedSkills.special.length < distr.special) return "special"
         if (pickedSkills.strongest.length < distr.strongest) return "strongest"
         if (pickedSkills.decent.length < distr.decent) return "decent"
-        else return "acceptable"
+        return "acceptable"
     })()
-
-    const specialStyle = toPick === "special" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const strongestStyle = toPick === "strongest" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const decentStyle = toPick === "decent" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
-    const acceptableStyle =
-        toPick === "acceptable" ? { fontSize: globals.largeFontSize } : { fontSize: globals.smallFontSize, color: "grey" }
 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
@@ -258,51 +357,73 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     "science",
                     "survival",
                     "subterfuge",
-                    "technology",
+                    "technology"
                 ]
                     .map((s) => skillsKeySchema.parse(s))
                     .map((clan, i) => createButton(clan, i))}
             </Grid>
         </Group>
     )
+
     const height = globals.viewportHeightPx
+    const phases = [
+        pickedDistribution === "Specialist"
+            ? {
+                  key: "special",
+                  prompt: "Pick your",
+                  bold: `${distr.special - pickedSkills.special.length}`,
+                  suffix: "specialty skill",
+                  level: 4,
+                  done: pickedSkills.special.length === distr.special
+              }
+            : null,
+        {
+            key: "strongest",
+            prompt: "Pick your",
+            bold: `${distr.strongest - pickedSkills.strongest.length} strongest`,
+            suffix: "skills",
+            level: 3,
+            done: pickedSkills.strongest.length === distr.strongest
+        },
+        {
+            key: "decent",
+            prompt: "Pick",
+            bold: `${distr.decent - pickedSkills.decent.length}`,
+            suffix: "skills you're decent in",
+            level: 2,
+            done: pickedSkills.decent.length === distr.decent
+        },
+        {
+            key: "acceptable",
+            prompt: "Pick",
+            bold: `${distr.acceptable - pickedSkills.acceptable.length}`,
+            suffix: "skills you're ok in",
+            level: 1,
+            done: pickedSkills.acceptable.length === distr.acceptable
+        }
+    ].filter(Boolean) as Array<{
+        key: string
+        prompt: string
+        bold: string
+        suffix: string
+        level: number
+        done: boolean
+    }>
 
     return (
         <div style={{ marginTop: height < globals.heightBreakPoint ? "60px" : 0 }}>
             {!pickedDistribution ? (
-                <Text fz={globals.largeFontSize} ta={"center"}>
-                    Pick your <b>Skill Distribution</b>
-                </Text>
-            ) : (
                 <>
-                    <Text style={{ fontSize: globals.smallerFontSize, color: "grey" }} ta={"center"}>
-                        {pickedDistribution}
-                    </Text>
-                    {pickedDistribution === "Specialist" ? (
-                        <Text style={specialStyle} fz={"30px"} ta={"center"}>
-                            {toPick === "special" ? ">" : ""} Pick your <b>{distr.special - pickedSkills.special.length} specialty</b> skill
-                        </Text>
-                    ) : null}
-                    <Text style={strongestStyle} ta={"center"}>
-                        {toPick === "strongest" ? ">" : ""} Pick your <b>{distr.strongest - pickedSkills.strongest.length} strongest</b>{" "}
-                        skills
-                    </Text>
-                    <Text style={decentStyle} ta={"center"}>
-                        {toPick === "decent" ? ">" : ""} Pick <b>{distr.decent - pickedSkills.decent.length}</b> skills you&apos;re{" "}
-                        <b>decent</b> in
-                    </Text>
-                    <Text style={acceptableStyle} ta={"center"}>
-                        {toPick === "acceptable" ? ">" : ""} Pick <b>{distr.acceptable - pickedSkills.acceptable.length}</b> skills
-                        you&apos;re <b>ok</b> in
-                    </Text>
-                </>
-            )}
-
-            {pickedDistribution !== null ? null : (
-                <>
-                    <Space h="xl" />
+                    <GeneratorStepHero
+                        leadText="Pick your"
+                        accentText="Skill Distribution"
+                        description="Balanced is the default choice"
+                        marginBottom={32}
+                    />
                     <Grid grow>
-                        {(["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]).map((distribution) => {
+                        {(
+                            ["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]
+                        ).map((distribution) => {
                             return (
                                 <Grid.Col span={4} key={distribution}>
                                     <Tooltip
@@ -312,6 +433,9 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                         events={globals.tooltipTriggerEvents}
                                     >
                                         <Button
+                                            data-testid={`skill-distribution-${distribution
+                                                .toLowerCase()
+                                                .replace(/\s+/g, "-")}-button`}
                                             p={phoneScreen ? 0 : "default"}
                                             disabled={pickedDistribution !== null}
                                             color="red"
@@ -320,7 +444,9 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                                 setPickedDistribution(distribution)
                                             }}
                                         >
-                                            <Text fz={phoneScreen ? 12 : "inherit"}>{distribution}</Text>
+                                            <Text fz={phoneScreen ? 12 : "inherit"}>
+                                                {distribution}
+                                            </Text>
                                         </Button>
                                     </Tooltip>
                                 </Grid.Col>
@@ -330,16 +456,24 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     <Space h="xl" />
                     <Space h="xl" />
                 </>
+            ) : (
+                <GeneratorPhasePrompt
+                    lines={phases}
+                    activeKey={toPick}
+                    phoneScreen={phoneScreen}
+                    caption={pickedDistribution}
+                />
             )}
 
-            <Text mt={"xl"} ta="center" fz="xl" fw={700} c="red">
-                Skills
-            </Text>
-            <hr color="#e03131" />
+            <GeneratorSectionDivider label="Skills" />
 
             <Space h="sm" />
 
-            {height < globals.heightBreakPoint ? <ScrollArea h={height - 340}>{createSkillButtons()}</ScrollArea> : createSkillButtons()}
+            {height < globals.heightBreakPoint ? (
+                <ScrollArea h={height - 340}>{createSkillButtons()}</ScrollArea>
+            ) : (
+                createSkillButtons()
+            )}
 
             <SpecialtyModal
                 modalOpened={modalOpened}

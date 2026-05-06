@@ -1,4 +1,18 @@
-import { Box, Grid, Paper, Text, Title, useMantineTheme, Center, ActionIcon, Modal, Button, Group, Divider, Stack } from "@mantine/core"
+import {
+    Box,
+    Grid,
+    Paper,
+    Text,
+    Title,
+    useMantineTheme,
+    Center,
+    ActionIcon,
+    Modal,
+    Button,
+    Group,
+    Divider,
+    Stack
+} from "@mantine/core"
 import { useState } from "react"
 import { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
@@ -39,7 +53,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                         t.description === touchstoneToDelete.description &&
                         t.conviction === touchstoneToDelete.conviction
                     )
-            ),
+            )
         })
 
         setTouchstoneToDelete(null)
@@ -62,11 +76,14 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                     position: "relative",
                                     minHeight: "120px",
                                     display: "flex",
-                                    flexDirection: "column",
+                                    flexDirection: "column"
                                 }}
                             >
                                 {isFreeMode ? (
-                                    <Group gap="xs" style={{ position: "absolute", top: "8px", right: "8px" }}>
+                                    <Group
+                                        gap="xs"
+                                        style={{ position: "absolute", top: "8px", right: "8px" }}
+                                    >
                                         <ActionIcon
                                             size="sm"
                                             variant="subtle"
@@ -118,7 +135,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    backgroundColor: paperBg,
+                                    backgroundColor: paperBg
                                 }}
                             >
                                 <Center style={{ height: "100%" }}>
@@ -134,7 +151,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                         style={{
                                             display: "flex",
                                             alignItems: "center",
-                                            justifyContent: "center",
+                                            justifyContent: "center"
                                         }}
                                     >
                                         <IconPlus size={24} />

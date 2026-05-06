@@ -1,5 +1,24 @@
-import { ActionIcon, Badge, Button, Card, Divider, Group, Menu, Paper, Stack, Text, Title } from "@mantine/core"
-import { IconDots, IconEdit, IconInfoCircle, IconPlus, IconTrash, IconUsers } from "@tabler/icons-react"
+import {
+    ActionIcon,
+    Badge,
+    Button,
+    Card,
+    Divider,
+    Group,
+    Menu,
+    Paper,
+    Stack,
+    Text,
+    Title
+} from "@mantine/core"
+import {
+    IconDots,
+    IconEdit,
+    IconInfoCircle,
+    IconPlus,
+    IconTrash,
+    IconUsers
+} from "@tabler/icons-react"
 import { Character as CharacterType } from "~/data/Character"
 
 type Character = {
@@ -35,7 +54,7 @@ const CoteriesSection = ({
     handleDeleteCoterie,
     handleRemoveCharacterFromCoterie,
     setCoterieForSummary,
-    setCoterieSummaryModalOpened,
+    setCoterieSummaryModalOpened
 }: CoteriesSectionProps) => {
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
@@ -47,7 +66,11 @@ const CoteriesSection = ({
                         {userCoteries.length}
                     </Badge>
                 </Group>
-                <Button leftSection={<IconPlus size={16} />} color="red" onClick={() => setCreateCoterieModalOpened(true)}>
+                <Button
+                    leftSection={<IconPlus size={16} />}
+                    color="red"
+                    onClick={() => setCreateCoterieModalOpened(true)}
+                >
                     Create Coterie
                 </Button>
             </Group>
@@ -56,7 +79,12 @@ const CoteriesSection = ({
             ) : (
                 <Stack gap="md">
                     {userCoteries.map((coterie) => (
-                        <Paper key={coterie.id} p="md" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}>
+                        <Paper
+                            key={coterie.id}
+                            p="md"
+                            withBorder
+                            style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+                        >
                             <Stack gap="sm">
                                 <Group justify="space-between">
                                     <Group gap="sm">
@@ -107,7 +135,12 @@ const CoteriesSection = ({
                                                     <Menu.Item
                                                         leftSection={<IconTrash size={14} />}
                                                         color="red"
-                                                        onClick={() => handleDeleteCoterie(coterie.id, coterie.name)}
+                                                        onClick={() =>
+                                                            handleDeleteCoterie(
+                                                                coterie.id,
+                                                                coterie.name
+                                                            )
+                                                        }
                                                     >
                                                         Delete
                                                     </Menu.Item>
@@ -124,17 +157,30 @@ const CoteriesSection = ({
                                         </Text>
                                         <Stack gap="xs">
                                             {coterie.members.map((member) => {
-                                                const memberCharData = member.character?.data as CharacterType | undefined
+                                                const memberCharData = member.character?.data as
+                                                    | CharacterType
+                                                    | undefined
                                                 const memberPlayerName = memberCharData?.player
                                                 return member.character ? (
-                                                    <Group key={member.characterId} gap="sm" pl="md" justify="space-between">
+                                                    <Group
+                                                        key={member.characterId}
+                                                        gap="sm"
+                                                        pl="md"
+                                                        justify="space-between"
+                                                    >
                                                         <Group gap="sm">
                                                             <Text size="sm">
                                                                 • {member.character.name}
-                                                                {memberPlayerName ? ` | ${memberPlayerName}` : ""}
+                                                                {memberPlayerName
+                                                                    ? ` | ${memberPlayerName}`
+                                                                    : ""}
                                                             </Text>
                                                             {member.character.shared ? (
-                                                                <Badge size="xs" color="red" variant="light">
+                                                                <Badge
+                                                                    size="xs"
+                                                                    color="red"
+                                                                    variant="light"
+                                                                >
                                                                     Shared
                                                                 </Badge>
                                                             ) : null}
@@ -145,7 +191,10 @@ const CoteriesSection = ({
                                                                 variant="light"
                                                                 size="sm"
                                                                 onClick={() =>
-                                                                    handleRemoveCharacterFromCoterie(coterie.id, member.characterId)
+                                                                    handleRemoveCharacterFromCoterie(
+                                                                        coterie.id,
+                                                                        member.characterId
+                                                                    )
                                                                 }
                                                             >
                                                                 <IconTrash size={14} />

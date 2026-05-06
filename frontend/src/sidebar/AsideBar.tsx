@@ -1,36 +1,37 @@
-import { Button, ScrollArea, Stack, Stepper } from "@mantine/core"
-import { IconArrowRight } from "@tabler/icons-react"
-import { Link } from "@tanstack/react-router"
-import { Character, containsBloodSorcery } from "../data/Character"
-import { isDefault, upcase } from "../generator/utils"
+import { Box, ScrollArea, Stack, Text, UnstyledButton } from "@mantine/core"
+import { IconCheck } from "@tabler/icons-react"
+import { Character } from "../data/Character"
+import {
+    GeneratorStepId,
+    getGeneratorStepIndex,
+    getVisibleGeneratorSteps
+} from "../generator/steps"
+import { isDefault } from "../generator/utils"
 import { globals } from "../globals"
-import { useAuth } from "../hooks/useAuth"
 
 export type AsideBarProps = {
-    selectedStep: number
-    setSelectedStep: (step: number) => void
+    selectedStep: GeneratorStepId
+    setSelectedStep: (step: GeneratorStepId) => void
     character: Character
 }
 
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
-    const { loading: authLoading, isAuthenticated, signIn } = useAuth()
-    // const smallScreen = globals.isSmallScreen
-    const maybeRituals = containsBloodSorcery(character.disciplines) ? ["rituals"] : []
-    const stepperKeys = [
-        "clan",
-        "attributes",
-        "skills",
-        "generation",
-        "predatorType",
-        "name",
-        "disciplines",
-        ...maybeRituals,
-        "touchstones",
-        "merits",
-    ] as (keyof Character)[]
+    const steps = getVisibleGeneratorSteps(character)
+    const activeIndex = getGeneratorStepIndex(character, selectedStep)
 
-    const isHigherLevelAccessible = (character: Character, key: keyof Character) => {
-        const index = Math.max(0, stepperKeys.indexOf(key) - 1) // if n-1 is not default then we can jump to n
+    const isHigherLevelAccessible = (character: Character, step: (typeof steps)[number]) => {
+        if (step.id === "clan") {
+            return true
+        }
+
+        if (!step.progressKey) {
+            return true
+        }
+
+        const stepperKeys = steps
+            .map((candidateStep) => candidateStep.progressKey)
+            .filter((value): value is NonNullable<typeof value> => value !== undefined)
+        const index = Math.max(0, stepperKeys.indexOf(step.progressKey) - 1)
 
         for (let i = index; i < stepperKeys.length; i++) {
             if (!isDefault(character, stepperKeys[i])) return true
@@ -38,35 +39,133 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
         return false
     }
 
-    const getStepper = () => {
+    const getStagesList = () => {
         return (
-            <Stepper
-                color="grape"
-                orientation="vertical"
-                active={selectedStep}
-                onStepClick={(x) => {
-                    setSelectedStep(x)
-                }}
-            >
-                <Stepper.Step key={"Intro"} label={"Intro"} description="">
-                    {" "}
-                </Stepper.Step>
-                {stepperKeys.map((title) => {
+            <Stack gap={0}>
+                <Text
+                    size="sm"
+                    fw={600}
+                    style={{
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        color: "var(--mantine-color-dimmed)",
+                        marginBottom: "1rem"
+                    }}
+                >
+                    Stages
+                </Text>
+                {steps.map((step, index) => {
+                    const isCurrent = step.id === selectedStep
+                    const isCompleted = index < activeIndex
+                    const isAccessible = isHigherLevelAccessible(character, step)
+                    const isLast = index === steps.length - 1
+
                     return (
-                        <Stepper.Step
-                            key={title}
-                            label={upcase(title)}
-                            description=""
-                            disabled={!isHigherLevelAccessible(character, title)}
-                        >
-                            {" "}
-                        </Stepper.Step>
+                        <Box key={step.id}>
+                            <UnstyledButton
+                                onClick={() => {
+                                    if (isAccessible) setSelectedStep(step.id)
+                                }}
+                                disabled={!isAccessible}
+                                style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.75rem",
+                                    padding: "0.5rem 0.625rem",
+                                    borderRadius: "0.5rem",
+                                    cursor: isAccessible ? "pointer" : "default",
+                                    transition: "background-color 150ms ease",
+                                    backgroundColor: isCurrent
+                                        ? "rgba(190, 75, 219, 0.12)"
+                                        : "transparent",
+                                    border: isCurrent
+                                        ? "1px solid rgba(190, 75, 219, 0.3)"
+                                        : "1px solid transparent",
+                                    opacity: !isAccessible && !isCurrent && !isCompleted ? 0.4 : 1
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isCurrent && isAccessible) {
+                                        e.currentTarget.style.backgroundColor =
+                                            "rgba(255, 255, 255, 0.05)"
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isCurrent) {
+                                        e.currentTarget.style.backgroundColor = "transparent"
+                                    }
+                                }}
+                            >
+                                <Box
+                                    style={{
+                                        width: "1.875rem",
+                                        height: "1.875rem",
+                                        borderRadius: "50%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "0.75rem",
+                                        fontWeight: 600,
+                                        flexShrink: 0,
+                                        transition: "all 200ms ease",
+                                        ...(isCurrent
+                                            ? {
+                                                  backgroundColor: "var(--mantine-color-grape-6)",
+                                                  color: "white",
+                                                  boxShadow: "0 0 10px rgba(190, 75, 219, 0.4)"
+                                              }
+                                            : isCompleted
+                                              ? {
+                                                    backgroundColor: "rgba(212, 175, 55, 0.2)",
+                                                    color: "rgb(212, 175, 55)",
+                                                    border: "1px solid rgba(212, 175, 55, 0.3)"
+                                                }
+                                              : {
+                                                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                                                    color: "var(--mantine-color-dimmed)",
+                                                    border: "1px solid rgba(255, 255, 255, 0.15)"
+                                                })
+                                    }}
+                                >
+                                    {isCompleted && !isCurrent ? (
+                                        <IconCheck size={12} />
+                                    ) : (
+                                        index + 1
+                                    )}
+                                </Box>
+
+                                <Text
+                                    size="sm"
+                                    style={{
+                                        color: isCurrent
+                                            ? "var(--mantine-color-text)"
+                                            : "var(--mantine-color-dimmed)",
+                                        fontWeight: isCurrent ? 500 : 400,
+                                        lineHeight: 1.2,
+                                        transition: "color 150ms ease"
+                                    }}
+                                >
+                                    {step.label}
+                                </Text>
+                            </UnstyledButton>
+
+                            {!isLast && (
+                                <Box style={{ marginLeft: "23px" }}>
+                                    <Box
+                                        style={{
+                                            width: "1px",
+                                            height: "1.375rem",
+                                            backgroundColor: isCompleted
+                                                ? "rgba(212, 175, 55, 0.3)"
+                                                : "rgba(255, 255, 255, 0.1)"
+                                        }}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
                     )
                 })}
-                <Stepper.Step key={"Final"} label={"Final"} description="" disabled={isDefault(character, "disciplines")}>
-                    {" "}
-                </Stepper.Step>
-            </Stepper>
+            </Stack>
         )
     }
 
@@ -74,26 +173,12 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     const scrollerHeight = 940
     return (
         <Stack gap="md" style={{ padding: "1rem", zIndex: 0, height: "100%" }}>
-            <Stack gap="sm">
-                {authLoading ? (
-                    <Button size="sm" color="gray" variant="outline" loading leftSection={<IconArrowRight size={16} />}>
-                        Loading...
-                    </Button>
-                ) : !isAuthenticated ? (
-                    <Button size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />} onClick={signIn}>
-                        Sign In
-                    </Button>
+            <div style={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
+                {height <= scrollerHeight ? (
+                    <ScrollArea h={height - 100}>{getStagesList()}</ScrollArea>
                 ) : (
-                    <Button component={Link} to="/me" size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />}>
-                        Account
-                    </Button>
+                    <>{getStagesList()}</>
                 )}
-                <Button component={Link} to="/sheet" size="sm" color="grape" variant="outline" leftSection={<IconArrowRight size={16} />}>
-                    Sheet
-                </Button>
-            </Stack>
-            <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
-                {height <= scrollerHeight ? <ScrollArea h={height - 100}>{getStepper()}</ScrollArea> : <>{getStepper()}</>}
             </div>
         </Stack>
     )

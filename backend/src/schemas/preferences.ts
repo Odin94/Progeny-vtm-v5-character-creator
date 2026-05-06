@@ -12,7 +12,7 @@ export const ALLOWED_COLOR_THEMES = [
     "green",
     "lime",
     "yellow",
-    "orange",
+    "orange"
 ] as const
 
 export const ALLOWED_BACKGROUND_IMAGES = [
@@ -22,12 +22,12 @@ export const ALLOWED_BACKGROUND_IMAGES = [
     "bg_city",
     "bg_blood_guy",
     "bg_bat_woman",
-    "bg_alley",
+    "bg_alley"
 ] as const
 
 export const updatePreferencesSchema = z.object({
     colorTheme: z.enum(ALLOWED_COLOR_THEMES).nullable().optional(),
-    backgroundImage: z.enum(ALLOWED_BACKGROUND_IMAGES).nullable().optional(),
+    backgroundImage: z.enum(ALLOWED_BACKGROUND_IMAGES).nullable().optional()
 })
 
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>

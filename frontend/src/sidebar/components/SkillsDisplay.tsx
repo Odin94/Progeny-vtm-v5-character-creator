@@ -9,7 +9,7 @@ export type SkillsProps = {
 
 const SkillDisplay = ({ skills }: SkillsProps) => {
     const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New",
+        fontFamily: "Courier New"
     }
 
     return (
@@ -19,7 +19,17 @@ const SkillDisplay = ({ skills }: SkillsProps) => {
             <Grid>
                 <Grid.Col span={4}>
                     <Title order={4}>Physical</Title>
-                    {["athletics", "brawl", "craft", "drive", "firearms", "melee", "larceny", "stealth", "survival"]
+                    {[
+                        "athletics",
+                        "brawl",
+                        "craft",
+                        "drive",
+                        "firearms",
+                        "melee",
+                        "larceny",
+                        "stealth",
+                        "survival"
+                    ]
                         .map((s) => skillsKeySchema.parse(s))
                         .map((skill) => {
                             return (
@@ -41,7 +51,7 @@ const SkillDisplay = ({ skills }: SkillsProps) => {
                         "performance",
                         "persuasion",
                         "streetwise",
-                        "subterfuge",
+                        "subterfuge"
                     ]
                         .map((s) => skillsKeySchema.parse(s))
                         .map((skill) => {
@@ -55,7 +65,17 @@ const SkillDisplay = ({ skills }: SkillsProps) => {
 
                 <Grid.Col span={4}>
                     <Title order={4}>Mental</Title>
-                    {["academics", "awareness", "finance", "investigation", "medicine", "occult", "politics", "science", "technology"]
+                    {[
+                        "academics",
+                        "awareness",
+                        "finance",
+                        "investigation",
+                        "medicine",
+                        "occult",
+                        "politics",
+                        "science",
+                        "technology"
+                    ]
                         .map((s) => skillsKeySchema.parse(s))
                         .map((skill) => {
                             return (

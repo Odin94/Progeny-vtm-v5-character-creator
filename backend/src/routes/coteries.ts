@@ -10,7 +10,7 @@ import {
     CreateCoterieInput,
     CoterieParams,
     UpdateCoterieInput,
-    AddCharacterToCoterieInput,
+    AddCharacterToCoterieInput
 } from "../schemas/coterie.js"
 import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
@@ -25,8 +25,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                body: zodToFastifySchema(createCoterieSchema),
-            },
+                body: zodToFastifySchema(createCoterieSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             try {
@@ -44,7 +44,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         endpoint: "/coteries",
                         method: "POST",
                         userId,
-                        coterieCount: coterieCount[0]?.count,
+                        coterieCount: coterieCount[0]?.count
                     })
                     await trackEvent(
                         "coterie_limit_exceeded",
@@ -53,14 +53,15 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                             method: "POST",
                             userId,
                             coterieCount: coterieCount[0]?.count,
-                            limit: 100,
+                            limit: 100
                         },
                         userId,
                         request
                     )
                     reply.code(403).send({
                         error: "Coterie limit reached",
-                        message: "You have reached the maximum limit of 100 coteries. Please delete some coteries before creating new ones.",
+                        message:
+                            "You have reached the maximum limit of 100 coteries. Please delete some coteries before creating new ones."
                     })
                     return
                 }
@@ -72,7 +73,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     .values({
                         id: coterieId,
                         name,
-                        ownerId: userId,
+                        ownerId: userId
                     })
                     .returning()
 
@@ -81,7 +82,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     method: "POST",
                     userId,
                     coterieId,
-                    coterieName: name,
+                    coterieName: name
                 })
 
                 await trackEvent(
@@ -91,7 +92,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         coterieId,
-                        coterieName: name,
+                        coterieName: name
                     },
                     userId,
                     request
@@ -102,11 +103,11 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 logger.error("Failed to create coterie", error, {
                     endpoint: "/coteries",
                     method: "POST",
-                    userId: request.user?.id ?? null,
+                    userId: request.user?.id ?? null
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to create coterie",
+                    message: error instanceof Error ? error.message : "Failed to create coterie"
                 })
             }
         }
@@ -116,23 +117,29 @@ export async function coterieRoutes(fastify: FastifyInstance) {
     fastify.get(
         "/coteries",
         {
-            preHandler: authenticateUser,
+            preHandler: authenticateUser
         },
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
 
             // Get owned coteries
-            const ownedCoteries = await db.select().from(schema.coteries).where(eq(schema.coteries.ownerId, userId))
+            const ownedCoteries = await db
+                .select()
+                .from(schema.coteries)
+                .where(eq(schema.coteries.ownerId, userId))
 
             // Get members for each coterie
             const coteriesWithMembers = await Promise.all(
                 ownedCoteries.map(async (coterie) => {
-                    const members = await db.select().from(schema.coterieMembers).where(eq(schema.coterieMembers.coterieId, coterie.id))
+                    const members = await db
+                        .select()
+                        .from(schema.coterieMembers)
+                        .where(eq(schema.coterieMembers.coterieId, coterie.id))
 
                     const characters = await Promise.all(
                         members.map(async (member) => {
                             const character = await db.query.characters.findFirst({
-                                where: eq(schema.characters.id, member.characterId),
+                                where: eq(schema.characters.id, member.characterId)
                             })
                             return character ? { ...member, character } : null
                         })
@@ -146,10 +153,10 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                                 const { userId: _, ...characterWithoutUserId } = c!.character
                                 return {
                                     ...c!,
-                                    character: characterWithoutUserId,
+                                    character: characterWithoutUserId
                                 }
                             }),
-                        owned: true,
+                        owned: true
                     }
                 })
             )
@@ -173,13 +180,16 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             const sharedCoteries = await Promise.all(
                 Array.from(sharedCoterieIds).map(async (coterieId) => {
                     const coterie = await db.query.coteries.findFirst({
-                        where: eq(schema.coteries.id, coterieId),
+                        where: eq(schema.coteries.id, coterieId)
                     })
                     return coterie ? { ...coterie, owned: false, members: [] } : null
                 })
             )
 
-            const allCoteries = [...coteriesWithMembers, ...sharedCoteries.filter((c) => c !== null)]
+            const allCoteries = [
+                ...coteriesWithMembers,
+                ...sharedCoteries.filter((c) => c !== null)
+            ]
 
             await trackEvent(
                 "coteries_listed",
@@ -189,7 +199,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     userId,
                     ownedCount: ownedCoteries.length,
                     sharedCount: sharedCoteries.filter((c) => c !== null).length,
-                    totalCount: allCoteries.length,
+                    totalCount: allCoteries.length
                 },
                 userId,
                 request
@@ -205,15 +215,15 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: zodToFastifySchema(coterieParamsSchema),
-            },
+                params: zodToFastifySchema(coterieParamsSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
             const { id } = request.params as CoterieParams
 
             const coterie = await db.query.coteries.findFirst({
-                where: eq(schema.coteries.id, id),
+                where: eq(schema.coteries.id, id)
             })
 
             if (!coterie) {
@@ -222,12 +232,15 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             }
 
             // Get members
-            const members = await db.select().from(schema.coterieMembers).where(eq(schema.coterieMembers.coterieId, id))
+            const members = await db
+                .select()
+                .from(schema.coterieMembers)
+                .where(eq(schema.coterieMembers.coterieId, id))
 
             const membersWithCharacters = await Promise.all(
                 members.map(async (member) => {
                     const character = await db.query.characters.findFirst({
-                        where: eq(schema.characters.id, member.characterId),
+                        where: eq(schema.characters.id, member.characterId)
                     })
                     return character ? { ...member, character } : null
                 })
@@ -254,7 +267,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     userId,
                     coterieId: id,
                     isOwner,
-                    hasSharedAccess,
+                    hasSharedAccess
                 },
                 userId,
                 request
@@ -270,11 +283,11 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                             ...m!,
                             character: {
                                 ...characterWithoutUserId,
-                                data: JSON.parse(m!.character.data),
-                            },
+                                data: JSON.parse(m!.character.data)
+                            }
                         }
                     }),
-                canEdit: isOwner,
+                canEdit: isOwner
             })
         }
     )
@@ -289,8 +302,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             preHandler: authenticateUser,
             schema: {
                 params: zodToFastifySchema(coterieParamsSchema),
-                body: zodToFastifySchema(updateCoterieSchema),
-            },
+                body: zodToFastifySchema(updateCoterieSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const { id } = request.params as CoterieParams
@@ -299,7 +312,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 const userId = request.user!.id
 
                 const coterie = await db.query.coteries.findFirst({
-                    where: eq(schema.coteries.id, id),
+                    where: eq(schema.coteries.id, id)
                 })
 
                 if (!coterie) {
@@ -307,7 +320,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         endpoint: "/coteries/:id",
                         method: "PUT",
                         userId,
-                        coterieId: id,
+                        coterieId: id
                     })
                     reply.code(404).send({ error: "Coterie not found" })
                     return
@@ -319,9 +332,11 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "PUT",
                         userId,
                         coterieId: id,
-                        coterieOwnerId: coterie.ownerId,
+                        coterieOwnerId: coterie.ownerId
                     })
-                    reply.code(403).send({ error: "Forbidden: You can only edit your own coteries" })
+                    reply
+                        .code(403)
+                        .send({ error: "Forbidden: You can only edit your own coteries" })
                     return
                 }
 
@@ -329,7 +344,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     .update(schema.coteries)
                     .set({
                         ...(name && { name }),
-                        updatedAt: new Date(),
+                        updatedAt: new Date()
                     })
                     .where(eq(schema.coteries.id, id))
                     .returning()
@@ -339,7 +354,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     method: "PUT",
                     userId,
                     coterieId: id,
-                    updatedFields: name ? ["name"] : [],
+                    updatedFields: name ? ["name"] : []
                 })
 
                 await trackEvent(
@@ -349,7 +364,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "PUT",
                         userId,
                         coterieId: id,
-                        updatedFields: name ? ["name"] : [],
+                        updatedFields: name ? ["name"] : []
                     },
                     userId,
                     request
@@ -361,11 +376,11 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     endpoint: "/coteries/:id",
                     method: "PUT",
                     userId: request.user?.id ?? null,
-                    coterieId: id,
+                    coterieId: id
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to update coterie",
+                    message: error instanceof Error ? error.message : "Failed to update coterie"
                 })
             }
         }
@@ -377,15 +392,15 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: zodToFastifySchema(coterieParamsSchema),
-            },
+                params: zodToFastifySchema(coterieParamsSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
             const { id } = request.params as CoterieParams
 
             const coterie = await db.query.coteries.findFirst({
-                where: eq(schema.coteries.id, id),
+                where: eq(schema.coteries.id, id)
             })
 
             if (!coterie) {
@@ -406,7 +421,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     endpoint: "/coteries/:id",
                     method: "DELETE",
                     userId,
-                    coterieId: id,
+                    coterieId: id
                 },
                 userId,
                 request
@@ -426,8 +441,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             preHandler: authenticateUser,
             schema: {
                 params: zodToFastifySchema(coterieParamsSchema),
-                body: zodToFastifySchema(addCharacterToCoterieSchema),
-            },
+                body: zodToFastifySchema(addCharacterToCoterieSchema)
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
             const { id: coterieId } = request.params as CoterieParams
@@ -436,7 +451,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 const userId = request.user!.id
 
                 const coterie = await db.query.coteries.findFirst({
-                    where: eq(schema.coteries.id, coterieId),
+                    where: eq(schema.coteries.id, coterieId)
                 })
 
                 if (!coterie) {
@@ -444,7 +459,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         endpoint: "/coteries/:id/characters",
                         method: "POST",
                         userId,
-                        coterieId,
+                        coterieId
                     })
                     reply.code(404).send({ error: "Coterie not found" })
                     return
@@ -456,14 +471,16 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         coterieId,
-                        coterieOwnerId: coterie.ownerId,
+                        coterieOwnerId: coterie.ownerId
                     })
-                    reply.code(403).send({ error: "Forbidden: You can only add characters to your own coteries" })
+                    reply.code(403).send({
+                        error: "Forbidden: You can only add characters to your own coteries"
+                    })
                     return
                 }
 
                 const character = await db.query.characters.findFirst({
-                    where: eq(schema.characters.id, characterId),
+                    where: eq(schema.characters.id, characterId)
                 })
 
                 if (!character) {
@@ -472,7 +489,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         coterieId,
-                        characterId,
+                        characterId
                     })
                     reply.code(404).send({ error: "Character not found" })
                     return
@@ -485,17 +502,20 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         userId,
                         coterieId,
                         characterId,
-                        characterOwnerId: character.userId,
+                        characterOwnerId: character.userId
                     })
                     reply.code(403).send({
-                        error: "Forbidden: You can only add your own characters to coteries",
+                        error: "Forbidden: You can only add your own characters to coteries"
                     })
                     return
                 }
 
                 // Check if already in coterie
                 const existing = await db.query.coterieMembers.findFirst({
-                    where: and(eq(schema.coterieMembers.coterieId, coterieId), eq(schema.coterieMembers.characterId, characterId)),
+                    where: and(
+                        eq(schema.coterieMembers.coterieId, coterieId),
+                        eq(schema.coterieMembers.characterId, characterId)
+                    )
                 })
 
                 if (existing) {
@@ -504,7 +524,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         coterieId,
-                        characterId,
+                        characterId
                     })
                     reply.code(409).send({ error: "Character is already in this coterie" })
                     return
@@ -517,7 +537,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     .values({
                         id: memberId,
                         coterieId,
-                        characterId,
+                        characterId
                     })
                     .returning()
 
@@ -526,7 +546,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     method: "POST",
                     userId,
                     coterieId,
-                    characterId,
+                    characterId
                 })
 
                 await trackEvent(
@@ -536,7 +556,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         coterieId,
-                        characterId,
+                        characterId
                     },
                     userId,
                     request
@@ -548,11 +568,14 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     endpoint: "/coteries/:id/characters",
                     method: "POST",
                     userId: request.user?.id ?? null,
-                    coterieId,
+                    coterieId
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to add character to coterie",
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to add character to coterie"
                 })
             }
         }
@@ -566,16 +589,20 @@ export async function coterieRoutes(fastify: FastifyInstance) {
         {
             preHandler: authenticateUser,
             schema: {
-                params: zodToFastifySchema(coterieParamsSchema.extend({ characterId: z.string().min(1) })),
-            },
+                params: zodToFastifySchema(
+                    coterieParamsSchema.extend({ characterId: z.string().min(1) })
+                )
+            }
         },
         async (request: AuthenticatedRequest, reply) => {
-            const { id: coterieId, characterId } = request.params as CoterieParams & { characterId: string }
+            const { id: coterieId, characterId } = request.params as CoterieParams & {
+                characterId: string
+            }
             try {
                 const userId = request.user!.id
 
                 const coterie = await db.query.coteries.findFirst({
-                    where: eq(schema.coteries.id, coterieId),
+                    where: eq(schema.coteries.id, coterieId)
                 })
 
                 if (!coterie) {
@@ -583,7 +610,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         endpoint: "/coteries/:id/characters/:characterId",
                         method: "DELETE",
                         userId,
-                        coterieId,
+                        coterieId
                     })
                     reply.code(404).send({ error: "Coterie not found" })
                     return
@@ -595,24 +622,29 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "DELETE",
                         userId,
                         coterieId,
-                        coterieOwnerId: coterie.ownerId,
+                        coterieOwnerId: coterie.ownerId
                     })
                     reply.code(403).send({
-                        error: "Forbidden: You can only remove characters from your own coteries",
+                        error: "Forbidden: You can only remove characters from your own coteries"
                     })
                     return
                 }
 
                 await db
                     .delete(schema.coterieMembers)
-                    .where(and(eq(schema.coterieMembers.coterieId, coterieId), eq(schema.coterieMembers.characterId, characterId)))
+                    .where(
+                        and(
+                            eq(schema.coterieMembers.coterieId, coterieId),
+                            eq(schema.coterieMembers.characterId, characterId)
+                        )
+                    )
 
                 logger.info("Character removed from coterie", {
                     endpoint: "/coteries/:id/characters/:characterId",
                     method: "DELETE",
                     userId,
                     coterieId,
-                    characterId,
+                    characterId
                 })
 
                 await trackEvent(
@@ -622,7 +654,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "DELETE",
                         userId,
                         coterieId,
-                        characterId,
+                        characterId
                     },
                     userId,
                     request
@@ -635,11 +667,14 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     method: "DELETE",
                     userId: request.user?.id ?? null,
                     coterieId,
-                    characterId,
+                    characterId
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: error instanceof Error ? error.message : "Failed to remove character from coterie",
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to remove character from coterie"
                 })
             }
         }

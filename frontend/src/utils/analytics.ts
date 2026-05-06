@@ -19,7 +19,7 @@ export const trackEvent = ({ action, category, label, value }: EventParams) => {
             action,
             category,
             label,
-            value,
+            value
         })
     } catch (error) {
         console.warn("Google Analytics event tracking failed: ", error)
@@ -29,7 +29,7 @@ export const trackEvent = ({ action, category, label, value }: EventParams) => {
         posthog.capture(action, {
             category,
             label,
-            value,
+            value
         })
     } catch (error) {
         console.warn("PostHog event tracking failed:", error)
@@ -46,7 +46,7 @@ export const trackPageView = ({ page, title }: PageViewParams) => {
     try {
         posthog.capture("$pageview", {
             $current_url: page,
-            title,
+            title
         })
     } catch (error) {
         console.warn("PostHog page view tracking failed: ", error)

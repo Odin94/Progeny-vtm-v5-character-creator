@@ -13,7 +13,14 @@ type SquarePipsProps = {
     field?: string
 }
 
-const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, options, field }: SquarePipsProps) => {
+const SquarePips = ({
+    value,
+    setValue,
+    maxLevel = 5,
+    groupSize,
+    options,
+    field
+}: SquarePipsProps) => {
     const prevValueRef = useRef(value)
 
     const { firstChangingIndex, isFilling } = useMemo(() => {
@@ -72,14 +79,14 @@ const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, options, field }
         } else if (field === "ephemeral.hunger") {
             update.ephemeral = {
                 ...character.ephemeral,
-                hunger: clampedValue,
+                hunger: clampedValue
             }
         } else if (field) {
             update[field as keyof Character] = clampedValue as never
         }
         setCharacter({
             ...character,
-            ...update,
+            ...update
         })
     }
 
@@ -93,7 +100,11 @@ const SquarePips = ({ value, setValue, maxLevel = 5, groupSize, options, field }
                     firstChangingIndex={firstChangingIndex}
                     isFilling={isFilling}
                     onClick={() => handlePipClick(index)}
-                    style={groupSize && (index + 1) % groupSize === 0 && index < maxLevel - 1 ? { marginRight: 8 } : undefined}
+                    style={
+                        groupSize && (index + 1) % groupSize === 0 && index < maxLevel - 1
+                            ? { marginRight: 8 }
+                            : undefined
+                    }
                     options={options}
                     disabledReason={getDisabledReason(index)}
                 />

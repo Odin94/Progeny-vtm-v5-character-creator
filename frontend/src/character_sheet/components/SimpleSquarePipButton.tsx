@@ -22,7 +22,7 @@ const SimpleSquarePipButton = ({
     firstChangingIndex = null,
     isFilling: isFillingProp = false,
     options,
-    disabledReason,
+    disabledReason
 }: SimpleSquarePipButtonProps) => {
     const theme = useMantineTheme()
     const color = options?.primaryColor || "grape"
@@ -63,11 +63,14 @@ const SimpleSquarePipButton = ({
         transition: "transform 0.2s ease",
         position: "relative",
         overflow: "visible",
-        ...style,
+        ...style
     }
 
     const actionIcon = (
-        <motion.div whileHover={!isDisabled && onClick ? { scale: 1.15 } : undefined} style={{ display: "inline-block" }}>
+        <motion.div
+            whileHover={!isDisabled && onClick ? { scale: 1.15 } : undefined}
+            style={{ display: "inline-block" }}
+        >
             <ActionIcon
                 variant="subtle"
                 color={color}
@@ -82,13 +85,13 @@ const SimpleSquarePipButton = ({
                     transition={{
                         duration: 0.3,
                         ease: "easeOut",
-                        delay: delay,
+                        delay: delay
                     }}
                     style={{
                         position: "absolute",
                         inset: 0,
                         backgroundColor: baseColor,
-                        borderRadius: "4px",
+                        borderRadius: "4px"
                     }}
                 />
             </ActionIcon>

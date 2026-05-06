@@ -1,12 +1,15 @@
+import { AppShell } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect } from "react"
+import { RAW_GOLD, rgba } from "~/theme/colors"
 import CharacterSheet from "~/character_sheet/CharacterSheet"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import { getEmptyCharacter } from "~/data/Character"
+import Topbar from "~/topbar/Topbar"
 
 export const Route = createFileRoute("/sheet")({
-    component: Sheet,
+    component: Sheet
 })
 
 function Sheet() {
@@ -25,11 +28,11 @@ function Sheet() {
 
             if (isEmpty) {
                 posthog.capture("sheet-page-visit-empty", {
-                    page: "/sheet",
+                    page: "/sheet"
                 })
             } else {
                 posthog.capture("sheet-page-visit-non-empty", {
-                    page: "/sheet",
+                    page: "/sheet"
                 })
             }
         } catch (error) {
@@ -37,5 +40,30 @@ function Sheet() {
         }
     }, [character])
 
-    return <CharacterSheet character={character} setCharacter={setCharacter} />
+    return (
+        <AppShell
+            padding="0"
+            header={{ height: 52 }}
+            styles={{
+                root: {
+                    minHeight: "100vh"
+                },
+                header: {
+                    background: "rgba(8, 7, 8, 0.7)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                    borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
+                    zIndex: 200
+                },
+                main: {
+                    height: "100%"
+                }
+            }}
+        >
+            <AppShell.Header>
+                <Topbar />
+            </AppShell.Header>
+            <CharacterSheet character={character} setCharacter={setCharacter} />
+        </AppShell>
+    )
 }

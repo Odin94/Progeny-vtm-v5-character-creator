@@ -14,7 +14,7 @@ export const users = sqliteTable("users", {
         .default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" })
         .notNull()
-        .default(sql`(unixepoch())`),
+        .default(sql`(unixepoch())`)
 })
 
 export const characters = sqliteTable(
@@ -33,10 +33,10 @@ export const characters = sqliteTable(
             .default(sql`(unixepoch())`),
         updatedAt: integer("updated_at", { mode: "timestamp" })
             .notNull()
-            .default(sql`(unixepoch())`),
+            .default(sql`(unixepoch())`)
     },
     (table) => ({
-        userIdIdx: index("characters_user_id_idx").on(table.userId),
+        userIdIdx: index("characters_user_id_idx").on(table.userId)
     })
 )
 
@@ -51,7 +51,7 @@ export const coteries = sqliteTable("coteries", {
         .default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" })
         .notNull()
-        .default(sql`(unixepoch())`),
+        .default(sql`(unixepoch())`)
 })
 
 export const coterieMembers = sqliteTable(
@@ -66,11 +66,11 @@ export const coterieMembers = sqliteTable(
             .references(() => characters.id, { onDelete: "cascade" }),
         createdAt: integer("created_at", { mode: "timestamp" })
             .notNull()
-            .default(sql`(unixepoch())`),
+            .default(sql`(unixepoch())`)
     },
     (table) => ({
         coterieIdIdx: index("coterie_members_coterie_id_idx").on(table.coterieId),
-        characterIdIdx: index("coterie_members_character_id_idx").on(table.characterId),
+        characterIdIdx: index("coterie_members_character_id_idx").on(table.characterId)
     })
 )
 
@@ -89,12 +89,17 @@ export const characterShares = sqliteTable(
             .references(() => users.id, { onDelete: "cascade" }),
         createdAt: integer("created_at", { mode: "timestamp" })
             .notNull()
-            .default(sql`(unixepoch())`),
+            .default(sql`(unixepoch())`)
     },
     (table) => ({
         characterIdIdx: index("character_shares_character_id_idx").on(table.characterId),
-        sharedWithUserIdIdx: index("character_shares_shared_with_user_id_idx").on(table.sharedWithUserId),
-        uniqueShare: index("character_shares_unique_idx").on(table.characterId, table.sharedWithUserId),
+        sharedWithUserIdIdx: index("character_shares_shared_with_user_id_idx").on(
+            table.sharedWithUserId
+        ),
+        uniqueShare: index("character_shares_unique_idx").on(
+            table.characterId,
+            table.sharedWithUserId
+        )
     })
 )
 
@@ -114,50 +119,50 @@ export const usersRelations = relations(users, ({ many }) => ({
     characters: many(characters),
     ownedCoteries: many(coteries),
     sharedCharacters: many(characterShares, { relationName: "sharedWith" }),
-    sharedBy: many(characterShares, { relationName: "sharedBy" }),
+    sharedBy: many(characterShares, { relationName: "sharedBy" })
 }))
 
 export const charactersRelations = relations(characters, ({ one, many }) => ({
     user: one(users, {
         fields: [characters.userId],
-        references: [users.id],
+        references: [users.id]
     }),
     coterieMembers: many(coterieMembers),
-    shares: many(characterShares),
+    shares: many(characterShares)
 }))
 
 export const coteriesRelations = relations(coteries, ({ one, many }) => ({
     owner: one(users, {
         fields: [coteries.ownerId],
-        references: [users.id],
+        references: [users.id]
     }),
-    members: many(coterieMembers),
+    members: many(coterieMembers)
 }))
 
 export const coterieMembersRelations = relations(coterieMembers, ({ one }) => ({
     coterie: one(coteries, {
         fields: [coterieMembers.coterieId],
-        references: [coteries.id],
+        references: [coteries.id]
     }),
     character: one(characters, {
         fields: [coterieMembers.characterId],
-        references: [characters.id],
-    }),
+        references: [characters.id]
+    })
 }))
 
 export const characterSharesRelations = relations(characterShares, ({ one }) => ({
     character: one(characters, {
         fields: [characterShares.characterId],
-        references: [characters.id],
+        references: [characters.id]
     }),
     sharedWith: one(users, {
         fields: [characterShares.sharedWithUserId],
         references: [users.id],
-        relationName: "sharedWith",
+        relationName: "sharedWith"
     }),
     sharedBy: one(users, {
         fields: [characterShares.sharedById],
         references: [users.id],
-        relationName: "sharedBy",
-    }),
+        relationName: "sharedBy"
+    })
 }))

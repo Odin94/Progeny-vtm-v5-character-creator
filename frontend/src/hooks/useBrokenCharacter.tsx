@@ -3,15 +3,20 @@ import { useLocalStorage } from "@mantine/hooks"
 const BROKEN_SAVE_KEY = "character_broken_save"
 const BROKEN_SAVE_ERROR_KEY = "character_broken_save_error"
 
+export const recordBrokenCharacter = (data: string, error: string) => {
+    localStorage.setItem(BROKEN_SAVE_KEY, JSON.stringify(data))
+    localStorage.setItem(BROKEN_SAVE_ERROR_KEY, JSON.stringify(error))
+}
+
 export const useBrokenCharacter = () => {
     const [brokenData, setBrokenData] = useLocalStorage<string>({
         key: BROKEN_SAVE_KEY,
-        defaultValue: "",
+        defaultValue: ""
     })
 
     const [brokenError, setBrokenError] = useLocalStorage<string>({
         key: BROKEN_SAVE_ERROR_KEY,
-        defaultValue: "",
+        defaultValue: ""
     })
 
     const clearBrokenCharacter = () => {
@@ -31,6 +36,6 @@ export const useBrokenCharacter = () => {
         brokenError,
         hasBrokenCharacter,
         setBrokenCharacter,
-        clearBrokenCharacter,
+        clearBrokenCharacter
     }
 }

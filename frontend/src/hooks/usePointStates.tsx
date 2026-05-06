@@ -11,21 +11,35 @@ export type PointState = {
 
 export type PointStateReturnValue = {
     pointStates: PointState[]
-    updatePointStates: (selectedPoints: number, pointStateIndex: number, subPointStateIndex: number) => void
+    updatePointStates: (
+        selectedPoints: number,
+        pointStateIndex: number,
+        subPointStateIndex: number
+    ) => void
+    setExclusiveSelection: (pointStateIndex: number, subPointStateIndex: number) => void
     setFromSelectableMeritsAndFlaws: (selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]) => void
 }
 
-const usePointStates = (selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]): PointStateReturnValue => {
+const usePointStates = (
+    selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]
+): PointStateReturnValue => {
     const initialPointStates: PointState[] = []
     for (const selectable of selectableMeritsAndFlaws) {
         initialPointStates.push({
-            subPointStates: selectable.options.map((option) => ({ selectedPoints: 0, maxLevel: option.maxLevel })),
-            totalPoints: selectable.totalPoints,
+            subPointStates: selectable.options.map((option) => ({
+                selectedPoints: 0,
+                maxLevel: option.maxLevel
+            })),
+            totalPoints: selectable.totalPoints
         })
     }
     const [pointStates, setPointStates] = useState<PointState[]>(initialPointStates)
 
-    const updatePointStates = (selectedPoints: number, pointStateIndex: number, subPointStateIndex: number) => {
+    const updatePointStates = (
+        selectedPoints: number,
+        pointStateIndex: number,
+        subPointStateIndex: number
+    ) => {
         const updatedPointStates = [...pointStates]
         const pointState = updatedPointStates[pointStateIndex]
         const subPointStates = updatedPointStates[pointStateIndex].subPointStates
@@ -44,19 +58,39 @@ const usePointStates = (selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]): P
         setPointStates(updatedPointStates)
     }
 
-    const setFromSelectableMeritsAndFlaws = (selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]) => {
+    const setExclusiveSelection = (pointStateIndex: number, subPointStateIndex: number) => {
+        const updatedPointStates = [...pointStates]
+        const pointState = updatedPointStates[pointStateIndex]
+        pointState.subPointStates.forEach((sub) => {
+            sub.selectedPoints = 0
+        })
+        pointState.subPointStates[subPointStateIndex].selectedPoints = pointState.totalPoints
+        setPointStates(updatedPointStates)
+    }
+
+    const setFromSelectableMeritsAndFlaws = (
+        selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]
+    ) => {
         const initialPointStates: PointState[] = []
         for (const selectable of selectableMeritsAndFlaws) {
             initialPointStates.push({
-                subPointStates: selectable.options.map((option) => ({ selectedPoints: 0, maxLevel: option.maxLevel })),
-                totalPoints: selectable.totalPoints,
+                subPointStates: selectable.options.map((option) => ({
+                    selectedPoints: 0,
+                    maxLevel: option.maxLevel
+                })),
+                totalPoints: selectable.totalPoints
             })
         }
 
         setPointStates(initialPointStates)
     }
 
-    return { pointStates, updatePointStates, setFromSelectableMeritsAndFlaws }
+    return {
+        pointStates,
+        updatePointStates,
+        setExclusiveSelection,
+        setFromSelectableMeritsAndFlaws
+    }
 }
 
 export default usePointStates

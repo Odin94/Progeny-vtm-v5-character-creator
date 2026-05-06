@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
-import { createPdf_nerdbert } from "~/generator/pdfCreator"
+import {
+    createPdf_nerdbert,
+    setButtonImageOverlay,
+    setHumanityTracker
+} from "~/generator/pdfCreator"
 import { getBasicTestCharacter } from "./testUtils"
 import { readFileSync } from "fs"
 import { resolve } from "path"
@@ -31,16 +35,40 @@ const getImageBytes = () => {
     return imageBytes
 }
 
+const createButtonOverlayHarness = () => {
+    const drawImage = vi.fn()
+    const pageRef = { id: "page-1" }
+    const page = { ref: pageRef, drawImage }
+    const widget = {
+        P: () => pageRef,
+        getRectangle: () => ({ x: 10, y: 20, width: 30, height: 40 })
+    }
+    const button = {
+        acroField: {
+            getWidgets: () => [widget]
+        }
+    }
+    const pdfDoc = {
+        getPages: () => [page]
+    }
+    const form = {
+        getButton: vi.fn().mockReturnValue(button)
+    }
+    const image = { id: "image" }
+
+    return { drawImage, form, image, pdfDoc }
+}
+
 global.fetch = vi.fn((url: string | Request | URL) => {
     if (typeof url === "string") {
         if (url.includes("Roboto-Regular.ttf")) {
             return Promise.resolve({
-                arrayBuffer: () => Promise.resolve(getFontBytes().buffer),
+                arrayBuffer: () => Promise.resolve(getFontBytes().buffer)
             } as Response)
         }
         if (url.includes("CheckSolid.png")) {
             return Promise.resolve({
-                arrayBuffer: () => Promise.resolve(getImageBytes().buffer),
+                arrayBuffer: () => Promise.resolve(getImageBytes().buffer)
             } as Response)
         }
     }
@@ -49,7 +77,7 @@ global.fetch = vi.fn((url: string | Request | URL) => {
 
 Object.defineProperty(window, "atob", {
     writable: true,
-    value: (str: string) => Buffer.from(str, "base64").toString("binary"),
+    value: (str: string) => Buffer.from(str, "base64").toString("binary")
 })
 
 describe("createPdf_nerdbert", () => {
@@ -96,7 +124,9 @@ describe("createPdf_nerdbert", () => {
         expect(disc2Ability1Text).toContain("Corrosive Vitae")
 
         if (character.rituals.length > 0) {
-            const bloodSorceryPowers = character.disciplines.filter((d) => d.discipline === "blood sorcery")
+            const bloodSorceryPowers = character.disciplines.filter(
+                (d) => d.discipline === "blood sorcery"
+            )
             const ritualFieldIndex = bloodSorceryPowers.length + 1 // First ritual appears after all powers
             const ritualField = form.getTextField(`Disc2_Ability${ritualFieldIndex}`)
             const ritualText = ritualField.getText() || ""
@@ -111,5 +141,32 @@ describe("createPdf_nerdbert", () => {
         const meritTexts = allMeritFields.map((field) => field.getText()).join(" ")
         expect(meritTexts).toContain(character.merits[0].name)
         expect(meritTexts).toContain(character.flaws[0].name)
+    })
+})
+
+describe("PDF humanity helpers", () => {
+    it("draws an image overlay at the matching button widget position", () => {
+        const { drawImage, form, image, pdfDoc } = createButtonOverlayHarness()
+
+        setButtonImageOverlay(pdfDoc as any, form as any, "Humanity-1", image as any)
+
+        expect(form.getButton).toHaveBeenCalledWith("Humanity-1")
+        expect(drawImage).toHaveBeenCalledWith(image, {
+            x: 12.4,
+            y: 23.2,
+            width: 25.2,
+            height: 33.6
+        })
+    })
+
+    it("draws one humanity mark per filled humanity slot", () => {
+        const { drawImage, form, image, pdfDoc } = createButtonOverlayHarness()
+
+        setHumanityTracker(pdfDoc as any, form as any, image as any, 3)
+
+        expect(form.getButton).toHaveBeenNthCalledWith(1, "Humanity-1")
+        expect(form.getButton).toHaveBeenNthCalledWith(2, "Humanity-2")
+        expect(form.getButton).toHaveBeenNthCalledWith(3, "Humanity-3")
+        expect(drawImage).toHaveBeenCalledTimes(3)
     })
 })

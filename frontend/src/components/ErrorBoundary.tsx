@@ -1,7 +1,8 @@
-import { Alert, Center, Text } from "@mantine/core"
+import { Alert, Center } from "@mantine/core"
 import { IconAlertCircle } from "@tabler/icons-react"
 import { Component, ErrorInfo, ReactNode } from "react"
 import posthog from "posthog-js"
+import ErrorDetails from "./ErrorDetails"
 
 type Props = {
     children?: ReactNode
@@ -28,7 +29,7 @@ const getCharacterFromStorage = () => {
 class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
-        error: undefined,
+        error: undefined
     }
 
     public static getDerivedStateFromError(e: Error): State {
@@ -46,7 +47,7 @@ class ErrorBoundary extends Component<Props, State> {
                 $exception_type: error.name,
                 $exception_stack_trace_raw: error.stack,
                 $exception_stack_trace: errorInfo.componentStack,
-                character: character,
+                character: character
             })
         } catch (posthogError) {
             console.warn("Failed to capture error in PostHog:", posthogError)
@@ -57,26 +58,19 @@ class ErrorBoundary extends Component<Props, State> {
         if (this.state.hasError) {
             return (
                 <Center>
-                    <Alert mt={"50px"} icon={<IconAlertCircle size="1rem" />} color="red" variant="outline" bg={"rgba(0, 0, 0, 0.6)"}>
-                        <Text fz={"xl"} ta={"center"}>
-                            There was an error: {this.state.error?.message}
-                        </Text>
-                        <Text fz={"lg"} ta={"center"} mb={"xl"}>
-                            Send a screenshot of this to me on{" "}
-                            <a target="_blank" rel="noreferrer" href="https://twitter.com/Odin68092534">
-                                Twitter
-                            </a>{" "}
-                            to help me fix it
-                        </Text>
-                        <Text fz={"xs"} ta={"center"}>
-                            {this.state.error?.stack}
-                        </Text>
+                    <Alert
+                        mt={"50px"}
+                        icon={<IconAlertCircle size="1rem" />}
+                        color="red"
+                        variant="outline"
+                        bg={"rgba(0, 0, 0, 0.6)"}
+                    >
+                        {this.state.error ? <ErrorDetails error={this.state.error} /> : null}
                     </Alert>
                 </Center>
             )
         }
 
-        // eslint-disable-next-line react/prop-types
         return this.props.children
     }
 }

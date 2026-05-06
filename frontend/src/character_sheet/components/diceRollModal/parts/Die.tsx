@@ -16,9 +16,22 @@ type DieProps = {
     isBloodDie?: boolean
 }
 
-const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onClick, isSelected = false, isSelectable = false, isMobile = false, isBloodDie = false }: DieProps) => {
+const Die = ({
+    value,
+    isRolling,
+    primaryColor,
+    animationDelay = 0,
+    seed = 0,
+    onClick,
+    isSelected = false,
+    isSelectable = false,
+    isMobile = false,
+    isBloodDie = false
+}: DieProps) => {
     const theme = useMantineTheme()
-    const colorValue = primaryColor.startsWith("#") ? primaryColor : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
+    const colorValue = primaryColor.startsWith("#")
+        ? primaryColor
+        : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
 
     if (isMobile) {
         const displayValue = value === 10 ? "0" : value.toString()
@@ -47,8 +60,12 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
                         justifyContent: "center",
                         fontSize: "20px",
                         fontWeight: 700,
-                        border: isSelected ? "3px solid #ffd700" : "2px solid rgba(255, 255, 255, 0.3)",
-                        boxShadow: isSelected ? "0 0 12px rgba(255, 215, 0, 0.8)" : "0 2px 8px rgba(0, 0, 0, 0.3)",
+                        border: isSelected
+                            ? "3px solid #ffd700"
+                            : "2px solid rgba(255, 255, 255, 0.3)",
+                        boxShadow: isSelected
+                            ? "0 0 12px rgba(255, 215, 0, 0.8)"
+                            : "0 2px 8px rgba(0, 0, 0, 0.3)"
                     }}
                 >
                     {displayValue}
@@ -89,7 +106,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
         position: "relative" as const,
         width: `${containerWidth}px`,
         height: `${containerHeight}px`,
-        perspective: "1500px",
+        perspective: "1500px"
     }
 
     const dieStyle = {
@@ -97,11 +114,13 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
         width: "100%",
         height: "100%",
         transformStyle: "preserve-3d" as const,
-        cursor: isSelectable ? "pointer" : "default",
+        cursor: isSelectable ? "pointer" : "default"
     }
 
     const selectionColor = isSelected ? "#ffd700" : colorValue
-    const selectionGlow = isSelected ? "drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))" : "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
+    const selectionGlow = isSelected
+        ? "drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
+        : "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
 
     const baseFaceStyle = {
         position: "absolute" as const,
@@ -115,7 +134,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
         height: "0px",
         transformStyle: "preserve-3d" as const,
         backfaceVisibility: "hidden" as const,
-        filter: selectionGlow,
+        filter: selectionGlow
     }
 
     const faceAfterStyle = {
@@ -128,7 +147,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
         borderTop: `${lowerHeight}px solid ${selectionColor}`,
         width: "0px",
         height: "0px",
-        filter: selectionGlow,
+        filter: selectionGlow
     }
 
     const faceBeforeStyle = {
@@ -141,7 +160,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
         textAlign: "center" as const,
         lineHeight: `${upperHeight}px`,
         width: `${internalWidth * 2}px`,
-        height: `${upperHeight}px`,
+        height: `${upperHeight}px`
     }
 
     const getFinalRotation = () => {
@@ -149,13 +168,13 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
             const angleMultiplier = faceIndex / 2
             return {
                 rotateX: -angle,
-                rotateY: sideAngle * angleMultiplier,
+                rotateY: sideAngle * angleMultiplier
             }
         } else {
             const angleMultiplier = (faceIndex + 1) / 2
             return {
                 rotateX: -(180 + angle),
-                rotateY: -sideAngle * angleMultiplier,
+                rotateY: -sideAngle * angleMultiplier
             }
         }
     }
@@ -184,18 +203,18 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
                         rotateX: startRotateX,
                         rotateY: startRotateY,
                         x: (seededRandom(5) - 0.5) * 100,
-                        y: (seededRandom(6) - 0.5) * 100,
+                        y: (seededRandom(6) - 0.5) * 100
                     }}
                     animate={{
                         rotateX: finalRotateX,
                         rotateY: finalRotateY,
                         x: 0,
-                        y: 0,
+                        y: 0
                     }}
                     transition={{
                         duration: rollDuration,
                         ease: [0.43, 0.13, 0.23, 0.96],
-                        delay: animationDelay,
+                        delay: animationDelay
                     }}
                     style={dieStyle}
                 >
@@ -208,7 +227,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
                                 style={{
                                     ...baseFaceStyle,
                                     top: isLower ? `${upperHeight}px` : "0",
-                                    transform: getFaceTransform(i),
+                                    transform: getFaceTransform(i)
                                 }}
                             >
                                 <div style={faceBeforeStyle}>{displayValue}</div>
@@ -224,19 +243,23 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
     return (
         <div style={contentStyle}>
             <motion.div
-                initial={{ scale: 0, rotateX: finalRotation.rotateX - 180, rotateY: finalRotation.rotateY - 180 }}
+                initial={{
+                    scale: 0,
+                    rotateX: finalRotation.rotateX - 180,
+                    rotateY: finalRotation.rotateY - 180
+                }}
                 animate={{
                     scale: 1,
                     rotateX: normalizeAngle(finalRotation.rotateX) + 1080,
                     rotateY: normalizeAngle(finalRotation.rotateY) + 2160,
-                    rotateZ: 0,
+                    rotateZ: 0
                 }}
                 transition={{
                     type: "spring",
                     stiffness: 200,
                     damping: 15,
                     duration: 0.5,
-                    ease: "easeOut",
+                    ease: "easeOut"
                 }}
                 whileHover={isSelectable ? { scale: 1.1 } : { scale: 1.05 }}
                 onClick={isSelectable ? onClick : undefined}
@@ -251,7 +274,7 @@ const Die = ({ value, isRolling, primaryColor, animationDelay = 0, seed = 0, onC
                             style={{
                                 ...baseFaceStyle,
                                 top: isLower ? `${upperHeight}px` : "0",
-                                transform: getFaceTransform(i),
+                                transform: getFaceTransform(i)
                             }}
                         >
                             <div style={faceBeforeStyle}>{displayValue}</div>

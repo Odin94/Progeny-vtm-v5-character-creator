@@ -3,7 +3,13 @@ import { useRef, useMemo, useEffect } from "react"
 import PipButton from "./PipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
-import { getAvailableXP, canAffordUpgrade, getAttributeCost, getSkillCost, getBloodPotencyCost } from "../utils/xp"
+import {
+    getAvailableXP,
+    canAffordUpgrade,
+    getAttributeCost,
+    getSkillCost,
+    getBloodPotencyCost
+} from "../utils/xp"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { potencyLimitByGeneration } from "~/data/BloodPotency"
 
@@ -90,7 +96,10 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         const wouldDecrease = newLevel < level
 
         // Health and willpower are not editable in play or XP mode
-        if ((field === "maxHealth" || field === "willpower") && (mode === "play" || mode === "xp")) {
+        if (
+            (field === "maxHealth" || field === "willpower") &&
+            (mode === "play" || mode === "xp")
+        ) {
             return "Health and Willpower are automatically calculated from attributes"
         }
 
@@ -199,8 +208,8 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                 ...update,
                 ephemeral: {
                     ...character.ephemeral,
-                    experienceSpent: character.ephemeral.experienceSpent + cost,
-                },
+                    experienceSpent: character.ephemeral.experienceSpent + cost
+                }
             }
             // Update health, willpower, blood potency, and humanity when attributes change
             if (field.startsWith("attributes.")) {
@@ -224,7 +233,7 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         }
         const updatedCharacter = {
             ...character,
-            ...update,
+            ...update
         }
         // Update health, willpower, blood potency, and humanity when attributes change
         if (field.startsWith("attributes.")) {
@@ -243,7 +252,11 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                     firstChangingIndex={firstChangingIndex}
                     isFilling={isFilling}
                     onClick={() => handlePipClick(index)}
-                    style={(index + 1) % 5 === 0 && index < maxLevel - 1 ? { marginRight: 8 } : undefined}
+                    style={
+                        (index + 1) % 5 === 0 && index < maxLevel - 1
+                            ? { marginRight: 8 }
+                            : undefined
+                    }
                     options={options}
                     disabledReason={getDisabledReason(index)}
                     xpCost={getXPCost(index)}

@@ -13,7 +13,7 @@ export const meritFlawSchema = z.object({
     level: z.number().min(1).int(),
     summary: z.string(),
     excludes: z.string().array(),
-    type: z.union([z.literal("merit"), z.literal("flaw")]),
+    type: z.union([z.literal("merit"), z.literal("flaw")])
 })
 
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
@@ -21,7 +21,7 @@ export type MeritFlaw = z.infer<typeof meritFlawSchema>
 export const touchstoneSchema = z.object({
     name: z.string(),
     description: z.string(),
-    conviction: z.string(),
+    conviction: z.string()
 })
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
@@ -42,7 +42,7 @@ export const characterSchema = z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
         pickedSpecialties: specialtySchema.array(),
-        pickedMeritsAndFlaws: meritFlawSchema.array(),
+        pickedMeritsAndFlaws: meritFlawSchema.array()
     }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
@@ -54,7 +54,10 @@ export const characterSchema = z.object({
     availableDisciplineNames: disciplineNameSchema.array(),
     disciplines: powerSchema.array(),
     rituals: ritualSchema.array(),
-    customDisciplines: z.record(disciplineNameSchema, customDisciplineSchema).optional().default({}),
+    customDisciplines: z
+        .record(disciplineNameSchema, customDisciplineSchema)
+        .optional()
+        .default({}),
 
     bloodPotency: z.number().min(0).int(),
     generation: z.number().min(0).int(),
@@ -76,10 +79,10 @@ export const characterSchema = z.object({
         superficialWillpowerDamage: z.number().min(0).int(),
         aggravatedWillpowerDamage: z.number().min(0).int(),
         humanityStains: z.number().min(0).int(),
-        experienceSpent: z.number().min(0).int(),
+        experienceSpent: z.number().min(0).int()
     }),
     version: z.number().int().positive().optional().default(schemaVersion),
-    characterVersion: z.number().int().min(0).optional().default(0),
+    characterVersion: z.number().int().min(0).optional().default(0)
 })
 
 export type Character = z.infer<typeof characterSchema>
@@ -95,7 +98,12 @@ export const getEmptyCharacter = (): Character => {
         sect: "",
 
         clan: "",
-        predatorType: { name: "", pickedDiscipline: "", pickedSpecialties: [], pickedMeritsAndFlaws: [] },
+        predatorType: {
+            name: "",
+            pickedDiscipline: "",
+            pickedSpecialties: [],
+            pickedMeritsAndFlaws: []
+        },
         touchstones: [],
         ambition: "",
         desire: "",
@@ -109,7 +117,7 @@ export const getEmptyCharacter = (): Character => {
             composure: 1,
             intelligence: 1,
             wits: 1,
-            resolve: 1,
+            resolve: 1
         },
         skills: {
             athletics: 0,
@@ -138,7 +146,7 @@ export const getEmptyCharacter = (): Character => {
             occult: 0,
             politics: 0,
             science: 0,
-            technology: 0,
+            technology: 0
         },
         skillSpecialties: [],
         availableDisciplineNames: [],
@@ -166,14 +174,15 @@ export const getEmptyCharacter = (): Character => {
             superficialWillpowerDamage: 0,
             aggravatedWillpowerDamage: 0,
             humanityStains: 0,
-            experienceSpent: 0,
+            experienceSpent: 0
         },
         version: schemaVersion,
-        characterVersion: 0,
+        characterVersion: 0
     }
 }
 
-export const containsBloodSorcery = (powers: Power[]) => powers.filter((power) => power.discipline === "blood sorcery").length > 0
+export const containsBloodSorcery = (powers: Power[]) =>
+    powers.filter((power) => power.discipline === "blood sorcery").length > 0
 
 export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
     if (!parsed["rituals"]) parsed["rituals"] = []
@@ -205,7 +214,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
             superficialWillpowerDamage: 0,
             aggravatedWillpowerDamage: 0,
             humanityStains: 0,
-            experienceSpent: 0,
+            experienceSpent: 0
         }
     } else {
         // Ensure all ephemeral fields exist, defaulting to 0 if missing
@@ -217,7 +226,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
             superficialWillpowerDamage: ephemeral["superficialWillpowerDamage"] ?? 0,
             aggravatedWillpowerDamage: ephemeral["aggravatedWillpowerDamage"] ?? 0,
             humanityStains: ephemeral["humanityStains"] ?? 0,
-            experienceSpent: ephemeral["experienceSpent"] ?? 0,
+            experienceSpent: ephemeral["experienceSpent"] ?? 0
         }
     }
 

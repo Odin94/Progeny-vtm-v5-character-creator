@@ -1,4 +1,14 @@
-import { ActionIcon, Box, Container, Divider, Paper, SegmentedControl, Stack } from "@mantine/core"
+import {
+    ActionIcon,
+    Box,
+    Container,
+    createTheme,
+    Divider,
+    MantineProvider,
+    Paper,
+    SegmentedControl,
+    Stack
+} from "@mantine/core"
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
@@ -54,12 +64,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     const [mode, setMode] = useLocalStorage<CharacterSheetMode>({
         key: "characterSheetMode",
         defaultValue: isEmptyCharacter ? "free" : "play",
-        getInitialValueInEffect: false,
+        getInitialValueInEffect: false
     })
     const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
     const resetSelectedDicePool = useCharacterSheetStore((state) => state.resetSelectedDicePool)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
+    const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
@@ -69,13 +80,21 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             setCharacter,
             diceModalOpened,
             preferences,
-            onUpdatePreferences: updatePreferences,
+            onUpdatePreferences: updatePreferences
         }),
-        [mode, primaryColor, character, setCharacter, diceModalOpened, preferences, updatePreferences]
+        [
+            mode,
+            primaryColor,
+            character,
+            setCharacter,
+            diceModalOpened,
+            preferences,
+            updatePreferences
+        ]
     )
 
     return (
-        <>
+        <MantineProvider theme={sheetTheme} forceColorScheme="dark">
             <Box
                 style={{
                     position: "fixed",
@@ -87,7 +106,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundAttachment: "fixed",
-                    zIndex: -1,
+                    zIndex: -1
                 }}
             />
             <Box
@@ -98,117 +117,126 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                     right: 0,
                     bottom: 0,
                     backgroundColor: "rgba(0, 0, 0, 0.4)",
-                    zIndex: -1,
+                    zIndex: -1
                 }}
             />
             <Box
                 style={{
                     minHeight: "100vh",
                     width: "100%",
+                    boxSizing: "border-box",
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: "center",
-                    padding: "2rem 0",
-                    position: "relative",
+                    padding: "calc(2rem + 52px) 0 2rem",
+                    position: "relative"
                 }}
             >
                 <Container
                     size="xl"
                     style={{
                         width: "100%",
-                        position: "relative",
-                    }}
-                >
-                <Box
-                    style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                        backdropFilter: "blur(7px)",
-                        borderRadius: "8px",
-                        padding: "1.5rem",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                        position: "relative",
+                        position: "relative"
                     }}
                 >
                     <Box
                         style={{
-                            position: "absolute",
-                            top: "1rem",
-                            right: "1rem",
-                            zIndex: 10,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "0.5rem",
-                            alignItems: "flex-end",
+                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            backdropFilter: "blur(7px)",
+                            borderRadius: "8px",
+                            padding: "1.5rem",
+                            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                            position: "relative"
                         }}
                     >
-                        <ActionIcon
-                            size="xl"
-                            variant="light"
-                            color={primaryColor}
-                            radius="xl"
-                            onClick={() => {
-                                openDiceModal()
-                                try {
-                                    posthog.capture("dice-modal-opened", {
-                                        mode,
-                                    })
-                                } catch (error) {
-                                    console.warn("PostHog dice-modal-opened tracking failed:", error)
-                                }
-                            }}
+                        <Box
                             style={{
-                                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                                position: "absolute",
+                                top: "1rem",
+                                right: "1rem",
+                                zIndex: 10,
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "0.5rem",
+                                alignItems: "flex-end"
                             }}
                         >
-                            <IconDice size={24} />
-                        </ActionIcon>
-                        <SegmentedControl
-                            value={mode}
-                            onChange={(value) => setMode(value as CharacterSheetMode)}
-                            data={[
-                                { label: "Play", value: "play" },
-                                { label: "XP", value: "xp" },
-                                { label: "Free", value: "free" },
-                            ]}
-                            color={primaryColor}
-                            orientation="vertical"
-                        />
+                            <ActionIcon
+                                size="xl"
+                                variant="light"
+                                color={primaryColor}
+                                radius="xl"
+                                onClick={() => {
+                                    openDiceModal()
+                                    try {
+                                        posthog.capture("dice-modal-opened", {
+                                            mode
+                                        })
+                                    } catch (error) {
+                                        console.warn(
+                                            "PostHog dice-modal-opened tracking failed:",
+                                            error
+                                        )
+                                    }
+                                }}
+                                style={{
+                                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)"
+                                }}
+                            >
+                                <IconDice size={24} />
+                            </ActionIcon>
+                            <SegmentedControl
+                                value={mode}
+                                onChange={(value) => setMode(value as CharacterSheetMode)}
+                                data={[
+                                    { label: "Play", value: "play" },
+                                    { label: "XP", value: "xp" },
+                                    { label: "Free", value: "free" }
+                                ]}
+                                color={primaryColor}
+                                orientation="vertical"
+                            />
+                        </Box>
+
+                        <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
+                            <Stack gap="lg">
+                                <TopData options={sheetOptions} />
+
+                                <Divider />
+
+                                <Attributes options={sheetOptions} />
+
+                                <Divider />
+
+                                <Skills options={sheetOptions} />
+
+                                {character.disciplines.length > 0 ||
+                                character.rituals.length > 0 ? (
+                                    <Divider />
+                                ) : null}
+
+                                <Disciplines options={sheetOptions} />
+
+                                <Divider />
+
+                                <BottomData options={sheetOptions} />
+
+                                <Divider />
+
+                                <TheBlood options={sheetOptions} />
+
+                                {character.touchstones.length > 0 ? <Divider /> : null}
+
+                                <Touchstones options={sheetOptions} />
+
+                                {character.merits.length > 0 || character.flaws.length > 0 ? (
+                                    <Divider />
+                                ) : null}
+
+                                <MeritsAndFlaws options={sheetOptions} />
+                            </Stack>
+                        </Paper>
                     </Box>
-
-                    <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
-                        <Stack gap="lg">
-                            <TopData options={sheetOptions} />
-
-                            <Divider />
-
-                            <Attributes options={sheetOptions} />
-
-                            <Divider />
-
-                            <Skills options={sheetOptions} />
-
-                            {character.disciplines.length > 0 || character.rituals.length > 0 ? <Divider /> : null}
-
-                            <Disciplines options={sheetOptions} />
-
-                            <Divider />
-
-                            <BottomData options={sheetOptions} />
-
-                            <Divider />
-
-                            <TheBlood options={sheetOptions} />
-
-                            {character.touchstones.length > 0 ? <Divider /> : null}
-
-                            <Touchstones options={sheetOptions} />
-
-                            {character.merits.length > 0 || character.flaws.length > 0 ? <Divider /> : null}
-
-                            <MeritsAndFlaws options={sheetOptions} />
-                        </Stack>
-                    </Paper>
-                </Box>
                 </Container>
             </Box>
             <CharacterSheetMenu options={sheetOptions} />
@@ -223,7 +251,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 character={character}
                 setCharacter={setCharacter}
             />
-        </>
+        </MantineProvider>
     )
 }
 

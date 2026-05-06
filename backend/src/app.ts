@@ -13,7 +13,12 @@ import { characterSyncWebSocket } from "./websocket/characterSync.js"
 import { sessionChatWebSocket } from "./websocket/sessionChat.js"
 import { env } from "./config/env.js"
 import { generateRequestId, setRequestId } from "./middleware/requestId.js"
-import { CSRF_TOKEN_HEADER_NAME, generateCsrfToken, setCsrfToken, validateCsrfToken } from "./middleware/csrf.js"
+import {
+    CSRF_TOKEN_HEADER_NAME,
+    generateCsrfToken,
+    setCsrfToken,
+    validateCsrfToken
+} from "./middleware/csrf.js"
 import { logError, logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
 
 export async function buildApp() {
@@ -21,7 +26,7 @@ export async function buildApp() {
         env.SSL_CERT_PATH && env.SSL_KEY_PATH
             ? {
                   cert: readFileSync(env.SSL_CERT_PATH),
-                  key: readFileSync(env.SSL_KEY_PATH),
+                  key: readFileSync(env.SSL_KEY_PATH)
               }
             : null
 
@@ -36,11 +41,11 @@ export async function buildApp() {
                           options: {
                               colorize: true,
                               translateTime: "HH:MM:ss Z",
-                              ignore: "pid,hostname",
-                          },
-                      },
+                              ignore: "pid,hostname"
+                          }
+                      }
                   }
-                : env.NODE_ENV !== "test",
+                : env.NODE_ENV !== "test"
     })
 
     await fastify.register(cors, {
@@ -58,7 +63,10 @@ export async function buildApp() {
                 return callback(null, true)
             }
 
-            const allowedPatterns = [/^https?:\/\/([a-z0-9-]+\.)*odin-matthias\.de$/, /^https?:\/\/([a-z0-9-]+\.)*odin-matthias\.com$/]
+            const allowedPatterns = [
+                /^https?:\/\/([a-z0-9-]+\.)*odin-matthias\.de$/,
+                /^https?:\/\/([a-z0-9-]+\.)*odin-matthias\.com$/
+            ]
 
             const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin))
 
@@ -70,24 +78,31 @@ export async function buildApp() {
         },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME, "X-Request-Id"],
-        exposedHeaders: ["X-Request-Id", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+            "X-CSRF-Token",
+            CSRF_TOKEN_HEADER_NAME,
+            "X-Request-Id"
+        ],
+        exposedHeaders: ["X-Request-Id", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME]
     })
 
     await fastify.register(cookie, {
-        secret: env.WORKOS_COOKIE_PASSWORD,
+        secret: env.WORKOS_COOKIE_PASSWORD
     })
 
     await fastify.register(rateLimit, {
         max: 1000,
         timeWindow: "15 minutes",
-        skipOnError: true,
+        skipOnError: true
     })
 
     await fastify.register(websocket)
 
     fastify.addHook("onRequest", async (request, reply) => {
-        const requestId = (request.headers["x-request-id"] as string | undefined) || generateRequestId()
+        const requestId =
+            (request.headers["x-request-id"] as string | undefined) || generateRequestId()
         setRequestId(request, reply, requestId)
     })
 
@@ -109,7 +124,7 @@ export async function buildApp() {
         } catch (error) {
             logSecurityEvent(request, reply, "csrf_failure", {
                 url: request.url,
-                method: request.method,
+                method: request.method
             })
             throw error
         }
@@ -136,8 +151,8 @@ export async function buildApp() {
         "/health",
         {
             config: {
-                rateLimit: false,
-            },
+                rateLimit: false
+            }
         },
         async () => {
             return { status: "ok" }
