@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { api, API_URL } from "../utils/api"
+import { api, API_URL, type ApiError } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
 
@@ -49,12 +49,13 @@ export const useAuth = () => {
     const {
         data: user,
         isLoading,
+        isFetching,
         refetch
     } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => api.getCurrentUser(),
         retry: (failureCount, error) => {
-            const status = (error as Error & { status?: number })?.status
+            const status = (error as ApiError)?.status
             if (status && status >= 400 && status < 500) {
                 return false
             }
@@ -64,23 +65,28 @@ export const useAuth = () => {
             return false
         },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff
-        staleTime: 5 * 60 * 1000 // 5 minutes
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnMount: "always",
+        refetchOnWindowFocus: true
     })
+
+    const isValidatingCachedAuth = !!user && isFetching
+    const currentUser = isValidatingCachedAuth ? null : (user ?? null)
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
     useEffect(() => {
-        if (user) {
+        if (currentUser) {
             try {
-                posthog.identify(user.id, {
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName
+                posthog.identify(currentUser.id, {
+                    email: currentUser.email,
+                    firstName: currentUser.firstName,
+                    lastName: currentUser.lastName
                 })
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
         }
-    }, [user])
+    }, [currentUser])
 
     const refreshAuth = async () => {
         // Invalidate the query cache first to force a fresh fetch
@@ -166,9 +172,9 @@ export const useAuth = () => {
     })
 
     return {
-        user: user ?? null,
-        isLoading,
-        isAuthenticated: !!user,
+        user: currentUser,
+        isLoading: isLoading || isValidatingCachedAuth,
+        isAuthenticated: !!currentUser,
         signIn,
         signOut,
         refreshAuth,

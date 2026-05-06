@@ -3,21 +3,54 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createTheme, MantineProvider } from "@mantine/core"
 import { generateColors } from "@mantine/colors-generator"
 import { Notifications } from "@mantine/notifications"
+import { useEffect } from "react"
+import posthog from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { CookiesBanner } from "~/components/CookiesBanner"
 import { inputFocusTheme } from "~/theme/inputFocus"
+import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 5 * 60 * 1000,
-            retry: 1,
+            retry: (failureCount, error) => {
+                const status = (error as ApiError)?.status
+                if (status && status >= 400 && status < 500) {
+                    return false
+                }
+
+                return failureCount < 1
+            },
             refetchOnWindowFocus: false
         }
     }
 })
+
+const AuthUnauthorizedHandler = () => {
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            queryClient.setQueryData(["auth", "me"], null)
+            queryClient.removeQueries({ queryKey: ["characters"] })
+            queryClient.removeQueries({ queryKey: ["coteries"] })
+            queryClient.removeQueries({ queryKey: ["shares"] })
+            queryClient.removeQueries({ queryKey: ["user", "preferences"] })
+
+            try {
+                posthog.reset()
+            } catch (error) {
+                console.warn("PostHog reset failed:", error)
+            }
+        }
+
+        window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
+        return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
+    }, [])
+
+    return null
+}
 
 export const Route = createRootRoute({
     component: () => (
@@ -86,6 +119,7 @@ export const Route = createRootRoute({
                     forceColorScheme="dark"
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
+                    <AuthUnauthorizedHandler />
                     <BrokenSaveModal />
                     <CookiesBanner />
                     <Outlet />

@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify"
 import { workos } from "../config/workos.js"
 import { env } from "../config/env.js"
 import { logSecurityEvent } from "./securityLogger.js"
+import { clearSessionCookie, setSessionCookie } from "../utils/sessionCookie.js"
 
 export interface AuthenticatedRequest extends FastifyRequest {
     user?: {
@@ -47,12 +48,7 @@ export async function authenticateUser(
                     refreshResult.sealedSession
                 ) {
                     // Update the cookie with the new session
-                    reply.setCookie("wos-session", refreshResult.sealedSession, {
-                        path: "/",
-                        httpOnly: true,
-                        secure: env.NODE_ENV === "production",
-                        sameSite: env.NODE_ENV === "production" ? "none" : "lax"
-                    })
+                    setSessionCookie(reply, refreshResult.sealedSession)
 
                     request.user = {
                         id: refreshResult.user.id,
@@ -69,6 +65,7 @@ export async function authenticateUser(
             logSecurityEvent(request, reply, "authentication_failure", {
                 reason: "Invalid or expired session"
             })
+            clearSessionCookie(reply)
             reply.code(401).send({ error: "Unauthorized: Invalid or expired session" })
             return
         }
@@ -85,6 +82,7 @@ export async function authenticateUser(
             reason: "Failed to authenticate session",
             error: error instanceof Error ? error.message : String(error)
         })
+        clearSessionCookie(reply)
         reply.code(401).send({ error: "Unauthorized: Failed to authenticate session" })
         return
     }

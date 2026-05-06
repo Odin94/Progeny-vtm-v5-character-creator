@@ -23,6 +23,16 @@ type RequestOptions = {
     headers?: Record<string, string>
 }
 
+export const AUTH_UNAUTHORIZED_EVENT = "progeny:auth-unauthorized"
+
+export type ApiError = Error & { status?: number }
+
+const notifyAuthUnauthorized = () => {
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT))
+    }
+}
+
 // TODOdin: We're now getting token from header because of domain conflict issues
 // TODOdin: Switch to JWT-in-header auth (like in cozycrowns) and ditch all CSRF stuff
 // verify that what we're doing now is legit and good practice
@@ -95,8 +105,11 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: "Unknown error" }))
         const errorMessage = error.message || error.error || `HTTP ${response.status}`
-        const httpError = new Error(errorMessage) as Error & { status?: number }
+        const httpError = new Error(errorMessage) as ApiError
         httpError.status = response.status
+        if (response.status === 401) {
+            notifyAuthUnauthorized()
+        }
         throw httpError
     }
 
@@ -135,13 +148,14 @@ export const api = {
         }
 
         if (response.status === 401) {
+            notifyAuthUnauthorized()
             return null
         }
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({ error: "Unknown error" }))
             const errorMessage = error.message || error.error || `HTTP ${response.status}`
-            const httpError = new Error(errorMessage) as Error & { status?: number }
+            const httpError = new Error(errorMessage) as ApiError
             httpError.status = response.status
             throw httpError
         }

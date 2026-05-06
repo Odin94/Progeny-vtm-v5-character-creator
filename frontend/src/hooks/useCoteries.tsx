@@ -1,17 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "../utils/api"
 
-export const useCoteries = () => {
+export const useCoteries = (enabled = true) => {
     return useQuery({
         queryKey: ["coteries"],
-        queryFn: () => api.getCoteries()
+        queryFn: () => api.getCoteries(),
+        enabled
     })
 }
 
 export const useCoterie = (id: string | null) => {
     return useQuery({
         queryKey: ["coteries", id],
-        queryFn: () => (id ? api.getCoterie(id) : null)
+        queryFn: () => (id ? api.getCoterie(id) : null),
+        enabled: !!id
     })
 }
 
