@@ -9,6 +9,66 @@ import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
 import { getValueForKey } from "./utils"
 
+const WoD5EVttDicePoolSchema = z.record(z.string(), z.object({ path: z.string() }))
+
+const WoD5EVttBonusSchema = z.record(z.string(), z.unknown())
+
+const WoD5EVttItemBaseSchema = z.object({
+    name: z.string(),
+})
+
+const WoD5EVttClanItemSchema = WoD5EVttItemBaseSchema.extend({
+    type: z.literal("clan"),
+    system: z.object({
+        description: z.string(),
+        bane: z.string(),
+        bonuses: z.array(WoD5EVttBonusSchema),
+    }),
+})
+
+const WoD5EVttPredatorTypeItemSchema = WoD5EVttItemBaseSchema.extend({
+    type: z.literal("predatorType"),
+    system: z.object({
+        description: z.string(),
+        bonuses: z.array(WoD5EVttBonusSchema),
+        dicepool: WoD5EVttDicePoolSchema,
+    }),
+})
+
+const WoD5EVttPowerItemSchema = WoD5EVttItemBaseSchema.extend({
+    type: z.literal("power"),
+    system: z.object({
+        description: z.string(),
+        discipline: z.string(),
+        level: z.number(),
+        cost: z.number(),
+        dicepool: WoD5EVttDicePoolSchema,
+        bonuses: z.array(WoD5EVttBonusSchema),
+    }),
+})
+
+const WoD5EVttFeatureItemSchema = WoD5EVttItemBaseSchema.extend({
+    type: z.literal("feature"),
+    system: z.object({
+        description: z.string(),
+        featuretype: z.union([z.literal("merit"), z.literal("flaw")]),
+        points: z.number(),
+        bonuses: z.array(WoD5EVttBonusSchema),
+        uses: z.object({
+            max: z.number(),
+            current: z.number(),
+            enabled: z.boolean(),
+        }),
+    }),
+})
+
+const WoD5EVttItemSchema = z.discriminatedUnion("type", [
+    WoD5EVttClanItemSchema,
+    WoD5EVttPredatorTypeItemSchema,
+    WoD5EVttPowerItemSchema,
+    WoD5EVttFeatureItemSchema,
+])
+
 const WoD5EVttJsonSchema = z.object({
     name: z.string(),
     type: z.literal("vampire"),
@@ -68,7 +128,7 @@ const WoD5EVttJsonSchema = z.object({
         }),
         blood: z.object({
             potency: z.number(),
-            resonance: z.string()
+            generation: z.string()
         }),
         attributes: z.object({
             strength: z.object({ value: z.number() }),
@@ -113,7 +173,7 @@ const WoD5EVttJsonSchema = z.object({
             skillAttributeInputs: z.boolean()
         })
     }),
-    items: z.array(z.record(z.string(), z.unknown()))
+    items: z.array(WoD5EVttItemSchema)
 })
 
 // TypeScript type derived from the Zod schema
@@ -376,7 +436,6 @@ export const createWoD5EVttJson = (
             type: "clan",
             system: {
                 description: clanDef?.description ?? "",
-                gamesystem: "vampire",
                 bane: clanDef?.bane ?? "",
                 bonuses: []
             }
@@ -391,9 +450,8 @@ export const createWoD5EVttJson = (
             type: "predatorType",
             system: {
                 description: predDef?.summary ?? "",
-                gamesystem: "vampire",
                 bonuses: [],
-                dicepool: { path: "", value: 0 }
+                dicepool: {}
             }
         })
     }
@@ -407,14 +465,11 @@ export const createWoD5EVttJson = (
             type: "power",
             system: {
                 description: p.summary || p.description || "",
-                gamesystem: "vampire",
                 discipline: key,
                 level: p.level,
-                duration: "",
-                cost: "",
+                cost: p.rouseChecks,
                 dicepool: parseDicePool(p.dicePool, character),
-                bonuses: [],
-                uses: { max: 0, current: 0, enabled: false }
+                bonuses: []
             }
         })
     }
@@ -464,15 +519,10 @@ export const createWoD5EVttJson = (
             type: "power",
             system: {
                 description: ritual.summary || "",
-                gamesystem: "vampire",
                 discipline: "rituals",
                 level: ritual.level,
-                duration: "",
-                cost:
-                    ritual.rouseChecks > 0
-                        ? `${ritual.rouseChecks} Rouse Check${ritual.rouseChecks > 1 ? "s" : ""}`
-                        : "Free",
-                dicepool: {},
+                cost: ritual.rouseChecks,
+                dicepool: parseDicePool(ritual.dicePool, character),
                 bonuses: []
             }
         })
@@ -530,7 +580,10 @@ export const createWoD5EVttJson = (
                 value: character.willpower ?? 5
             },
 
-            blood: { potency: character.bloodPotency ?? 0, resonance: "" },
+            blood: {
+                potency: character.bloodPotency ?? 0,
+                generation: String(character.generation ?? "")
+            },
 
             attributes: {
                 strength: { value: character.attributes.strength },
