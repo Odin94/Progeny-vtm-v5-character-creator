@@ -1,61 +1,28 @@
-import { Character } from "../data/Character"
-import { AttributesKey } from "../data/Attributes"
-import { SkillsKey } from "../data/Skills"
-import { DisciplineName } from "../data/NameSchemas"
+import type { Character } from "../data/Character"
+import type { AttributesKey } from "../data/Attributes"
+import type { SkillsKey } from "../data/Skills"
+import type { DisciplineName } from "../data/NameSchemas"
+
+type InconnuSplat = "vampire" | "thin-blood" | "ghoul" | "mortal"
 
 type InconnuTrait = {
     name: string
     rating: number
     type: "attribute" | "skill" | "discipline" | "custom"
-    subtraits?: string[]
+    subtraits: string[]
 }
 
-type InconnuVChar = {
-    _name: string
-    splat: "vampire" | "thin-blood" | "ghoul" | "mortal"
-    _humanity: number
-    stains: number
-    health: string
-    willpower: string
-    _hunger: number
-    potency: number
-    _traits: InconnuTrait[]
-    profile: {
-        biography: string
-        description: string
-        images: string[]
-    }
+export type InconnuCreationBody = {
+    name: string
+    splat: InconnuSplat
+    health: number
+    willpower: number
+    humanity: number
+    blood_potency: number
     convictions: string[]
-    header: {
-        blush: number
-        location: string
-        merits: string
-        flaws: string
-        temp: string
-    }
-    macros: Array<{
-        name: string
-        pool: string[]
-        hunger: boolean
-        difficulty: number
-        rouses: number
-        reroll_rouses: boolean
-        staining: string
-        hunt: boolean
-        comment: string | null
-    }>
-    experience: {
-        unspent: number
-        lifetime: number
-        log: Array<{
-            event: string
-            amount: number
-            reason: string
-            admin: number
-            date: string
-        }>
-    }
-    stat_log: Record<string, number>
+    biography: string
+    description: string
+    traits: InconnuTrait[]
 }
 
 const attributeNameToInconnu: Record<AttributesKey, string> = {
@@ -100,7 +67,7 @@ const skillNameToInconnu: Record<SkillsKey, string> = {
     technology: "Technology"
 }
 
-const disciplineNameToInconnu: Record<DisciplineName, string> = {
+const disciplineNameToInconnu: Partial<Record<DisciplineName, string>> = {
     animalism: "Animalism",
     auspex: "Auspex",
     celerity: "Celerity",
@@ -116,53 +83,223 @@ const disciplineNameToInconnu: Record<DisciplineName, string> = {
     "": ""
 }
 
+const INCONNU_MAX_NAME_LENGTH = 30
+const INCONNU_MAX_TEXT_LENGTH = 1024
+const INCONNU_MAX_CONVICTION_LENGTH = 200
+const INCONNU_MAX_TRAIT_LENGTH = 20
+const reservedTraitNames = new Set([
+    "willpower",
+    "hunger",
+    "humanity",
+    "surge",
+    "potency",
+    "bane",
+    "current_hunger"
+])
+
+const hasOwn = <T extends object>(object: T, key: PropertyKey): key is keyof T =>
+    Object.prototype.hasOwnProperty.call(object, key)
+
+const asArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : [])
+
+const toNumber = (value: unknown): number => (typeof value === "number" ? value : Number(value))
+
+const clamp = (value: number, min: number, max: number): number =>
+    Math.max(min, Math.min(max, value))
+
+const toFiniteInteger = (value: unknown, fallback: number): number => {
+    const numeric = toNumber(value)
+    return Number.isFinite(numeric) ? Math.trunc(numeric) : fallback
+}
+
+const clampInt = (value: unknown, min: number, max: number, fallback = min): number => {
+    const numeric = toNumber(value)
+    if (numeric === Number.POSITIVE_INFINITY) return max
+    if (numeric === Number.NEGATIVE_INFINITY) return min
+    return clamp(toFiniteInteger(value, fallback), min, max)
+}
+
+const nonNegativeInt = (value: unknown): number => Math.max(0, toFiniteInteger(value, 0))
+
+const truncate = (value: unknown, maxLength: number): string => {
+    const stringValue = String(value ?? "")
+    return stringValue.length > maxLength ? stringValue.slice(0, maxLength) : stringValue
+}
+
+const sanitizeCharacterName = (name: unknown): string => {
+    const normalized = String(name ?? "")
+        .replace(/[^A-Za-z0-9 _'-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    return truncate(normalized || "Unnamed Character", INCONNU_MAX_NAME_LENGTH).trim()
+}
+
+const toIdentifier = (value: unknown, fallback: string): string => {
+    const words = String(value ?? "").match(/[A-Za-z]+/g) ?? []
+    const identifier = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join("_")
+
+    return truncate(identifier || fallback, INCONNU_MAX_TRAIT_LENGTH)
+}
+
+const toTraitIdentifier = (value: string, fallback: string): string => {
+    const identifier = toIdentifier(value, fallback)
+    const normalized = identifier.toLowerCase()
+    if (
+        reservedTraitNames.has(normalized) ||
+        normalized === "powerbonus" ||
+        normalized === "power_bonus"
+    ) {
+        return truncate(`${identifier}_Trait`, INCONNU_MAX_TRAIT_LENGTH)
+    }
+
+    return identifier
+}
+
+const uniqueIdentifier = (base: string, used: Set<string>): string => {
+    if (!used.has(base.toLowerCase())) {
+        used.add(base.toLowerCase())
+        return base
+    }
+
+    const suffixes = [
+        "Alt",
+        "Extra",
+        "Other",
+        "More",
+        "Next",
+        "New",
+        "Also",
+        "Again",
+        "Plus",
+        "Spare"
+    ]
+
+    for (const suffix of suffixes) {
+        const suffixText = `_${suffix}`
+        const candidate = `${base.slice(0, INCONNU_MAX_TRAIT_LENGTH - suffixText.length)}${suffixText}`
+        if (!used.has(candidate.toLowerCase())) {
+            used.add(candidate.toLowerCase())
+            return candidate
+        }
+    }
+
+    for (const first of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+        for (const second of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+            const suffixText = `_${first}${second}`
+            const candidate = `${base.slice(0, INCONNU_MAX_TRAIT_LENGTH - suffixText.length)}${suffixText}`
+            if (!used.has(candidate.toLowerCase())) {
+                used.add(candidate.toLowerCase())
+                return candidate
+            }
+        }
+    }
+
+    throw new Error("Unable to create a unique Inconnu identifier.")
+}
+
+const sanitizeSubtraits = (subtraits: string[]): string[] => {
+    const used = new Set<string>()
+
+    return subtraits
+        .map((subtrait) => toIdentifier(subtrait, "Subtrait"))
+        .map((subtrait) => uniqueIdentifier(subtrait, used))
+}
+
 const customDisciplineNameToInconnu = (name: string): string => {
     const normalized = name.toLowerCase().trim()
-    if (normalized in disciplineNameToInconnu) {
-        return disciplineNameToInconnu[normalized as DisciplineName]
+    if (hasOwn(disciplineNameToInconnu, normalized)) {
+        return disciplineNameToInconnu[normalized as DisciplineName] ?? ""
     }
-    return name
+    return toTraitIdentifier(name, "Discipline")
 }
 
-const createDamageString = (max: number, superficial: number, aggravated: number): string => {
-    const none = max - superficial - aggravated
-    return ".".repeat(none) + "/".repeat(superficial) + "x".repeat(aggravated)
+const createSplat = (character: Character): InconnuSplat => {
+    if (character.clan === "Thin-blood") return "thin-blood"
+    if (character.clan) return "vampire"
+    return "mortal"
 }
 
-export const createInconnuJson = (character: Character): InconnuVChar => {
+const createBloodPotency = (character: Character, splat: InconnuSplat): number => {
+    if (splat === "mortal" || splat === "ghoul") return 0
+    if (splat === "thin-blood") return clampInt(character.bloodPotency, 0, 2, 0)
+    return clampInt(character.bloodPotency, 0, 10, 0)
+}
+
+const createBiography = (character: Character): string => {
+    const touchstonesText = asArray<{
+        name?: unknown
+        conviction?: unknown
+        description?: unknown
+    }>(character.touchstones)
+        .map((t) => `${t.name} (${t.conviction})${t.description ? `: ${t.description}` : ""}`)
+        .join("\n")
+
+    const biography = [
+        character.clan ? `Clan: ${character.clan}` : "",
+        character.predatorType?.name ? `Predator Type: ${character.predatorType.name}` : "",
+        character.sect ? `Sect: ${character.sect}` : "",
+        character.chronicle ? `Chronicle: ${character.chronicle}` : "",
+        character.sire ? `Sire: ${character.sire}` : "",
+        character.ambition ? `Ambition: ${character.ambition}` : "",
+        character.desire ? `Desire: ${character.desire}` : "",
+        touchstonesText ? `Touchstones:\n${touchstonesText}` : "",
+        character.notes ? `Notes:\n${character.notes}` : ""
+    ]
+        .filter(Boolean)
+        .join("\n\n")
+
+    return truncate(biography, INCONNU_MAX_TEXT_LENGTH)
+}
+
+export const createInconnuJson = (character: Character): InconnuCreationBody => {
     const traits: InconnuTrait[] = []
+    const usedTraitNames = new Set<string>()
+    const skillSpecialties = asArray<{ skill?: unknown; name?: unknown }>(
+        character.skillSpecialties
+    )
+    const predatorSpecialties = asArray<{ skill?: unknown; name?: unknown }>(
+        character.predatorType?.pickedSpecialties
+    )
 
-    for (const [key, value] of Object.entries(character.attributes)) {
+    const addTrait = (trait: InconnuTrait) => {
+        traits.push({
+            ...trait,
+            name: uniqueIdentifier(trait.name, usedTraitNames),
+            subtraits: sanitizeSubtraits(trait.subtraits)
+        })
+    }
+
+    for (const [key, value] of Object.entries(character.attributes ?? {})) {
         const inconnuName = attributeNameToInconnu[key as AttributesKey]
         if (inconnuName) {
-            traits.push({
+            addTrait({
                 name: inconnuName,
-                rating: value,
-                type: "attribute"
+                rating: clampInt(value, 1, 5, 1),
+                type: "attribute",
+                subtraits: []
             })
         }
     }
 
-    for (const [key, value] of Object.entries(character.skills)) {
-        if (value > 0) {
-            const inconnuName = skillNameToInconnu[key as SkillsKey]
-            if (inconnuName) {
-                const skillSpecialties = character.skillSpecialties
-                    .filter((spec) => spec.skill === key)
-                    .map((spec) => spec.name)
+    for (const [key, value] of Object.entries(character.skills ?? {})) {
+        const inconnuName = skillNameToInconnu[key as SkillsKey]
+        if (inconnuName) {
+            const directSpecialties = skillSpecialties
+                .filter((spec) => spec.skill === key)
+                .map((spec) => String(spec.name ?? ""))
 
-                const predatorSpecialties =
-                    character.predatorType?.pickedSpecialties
-                        ?.filter((spec) => spec.skill === key)
-                        .map((spec) => spec.name) || []
+            const selectedPredatorSpecialties = predatorSpecialties
+                .filter((spec) => spec.skill === key)
+                .map((spec) => String(spec.name ?? ""))
 
-                const allSpecialties = [...skillSpecialties, ...predatorSpecialties]
+            const allSpecialties = [...directSpecialties, ...selectedPredatorSpecialties]
 
-                traits.push({
+            if (value > 0 || allSpecialties.length > 0) {
+                addTrait({
                     name: inconnuName,
-                    rating: value,
+                    rating: clampInt(value, 0, 5, 0),
                     type: "skill",
-                    subtraits: allSpecialties.length > 0 ? allSpecialties : undefined
+                    subtraits: allSpecialties
                 })
             }
         }
@@ -170,170 +307,68 @@ export const createInconnuJson = (character: Character): InconnuVChar => {
 
     const disciplineMap = new Map<string, { rating: number; powers: string[] }>()
 
-    for (const power of character.disciplines) {
-        let inconnuDisciplineName: string
-        if (power.discipline in disciplineNameToInconnu) {
-            inconnuDisciplineName = disciplineNameToInconnu[power.discipline as DisciplineName]
-        } else {
-            inconnuDisciplineName = customDisciplineNameToInconnu(power.discipline)
-        }
-        if (!inconnuDisciplineName || inconnuDisciplineName === "") continue
+    for (const power of asArray<{ discipline?: unknown; name?: unknown; level?: unknown }>(
+        character.disciplines
+    )) {
+        const inconnuDisciplineName = customDisciplineNameToInconnu(String(power.discipline ?? ""))
+
+        if (!inconnuDisciplineName) continue
 
         if (!disciplineMap.has(inconnuDisciplineName)) {
             disciplineMap.set(inconnuDisciplineName, { rating: 0, powers: [] })
         }
 
-        const disc = disciplineMap.get(inconnuDisciplineName)!
-        disc.powers.push(power.name)
-        disc.rating = Math.max(disc.rating, power.level)
+        const discipline = disciplineMap.get(inconnuDisciplineName)!
+        discipline.powers.push(String(power.name ?? ""))
+        discipline.rating = Math.max(discipline.rating, clampInt(power.level, 0, 5, 0))
     }
 
-    if (character.customDisciplines) {
-        for (const [discName, customDisc] of Object.entries(character.customDisciplines)) {
-            const inconnuDisciplineName = customDisciplineNameToInconnu(discName)
-            if (!disciplineMap.has(inconnuDisciplineName)) {
-                disciplineMap.set(inconnuDisciplineName, { rating: 0, powers: [] })
-            }
-            const disc = disciplineMap.get(inconnuDisciplineName)!
-            const customPowers = character.disciplines.filter(
-                (power) => power.discipline === discName && power.isCustom
-            )
-            for (const power of customPowers) {
-                disc.powers.push(power.name)
-                disc.rating = Math.max(disc.rating, power.level)
-            }
+    for (const ritual of asArray<{ name?: unknown }>(character.rituals)) {
+        if (!disciplineMap.has("BloodSorcery")) {
+            disciplineMap.set("BloodSorcery", { rating: 0, powers: [] })
         }
-    }
-
-    for (const ritual of character.rituals || []) {
-        const bloodSorceryName = "BloodSorcery"
-        if (!disciplineMap.has(bloodSorceryName)) {
-            disciplineMap.set(bloodSorceryName, { rating: 0, powers: [] })
-        }
-        const disc = disciplineMap.get(bloodSorceryName)!
-        disc.powers.push(ritual.name)
+        disciplineMap.get("BloodSorcery")!.powers.push(String(ritual.name ?? ""))
     }
 
     for (const [disciplineName, { rating, powers }] of disciplineMap.entries()) {
-        traits.push({
+        addTrait({
             name: disciplineName,
             rating,
             type: "discipline",
-            subtraits: powers.length > 0 ? powers : undefined
+            subtraits: powers
         })
     }
 
-    for (const merit of character.merits) {
-        traits.push({
-            name: merit.name,
-            rating: merit.level,
-            type: "custom"
+    for (const meritFlaw of [
+        ...asArray<{ name?: unknown; level?: unknown }>(character.merits),
+        ...asArray<{ name?: unknown; level?: unknown }>(character.flaws),
+        ...asArray<{ name?: unknown; level?: unknown }>(
+            character.predatorType?.pickedMeritsAndFlaws
+        )
+    ]) {
+        addTrait({
+            name: toTraitIdentifier(meritFlaw.name, "Trait"),
+            rating: nonNegativeInt(meritFlaw.level),
+            type: "custom",
+            subtraits: []
         })
     }
 
-    for (const flaw of character.flaws) {
-        traits.push({
-            name: flaw.name,
-            rating: flaw.level,
-            type: "custom"
-        })
-    }
+    const splat = createSplat(character)
 
-    for (const meritFlaw of character.predatorType?.pickedMeritsAndFlaws || []) {
-        traits.push({
-            name: meritFlaw.name,
-            rating: meritFlaw.level,
-            type: "custom"
-        })
-    }
-
-    const healthString = createDamageString(
-        character.maxHealth,
-        character.ephemeral.superficialDamage,
-        character.ephemeral.aggravatedDamage
-    )
-
-    const willpowerString = createDamageString(
-        character.willpower,
-        character.ephemeral.superficialWillpowerDamage,
-        character.ephemeral.aggravatedWillpowerDamage
-    )
-
-    const convictions = character.touchstones.map((touchstone) => touchstone.conviction)
-
-    const biography = [
-        character.description ? `Concept: ${character.description}` : "",
-        character.clan ? `Clan: ${character.clan}` : "",
-        character.sect ? `Sect: ${character.sect}` : "",
-        character.chronicle ? `Chronicle: ${character.chronicle}` : "",
-        character.sire ? `Sire: ${character.sire}` : "",
-        character.ambition ? `Ambition: ${character.ambition}` : "",
-        character.desire ? `Desire: ${character.desire}` : "",
-        character.notes ? `Notes: ${character.notes}` : ""
-    ]
-        .filter(Boolean)
-        .join("\n\n")
-
-    const touchstonesText = character.touchstones
-        .map((t) => `${t.name} (${t.conviction})${t.description ? `: ${t.description}` : ""}`)
-        .join("\n")
-
-    const description = touchstonesText || ""
-
-    const meritsText = [
-        ...character.merits,
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "merit") || [])
-    ]
-        .map((m) => `${m.name} (${m.level})`)
-        .join(", ")
-
-    const flawsText = [
-        ...character.flaws,
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "flaw") || [])
-    ]
-        .map((f) => `${f.name} (${f.level})`)
-        .join(", ")
-
-    let splat: "vampire" | "thin-blood" | "ghoul" | "mortal" = "vampire"
-    if (character.clan === "Thin-blood") {
-        splat = "thin-blood"
-    } else if (character.clan) {
-        splat = "vampire"
-    } else {
-        splat = "mortal"
-    }
-
-    const inconnuJson: InconnuVChar = {
-        _name: character.name,
+    return {
+        name: sanitizeCharacterName(character.name),
         splat,
-        _humanity: character.humanity,
-        stains: character.ephemeral.humanityStains,
-        health: healthString,
-        willpower: willpowerString,
-        _hunger: character.ephemeral.hunger,
-        potency: character.bloodPotency,
-        _traits: traits,
-        profile: {
-            biography,
-            description,
-            images: []
-        },
-        convictions,
-        header: {
-            blush: 0,
-            location: "",
-            merits: meritsText,
-            flaws: flawsText,
-            temp: ""
-        },
-        macros: [],
-        experience: {
-            unspent: character.experience - character.ephemeral.experienceSpent,
-            lifetime: character.experience,
-            log: []
-        },
-        stat_log: {}
+        health: clampInt(character.maxHealth, 4, 20, 4),
+        willpower: clampInt(character.willpower, 2, 10, 2),
+        humanity: clampInt(character.humanity, 0, 10, 0),
+        blood_potency: createBloodPotency(character, splat),
+        convictions: asArray<{ conviction?: unknown }>(character.touchstones)
+            .map((touchstone) => truncate(touchstone.conviction, INCONNU_MAX_CONVICTION_LENGTH))
+            .filter(Boolean)
+            .slice(0, 3),
+        biography: createBiography(character),
+        description: truncate(character.description, INCONNU_MAX_TEXT_LENGTH),
+        traits
     }
-
-    return inconnuJson
 }
