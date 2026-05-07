@@ -19,7 +19,7 @@ import {
     IconTrash,
     IconUsers
 } from "@tabler/icons-react"
-import { Character as CharacterType } from "~/data/Character"
+import { parseCharacterData } from "~/utils/characterData"
 
 type Character = {
     id: string
@@ -41,7 +41,14 @@ type CoteriesSectionProps = {
     handleAddCharacterToCoterie: (coterie: Coterie) => void
     handleEditCoterie: (coterie: Coterie) => void
     handleDeleteCoterie: (coterieId: string, coterieName: string) => void
-    handleRemoveCharacterFromCoterie: (coterieId: string, characterId: string) => void
+    handleRemoveCharacterFromCoterie: (
+        coterieId: string,
+        characterId: string,
+        details?: {
+            characterName?: string | null
+            coterieName?: string | null
+        }
+    ) => void
     setCoterieForSummary: (coterie: Coterie) => void
     setCoterieSummaryModalOpened: (opened: boolean) => void
 }
@@ -157,9 +164,9 @@ const CoteriesSection = ({
                                         </Text>
                                         <Stack gap="xs">
                                             {coterie.members.map((member) => {
-                                                const memberCharData = member.character?.data as
-                                                    | CharacterType
-                                                    | undefined
+                                                const memberCharData = parseCharacterData(
+                                                    member.character?.data
+                                                )
                                                 const memberPlayerName = memberCharData?.player
                                                 return member.character ? (
                                                     <Group
@@ -193,7 +200,14 @@ const CoteriesSection = ({
                                                                 onClick={() =>
                                                                     handleRemoveCharacterFromCoterie(
                                                                         coterie.id,
-                                                                        member.characterId
+                                                                        member.characterId,
+                                                                        {
+                                                                            characterName:
+                                                                                member.character
+                                                                                    ?.name,
+                                                                            coterieName:
+                                                                                coterie.name
+                                                                        }
                                                                     )
                                                                 }
                                                             >

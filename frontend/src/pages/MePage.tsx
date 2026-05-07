@@ -68,6 +68,7 @@ import {
     useRemoveCharacterFromCoterie,
     useUpdateCoterie
 } from "~/hooks/useCoteries"
+import { parseCharacterData } from "~/utils/characterData"
 import { useCharacterShares, useUnshareCharacter } from "~/hooks/useShares"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
@@ -181,6 +182,26 @@ type Coterie = {
     name: string
     owned?: boolean
     members?: Array<{ characterId: string; character?: Character }>
+}
+
+const getLimitedLabel = (value: string | null | undefined, fallback: string, maxLength: number) => {
+    const label = value?.trim() || fallback
+    return label.length > maxLength ? `${label.slice(0, maxLength - 3).trimEnd()}...` : label
+}
+
+const getCharacterFirstNameLabel = (name: string | null | undefined) => {
+    const firstName = name?.trim().split(/\s+/)[0]
+    return getLimitedLabel(firstName, "Character", 24)
+}
+
+const getRemovedFromCoterieMessage = (
+    characterName: string | null | undefined,
+    coterieName: string | null | undefined
+) => {
+    const characterLabel = getCharacterFirstNameLabel(characterName)
+    const coterieLabel = getLimitedLabel(coterieName, "selected coterie", 48)
+
+    return `${characterLabel} removed from coterie ${coterieLabel}`
 }
 
 // TODOdin: Refactorings:
@@ -1256,14 +1277,24 @@ const MePage = () => {
         )
     }
 
-    const handleRemoveCharacterFromCoterie = (coterieId: string, characterId: string) => {
+    const handleRemoveCharacterFromCoterie = (
+        coterieId: string,
+        characterId: string,
+        details?: {
+            characterName?: string | null
+            coterieName?: string | null
+        }
+    ) => {
         removeCharacterFromCoterieMutation.mutate(
             { coterieId, characterId },
             {
                 onSuccess: () => {
                     notifications.show({
                         title: "Success",
-                        message: "Character removed from coterie",
+                        message: getRemovedFromCoterieMessage(
+                            details?.characterName,
+                            details?.coterieName
+                        ),
                         color: "green"
                     })
                 },
@@ -2025,10 +2056,6 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
         let socialScore = 0
         let mentalScore = 0
 
-        console.log({ character })
-        console.log(character.attributes)
-
-        // TODOdin: Why does this explode with `Cannot read properties of undefined (reading 'strength')`?
         physicalAttributes.forEach((attr) => {
             const key = attributesKeySchema.parse(attr)
             physicalScore += character.attributes[key] ?? 0
@@ -2105,67 +2132,64 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
 
     return (
         <Grid>
-            {/* TODOdin: Fix typing on member.character - looks like member.character.data is a json string */}
-            {members
-                .filter((m) => m.character?.data)
-                .map((member) => {
-                    const character = characterSchema.parse(
-                        JSON.parse(member.character?.data as string)
-                    )
-                    const strength = calculateCharacterStrength(character)
-                    const clan = character.clan ? clans[character.clan] : null
-                    const backgroundColor = getBackgroundColor(strength.dominant)
-                    const borderColor = getBorderColor(strength.dominant)
+            {members.map((member) => {
+                const character = parseCharacterData(member.character?.data)
+                if (!character) return null
 
-                    return (
-                        <Grid.Col key={member.characterId} span={{ base: 12, md: 6, lg: 4 }}>
-                            <Paper
-                                p="md"
-                                withBorder
-                                radius="md"
-                                style={{
-                                    backgroundColor,
-                                    borderColor,
-                                    borderWidth: 2
-                                }}
-                            >
-                                <Stack gap="sm">
-                                    <Group gap="sm" justify="space-between">
-                                        <Group gap="sm">
-                                            {clan?.logo ? (
-                                                <Box
-                                                    style={{
-                                                        width: "40px",
-                                                        height: "40px",
-                                                        backgroundColor: borderColor,
-                                                        maskImage: `url(${clan.logo})`,
-                                                        maskSize: "contain",
-                                                        maskRepeat: "no-repeat",
-                                                        maskPosition: "center",
-                                                        WebkitMaskImage: `url(${clan.logo})`,
-                                                        WebkitMaskSize: "contain",
-                                                        WebkitMaskRepeat: "no-repeat",
-                                                        WebkitMaskPosition: "center"
-                                                    }}
-                                                />
-                                            ) : null}
-                                            <Stack gap={2}>
-                                                <Text fw={600} size="lg">
-                                                    {character.name}
+                const strength = calculateCharacterStrength(character)
+                const clan = character.clan ? clans[character.clan] : null
+                const backgroundColor = getBackgroundColor(strength.dominant)
+                const borderColor = getBorderColor(strength.dominant)
+
+                return (
+                    <Grid.Col key={member.characterId} span={{ base: 12, md: 6, lg: 4 }}>
+                        <Paper
+                            p="md"
+                            withBorder
+                            radius="md"
+                            style={{
+                                backgroundColor,
+                                borderColor,
+                                borderWidth: 2
+                            }}
+                        >
+                            <Stack gap="sm">
+                                <Group gap="sm" justify="space-between">
+                                    <Group gap="sm">
+                                        {clan?.logo ? (
+                                            <Box
+                                                style={{
+                                                    width: "40px",
+                                                    height: "40px",
+                                                    backgroundColor: borderColor,
+                                                    maskImage: `url(${clan.logo})`,
+                                                    maskSize: "contain",
+                                                    maskRepeat: "no-repeat",
+                                                    maskPosition: "center",
+                                                    WebkitMaskImage: `url(${clan.logo})`,
+                                                    WebkitMaskSize: "contain",
+                                                    WebkitMaskRepeat: "no-repeat",
+                                                    WebkitMaskPosition: "center"
+                                                }}
+                                            />
+                                        ) : null}
+                                        <Stack gap={2}>
+                                            <Text fw={600} size="lg">
+                                                {character.name}
+                                            </Text>
+                                            {character.player ? (
+                                                <Text size="sm" c="dimmed">
+                                                    {character.player}
                                                 </Text>
-                                                {character.player ? (
-                                                    <Text size="sm" c="dimmed">
-                                                        {character.player}
-                                                    </Text>
-                                                ) : null}
-                                            </Stack>
-                                        </Group>
+                                            ) : null}
+                                        </Stack>
                                     </Group>
-                                </Stack>
-                            </Paper>
-                        </Grid.Col>
-                    )
-                })}
+                                </Group>
+                            </Stack>
+                        </Paper>
+                    </Grid.Col>
+                )
+            })}
         </Grid>
     )
 }
