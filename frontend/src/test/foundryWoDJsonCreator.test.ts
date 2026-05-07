@@ -71,6 +71,7 @@ describe("createWoD5EVttJson", () => {
 
         // Test blood potency and humanity
         expect(json.system.blood.potency).toBe(1)
+        expect(json.system.blood.generation).toBe("13")
         expect(json.system.humanity.value).toBe(7)
 
         // Test experience
@@ -88,6 +89,7 @@ describe("createWoD5EVttJson", () => {
         const predatorItem = json.items.find((item: any) => item.type === "predatorType")
         expect(predatorItem).toBeDefined()
         expect(predatorItem?.name).toBe("Sandman")
+        expect((predatorItem!.system as any).dicepool).toEqual({})
 
         // Should have discipline power item
         const powerItem = json.items.find((item: any) => item.type === "power")
@@ -95,6 +97,9 @@ describe("createWoD5EVttJson", () => {
         expect(powerItem!.name).toBe("Prowess")
         expect((powerItem!.system as any).discipline).toBe("potence")
         expect((powerItem!.system as any).level).toBe(1)
+        expect((powerItem!.system as any).cost).toBe(1)
+        expect((powerItem!.system as any).duration).toBeUndefined()
+        expect((powerItem!.system as any).uses).toBeUndefined()
 
         // Should have ritual item
         const ritualItem = json.items.find(
@@ -102,7 +107,11 @@ describe("createWoD5EVttJson", () => {
         )
         expect(ritualItem).toBeDefined()
         expect(ritualItem!.name).toBe("Test Ritual")
-        expect((ritualItem!.system as any).cost).toBe("1 Rouse Check")
+        expect((ritualItem!.system as any).cost).toBe(1)
+        expect((ritualItem!.system as any).dicepool).toEqual({
+            intelligence: { path: "attributes.intelligence" },
+            "blood sorcery": { path: "disciplines.sorcery" }
+        })
 
         // Should have merit items
         const meritItems = json.items.filter(
