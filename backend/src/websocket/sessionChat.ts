@@ -1,9 +1,8 @@
-import { eq } from "drizzle-orm"
 import { FastifyInstance } from "fastify"
-import { env } from "../config/env.js"
-import { workos } from "../config/workos.js"
-import { db, schema } from "../db/index.js"
-import { AuthenticatedRequest } from "../middleware/auth.js"
+import {
+    authenticateWebSocketRequest,
+    AuthenticatedRequest
+} from "../middleware/auth.js"
 import { handleChatMessage } from "./chatMessageHandlers/handleChatMessage.js"
 import { handleDiceRoll } from "./chatMessageHandlers/handleDiceRoll.js"
 import { handleJoinSession } from "./chatMessageHandlers/handleJoinSession.js"
@@ -46,7 +45,7 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
                 return
             }
 
-            const user = await authenticateWebSocketUser(request)
+            const user = await authenticateWebSocketRequest(request)
 
             if (!user) {
                 socket.close(1008, "Unauthorized")
@@ -197,60 +196,11 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
     )
 }
 
-async function authenticateWebSocketUser(
-    request: AuthenticatedRequest
-): Promise<{ id: string; firstName?: string; lastName?: string; nickname?: string } | null> {
-    const cookiePassword = env.WORKOS_COOKIE_PASSWORD
-    const sessionData = request.cookies["wos-session"]
-
-    if (!sessionData) {
-        return null
-    }
-
-    try {
-        const session = workos.userManagement.loadSealedSession({
-            sessionData,
-            cookiePassword
-        })
-
-        const authResult = await session.authenticate()
-
-        if (!authResult.authenticated || !("user" in authResult)) {
-            try {
-                const refreshResult = await session.refresh()
-                if (refreshResult.authenticated && "user" in refreshResult && refreshResult.user) {
-                    const userId = refreshResult.user.id
-                    const dbUser = await db.query.users.findFirst({
-                        where: eq(schema.users.id, userId)
-                    })
-                    return {
-                        id: userId,
-                        firstName: refreshResult.user.firstName ?? undefined,
-                        lastName: refreshResult.user.lastName ?? undefined,
-                        nickname: dbUser?.nickname ?? undefined
-                    }
-                }
-            } catch (_refreshError) {}
-            return null
-        }
-
-        const userId = authResult.user.id
-        const dbUser = await db.query.users.findFirst({
-            where: eq(schema.users.id, userId)
-        })
-
-        return {
-            id: userId,
-            firstName: authResult.user.firstName ?? undefined,
-            lastName: authResult.user.lastName ?? undefined,
-            nickname: dbUser?.nickname ?? undefined
-        }
-    } catch (_error) {
-        return null
-    }
-}
-
-function getUserName(user: { firstName?: string; lastName?: string; nickname?: string }): string {
+function getUserName(user: {
+    firstName?: string
+    lastName?: string
+    nickname?: string | null
+}): string {
     if (user.nickname) {
         return user.nickname
     }

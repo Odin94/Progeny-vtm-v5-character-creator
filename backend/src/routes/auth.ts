@@ -7,6 +7,7 @@ import { z } from "zod"
 import { updateUserSchema, type UpdateUserInput } from "../schemas/user.js"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.js"
+import { clearImpersonationCookie, endImpersonationSession } from "../middleware/impersonation.js"
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
 import { clearSessionCookie, setSessionCookie } from "../utils/sessionCookie.js"
@@ -243,7 +244,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                     email: user.email,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    nickname: dbUser?.nickname ?? null
+                    nickname: dbUser?.nickname ?? null,
+                    isSuperadmin: dbUser?.isSuperadmin ?? false,
+                    actorIsSuperadmin: dbUser?.isSuperadmin ?? false,
+                    impersonation: { active: false }
                 }
             })
         } catch (error) {
@@ -304,6 +308,10 @@ export async function authRoutes(fastify: FastifyInstance) {
 
                 // Clear the session cookie
                 clearSessionCookie(reply)
+                if (request.impersonation?.active) {
+                    await endImpersonationSession(request.impersonation.sessionId, "stopped")
+                    clearImpersonationCookie(reply)
+                }
 
                 await trackEvent(
                     "auth_logout",
@@ -330,6 +338,9 @@ export async function authRoutes(fastify: FastifyInstance) {
                 })
                 // Clear cookie even on error
                 clearSessionCookie(reply)
+                if (request.impersonation?.active) {
+                    clearImpersonationCookie(reply)
+                }
                 reply.send({
                     success: true,
                     logoutUrl: null
@@ -339,115 +350,75 @@ export async function authRoutes(fastify: FastifyInstance) {
     )
 
     // Get current user endpoint
-    fastify.get("/auth/me", async (request, reply) => {
-        try {
-            const cookiePassword = env.WORKOS_COOKIE_PASSWORD
-            if (!cookiePassword) {
-                logger.error("WORKOS_COOKIE_PASSWORD not configured", undefined, {
+    fastify.get(
+        "/auth/me",
+        {
+            preHandler: authenticateUser
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            try {
+                const user = request.user!
+                const actorUser = request.actorUser ?? user
+
+                await trackEvent(
+                    "auth_me_success",
+                    {
+                        endpoint: "/auth/me",
+                        method: "GET",
+                        userId: user.id,
+                        actorUserId: actorUser.id,
+                        impersonating: !!request.impersonation?.active
+                    },
+                    actorUser.id,
+                    request
+                )
+
+                reply.send({
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    nickname: user.nickname ?? null,
+                    isSuperadmin: user.isSuperadmin,
+                    actorIsSuperadmin: actorUser.isSuperadmin,
+                    impersonation: request.impersonation?.active
+                        ? {
+                              active: true,
+                              expiresAt: request.impersonation.expiresAt.toISOString(),
+                              actorUser: {
+                                  id: actorUser.id,
+                                  email: actorUser.email,
+                                  firstName: actorUser.firstName,
+                                  lastName: actorUser.lastName,
+                                  nickname: actorUser.nickname ?? null,
+                                  isSuperadmin: actorUser.isSuperadmin
+                              },
+                              impersonatedUser: {
+                                  id: user.id,
+                                  email: user.email,
+                                  firstName: user.firstName,
+                                  lastName: user.lastName,
+                                  nickname: user.nickname ?? null,
+                                  isSuperadmin: user.isSuperadmin
+                              }
+                          }
+                        : { active: false }
+                })
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : "Failed to get user"
+                fastify.log.error({ err: error }, "Get user error")
+                logger.error("Get user error", error, {
                     endpoint: "/auth/me",
-                    method: "GET"
+                    method: "GET",
+                    userId: request.user?.id ?? null
                 })
                 reply.code(500).send({
                     error: "Internal server error",
-                    message: "WORKOS_COOKIE_PASSWORD is not configured"
+                    message: errorMessage
                 })
-                return
             }
-
-            const sessionData = request.cookies["wos-session"]
-
-            if (!sessionData) {
-                reply.code(401).send({
-                    error: "Unauthorized",
-                    message: "No session found"
-                })
-                return
-            }
-
-            let sessionUser: {
-                id: string
-                email: string
-                firstName?: string | null
-                lastName?: string | null
-            }
-            let sessionRefreshed = false
-
-            try {
-                const session = workos.userManagement.loadSealedSession({
-                    sessionData,
-                    cookiePassword
-                })
-
-                const authResult = await session.authenticate()
-
-                if (authResult.authenticated && "user" in authResult) {
-                    sessionUser = authResult.user
-                } else {
-                    const refreshResult = await session.refresh()
-                    if (
-                        refreshResult.authenticated &&
-                        "sealedSession" in refreshResult &&
-                        "user" in refreshResult &&
-                        refreshResult.sealedSession
-                    ) {
-                        setSessionCookie(reply, refreshResult.sealedSession)
-                        sessionUser = refreshResult.user
-                        sessionRefreshed = true
-                    } else {
-                        throw new Error("Session is invalid")
-                    }
-                }
-            } catch (error) {
-                logger.warn("Session is invalid", {
-                    endpoint: "/auth/me",
-                    method: "GET",
-                    error: error instanceof Error ? error.message : String(error)
-                })
-                clearSessionCookie(reply)
-                reply.code(401).send({
-                    error: "Unauthorized",
-                    message: "Session is invalid"
-                })
-                return
-            }
-
-            // Get user from database to include nickname
-            const dbUser = await db.query.users.findFirst({
-                where: eq(schema.users.id, sessionUser.id)
-            })
-
-            await trackEvent(
-                "auth_me_success",
-                {
-                    endpoint: "/auth/me",
-                    method: "GET",
-                    userId: sessionUser.id,
-                    ...(sessionRefreshed ? { sessionRefreshed: true } : {})
-                },
-                sessionUser.id,
-                request
-            )
-
-            reply.send({
-                id: sessionUser.id,
-                email: sessionUser.email,
-                firstName: sessionUser.firstName,
-                lastName: sessionUser.lastName,
-                nickname: dbUser?.nickname || null
-            })
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to get user"
-            fastify.log.error({ err: error }, "Get user error")
-            logger.error("Get user error", error, {
-                endpoint: "/auth/me",
-                method: "GET"
-            })
-            reply.code(500).send({
-                error: "Internal server error",
-                message: errorMessage
-            })
         }
-    })
+    )
 
     // Update user profile endpoint
     fastify.put<{
@@ -471,7 +442,16 @@ export async function authRoutes(fastify: FastifyInstance) {
                         email: request.user!.email,
                         firstName: request.user!.firstName,
                         lastName: request.user!.lastName,
-                        nickname: null
+                        nickname: null,
+                        isSuperadmin: request.user!.isSuperadmin,
+                        actorIsSuperadmin:
+                            request.actorUser?.isSuperadmin ?? request.user!.isSuperadmin,
+                        impersonation: request.impersonation?.active
+                            ? {
+                                  active: true,
+                                  expiresAt: request.impersonation.expiresAt.toISOString()
+                              }
+                            : { active: false }
                     })
                     return
                 }
@@ -500,7 +480,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                 // Get WorkOS user data for email, firstName, lastName
                 const cookiePassword = env.WORKOS_COOKIE_PASSWORD
                 let workosUser = null
-                if (cookiePassword) {
+                if (cookiePassword && !request.impersonation?.active) {
                     const sessionData = request.cookies["wos-session"]
                     if (sessionData) {
                         try {
@@ -542,7 +522,15 @@ export async function authRoutes(fastify: FastifyInstance) {
                     email: workosUser?.email || updated.email,
                     firstName: workosUser?.firstName || updated.firstName,
                     lastName: workosUser?.lastName || updated.lastName,
-                    nickname: updated.nickname
+                    nickname: updated.nickname,
+                    isSuperadmin: updated.isSuperadmin,
+                    actorIsSuperadmin: request.actorUser?.isSuperadmin ?? updated.isSuperadmin,
+                    impersonation: request.impersonation?.active
+                        ? {
+                              active: true,
+                              expiresAt: request.impersonation.expiresAt.toISOString()
+                          }
+                        : { active: false }
                 })
             } catch (error) {
                 // Handle unique constraint violation for nickname

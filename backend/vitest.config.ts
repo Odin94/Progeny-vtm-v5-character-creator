@@ -10,7 +10,8 @@ export default defineConfig({
             WORKOS_API_KEY: "test-api-key",
             WORKOS_CLIENT_ID: "test-client-id",
             WORKOS_COOKIE_PASSWORD: "test-cookie-password-minimum-32-chars!",
-            NODE_ENV: "test"
+            NODE_ENV: "test",
+            DATABASE_URL: ":memory:"
         }
     }
 })
