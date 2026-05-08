@@ -23,6 +23,16 @@ const loginQuerySchema = z.object({
     returnTo: z.string().optional()
 })
 
+const serializeImpersonationState = (request: AuthenticatedRequest) =>
+    request.impersonation?.active
+        ? {
+              active: true,
+              expiresAt: request.impersonation.expiresAt.toISOString(),
+              actorUser: request.impersonation.actorUser,
+              impersonatedUser: request.impersonation.impersonatedUser
+          }
+        : { active: false }
+
 function getSafeReturnPath(returnTo?: string): string {
     if (!returnTo) return DEFAULT_POST_AUTH_PATH
     if (!returnTo.startsWith("/")) return DEFAULT_POST_AUTH_PATH
@@ -446,12 +456,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                         isSuperadmin: request.user!.isSuperadmin,
                         actorIsSuperadmin:
                             request.actorUser?.isSuperadmin ?? request.user!.isSuperadmin,
-                        impersonation: request.impersonation?.active
-                            ? {
-                                  active: true,
-                                  expiresAt: request.impersonation.expiresAt.toISOString()
-                              }
-                            : { active: false }
+                        impersonation: serializeImpersonationState(request)
                     })
                     return
                 }
@@ -525,12 +530,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     nickname: updated.nickname,
                     isSuperadmin: updated.isSuperadmin,
                     actorIsSuperadmin: request.actorUser?.isSuperadmin ?? updated.isSuperadmin,
-                    impersonation: request.impersonation?.active
-                        ? {
-                              active: true,
-                              expiresAt: request.impersonation.expiresAt.toISOString()
-                          }
-                        : { active: false }
+                    impersonation: serializeImpersonationState(request)
                 })
             } catch (error) {
                 // Handle unique constraint violation for nickname

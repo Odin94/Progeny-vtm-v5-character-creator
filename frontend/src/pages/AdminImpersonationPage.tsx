@@ -78,81 +78,86 @@ const AdminImpersonationPage = () => {
         }
     })
 
-    const rows =
-        usersQuery.data?.users.map((candidate) => {
-            const isSelf = candidate.id === user?.id
-            const canImpersonate = !isSelf && !candidate.isSuperadmin
-            const lastActiveLabel = candidate.lastActiveAt
-                ? new Date(candidate.lastActiveAt).toLocaleString([], {
-                      dateStyle: "short",
-                      timeStyle: "short"
-                  })
-                : null
+    const rows = usersQuery.isSuccess
+        ? usersQuery.data.users.map((candidate) => {
+              const isSelf = candidate.id === user?.id
+              const canImpersonate = !isSelf && !candidate.isSuperadmin
+              const lastActiveLabel = candidate.lastActiveAt
+                  ? new Date(candidate.lastActiveAt).toLocaleString([], {
+                        dateStyle: "short",
+                        timeStyle: "short"
+                    })
+                  : null
 
-            return (
-                <Table.Tr key={candidate.id}>
-                    <Table.Td>
-                        <Stack gap={2}>
-                            <Group gap="xs">
-                                <Text fw={600}>{getUserLabel(candidate)}</Text>
-                                {candidate.isSuperadmin ? (
-                                    <Badge color="yellow" variant="light">
-                                        Superadmin
-                                    </Badge>
-                                ) : null}
-                                {candidate.isActive ? (
-                                    <Badge color="green" variant="light">
-                                        Active
-                                    </Badge>
-                                ) : lastActiveLabel ? (
-                                    <Badge color="gray" variant="light">
-                                        Seen {lastActiveLabel}
-                                    </Badge>
-                                ) : null}
-                            </Group>
-                            <Text size="sm" c="dimmed">
-                                {candidate.email}
-                            </Text>
-                        </Stack>
-                    </Table.Td>
-                    <Table.Td>
-                        <Switch
-                            checked={candidate.isSuperadmin}
-                            disabled={isSelf || toggleSuperadminMutation.isPending}
-                            onChange={(event) => {
-                                const isSuperadmin = event.currentTarget.checked
-                                if (isSuperadmin) {
-                                    setSuperadminCandidate(candidate)
-                                    return
-                                }
+              return (
+                  <Table.Tr key={candidate.id}>
+                      <Table.Td>
+                          <Stack gap={2}>
+                              <Group gap="xs">
+                                  <Text fw={600}>{getUserLabel(candidate)}</Text>
+                                  {candidate.isSuperadmin ? (
+                                      <Badge color="yellow" variant="light">
+                                          Superadmin
+                                      </Badge>
+                                  ) : null}
+                                  {candidate.isActive ? (
+                                      <Badge color="green" variant="light">
+                                          Active
+                                      </Badge>
+                                  ) : lastActiveLabel ? (
+                                      <Badge color="gray" variant="light">
+                                          Seen {lastActiveLabel}
+                                      </Badge>
+                                  ) : null}
+                              </Group>
+                              <Text size="sm" c="dimmed">
+                                  {candidate.email}
+                              </Text>
+                          </Stack>
+                      </Table.Td>
+                      <Table.Td>
+                          <Switch
+                              checked={candidate.isSuperadmin}
+                              disabled={isSelf || toggleSuperadminMutation.isPending}
+                              onChange={(event) => {
+                                  const isSuperadmin = event.currentTarget.checked
+                                  if (isSuperadmin) {
+                                      setSuperadminCandidate(candidate)
+                                      return
+                                  }
 
-                                toggleSuperadminMutation.mutate({
-                                    id: candidate.id,
-                                    isSuperadmin
-                                })
-                            }}
-                            aria-label={`Set ${candidate.email} superadmin status`}
-                        />
-                    </Table.Td>
-                    <Table.Td>
-                        <Button
-                            size="xs"
-                            variant="light"
-                            color="yellow"
-                            leftSection={<IconUserShield size={14} />}
-                            disabled={!canImpersonate}
-                            loading={
-                                startImpersonationMutation.isPending &&
-                                startImpersonationMutation.variables === candidate.id
-                            }
-                            onClick={() => startImpersonationMutation.mutate(candidate.id)}
-                        >
-                            Impersonate
-                        </Button>
-                    </Table.Td>
-                </Table.Tr>
-            )
-        }) ?? []
+                                  toggleSuperadminMutation.mutate({
+                                      id: candidate.id,
+                                      isSuperadmin
+                                  })
+                              }}
+                              aria-label={`Set ${candidate.email} superadmin status`}
+                          />
+                      </Table.Td>
+                      <Table.Td>
+                          <Button
+                              size="xs"
+                              variant="light"
+                              color="yellow"
+                              leftSection={<IconUserShield size={14} />}
+                              disabled={!canImpersonate}
+                              loading={
+                                  startImpersonationMutation.isPending &&
+                                  startImpersonationMutation.variables === candidate.id
+                              }
+                              onClick={() => startImpersonationMutation.mutate(candidate.id)}
+                          >
+                              Impersonate
+                          </Button>
+                      </Table.Td>
+                  </Table.Tr>
+              )
+          })
+        : []
+    const usersQueryError = usersQuery.error as (Error & { status?: number }) | null
+    const usersQueryErrorMessage = usersQueryError
+        ? `${usersQueryError.message}${usersQueryError.status ? ` (HTTP ${usersQueryError.status})` : ""}`
+        : "Could not load users."
 
     return (
         <AppShell header={{ height: topbarHeight }}>
@@ -250,6 +255,23 @@ const AdminImpersonationPage = () => {
                                     {usersQuery.isLoading ? (
                                         <Center py="xl">
                                             <Loader color="yellow" />
+                                        </Center>
+                                    ) : usersQuery.isError ? (
+                                        <Center py="xl">
+                                            <Stack align="center" gap="sm">
+                                                <Text fw={600}>Could not load users</Text>
+                                                <Text size="sm" c="dimmed" ta="center">
+                                                    {usersQueryErrorMessage}
+                                                </Text>
+                                                <Button
+                                                    size="xs"
+                                                    variant="light"
+                                                    color="yellow"
+                                                    onClick={() => usersQuery.refetch()}
+                                                >
+                                                    Retry
+                                                </Button>
+                                            </Stack>
                                         </Center>
                                     ) : (
                                         <Table.ScrollContainer minWidth={720}>

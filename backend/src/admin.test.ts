@@ -260,6 +260,38 @@ describe("superadmin impersonation", () => {
         expect(meResponse.json().impersonation.active).toBe(true)
         expect(meResponse.json().impersonation.actorUser.id).toBe(ADMIN_ID)
 
+        const emptyProfileUpdateResponse = await app.inject({
+            method: "PUT",
+            url: "/auth/me",
+            headers: {
+                cookie: impersonationCookie,
+                "x-csrf-token": "test-csrf"
+            },
+            payload: {}
+        })
+        expect(emptyProfileUpdateResponse.statusCode).toBe(200)
+        expect(emptyProfileUpdateResponse.json().impersonation).toMatchObject({
+            active: true,
+            actorUser: { id: ADMIN_ID },
+            impersonatedUser: { id: TARGET_ID }
+        })
+
+        const profileUpdateResponse = await app.inject({
+            method: "PUT",
+            url: "/auth/me",
+            headers: {
+                cookie: impersonationCookie,
+                "x-csrf-token": "test-csrf"
+            },
+            payload: { nickname: "target-nick" }
+        })
+        expect(profileUpdateResponse.statusCode).toBe(200)
+        expect(profileUpdateResponse.json().impersonation).toMatchObject({
+            active: true,
+            actorUser: { id: ADMIN_ID },
+            impersonatedUser: { id: TARGET_ID }
+        })
+
         const stopResponse = await app.inject({
             method: "POST",
             url: "/admin/impersonation/stop",
