@@ -8,11 +8,12 @@ import { characterRoutes } from "./routes/characters.js"
 import { coterieRoutes } from "./routes/coteries.js"
 import { shareRoutes } from "./routes/shares.js"
 import { authRoutes } from "./routes/auth.js"
+import { adminRoutes } from "./routes/admin.js"
 import { preferencesRoutes } from "./routes/preferences.js"
 import { characterSyncWebSocket } from "./websocket/characterSync.js"
 import { sessionChatWebSocket } from "./websocket/sessionChat.js"
 import { env } from "./config/env.js"
-import { generateRequestId, setRequestId } from "./middleware/requestId.js"
+import { generateRequestId, getRequestId, setRequestId } from "./middleware/requestId.js"
 import {
     CSRF_TOKEN_HEADER_NAME,
     generateCsrfToken,
@@ -20,6 +21,11 @@ import {
     validateCsrfToken
 } from "./middleware/csrf.js"
 import { logError, logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
+import {
+    appendImpersonationAuditLog,
+    summarizeAuditBody
+} from "./middleware/impersonation.js"
+import type { AuthenticatedRequest } from "./middleware/auth.js"
 
 export async function buildApp() {
     const httpsOptions =
@@ -131,6 +137,28 @@ export async function buildApp() {
     })
 
     fastify.addHook("onResponse", async (request, reply) => {
+        const authenticatedRequest = request as AuthenticatedRequest
+        const shouldAudit =
+            authenticatedRequest.impersonation?.active &&
+            ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) &&
+            !request.url.startsWith("/admin/impersonation") &&
+            request.url !== "/health" &&
+            !request.url.startsWith("/metrics")
+
+        if (shouldAudit) {
+            await appendImpersonationAuditLog(authenticatedRequest.impersonation!.sessionId, {
+                type: "request",
+                timestamp: new Date().toISOString(),
+                method: request.method,
+                url: request.url,
+                statusCode: reply.statusCode,
+                requestId: getRequestId(request),
+                actorUserId: authenticatedRequest.impersonation!.actorUser.id,
+                effectiveUserId: authenticatedRequest.impersonation!.impersonatedUser.id,
+                body: summarizeAuditBody(request.body)
+            })
+        }
+
         logRequest(request, reply)
     })
 
@@ -139,6 +167,7 @@ export async function buildApp() {
     })
 
     await fastify.register(authRoutes)
+    await fastify.register(adminRoutes)
     await fastify.register(preferencesRoutes)
     await fastify.register(characterRoutes)
     await fastify.register(coterieRoutes)
