@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { eq } from "drizzle-orm"
+import { eq, or, sql } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import {
     authenticateUser,
@@ -52,6 +52,8 @@ const serializeImpersonationUser = (user: AuthenticatedUser) => ({
     isSuperadmin: user.isSuperadmin
 })
 
+const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, "\\$&")
+
 export async function adminRoutes(fastify: FastifyInstance) {
     fastify.get<{ Querystring: AdminUsersQuery }>(
         "/admin/users",
@@ -63,20 +65,23 @@ export async function adminRoutes(fastify: FastifyInstance) {
         },
         async (request, reply) => {
             const query = (request.query.query ?? "").trim().toLowerCase()
+            const pattern = `%${escapeLikePattern(query)}%`
+            const where = query
+                ? or(
+                      sql`lower(${schema.users.email}) like ${pattern} escape ${"\\"}`,
+                      sql`lower(${schema.users.firstName}) like ${pattern} escape ${"\\"}`,
+                      sql`lower(${schema.users.lastName}) like ${pattern} escape ${"\\"}`,
+                      sql`lower(${schema.users.nickname}) like ${pattern} escape ${"\\"}`
+                  )
+                : undefined
+
             const users = await db.query.users.findMany({
+                where,
                 limit: 200
             })
 
-            const filtered = query
-                ? users.filter((user) =>
-                      [user.email, user.firstName, user.lastName, user.nickname]
-                          .filter(Boolean)
-                          .some((value) => value!.toLowerCase().includes(query))
-                  )
-                : users
-
             reply.send({
-                users: filtered.map(serializeAdminUser)
+                users: users.map(serializeAdminUser)
             })
         }
     )
