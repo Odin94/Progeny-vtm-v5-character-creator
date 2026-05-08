@@ -35,6 +35,7 @@ const OTHER_ID = "test-other"
 const ADMIN_EMAIL = "test-superadmin@progeny.invalid"
 const TARGET_EMAIL = "test-target@progeny.invalid"
 const OTHER_EMAIL = "test-other@progeny.invalid"
+const BULK_EMAIL_DOMAIN = "bulk.progeny.invalid"
 const TEST_USER_IDS = [ADMIN_ID, TARGET_ID, OTHER_ID]
 const TEST_USER_EMAILS = [ADMIN_EMAIL, TARGET_EMAIL, OTHER_EMAIL]
 
@@ -74,6 +75,8 @@ const cleanupTestUsers = async () => {
     for (const email of TEST_USER_EMAILS) {
         await db.delete(schema.users).where(eq(schema.users.email, email))
     }
+
+    await db.delete(schema.users).where(sql`${schema.users.email} like ${`%@${BULK_EMAIL_DOMAIN}`}`)
 }
 
 const cookieHeaderWith = (setCookieHeader: string | string[] | undefined) => {
@@ -91,7 +94,8 @@ describe("superadmin impersonation", () => {
     beforeAll(async () => {
         assertSafeTestDatabase()
 
-        await db.run(sql.raw(`CREATE TABLE IF NOT EXISTS users (
+        await db.run(
+            sql.raw(`CREATE TABLE IF NOT EXISTS users (
             id text PRIMARY KEY NOT NULL,
             email text NOT NULL UNIQUE,
             first_name text,
@@ -101,8 +105,10 @@ describe("superadmin impersonation", () => {
             is_superadmin integer DEFAULT false NOT NULL,
             created_at integer DEFAULT (unixepoch()) NOT NULL,
             updated_at integer DEFAULT (unixepoch()) NOT NULL
-        )`))
-        await db.run(sql.raw(`CREATE TABLE IF NOT EXISTS impersonation_sessions (
+        )`)
+        )
+        await db.run(
+            sql.raw(`CREATE TABLE IF NOT EXISTS impersonation_sessions (
             id text PRIMARY KEY NOT NULL,
             superadmin_user_id text NOT NULL REFERENCES users(id),
             impersonated_user_id text NOT NULL REFERENCES users(id),
@@ -111,7 +117,8 @@ describe("superadmin impersonation", () => {
             ended_at integer,
             ended_reason text,
             audit_log text NOT NULL DEFAULT '[]'
-        )`))
+        )`)
+        )
 
         app = await buildApp()
         await app.ready()
@@ -181,6 +188,33 @@ describe("superadmin impersonation", () => {
         })
         expect(toggleResponse.statusCode).toBe(200)
         expect(toggleResponse.json().isSuperadmin).toBe(true)
+    })
+
+    it("searches users in SQL before applying the list limit", async () => {
+        await db.insert(schema.users).values(
+            Array.from({ length: 220 }, (_, index) => ({
+                id: `bulk-user-${index}`,
+                email: `bulk-user-${index}@${BULK_EMAIL_DOMAIN}`,
+                firstName: "Bulk",
+                lastName: "User"
+            }))
+        )
+        await db.insert(schema.users).values({
+            id: "bulk-user-late-match",
+            email: `late-match@${BULK_EMAIL_DOMAIN}`,
+            firstName: "Late",
+            lastName: "Match"
+        })
+
+        const response = await app.inject({
+            method: "GET",
+            url: "/admin/users?query=late-match",
+            headers: csrfHeaders
+        })
+
+        expect(response.statusCode).toBe(200)
+        expect(response.json().users).toHaveLength(1)
+        expect(response.json().users[0].id).toBe("bulk-user-late-match")
     })
 
     it("shows users active after recent authenticated activity", async () => {
