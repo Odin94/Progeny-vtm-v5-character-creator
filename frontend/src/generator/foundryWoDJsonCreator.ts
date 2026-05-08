@@ -14,7 +14,7 @@ const WoD5EVttDicePoolSchema = z.record(z.string(), z.object({ path: z.string() 
 const WoD5EVttBonusSchema = z.record(z.string(), z.unknown())
 
 const WoD5EVttItemBaseSchema = z.object({
-    name: z.string(),
+    name: z.string()
 })
 
 const WoD5EVttClanItemSchema = WoD5EVttItemBaseSchema.extend({
@@ -22,8 +22,8 @@ const WoD5EVttClanItemSchema = WoD5EVttItemBaseSchema.extend({
     system: z.object({
         description: z.string(),
         bane: z.string(),
-        bonuses: z.array(WoD5EVttBonusSchema),
-    }),
+        bonuses: z.array(WoD5EVttBonusSchema)
+    })
 })
 
 const WoD5EVttPredatorTypeItemSchema = WoD5EVttItemBaseSchema.extend({
@@ -31,8 +31,8 @@ const WoD5EVttPredatorTypeItemSchema = WoD5EVttItemBaseSchema.extend({
     system: z.object({
         description: z.string(),
         bonuses: z.array(WoD5EVttBonusSchema),
-        dicepool: WoD5EVttDicePoolSchema,
-    }),
+        dicepool: WoD5EVttDicePoolSchema
+    })
 })
 
 const WoD5EVttPowerItemSchema = WoD5EVttItemBaseSchema.extend({
@@ -43,8 +43,8 @@ const WoD5EVttPowerItemSchema = WoD5EVttItemBaseSchema.extend({
         level: z.number(),
         cost: z.number(),
         dicepool: WoD5EVttDicePoolSchema,
-        bonuses: z.array(WoD5EVttBonusSchema),
-    }),
+        bonuses: z.array(WoD5EVttBonusSchema)
+    })
 })
 
 const WoD5EVttFeatureItemSchema = WoD5EVttItemBaseSchema.extend({
@@ -57,16 +57,16 @@ const WoD5EVttFeatureItemSchema = WoD5EVttItemBaseSchema.extend({
         uses: z.object({
             max: z.number(),
             current: z.number(),
-            enabled: z.boolean(),
-        }),
-    }),
+            enabled: z.boolean()
+        })
+    })
 })
 
 const WoD5EVttItemSchema = z.discriminatedUnion("type", [
     WoD5EVttClanItemSchema,
     WoD5EVttPredatorTypeItemSchema,
     WoD5EVttPowerItemSchema,
-    WoD5EVttFeatureItemSchema,
+    WoD5EVttFeatureItemSchema
 ])
 
 const WoD5EVttJsonSchema = z.object({

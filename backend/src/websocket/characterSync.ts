@@ -1,10 +1,7 @@
 import { FastifyInstance } from "fastify"
 import { eq, and } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
-import {
-    authenticateWebSocketRequest,
-    AuthenticatedRequest
-} from "../middleware/auth.js"
+import { authenticateWebSocketRequest, AuthenticatedRequest } from "../middleware/auth.js"
 
 interface CharacterUpdateMessage {
     type: "character_update"
