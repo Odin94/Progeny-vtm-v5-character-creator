@@ -9,6 +9,7 @@ export const users = sqliteTable("users", {
     lastName: text("last_name"),
     nickname: text("nickname").unique(),
     preferences: text("preferences"),
+    isSuperadmin: integer("is_superadmin", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp" })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -103,6 +104,34 @@ export const characterShares = sqliteTable(
     })
 )
 
+export const impersonationSessions = sqliteTable(
+    "impersonation_sessions",
+    {
+        id: text("id").primaryKey(),
+        superadminUserId: text("superadmin_user_id")
+            .notNull()
+            .references(() => users.id),
+        impersonatedUserId: text("impersonated_user_id")
+            .notNull()
+            .references(() => users.id),
+        startedAt: integer("started_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+        endedAt: integer("ended_at", { mode: "timestamp" }),
+        endedReason: text("ended_reason"),
+        auditLog: text("audit_log").notNull().default("[]")
+    },
+    (table) => ({
+        superadminUserIdIdx: index("impersonation_sessions_superadmin_user_id_idx").on(
+            table.superadminUserId
+        ),
+        impersonatedUserIdIdx: index("impersonation_sessions_impersonated_user_id_idx").on(
+            table.impersonatedUserId
+        )
+    })
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Character = typeof characters.$inferSelect
@@ -113,13 +142,17 @@ export type CoterieMember = typeof coterieMembers.$inferSelect
 export type NewCoterieMember = typeof coterieMembers.$inferInsert
 export type CharacterShare = typeof characterShares.$inferSelect
 export type NewCharacterShare = typeof characterShares.$inferInsert
+export type ImpersonationSession = typeof impersonationSessions.$inferSelect
+export type NewImpersonationSession = typeof impersonationSessions.$inferInsert
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
     characters: many(characters),
     ownedCoteries: many(coteries),
     sharedCharacters: many(characterShares, { relationName: "sharedWith" }),
-    sharedBy: many(characterShares, { relationName: "sharedBy" })
+    sharedBy: many(characterShares, { relationName: "sharedBy" }),
+    impersonationSessionsStarted: many(impersonationSessions, { relationName: "superadmin" }),
+    impersonationSessionsReceived: many(impersonationSessions, { relationName: "impersonated" })
 }))
 
 export const charactersRelations = relations(characters, ({ one, many }) => ({
@@ -164,5 +197,18 @@ export const characterSharesRelations = relations(characterShares, ({ one }) => 
         fields: [characterShares.sharedById],
         references: [users.id],
         relationName: "sharedBy"
+    })
+}))
+
+export const impersonationSessionsRelations = relations(impersonationSessions, ({ one }) => ({
+    superadmin: one(users, {
+        fields: [impersonationSessions.superadminUserId],
+        references: [users.id],
+        relationName: "superadmin"
+    }),
+    impersonated: one(users, {
+        fields: [impersonationSessions.impersonatedUserId],
+        references: [users.id],
+        relationName: "impersonated"
     })
 }))

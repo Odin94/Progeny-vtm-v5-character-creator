@@ -1,9 +1,10 @@
 import { FastifyInstance } from "fastify"
 import { eq, and } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
-import { AuthenticatedRequest } from "../middleware/auth.js"
-import { workos } from "../config/workos.js"
-import { env } from "../config/env.js"
+import {
+    authenticateWebSocketRequest,
+    AuthenticatedRequest
+} from "../middleware/auth.js"
 
 interface CharacterUpdateMessage {
     type: "character_update"
@@ -31,56 +32,13 @@ type WebSocketMessage =
 // Map of characterId -> Set of WebSocket connections
 const characterSubscriptions = new Map<string, Set<any>>()
 
-async function authenticateWebSocketUser(
-    request: AuthenticatedRequest
-): Promise<{ id: string; email: string } | null> {
-    const cookiePassword = env.WORKOS_COOKIE_PASSWORD
-    const sessionData = request.cookies["wos-session"]
-
-    if (!sessionData) {
-        return null
-    }
-
-    try {
-        const session = workos.userManagement.loadSealedSession({
-            sessionData,
-            cookiePassword
-        })
-
-        const authResult = await session.authenticate()
-
-        if (!authResult.authenticated || !("user" in authResult)) {
-            // Try to refresh the session
-            try {
-                const refreshResult = await session.refresh()
-                if (refreshResult.authenticated && "user" in refreshResult && refreshResult.user) {
-                    return {
-                        id: refreshResult.user.id,
-                        email: refreshResult.user.email
-                    }
-                }
-            } catch (_refreshError) {
-                // Refresh failed
-            }
-            return null
-        }
-
-        return {
-            id: authResult.user.id,
-            email: authResult.user.email
-        }
-    } catch (_error) {
-        return null
-    }
-}
-
 export async function characterSyncWebSocket(fastify: FastifyInstance) {
     fastify.get(
         "/ws/characters",
         { websocket: true },
         async (connection, request: AuthenticatedRequest) => {
             // Authenticate WebSocket connection using WorkOS session (same as REST endpoints)
-            const user = await authenticateWebSocketUser(request)
+            const user = await authenticateWebSocketRequest(request)
 
             if (!user) {
                 connection.socket.close(1008, "Unauthorized")

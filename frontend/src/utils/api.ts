@@ -18,7 +18,7 @@ const API_URL =
         : configuredApiUrl || (import.meta.env.DEV ? "/api" : "http://localhost:3001")
 
 type RequestOptions = {
-    method?: "GET" | "POST" | "PUT" | "DELETE"
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
     body?: unknown
     headers?: Record<string, string>
 }
@@ -69,7 +69,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     const { method = "GET", body, headers = {} } = options
 
     // Ensure CSRF token exists for state-changing operations
-    if (["POST", "PUT", "DELETE"].includes(method)) {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
         await ensureCsrfToken()
     }
 
@@ -81,7 +81,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
         requestHeaders["Content-Type"] = "application/json"
     }
 
-    if (["POST", "PUT", "DELETE"].includes(method)) {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
         const csrfToken = getCsrfToken()
         if (csrfToken) {
             requestHeaders["x-csrf-token"] = csrfToken
@@ -132,6 +132,34 @@ export type CurrentUser = {
     firstName?: string
     lastName?: string
     nickname?: string | null
+    isSuperadmin: boolean
+    actorIsSuperadmin: boolean
+    impersonation:
+        | { active: false }
+        | {
+              active: true
+              expiresAt: string
+              actorUser: AdminUser
+              impersonatedUser: AdminUser
+          }
+}
+
+export type AdminUser = {
+    id: string
+    email: string
+    firstName?: string | null
+    lastName?: string | null
+    nickname?: string | null
+    isSuperadmin: boolean
+    isActive?: boolean
+    lastActiveAt?: string | null
+}
+
+export type StartImpersonationResponse = {
+    sessionId: string
+    expiresAt: string
+    actorUser: AdminUser
+    impersonatedUser: AdminUser
 }
 
 // TODOdin: Put proper types in APIs
@@ -172,6 +200,24 @@ export const api = {
     getPreferences: () => apiRequest<UserPreferences>("/auth/preferences"),
     updatePreferences: (data: Partial<UserPreferences>) =>
         apiRequest<UserPreferences>("/auth/preferences", { method: "PUT", body: data }),
+
+    // Admin
+    getAdminUsers: (query?: string) =>
+        apiRequest<{ users: AdminUser[] }>(
+            `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`
+        ),
+    updateSuperadmin: (id: string, data: { isSuperadmin: boolean }) =>
+        apiRequest<AdminUser>(`/admin/users/${id}/superadmin`, {
+            method: "PATCH",
+            body: data
+        }),
+    startImpersonation: (userId: string) =>
+        apiRequest<StartImpersonationResponse>("/admin/impersonation", {
+            method: "POST",
+            body: { userId }
+        }),
+    stopImpersonation: () =>
+        apiRequest<{ stopped: boolean }>("/admin/impersonation/stop", { method: "POST" }),
 
     // Characters
     // TODOdin: type these APIs and validate in fetch
