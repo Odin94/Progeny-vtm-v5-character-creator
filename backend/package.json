@@ -10,6 +10,7 @@
         "lint": "oxlint src scripts drizzle.config.ts vitest.config.ts",
         "lint:fix": "oxlint src scripts drizzle.config.ts vitest.config.ts --fix",
         "format": "oxfmt --write .",
+        "fmt": "oxfmt --write .",
         "format:check": "oxfmt --check .",
         "test": "vitest",
         "test:run": "vitest run",

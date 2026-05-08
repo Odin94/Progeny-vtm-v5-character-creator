@@ -200,9 +200,7 @@ const AdminImpersonationPage = () => {
                     </Group>
                 </Stack>
             </Modal>
-            <AppShell.Header
-                style={{ background: "rgba(13, 11, 15, 0.96)", borderBottom: "none" }}
-            >
+            <AppShell.Header style={{ background: "rgba(13, 11, 15, 0.96)", borderBottom: "none" }}>
                 <Topbar />
             </AppShell.Header>
             <AppShell.Main bg="#100d13" mih="100vh">

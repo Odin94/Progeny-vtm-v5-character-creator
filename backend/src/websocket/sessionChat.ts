@@ -1,8 +1,5 @@
 import { FastifyInstance } from "fastify"
-import {
-    authenticateWebSocketRequest,
-    AuthenticatedRequest
-} from "../middleware/auth.js"
+import { authenticateWebSocketRequest, AuthenticatedRequest } from "../middleware/auth.js"
 import { handleChatMessage } from "./chatMessageHandlers/handleChatMessage.js"
 import { handleDiceRoll } from "./chatMessageHandlers/handleDiceRoll.js"
 import { handleJoinSession } from "./chatMessageHandlers/handleJoinSession.js"

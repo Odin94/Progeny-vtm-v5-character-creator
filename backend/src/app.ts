@@ -21,10 +21,7 @@ import {
     validateCsrfToken
 } from "./middleware/csrf.js"
 import { logError, logRequest, logSecurityEvent } from "./middleware/securityLogger.js"
-import {
-    appendImpersonationAuditLog,
-    summarizeAuditBody
-} from "./middleware/impersonation.js"
+import { appendImpersonationAuditLog, summarizeAuditBody } from "./middleware/impersonation.js"
 import type { AuthenticatedRequest } from "./middleware/auth.js"
 
 export async function buildApp() {

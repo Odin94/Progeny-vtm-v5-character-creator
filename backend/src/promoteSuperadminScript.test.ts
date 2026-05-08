@@ -31,9 +31,9 @@ const createTestDatabase = () => {
 
 const getSuperadminFlag = () => {
     const db = new Database(databasePath)
-    const row = db.prepare("select is_superadmin as isSuperadmin from users where id = ?").get(
-        "user-1"
-    ) as { isSuperadmin: number }
+    const row = db
+        .prepare("select is_superadmin as isSuperadmin from users where id = ?")
+        .get("user-1") as { isSuperadmin: number }
     db.close()
     return row.isSuperadmin
 }
