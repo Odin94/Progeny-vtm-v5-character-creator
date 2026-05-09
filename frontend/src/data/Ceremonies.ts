@@ -37,6 +37,18 @@ export const Ceremonies: Ceremony[] = [
         prerequisitePowers: ["The Binding Fetter"]
     },
     {
+        name: "Traveler's Call",
+        summary:
+            "Send a vision of your surroundings through Oblivion to call another Shalimite to you.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: defaultDicePool,
+        ingredients: "The black book given during Shalimite indoctrination",
+        level: 1,
+        discipline: "oblivion",
+        prerequisitePowers: ["Oblivion's Sight"]
+    },
+    {
         name: "Awaken the Homuncular Servant",
         summary: "Create a loyal spy or stalker from a severed body part or small animal carcass.",
         rouseChecks: 1,
@@ -83,6 +95,18 @@ export const Ceremonies: Ceremony[] = [
         level: 3,
         discipline: "oblivion",
         prerequisitePowers: ["Aura of Decay"]
+    },
+    {
+        name: "Name of the Father",
+        summary:
+            "Invoke Shalim to overwhelm a victim with sensory darkness and paralyzing despair.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: defaultDicePool,
+        ingredients: "Ancient Greek speech, eye contact with the victim, and five charcoal sticks",
+        level: 3,
+        discipline: "oblivion",
+        prerequisitePowers: ["Shadow Perspective"]
     },
     {
         name: "Bind the Spirit",
@@ -132,6 +156,19 @@ export const Ceremonies: Ceremony[] = [
         level: 5,
         discipline: "oblivion",
         prerequisitePowers: ["Skuld Fulfilled"]
+    },
+    {
+        name: "Pit of Contemplation",
+        summary:
+            "Open a doorway into Oblivion that pulls victims into an empty black prison.",
+        rouseChecks: 1,
+        requiredTime: "25min",
+        dicePool: defaultDicePool,
+        ingredients:
+            "A pot of ink, blood from an innocent victim, and an unlit room with a painted doorway",
+        level: 5,
+        discipline: "oblivion",
+        prerequisitePowers: ["Tenebrous Avatar"]
     }
 ]
 

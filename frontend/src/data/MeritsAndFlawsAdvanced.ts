@@ -6,6 +6,18 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
         complexity: "advanced",
         merits: [
             {
+                name: "Business Establishment",
+                cost: [2, 3],
+                summary: "your haven contains a money-making business with useful local access",
+                excludes: ["No Haven"]
+            },
+            {
+                name: "Furcus",
+                cost: [1, 2, 3],
+                summary: "mystic crossing in your haven aids rituals or ceremonies performed there",
+                excludes: ["No Haven"]
+            },
+            {
                 name: "Laboratory",
                 cost: [1, 2, 3],
                 summary: "equipped haven lab for Science, Technology, or alchemy work",
@@ -21,6 +33,12 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 name: "Location",
                 cost: [1],
                 summary: "prime haven spot that helps nearby hunting, politics, or security",
+                excludes: ["No Haven"]
+            },
+            {
+                name: "Machine Shop",
+                cost: [1, 2, 3],
+                summary: "tools and machinery for building, repairing, or dismantling equipment",
                 excludes: ["No Haven"]
             },
             {
@@ -48,7 +66,14 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 excludes: ["No Haven"]
             }
         ],
-        flaws: []
+        flaws: [
+            {
+                name: "Shared",
+                cost: [1, 2],
+                summary: "other Kindred have access to or authority over your haven",
+                excludes: ["No Haven"]
+            }
+        ]
     },
     {
         title: "Looks",
@@ -136,6 +161,12 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 name: "Starving Decay",
                 cost: [2],
                 summary: "at Hunger 3+, decay harms physical and mortal social tests",
+                excludes: []
+            },
+            {
+                name: "Twice-Cursed",
+                cost: [2],
+                summary: "suffer your clan's variant Bane in addition to its normal Bane",
                 excludes: []
             }
         ]
@@ -265,6 +296,38 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 excludes: []
             }
         ],
-        flaws: []
+        flaws: [
+            {
+                name: "Weak-Willed",
+                cost: [2],
+                summary: "struggle to resist a leader's influence and cannot actively resist mental sway",
+                excludes: []
+            }
+        ]
+    },
+    {
+        title: "Other",
+        complexity: "advanced",
+        merits: [],
+        flaws: [
+            {
+                name: "Knowledge Hungry",
+                cost: [1],
+                summary: "must resist pursuing study of a chosen subject when new sources appear",
+                excludes: []
+            },
+            {
+                name: "Prestation Debts",
+                cost: [1],
+                summary: "owe two minor boons to a more influential Kindred",
+                excludes: []
+            },
+            {
+                name: "Risk-Taker",
+                cost: [1],
+                summary: "new risky temptations distract you until indulged or the scene ends",
+                excludes: []
+            }
+        ]
     }
 ]
