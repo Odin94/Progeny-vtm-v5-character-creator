@@ -8,11 +8,12 @@ echo "Backed up database.sqlite to $BACKUP_FILE"
 
 git pull
 echo "Pulled latest code from git"
-pnpm install --frozen-lockfile
+corepack enable
+corepack pnpm install --frozen-lockfile
 echo "Installed dependencies"
-pnpm run build
+corepack pnpm run build
 echo "Built the code"
-pnpm run db:migrate
+corepack pnpm run db:migrate
 echo "Migrated the database"
 pm2 restart progeny-backend
 echo "Restarted the backend"
