@@ -87,7 +87,9 @@ const downloadPdf = (fileName: string, bytes: Uint8Array) => {
 
     // Clean up the object URL to prevent memory leaks
     setTimeout(() => {
-        window.URL.revokeObjectURL(link.href)
+        if (typeof window !== "undefined") {
+            window.URL.revokeObjectURL?.(link.href)
+        }
     }, 100)
 }
 
@@ -341,6 +343,13 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
                 const ri = powers.length + ritualIndex + 1
                 form.getTextField(`Disc${di}_Ability${ri}`).setText(getDisciplineText(ritual))
                 form.getTextField(`Disc${di}_Ability${ri}`).disableRichFormatting()
+            }
+        }
+        if (powers[0].discipline === "oblivion") {
+            for (const [ceremonyIndex, ceremony] of character.ceremonies.entries()) {
+                const ci = powers.length + ceremonyIndex + 1
+                form.getTextField(`Disc${di}_Ability${ci}`).setText(getDisciplineText(ceremony))
+                form.getTextField(`Disc${di}_Ability${ci}`).disableRichFormatting()
             }
         }
     }

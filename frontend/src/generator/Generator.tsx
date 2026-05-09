@@ -4,6 +4,7 @@ import { Character } from "../data/Character"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
 import ClanPicker from "./components/ClanPicker"
+import CeremoniesPicker from "./components/CeremoniesPicker"
 import DisciplinesPicker from "./components/DisciplinesPicker"
 import Final from "./components/Final"
 import GenerationPicker from "./components/GenerationPicker"
@@ -88,6 +89,14 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
             case "rituals":
                 return (
                     <RitualsPicker
+                        character={character}
+                        setCharacter={setCharacter}
+                        nextStep={nextStep}
+                    />
+                )
+            case "ceremonies":
+                return (
+                    <CeremoniesPicker
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}

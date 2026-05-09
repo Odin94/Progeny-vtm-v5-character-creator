@@ -211,7 +211,8 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 <Skills options={sheetOptions} />
 
                                 {character.disciplines.length > 0 ||
-                                character.rituals.length > 0 ? (
+                                character.rituals.length > 0 ||
+                                character.ceremonies.length > 0 ? (
                                     <Divider />
                                 ) : null}
 

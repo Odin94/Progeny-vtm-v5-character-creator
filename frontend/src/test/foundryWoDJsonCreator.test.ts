@@ -113,6 +113,42 @@ describe("createWoD5EVttJson", () => {
             "blood sorcery": { path: "disciplines.sorcery" }
         })
 
+        basicCharacter.disciplines.push({
+            name: "Ashes to Ashes",
+            description: "",
+            rouseChecks: 1,
+            amalgamPrerequisites: [],
+            summary: "use your vitae to disintegrate non-vampire corpses",
+            dicePool: "Stamina + Oblivion",
+            level: 1,
+            discipline: "oblivion"
+        })
+        basicCharacter.ceremonies = [
+            {
+                name: "Summon Spirit",
+                level: 1,
+                summary: "Call a named wraith through the Shroud.",
+                rouseChecks: 1,
+                dicePool: "Resolve + Oblivion",
+                requiredTime: "5min",
+                ingredients: "A wraith's fetter and your vitae",
+                prerequisitePowers: ["The Binding Fetter"],
+                discipline: "oblivion"
+            }
+        ]
+
+        const ceremonyResult = createWoD5EVttJson(basicCharacter)
+        const ceremonyItem = ceremonyResult.json.items.find(
+            (item: any) => item.type === "power" && (item.system as any).discipline === "ceremonies"
+        )
+        expect(ceremonyItem).toBeDefined()
+        expect(ceremonyItem!.name).toBe("Summon Spirit")
+        expect((ceremonyItem!.system as any).cost).toBe(1)
+        expect((ceremonyItem!.system as any).dicepool).toEqual({
+            resolve: { path: "attributes.resolve" },
+            oblivion: { path: "disciplines.oblivion" }
+        })
+
         // Should have merit items
         const meritItems = json.items.filter(
             (item: any) => item.type === "feature" && item.system.featuretype === "merit"

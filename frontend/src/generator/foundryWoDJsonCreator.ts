@@ -528,6 +528,21 @@ export const createWoD5EVttJson = (
         })
     }
 
+    for (const ceremony of character.ceremonies || []) {
+        items.push({
+            name: ceremony.name,
+            type: "power",
+            system: {
+                description: ceremony.summary || "",
+                discipline: "ceremonies",
+                level: ceremony.level,
+                cost: ceremony.rouseChecks,
+                dicepool: parseDicePool(ceremony.dicePool, character),
+                bonuses: []
+            }
+        })
+    }
+
     const foundry_WoD5E_json = {
         name: character.name,
         type: "vampire",

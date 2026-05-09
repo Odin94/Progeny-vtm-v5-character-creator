@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { attributesSchema } from "./Attributes.js"
-import { powerSchema, ritualSchema, customDisciplineSchema } from "./Disciplines.js"
+import { powerSchema, ritualSchema, ceremonySchema, customDisciplineSchema } from "./Disciplines.js"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas.js"
 import { skillsSchema } from "./Skills.js"
 import { specialtySchema } from "./Specialties.js"
@@ -23,7 +23,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 5
+export const schemaVersion = 6
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -51,6 +51,7 @@ export const characterSchema = z.object({
     availableDisciplineNames: disciplineNameSchema.array(),
     disciplines: powerSchema.array(),
     rituals: ritualSchema.array(),
+    ceremonies: ceremonySchema.array().optional().default([]),
     customDisciplines: z
         .record(disciplineNameSchema, customDisciplineSchema)
         .optional()

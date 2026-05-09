@@ -44,6 +44,39 @@ describe("createInconnuJson", () => {
             })
         )
 
+        character.disciplines.push({
+            name: "Ashes to Ashes",
+            description: "",
+            rouseChecks: 1,
+            amalgamPrerequisites: [],
+            summary: "use your vitae to disintegrate non-vampire corpses",
+            dicePool: "Stamina + Oblivion",
+            level: 1,
+            discipline: "oblivion"
+        })
+        character.ceremonies = [
+            {
+                name: "Summon Spirit",
+                level: 1,
+                summary: "Call a named wraith through the Shroud.",
+                rouseChecks: 1,
+                dicePool: "Resolve + Oblivion",
+                requiredTime: "5min",
+                ingredients: "A wraith's fetter and your vitae",
+                prerequisitePowers: ["The Binding Fetter"],
+                discipline: "oblivion"
+            }
+        ]
+        const resultWithCeremony = createInconnuJson(character)
+        const oblivion = resultWithCeremony.traits.find((trait) => trait.name === "Oblivion")
+        expect(oblivion).toEqual(
+            expect.objectContaining({
+                rating: 1,
+                type: "discipline",
+                subtraits: ["Ashes_To_Ashes", "Summon_Spirit"]
+            })
+        )
+
         const intimidation = result.traits.find((trait) => trait.name === "Intimidation")
         expect(intimidation?.subtraits).toEqual(["Direct_Specialty"])
 
@@ -216,6 +249,7 @@ describe("createInconnuJson", () => {
             skillSpecialties: undefined,
             disciplines: undefined,
             rituals: undefined,
+            ceremonies: undefined,
             merits: undefined,
             flaws: undefined,
             predatorType: undefined
