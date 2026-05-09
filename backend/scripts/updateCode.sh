@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-mkdir -p db_backups
-BACKUP_FILE="db_backups/database.sqlite.backup.$(date +%Y%m%d_%H%M%S)"
+BACKUP_MONTH="$(date +%Y_%m)"
+BACKUP_DIR="db_backups/$BACKUP_MONTH"
+mkdir -p "$BACKUP_DIR"
+BACKUP_FILE="$BACKUP_DIR/database.sqlite.backup.$(date +%Y%m%d_%H%M%S)"
 cp database.sqlite "$BACKUP_FILE"
 echo "Backed up database.sqlite to $BACKUP_FILE"
 
