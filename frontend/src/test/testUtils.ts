@@ -113,6 +113,7 @@ export const getBasicTestCharacter = (): Character => {
                 ingredients: "Blood of the subject"
             }
         ],
+        ceremonies: [],
         bloodPotency: 1,
         generation: 13,
         maxHealth: 5,

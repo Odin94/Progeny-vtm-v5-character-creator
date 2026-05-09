@@ -379,6 +379,7 @@ const Sidebar = ({
                         <DisciplineDisplay
                             powers={character.disciplines}
                             rituals={character.rituals}
+                            ceremonies={character.ceremonies}
                         />
                     ) : null}
                     {notDefault(character, "touchstones") ? (

@@ -727,7 +727,8 @@ const PredatorTypeModal = ({
                                     disciplines: changedPickedDiscipline
                                         ? []
                                         : character.disciplines,
-                                    rituals: changedPickedDiscipline ? [] : character.rituals
+                                    rituals: changedPickedDiscipline ? [] : character.rituals,
+                                    ceremonies: changedPickedDiscipline ? [] : character.ceremonies
                                 })
 
                                 trackEvent({

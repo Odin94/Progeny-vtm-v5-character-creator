@@ -61,3 +61,9 @@ export const ritualSchema = z.object({
 })
 
 export type Ritual = z.infer<typeof ritualSchema>
+
+export const ceremonySchema = ritualSchema.extend({
+    prerequisitePowers: z.string().array()
+})
+
+export type Ceremony = z.infer<typeof ceremonySchema>

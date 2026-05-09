@@ -330,6 +330,13 @@ export const createInconnuJson = (character: Character): InconnuCreationBody => 
         disciplineMap.get("BloodSorcery")!.powers.push(String(ritual.name ?? ""))
     }
 
+    for (const ceremony of asArray<{ name?: unknown }>(character.ceremonies)) {
+        if (!disciplineMap.has("Oblivion")) {
+            disciplineMap.set("Oblivion", { rating: 0, powers: [] })
+        }
+        disciplineMap.get("Oblivion")!.powers.push(String(ceremony.name ?? ""))
+    }
+
     for (const [disciplineName, { rating, powers }] of disciplineMap.entries()) {
         addTrait({
             name: disciplineName,

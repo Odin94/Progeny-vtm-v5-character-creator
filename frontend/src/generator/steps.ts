@@ -1,4 +1,4 @@
-import { Character, containsBloodSorcery } from "~/data/Character"
+import { Character, containsBloodSorcery, containsOblivion } from "~/data/Character"
 
 type GeneratorProgressKey =
     | "clan"
@@ -8,6 +8,7 @@ type GeneratorProgressKey =
     | "predatorType"
     | "name"
     | "disciplines"
+    | "ceremonies"
     | "touchstones"
     | "merits"
 
@@ -20,6 +21,7 @@ export type GeneratorStepId =
     | "basics"
     | "disciplines"
     | "rituals"
+    | "ceremonies"
     | "touchstones"
     | "merits"
     | "final"
@@ -39,6 +41,7 @@ const allGeneratorSteps: GeneratorStep[] = [
     { id: "basics", label: "Basics", progressKey: "name" },
     { id: "disciplines", label: "Disciplines", progressKey: "disciplines" },
     { id: "rituals", label: "Rituals" },
+    { id: "ceremonies", label: "Ceremonies" },
     { id: "touchstones", label: "Touchstones", progressKey: "touchstones" },
     { id: "merits", label: "Merits", progressKey: "merits" },
     { id: "final", label: "Final" }
@@ -49,6 +52,9 @@ export const defaultGeneratorStepId: GeneratorStepId = "clan"
 const isStepAvailable = (character: Character, stepId: GeneratorStepId) => {
     if (stepId === "rituals") {
         return containsBloodSorcery(character.disciplines)
+    }
+    if (stepId === "ceremonies") {
+        return containsOblivion(character.disciplines)
     }
 
     return true

@@ -14,7 +14,7 @@ import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
-import { Character, containsBloodSorcery } from "../../data/Character"
+import { Character, containsBloodSorcery, containsOblivion } from "../../data/Character"
 import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
@@ -635,6 +635,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                         disciplines: allPickedPowers,
                                         rituals: containsBloodSorcery(allPickedPowers)
                                             ? character.rituals
+                                            : [],
+                                        ceremonies: containsOblivion(allPickedPowers)
+                                            ? character.ceremonies
                                             : []
                                     }
                                     setCharacter(updatedCharacter)

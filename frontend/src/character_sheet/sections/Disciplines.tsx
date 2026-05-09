@@ -18,13 +18,9 @@ import {
 import { useState } from "react"
 import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import {
-    disciplines,
-    Power,
-    Ritual,
-    Rituals,
-    sanitizeCustomDisciplineLogoUrl
-} from "~/data/Disciplines"
+import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
+import { Rituals } from "~/data/Rituals"
+import { Ceremony, Ceremonies, getCeremonyPrerequisiteLabel } from "~/data/Ceremonies"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
@@ -32,6 +28,8 @@ import CustomDisciplineModal from "../components/CustomDisciplineModal"
 import CustomPowerModal from "../components/CustomPowerModal"
 import RitualSelectModal from "../components/RitualSelectModal"
 import CustomRitualModal from "../components/CustomRitualModal"
+import CeremonySelectModal from "../components/CeremonySelectModal"
+import CustomCeremonyModal from "../components/CustomCeremonyModal"
 import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade, getRitualCost } from "../utils/xp"
 import { bgAlpha, hexToRgba } from "../utils/style"
@@ -61,12 +59,16 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
     const [ritualModalOpened, setRitualModalOpened] = useState(false)
     const [customRitualModalOpened, setCustomRitualModalOpened] = useState(false)
+    const [ceremonyModalOpened, setCeremonyModalOpened] = useState(false)
+    const [customCeremonyModalOpened, setCustomCeremonyModalOpened] = useState(false)
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
     const [editingRitual, setEditingRitual] = useState<Ritual | null>(null)
+    const [editingCeremony, setEditingCeremony] = useState<Ceremony | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
         | { type: "power"; power: Power }
         | { type: "ritual"; ritual: Ritual }
+        | { type: "ceremony"; ceremony: Ceremony }
         | { type: "discipline"; disciplineName: DisciplineName }
         | null
     >(null)
@@ -77,7 +79,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const bloodSorceryLevel = character.disciplines.filter(
         (power) => power.discipline === "blood sorcery"
     ).length
+    const oblivionLevel = character.disciplines.filter(
+        (power) => power.discipline === "oblivion"
+    ).length
     const canAddRituals = isEditable && bloodSorceryLevel > 0
+    const canAddCeremonies = isEditable && oblivionLevel > 0
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
         if (!isClickable) return
@@ -88,7 +94,12 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         })
     }
 
-    if (character.disciplines.length === 0 && character.rituals.length === 0 && !isEditable) {
+    if (
+        character.disciplines.length === 0 &&
+        character.rituals.length === 0 &&
+        character.ceremonies.length === 0 &&
+        !isEditable
+    ) {
         return null
     }
 
@@ -120,6 +131,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         setItemToDelete({ type: "ritual", ritual })
     }
 
+    const handleDeleteCeremony = (ceremony: Ceremony) => {
+        setItemToDelete({ type: "ceremony", ceremony })
+    }
+
     const handleDeleteDiscipline = (disciplineName: DisciplineName) => {
         setItemToDelete({ type: "discipline", disciplineName })
     }
@@ -138,12 +153,21 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 ...character,
                 rituals: character.rituals.filter((ritual) => ritual !== itemToDelete.ritual)
             }
+        } else if (itemToDelete.type === "ceremony") {
+            updatedCharacter = {
+                ...character,
+                ceremonies: character.ceremonies.filter(
+                    (ceremony) => ceremony !== itemToDelete.ceremony
+                )
+            }
         } else {
             updatedCharacter = {
                 ...character,
                 disciplines: character.disciplines.filter(
                     (p) => p.discipline !== itemToDelete.disciplineName
-                )
+                ),
+                rituals: itemToDelete.disciplineName === "blood sorcery" ? [] : character.rituals,
+                ceremonies: itemToDelete.disciplineName === "oblivion" ? [] : character.ceremonies
             }
         }
 
@@ -644,6 +668,129 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     </Grid>
                 </Box>
             ) : null}
+            {character.ceremonies.length > 0 || canAddCeremonies ? (
+                <Box mt="xl">
+                    {character.disciplines.length > 0 || character.rituals.length > 0 ? (
+                        <Divider mb="lg" />
+                    ) : null}
+                    <Group justify="center" gap="sm" mb="lg">
+                        <Title order={2} ta="center">
+                            Ceremonies
+                        </Title>
+                        {canAddCeremonies ? (
+                            mode === "xp" ? (
+                                (() => {
+                                    const ownedCeremonyNames = new Set(
+                                        character.ceremonies.map((ceremony) => ceremony.name)
+                                    )
+                                    const availableCosts = Ceremonies.filter(
+                                        (ceremony) =>
+                                            ceremony.level <= oblivionLevel &&
+                                            !ownedCeremonyNames.has(ceremony.name)
+                                    ).map((ceremony) => getRitualCost(ceremony.level))
+                                    availableCosts.push(getRitualCost(1))
+                                    const minCost =
+                                        availableCosts.length > 0 ? Math.min(...availableCosts) : 0
+                                    const availableXP = getAvailableXP(character)
+                                    const canAfford = canAffordUpgrade(availableXP, minCost)
+                                    const tooltipLabel = canAfford
+                                        ? `${minCost} XP`
+                                        : `Insufficient XP. Need ${minCost}, have ${availableXP}`
+
+                                    return (
+                                        <Tooltip label={tooltipLabel}>
+                                            <span style={{ display: "inline-block" }}>
+                                                <ActionIcon
+                                                    size="lg"
+                                                    radius="xl"
+                                                    variant="light"
+                                                    color={primaryColor}
+                                                    disabled={!canAfford}
+                                                    onClick={() => setCeremonyModalOpened(true)}
+                                                    style={{
+                                                        cursor: canAfford ? "pointer" : "default"
+                                                    }}
+                                                >
+                                                    <IconPlus size={18} />
+                                                </ActionIcon>
+                                            </span>
+                                        </Tooltip>
+                                    )
+                                })()
+                            ) : (
+                                <ActionIcon
+                                    size="lg"
+                                    radius="xl"
+                                    variant="light"
+                                    color={primaryColor}
+                                    onClick={() => setCeremonyModalOpened(true)}
+                                >
+                                    <IconPlus size={18} />
+                                </ActionIcon>
+                            )
+                        ) : null}
+                    </Group>
+                    <Grid gutter="md">
+                        {character.ceremonies.map((ceremony) => (
+                            <Grid.Col key={ceremony.name} span={{ base: 12, md: 6 }}>
+                                <Paper p="md" withBorder>
+                                    <Group justify="space-between" align="flex-start" mb="xs">
+                                        <Text fw={700} size="lg">
+                                            {ceremony.name}
+                                        </Text>
+                                        <Group gap="xs">
+                                            <Badge variant="light" color={primaryColor}>
+                                                {ceremony.isCustom ? "Custom Ceremony" : "Ceremony"}
+                                            </Badge>
+                                            {ceremony.isCustom && isFreeMode ? (
+                                                <ActionIcon
+                                                    size="sm"
+                                                    variant="subtle"
+                                                    color={primaryColor}
+                                                    onClick={() => {
+                                                        setEditingCeremony(ceremony)
+                                                        setCustomCeremonyModalOpened(true)
+                                                    }}
+                                                >
+                                                    <IconEdit size={16} />
+                                                </ActionIcon>
+                                            ) : null}
+                                            {isFreeMode ? (
+                                                <ActionIcon
+                                                    size="sm"
+                                                    variant="subtle"
+                                                    color="red"
+                                                    onClick={() => handleDeleteCeremony(ceremony)}
+                                                >
+                                                    <IconX size={16} />
+                                                </ActionIcon>
+                                            ) : null}
+                                        </Group>
+                                    </Group>
+                                    {ceremony.summary ? (
+                                        <Text size="sm" c="dimmed" mt="xs">
+                                            {ceremony.summary}
+                                        </Text>
+                                    ) : null}
+                                    <Stack gap={2} mt="sm">
+                                        {ceremony.dicePool ? (
+                                            <Text size="xs" c="dimmed">
+                                                {ceremony.dicePool.toUpperCase()}
+                                            </Text>
+                                        ) : null}
+                                        <Text size="xs" c="dimmed">
+                                            Requires: {getCeremonyPrerequisiteLabel(ceremony)}
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
+                                            Time: {ceremony.requiredTime}
+                                        </Text>
+                                    </Stack>
+                                </Paper>
+                            </Grid.Col>
+                        ))}
+                    </Grid>
+                </Box>
+            ) : null}
             <DisciplineSelectModal
                 opened={modalOpened}
                 onClose={() => {
@@ -667,6 +814,20 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 }}
                 options={options}
                 editingRitual={editingRitual}
+            />
+            <CeremonySelectModal
+                opened={ceremonyModalOpened}
+                onClose={() => setCeremonyModalOpened(false)}
+                options={options}
+            />
+            <CustomCeremonyModal
+                opened={customCeremonyModalOpened}
+                onClose={() => {
+                    setCustomCeremonyModalOpened(false)
+                    setEditingCeremony(null)
+                }}
+                options={options}
+                editingCeremony={editingCeremony}
             />
             <CustomDisciplineModal
                 opened={customDisciplineModalOpened}
@@ -703,7 +864,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             ? `Delete power "${itemToDelete.power.name}"?`
                             : itemToDelete?.type === "ritual"
                               ? `Delete ritual "${itemToDelete.ritual.name}"?`
-                              : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
+                              : itemToDelete?.type === "ceremony"
+                                ? `Delete ceremony "${itemToDelete.ceremony.name}"?`
+                                : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
                     </Text>
                     <Divider my="sm" />
                     <Group justify="space-between">
