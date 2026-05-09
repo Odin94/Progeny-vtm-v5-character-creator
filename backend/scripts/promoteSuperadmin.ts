@@ -1,4 +1,5 @@
 import Database from "better-sqlite3"
+import { config } from "dotenv"
 import { createInterface } from "node:readline/promises"
 import { stdin as input, stdout as output } from "node:process"
 import { resolve } from "node:path"
@@ -57,10 +58,12 @@ export async function promoteUserToSuperadmin({
     confirm,
     write = console.log
 }: PromoteSuperadminOptions): Promise<PromoteSuperadminResult> {
-    const db = new Database(databasePath)
+    const resolvedDatabasePath = databasePath === ":memory:" ? databasePath : resolve(databasePath)
+    const db = new Database(resolvedDatabasePath)
     db.pragma("foreign_keys = ON")
 
     try {
+        write(`Database: ${resolvedDatabasePath}`)
         const user = findUser(db, lookup)
 
         if (!user) {
@@ -85,7 +88,11 @@ export async function promoteUserToSuperadmin({
             user.id
         )
 
-        const promoted = { ...user, isSuperadmin: true }
+        const promoted = findUser(db, user.id)
+        if (!promoted?.isSuperadmin) {
+            throw new Error("Superadmin promotion did not persist; verify the database path.")
+        }
+
         write("User promoted to superadmin.")
         return { status: "promoted", user: promoted }
     } finally {
@@ -100,6 +107,8 @@ const runCli = async () => {
         process.exitCode = 1
         return
     }
+
+    config({ path: resolve(process.cwd(), ".env"), quiet: true })
 
     const databasePath = process.env.DATABASE_URL ?? "./database.sqlite"
     const rl = createInterface({ input, output })

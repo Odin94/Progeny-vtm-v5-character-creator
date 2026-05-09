@@ -63,6 +63,29 @@ describe("promoteSuperadmin script", () => {
         expect(output.join("\n")).toContain("Nickname: tester")
         expect(output.join("\n")).toContain("Email: user@example.com")
         expect(output.join("\n")).toContain("ID: user-1")
+        expect(output.join("\n")).toContain(`Database: ${databasePath}`)
+    })
+
+    it("reports an already promoted user on the next run", async () => {
+        await promoteUserToSuperadmin({
+            databasePath,
+            lookup: "user@example.com",
+            confirm: async () => true,
+            write: () => {}
+        })
+
+        const output: string[] = []
+        const result = await promoteUserToSuperadmin({
+            databasePath,
+            lookup: "user@example.com",
+            confirm: async () => {
+                throw new Error("confirmation should not be requested")
+            },
+            write: (message) => output.push(message)
+        })
+
+        expect(result.status).toBe("already-superadmin")
+        expect(output.join("\n")).toContain("Already superadmin: yes")
     })
 
     it("does not promote when confirmation is rejected", async () => {
