@@ -349,6 +349,14 @@ export async function authRoutes(fastify: FastifyInstance) {
                 // Clear cookie even on error
                 clearSessionCookie(reply)
                 if (request.impersonation?.active) {
+                    try {
+                        await endImpersonationSession(request.impersonation.sessionId, "stopped")
+                    } catch (impersonationError) {
+                        fastify.log.warn(
+                            { err: impersonationError },
+                            "Failed to end impersonation session during logout error cleanup"
+                        )
+                    }
                     clearImpersonationCookie(reply)
                 }
                 reply.send({
@@ -391,28 +399,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     nickname: user.nickname ?? null,
                     isSuperadmin: user.isSuperadmin,
                     actorIsSuperadmin: actorUser.isSuperadmin,
-                    impersonation: request.impersonation?.active
-                        ? {
-                              active: true,
-                              expiresAt: request.impersonation.expiresAt.toISOString(),
-                              actorUser: {
-                                  id: actorUser.id,
-                                  email: actorUser.email,
-                                  firstName: actorUser.firstName,
-                                  lastName: actorUser.lastName,
-                                  nickname: actorUser.nickname ?? null,
-                                  isSuperadmin: actorUser.isSuperadmin
-                              },
-                              impersonatedUser: {
-                                  id: user.id,
-                                  email: user.email,
-                                  firstName: user.firstName,
-                                  lastName: user.lastName,
-                                  nickname: user.nickname ?? null,
-                                  isSuperadmin: user.isSuperadmin
-                              }
-                          }
-                        : { active: false }
+                    impersonation: serializeImpersonationState(request)
                 })
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "Failed to get user"
