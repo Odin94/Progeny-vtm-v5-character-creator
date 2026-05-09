@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+import RenderProfiler from "~/components/RenderProfiler"
 import CreatorPage from "~/pages/CreatorPage"
 
 export const Route = createFileRoute("/create")({
@@ -6,5 +7,9 @@ export const Route = createFileRoute("/create")({
 })
 
 function Create() {
-    return <CreatorPage />
+    return (
+        <RenderProfiler id="CreatorPage">
+            <CreatorPage />
+        </RenderProfiler>
+    )
 }

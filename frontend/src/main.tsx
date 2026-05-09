@@ -6,6 +6,7 @@ import ReactGA from "react-ga4"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { routeTree } from "./routeTree.gen"
 import "./index.css"
+import RenderProfiler from "./components/RenderProfiler"
 import reportWebVitals from "./reportWebVitals"
 
 const router = createRouter({ routeTree })
@@ -28,7 +29,9 @@ const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement)
 
 root.render(
     <React.StrictMode>
-        <RouterProvider router={router} />
+        <RenderProfiler id="Router">
+            <RouterProvider router={router} />
+        </RenderProfiler>
     </React.StrictMode>
 )
 

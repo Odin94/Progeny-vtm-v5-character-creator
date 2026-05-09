@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useEffect } from "react"
 import { RAW_GOLD, rgba } from "~/theme/colors"
 import CharacterSheet from "~/character_sheet/CharacterSheet"
+import RenderProfiler from "~/components/RenderProfiler"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import { getEmptyCharacter } from "~/data/Character"
@@ -61,9 +62,13 @@ function Sheet() {
             }}
         >
             <AppShell.Header>
-                <Topbar />
+                <RenderProfiler id="SheetTopbar">
+                    <Topbar />
+                </RenderProfiler>
             </AppShell.Header>
-            <CharacterSheet character={character} setCharacter={setCharacter} />
+            <RenderProfiler id="CharacterSheet">
+                <CharacterSheet character={character} setCharacter={setCharacter} />
+            </RenderProfiler>
         </AppShell>
     )
 }

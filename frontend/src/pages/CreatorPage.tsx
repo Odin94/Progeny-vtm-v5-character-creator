@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router"
 import React, { useEffect, useState } from "react"
 import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
+import RenderProfiler from "~/components/RenderProfiler"
 import {
     characterSchema,
     getEmptyCharacter,
@@ -405,21 +406,25 @@ export default function CreatorPage() {
                 })}
             >
                 <AppShell.Header>
-                    <Topbar
-                        asideBar={{
-                            show: showAsideBar,
-                            onToggle: () => setShowAsideBar(!showAsideBar)
-                        }}
-                    />
+                    <RenderProfiler id="CreatorTopbar">
+                        <Topbar
+                            asideBar={{
+                                show: showAsideBar,
+                                onToggle: () => setShowAsideBar(!showAsideBar)
+                            }}
+                        />
+                    </RenderProfiler>
                 </AppShell.Header>
                 {!globals.isSmallScreen && (
                     <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
-                        <Sidebar
-                            character={character}
-                            onLoadFromFile={openLoadModal}
-                            onLoadSavedCharacter={handleLoadSavedCharacter}
-                            onCreateCharacter={handleCreateCharacter}
-                        />
+                        <RenderProfiler id="CreatorSidebar">
+                            <Sidebar
+                                character={character}
+                                onLoadFromFile={openLoadModal}
+                                onLoadSavedCharacter={handleLoadSavedCharacter}
+                                onCreateCharacter={handleCreateCharacter}
+                            />
+                        </RenderProfiler>
                     </AppShell.Navbar>
                 )}
                 {showAsideBar && (
@@ -429,11 +434,13 @@ export default function CreatorPage() {
                         style={{ display: "flex", flexDirection: "column" }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <AsideBar
-                            selectedStep={selectedStep}
-                            setSelectedStep={setSelectedStep}
-                            character={character}
-                        />
+                        <RenderProfiler id="CreatorAsideBar">
+                            <AsideBar
+                                selectedStep={selectedStep}
+                                setSelectedStep={setSelectedStep}
+                                character={character}
+                            />
+                        </RenderProfiler>
                     </AppShell.Aside>
                 )}
                 <BackgroundImage
@@ -468,12 +475,14 @@ export default function CreatorPage() {
                                 } as React.CSSProperties
                             }
                         >
-                            <Generator
-                                character={character}
-                                setCharacter={setCharacter}
-                                selectedStep={selectedStep}
-                                setSelectedStep={setSelectedStep}
-                            />
+                            <RenderProfiler id="Generator">
+                                <Generator
+                                    character={character}
+                                    setCharacter={setCharacter}
+                                    selectedStep={selectedStep}
+                                    setSelectedStep={setSelectedStep}
+                                />
+                            </RenderProfiler>
                         </div>
                     </div>
                 </BackgroundImage>
