@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
+import RenderProfiler from "~/components/RenderProfiler"
 import LandingPage from "~/pages/LandingPage"
 
 export const Route = createFileRoute("/")({
@@ -6,5 +7,9 @@ export const Route = createFileRoute("/")({
 })
 
 function Index() {
-    return <LandingPage />
+    return (
+        <RenderProfiler id="LandingPage">
+            <LandingPage />
+        </RenderProfiler>
+    )
 }

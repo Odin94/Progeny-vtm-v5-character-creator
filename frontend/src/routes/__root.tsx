@@ -9,6 +9,7 @@ import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { CookiesBanner } from "~/components/CookiesBanner"
+import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 
@@ -122,7 +123,9 @@ export const Route = createRootRoute({
                     <AuthUnauthorizedHandler />
                     <BrokenSaveModal />
                     <CookiesBanner />
-                    <Outlet />
+                    <RenderProfiler id="RouteOutlet">
+                        <Outlet />
+                    </RenderProfiler>
                 </MantineProvider>
             </PostHogProvider>
         </QueryClientProvider>

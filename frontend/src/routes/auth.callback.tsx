@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { Container, Loader, Text } from "@mantine/core"
 import { useEffect } from "react"
 import posthog from "posthog-js"
+import RenderProfiler from "~/components/RenderProfiler"
 import { clearStoredAuthReturnTo, getSafeAuthReturnTo } from "~/hooks/useAuth"
 import { PREFERENCES_QUERY_KEY } from "~/hooks/useUserPreferences"
 import { api, type CurrentUser } from "~/utils/api"
@@ -76,18 +77,20 @@ function AuthCallback() {
     }, [queryClient])
 
     return (
-        <Container
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                gap: "1rem"
-            }}
-        >
-            <Loader size="lg" color="red" />
-            <Text size="lg">Completing sign in...</Text>
-        </Container>
+        <RenderProfiler id="AuthCallback">
+            <Container
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100vh",
+                    gap: "1rem"
+                }}
+            >
+                <Loader size="lg" color="red" />
+                <Text size="lg">Completing sign in...</Text>
+            </Container>
+        </RenderProfiler>
     )
 }
