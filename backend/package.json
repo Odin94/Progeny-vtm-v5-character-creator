@@ -5,7 +5,8 @@
     "type": "module",
     "scripts": {
         "dev": "tsx watch src/index.ts",
-        "build": "tsc",
+        "build": "pnpm run clean && tsc",
+        "clean": "node scripts/cleanDist.mjs",
         "start": "node dist/index.js",
         "lint": "oxlint src scripts drizzle.config.ts vitest.config.ts",
         "lint:fix": "oxlint src scripts drizzle.config.ts vitest.config.ts --fix",
