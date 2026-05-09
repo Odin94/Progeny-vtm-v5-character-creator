@@ -49,7 +49,6 @@ export const useAuth = () => {
     const {
         data: user,
         isLoading,
-        isFetching,
         refetch
     } = useQuery({
         queryKey: ["auth", "me"],
@@ -70,8 +69,7 @@ export const useAuth = () => {
         refetchOnWindowFocus: true
     })
 
-    const isValidatingCachedAuth = !!user && isFetching
-    const currentUser = isValidatingCachedAuth ? null : (user ?? null)
+    const currentUser = user ?? null
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
     useEffect(() => {
@@ -173,7 +171,7 @@ export const useAuth = () => {
 
     return {
         user: currentUser,
-        isLoading: isLoading || isValidatingCachedAuth,
+        isLoading,
         isAuthenticated: !!currentUser,
         signIn,
         signOut,
