@@ -9,6 +9,7 @@ import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
 import { attributesKeySchema } from "../data/Attributes"
 import { Power, Ritual, powerIsRitual } from "../data/Disciplines"
+import { Ceremony } from "../data/Ceremonies"
 import { upcase } from "./utils"
 import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
@@ -305,7 +306,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("Title").setText(`${character.generation}`) // Yes, "Title" is the generation field
 
     // Disciplines
-    const getDisciplineText = (power: Power | Ritual) => {
+    const getDisciplineText = (power: Power | Ritual | Ceremony) => {
         let text = power.name + ": " + power.summary
         if (power.dicePool !== "") {
             text += ` // ${power.dicePool}`
@@ -321,6 +322,12 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         return text
     }
 
+    type PdfDisciplineSection = {
+        title: string
+        powers: Power[]
+        extras: Array<Ritual | Ceremony>
+    }
+
     const powersByDiscipline = character.disciplines.reduce(
         (acc, p) => {
             if (!acc[p.discipline]) acc[p.discipline] = []
@@ -329,28 +336,53 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         },
         {} as Record<DisciplineName, Power[]>
     )
-    for (const [disciplineIndex, powers] of Object.values(powersByDiscipline).entries()) {
+    const disciplineSections: PdfDisciplineSection[] = Object.values(powersByDiscipline).map(
+        (powers) => ({
+            title: upcase(powers[0].discipline),
+            powers,
+            extras: powers[0].discipline === "blood sorcery" ? character.rituals : []
+        })
+    )
+
+    if (character.ceremonies.length > 0) {
+        const ceremonySection: PdfDisciplineSection = {
+            title: "Oblivion Ceremonies",
+            powers: [],
+            extras: character.ceremonies
+        }
+        const oblivionIndex = disciplineSections.findIndex((section) =>
+            section.powers.some((power) => power.discipline === "oblivion")
+        )
+
+        if (oblivionIndex >= 0 && oblivionIndex < 3) {
+            const belowOblivionIndex = oblivionIndex + 3
+            if (disciplineSections[belowOblivionIndex]) {
+                disciplineSections.splice(belowOblivionIndex, 0, ceremonySection)
+            } else {
+                disciplineSections[belowOblivionIndex] = ceremonySection
+            }
+        } else if (oblivionIndex >= 0) {
+            disciplineSections.splice(oblivionIndex + 1, 0, ceremonySection)
+        } else {
+            disciplineSections.push(ceremonySection)
+        }
+    }
+
+    for (const [disciplineIndex, section] of disciplineSections.entries()) {
+        if (!section) continue
+
         const di = disciplineIndex + 1
-        form.getTextField(`Disc${di}`).setText(upcase(powers[0].discipline))
-        for (const [powerIndex, power] of powers.entries()) {
+        form.getTextField(`Disc${di}`).setText(section.title)
+        for (const [powerIndex, power] of section.powers.entries()) {
             const pi = powerIndex + 1
             form.getTextField(`Disc${di}_Ability${pi}`).setText(getDisciplineText(power))
             form.getTextField(`Disc${di}_Ability${pi}`).disableRichFormatting()
             form.getCheckBox(`Disc${di}-${pi}`).check()
         }
-        if (powers[0].discipline === "blood sorcery") {
-            for (const [ritualIndex, ritual] of character.rituals.entries()) {
-                const ri = powers.length + ritualIndex + 1
-                form.getTextField(`Disc${di}_Ability${ri}`).setText(getDisciplineText(ritual))
-                form.getTextField(`Disc${di}_Ability${ri}`).disableRichFormatting()
-            }
-        }
-        if (powers[0].discipline === "oblivion") {
-            for (const [ceremonyIndex, ceremony] of character.ceremonies.entries()) {
-                const ci = powers.length + ceremonyIndex + 1
-                form.getTextField(`Disc${di}_Ability${ci}`).setText(getDisciplineText(ceremony))
-                form.getTextField(`Disc${di}_Ability${ci}`).disableRichFormatting()
-            }
+        for (const [extraIndex, extra] of section.extras.entries()) {
+            const ei = section.powers.length + extraIndex + 1
+            form.getTextField(`Disc${di}_Ability${ei}`).setText(getDisciplineText(extra))
+            form.getTextField(`Disc${di}_Ability${ei}`).disableRichFormatting()
         }
     }
 

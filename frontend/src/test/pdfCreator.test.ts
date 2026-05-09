@@ -83,6 +83,29 @@ Object.defineProperty(window, "atob", {
 describe("createPdf_nerdbert", () => {
     it("should create a PDF with correct character data", async () => {
         const character = getBasicTestCharacter()
+        character.disciplines.push({
+            name: "Ashes to Ashes",
+            description: "",
+            rouseChecks: 1,
+            amalgamPrerequisites: [],
+            summary: "use your vitae to disintegrate non-vampire corpses",
+            dicePool: "Stamina + Oblivion",
+            level: 1,
+            discipline: "oblivion"
+        })
+        character.ceremonies = [
+            {
+                name: "The Gift of False Life",
+                level: 1,
+                summary: "Animate prepared corpses to carry out one simple command.",
+                rouseChecks: 1,
+                dicePool: "Resolve + Oblivion",
+                requiredTime: "5min",
+                ingredients: "Prepared corpses and bodily fluids",
+                prerequisitePowers: ["Ashes to Ashes"],
+                discipline: "oblivion"
+            }
+        ]
         const pdfBytes = await createPdf_nerdbert(character)
 
         expect(pdfBytes).toBeInstanceOf(Uint8Array)
@@ -132,6 +155,16 @@ describe("createPdf_nerdbert", () => {
             const ritualText = ritualField.getText() || ""
             expect(ritualText).toContain(character.rituals[0].name)
         }
+
+        const disc3Text = form.getTextField("Disc3").getText() || ""
+        expect(disc3Text.toLowerCase()).toContain("oblivion")
+        expect(form.getTextField("Disc3_Ability1").getText()).toContain("Ashes to Ashes")
+
+        const ceremoniesText = form.getTextField("Disc6").getText() || ""
+        expect(ceremoniesText).toContain("Oblivion Ceremonies")
+        expect(form.getTextField("Disc6_Ability1").getText()).toContain(
+            "The Gift of False Life"
+        )
 
         const allMeritFields = form.getFields().filter((field) => {
             const name = field.getName()
