@@ -1,0 +1,13 @@
+{
+    "name": "progeny",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "lint": "pnpm --dir backend run lint && pnpm --dir frontend run lint",
+        "fmt": "pnpm --dir backend run fmt && pnpm --dir frontend run fmt"
+    },
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "packageManager": "pnpm@10.33.0"
+}
