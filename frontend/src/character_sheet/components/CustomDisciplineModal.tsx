@@ -2,7 +2,6 @@ import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
 import { CustomDiscipline, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
-import { Character } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
 
 type CustomDisciplineModalProps = {
@@ -91,25 +90,6 @@ const CustomDisciplineModal = ({
         }
     }
 
-    const handleDelete = () => {
-        if (!editingDisciplineName) return
-
-        const updatedCustomDisciplines = { ...character.customDisciplines }
-        delete updatedCustomDisciplines[editingDisciplineName]
-
-        const updatedCharacter = {
-            ...character,
-            customDisciplines: updatedCustomDisciplines,
-            availableDisciplineNames: character.availableDisciplineNames.filter(
-                (n) => n !== editingDisciplineName
-            ),
-            disciplines: character.disciplines.filter((p) => p.discipline !== editingDisciplineName)
-        }
-
-        setCharacter(updatedCharacter)
-        onClose()
-    }
-
     return (
         <Modal
             opened={opened}
@@ -144,14 +124,7 @@ const CustomDisciplineModal = ({
                     description="Only http:// and https:// image URLs are allowed."
                     color={primaryColor}
                 />
-                <Group justify="space-between">
-                    {editingDisciplineName ? (
-                        <Button color="red" variant="subtle" onClick={handleDelete}>
-                            Delete
-                        </Button>
-                    ) : (
-                        <div />
-                    )}
+                <Group justify="flex-end">
                     <Group>
                         <Button variant="subtle" onClick={onClose} color={primaryColor}>
                             Cancel

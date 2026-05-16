@@ -186,19 +186,6 @@ const CustomPowerModal = ({
         onClose()
     }
 
-    const handleDelete = () => {
-        if (!editingPower) return
-
-        const updatedCharacter = {
-            ...character,
-            disciplines: character.disciplines.filter((p) => p !== editingPower)
-        }
-
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        setCharacter(updatedCharacter)
-        onClose()
-    }
-
     return (
         <Modal
             opened={opened}
@@ -256,14 +243,7 @@ const CustomPowerModal = ({
                     min={0}
                     required
                 />
-                <Group justify="space-between">
-                    {editingPower ? (
-                        <Button color="red" variant="subtle" onClick={handleDelete}>
-                            Delete
-                        </Button>
-                    ) : (
-                        <div />
-                    )}
+                <Group justify="flex-end">
                     <Group>
                         <Button variant="subtle" onClick={onClose} color={primaryColor}>
                             Cancel
