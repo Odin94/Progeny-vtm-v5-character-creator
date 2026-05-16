@@ -185,6 +185,9 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
 
     const phoneScreen = globals.isPhoneScreen
     const levelOneCeremonies = Ceremonies.filter((ceremony) => ceremony.level === 1)
+    const canTakeAnyCeremony = levelOneCeremonies.some((ceremony) =>
+        characterHasCeremonyPrerequisite(character, ceremony)
+    )
 
     const handleTake = (ceremony: Ceremony) => {
         trackEvent({
@@ -193,6 +196,16 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
             label: ceremony.name
         })
         setCharacter({ ...character, ceremonies: [ceremony] })
+        nextStep()
+    }
+
+    const handleContinueWithoutCeremony = () => {
+        trackEvent({
+            action: "ceremony skipped",
+            category: "ceremonies",
+            label: "no valid prerequisite"
+        })
+        setCharacter({ ...character, ceremonies: [] })
         nextStep()
     }
 
@@ -212,7 +225,7 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
                     <GeneratorStepHero
                         leadText="Pick your free"
                         accentText="Ceremony"
-                        description="Necromancers begin with one free Level 1 ceremony when they know its prerequisite Oblivion power"
+                        description="You begin with one free Level 1 ceremony when you know its prerequisite Oblivion power"
                         marginBottom={phoneScreen ? 18 : 26}
                     />
 
@@ -250,6 +263,51 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
                                 )
                             })}
                         </div>
+
+                        {!canTakeAnyCeremony ? (
+                            <Box
+                                mt="md"
+                                p="md"
+                                style={{
+                                    borderRadius: 8,
+                                    border: "1px solid rgba(125, 91, 72, 0.25)",
+                                    background:
+                                        "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)"
+                                }}
+                            >
+                                <Text
+                                    mb="sm"
+                                    style={{
+                                        fontFamily: "Inter, sans-serif",
+                                        fontSize: "0.86rem",
+                                        color: rgba(RAW_GREY, 0.7),
+                                        lineHeight: 1.45,
+                                        textAlign: "center"
+                                    }}
+                                >
+                                    None of these ceremonies match your chosen Oblivion powers.
+                                </Text>
+                                <Group justify="center">
+                                    <Button
+                                        color="red"
+                                        variant="outline"
+                                        onClick={handleContinueWithoutCeremony}
+                                        styles={{
+                                            root: {
+                                                borderColor: rgba(RAW_RED, 0.4),
+                                                background: rgba(RAW_RED, 0.08),
+                                                letterSpacing: "0.12em",
+                                                textTransform: "uppercase",
+                                                fontFamily: "Cinzel, Georgia, serif",
+                                                fontSize: "0.74rem"
+                                            }
+                                        }}
+                                    >
+                                        Continue without a ceremony
+                                    </Button>
+                                </Group>
+                            </Box>
+                        ) : null}
                     </Box>
                 </div>
             </ScrollArea>
