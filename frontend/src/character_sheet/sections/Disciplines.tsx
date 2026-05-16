@@ -161,8 +161,15 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 )
             }
         } else {
+            const updatedCustomDisciplines = { ...character.customDisciplines }
+            delete updatedCustomDisciplines[itemToDelete.disciplineName]
+
             updatedCharacter = {
                 ...character,
+                customDisciplines: updatedCustomDisciplines,
+                availableDisciplineNames: character.availableDisciplineNames.filter(
+                    (disciplineName) => disciplineName !== itemToDelete.disciplineName
+                ),
                 disciplines: character.disciplines.filter(
                     (p) => p.discipline !== itemToDelete.disciplineName
                 ),
