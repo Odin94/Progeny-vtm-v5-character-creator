@@ -82,6 +82,46 @@ export const Rituals: Ritual[] = [
         level: 1
     },
     {
+        name: "Letter Ward",
+        summary:
+            "Seal a letter so anyone except the intended recipient is burned and the message is destroyed.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Pigeon blood, wax, and dog blood",
+        level: 1
+    },
+    {
+        name: "Bloody Message",
+        summary:
+            "Write a blood message onto a remembered reflective surface for a chosen type of viewer.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A mirror, human blood, and UV light",
+        level: 1
+    },
+    {
+        name: "Beelzebeatit",
+        summary:
+            "Make a small area repellent to animals, vermin, plants, and other lesser living creatures.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Vinegar or alcohol",
+        level: 1
+    },
+    {
+        name: "Enrich the Blood",
+        summary:
+            "Make a human vessel's blood richer so a smaller drink slakes more Hunger for a short time.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A vial of the target's blood and fresh human blood",
+        level: 1
+    },
+    {
         name: "As Fog on Water",
         summary: "Walk silently across the surface of a body of water for the rest of the night.",
         rouseChecks: 1,
@@ -110,6 +150,25 @@ export const Rituals: Ritual[] = [
         level: 2
     },
     {
+        name: "The Shroud of Silence",
+        summary: "Seal a room so no sound can escape until the focus is removed or the scene ends.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Woven cloth, a golden ring, and vitae from an Obfuscate user",
+        level: 2
+    },
+    {
+        name: "Enhance Dyscrasia",
+        summary:
+            "Amplify a vessel's Dyscrasia so several Kindred can benefit from it over three nights.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A resonant personal object belonging to the target",
+        level: 2
+    },
+    {
         name: "Fire in the Blood",
         summary:
             "Burn a target's blood from afar, causing painful superficial damage and physical penalties.",
@@ -127,6 +186,66 @@ export const Rituals: Ritual[] = [
         requiredTime: "1 night",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "A melee weapon immersed in the caster's vitae",
+        level: 3
+    },
+    {
+        name: "Herd Ward",
+        summary:
+            "Ward a mortal or shelter so another vampire is burned and repelled when they try to feed there.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Scorpion poison and the caster's vitae",
+        level: 3
+    },
+    {
+        name: "Sleep of Judas",
+        summary:
+            "Prepare a supernatural narcotic that can incapacitate vampires and kill mortals or ghouls.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Blood from a mystical landmark and opium",
+        level: 3
+    },
+    {
+        name: "Communal Vigor",
+        summary:
+            "Strengthen a pack's Vaulderie so members share the priest's Blood Potency for the night.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A fingernail from the pack priest",
+        level: 3
+    },
+    {
+        name: "Galvanic Ruination",
+        summary:
+            "Destroy nearby electrical systems, usually knocking out lights, alarms, cars, and cameras.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A copper coin smeared with the caster's blood",
+        level: 3
+    },
+    {
+        name: "Bloodless Feast",
+        summary:
+            "Transmute an unconscious human's life into clear vitae that can sate Hunger but invites diablerie.",
+        rouseChecks: 1,
+        requiredTime: "3 hours",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "An unconscious human and a flawless crystal chalice",
+        level: 3
+    },
+    {
+        name: "Grim Chrysalis",
+        summary:
+            "Spit out a protective cocoon that shields you from sunlight and accelerates healing or reshaping.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Human hair and a moth or butterfly",
         level: 3
     },
     {
@@ -160,6 +279,26 @@ export const Rituals: Ritual[] = [
         level: 4
     },
     {
+        name: "Seek the Gathered Vitae",
+        summary:
+            "Sense a nearby concentration of Kindred vitae and track its direction for an hour.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Red ink, pomegranate juice, white paper or cloth, and a large top",
+        level: 4
+    },
+    {
+        name: "The Balm of Bathory",
+        summary:
+            "Brew a blood balm that temporarily restores youthful beauty but becomes addictive and toxic.",
+        rouseChecks: 1,
+        requiredTime: "1 hour",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Caster vitae, youthful mortal blood, chamomile, and fat or butter",
+        level: 4
+    },
+    {
         name: "Eden's Bounty",
         summary:
             "Draw small amounts of blood from nearby mortals through a tree to reduce the caster's Hunger.",
@@ -187,6 +326,16 @@ export const Rituals: Ritual[] = [
         requiredTime: "3 hours",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "Iron seals embedded over every doorway",
+        level: 5
+    },
+    {
+        name: "Simulacrum Gate",
+        summary:
+            "Build a sacrificial replica doorway that allows multiple vampires to cross vast distances.",
+        rouseChecks: 1,
+        requiredTime: "weeks",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Replica materials, mortal sacrifices, and a vampire sacrifice",
         level: 5
     }
 ]

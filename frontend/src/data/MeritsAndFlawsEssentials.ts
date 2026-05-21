@@ -54,6 +54,13 @@ export const thinbloodMeritsAndFlaws: MeritsAndFlaws = {
             cost: [1],
             summary: "Suffer only superficial damage from most sources, like a normal Vampire",
             excludes: []
+        },
+        {
+            name: "Memories of the Fallen",
+            cost: [2],
+            summary: "Ashe visions make some Blood Alchemy rolls critically stronger",
+            excludes: [],
+            complexity: "advanced"
         }
     ],
     flaws: [
@@ -94,6 +101,13 @@ export const thinbloodMeritsAndFlaws: MeritsAndFlaws = {
             cost: [1],
             summary: "Need to drink Vampire vitae once a week to use Disciplines",
             excludes: []
+        },
+        {
+            name: "Ashe Addiction",
+            cost: [2],
+            summary: "failed Ashe-related alchemy leaves you distracted for the session",
+            excludes: [],
+            complexity: "advanced"
         }
     ]
 }

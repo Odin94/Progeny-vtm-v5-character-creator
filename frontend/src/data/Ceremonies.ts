@@ -61,6 +61,17 @@ export const Ceremonies: Ceremony[] = [
         prerequisitePowers: ["Where the Shroud Thins"]
     },
     {
+        name: "Blinding the Alloy Eye",
+        summary: "Bind a death-spirit to foil nearby cameras and surveillance for a scene.",
+        rouseChecks: 1,
+        requiredTime: "1 scene",
+        dicePool: defaultDicePool,
+        ingredients: "A small piece of aluminum mesh",
+        level: 2,
+        discipline: "oblivion",
+        prerequisitePowers: ["Shadow Cast"]
+    },
+    {
         name: "Compel Spirit",
         summary:
             "Force a nearby wraith into service for a limited task, with harsher demands possible on stronger wins.",
@@ -109,6 +120,64 @@ export const Ceremonies: Ceremony[] = [
         prerequisitePowers: ["Shadow Perspective"]
     },
     {
+        name: "Harrowhaunt",
+        summary:
+            "Make a place radiate supernatural dread, driving mortals away and testing vampires for fear frenzy.",
+        rouseChecks: 1,
+        requiredTime: "1 scene",
+        dicePool: defaultDicePool,
+        ingredients: "Mortals subjected to terror and suffering in the place",
+        level: 3,
+        discipline: "oblivion",
+        prerequisitePowers: ["Aura of Decay"]
+    },
+    {
+        name: "Fortezza Sindonica",
+        summary: "Lay a chain ward that tortures and hinders wraiths crossing its boundary.",
+        rouseChecks: 3,
+        requiredTime: "20min",
+        dicePool: defaultDicePool,
+        ingredients: "Powdered bones, salt, steel chain, vitae, a finger, and a metal basin",
+        level: 3,
+        discipline: "oblivion",
+        prerequisitePowers: ["Where the Shroud Thins"]
+    },
+    {
+        name: "Knit the Veil",
+        summary:
+            "Thicken the Shroud in a marked area, blocking ghostly passage and spying while the candle burns.",
+        rouseChecks: 1,
+        requiredTime: "20min",
+        dicePool: defaultDicePool,
+        ingredients: "Ground bones, an iron needle, catgut, vitae, and a goat-tallow candle",
+        level: 3,
+        discipline: "oblivion",
+        prerequisitePowers: ["Where the Shroud Thins"]
+    },
+    {
+        name: "Craft Flesh Golem",
+        summary:
+            "Animate stitched corpse parts into a flesh golem that obeys its creator's commands.",
+        rouseChecks: 1,
+        requiredTime: "1 hour",
+        dicePool: defaultDicePool,
+        ingredients: "Corpse parts, sea-bed clay, acid-dissolved copper, and an engraving tool",
+        level: 3,
+        discipline: "oblivion",
+        prerequisitePowers: ["Aura of Decay", "Necrotic Plague"]
+    },
+    {
+        name: "Create Corpse Suit",
+        summary: "Sew a sentient skin garment that warns of danger but brings folklore weaknesses.",
+        rouseChecks: 1,
+        requiredTime: "1 hour",
+        dicePool: defaultDicePool,
+        ingredients: "Human skin, mortal fat, waxed thread, and decorative elements",
+        level: 3,
+        discipline: "oblivion",
+        prerequisitePowers: ["Shadow Perspective", "Touch of Oblivion"]
+    },
+    {
         name: "Bind the Spirit",
         summary:
             "Anchor a compelled wraith to a place or person, causing its strongest emotions to haunt the target.",
@@ -132,6 +201,42 @@ export const Ceremonies: Ceremony[] = [
         level: 4,
         discipline: "oblivion",
         prerequisitePowers: ["Necrotic Plague"]
+    },
+    {
+        name: "Befoul Vessel",
+        summary:
+            "Infect a mortal's blood so any vampire feeding from them gains Hunger instead of slaking it.",
+        rouseChecks: 1,
+        requiredTime: "1 action",
+        dicePool: defaultDicePool,
+        ingredients: "The vampire's saliva",
+        level: 4,
+        discipline: "oblivion",
+        prerequisitePowers: ["Touch of Oblivion"]
+    },
+    {
+        name: "Death Rattle",
+        summary: "Force a target to experience a chosen wraith's death through a prepared link.",
+        rouseChecks: 1,
+        requiredTime: "20min",
+        dicePool: defaultDicePool,
+        ingredients: "A wraith's fetter, target keepsake, vitae, overproof rum, candle, and bowl",
+        level: 4,
+        discipline: "oblivion",
+        prerequisitePowers: ["Fatal Precognition"]
+    },
+    {
+        name: "Bind to Mortal Form",
+        summary:
+            "Chain a mortal's spirit to their aging body, extending life without making them a ghoul.",
+        rouseChecks: 1,
+        requiredTime: "1 hour",
+        dicePool: defaultDicePool,
+        ingredients:
+            "A mortal, Oblivion-marked chain, human tallow candle, grave dirt, and body fluid",
+        level: 4,
+        discipline: "oblivion",
+        prerequisitePowers: ["Necrotic Plague", "Skuld Fulfilled"]
     },
     {
         name: "Ex Nihilo",
@@ -159,8 +264,7 @@ export const Ceremonies: Ceremony[] = [
     },
     {
         name: "Pit of Contemplation",
-        summary:
-            "Open a doorway into Oblivion that pulls victims into an empty black prison.",
+        summary: "Open a doorway into Oblivion that pulls victims into an empty black prison.",
         rouseChecks: 1,
         requiredTime: "25min",
         dicePool: defaultDicePool,
@@ -169,6 +273,18 @@ export const Ceremonies: Ceremony[] = [
         level: 5,
         discipline: "oblivion",
         prerequisitePowers: ["Tenebrous Avatar"]
+    },
+    {
+        name: "Gift of True Life",
+        summary:
+            "Move years of mortal life from one person to another, extending one life by shortening the other.",
+        rouseChecks: 1,
+        requiredTime: "1 scene",
+        dicePool: defaultDicePool,
+        ingredients: "Two mortals and a length of silk rope",
+        level: 5,
+        discipline: "oblivion",
+        prerequisitePowers: ["Necrotic Plague", "Passion Feast"]
     }
 ]
 
