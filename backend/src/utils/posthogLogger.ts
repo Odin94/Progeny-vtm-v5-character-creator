@@ -2,14 +2,12 @@ import { NodeSDK } from "@opentelemetry/sdk-node"
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http"
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs"
 import { resourceFromAttributes } from "@opentelemetry/resources"
-import { logs } from "@opentelemetry/api-logs"
+import { logs, NOOP_LOGGER } from "@opentelemetry/api-logs"
 import { env } from "../config/env.js"
 
 let sdk: NodeSDK | null = null
 // Initialize with empty logger
-export let posthogLogger: ReturnType<typeof logs.getLogger> = {
-    emit: () => {}
-}
+export let posthogLogger: ReturnType<typeof logs.getLogger> = NOOP_LOGGER
 
 export const initializePostHogLogging = () => {
     if (env.NODE_ENV === "development") {
@@ -57,8 +55,6 @@ export const shutdownPostHogLogging = async () => {
     if (sdk) {
         await sdk.shutdown()
         sdk = null
-        posthogLogger = {
-            emit: () => {}
-        }
+        posthogLogger = NOOP_LOGGER
     }
 }

@@ -162,9 +162,7 @@ describe("createPdf_nerdbert", () => {
 
         const ceremoniesText = form.getTextField("Disc6").getText() || ""
         expect(ceremoniesText).toContain("Oblivion Ceremonies")
-        expect(form.getTextField("Disc6_Ability1").getText()).toContain(
-            "The Gift of False Life"
-        )
+        expect(form.getTextField("Disc6_Ability1").getText()).toContain("The Gift of False Life")
 
         const allMeritFields = form.getFields().filter((field) => {
             const name = field.getName()

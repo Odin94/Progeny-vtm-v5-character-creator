@@ -87,6 +87,9 @@
     },
     "packageManager": "pnpm@10.33.0",
     "pnpm": {
+        "overrides": {
+            "protobufjs": "7.6.0"
+        },
         "onlyBuiltDependencies": [
             "core-js",
             "esbuild",
