@@ -16,13 +16,8 @@ export default defineConfig({
         exclude: [...configDefaults.exclude, "e2e/**"],
         globals: true,
         pool: "threads",
-        poolOptions: {
-            threads: {
-                singleThread: false,
-                minThreads: 1,
-                maxThreads: 2
-            }
-        },
+        minWorkers: 1,
+        maxWorkers: 2,
         isolate: false,
         sequence: {
             shuffle: false
