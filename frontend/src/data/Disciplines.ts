@@ -871,16 +871,6 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "fortitude"
             },
             {
-                name: "Valeren",
-                description: "",
-                rouseChecks: 1,
-                amalgamPrerequisites: [{ discipline: "auspex", level: 1 }],
-                summary: "use your blood to heal other vampires",
-                dicePool: "Intelligence + Fortitude",
-                level: 2,
-                discipline: "fortitude"
-            },
-            {
                 name: "Enduring Beasts",
                 description: "",
                 rouseChecks: 0,
@@ -930,6 +920,16 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary:
                     "commit a planned atrocity to numb your conscience against further Stains that night",
                 dicePool: "",
+                level: 3,
+                discipline: "fortitude"
+            },
+            {
+                name: "Valeren",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [{ discipline: "auspex", level: 1 }],
+                summary: "use your blood to heal other vampires",
+                dicePool: "Intelligence + Fortitude",
                 level: 3,
                 discipline: "fortitude"
             },
