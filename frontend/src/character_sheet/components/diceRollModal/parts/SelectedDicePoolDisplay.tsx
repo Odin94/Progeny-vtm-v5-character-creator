@@ -139,7 +139,7 @@ const SelectedDicePoolDisplay = ({
                         </ActionIcon>
                     ) : null}
                 </Group>
-                <Collapse in={poolExpanded}>
+                <Collapse expanded={poolExpanded}>
                     <Stack gap="xs">
                         <Group gap="xs">
                             {selectedDicePool.attribute ? (
@@ -299,7 +299,7 @@ const SelectedDicePoolDisplay = ({
                                         Merits & Flaws:
                                     </Text>
                                 </Group>
-                                <Collapse in={meritFlawExpanded}>
+                                <Collapse expanded={meritFlawExpanded}>
                                     <Group gap="xs">
                                         {applicableMeritFlawModifiers.map(
                                             ({ meritFlaw, bonusDice, reason, key }) => {
