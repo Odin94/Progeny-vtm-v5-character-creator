@@ -122,6 +122,26 @@ export const Rituals: Ritual[] = [
         level: 1
     },
     {
+        name: "Astromancy",
+        summary:
+            "Read a target's aptitudes, Ambition, and deeper motives through their blood and the night sky.",
+        rouseChecks: 1,
+        requiredTime: "30min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A clear night sky, silver surface, and biological trace from the target",
+        level: 1
+    },
+    {
+        name: "Bind the Accusing Tongue",
+        summary:
+            "Prevent a target from directly communicating harmful or critical information about the caster.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "An image of the target, their hair, and black silk cord",
+        level: 1
+    },
+    {
         name: "As Fog on Water",
         summary: "Walk silently across the surface of a body of water for the rest of the night.",
         rouseChecks: 1,
@@ -166,6 +186,76 @@ export const Rituals: Ritual[] = [
         requiredTime: "5min",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "A resonant personal object belonging to the target",
+        level: 2
+    },
+    {
+        name: "Craftmaster",
+        summary:
+            "Drink a gifted subject's blood to temporarily copy one of their scholarly or creative skills.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A gifted subject's blood, a symbolic craft object, and vulture bones",
+        level: 2
+    },
+    {
+        name: "Depths of Nightmare",
+        summary:
+            "Afflict a target with repeated nightmares that damage Willpower and cannot heal normally.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "The target's hair, wax, and natron",
+        level: 2
+    },
+    {
+        name: "Elemental Grasp",
+        summary:
+            "Command your koldunic element to hinder and batter a perceived target until your focus breaks.",
+        rouseChecks: 1,
+        requiredTime: "1 action",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Requires Koldunic Sorcery; a sample or symbol of the chosen element",
+        level: 2
+    },
+    {
+        name: "Le Sang de l'Amour",
+        summary:
+            "Create paired blood-vials that let two desiring lovers sense each other's rough location.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Blood from both lovers and two glass vials on chains",
+        level: 2
+    },
+    {
+        name: "Silentia Mortis",
+        summary:
+            "Enchant a talisman that surrounds its holder with a temporary zone of magical silence.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Silent animal paw, blood, corpse-wax candle, and a white rose",
+        level: 2
+    },
+    {
+        name: "Tiamat Glistens",
+        summary:
+            "Attune a place of power so the caster can draw its bonus into rituals performed there.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A furcus or other place of power and dust from a fitting precious metal",
+        level: 2
+    },
+    {
+        name: "Viscera Garden",
+        summary:
+            "Grow Blood-fed plants that vampires can keep down and that prime mortals for influence.",
+        rouseChecks: 1,
+        requiredTime: "1 hour",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A plot of land, a day-old corpse, plants, and ongoing vitae",
         level: 2
     },
     {
@@ -309,6 +399,97 @@ export const Rituals: Ritual[] = [
         level: 5
     },
     {
+        name: "Blood Sigil",
+        summary:
+            "Preserve a hidden message or image permanently inside a tattoo on another vampire.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients:
+            "Tattoo pigments mixed with blood, a message or image, and a heated sharp tool",
+        level: 3
+    },
+    {
+        name: "Elemental Shelter",
+        summary:
+            "Merge into your koldunic element for shelter, awareness, and protection from most harm.",
+        rouseChecks: 1,
+        requiredTime: "1 action",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Requires Koldunic Sorcery; enough of the chosen element to envelop you",
+        level: 3
+    },
+    {
+        name: "Nepenthe",
+        summary:
+            "Brew a draught that suppresses Stains before Remorse, risking dependency and permanent guilt.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Poppy, starflower, honey, the subject's tears, and the caster's Blood",
+        level: 3
+    },
+    {
+        name: "Seeing with the Sky's Eyes",
+        summary:
+            "Enter a trance to ask questions about a target's location, surroundings, and inner drives.",
+        rouseChecks: 1,
+        requiredTime: "30min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Euphoric blood, incense, brazier, and a target image",
+        level: 3
+    },
+    {
+        name: "Seeking Tiamat",
+        summary:
+            "Use a painful divining rod in your vein to locate the nearest furcus or earth-vein.",
+        rouseChecks: 1,
+        requiredTime: "15min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Sharpened witch hazel or magnetized iron",
+        level: 3
+    },
+    {
+        name: "Soul of the Hemonculus",
+        summary:
+            "Create an impaired miniature duplicate of your mortal self that must obey your commands.",
+        rouseChecks: 1,
+        requiredTime: "1 month",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Glass bottle, grave dirt, semen, vitae, a dead thumb, and a dead pig",
+        level: 3
+    },
+    {
+        name: "Stone of the True Form",
+        summary:
+            "Prepare a thrown stone that briefly strips away illusions, crafted bodies, or shapeshifting.",
+        rouseChecks: 1,
+        requiredTime: "1 hour",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A carved sphere of metamorphic stone coated in boiling Blood",
+        level: 3
+    },
+    {
+        name: "Trespass",
+        summary:
+            "Blend into one prepared structure and slip through gaps that liquid blood could cross.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A location fragment, thief's blood, and thread",
+        level: 3
+    },
+    {
+        name: "Viral Haruspex",
+        summary:
+            "Consult nearby mortals carrying a cold for overlapping impressions or remembered facts.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Live rhinovirus in the caster's Blood, a rat, and a bowl",
+        level: 3
+    },
+    {
         name: "Creatio Ignis",
         summary:
             "Coat your arms in vitae that catches fire first, letting you wield flame by touch for a scene.",
@@ -326,6 +507,65 @@ export const Rituals: Ritual[] = [
         requiredTime: "3 hours",
         dicePool: "Intelligence + Blood Sorcery",
         ingredients: "Iron seals embedded over every doorway",
+        level: 5
+    },
+    {
+        name: "Compel the Inanimate",
+        summary: "Mark an object with blood so it carries out one simple command later that night.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "An inanimate object marked with the caster's Blood",
+        level: 4
+    },
+    {
+        name: "Egregore Consultation",
+        summary:
+            "Draw on the skills of nearby flu-sick mortals to enhance your next few uses of one Skill.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Live influenza in the caster's Blood, parasites, a knife, and a magnet",
+        level: 4
+    },
+    {
+        name: "Land's Sustenance",
+        summary:
+            "Turn a place of power into a hungry domain that later pays the caster back in spared Rouse Checks.",
+        rouseChecks: 1,
+        requiredTime: "5 nights",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A place of power, boundary markers, and a dagger",
+        level: 4
+    },
+    {
+        name: "Riding the Earth's Veins",
+        summary:
+            "Escape from a furcus through the earth's veins, reappearing at another place of power.",
+        rouseChecks: 1,
+        requiredTime: "10min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A furcus and a token of entry such as a key or ticket",
+        level: 4
+    },
+    {
+        name: "Elemental Attack",
+        summary:
+            "Command your koldunic element to assault a target and keep harming them until they escape.",
+        rouseChecks: 1,
+        requiredTime: "1 action",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "Requires Koldunic Sorcery; a weapon tied to the chosen element",
+        level: 5
+    },
+    {
+        name: "Fisher King",
+        summary:
+            "Bind your awareness to a domain-sized region and ask truthful questions about the land.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: "Intelligence + Blood Sorcery",
+        ingredients: "A regional landmark, local dirt, and a horse-hair brush",
         level: 5
     },
     {

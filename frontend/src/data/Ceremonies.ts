@@ -84,6 +84,18 @@ export const Ceremonies: Ceremony[] = [
         prerequisitePowers: ["Where the Shroud Thins"]
     },
     {
+        name: "Maw of Ahriman",
+        summary:
+            "Fill an orifice with Abyssal void that destroys small objects and makes a bite damage Willpower.",
+        rouseChecks: 1,
+        requiredTime: "5min",
+        dicePool: defaultDicePool,
+        ingredients: "A room without light or sound",
+        level: 2,
+        discipline: "oblivion",
+        prerequisitePowers: []
+    },
+    {
         name: "Host Spirit",
         summary:
             "Invite a wraith into your body, gaining physical strength and health while risking possession.",
@@ -295,10 +307,11 @@ export const characterHasCeremonyPrerequisite = (
     character: Pick<Character, "disciplines">,
     ceremony: Ceremony
 ): boolean =>
+    ceremony.prerequisitePowers.length === 0 ||
     character.disciplines.some(
         (power) =>
             power.discipline === "oblivion" && ceremony.prerequisitePowers.includes(power.name)
     )
 
 export const getCeremonyPrerequisiteLabel = (ceremony: Pick<Ceremony, "prerequisitePowers">) =>
-    ceremony.prerequisitePowers.join(" or ")
+    ceremony.prerequisitePowers.length === 0 ? "None" : ceremony.prerequisitePowers.join(" or ")

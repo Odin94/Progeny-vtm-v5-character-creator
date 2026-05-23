@@ -1036,6 +1036,17 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "obfuscate"
             },
             {
+                name: "Doubletalk",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [{ discipline: "auspex", level: 1 }],
+                summary:
+                    "hide a short private message inside ordinary speech for one intended listener",
+                dicePool: "Composure + Obfuscate",
+                level: 2,
+                discipline: "obfuscate"
+            },
+            {
                 name: "Unseen Passage",
                 description: "",
                 rouseChecks: 1,
@@ -1501,6 +1512,17 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "presence"
             },
             {
+                name: "Wingman",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "extend one of your active Presence powers to another willing vampire instead of yourself",
+                dicePool: "",
+                level: 4,
+                discipline: "presence"
+            },
+            {
                 name: "Summon",
                 description: "",
                 rouseChecks: 1,
@@ -1577,6 +1599,28 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 rouseChecks: 1,
                 amalgamPrerequisites: [],
                 summary: "grow deadly claws",
+                dicePool: "",
+                level: 2,
+                discipline: "protean"
+            },
+            {
+                name: "Serpent's Kiss",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "grow hollow fangs that push your vitae into a victim during a bite or kiss",
+                dicePool: "",
+                level: 2,
+                discipline: "protean"
+            },
+            {
+                name: "The False Sip",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [{ discipline: "fortitude", level: 1 }],
+                summary:
+                    "hold swallowed blood outside your system for a scene, avoiding feeding effects until you expel it",
                 dicePool: "",
                 level: 2,
                 discipline: "protean"
@@ -1756,6 +1800,17 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "blood sorcery"
             },
             {
+                name: "Koldunic Sorcery",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "bind yourself to one chosen element and suffer harm to extend your senses through it",
+                dicePool: "",
+                level: 1,
+                discipline: "blood sorcery"
+            },
+            {
                 name: "Extinguish Vitae",
                 description: "",
                 rouseChecks: 1,
@@ -1804,6 +1859,17 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 summary:
                     "your blood can retain Blood Bonding properties even when stored in an object or a ghoul",
                 dicePool: "Intelligence + Blood Sorcery",
+                level: 3,
+                discipline: "blood sorcery"
+            },
+            {
+                name: "Ripples of the Heart",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "alter blood resonance or seed a compulsion into blood the next vampire drinks",
+                dicePool: "",
                 level: 3,
                 discipline: "blood sorcery"
             },
@@ -2175,6 +2241,60 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "thin-blood alchemy"
             },
             {
+                name: "Body Paint",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "create supernatural tattoo fluid that can mark skin permanently or reshape itself",
+                dicePool: "Dexterity + Craft / Stamina + Resolve",
+                level: 1,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Checkout Time",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "place a vampire into corpse-like torpor until a written end time, protecting them from daylight mishaps",
+                dicePool: "",
+                level: 1,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Elevate",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "brew a euphoric party drug that sharpens Dexterity and intensifies sensation",
+                dicePool: "Stamina + Alchemy",
+                level: 1,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Food Stain",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary: "mark a vessel so you can recognize the next person who drinks from them",
+                dicePool: "",
+                level: 1,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Speak from the Heart",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "hide a short message, image, or emotion in a carrier's blood for the next drinker",
+                dicePool: "",
+                level: 1,
+                discipline: "thin-blood alchemy"
+            },
+            {
                 name: "Envelop",
                 description: "",
                 rouseChecks: 1,
@@ -2192,6 +2312,39 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 amalgamPrerequisites: [],
                 summary: "see silver threads connecting mortals to Kindred they are tied to",
                 dicePool: "Intelligence + Alchemy",
+                level: 2,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Advanced Torpor",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "induce torpor that improves healing chances and can preserve Hunger for thin-bloods",
+                dicePool: "",
+                level: 2,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Blacklight Surprise",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "make ultraviolet light burn vampires like weak sunlight and provoke terror frenzy",
+                dicePool: "",
+                level: 2,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Blue State",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "make a target fixate on the next betrayal or Conviction breach by an ally",
+                dicePool: "",
                 level: 2,
                 discipline: "thin-blood alchemy"
             },
@@ -2292,6 +2445,82 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "thin-blood alchemy"
             },
             {
+                name: "Diamond Skin",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "harden skin so some cutting, piercing, or impact aggravated damage becomes superficial",
+                dicePool: "",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Fireskin",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "superheat your body, ignore fire for a scene, and add fire damage to touch attacks",
+                dicePool: "",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Hospital Chains",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary: "prevent an injured target from healing physical damage for several days",
+                dicePool: "Distillation vs Stamina",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Martian Purity",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "burn a blood-borne infection out through the carrier's skin in a painful flare",
+                dicePool: "",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Mask Off",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "create gas that strips Blush of Life from true vampires caught in the blast",
+                dicePool: "Distillation vs Stamina + Resolve",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "TLC",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "treat animal blood so vampires can feed from it as though it were human blood",
+                dicePool: "",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Troll the Pious",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "coat a person, object, or place with paste that unsettles the religious and torments the faithful",
+                dicePool: "",
+                level: 3,
+                discipline: "thin-blood alchemy"
+            },
+            {
                 name: "Airborne Momentum",
                 description: "",
                 rouseChecks: 1,
@@ -2334,6 +2563,50 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 discipline: "thin-blood alchemy"
             },
             {
+                name: "Copycat",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "blur your face and hair toward a blood donor's appearance for a brief disguise",
+                dicePool: "Intelligence + Awareness",
+                level: 4,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Half-Living Conductor",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "ignore electrical harm and redirect electricity as a ranged alchemical attack",
+                dicePool: "Stamina + Alchemy / Dexterity + Alchemy",
+                level: 4,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Red State",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "erase a target's memory of one trusted ally's next betrayal or harmful act",
+                dicePool: "",
+                level: 4,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Vitae MSG",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "make a vessel's blood irresistibly appetizing, pressuring nearby vampires to feed",
+                dicePool: "",
+                level: 4,
+                discipline: "thin-blood alchemy"
+            },
+            {
                 name: "Flowering Amaranth",
                 description: "",
                 rouseChecks: 1,
@@ -2362,6 +2635,17 @@ export const disciplines: Record<DisciplineName, Discipline> = {
                 amalgamPrerequisites: [],
                 summary:
                     "create an elixir which, when added to human blood, can awaken a vampire from Torpor",
+                dicePool: "",
+                level: 5,
+                discipline: "thin-blood alchemy"
+            },
+            {
+                name: "Saturn's Flux",
+                description: "",
+                rouseChecks: 1,
+                amalgamPrerequisites: [],
+                summary:
+                    "break a Blood Bond within a day through a painful and politically dangerous purge",
                 dicePool: "",
                 level: 5,
                 discipline: "thin-blood alchemy"

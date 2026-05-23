@@ -158,6 +158,13 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 cost: [1],
                 summary: "embody a subculture's style, helping social rolls with those in the know",
                 excludes: []
+            },
+            {
+                name: "Up All Night",
+                cost: [2, 4],
+                summary:
+                    "treat Humanity as higher for Blush of Life, eating, drinking, and mortal intimacy",
+                excludes: []
             }
         ],
         flaws: [
@@ -626,6 +633,20 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 cost: [1, 2, 3],
                 summary: "turn Conviction-aligned normal successes into messy criticals",
                 excludes: []
+            },
+            {
+                name: "Soothed Beast",
+                cost: [1],
+                summary:
+                    "ignore one messy critical or bestial failure near a chosen Storyteller-character obsession",
+                excludes: []
+            },
+            {
+                name: "False Love",
+                cost: [1],
+                summary:
+                    "treat Humanity as higher for mortal mimicry while near a chosen Storyteller-character obsession",
+                excludes: []
             }
         ],
         flaws: [
@@ -698,6 +719,12 @@ export const advancedMeritsAndFlaws: MeritsAndFlaws[] = [
                 cost: [1],
                 summary:
                     "Masquerade enforcers distrust your attempt to live too much like a mortal",
+                excludes: []
+            },
+            {
+                name: "Two Masters",
+                cost: [1],
+                summary: "you can be Blood Bound to two regnants at the same time",
                 excludes: []
             }
         ]
