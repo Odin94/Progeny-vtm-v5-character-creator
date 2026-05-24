@@ -1,6 +1,6 @@
 import type { Character } from "./Character"
 import { ClanName } from "./NameSchemas"
-import type { Loresheet, MeritsAndFlaws } from "./MeritsAndFlaws"
+import type { Loresheet, MeritOrFlaw, MeritsAndFlaws } from "./MeritsAndFlaws"
 
 export const thinbloodMeritsAndFlaws: MeritsAndFlaws = {
     title: "◐ Thin-blood specific",
@@ -514,6 +514,17 @@ export const essentialMeritsAndFlaws: MeritsAndFlaws[] = [
 
 // Requirement function generators
 const isClan = (clan: ClanName) => (character: Character) => character.clan === clan
+const isNotClan = (clan: ClanName) => (character: Character) => character.clan !== clan
+const hasDiscipline = (discipline: string) => (character: Character) =>
+    character.availableDisciplineNames.includes(discipline) ||
+    character.disciplines.some((power) => power.discipline === discipline)
+
+const loreMerit = (name: string, cost: number, summary: string): MeritOrFlaw => ({
+    name,
+    cost: [cost],
+    summary,
+    excludes: []
+})
 
 export const loresheets: Loresheet[] = [
     {
@@ -1815,6 +1826,2338 @@ export const loresheets: Loresheet[] = [
                     "You are next in the line of succession of the Baron. Before you step up into his position, you have him as a 5 dot Mawla (his help comes in cryptic and mysterious ways). If you take his place, it might just be a job, or maybe you gain his mystical powers. Either way, you certainly gain his enemies.",
                 excludes: []
             }
+        ]
+    },
+    {
+        title: "Descendant of the Ankou",
+        summary:
+            "A Malkavian death-visionary lineage from northern France, drawn to blood, mortality, and secrets pulled from the dead.",
+        source: "Tattered Facade p171",
+        requirementFunctions: [isClan("Malkavian")],
+        merits: [
+            loreMerit(
+                "Bleed Them Dry",
+                1,
+                "Gain three blood, blade, fang, occult, or hematology specialties, but every haven you occupy becomes creepy."
+            ),
+            loreMerit(
+                "Crimson Visionary",
+                2,
+                "Learn Oblivion at in-clan cost without a tutor's Blood, but your early powers must focus on perception and you gain a minor folkloric weakness."
+            ),
+            loreMerit(
+                "Bloody Work",
+                3,
+                "Spend extra blood or kill an animal to add 2 dice to information-gathering Auspex, Occult, Ritual, or Ceremony pools."
+            ),
+            loreMerit(
+                "Focus of Clarity",
+                4,
+                "Once per session, use a treasured focus object with one skill to turn one Hunger die 1 or 10 into a normal failure."
+            ),
+            loreMerit(
+                "The Prophet of Death Reborn",
+                5,
+                "At each story's start, receive temporary local Contacts, Influence, Resources, or a minor Kindred boon for your prophecies."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Baron Vollgirre",
+        summary:
+            "A Toreador line touched by Vollgirre's cruelty, classical education, and hidden fleshcrafting legacy.",
+        source: "Tattered Facade p172",
+        requirementFunctions: [isClan("Toreador")],
+        merits: [
+            loreMerit(
+                "The Seven Arts",
+                1,
+                "Gain three liberal-arts specialties across academic, social, or creative skills, but your refinement marks you as disliked."
+            ),
+            loreMerit(
+                "Prodigy of Flesh",
+                2,
+                "Learn Protean at in-clan cost and use Presence for Vicissitude amalgams, but learning Vicissitude creates a dangerous secret."
+            ),
+            loreMerit(
+                "Sadistic Hunger",
+                3,
+                "Inflicting real pain or fear immediately before or during feeding slakes one extra Hunger, within normal limits."
+            ),
+            loreMerit(
+                "Unusual Connections",
+                4,
+                "Gain a 5-dot Mawla among Sabbat, Tzimisce, or Vollgirre descendants, but your Blood becomes vulnerable to bonding flaws."
+            ),
+            loreMerit(
+                "Voice of Treachery",
+                5,
+                "Once per story, set one die to 10 on a social roll to intimidate, torture, or influence Sabbat, Toreador, Tzimisce, or Vicissitude users."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Montano",
+        summary:
+            "A Lasombra lineage tied to Montano's ancient Abyssal mastery, Camarilla loyalty, and long memory of clan politics.",
+        source: "Tattered Facade p173",
+        requirementFunctions: [isClan("Lasombra")],
+        merits: [
+            loreMerit(
+                "The Shadow of Yesterday",
+                1,
+                "Once per story, write Montano for truth or clues about the Camarilla or Clan Lasombra."
+            ),
+            loreMerit(
+                "Siblings in Darkness",
+                2,
+                "Your Lasombra Status applies across sect boundaries because the clan respects Montano's line."
+            ),
+            loreMerit(
+                "Abyssal Apprentice",
+                3,
+                "Once per story, use an Oblivion power at or below your current Oblivion rating that you do not know."
+            ),
+            loreMerit(
+                "Word of Mouth",
+                4,
+                "Your non-Lasombra Camarilla Status follows you throughout your home country, even outside your own city."
+            ),
+            loreMerit(
+                "Purity of Remorse",
+                5,
+                "When rolling Remorse, never roll fewer than two dice."
+            )
+        ]
+    },
+    {
+        title: "Little Siblings",
+        summary:
+            "Rossellini Hecata who treat ghosts as tools and practice Oblivion with harsh, domineering necromantic discipline.",
+        source: "Tattered Facade p174",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            loreMerit(
+                "Grave Attitude",
+                1,
+                "Your certainty about death imposes a 1-die penalty on attempts to intimidate or manipulate you."
+            ),
+            loreMerit(
+                "Ghostly Dominance",
+                2,
+                "After harming a wraith or its attachments, gain 3 dice to command that wraith."
+            ),
+            loreMerit("Necromantic Expertise", 3, "Reduce Oblivion Ceremony difficulty by 1."),
+            loreMerit(
+                "Stolen Will",
+                4,
+                "Biting a commanded ghost's damaged fetter can heal your Willpower damage."
+            ),
+            loreMerit(
+                "Purge",
+                5,
+                "Your attacks can strike intangible ghosts and always deal aggravated damage to them."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Idder",
+        summary:
+            "A wandering Banu Haqim line with nomadic roots, protective instincts, and deep experience keeping herds safe on the road.",
+        source: "Live from the Succubus Club p158",
+        requirementFunctions: [isClan("Banu Haqim")],
+        merits: [
+            loreMerit(
+                "Animal Affinity",
+                1,
+                "Reroll Rouse Checks to maintain animal ghouls and keep two Famuli if you know Bond Famulus."
+            ),
+            loreMerit("Shepherd", 2, "Slake one extra Hunger from your Herd each session."),
+            loreMerit(
+                "Never Unprepared",
+                3,
+                "Gain 2 dice the first time you hunt mortals in a new city or environment."
+            ),
+            loreMerit(
+                "Safe Haven",
+                4,
+                "If free and half an hour from sunrise, gain 1 Hunger to have the Beast find daytime shelter."
+            ),
+            loreMerit(
+                "Haqim's Justice",
+                5,
+                "Gain 2 dice when defending or avenging close connections, and once per story declare a vendetta for a lasting bonus against one target."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Kerwiya",
+        summary:
+            "Urban Gangrel descended from the Greek Gangrel tradition, more at home in Kindred politics than wilderness isolation.",
+        source: "Live from the Succubus Club p159",
+        requirementFunctions: [isClan("Gangrel")],
+        merits: [
+            loreMerit(
+                "Hidden Predator",
+                1,
+                "You can learn Obfuscate without drinking from a teacher, though it remains out-of-clan."
+            ),
+            loreMerit(
+                "Politically Adept",
+                2,
+                "Gain vampire-focused specialties or first dots in Politics, Insight, and Subterfuge, but lose access to mortal-culture specialties."
+            ),
+            loreMerit(
+                "Actions Have Consequences",
+                3,
+                "Once per story, ask if a choice will increase danger from other Kindred and receive a yes or no answer."
+            ),
+            loreMerit(
+                "The Boon Economy",
+                4,
+                "Once per story, upgrade a trivial or minor boon owed to you by one step."
+            ),
+            loreMerit(
+                "Echoes of Constantinople",
+                5,
+                "After rolling Insight, Subterfuge, or Politics, set one die to 10."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Phaedyme",
+        summary:
+            "Ravnos descended from a martial pilgrim-knight tradition, known for travel, guardianship, and difficult honor.",
+        source: "Live from the Succubus Club p160",
+        requirementFunctions: [isClan("Ravnos")],
+        merits: [
+            loreMerit(
+                "Skilled Traveler",
+                1,
+                "Gain travel and combat specialties or first dots, but you cannot take knowledge-skill specialties."
+            ),
+            loreMerit(
+                "Safe Routes",
+                2,
+                "Once per session, bypass roadblocks or obstacles by taking a longer route, with the delay's consequences."
+            ),
+            loreMerit(
+                "Renown Guardian",
+                3,
+                "Once per story, a local authority grants you a security role when you ask."
+            ),
+            loreMerit(
+                "Honor among the Honorless",
+                4,
+                "Gain an extra duty, honor, or chivalry Conviction that needs no Touchstone."
+            ),
+            loreMerit(
+                "Defender",
+                5,
+                "Once per story, reroll Blood Surge Rouse Checks for a scene while defending someone or something important."
+            )
+        ]
+    },
+    {
+        title: "Descendant of the Fallen Lord",
+        summary:
+            "A militant Salubri line shaped by Sabbat war, ancient grudges, and violent discipline.",
+        source: "Live from the Succubus Club p161",
+        requirementFunctions: [isClan("Salubri")],
+        merits: [
+            loreMerit(
+                "Instinct for Death",
+                1,
+                "Gain two combat specialties or first dots, but very humane characters find you harder to deal with."
+            ),
+            loreMerit(
+                "Tracker's Mark",
+                2,
+                "Gain 2 dice to track anyone you have attacked in combat."
+            ),
+            loreMerit(
+                "Fury's Strike",
+                3,
+                "Once per scene after a close-combat hit, immediately use a Discipline power against that target as though you had touch or eye contact."
+            ),
+            loreMerit(
+                "What Must Be Done",
+                4,
+                "Gain a permanent enemy-destruction Conviction that needs no Touchstone."
+            ),
+            loreMerit(
+                "Vengeful Eye",
+                5,
+                "When rerolling melee dice with Willpower, reroll one extra die, even Hunger, while exposing your third eye."
+            )
+        ]
+    },
+    {
+        title: "Succubus Club Copycat",
+        summary:
+            "Owner or key operator of a nightclub trying to capture the dangerous glamour of the legendary Succubus Club.",
+        source: "Live from the Succubus Club p162",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Finger on the Pulse",
+                1,
+                "Gain 1 die to Social pools involving important mortals who want your favor or discretion."
+            ),
+            loreMerit(
+                "Energizing Beat",
+                2,
+                "Blood hunted from your club counts as Intense Resonance for you."
+            ),
+            loreMerit(
+                "Damage Control",
+                3,
+                "Once per session while hunting in the club, reroll all dice after a Messy Critical or failed frenzy test."
+            ),
+            loreMerit(
+                "Loyalty",
+                4,
+                "Your staff automatically resist bonding, Dominate, or Presence that would turn them against you or the club."
+            ),
+            loreMerit(
+                "Destination of Choice",
+                5,
+                "Once per session, petition to host the city's major undead gathering at your club."
+            )
+        ]
+    },
+    {
+        title: "The Pony Express",
+        summary:
+            "A Camarilla courier network moving secure physical messages, people, and goods between domains after digital communication became deadly.",
+        source: "Live from the Succubus Club p163",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Access to the Network",
+                1,
+                "Send or receive one secure package or message through any domain the Express serves."
+            ),
+            loreMerit(
+                "Station Agent",
+                2,
+                "Gain a 2-dot Mask, Zeroed, and use of a 2-dot Express haven while handling risky local mail handoffs."
+            ),
+            loreMerit(
+                "Driver",
+                3,
+                "Once per story, obtain a suitable travel vehicle and use the Express chain of safe stations."
+            ),
+            loreMerit(
+                "World Tour",
+                4,
+                "Once per story, access Kindred-safe international travel with secure stations at both ends."
+            ),
+            loreMerit(
+                "Passenger Service",
+                5,
+                "Once per story, move yourself and your coterie to another Express-served destination."
+            )
+        ]
+    },
+    {
+        title: "Road Courier",
+        summary:
+            "A discreet courier who survives long-haul nights, bad roads, and the dangers of transporting sensitive cargo.",
+        source: "Live from the Succubus Club p164",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Bucket",
+                1,
+                "Gain 2 dice to find a temporary vehicle in cities or along major roads."
+            ),
+            loreMerit(
+                "Six in the Morning",
+                2,
+                "Once per story, gain 4 dice to find vehicular shelter from dawn on or near a road."
+            ),
+            loreMerit(
+                "Chosen Steed",
+                3,
+                "Pick a vehicle you have kept for a story; gain 3 dice to drive or work on it."
+            ),
+            loreMerit(
+                "Highway Harbinger",
+                4,
+                "For three nights in a new city, gain 3 dice to intimidate, investigate, or navigate vampire rumors, but attract a temporary Adversary."
+            ),
+            loreMerit(
+                "Midnight Express",
+                5,
+                "Gain courier Contacts and once per story have them scout and clear a route for one night's high-speed travel."
+            )
+        ]
+    },
+    {
+        title: "Stories of the Daughters",
+        summary:
+            "A suspected, pretended, or genuine link to the legendary Daughters of Cacophony and their supernatural vocal gifts.",
+        source: "Live from the Succubus Club p165",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Aspiring Idol",
+                1,
+                "Gain 2 dice to singing tests, but a failure immediately triggers a Compulsion."
+            ),
+            loreMerit(
+                "Surprise Performance",
+                2,
+                "Once per story, add 2 successes to a public-speaking test after rolling."
+            ),
+            loreMerit(
+                "Wayward Daughter",
+                3,
+                "Pass as a Daughter in your domain and distribute 4 dots among Status, Herd, and Mawla until exposed."
+            ),
+            loreMerit(
+                "Songstress Supreme",
+                4,
+                "Gain 4 dice to vocal performances, but take Stalkers and a possessive or jealous Adversary."
+            ),
+            loreMerit(
+                "Rejuvenating Voice",
+                5,
+                "Gain 2 dice to non-intimidating Presence, Quell the Beast, or Obeah and once per story heal listeners' Willpower through song."
+            )
+        ]
+    },
+    {
+        title: "Temple of Boom Contract",
+        summary:
+            "A business or performance connection to Victor Temple's Anarch entertainment empire and its growing nightclub brand.",
+        source: "Live from the Succubus Club p166",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Chocolate Drop",
+                1,
+                "Gain 1 dot each in Fame and Contacts as Temple talent, plus a Stalker flaw."
+            ),
+            loreMerit(
+                "Got Connections",
+                2,
+                "Temporarily gain Resources or Contacts by recruiting talent for Temple of Boom."
+            ),
+            loreMerit(
+                "This is Fine",
+                3,
+                "Once per story, name-drop Victor for 3 dice in business or entertainment scenes, but gain a temporary Enemy."
+            ),
+            loreMerit(
+                "Maharaja/Maharani",
+                4,
+                "Open a Temple club franchise, improving Haven, Fame, Resources, Herd, and one specialty while making the haven Compromised."
+            ),
+            loreMerit(
+                "If Not Now, When?",
+                5,
+                "Hold a major boon from Victor Temple, but using it marks your Anarch connection to the Camarilla."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Al-Ashrad",
+        summary:
+            "A Banu Haqim sorcerous lineage carrying al-Ashrad's prestige, visions, and hatred of hostile spirits and clan schismatics.",
+        source: "Blood Sigils p177",
+        requirementFunctions: [isClan("Banu Haqim")],
+        merits: [
+            loreMerit(
+                "Stories of Old",
+                1,
+                "Gain 2 dice to Leadership tests when invoking al-Ashrad or Haqim to motivate others."
+            ),
+            loreMerit(
+                "Sight Beyond Sight",
+                2,
+                "Once per session, use Sense the Unseen with Blood Potency in place of Auspex, or gain 2 dice if you already know it."
+            ),
+            loreMerit(
+                "Vengeful Sorcery",
+                3,
+                "Once per session in violent conflict, gain 2 dice to a harmful Blood Sorcery power against another vampire."
+            ),
+            loreMerit(
+                "Banish the Intangible",
+                4,
+                "Blood Sorcery powers and rituals that harm physical targets also affect incorporeal beings."
+            ),
+            loreMerit(
+                "Amr-in-Waiting",
+                5,
+                "Gain Banu Haqim Status 5 and one free ritual, but also a powerful sorcerous Adversary."
+            )
+        ]
+    },
+    {
+        title: "Student of Kirin Taunk",
+        summary:
+            "A thin-blood alchemist shaped by Kirin Taunk's efficient formulas, social pragmatism, and mysterious patronage.",
+        source: "Blood Sigils p178",
+        requirementFunctions: [isClan("Thin-blood")],
+        merits: [
+            loreMerit("Stunning Efficiency", 1, "Halve all formula distillation times."),
+            loreMerit(
+                "Professional Mindset",
+                2,
+                "Once per session, use Thin-blood Alchemy rating in place of a lower Social skill at Storyteller discretion."
+            ),
+            loreMerit(
+                "A Taunk Formula",
+                3,
+                "Choose one formula for free once your alchemy is high enough and gain 2 dice to distill it."
+            ),
+            loreMerit(
+                "Diplomatic Power",
+                4,
+                "Gain Status 2 with both the Camarilla and the Anarchs."
+            ),
+            loreMerit(
+                "Taunk's Patron",
+                5,
+                "Gain a 5-dot Mawla who can boost three approved formulae each story with rare ingredients."
+            )
+        ]
+    },
+    {
+        title: "Veins of the Earth",
+        summary:
+            "A blood-craft mystic who senses and exploits the living earth's hidden energetic veins and furcus sites.",
+        source: "Blood Sigils p179",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Seeking a Vein",
+                1,
+                "Once per story, declare your current location a furcus at Storyteller discretion."
+            ),
+            loreMerit(
+                "Drawing the Flies",
+                2,
+                "Gain a 3-dot Herd of mortals drawn to earth energies, maintained by sharing discoveries."
+            ),
+            loreMerit(
+                "Revelations of the Earth",
+                3,
+                "Once per session, meditate on a furcus to ask one truthful question about a Kindred's location and movement."
+            ),
+            loreMerit(
+                "Channeling the Earth",
+                4,
+                "Once per session, meditate on a furcus to add 1 die to a Discipline pool beyond Blood Potency."
+            ),
+            loreMerit(
+                "Tiamat's Exchange",
+                5,
+                "Once per story, offer flesh or blood to a furcus to gain 3 automatic successes on a chosen test."
+            )
+        ]
+    },
+    {
+        title: "Vienna Zero",
+        summary:
+            "A blood sorcerer or scavenger with dangerous access to the ruined Tremere Prime Chantry and the hunters excavating it.",
+        source: "Blood Sigils p180",
+        requirementFunctions: [hasDiscipline("blood sorcery")],
+        merits: [
+            loreMerit(
+                "Inside Knowledge",
+                1,
+                "Gain 2 dice to blood-craft Occult or Tremere Politics rolls."
+            ),
+            loreMerit(
+                "Off the Back of a Truck",
+                2,
+                "Gain a 3-dot Contact who can source restricted items from Vienna Zero if you can pay."
+            ),
+            loreMerit(
+                "Instrument of Power",
+                3,
+                "Gain an agreed artifact with +1 die to its tests, but each use risks hunter attention."
+            ),
+            loreMerit(
+                "The Very Last Copy",
+                4,
+                "Own a unique Tremere grimoire listing four rituals you can learn without a teacher in half the time."
+            ),
+            loreMerit(
+                "Deep Clearance",
+                5,
+                "Gain Mask 3 with Zeroed and once per story borrow an artifact from Vienna Zero, but take a suspicious hunter Enemy."
+            )
+        ]
+    },
+    {
+        title: "Birth of the Anarch Free States",
+        summary:
+            "A claimed or genuine connection to the Second Anarch Revolt in Los Angeles and the myth of the Free States.",
+        source: "In Memoriam p149",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Fake Revolutionary",
+                1,
+                "Gain 1 die to rally or manipulate Anarchs, but veterans may catch your false history."
+            ),
+            loreMerit(
+                "Connections",
+                2,
+                "Once per story, ask a veteran contact an honest question about Anarch politics or Free States history."
+            ),
+            loreMerit(
+                "Original Rebel",
+                3,
+                "Gain 1 die to tests involving revolution against Camarilla rule."
+            ),
+            loreMerit(
+                "Hero of the Revolution",
+                4,
+                "Once per story, summon five Anarch neonates for a justified anti-Camarilla action."
+            ),
+            loreMerit(
+                "Legacy of the Revolution",
+                5,
+                "Once per chronicle, spark a domain-wide Anarch revolt with Storyteller approval."
+            )
+        ]
+    },
+    {
+        title: "Childe of the Revolution",
+        summary:
+            "A Kindred survivor or inheritor of the French Revolution's violence, reformist salons, and Bohemian politics.",
+        source: "In Memoriam p150",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Rousing Speech",
+                1,
+                "Gain 2 dice to Persuasion or Leadership when arguing against the established order."
+            ),
+            loreMerit(
+                "Under the Guillotine",
+                2,
+                "Once per story, reroll a failed Hunger Frenzy test."
+            ),
+            loreMerit(
+                "Bal des Victimes",
+                3,
+                "Gain 2 or 3 dice to social tests when bonding through grief, especially with other attendees."
+            ),
+            loreMerit(
+                "Friend of Beaumont",
+                4,
+                "Count Felicien Beaumont as a 5-dot Mawla who asks one minor boon each story."
+            ),
+            loreMerit(
+                "Bohemian Affinities",
+                5,
+                "Distribute 5 dots among Haven, Contacts, and Resources and occasionally use the Halls of Montmartre as a hideout."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Dracula",
+        summary:
+            "A Tzimisce line claiming the dangerous legacy, charisma, earth-bound resilience, and occult potential of Vlad Tepes.",
+        source: "In Memoriam p151",
+        requirementFunctions: [isClan("Tzimisce")],
+        merits: [
+            loreMerit(
+                "Blood of the Dragon",
+                1,
+                "Once per story, gain 1 die to all Physical tests for a scene."
+            ),
+            loreMerit(
+                "Of the Earth",
+                2,
+                "Once per story, bury yourself for 48 hours to mend all aggravated Willpower or Physical damage."
+            ),
+            loreMerit(
+                "Charisma of the Count",
+                3,
+                "Gain a Persuasion specialty and 1 die to seduction or charm tests."
+            ),
+            loreMerit(
+                "Whispers in the Blood",
+                4,
+                "Once per story, use an unknown power from a Discipline you already possess at your current level or lower."
+            ),
+            loreMerit(
+                "Dracula's Chosen",
+                5,
+                "Once per story, call on your bloodline for up to a major boon, with political expectations attached."
+            )
+        ]
+    },
+    {
+        title: "The Order of Repentants",
+        summary:
+            "Kindred penitents who once lost themselves to the Beast and now seek discipline, atonement, and control.",
+        source: "In Memoriam p152",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Sponsorship",
+                1,
+                "Gain a 3-dot Mawla from the order who helps once per story and may police your conduct."
+            ),
+            loreMerit(
+                "Surface Empathy",
+                2,
+                "Once per session, gain 2 dice to an Insight or Persuasion test."
+            ),
+            loreMerit(
+                "Flagellation",
+                3,
+                "Gain 1 die to resist frenzy, but must later inflict aggravated damage on yourself or fail the next frenzy test."
+            ),
+            loreMerit(
+                "Superior Focus",
+                4,
+                "Once per story, reroll one Bestial Failure without spending Willpower."
+            ),
+            loreMerit(
+                "Benevolence",
+                5,
+                "Once per story, reroll a failed Remorse test for yourself or another player."
+            )
+        ]
+    },
+    {
+        title: "The Red Lady",
+        summary:
+            "Access to a Prague Toreador's infamous parties, shifting favorites, and discreet Camarilla favors.",
+        source: "In Memoriam p153",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "You Gotta Know Somebody",
+                1,
+                "Know a contact who can get you into one of the Red Lady's parties."
+            ),
+            loreMerit(
+                "Person of Interest",
+                2,
+                "Gain 1 die to Charisma tests around the Red Lady or her partygoers when you fit her current tastes."
+            ),
+            loreMerit(
+                "A Pretty Pet",
+                3,
+                "Count the Red Lady as a 2-dot Mawla and gain Herd 1 and Resources 1 while you remain favored."
+            ),
+            loreMerit(
+                "A Trusted Friend",
+                4,
+                "Once per story, host the Red Lady for a favor and gain 1 Camarilla Status."
+            ),
+            loreMerit(
+                "Red Haze",
+                5,
+                "Once per story, have the Red Lady hide evidence of diablerie in your Blood and aura."
+            )
+        ]
+    },
+    {
+        title: "The Vanderbilt Ventrue",
+        summary:
+            "A Ventrue connection to the gilded wealth, social leverage, and occult bargains surrounding the Vanderbilt circle.",
+        source: "In Memoriam p154",
+        requirementFunctions: [isClan("Ventrue")],
+        merits: [
+            loreMerit(
+                "Well-connected",
+                1,
+                "Once per story, call on a distant Vanderbilt relation for a minor social, financial, or professional favor."
+            ),
+            loreMerit(
+                "Financial Problem-solving",
+                2,
+                "Gain 1 Resources and spend Willpower to secure a temporary professional Retainer for the story."
+            ),
+            loreMerit(
+                "Someone of Worth",
+                3,
+                "Gain 1 die with high society and 1 die to read intentions in elite social situations."
+            ),
+            loreMerit(
+                "In the Know",
+                4,
+                "Once per story, blackmail a suitable ancilla or elder, with risky repeat attempts possible."
+            ),
+            loreMerit(
+                "Ancient Pact",
+                5,
+                "Perform a costly occult bargain for 2 automatic successes on finance-related tests for a story, but suffer bad luck near Final Death."
+            )
+        ]
+    },
+    {
+        title: "The Anubi",
+        summary:
+            "Lupine-hunting coteries modeled after Milwaukee's Anubi, ranging from silver-armed strike teams to tense werewolf diplomats.",
+        source: "Let the Streets Run Red p224",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Argent Fury",
+                1,
+                "Once per story, equip yourself with a silver handheld weapon or ammunition."
+            ),
+            loreMerit(
+                "What Big Eyes You Have",
+                2,
+                "Once per story, gain 2 automatic successes to investigate Lupines in your domain."
+            ),
+            loreMerit(
+                "Brick House",
+                3,
+                "Spend 4 dots on Haven and Retainers dedicated to defense against Lupines."
+            ),
+            loreMerit(
+                "In the City, In the Woods",
+                4,
+                "Choose a Lupine-hunting, diplomacy, or werewolf-blood benefit for your organization."
+            ),
+            loreMerit(
+                "Summon the Pack",
+                5,
+                "Once per story when Lupines are involved, call on a temporary Mawla and Anubi biker Allies."
+            )
+        ]
+    },
+    {
+        title: "Eletria",
+        summary:
+            "A personal tie to Eletria, vanished artist, warrior, former Prince of Veracruz, and one-time companion of Helena.",
+        source: "Let the Streets Run Red p225",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Muse",
+                1,
+                "Reduce difficulty by 1 on chosen painting, sculpture, or music tests."
+            ),
+            loreMerit(
+                "Portrait of a Woman",
+                2,
+                "Once per session, meditate on Eletria's art before rest to recover all superficial Willpower damage on a successful creative test."
+            ),
+            loreMerit(
+                "This is Sparta",
+                3,
+                "Gain 1 die to research or occult defense against hostile sect incursions."
+            ),
+            loreMerit(
+                "Ageless Beauty",
+                4,
+                "Once per session, glimpse and artistically reproduce a subject as they appeared in the past."
+            ),
+            loreMerit(
+                "Conspicuous Consumption",
+                5,
+                "Join Helena's feeding circle and distribute 5 dots among social and material Backgrounds, with secrecy demanded."
+            )
+        ]
+    },
+    {
+        title: "Kindred Social Media Influencer",
+        summary:
+            "A vampire risking online attention for money, reach, followers, information, and easy feeding.",
+        source: "Let the Streets Run Red p226",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Friends Everywhere",
+                1,
+                "Once per chapter, crowdsource help for a problem, rolling an unfamiliar skill or adding successes to a familiar area."
+            ),
+            loreMerit(
+                "Niche Following",
+                2,
+                "Gain 2 dots of field-specific Influence and once per story earn a temporary Resources boost from paid content."
+            ),
+            loreMerit(
+                "Internet Famous",
+                3,
+                "Gain 2 Resources and once per story arrange a meetup that provides Herd 1."
+            ),
+            loreMerit(
+                "Collabs and Sponsorships",
+                4,
+                "Gain Fame 2, fan Allies 2, and a company Contact 2."
+            ),
+            loreMerit(
+                "Superstar",
+                5,
+                "Gain Fame 3 and Resources 3 from your platform, but your visibility makes exposure deadly."
+            )
+        ]
+    },
+    {
+        title: "Juggler",
+        summary:
+            "A connection to Juggler's Gary Anarch network, revolutionary logistics, and hidden plans against the Camarilla.",
+        source: "Let the Streets Run Red p227",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "For the Cause",
+                1,
+                "Once per session, reroll Brawl, Melee, or Streetwise against Camarilla members."
+            ),
+            loreMerit(
+                "Guns to a Knife Fight",
+                2,
+                "Once per story, access one of Juggler's Gary weapon caches."
+            ),
+            loreMerit(
+                "Rabble Rouser",
+                3,
+                "Once per story, call on a small Kindred Anarch crew to create chaos or fight."
+            ),
+            loreMerit(
+                "Coordination is Key",
+                4,
+                "Gain Anarch Status 3, Gary Influence 3, and once per story ask for recent movement intel."
+            ),
+            loreMerit(
+                "Rust Never Sleeps",
+                5,
+                "Count Juggler or Evelyn as a 4-dot Mawla and once per story turn another city's Anarch into a temporary Contact."
+            )
+        ]
+    },
+    {
+        title: "Lost Secrets of the Milwaukee Chantry",
+        summary:
+            "Access to the abandoned Tremere mysteries, havens, grimoires, and occult sites left behind in Milwaukee.",
+        source: "Let the Streets Run Red p228",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Carna's Primogen Files",
+                1,
+                "Gain 1 die to Politics rolls involving Milwaukee Kindred."
+            ),
+            loreMerit(
+                "Abandoned Real Estate",
+                2,
+                "Gain access to a Milwaukee haven with either an occult library or hidden armory."
+            ),
+            loreMerit(
+                "Victor's Grimoire",
+                3,
+                "Blood sorcerers can justify learning one special Milwaukee ritual and later learn more from the grimoire."
+            ),
+            loreMerit(
+                "Objects of Desire",
+                4,
+                "Gain a precarious 4-dot haven near the Null Zone, plus serious enemies and rivals."
+            ),
+            loreMerit(
+                "Dr. Mortius's Haven",
+                5,
+                "Find Mortius's haunted haven and powerful occult library, with possible secrets and defenses inside."
+            )
+        ]
+    },
+    {
+        title: "Mark Decker",
+        summary:
+            "A place in Prince Decker's paranoid Milwaukee order, built on patrol duty, Lupine defense, and harsh law enforcement.",
+        source: "Let the Streets Run Red p229",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Good Graces",
+                1,
+                "Act with limited Decker authority on patrol, but accept a one-step Blood Bond."
+            ),
+            loreMerit(
+                "Tyrant's Recognition",
+                2,
+                "Gain a 2-dot Herd and 1-dot Haven as feeding rights for protecting Milwaukee."
+            ),
+            loreMerit(
+                "One Strike",
+                3,
+                "Once per story, plead down a minor breach of Decker's laws instead of facing Final Death."
+            ),
+            loreMerit(
+                "The Prince's Trust",
+                4,
+                "Once per story, count Decker as a 5-dot Mawla or secure a private audience with him."
+            ),
+            loreMerit(
+                "Childe of Mark Decker",
+                5,
+                "Gangrel only: gain Haven, Status, and a combat specialty from Decker's Embrace, plus Adversaries who hate his line."
+            )
+        ]
+    },
+    {
+        title: "Maxwell",
+        summary:
+            "Support from the vanished Brujah prince-in-waiting, his Gary Vanguard, and his plans to reclaim Chicago.",
+        source: "Let the Streets Run Red p230",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Tactician",
+                1,
+                "Gain 2 dice to academic, political, or deceptive planning and military rolls."
+            ),
+            loreMerit(
+                "Travelling Companion",
+                2,
+                "Once per story, call on Maxwell's allies for secure travel between cities."
+            ),
+            loreMerit(
+                "Vanguard",
+                3,
+                "Gain Gary Status 3, a 2-dot Haven, and recognized local standing."
+            ),
+            loreMerit(
+                "The Art of Disappearing",
+                4,
+                "Once per story, Maxwell helps create or retire a 2-dot Mask for anonymous work."
+            ),
+            loreMerit(
+                "The Once and Future Prince",
+                5,
+                "Gain Resources 5, access to Maxwell's boon list, and the obligation to spend his favors wisely."
+            )
+        ]
+    },
+    {
+        title: 'The Milwaukee "Null Zone"',
+        summary:
+            "Knowledge of the occult dead zone beneath Marquette University and the Lupine talismans buried there.",
+        source: "Let the Streets Run Red p231",
+        requirementFunctions: [],
+        merits: [
+            loreMerit("Legends of Usla", 1, "Gain 1 die to investigate or research the Null Zone."),
+            loreMerit(
+                "Into the Zone",
+                2,
+                "Safely access the Null Zone and exploit its strange effects on Auspex, Protean, and Blood Sorcery."
+            ),
+            loreMerit(
+                "St. Joan of Arc Chapel",
+                3,
+                "Know the warded chapel and hidden tunnels at the Zone's center."
+            ),
+            loreMerit(
+                "Church of Isis",
+                4,
+                "Once per chronicle, call on a 5-dot occult Ally group tied to the Zone."
+            ),
+            loreMerit(
+                "Usla's Talismans",
+                5,
+                "With permission, locate either a powerful Auspex or Protean talisman while drawing relentless Lupine pursuit."
+            )
+        ]
+    },
+    {
+        title: "Modius",
+        summary:
+            "A loyalist, correspondent, or beneficiary of Gary's self-styled Prince and his long feud with Juggler.",
+        source: "Let the Streets Run Red p233",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Followers",
+                1,
+                "Once per chapter, call on another Modius supporter for a small favor in Gary."
+            ),
+            loreMerit(
+                "Windy City Ally",
+                2,
+                "Gain a 2-dot Retainer sent by Modius as thanks for supporting his Chicago ambitions."
+            ),
+            loreMerit(
+                "Keys to the Mansion",
+                3,
+                "Use Modius's mansion haven and once per story ask for intel on Anarch movements."
+            ),
+            loreMerit(
+                "Since 1913",
+                4,
+                "Gain Gary Camarilla Status 4 and feeding permission throughout Gary, Anarch resistance notwithstanding."
+            ),
+            loreMerit(
+                "Pauper Dynasty",
+                5,
+                "Count Modius as a 5-dot Mawla and gain 2 Influence in a city he hopes you will one night rule."
+            )
+        ]
+    },
+    {
+        title: "The Ruby Throat",
+        summary:
+            "A connection to Atlantic City's undead gambling den, where Kindred stake status, secrets, vessels, and stranger prizes.",
+        source: "Ash and Bone p170",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Rubbing Shoulders",
+                1,
+                "Name-drop important patrons for 1 die to get access or information in Atlantic City, if you choose well."
+            ),
+            loreMerit(
+                "What's in your Sleeves",
+                2,
+                "Gain 2 dice to intimidate Kindred in the crime scene and identify Atlantic City night-spot regulars."
+            ),
+            loreMerit(
+                "Chicken Dinner",
+                3,
+                "Once per story, gain responsibility for a human vessel with a dyscrasia of your choice."
+            ),
+            loreMerit(
+                "High Roller",
+                4,
+                "Increase Resources by 2 up to 4 and access Herd 2 in Atlantic City, but gain a jealous Adversary."
+            ),
+            loreMerit(
+                "Dead Man's Hand",
+                5,
+                "Before the highest-stakes annual game, gain Atlantic City Status 3 and access to lesser games without a roll."
+            )
+        ]
+    },
+    {
+        title: "Relics of the Veil",
+        summary:
+            "Haunted relics and fetters that aid Oblivion, resist wraiths, reveal secrets, or carry the attention of the dead.",
+        source: "Ash and Bone p172",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Torn Shroud",
+                1,
+                "Hold a fragile shroud fragment for 1 die to Oblivion pools until overuse destroys it."
+            ),
+            loreMerit(
+                "Burning Effigy",
+                2,
+                "Burn the effigy once to heal extra aggravated Health next dusk while something else feels the pain."
+            ),
+            loreMerit(
+                "The Gaunt Robe",
+                3,
+                "Spend Willpower while wearing the robe for 2 automatic successes to resist wraith abilities."
+            ),
+            loreMerit(
+                "The Nails of Dismus",
+                4,
+                "Own a cruel relic nail that stakes vampires and torments them each dawn."
+            ),
+            loreMerit(
+                "Codex Caecitus",
+                5,
+                "Once per story, meditate on the codex to uncover a major deathly secret, wraith name, fetter, or Oblivion ritual."
+            )
+        ]
+    },
+    {
+        title: "Bankers of Dunsirn",
+        summary:
+            "A Hecata bloodline of cannibal financiers whose money, secrecy, and leverage keep the Clan of Death solvent.",
+        source: "Blood Gods p220",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            loreMerit(
+                "Money Obfuscates",
+                1,
+                "Gain a 2-dot Mask backed by family money, provided you maintain it each story."
+            ),
+            loreMerit(
+                "Money Talks",
+                2,
+                "Once per story, buy information as if you had Contacts equal to your Resources for one scene."
+            ),
+            loreMerit(
+                "Money Enhances",
+                3,
+                "Gain 1 die when using your own high-quality equipment for a roll."
+            ),
+            loreMerit(
+                "Money Multiplies",
+                4,
+                "Gain 3 Resources up to 5 and help your coterie recover from Destitute or buy Resources cheaply."
+            ),
+            loreMerit(
+                "Money Dictates",
+                5,
+                "Gain Hecata Status 3 and once per chronicle adjust Hecata Resources for a story, creating enemies if you take wealth away."
+            )
+        ]
+    },
+    {
+        title: "Harbingers of Ashur",
+        summary:
+            "Masked Cappadocian remnants whose Hecata identity balances death-scholarship, old grudges, and Underworld experience.",
+        source: "Blood Gods p224",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            loreMerit(
+                "The Ashen Mask",
+                1,
+                "When a Touchstone dies, corpse study can move their Conviction to another mortal as if the death were peaceful."
+            ),
+            loreMerit(
+                "The Gold Mask",
+                2,
+                "Use the equivalent of Influence 4 to cover up deaths by you or your coterie."
+            ),
+            loreMerit(
+                "The White Mask",
+                3,
+                "Gain 3 dice socially against Harbingers and 2 dice against other Hecata."
+            ),
+            loreMerit(
+                "The Obsidian Mask",
+                4,
+                "Learn Oblivion Ceremonies without a teacher, but ghost-targeting effects also threaten you."
+            ),
+            loreMerit(
+                "The Lazarene Mask",
+                5,
+                "Take no Stains for killing Hecata or Hecata servants in pursuit of your bloodline's final necromantic doctrine."
+            )
+        ]
+    },
+    {
+        title: "The Criminal Puttanesca",
+        summary:
+            "The Hecata's street-level enforcers and criminal fixers, handed the family's dirtiest organized-crime work.",
+        source: "Blood Gods p226",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            loreMerit(
+                "Friends in Low Places",
+                1,
+                "Split 2 dots between Allies and Resources each story, but police scrutiny follows."
+            ),
+            loreMerit(
+                "Show Your Belly",
+                2,
+                "Gain 3 dice to convince stronger people not to hurt or endanger you."
+            ),
+            loreMerit(
+                "Show Your Fists",
+                3,
+                "Gain 2 dice to intimidate mortals and increase unarmed damage against them by 1."
+            ),
+            loreMerit(
+                "Get the Squad Together",
+                4,
+                "Once per story, gather local Puttanesca and mortal Allies for a brawl, with an automatic social success to justify it."
+            ),
+            loreMerit(
+                "The Don",
+                5,
+                "Gain 3 dots each in criminal Contacts, Influence, and Resources, but maintaining them risks law-enforcement enemies."
+            )
+        ]
+    },
+    {
+        title: "The Gorgons",
+        summary:
+            "Lamia-descended Hecata warriors tied to Lilith, Bahari rites, body-control, and the old duty of protecting Cappadocians.",
+        source: "Blood Gods p227",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            loreMerit(
+                "The Serpent's Kiss",
+                1,
+                "Once per story, infect mortal prey with a disease that causes aggravated damage over three nights."
+            ),
+            loreMerit("Protection", 2, "Gain 2 dice when using Block to protect someone else."),
+            loreMerit(
+                "Four Humours",
+                3,
+                "Once per story, bite a mortal to penalize actions that do not match their current resonance."
+            ),
+            loreMerit(
+                "Controlling the Beast",
+                4,
+                "Once per session, convert a messy critical in combat into a normal critical."
+            ),
+            loreMerit(
+                "Medusa's Gaze",
+                5,
+                "Once per session after winning Intimidation or conflict, freeze the loser briefly in combat or for a scene outside combat."
+            )
+        ]
+    },
+    {
+        title: "Calling the Family Reunion",
+        summary:
+            "A Hecata insider tied to the negotiations, murders, favors, and spectral fallout that unified the Clan of Death.",
+        source: "Blood Gods p228",
+        requirementFunctions: [isClan("Hecata")],
+        merits: [
+            loreMerit(
+                "The Kids' Table",
+                1,
+                "Gain 2 dice to persuade Hecata against reopening old grudges."
+            ),
+            loreMerit(
+                "Updating the Rolodex",
+                2,
+                "Use the equivalent of Hecata Status 3 for information and small favors."
+            ),
+            loreMerit(
+                "Hiding the Bodies",
+                3,
+                "Once per story, cash in a Hecata elder's debt for a boon, with overuse creating an Adversary."
+            ),
+            loreMerit(
+                "Dealmaker",
+                4,
+                "Gain a 5-dot Hecata Mawla from a secret deal, who becomes an Adversary if exposed."
+            ),
+            loreMerit(
+                "Spiritual Assault",
+                5,
+                "Gain 2 automatic successes when you or someone you advise uses Oblivion Ceremonies against hostile ghosts."
+            )
+        ]
+    },
+    {
+        title: "Child of the Angel Michael",
+        summary:
+            "A Nephilim cultist pursuing beauty, perfection, hedonism, and the dream of a restored Constantinople.",
+        source: "Blood Gods p229",
+        requirementFunctions: [isNotClan("Nosferatu")],
+        merits: [
+            loreMerit(
+                "The Great and the Good",
+                1,
+                "Distribute 2 dots among Contacts, Fame, Herd, and Influence, attracting fanatical admirers."
+            ),
+            loreMerit(
+                "Outer Beauty",
+                2,
+                "Gain 4 dots of Looks even after character creation, but your appearance becomes memorable."
+            ),
+            loreMerit(
+                "Hedonistic Pleasure",
+                3,
+                "Gain 2 dice to find drugs, partners, or parties, and take either Fame 2 or Status 2."
+            ),
+            loreMerit(
+                "Michael's Calling",
+                4,
+                "Once per story, use another cult member's relevant Backgrounds as your own."
+            ),
+            loreMerit(
+                "Wiping Away the Stains",
+                5,
+                "Once per story, spend Willpower and a hedonistic hour to remove another vampire's Stain."
+            )
+        ]
+    },
+    {
+        title: "Servitor of Irad",
+        summary:
+            "A deep-cover cultist serving the Antediluvians by weakening elders, shattering alliances, and sowing division.",
+        source: "Blood Gods p230",
+        requirementFunctions: [],
+        merits: [
+            loreMerit("Shield of Irad", 1, "Gain 1 die when lying to other Kindred."),
+            loreMerit(
+                "Sword of Irad",
+                2,
+                "Once per story, add 3 dice to a roll central to your cult's plans."
+            ),
+            loreMerit(
+                "Know the Will of the Ancients",
+                3,
+                "Gain an extra infiltration-related Conviction sustained by the cult instead of a Touchstone."
+            ),
+            loreMerit(
+                "Do the Will of the Ancients",
+                4,
+                "Once per story, ignore your clan Bane while acting as a Servitor."
+            ),
+            loreMerit(
+                "Kill Thy Brother",
+                5,
+                "Once per story, gain 2 dice to inflict aggravated damage on a vampire and ignore fire frenzy for that attack."
+            )
+        ]
+    },
+    {
+        title: "The Promise of 1528",
+        summary:
+            "Forbidden knowledge of the expiring pact between the Giovanni and the Camarilla, useful in legal and political pressure.",
+        source: "Blood Gods p231",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Legal Scholar",
+                1,
+                "Gain 2 dice to Persuasion in legal disputes with Camarilla or Hecata Kindred."
+            ),
+            loreMerit(
+                "Scrap of Information",
+                2,
+                "Once per story, share research notes for a temporary Background dot and a future major boon."
+            ),
+            loreMerit(
+                "Tick Tock",
+                3,
+                "Once per story, secure a faction audience and 2 automatic successes when leveraging Promise knowledge."
+            ),
+            loreMerit(
+                "Faulty Memory",
+                4,
+                "Once per story, add 3 dice when a resurfaced memory of the Promise would help."
+            ),
+            loreMerit(
+                "Signatory",
+                5,
+                "Once per chronicle, force a Camarilla Prince or Hecata anziani to change a ruling in your favor."
+            )
+        ]
+    },
+    {
+        title: "Annabelle",
+        summary:
+            "A link to Chicago's Toreador Primogen, her parties, media ties, art patronage, and long Primogen influence.",
+        source: "Chicago by Night p262",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Intern",
+                1,
+                "Once per story, ask Annabelle for guidance, whether or not her help is cleanly beneficial."
+            ),
+            loreMerit(
+                "Glitterati",
+                2,
+                "Once per story, get yourself onto an event guest list through your name or fame."
+            ),
+            loreMerit(
+                "With Thanks to Our Donors",
+                3,
+                "Once per story, Annabelle arranges a meeting with someone important in art, media, or culture."
+            ),
+            loreMerit(
+                "Patronage",
+                4,
+                "Once per story, performing or selling art through Annabelle raises Resources by 1 for the story."
+            ),
+            loreMerit(
+                "Inner Circle",
+                5,
+                "Once per story, have Annabelle bring an issue of your choice before the Primogen council."
+            )
+        ]
+    },
+    {
+        title: "Ballard Industries",
+        summary:
+            "Access to Horatio Ballard's corporate empire, legal machinery, police leverage, and Ventrue financial power.",
+        source: "Chicago by Night p263",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Deep Pockets",
+                1,
+                "Once per story, restore Resources after an event reduces them."
+            ),
+            loreMerit(
+                "Where the In-Crowd Goes",
+                2,
+                "Once per story, invoke Ballard influence for 3 dice in a corporate social test, or risk a breach for automatic success."
+            ),
+            loreMerit(
+                "I Fought the Law, and I Won",
+                3,
+                "Always have access to Police Influence 3 in your home state or district."
+            ),
+            loreMerit(
+                "Favors for Favors",
+                4,
+                "Spend resources for an SPC to create a debt and gain leverage enforcing repayment."
+            ),
+            loreMerit(
+                "The View from the Top",
+                5,
+                "Run part of Ballard's empire, gaining major Backgrounds and business enemies."
+            )
+        ]
+    },
+    {
+        title: "Blacksite 24",
+        summary:
+            "Knowledge of FIRSTLIGHT's hidden Illinois detention and research site for captured vampires.",
+        source: "Chicago by Night p264",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Rumors",
+                1,
+                "Once per story, receive one possibly unreliable rumor about suspicious disappearances."
+            ),
+            loreMerit(
+                "No, Really!",
+                2,
+                "Once per story, receive a solid piece of information about what you witnessed."
+            ),
+            loreMerit(
+                "Paranoia Strikes Deep",
+                3,
+                "Once per story, use Contacts 4 focused on FIRSTLIGHT or similar hunter operations."
+            ),
+            loreMerit(
+                "It's My Job To Know This Stuff",
+                4,
+                "Gain Kindred Status 2 and mortal Influence 2 from your specialist security knowledge."
+            ),
+            loreMerit(
+                "The One That Got Away",
+                5,
+                "You escaped Blacksite 24, can recover one clear memory per story, and resist FIRSTLIGHT-induced Rotschreck."
+            )
+        ]
+    },
+    {
+        title: "The Blue Velvet",
+        summary:
+            "A place in Bronwyn's legendary Chicago club, its history, guest traffic, stage, VIP access, and secret patronage.",
+        source: "Chicago by Night p266",
+        requirementFunctions: [],
+        merits: [
+            loreMerit("Est. 1972", 1, "Gain 2 dice to recall or use Blue Velvet history."),
+            loreMerit(
+                "Who's Who",
+                2,
+                "Once per story, learn when a club regular last visited, how they behaved, and who they met."
+            ),
+            loreMerit(
+                "Standing Gig",
+                3,
+                "Once per story while performing at the club, gain temporary Resources 3 or Herd 3."
+            ),
+            loreMerit(
+                "VIP Club",
+                4,
+                "Count Bronwyn as a 4-dot Ally or Mawla and gain private VIP access."
+            ),
+            loreMerit(
+                "Backstage Pass",
+                5,
+                "Once per story, request Bronwyn's aid with money, influence, or club access."
+            )
+        ]
+    },
+    {
+        title: "The Book of Nod",
+        summary:
+            "Study, fragments, and authority around Cainite scripture, Noddist prophecy, and the forbidden history of Caine.",
+        source: "Chicago by Night p267",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Precis",
+                1,
+                "Once per story, add 2 dice to Academics or Occult about ancient Cainite history."
+            ),
+            loreMerit(
+                "Well-versed",
+                2,
+                "Once per story, seek a sire or Mawla's help for 2 dice to Noddist Occult."
+            ),
+            loreMerit(
+                "Scholar",
+                3,
+                "Once per session, add 3 dice to Persuasion when debating the Book of Nod."
+            ),
+            loreMerit(
+                "Collector",
+                4,
+                "Once per story, grant access to your collection for temporary resources or a future favor."
+            ),
+            loreMerit(
+                "Noddist Master",
+                5,
+                "Once per story, cite a fact or prophecy to automatically succeed at an appropriate Persuasion test."
+            )
+        ]
+    },
+    {
+        title: "Capone Gang",
+        summary:
+            "Membership, favors, and criminal access through Eddie Wu's vampiric continuation of Capone's Chicago underworld.",
+        source: "Chicago by Night p268",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "A Favor for a Favor",
+                1,
+                "Once per story, use Capone Gang Contacts and Allies for illegal goods, information, or services."
+            ),
+            loreMerit(
+                "In Debt",
+                2,
+                "Once per story, have the gang solve a major problem, then owe Eddie a favor."
+            ),
+            loreMerit(
+                "Just One Job",
+                3,
+                "Join a planned heist and gain Resources 3 after a successful job."
+            ),
+            loreMerit(
+                "One of Us",
+                4,
+                "Gain Resources 2, Capone Gang Allies 2, and 1 die to Streetwise about organized crime."
+            ),
+            loreMerit(
+                "Prodigal Child",
+                5,
+                "Gain Capone Gang Contacts 4, Eddie Wu as Mawla 2, and a gang safehouse haven, while owing loyalty."
+            )
+        ]
+    },
+    {
+        title: "The Cobweb",
+        summary:
+            "A Malkavian's psychic tie to the Madness Network, from stray impressions to direct communion with the mind inside it.",
+        source: "Chicago by Night p270",
+        requirementFunctions: [isClan("Malkavian")],
+        merits: [
+            loreMerit(
+                "A Break in the Static",
+                1,
+                "Catch brief Malkavian Network impressions, enough to understand an order or call for aid."
+            ),
+            loreMerit(
+                "Step into My Parlor",
+                2,
+                "Communicate nearby through the Network using short phrases, images, and emotions."
+            ),
+            loreMerit(
+                "Across the Web",
+                3,
+                "Hold citywide Malkavian conversations and once per story initiate the Call."
+            ),
+            loreMerit(
+                "Pluck the Strands",
+                4,
+                "Once per story, observe through the senses of your sire or childe."
+            ),
+            loreMerit(
+                "Malkav's Will",
+                5,
+                "Once per story, ask for a secret about another Malkavian or the Network entity's orders."
+            )
+        ]
+    },
+    {
+        title: "Cultivar",
+        summary:
+            "A follower shaped by Nerissa Blackwater's Lilith cult into a weapon for the Ancestor and the New Garden.",
+        source: "Chicago by Night p271",
+        requirementFunctions: [],
+        merits: [
+            loreMerit("Dark Seedling", 1, "Once per story, call on Cultivar mortal Allies 2."),
+            loreMerit(
+                "Fresh Cutting",
+                2,
+                "Gain an Occult specialty in Bahari, Lilith, or the Ancestor and Status 1 with the Cultivars."
+            ),
+            loreMerit(
+                "Suppressing the Beast",
+                3,
+                "Gain Herd 3 and a once-per-story Haven 1 from cultists, but may never feed from animals again."
+            ),
+            loreMerit(
+                "Newly Made Initiate",
+                4,
+                "Gain Cultivar Status 3 and once per story add 2 dice to a Willpower roll by recalling your initiation."
+            ),
+            loreMerit(
+                "Jewel in the Garden",
+                5,
+                "Gain 4 dice to resist frenzy, while maintaining a Garden and answering the cult's summons."
+            )
+        ]
+    },
+    {
+        title: "Cult of Shalim",
+        summary:
+            "A Lasombra doomsday faith devoted to the annihilating peace of the Abyss and the end of reality.",
+        source: "Chicago by Night p272",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Dark Whispers",
+                1,
+                "Once per story, gain 2 dice to investigate or identify the cult."
+            ),
+            loreMerit(
+                "Cult Initiate",
+                2,
+                "Use the cult phrase to gain 2 dice when persuading an initiated member for aid."
+            ),
+            loreMerit(
+                "Power of Faith",
+                3,
+                "Ignore Impairment penalties while in a church or temple."
+            ),
+            loreMerit(
+                "Crush the Dreams of Life",
+                4,
+                "Read a target's ambition, exploit it socially, and potentially break their hopes for the story."
+            ),
+            loreMerit(
+                "Shalim Is",
+                5,
+                "Gain Herd 2, religious Influence 3, a Dark Secret, and automatic success hiding cult membership with Composure."
+            )
+        ]
+    },
+    {
+        title: "Descendant of Lodin",
+        summary:
+            "A Ventrue scion of Chicago's fallen prince, inheriting his bloodline's authority, secrets, enemies, and survival instinct.",
+        source: "Chicago by Night p273",
+        requirementFunctions: [isClan("Ventrue")],
+        merits: [
+            loreMerit("Baby of the Family", 1, "Among Chicago Ventrue, always have Mawla 1."),
+            loreMerit(
+                "Responsible Middle Childe",
+                2,
+                "Among peers of similar age and generation, always carry Status 2."
+            ),
+            loreMerit(
+                "Black Sheep of the Family",
+                3,
+                "Once per story, learn a secret about one of Lodin's childer."
+            ),
+            loreMerit(
+                "Like Sire, Like Childe",
+                4,
+                "Gain 2 dice to avoid physical or supernatural injury outside direct physical conflict."
+            ),
+            loreMerit(
+                "Long-Lost Relative",
+                5,
+                "Gain Ventrue and court Status 4, social attention, and a seat at the Prince's table."
+            )
+        ]
+    },
+    {
+        title: "Fires and Floods and Devil's Night",
+        summary:
+            "Experience with Chicago's disasters, the undead politics hidden in them, and the opportunities they created.",
+        source: "Chicago by Night p275",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Trivia Buff",
+                1,
+                "Gain 2 dice to Academics or Investigation about Chicago disasters."
+            ),
+            loreMerit(
+                "Old Bones",
+                2,
+                "Once per story, hide in an old rebuilt-over part of the city to shake pursuit."
+            ),
+            loreMerit(
+                "Devil's Night Survivor",
+                3,
+                "Once per story, add 3 dice to Social rolls with fire survivors or their childer."
+            ),
+            loreMerit(
+                "Local Hero",
+                4,
+                "Once per chronicle, gain temporary Influence 5 to sway mortal opinion through disaster goodwill."
+            ),
+            loreMerit(
+                "Puppetmaster",
+                5,
+                "Work with the Storyteller to define the disaster you helped orchestrate and what you gained from it."
+            )
+        ]
+    },
+    {
+        title: "FIRSTLIGHT",
+        summary:
+            "Operational knowledge, countermeasures, and inside help against the intelligence coalition hunting vampires.",
+        source: "Chicago by Night p276",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Evasion Tactics",
+                1,
+                "Gain 1 die to avoid surveillance, tails, or recording."
+            ),
+            loreMerit(
+                "Branch Office",
+                2,
+                "Know the location of the nearest FIRSTLIGHT base of operations."
+            ),
+            loreMerit(
+                "What Do They Know",
+                3,
+                "Once per story, ask what information FIRSTLIGHT has on you or a coterie-mate."
+            ),
+            loreMerit(
+                "No Records Found",
+                4,
+                "Gain 3 dice to Larceny, Stealth, or Survival when handling FIRSTLIGHT operations."
+            ),
+            loreMerit(
+                "Friend on the Inside",
+                5,
+                "A mole warns you of actions against you and once per story performs minor sabotage."
+            )
+        ]
+    },
+    {
+        title: "Kevin Jackson",
+        summary:
+            "Service to Chicago's Prince, with access to his masks, ghouls, influence, gang network, and political favor.",
+        source: "Chicago by Night p277",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "New Blood",
+                1,
+                "Once per story, use a specially built 2-dot Mask backed by Jackson's Influence."
+            ),
+            loreMerit(
+                "Recent Graduate",
+                2,
+                "Gain a 2-dot Retainer ghoul who teaches Chicago and assists your assigned duties."
+            ),
+            loreMerit(
+                "Up and Comer",
+                3,
+                "Gain Influence 3 in one of Jackson's interests and once per story invoke him for automatic social success."
+            ),
+            loreMerit(
+                "Adjutant",
+                4,
+                "Once per story, call on the Bloods as Allies 3 and Contacts 2 for an upcoming scene."
+            ),
+            loreMerit(
+                "The Prince's Lieutenant",
+                5,
+                "Gain Kevin Jackson as Mawla 4 and once per story request permission to Embrace a chosen mortal."
+            )
+        ]
+    },
+    {
+        title: "Kindred Iconography",
+        summary:
+            "Mastery of vampire symbols, fashion, graffiti, and clan imagery as a practical visual language.",
+        source: "Chicago by Night p278",
+        requirementFunctions: [],
+        merits: [
+            loreMerit("Iconographer", 1, "Gain 2 dice to Academics involving Kindred symbols."),
+            loreMerit(
+                "The Writing on the Wall",
+                2,
+                "Gain 3 dice to Streetwise when reading local vampire signs in public art and markings."
+            ),
+            loreMerit(
+                "Trendsetter",
+                3,
+                "Gain 2 dice to Social rolls while dressed in your clan or affiliation imagery."
+            ),
+            loreMerit(
+                "Graffiti Artist",
+                4,
+                "Gain 3 dice to Craft rolls involving Kindred iconography."
+            ),
+            loreMerit(
+                "Giorgio Who?",
+                5,
+                "Once per story, your design grants Status 2 or your critique removes Status 1 for a session."
+            )
+        ]
+    },
+    {
+        title: "The Labyrinth",
+        summary:
+            "Access to Chicago's abandoned underground superstation, its hidden communities, rumors, parties, oracles, and safe routes.",
+        source: "Chicago by Night p279",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Tunnel Access",
+                1,
+                "Use a safe Labyrinth path to hide or escape, as long as you do not stray."
+            ),
+            loreMerit(
+                "Boxcar Blues",
+                2,
+                "Gain Performance and Streetwise specialties for decoding Labyrinth folk songs and rumors."
+            ),
+            loreMerit(
+                "Church",
+                3,
+                "Know and can attend the monthly underground club night with a plus one."
+            ),
+            loreMerit("Lydia's Lair", 4, "Gain access to Lydia the oracle as a 4-dot Mawla."),
+            loreMerit(
+                "Hideout",
+                5,
+                "Gain Labyrinth Kindred Community Allies 4 for protection and hiding."
+            )
+        ]
+    },
+    {
+        title: "Lupine Expert",
+        summary:
+            "Rare survival-tested knowledge of werewolves, from tracking and tactics to parley between Lupines and Kindred.",
+        source: "Chicago by Night p280",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Huntsman",
+                1,
+                "Once per session, gain 3 dice to a Mental test to pursue Lupines."
+            ),
+            loreMerit(
+                "Tactician",
+                2,
+                "Against Lupines, your group can always use Teamwork, with everyone contributing one die."
+            ),
+            loreMerit(
+                "Soldier",
+                3,
+                "When shifted Lupines fight you physically, their claw and bite damage modifier is reduced."
+            ),
+            loreMerit(
+                "Trophy",
+                4,
+                "Once per story, reveal a werewolf trophy to force a Lupine to flee or focus only on you."
+            ),
+            loreMerit(
+                "Ambassador",
+                5,
+                "Gain 2 dice to broker vampire-werewolf cooperation and once per chronicle unite them for a shared task."
+            )
+        ]
+    },
+    {
+        title: "Nathaniel Bordruff",
+        summary:
+            "A dangerous association with a bitter Nosferatu elder conspiring to expose and destroy Kindred society.",
+        source: "Chicago by Night p281",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Recruit",
+                1,
+                "Gain Bordruff as Mawla 2, but accept a one-step Blood Bond to him."
+            ),
+            loreMerit(
+                "Collaborator",
+                2,
+                "Gain Resources 1 and Status 1 through favors that deepen Bordruff's hold."
+            ),
+            loreMerit(
+                "Accomplice",
+                3,
+                "Gain a secured-room Haven, consistory Contacts, and insight into Bordruff's anti-Kindred cause."
+            ),
+            loreMerit(
+                "Conspirator",
+                4,
+                "Gain Allies 4 in Bordruff's ghoul church network devoted to destroying the undead."
+            ),
+            loreMerit(
+                "Betrayer",
+                5,
+                "Choose whether to betray Bordruff or the Kindred, with major Status, Mawla, and enemy consequences."
+            )
+        ]
+    },
+    {
+        title: "The Painted Lady",
+        summary:
+            "An invitation into Edith Beaubien's exclusive body-art, BDSM, and counterculture salon in Chicago.",
+        source: "Chicago by Night p282",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Plus One",
+                1,
+                "After visiting as someone's guest, gain 2 dice to Persuasion and temporary Status with fans for a week."
+            ),
+            loreMerit(
+                "Engraved Invitation",
+                2,
+                "Gain Painted Lady Enthusiasts Influence 2 and access to willing blood-play feeding."
+            ),
+            loreMerit(
+                "Schedule an Appointment",
+                3,
+                "Attend weekly, gain a 2-dot Retainer admirer, and improve counterculture Status if you get work done."
+            ),
+            loreMerit(
+                "VIP",
+                4,
+                "Gain Herd 3 and BDSM Community Contacts 2 through full VIP access."
+            ),
+            loreMerit(
+                "A Beaubien Original",
+                5,
+                "Gain 2 dice to Streetwise and permanent Status among Painted Lady devotees and Chicago Kindred."
+            )
+        ]
+    },
+    {
+        title: "Revenant Family: Ducheski",
+        summary:
+            "Tremere access to a declining revenant family of scholars, assistants, and occult inventors.",
+        source: "Chicago by Night p283",
+        requirementFunctions: [isClan("Tremere")],
+        merits: [
+            loreMerit(
+                "Nourishing Blood",
+                1,
+                "Gain a Ducheski Retainer whose blood sustains without Blood Bond risk."
+            ),
+            loreMerit(
+                "Personal Library",
+                2,
+                "Choose two scholarly skills; specialties in them grant 1 extra die through the revenant library."
+            ),
+            loreMerit(
+                "Research Team",
+                3,
+                "Gain a Ducheski Retainer group and halve ritual-learning time once per story."
+            ),
+            loreMerit(
+                "Ritual Assistant",
+                4,
+                "A revenant assistant reduces ritual difficulty by 1, with larger teams adding dice."
+            ),
+            loreMerit(
+                "Ducheski Invention",
+                5,
+                "Own a custom Ducheski device that acts as a powerful specialty for one skill."
+            )
+        ]
+    },
+    {
+        title: "The Society of St. Leopold",
+        summary:
+            "Inside knowledge of the Church's old vampire hunters and their modern role beside FIRSTLIGHT.",
+        source: "Chicago by Night p285",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Postulant",
+                1,
+                "Once per story, ask for known information about the Society."
+            ),
+            loreMerit("Novice", 2, "Gain 2-dot Contacts in your former religious community."),
+            loreMerit(
+                "Brother or Sister",
+                3,
+                "Gain 2 dice to religious-district Academics and Occult and once per story find a church Haven 1."
+            ),
+            loreMerit(
+                "Father or Mother",
+                4,
+                "Gain diocesan Influence 3 against the Society and Haven 2, but take Infamy."
+            ),
+            loreMerit(
+                "Inquisitor",
+                5,
+                "Once per story, ask for true information about the Society and its current activities."
+            )
+        ]
+    },
+    {
+        title: "Talley",
+        summary:
+            "A tie to the Lasombra assassin and bodyguard, his danger sense, secret channels, and professional violence.",
+        source: "Chicago by Night p286",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Recognize the Signs",
+                1,
+                "Once per story, ask if an action is likely to cause severe social backlash."
+            ),
+            loreMerit(
+                "Secret Communications",
+                2,
+                "Once per chronicle, claim a prominent Camarilla member as a 3-dot Mawla for a session."
+            ),
+            loreMerit(
+                "Tangled Strings",
+                3,
+                "Gain 2 dice to detect manipulation and 2 dice to socially manipulate the manipulator."
+            ),
+            loreMerit(
+                "Trained Killer",
+                4,
+                "Once per chronicle, Talley acts as Mawla 4 and grants access to his portable armory."
+            ),
+            loreMerit(
+                "Personal Defender",
+                5,
+                "For one session, Talley serves as your silent bodyguard under contract."
+            )
+        ]
+    },
+    {
+        title: "Wauneka",
+        summary:
+            "Trust and information from the Nosferatu's street-level whisper network of Chicago's unseen and discarded.",
+        source: "Chicago by Night p287",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Secluded Meetup",
+                1,
+                "Once per story, meet Wauneka for one secret from his network."
+            ),
+            loreMerit(
+                "Spy Paths",
+                2,
+                "Once per story, use hidden paths and vantage points to spy without being noticed."
+            ),
+            loreMerit(
+                "Insider Connections",
+                3,
+                "Once per story, Wauneka provides a temporary inside Retainer 2 who can become a Contact."
+            ),
+            loreMerit(
+                "Spy Skills",
+                4,
+                "Once per story, gain three secrets and receive Investigation and Insight specialties."
+            ),
+            loreMerit(
+                "Darkest Whispers",
+                5,
+                "Gain Wauneka and his underground associates as Allies 3, and once per story advise a political move."
+            )
+        ]
+    },
+    {
+        title: "Agent of Justicar Parr",
+        summary:
+            "Service as a trusted observer, investigator, or archon under Malkavian Justicar Juliette Parr.",
+        source: "Fall of London p231",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Information Drop",
+                1,
+                "Once per story, ask for investigation-relevant information from Parr's network."
+            ),
+            loreMerit(
+                "Camarilla Conditioning",
+                2,
+                "Gain 1 die to duty-related Willpower tests and to resist being intimidated or compelled away from duty."
+            ),
+            loreMerit(
+                "Request Backup",
+                3,
+                "Once per story, call a 5-dot Ally for one scene of Camarilla support."
+            ),
+            loreMerit(
+                "Favored Protege",
+                4,
+                "Count Parr as a 5-dot Mawla, but she makes frequent possessive demands."
+            ),
+            loreMerit(
+                "Camarilla Archon",
+                5,
+                "Hold an Archon's warrant demanding Camarilla cooperation, attracting respect, resentment, and enemies."
+            )
+        ]
+    },
+    {
+        title: "Court of Shadows",
+        summary:
+            "Service to London's King of Shadows, gaining food, rumors, contraband, sanctuary, and rare personal favor.",
+        source: "Fall of London p232",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Free Meals",
+                1,
+                "Once per session, receive a willing compatible vessel from the Court."
+            ),
+            loreMerit(
+                "Rumor Mill",
+                2,
+                "Once per session, trade useful information for rumors or services."
+            ),
+            loreMerit(
+                "Contraband",
+                3,
+                "Once per story, source illegal drugs, weapons, explosives, or similar goods for a price."
+            ),
+            loreMerit(
+                "Sanctuary",
+                4,
+                "Once per story, ask the Court to hide you safely in one of the King's secret sites."
+            ),
+            loreMerit(
+                "Favored by the King",
+                5,
+                "Once per story, call on the King of Shadows directly for materially useful aid."
+            )
+        ]
+    },
+    {
+        title: "Hunt Club",
+        summary:
+            "Membership in London's secret Kindred-hunting society, infamous for sport hunts and diablerie.",
+        source: "Fall of London p233",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Huntsman's Newsletter",
+                1,
+                "Receive notice of Blood Hunts and important hunting opportunities once per story."
+            ),
+            loreMerit(
+                "Experienced Diablerist",
+                2,
+                "Gain 1 die to future diablerie absorption rolls, while risking visible aura stains."
+            ),
+            loreMerit(
+                "Huntsman's Dossier",
+                3,
+                "Once per story, ask the club for a named local Kindred's whereabouts or favorite haunts."
+            ),
+            loreMerit(
+                "Huntsman's Steed",
+                4,
+                "Own a plain, reinforced hunting vehicle designed to contain Kindred prey."
+            ),
+            loreMerit(
+                "Leader of the Hunt",
+                5,
+                "Once per story, name a Kindred quarry for organized harassment and attacks by the Hunt Club."
+            )
+        ]
+    },
+    {
+        title: "London Under London",
+        summary:
+            "Nosferatu mastery of London's tunnels, stations, service shafts, vermin, bolt-holes, and unseen routes.",
+        source: "Fall of London p234",
+        requirementFunctions: [isClan("Nosferatu")],
+        merits: [
+            loreMerit(
+                "Tube Safety",
+                1,
+                "Use station knowledge to pass through or hunt in the Tube undetected on a successful Stealth test."
+            ),
+            loreMerit(
+                "Somewhere to Hide",
+                2,
+                "Find a concealed underground hiding place with a successful Larceny test."
+            ),
+            loreMerit(
+                "Network of Vermin",
+                3,
+                "Find underground animals more easily and gain 1 die to relevant Animalism powers below London."
+            ),
+            loreMerit(
+                "Personal Bolt-Hole",
+                4,
+                "Maintain a secret mundane underground haven and storage site."
+            ),
+            loreMerit(
+                "Freedom of the City",
+                5,
+                "Once per story, travel between surface locations through underground routes without ground-level detection."
+            )
+        ]
+    },
+    {
+        title: "Operation Antigen",
+        summary:
+            "Contacts, leverage, and false access inside the anti-vampire operation that purged London.",
+        source: "Fall of London p235",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Early Warning",
+                1,
+                "Once, an insider warns you if Antigen plans to capture you."
+            ),
+            loreMerit(
+                "Tactical Dossier",
+                2,
+                "Use Antigen procedures to outwit them for one scene before they adapt."
+            ),
+            loreMerit(
+                "Sympathetic Insider",
+                3,
+                "Once per story, ask a cautious 4-dot Contact about Antigen activity."
+            ),
+            loreMerit(
+                "Get Out of Jail Free",
+                4,
+                "Blackmail a senior Antigen figure for one major service, then land on their watch list."
+            ),
+            loreMerit(
+                "Official Credentials",
+                5,
+                "Use false Antigen credentials once to command personnel, seize evidence, or infiltrate an operation."
+            )
+        ]
+    },
+    {
+        title: "Oskar Anasov",
+        summary:
+            "A working relationship with London's Nosferatu messenger, smuggler, compact enforcer, and Landlord convener.",
+        source: "Fall of London p236",
+        requirementFunctions: [],
+        merits: [
+            loreMerit(
+                "Messaging Service",
+                1,
+                "Pay Anasov to deliver secure messages to other London Kindred."
+            ),
+            loreMerit(
+                "Personal Introduction",
+                2,
+                "Once per story, pay Anasov to arrange a face-to-face meeting with a London Kindred."
+            ),
+            loreMerit(
+                "Safe Passage",
+                3,
+                "Once per story, have Anasov smuggle up to six people into or out of London."
+            ),
+            loreMerit(
+                "Mentor",
+                4,
+                "Count Anasov as a 4-dot Mawla with discounted services and recurring requests."
+            ),
+            loreMerit(
+                "Landlord Council",
+                5,
+                "Receive invitations to Landlord meetings and once per story ask Anasov to convene one with cause."
+            )
         ]
     }
     // {

@@ -1,12 +1,22 @@
-import { Badge, Box, Button, Card, Grid, Group, ScrollArea, Stack, Text } from "@mantine/core"
+import {
+    Badge,
+    Box,
+    Button,
+    Card,
+    Grid,
+    Group,
+    ScrollArea,
+    Stack,
+    Text,
+    TextInput
+} from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { IconChevronLeft } from "@tabler/icons-react"
-import { useState } from "react"
+import { IconChevronLeft, IconSearch } from "@tabler/icons-react"
+import { useMemo, useState } from "react"
 import { essentialLoresheets, Loresheet, MeritOrFlaw } from "../../data/MeritsAndFlaws"
 import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
-import React from "react"
 
 type LoresheetProps = {
     character: Character
@@ -14,14 +24,30 @@ type LoresheetProps = {
     pickedMeritsAndFlaws: MeritFlaw[]
 }
 
-// TODO: Create text-filter for loresheets?
 export const Loresheets = ({
     character,
     getMeritOrFlawLine,
     pickedMeritsAndFlaws
 }: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
+    const [loresheetQuery, setLoresheetQuery] = useState("")
     const openLoresheet = essentialLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const normalizedLoresheetQuery = loresheetQuery.trim().toLocaleLowerCase()
+
+    const filteredLoresheets = useMemo(
+        () =>
+            essentialLoresheets.filter((loresheet) => {
+                const requirementsMet = loresheet.requirementFunctions.every((fun) =>
+                    fun(character)
+                )
+                const titleMatches =
+                    normalizedLoresheetQuery.length === 0 ||
+                    loresheet.title.toLocaleLowerCase().includes(normalizedLoresheetQuery)
+
+                return requirementsMet && titleMatches
+            }),
+        [character, normalizedLoresheetQuery]
+    )
 
     const getLoresheetCol = (loresheet: Loresheet) => {
         const sheetPicked =
@@ -29,9 +55,6 @@ export const Loresheets = ({
                 pickedMeritsAndFlaws.map((m) => m.name),
                 loresheet.merits.map((m) => m.name)
             ).length > 0
-
-        const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
-        if (!requirementsMet) return <React.Fragment key={loresheet.title}></React.Fragment>
 
         return (
             <Grid.Col span={smallScreen ? 12 : 4} key={loresheet.title}>
@@ -126,17 +149,51 @@ export const Loresheets = ({
                 boxShadow: "0 24px 60px rgba(0, 0, 0, 0.24)"
             }}
         >
-            <Grid w={"100%"} m={0} gutter="lg">
-                {openLoresheet ? (
+            {openLoresheet ? (
+                <Grid w={"100%"} m={0} gutter="lg">
                     <OpenedLoresheet
                         loresheet={openLoresheet}
                         getMeritOrFlawLine={getMeritOrFlawLine}
                         setOpenLoresheetTitle={setOpenLoresheetTitle}
                     />
-                ) : (
-                    essentialLoresheets.map(getLoresheetCol)
-                )}
-            </Grid>
+                </Grid>
+            ) : (
+                <Stack gap="lg">
+                    <TextInput
+                        aria-label="Search loresheets"
+                        leftSection={<IconSearch size={16} />}
+                        placeholder="Search loresheets by title"
+                        value={loresheetQuery}
+                        onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
+                        styles={{
+                            input: {
+                                background: "rgba(255, 255, 255, 0.04)",
+                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                                color: "rgba(244, 236, 232, 0.94)"
+                            }
+                        }}
+                    />
+                    <Grid w={"100%"} m={0} gutter="lg">
+                        {filteredLoresheets.length > 0 ? (
+                            filteredLoresheets.map(getLoresheetCol)
+                        ) : (
+                            <Grid.Col span={12}>
+                                <Text
+                                    ta="center"
+                                    py="xl"
+                                    style={{
+                                        fontFamily: "Crimson Text, Georgia, serif",
+                                        fontSize: "1.05rem",
+                                        color: rgba(RAW_GREY, 0.72)
+                                    }}
+                                >
+                                    No loresheets match that title.
+                                </Text>
+                            </Grid.Col>
+                        )}
+                    </Grid>
+                </Stack>
+            )}
         </Box>
     )
 }

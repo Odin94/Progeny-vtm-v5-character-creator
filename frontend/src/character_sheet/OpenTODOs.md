@@ -1,6 +1,5 @@
 ## Latest requests
 
-
 ## Character Sheet TODOs
 
 - Links from creator to sheet and vice versa
