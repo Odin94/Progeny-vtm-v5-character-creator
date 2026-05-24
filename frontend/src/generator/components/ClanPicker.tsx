@@ -17,7 +17,7 @@ import { useEffect } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
-import { ClanName, clanNameSchema } from "~/data/NameSchemas"
+import { ClanName, clanNameSchema, DisciplineName } from "~/data/NameSchemas"
 import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import { globals } from "../../globals"
@@ -44,20 +44,23 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
 
     const c1 = "rgba(26, 27, 30, 0.90)"
 
-    const createClanPick = (clan: ClanName, c2: string) => {
-        const bgColor = `linear-gradient(0deg, ${c1}, ${c2})`
+    const createClanPick = (clan: ClanName, accentColor: string) => {
+        const bgColor = `linear-gradient(0deg, ${c1}, ${mantineRgba(accentColor, 0.9)})`
+        const clanDisciplines = clan === "Caitiff" ? [] : clans[clan].nativeDisciplines
 
         return (
-            <Grid.Col key={clan} span={4}>
+            <Grid.Col key={clan} span={globals.isPhoneScreen ? 12 : 4}>
                 <Card
                     data-testid={`clan-${clan.toLowerCase().replace(/\s+/g, "-")}-card`}
                     shadow="sm"
                     padding="lg"
                     radius="md"
-                    h={275}
+                    h={globals.isPhoneScreen ? 350 : 330}
                     style={{
                         background: bgColor,
                         cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
                         transition: "transform 160ms ease, box-shadow 160ms ease"
                     }}
                     onMouseEnter={(event) => {
@@ -138,6 +141,30 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     <Text h={55} size="sm" color="dimmed" ta="center">
                         {clans[clan].description}
                     </Text>
+
+                    {clanDisciplines.length > 0 && (
+                        <Box
+                            mt="auto"
+                            pt="sm"
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 4,
+                                justifyContent: "center",
+                                marginLeft: -8,
+                                marginRight: -8,
+                                width: "calc(100% + 16px)"
+                            }}
+                        >
+                            {clanDisciplines.map((discipline) => (
+                                <DisciplineCard
+                                    key={discipline}
+                                    discipline={discipline}
+                                    accentColor={accentColor}
+                                />
+                            ))}
+                        </Box>
+                    )}
                 </Card>
             </Grid.Col>
         )
@@ -194,54 +221,42 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     <Grid grow m={0}>
                         {["Ventrue", "Tzimisce", "Lasombra"]
                             .map((c) => clanNameSchema.parse(c))
-                            .map((clan) =>
-                                createClanPick(clan, mantineRgba(theme.colors.blue[8], 0.9))
-                            )}
+                            .map((clan) => createClanPick(clan, theme.colors.blue[8]))}
                     </Grid>
 
                     <CategoryHeading label="Fighters & Protectors" />
                     <Grid grow m={0}>
                         {["Brujah", "Gangrel", "Banu Haqim"]
                             .map((c) => clanNameSchema.parse(c))
-                            .map((clan) =>
-                                createClanPick(clan, mantineRgba(theme.colors.red[8], 0.9))
-                            )}
+                            .map((clan) => createClanPick(clan, theme.colors.red[8]))}
                     </Grid>
 
                     <CategoryHeading label="Seducers & Deceivers" />
                     <Grid grow m={0}>
                         {["Toreador", "Ravnos", "Ministry"]
                             .map((c) => clanNameSchema.parse(c))
-                            .map((clan) =>
-                                createClanPick(clan, mantineRgba(theme.colors.grape[8], 0.9))
-                            )}
+                            .map((clan) => createClanPick(clan, theme.colors.grape[8]))}
                     </Grid>
 
                     <CategoryHeading label="Investigators & Researchers" />
                     <Grid grow m={0}>
                         {["Malkavian", "Tremere", "Hecata"]
                             .map((c) => clanNameSchema.parse(c))
-                            .map((clan) =>
-                                createClanPick(clan, mantineRgba(theme.colors.green[9], 0.9))
-                            )}
+                            .map((clan) => createClanPick(clan, theme.colors.green[9]))}
                     </Grid>
 
                     <CategoryHeading label="Hidden Lurkers" />
                     <Grid grow m={0}>
                         {["Nosferatu", "Salubri"]
                             .map((c) => clanNameSchema.parse(c))
-                            .map((clan) =>
-                                createClanPick(clan, mantineRgba(theme.colors.gray[6], 0.9))
-                            )}
+                            .map((clan) => createClanPick(clan, theme.colors.gray[6]))}
                     </Grid>
 
                     <CategoryHeading label="Advanced & Special Clans" />
                     <Grid grow m={0}>
                         {["Caitiff", "Thin-blood"]
                             .map((c) => clanNameSchema.parse(c))
-                            .map((clan) =>
-                                createClanPick(clan, mantineRgba(theme.colors.teal[8], 0.9))
-                            )}
+                            .map((clan) => createClanPick(clan, theme.colors.teal[8]))}
                     </Grid>
                 </div>
             </ScrollArea>
@@ -282,6 +297,49 @@ const CategoryHeading = ({ label }: { label: string }) => (
         </div>
     </Box>
 )
+
+const DisciplineCard = ({
+    discipline,
+    accentColor
+}: {
+    discipline: DisciplineName
+    accentColor: string
+}) => (
+    <Box
+        style={{
+            border: `1px solid ${mantineRgba(accentColor, 0.42)}`,
+            borderRadius: 6,
+            background: `linear-gradient(180deg, ${mantineRgba(accentColor, 0.24)} 0%, ${mantineRgba(accentColor, 0.1)} 100%)`,
+            boxShadow: `inset 0 0 12px ${mantineRgba(accentColor, 0.14)}`,
+            padding: "5px 6px",
+            minWidth: 0,
+            flexShrink: 0
+        }}
+    >
+        <Text
+            component="span"
+            style={{
+                display: "block",
+                fontFamily: "Cinzel, Georgia, serif",
+                fontSize: "0.64rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                lineHeight: 1,
+                textTransform: "uppercase",
+                color: "rgba(248, 240, 235, 0.9)",
+                whiteSpace: "nowrap"
+            }}
+        >
+            {formatDisciplineName(discipline)}
+        </Text>
+    </Box>
+)
+
+const formatDisciplineName = (discipline: DisciplineName) =>
+    discipline
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
 
 const meritsWithoutThinbloodMerits = (merits: MeritFlaw[]) =>
     merits.filter((m) => !isThinbloodMerit(m.name))

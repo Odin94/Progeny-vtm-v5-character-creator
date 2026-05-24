@@ -97,6 +97,32 @@ describe("createInconnuJson", () => {
         ])
     })
 
+    it("exports custom powers attached to known disciplines", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines.push({
+            name: "Stone Sermon",
+            description: "",
+            summary: "Speak through walls and foundations.",
+            dicePool: "Stamina + Potence",
+            level: 2,
+            discipline: "potence",
+            rouseChecks: 1,
+            amalgamPrerequisites: [],
+            isCustom: true
+        })
+
+        const result = createInconnuJson(character)
+        const potence = result.traits.find((trait) => trait.name === "Potence")
+
+        expect(potence).toEqual(
+            expect.objectContaining({
+                rating: 2,
+                type: "discipline",
+                subtraits: ["Prowess", "Stone_Sermon"]
+            })
+        )
+    })
+
     it("normalizes data to satisfy Inconnu validation constraints", () => {
         const character = getBasicTestCharacter()
         character.name = "A name with @ symbols that is much too long for Inconnu"

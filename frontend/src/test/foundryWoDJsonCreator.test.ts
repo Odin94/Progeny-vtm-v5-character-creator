@@ -165,6 +165,35 @@ describe("createWoD5EVttJson", () => {
         expect(flawItems.some((item: any) => item.name === "Direct Flaw")).toBe(true)
     })
 
+    it("exports custom powers attached to known disciplines", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines.push({
+            name: "Stone Sermon",
+            description: "",
+            summary: "Speak through walls and foundations.",
+            dicePool: "Stamina + Potence",
+            level: 2,
+            discipline: "potence",
+            rouseChecks: 1,
+            amalgamPrerequisites: [],
+            isCustom: true
+        })
+
+        const { json, validationErrors } = createWoD5EVttJson(character)
+
+        expect(validationErrors).toEqual([])
+        expect(json.system.disciplines.potence.value).toBe(2)
+        expect(json.system.disciplines.potence.powers).toContain("Stone Sermon")
+
+        const powerItem = json.items.find((item: any) => item.name === "Stone Sermon")
+        expect(powerItem).toBeDefined()
+        expect((powerItem!.system as any).discipline).toBe("potence")
+        expect((powerItem!.system as any).dicepool).toEqual({
+            stamina: { path: "attributes.stamina" },
+            potence: { path: "disciplines.potence" }
+        })
+    })
+
     it("should return validation errors for invalid data", () => {
         // @ts-expect-error - This is invalid data
         const invalidCharacter = {

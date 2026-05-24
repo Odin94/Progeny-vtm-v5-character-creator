@@ -1,14 +1,4 @@
-import {
-    Alert,
-    Button,
-    Group,
-    Modal,
-    NumberInput,
-    Stack,
-    TextInput,
-    Textarea,
-    useMantineTheme
-} from "@mantine/core"
+import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Power } from "~/data/Disciplines"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -26,6 +16,7 @@ import { getDisciplineCost } from "../utils/xp"
 type CustomPowerModalProps = {
     opened: boolean
     onClose: () => void
+    onSave?: () => void
     options: SheetOptions
     disciplineName: DisciplineName
     editingPower?: Power | null
@@ -34,6 +25,7 @@ type CustomPowerModalProps = {
 const CustomPowerModal = ({
     opened,
     onClose,
+    onSave,
     options,
     disciplineName,
     editingPower
@@ -183,7 +175,11 @@ const CustomPowerModal = ({
 
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
         setCharacter(updatedCharacter)
-        onClose()
+        if (onSave) {
+            onSave()
+        } else {
+            onClose()
+        }
     }
 
     return (

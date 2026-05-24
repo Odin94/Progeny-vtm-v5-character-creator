@@ -8,8 +8,10 @@ import { Character } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import CustomDisciplineModal from "./CustomDisciplineModal"
+import CustomPowerModal from "./CustomPowerModal"
 import { getDisciplineCost } from "../utils/xp"
 import posthog from "posthog-js"
+import { IconPlus } from "@tabler/icons-react"
 
 type DisciplineSelectModalProps = {
     opened: boolean
@@ -32,6 +34,7 @@ const DisciplineSelectModal = ({
         initialDiscipline || null
     )
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
+    const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
 
     useEffect(() => {
         if (opened && initialDiscipline) {
@@ -154,6 +157,12 @@ const DisciplineSelectModal = ({
         setSelectedDiscipline(null)
     }
 
+    const handleCustomPowerSaved = () => {
+        setCustomPowerModalOpened(false)
+        onClose()
+        setSelectedDiscipline(null)
+    }
+
     const availablePowers = selectedDiscipline ? getAvailablePowers(selectedDiscipline) : []
 
     return (
@@ -177,6 +186,7 @@ const DisciplineSelectModal = ({
                         primaryColor={primaryColor}
                         onSelectPower={handleSelectPower}
                         onBack={handleBack}
+                        onCreateCustomPower={() => setCustomPowerModalOpened(true)}
                         hideBackButton={hideBackButton}
                         character={character}
                         hasAmalgamPrerequisites={hasAmalgamPrerequisites}
@@ -305,6 +315,13 @@ const DisciplineSelectModal = ({
                     onClose()
                 }}
             />
+            <CustomPowerModal
+                opened={customPowerModalOpened}
+                onClose={() => setCustomPowerModalOpened(false)}
+                onSave={handleCustomPowerSaved}
+                options={options}
+                disciplineName={selectedDiscipline || ""}
+            />
         </Modal>
     )
 }
@@ -314,6 +331,7 @@ type PowerPickerProps = {
     primaryColor: string
     onSelectPower: (power: Power) => void
     onBack: () => void
+    onCreateCustomPower: () => void
     hideBackButton?: boolean
     character: Character
     hasAmalgamPrerequisites: (power: Power) => boolean
@@ -325,6 +343,7 @@ const PowerPicker = ({
     primaryColor,
     onSelectPower,
     onBack,
+    onCreateCustomPower,
     hideBackButton,
     character,
     hasAmalgamPrerequisites,
@@ -350,6 +369,16 @@ const PowerPicker = ({
                     </Button>
                 </Group>
             ) : null}
+            <Group justify="flex-end">
+                <Button
+                    variant="light"
+                    color={primaryColor}
+                    leftSection={<IconPlus size={16} />}
+                    onClick={onCreateCustomPower}
+                >
+                    Create Custom Power
+                </Button>
+            </Group>
             {availablePowers.length === 0 ? (
                 <Text c="dimmed" ta="center" py="xl">
                     No available powers to add for this discipline.

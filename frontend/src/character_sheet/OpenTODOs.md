@@ -1,3 +1,6 @@
+## Latest requests
+
+
 ## Character Sheet TODOs
 
 - Links from creator to sheet and vice versa
@@ -9,9 +12,6 @@
 
 ### Disciplines
 
-- Add Rituals / Ceremonies to sheet
-
-- Add more powers (currently mostly have core book powers)
 - Dice-pool hover should include eg. Prowess for strength
 - Give "+" buttons a cute animation on hover
 
