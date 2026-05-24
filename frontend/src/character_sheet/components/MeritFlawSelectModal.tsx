@@ -15,6 +15,7 @@ import {
     Title,
     Tooltip
 } from "@mantine/core"
+import { IconSearch } from "@tabler/icons-react"
 import posthog from "posthog-js"
 import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
@@ -44,6 +45,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const [selectedLevel, setSelectedLevel] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<string | null>("regular")
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
+    const [loresheetQuery, setLoresheetQuery] = useState("")
     const [customName, setCustomName] = useState("")
     const [customLevel, setCustomLevel] = useState<number>(1)
     const [customDescription, setCustomDescription] = useState("")
@@ -55,6 +57,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             setSelectedLevel(1)
             setActiveTab("regular")
             setOpenLoresheetTitle("")
+            setLoresheetQuery("")
             setCustomName("")
             setCustomLevel(1)
             setCustomDescription("")
@@ -493,9 +496,14 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             )
         }
 
+        const normalizedLoresheetQuery = loresheetQuery.trim().toLocaleLowerCase()
         const availableLoresheets = essentialLoresheets.filter((loresheet) => {
             const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
             if (!requirementsMet) return false
+            const titleMatches =
+                normalizedLoresheetQuery.length === 0 ||
+                loresheet.title.toLocaleLowerCase().includes(normalizedLoresheetQuery)
+            if (!titleMatches) return false
             const sheetPicked =
                 intersection(
                     pickedMeritsAndFlaws.map((m) => m.name),
@@ -509,63 +517,85 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
         if (availableLoresheets.length === 0) {
             return (
-                <Text c="dimmed" ta="center" py="xl">
-                    No available loresheets.
-                </Text>
+                <Stack gap="md">
+                    <TextInput
+                        aria-label="Search loresheets"
+                        leftSection={<IconSearch size={16} />}
+                        placeholder="Search loresheets by title"
+                        value={loresheetQuery}
+                        onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
+                    />
+                    <Text c="dimmed" ta="center" py="xl">
+                        {normalizedLoresheetQuery.length > 0
+                            ? "No loresheets match that title."
+                            : "No available loresheets."}
+                    </Text>
+                </Stack>
             )
         }
 
         return (
-            <ScrollArea h={400}>
-                <Grid gutter="md">
-                    {availableLoresheets.map((loresheet) => {
-                        const sheetPicked =
-                            intersection(
-                                pickedMeritsAndFlaws.map((m) => m.name),
-                                loresheet.merits.map((m) => m.name)
-                            ).length > 0
+            <Stack gap="md">
+                <TextInput
+                    aria-label="Search loresheets"
+                    leftSection={<IconSearch size={16} />}
+                    placeholder="Search loresheets by title"
+                    value={loresheetQuery}
+                    onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
+                />
+                <ScrollArea h={400}>
+                    <Grid gutter="md">
+                        {availableLoresheets.map((loresheet) => {
+                            const sheetPicked =
+                                intersection(
+                                    pickedMeritsAndFlaws.map((m) => m.name),
+                                    loresheet.merits.map((m) => m.name)
+                                ).length > 0
 
-                        return (
-                            <Grid.Col key={loresheet.title} span={{ base: 12, sm: 6, md: 4 }}>
-                                <Card
-                                    h={250}
-                                    style={{
-                                        backgroundColor: "rgba(26, 27, 30, 0.90)",
-                                        borderColor: sheetPicked ? "green" : "black"
-                                    }}
-                                    withBorder={sheetPicked}
-                                >
-                                    <Stack gap="xs" h="100%">
-                                        <Text fw={600} size="sm" ta="center">
-                                            {loresheet.title}
-                                        </Text>
-                                        <Text
-                                            size="xs"
-                                            c="dimmed"
-                                            lineClamp={4}
-                                            style={{ flex: 1 }}
-                                        >
-                                            {loresheet.summary}
-                                        </Text>
-                                        <Text size="xs" c="dimmed">
-                                            {loresheet.source}
-                                        </Text>
-                                        <Button
-                                            variant="light"
-                                            color="blue"
-                                            fullWidth
-                                            size="xs"
-                                            onClick={() => setOpenLoresheetTitle(loresheet.title)}
-                                        >
-                                            Open
-                                        </Button>
-                                    </Stack>
-                                </Card>
-                            </Grid.Col>
-                        )
-                    })}
-                </Grid>
-            </ScrollArea>
+                            return (
+                                <Grid.Col key={loresheet.title} span={{ base: 12, sm: 6, md: 4 }}>
+                                    <Card
+                                        h={250}
+                                        style={{
+                                            backgroundColor: "rgba(26, 27, 30, 0.90)",
+                                            borderColor: sheetPicked ? "green" : "black"
+                                        }}
+                                        withBorder={sheetPicked}
+                                    >
+                                        <Stack gap="xs" h="100%">
+                                            <Text fw={600} size="sm" ta="center">
+                                                {loresheet.title}
+                                            </Text>
+                                            <Text
+                                                size="xs"
+                                                c="dimmed"
+                                                lineClamp={4}
+                                                style={{ flex: 1 }}
+                                            >
+                                                {loresheet.summary}
+                                            </Text>
+                                            <Text size="xs" c="dimmed">
+                                                {loresheet.source}
+                                            </Text>
+                                            <Button
+                                                variant="light"
+                                                color="blue"
+                                                fullWidth
+                                                size="xs"
+                                                onClick={() =>
+                                                    setOpenLoresheetTitle(loresheet.title)
+                                                }
+                                            >
+                                                Open
+                                            </Button>
+                                        </Stack>
+                                    </Card>
+                                </Grid.Col>
+                            )
+                        })}
+                    </Grid>
+                </ScrollArea>
+            </Stack>
         )
     }
 
