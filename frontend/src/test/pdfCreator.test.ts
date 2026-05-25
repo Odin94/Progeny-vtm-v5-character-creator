@@ -9,6 +9,8 @@ import { readFileSync } from "fs"
 import { resolve } from "path"
 import { fileURLToPath } from "url"
 import { PDFDocument, PDFTextField } from "pdf-lib"
+import type { Power } from "~/data/Disciplines"
+import type { DisciplineName } from "~/data/NameSchemas"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
@@ -58,6 +60,17 @@ const createButtonOverlayHarness = () => {
 
     return { drawImage, form, image, pdfDoc }
 }
+
+const createTestPower = (discipline: DisciplineName, index: number): Power => ({
+    name: `${discipline} Power ${index}`,
+    discipline,
+    level: Math.min(index, 5),
+    summary: `Test ${discipline} power ${index}`,
+    description: "",
+    dicePool: "",
+    rouseChecks: 0,
+    amalgamPrerequisites: []
+})
 
 global.fetch = vi.fn((url: string | Request | URL) => {
     if (typeof url === "string") {
@@ -172,6 +185,47 @@ describe("createPdf_nerdbert", () => {
         const meritTexts = allMeritFields.map((field) => field.getText()).join(" ")
         expect(meritTexts).toContain(character.merits[0].name)
         expect(meritTexts).toContain(character.flaws[0].name)
+    })
+
+    it("writes discipline abilities that overflow a full block into an unclaimed block", async () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = Array.from({ length: 6 }, (_, index) =>
+            createTestPower("potence", index + 1)
+        )
+        character.rituals = []
+        character.ceremonies = []
+
+        const pdfBytes = await createPdf_nerdbert(character)
+        const pdfDoc = await PDFDocument.load(pdfBytes)
+        const form = pdfDoc.getForm()
+
+        expect(form.getTextField("Disc1_Ability5").getText()).toContain("potence Power 5")
+        expect(form.getTextField("Disc2").getText()).toBe("Potence (cont.)")
+        expect(form.getTextField("Disc2_Ability1").getText()).toContain("potence Power 6")
+    })
+
+    it("appends discipline ability overflow to notes when no unclaimed blocks remain", async () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = [
+            ...Array.from({ length: 6 }, (_, index) => createTestPower("potence", index + 1)),
+            createTestPower("animalism", 1),
+            createTestPower("auspex", 1),
+            createTestPower("celerity", 1),
+            createTestPower("dominate", 1),
+            createTestPower("fortitude", 1)
+        ]
+        character.rituals = []
+        character.ceremonies = []
+        character.notes = "Existing note."
+
+        const pdfBytes = await createPdf_nerdbert(character)
+        const pdfDoc = await PDFDocument.load(pdfBytes)
+        const form = pdfDoc.getForm()
+
+        const notesText = form.getTextField("PC_Notes").getText() || ""
+        expect(notesText).toContain("Existing note.")
+        expect(notesText).toContain("Potence: potence Power 6")
+        expect(notesText).toContain("Test potence power 6")
     })
 })
 

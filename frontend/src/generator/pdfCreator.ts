@@ -18,6 +18,10 @@ import { calculateBloodPotency } from "~/data/BloodPotency"
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
 
+const PDF_DISCIPLINE_BLOCK_COUNT = 6
+const PDF_DISCIPLINE_ABILITIES_PER_BLOCK = 5
+const PDF_NOTES_FIELD = "PC_Notes"
+
 const getNerdbertTemplate = () => {
     nerdbertTemplatePromise ??=
         import("../resources/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields.base64?raw").then(
@@ -368,21 +372,81 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         }
     }
 
+    const claimedDisciplineBlocks = new Set<number>(
+        disciplineSections
+            .map((section, index) =>
+                section && index < PDF_DISCIPLINE_BLOCK_COUNT ? index + 1 : null
+            )
+            .filter((index): index is number => index !== null)
+    )
+    const disciplineOverflowNotes: string[] = []
+
+    const getUnclaimedDisciplineBlock = () => {
+        for (let block = 1; block <= PDF_DISCIPLINE_BLOCK_COUNT; block++) {
+            if (!claimedDisciplineBlocks.has(block)) {
+                claimedDisciplineBlocks.add(block)
+                return block
+            }
+        }
+        return null
+    }
+
+    const setDisciplineBlockTitle = (block: number, title: string, continuation = false) => {
+        const field = form.getTextField(`Disc${block}`)
+        field.setText(continuation ? `${title} (cont.)` : title)
+    }
+
+    const writeDisciplineAbility = (
+        sectionTitle: string,
+        block: number | null,
+        abilityIndex: number,
+        text: string,
+        checkAbilityDot: boolean
+    ) => {
+        if (!block) {
+            disciplineOverflowNotes.push(`${sectionTitle}: ${text}`)
+            return
+        }
+
+        const field = form.getTextField(`Disc${block}_Ability${abilityIndex}`)
+        field.setText(text)
+        field.disableRichFormatting()
+
+        if (checkAbilityDot) {
+            form.getCheckBox(`Disc${block}-${abilityIndex}`).check()
+        }
+    }
+
     for (const [disciplineIndex, section] of disciplineSections.entries()) {
         if (!section) continue
 
-        const di = disciplineIndex + 1
-        form.getTextField(`Disc${di}`).setText(section.title)
-        for (const [powerIndex, power] of section.powers.entries()) {
-            const pi = powerIndex + 1
-            form.getTextField(`Disc${di}_Ability${pi}`).setText(getDisciplineText(power))
-            form.getTextField(`Disc${di}_Ability${pi}`).disableRichFormatting()
-            form.getCheckBox(`Disc${di}-${pi}`).check()
+        let block =
+            disciplineIndex < PDF_DISCIPLINE_BLOCK_COUNT
+                ? disciplineIndex + 1
+                : getUnclaimedDisciplineBlock()
+        let abilityIndex = 1
+
+        if (block) {
+            setDisciplineBlockTitle(block, section.title)
         }
-        for (const [extraIndex, extra] of section.extras.entries()) {
-            const ei = section.powers.length + extraIndex + 1
-            form.getTextField(`Disc${di}_Ability${ei}`).setText(getDisciplineText(extra))
-            form.getTextField(`Disc${di}_Ability${ei}`).disableRichFormatting()
+
+        const abilities = [
+            ...section.powers.map((power) => ({ text: getDisciplineText(power), check: true })),
+            ...section.extras.map((extra) => ({ text: getDisciplineText(extra), check: false }))
+        ]
+
+        for (const ability of abilities) {
+            if (abilityIndex > PDF_DISCIPLINE_ABILITIES_PER_BLOCK) {
+                block = getUnclaimedDisciplineBlock()
+                abilityIndex = 1
+
+                if (block) {
+                    setDisciplineBlockTitle(block, section.title, true)
+                }
+            }
+
+            writeDisciplineAbility(section.title, block, abilityIndex, ability.text, ability.check)
+            abilityIndex++
         }
     }
 
@@ -430,6 +494,20 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         }
     })()
     form.getTextField("tEXP").setText(`${experience} XP`)
+
+    const notesText = [
+        character.notes,
+        disciplineOverflowNotes.length > 0
+            ? `Discipline overflow:\n${disciplineOverflowNotes.join("\n")}`
+            : ""
+    ]
+        .filter((text) => text.trim().length > 0)
+        .join("\n\n")
+
+    if (notesText) {
+        form.getTextField(PDF_NOTES_FIELD).setText(notesText)
+        form.getTextField(PDF_NOTES_FIELD).disableRichFormatting()
+    }
 
     // Fixes bug where text that is too long for field doesn't show until clicked
     // see https://github.com/Hopding/pdf-lib/issues/569#issuecomment-1087328416 and https://stackoverflow.com/questions/73058238/some-pdf-textfield-content-not-visible-until-clicked
