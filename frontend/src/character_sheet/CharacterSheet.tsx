@@ -30,6 +30,7 @@ import CharacterSheetMenu from "./components/CharacterSheetMenu"
 import DiceRollModal from "./components/diceRollModal/DiceRollModal"
 import ChatWindow from "./components/ChatWindow"
 import { useCharacterSheetStore } from "./stores/characterSheetStore"
+import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
 
@@ -230,9 +231,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
 
                                 <Touchstones options={sheetOptions} />
 
-                                {character.merits.length > 0 || character.flaws.length > 0 ? (
-                                    <Divider />
-                                ) : null}
+                                {hasSheetMeritsAndFlaws(character) ? <Divider /> : null}
 
                                 <MeritsAndFlaws options={sheetOptions} />
                             </Stack>

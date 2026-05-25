@@ -16,12 +16,12 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useState, useMemo } from "react"
-import { SheetOptions } from "../CharacterSheet"
+import type { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
 import { MeritFlaw } from "~/data/Character"
 import { IconPlus, IconX } from "@tabler/icons-react"
-import { PredatorTypes } from "~/data/PredatorType"
+import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
 
 type MeritsAndFlawsProps = {
     options: SheetOptions
@@ -40,60 +40,13 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
 
-    // TODOdin: Make a hook that gets you all merits and flaws
     // TODOdin: Make descriptions of merits and flaws editable
-    const predatorTypeMerits = useMemo(() => {
-        if (!character.predatorType?.name) return []
-        const predatorType =
-            PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
-        if (!predatorType) return []
-        return predatorType.meritsAndFlaws.filter((mf) => mf.type === "merit")
-    }, [character.predatorType?.name])
+    const { merits: allMerits, flaws: allFlaws } = useMemo(
+        () => getSheetMeritsAndFlaws(character),
+        [character]
+    )
 
-    const predatorTypeFlaws = useMemo(() => {
-        if (!character.predatorType?.name) return []
-        const predatorType =
-            PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
-        if (!predatorType) return []
-        return predatorType.meritsAndFlaws.filter((mf) => mf.type === "flaw")
-    }, [character.predatorType?.name])
-
-    // TODOdin: picked merits and flaws are already added to character.merits and flaws;
-    // consider whether we want to change that (I'm thinking probably yes)
-    // const pickedPredatorTypeMerits = useMemo(() => {
-    //     if (!character.predatorType?.pickedMeritsAndFlaws) return []
-    //     return character.predatorType.pickedMeritsAndFlaws.filter((mf) => mf.type === "merit")
-    // }, [character.predatorType?.pickedMeritsAndFlaws])
-
-    // const pickedPredatorTypeFlaws = useMemo(() => {
-    //     if (!character.predatorType?.pickedMeritsAndFlaws) return []
-    //     return character.predatorType.pickedMeritsAndFlaws.filter((mf) => mf.type === "flaw")
-    // }, [character.predatorType?.pickedMeritsAndFlaws])
-
-    // Combine regular merits with predator type merits (both automatic and picked)
-    const allMerits = useMemo(() => {
-        const regularMerits = character.merits.map((merit) => ({
-            merit,
-            isFromPredatorType: false
-        }))
-        const autoMerits = predatorTypeMerits.map((merit) => ({ merit, isFromPredatorType: true }))
-        return [...regularMerits, ...autoMerits]
-    }, [character.merits, predatorTypeMerits])
-
-    // Combine regular flaws with predator type flaws (both automatic and picked)
-    const allFlaws = useMemo(() => {
-        const regularFlaws = character.flaws.map((flaw) => ({ flaw, isFromPredatorType: false }))
-        const autoFlaws = predatorTypeFlaws.map((flaw) => ({ flaw, isFromPredatorType: true }))
-        return [...regularFlaws, ...autoFlaws]
-    }, [character.flaws, predatorTypeFlaws])
-
-    if (
-        character.merits.length === 0 &&
-        character.flaws.length === 0 &&
-        predatorTypeMerits.length === 0 &&
-        predatorTypeFlaws.length === 0 &&
-        !isEditable
-    ) {
+    if (allMerits.length === 0 && allFlaws.length === 0 && !isEditable) {
         return null
     }
 
@@ -136,87 +89,99 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                 Merits
                             </Title>
                             <Stack gap="xs">
-                                {allMerits.map(({ merit, isFromPredatorType }, index) => {
-                                    const meritPaper = (
-                                        <Paper
-                                            key={index}
-                                            p="sm"
-                                            withBorder
-                                            style={{
-                                                backgroundColor: paperBg,
-                                                position: "relative"
-                                            }}
-                                        >
-                                            {isFreeMode && !isFromPredatorType ? (
-                                                <ActionIcon
-                                                    size="sm"
-                                                    variant="subtle"
-                                                    color="red"
-                                                    onClick={() => handleDeleteMerit(merit)}
-                                                    style={{
-                                                        position: "absolute",
-                                                        top: "8px",
-                                                        right: "8px"
-                                                    }}
-                                                >
-                                                    <IconX size={16} />
-                                                </ActionIcon>
-                                            ) : null}
-                                            <Group
-                                                justify={
-                                                    isFreeMode ? "flex-start" : "space-between"
-                                                }
+                                {allMerits.map(
+                                    ({ meritFlaw: merit, isFromPredatorType }, index) => {
+                                        const meritPaper = (
+                                            <Paper
+                                                key={`${merit.name}-${merit.level}-${index}`}
+                                                p="sm"
+                                                withBorder
+                                                style={{
+                                                    backgroundColor: paperBg,
+                                                    position: "relative"
+                                                }}
                                             >
-                                                <Text
-                                                    fw={700}
-                                                    style={{
-                                                        paddingRight: isFreeMode ? "60px" : "0"
-                                                    }}
+                                                {isFreeMode && !isFromPredatorType ? (
+                                                    <ActionIcon
+                                                        size="sm"
+                                                        variant="subtle"
+                                                        color="red"
+                                                        onClick={() => handleDeleteMerit(merit)}
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "8px"
+                                                        }}
+                                                    >
+                                                        <IconX size={16} />
+                                                    </ActionIcon>
+                                                ) : null}
+                                                <Group
+                                                    justify={
+                                                        isFreeMode ? "flex-start" : "space-between"
+                                                    }
                                                 >
-                                                    {merit.name}
-                                                </Text>
-                                                {!isFreeMode ? (
-                                                    <Badge color={primaryColor} circle>
+                                                    <Text
+                                                        fw={700}
+                                                        style={{
+                                                            paddingRight: isFreeMode ? "60px" : "0"
+                                                        }}
+                                                    >
+                                                        {merit.name}
+                                                    </Text>
+                                                    {!isFreeMode ? (
+                                                        <Badge color={primaryColor} circle>
+                                                            {merit.level}
+                                                        </Badge>
+                                                    ) : null}
+                                                </Group>
+                                                {isFreeMode ? (
+                                                    <Badge
+                                                        color={primaryColor}
+                                                        circle
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "40px"
+                                                        }}
+                                                    >
                                                         {merit.level}
                                                     </Badge>
                                                 ) : null}
-                                            </Group>
-                                            {isFreeMode ? (
-                                                <Badge
-                                                    color={primaryColor}
-                                                    circle
-                                                    style={{
-                                                        position: "absolute",
-                                                        top: "8px",
-                                                        right: "40px"
-                                                    }}
-                                                >
-                                                    {merit.level}
-                                                </Badge>
-                                            ) : null}
-                                            {merit.summary ? (
-                                                <Text size="sm" c="dimmed" mt="xs">
-                                                    {merit.summary.charAt(0).toUpperCase() +
-                                                        merit.summary.slice(1)}
-                                                </Text>
-                                            ) : null}
-                                        </Paper>
-                                    )
-
-                                    if (isFromPredatorType) {
-                                        return (
-                                            <Tooltip
-                                                key={index}
-                                                label="Added by predator type"
-                                                withArrow
-                                            >
-                                                <Box>{meritPaper}</Box>
-                                            </Tooltip>
+                                                {merit.summary ? (
+                                                    <Text size="sm" c="dimmed" mt="xs">
+                                                        {merit.summary.charAt(0).toUpperCase() +
+                                                            merit.summary.slice(1)}
+                                                    </Text>
+                                                ) : null}
+                                                {isFromPredatorType ? (
+                                                    <Badge
+                                                        size="xs"
+                                                        variant="light"
+                                                        color={primaryColor}
+                                                        mt="xs"
+                                                    >
+                                                        From predator type
+                                                    </Badge>
+                                                ) : null}
+                                            </Paper>
                                         )
-                                    }
 
-                                    return meritPaper
-                                })}
+                                        if (isFromPredatorType) {
+                                            return (
+                                                <Tooltip
+                                                    key={index}
+                                                    label="Added by predator type"
+                                                    withArrow
+                                                >
+                                                    <Box>{meritPaper}</Box>
+                                                </Tooltip>
+                                            )
+                                        }
+
+                                        return meritPaper
+                                    }
+                                )}
                                 {isEditable ? (
                                     <Paper
                                         p="md"
@@ -256,10 +221,10 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                 Flaws
                             </Title>
                             <Stack gap="xs">
-                                {allFlaws.map(({ flaw, isFromPredatorType }, index) => {
+                                {allFlaws.map(({ meritFlaw: flaw, isFromPredatorType }, index) => {
                                     const flawPaper = (
                                         <Paper
-                                            key={index}
+                                            key={`${flaw.name}-${flaw.level}-${index}`}
                                             p="sm"
                                             withBorder
                                             style={{
@@ -319,6 +284,16 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     {flaw.summary.charAt(0).toUpperCase() +
                                                         flaw.summary.slice(1)}
                                                 </Text>
+                                            ) : null}
+                                            {isFromPredatorType ? (
+                                                <Badge
+                                                    size="xs"
+                                                    variant="light"
+                                                    color="red"
+                                                    mt="xs"
+                                                >
+                                                    From predator type
+                                                </Badge>
                                             ) : null}
                                         </Paper>
                                     )
