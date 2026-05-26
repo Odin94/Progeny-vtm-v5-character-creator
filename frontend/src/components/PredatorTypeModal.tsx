@@ -15,6 +15,7 @@ import {
 import { trackEvent } from "../utils/analytics"
 import { Character, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
+import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "../data/meritsAndFlawsResolution"
 import { PredatorTypes } from "../data/PredatorType"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../generator/utils"
 import { globals } from "../globals"
@@ -713,17 +714,24 @@ const PredatorTypeModal = ({
                                     )
 
                                 const pickedDisciplineName = disciplineNameSchema.parse(discipline)
+                                const nextPredatorType = {
+                                    name: pickedPredatorType,
+                                    pickedDiscipline: pickedDisciplineName,
+                                    pickedSpecialties: [resolvedSpecialty],
+                                    pickedMeritsAndFlaws
+                                }
+                                const adjustedPickedMeritsAndFlaws =
+                                    adjustPickedMeritsAndFlawsForPredatorTypeChange(
+                                        character,
+                                        nextPredatorType
+                                    )
                                 const changedPickedDiscipline =
                                     pickedDisciplineName !== character.predatorType.pickedDiscipline
                                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                 setCharacter({
                                     ...character,
-                                    predatorType: {
-                                        name: pickedPredatorType,
-                                        pickedDiscipline: pickedDisciplineName,
-                                        pickedSpecialties: [resolvedSpecialty],
-                                        pickedMeritsAndFlaws
-                                    },
+                                    ...adjustedPickedMeritsAndFlaws,
+                                    predatorType: nextPredatorType,
                                     disciplines: changedPickedDiscipline
                                         ? []
                                         : character.disciplines,

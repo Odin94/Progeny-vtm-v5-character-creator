@@ -2,6 +2,7 @@ import type { Character } from "../data/Character"
 import type { AttributesKey } from "../data/Attributes"
 import type { SkillsKey } from "../data/Skills"
 import type { DisciplineName } from "../data/NameSchemas"
+import { getResolvedMeritFlawList } from "../data/meritsAndFlawsResolution"
 
 type InconnuSplat = "vampire" | "thin-blood" | "ghoul" | "mortal"
 
@@ -346,13 +347,7 @@ export const createInconnuJson = (character: Character): InconnuCreationBody => 
         })
     }
 
-    for (const meritFlaw of [
-        ...asArray<{ name?: unknown; level?: unknown }>(character.merits),
-        ...asArray<{ name?: unknown; level?: unknown }>(character.flaws),
-        ...asArray<{ name?: unknown; level?: unknown }>(
-            character.predatorType?.pickedMeritsAndFlaws
-        )
-    ]) {
+    for (const meritFlaw of getResolvedMeritFlawList(character).map(({ meritFlaw }) => meritFlaw)) {
         addTrait({
             name: toTraitIdentifier(meritFlaw.name, "Trait"),
             rating: nonNegativeInt(meritFlaw.level),

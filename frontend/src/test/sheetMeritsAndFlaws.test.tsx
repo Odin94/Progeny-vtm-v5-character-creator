@@ -53,13 +53,15 @@ describe("sheet merits and flaws", () => {
         expect(merits).toEqual([
             {
                 meritFlaw: character.predatorType.pickedMeritsAndFlaws[0],
-                isFromPredatorType: true
+                isFromPredatorType: true,
+                isUpgradedFromPredatorType: false
             }
         ])
         expect(flaws).toEqual([
             {
                 meritFlaw: character.predatorType.pickedMeritsAndFlaws[1],
-                isFromPredatorType: true
+                isFromPredatorType: true,
+                isUpgradedFromPredatorType: false
             }
         ])
     })
@@ -114,5 +116,45 @@ describe("sheet merits and flaws", () => {
         expect(screen.getByText("Fame")).toBeInTheDocument()
         expect(screen.getByText("Enemies")).toBeInTheDocument()
         expect(screen.getAllByText("From predator type")).toHaveLength(2)
+    })
+
+    it("shows predator type upgrades as one effective sheet entry", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            predatorType: {
+                name: "Osiris" as const,
+                pickedDiscipline: "presence",
+                pickedSpecialties: [],
+                pickedMeritsAndFlaws: [
+                    {
+                        name: "Fame",
+                        level: 3,
+                        summary: "",
+                        type: "merit" as const,
+                        excludes: []
+                    }
+                ]
+            },
+            merits: [
+                {
+                    name: "Fame",
+                    level: 5,
+                    summary: "1 - a select subculture loves you, 5 - you are well known globally",
+                    type: "merit" as const,
+                    excludes: []
+                }
+            ],
+            flaws: []
+        }
+
+        const { merits } = getSheetMeritsAndFlaws(character)
+
+        expect(merits).toEqual([
+            {
+                meritFlaw: character.merits[0],
+                isFromPredatorType: true,
+                isUpgradedFromPredatorType: true
+            }
+        ])
     })
 })

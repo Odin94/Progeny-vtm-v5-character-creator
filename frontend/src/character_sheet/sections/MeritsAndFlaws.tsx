@@ -90,7 +90,14 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                             </Title>
                             <Stack gap="xs">
                                 {allMerits.map(
-                                    ({ meritFlaw: merit, isFromPredatorType }, index) => {
+                                    (
+                                        {
+                                            meritFlaw: merit,
+                                            isFromPredatorType,
+                                            isUpgradedFromPredatorType
+                                        },
+                                        index
+                                    ) => {
                                         const meritPaper = (
                                             <Paper
                                                 key={`${merit.name}-${merit.level}-${index}`}
@@ -161,7 +168,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         color={primaryColor}
                                                         mt="xs"
                                                     >
-                                                        From predator type
+                                                        {isUpgradedFromPredatorType
+                                                            ? "Upgraded from predator type"
+                                                            : "From predator type"}
                                                     </Badge>
                                                 ) : null}
                                             </Paper>
@@ -221,97 +230,108 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                 Flaws
                             </Title>
                             <Stack gap="xs">
-                                {allFlaws.map(({ meritFlaw: flaw, isFromPredatorType }, index) => {
-                                    const flawPaper = (
-                                        <Paper
-                                            key={`${flaw.name}-${flaw.level}-${index}`}
-                                            p="sm"
-                                            withBorder
-                                            style={{
-                                                backgroundColor: paperBg,
-                                                position: "relative"
-                                            }}
-                                        >
-                                            {isFreeMode && !isFromPredatorType ? (
-                                                <ActionIcon
-                                                    size="sm"
-                                                    variant="subtle"
-                                                    color="red"
-                                                    onClick={() => handleDeleteFlaw(flaw)}
-                                                    style={{
-                                                        position: "absolute",
-                                                        top: "8px",
-                                                        right: "8px"
-                                                    }}
-                                                >
-                                                    <IconX size={16} />
-                                                </ActionIcon>
-                                            ) : null}
-                                            <Group
-                                                justify={
-                                                    isFreeMode ? "flex-start" : "space-between"
-                                                }
+                                {allFlaws.map(
+                                    (
+                                        {
+                                            meritFlaw: flaw,
+                                            isFromPredatorType,
+                                            isUpgradedFromPredatorType
+                                        },
+                                        index
+                                    ) => {
+                                        const flawPaper = (
+                                            <Paper
+                                                key={`${flaw.name}-${flaw.level}-${index}`}
+                                                p="sm"
+                                                withBorder
+                                                style={{
+                                                    backgroundColor: paperBg,
+                                                    position: "relative"
+                                                }}
                                             >
-                                                <Text
-                                                    fw={700}
-                                                    style={{
-                                                        paddingRight: isFreeMode ? "60px" : "0"
-                                                    }}
+                                                {isFreeMode && !isFromPredatorType ? (
+                                                    <ActionIcon
+                                                        size="sm"
+                                                        variant="subtle"
+                                                        color="red"
+                                                        onClick={() => handleDeleteFlaw(flaw)}
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "8px"
+                                                        }}
+                                                    >
+                                                        <IconX size={16} />
+                                                    </ActionIcon>
+                                                ) : null}
+                                                <Group
+                                                    justify={
+                                                        isFreeMode ? "flex-start" : "space-between"
+                                                    }
                                                 >
-                                                    {flaw.name}
-                                                </Text>
-                                                {!isFreeMode ? (
-                                                    <Badge color="red" circle>
+                                                    <Text
+                                                        fw={700}
+                                                        style={{
+                                                            paddingRight: isFreeMode ? "60px" : "0"
+                                                        }}
+                                                    >
+                                                        {flaw.name}
+                                                    </Text>
+                                                    {!isFreeMode ? (
+                                                        <Badge color="red" circle>
+                                                            {flaw.level}
+                                                        </Badge>
+                                                    ) : null}
+                                                </Group>
+                                                {isFreeMode ? (
+                                                    <Badge
+                                                        color="red"
+                                                        circle
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "40px"
+                                                        }}
+                                                    >
                                                         {flaw.level}
                                                     </Badge>
                                                 ) : null}
-                                            </Group>
-                                            {isFreeMode ? (
-                                                <Badge
-                                                    color="red"
-                                                    circle
-                                                    style={{
-                                                        position: "absolute",
-                                                        top: "8px",
-                                                        right: "40px"
-                                                    }}
-                                                >
-                                                    {flaw.level}
-                                                </Badge>
-                                            ) : null}
-                                            {flaw.summary ? (
-                                                <Text size="sm" c="dimmed" mt="xs">
-                                                    {flaw.summary.charAt(0).toUpperCase() +
-                                                        flaw.summary.slice(1)}
-                                                </Text>
-                                            ) : null}
-                                            {isFromPredatorType ? (
-                                                <Badge
-                                                    size="xs"
-                                                    variant="light"
-                                                    color="red"
-                                                    mt="xs"
-                                                >
-                                                    From predator type
-                                                </Badge>
-                                            ) : null}
-                                        </Paper>
-                                    )
-
-                                    if (isFromPredatorType) {
-                                        return (
-                                            <Tooltip
-                                                key={index}
-                                                label="Added by predator type"
-                                                withArrow
-                                            >
-                                                <Box>{flawPaper}</Box>
-                                            </Tooltip>
+                                                {flaw.summary ? (
+                                                    <Text size="sm" c="dimmed" mt="xs">
+                                                        {flaw.summary.charAt(0).toUpperCase() +
+                                                            flaw.summary.slice(1)}
+                                                    </Text>
+                                                ) : null}
+                                                {isFromPredatorType ? (
+                                                    <Badge
+                                                        size="xs"
+                                                        variant="light"
+                                                        color="red"
+                                                        mt="xs"
+                                                    >
+                                                        {isUpgradedFromPredatorType
+                                                            ? "Upgraded from predator type"
+                                                            : "From predator type"}
+                                                    </Badge>
+                                                ) : null}
+                                            </Paper>
                                         )
-                                    }
 
-                                    return flawPaper
-                                })}
+                                        if (isFromPredatorType) {
+                                            return (
+                                                <Tooltip
+                                                    key={index}
+                                                    label="Added by predator type"
+                                                    withArrow
+                                                >
+                                                    <Box>{flawPaper}</Box>
+                                                </Tooltip>
+                                            )
+                                        }
+
+                                        return flawPaper
+                                    }
+                                )}
                                 {isEditable ? (
                                     <Paper
                                         p="md"

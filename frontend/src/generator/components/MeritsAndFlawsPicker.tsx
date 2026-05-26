@@ -20,6 +20,10 @@ import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import {
+    getMeritFlawPointCost,
+    getPredatorTypeMeritsByName
+} from "../../data/meritsAndFlawsResolution"
+import {
     essentialMeritsAndFlaws,
     essentialThinbloodMeritsAndFlaws,
     isThinbloodFlaw,
@@ -103,9 +107,11 @@ const MeritOrFlawCard = memo(
 
         const meritInPredatorType = predatorTypeMeritsByName.get(meritOrFlaw.name)
         const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
+        const isPicked = Boolean(alreadyPickedItem ?? meritInPredatorType)
 
         const createButton = (level: number) => {
-            const cost = level - meritInPredatorTypeLevel
+            const nextCost = Math.max(0, level - meritInPredatorTypeLevel)
+            const previousCost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
             return (
                 <Button
                     key={meritOrFlaw.name + level}
@@ -118,14 +124,14 @@ const MeritOrFlawCard = memo(
                         if (isThinbloodFlaw(meritOrFlaw.name)) {
                             setRemainingThinbloodMeritPoints((prev) => prev + 1)
                         } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                            if (remainingThinbloodMeritPoints < cost) return
+                            if (remainingThinbloodMeritPoints + previousCost < nextCost) return
                             setRemainingThinbloodMeritPoints((prev) => prev - 1)
                         } else if (type === "flaw") {
-                            if (remainingFlaws + wasPickedLevel < cost) return
-                            setRemainingFlaws((prev) => prev + wasPickedLevel - cost)
+                            if (remainingFlaws + previousCost < nextCost) return
+                            setRemainingFlaws((prev) => prev + previousCost - nextCost)
                         } else {
-                            if (remainingMerits + wasPickedLevel < cost) return
-                            setRemainingMerits((prev) => prev + wasPickedLevel - cost)
+                            if (remainingMerits + previousCost < nextCost) return
+                            setRemainingMerits((prev) => prev + previousCost - nextCost)
                         }
                         setPickedMeritsAndFlaws((prev) => [
                             ...prev.filter((m) => m.name !== meritOrFlaw.name),
@@ -140,7 +146,11 @@ const MeritOrFlawCard = memo(
                     }}
                     style={{ marginRight: "5px" }}
                     size="xs"
-                    variant={alreadyPickedItem?.level === level ? "filled" : "outline"}
+                    variant={
+                        alreadyPickedItem?.level === level || meritInPredatorType?.level === level
+                            ? "filled"
+                            : "outline"
+                    }
                     color={buttonColor}
                     styles={{
                         root: {
@@ -148,7 +158,10 @@ const MeritOrFlawCard = memo(
                             borderColor:
                                 type === "flaw" ? rgba(RAW_RED, 0.45) : "rgba(63, 192, 120, 0.4)",
                             background:
-                                alreadyPickedItem?.level === level ? accentColor : "transparent",
+                                alreadyPickedItem?.level === level ||
+                                meritInPredatorType?.level === level
+                                    ? accentColor
+                                    : "transparent",
                             color: "rgba(244, 236, 232, 0.92)"
                         }
                     }}
@@ -158,7 +171,7 @@ const MeritOrFlawCard = memo(
             )
         }
 
-        const cost = wasPickedLevel - meritInPredatorTypeLevel
+        const cost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
         const summaryText = meritInPredatorType
             ? "Already picked in Predator Type"
             : isExcluded
@@ -171,8 +184,8 @@ const MeritOrFlawCard = memo(
                 style={{
                     padding: phoneScreen ? "12px" : "14px 16px",
                     borderRadius: 14,
-                    border: `1px solid ${alreadyPickedItem ? selectedBorder : baseBorder}`,
-                    background: alreadyPickedItem ? selectedBg : baseBg,
+                    border: `1px solid ${isPicked ? selectedBorder : baseBorder}`,
+                    background: isPicked ? selectedBg : baseBg,
                     opacity: isExcluded ? 0.5 : 1,
                     transition: "background 180ms ease, border-color 180ms ease"
                 }}
@@ -184,7 +197,7 @@ const MeritOrFlawCard = memo(
                             fontSize: phoneScreen ? "0.88rem" : "0.94rem",
                             fontWeight: 600,
                             lineHeight: 1.3,
-                            color: alreadyPickedItem ? accentColor : "rgba(244, 236, 232, 0.94)",
+                            color: isPicked ? accentColor : "rgba(244, 236, 232, 0.94)",
                             flex: 1
                         }}
                     >
@@ -268,23 +281,17 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         ...character.flaws
     ])
 
-    const predatorTypeProvidedNames = useMemo(() => {
-        const autoPredatorTypeNames =
-            PredatorTypes[character.predatorType.name]?.meritsAndFlaws.map((item) => item.name) ??
-            []
-        const pickedPredatorTypeNames = character.predatorType.pickedMeritsAndFlaws.map(
-            (item) => item.name
-        )
-
-        return new Set([...autoPredatorTypeNames, ...pickedPredatorTypeNames])
-    }, [character.predatorType.name, character.predatorType.pickedMeritsAndFlaws])
+    const predatorTypeMeritsByName = useMemo(
+        () => getPredatorTypeMeritsByName(character),
+        [character]
+    )
 
     const usedMeritsLevel = character.merits
-        .filter((m) => !isThinbloodMerit(m.name) && !predatorTypeProvidedNames.has(m.name))
-        .reduce((acc, { level }) => acc + level, 0)
+        .filter((m) => !isThinbloodMerit(m.name))
+        .reduce((acc, merit) => acc + getMeritFlawPointCost(merit, predatorTypeMeritsByName), 0)
     const usedFLawsLevel = character.flaws
-        .filter((f) => !isThinbloodFlaw(f.name) && !predatorTypeProvidedNames.has(f.name))
-        .reduce((acc, { level }) => acc + level, 0)
+        .filter((f) => !isThinbloodFlaw(f.name))
+        .reduce((acc, flaw) => acc + getMeritFlawPointCost(flaw, predatorTypeMeritsByName), 0)
 
     const meritPoints = character.generation === 10 || character.generation === 11 ? 9 : 7
     const flawPoints = character.generation === 10 || character.generation === 11 ? 4 : 2
@@ -299,24 +306,9 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         tbFlawCount - tbMeritCount
     )
 
-    const predatorTypePickedNames = useMemo(
-        () => new Set(character.predatorType.pickedMeritsAndFlaws.map((item) => item.name)),
-        [character.predatorType.pickedMeritsAndFlaws]
-    )
-
     const pickedByName = useMemo(
         () => new Map(pickedMeritsAndFlaws.map((item) => [item.name, item])),
         [pickedMeritsAndFlaws]
-    )
-
-    const predatorTypeMeritsFlaws = useMemo(
-        () => PredatorTypes[character.predatorType.name].meritsAndFlaws,
-        [character.predatorType.name]
-    )
-
-    const predatorTypeMeritsByName = useMemo(
-        () => new Map(predatorTypeMeritsFlaws.map((m) => [m.name, m])),
-        [predatorTypeMeritsFlaws]
     )
 
     const exclusionMap = useMemo(() => {
@@ -330,16 +322,18 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             })
         })
         const predatorType = PredatorTypes[character.predatorType.name]
-        if (predatorType) {
-            predatorType.meritsAndFlaws.forEach((meritFlaw) => {
-                meritFlaw.excludes.forEach((excludedName) => {
-                    if (!map.has(excludedName)) {
-                        map.set(excludedName, [])
-                    }
-                    map.get(excludedName)?.push(meritFlaw.name)
-                })
+        const predatorTypeItems = [
+            ...(predatorType?.meritsAndFlaws ?? []),
+            ...character.predatorType.pickedMeritsAndFlaws
+        ]
+        predatorTypeItems.forEach((meritFlaw) => {
+            meritFlaw.excludes.forEach((excludedName) => {
+                if (!map.has(excludedName)) {
+                    map.set(excludedName, [])
+                }
+                map.get(excludedName)?.push(meritFlaw.name)
             })
-        }
+        })
         const clan = clans[character.clan]
         if (clan?.excludedMeritsAndFlaws) {
             clan.excludedMeritsAndFlaws.forEach((excludedName) => {
@@ -350,7 +344,12 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             })
         }
         return map
-    }, [pickedMeritsAndFlaws, character.predatorType.name, character.clan])
+    }, [
+        pickedMeritsAndFlaws,
+        character.predatorType.name,
+        character.predatorType.pickedMeritsAndFlaws,
+        character.clan
+    ])
 
     const cardProps: Omit<MeritOrFlawCardProps, "meritOrFlaw" | "type"> = {
         pickedByName,
@@ -632,17 +631,25 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                         color="grape"
                         disabled={isConfirmDisabled}
                         onClick={() => {
+                            const pickedMeritsAndFlawsWithPointCost = pickedMeritsAndFlaws.filter(
+                                (meritFlaw) =>
+                                    getMeritFlawPointCost(meritFlaw, predatorTypeMeritsByName) > 0
+                            )
                             updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                             setCharacter({
                                 ...character,
-                                merits: pickedMeritsAndFlaws.filter((l) => l.type === "merit"),
-                                flaws: pickedMeritsAndFlaws.filter((l) => l.type === "flaw")
+                                merits: pickedMeritsAndFlawsWithPointCost.filter(
+                                    (l) => l.type === "merit"
+                                ),
+                                flaws: pickedMeritsAndFlawsWithPointCost.filter(
+                                    (l) => l.type === "flaw"
+                                )
                             })
 
                             trackEvent({
                                 action: "merits confirm clicked",
                                 category: "merits",
-                                label: pickedMeritsAndFlaws
+                                label: pickedMeritsAndFlawsWithPointCost
                                     .map((m) => `${m.name}: ${m.level}`)
                                     .join(", ")
                             })

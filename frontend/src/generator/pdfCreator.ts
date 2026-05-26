@@ -3,7 +3,6 @@ import fontkit from "@pdf-lib/fontkit"
 import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
 import { clans } from "../data/Clans"
-import { PredatorTypes } from "../data/PredatorType"
 import { SkillsKey, skillsKeySchema } from "../data/Skills"
 import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
@@ -14,6 +13,7 @@ import { upcase } from "./utils"
 import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
+import { getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
@@ -451,16 +451,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     }
 
     // Merits & flaws
-    const characterMeritsFlaws = [...character.merits, ...character.flaws]
-    const predatorTypeMeritsFlaws = PredatorTypes[
-        character.predatorType.name
-    ].meritsAndFlaws.filter((m) => !characterMeritsFlaws.map((cm) => cm.name).includes(m.name))
-    const pickedPredatorTypeMeritsFlaws = character.predatorType.pickedMeritsAndFlaws
-    const meritsAndFlaws = [
-        ...predatorTypeMeritsFlaws,
-        ...pickedPredatorTypeMeritsFlaws,
-        ...characterMeritsFlaws
-    ]
+    const resolvedMeritsAndFlaws = getResolvedMeritsAndFlaws(character)
+    const meritsAndFlaws = [...resolvedMeritsAndFlaws.merits, ...resolvedMeritsAndFlaws.flaws].map(
+        ({ meritFlaw }) => meritFlaw
+    )
     meritsAndFlaws.forEach(({ name, level, summary }, i) => {
         const fieldNum = i + 1
         form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)

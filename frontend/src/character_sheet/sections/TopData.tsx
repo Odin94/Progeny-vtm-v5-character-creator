@@ -12,6 +12,7 @@ import {
     Select
 } from "@mantine/core"
 import { clans } from "~/data/Clans"
+import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAndFlawsResolution"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
 import { PredatorTypes } from "~/data/PredatorType"
 import { SheetOptions } from "../CharacterSheet"
@@ -201,12 +202,25 @@ const TopData = ({ options }: TopDataProps) => {
                                     onChange={(value) => {
                                         if (value) {
                                             const selectedPredatorType = value as PredatorTypeName
+                                            const selectedPredatorTypeData =
+                                                PredatorTypes[selectedPredatorType]
+                                            const nextPredatorType = {
+                                                name: selectedPredatorType,
+                                                pickedDiscipline:
+                                                    selectedPredatorTypeData.disciplineOptions[0]
+                                                        ?.name ?? "",
+                                                pickedSpecialties: [],
+                                                pickedMeritsAndFlaws: []
+                                            }
+                                            const adjustedPickedMeritsAndFlaws =
+                                                adjustPickedMeritsAndFlawsForPredatorTypeChange(
+                                                    character,
+                                                    nextPredatorType
+                                                )
                                             setCharacter({
                                                 ...character,
-                                                predatorType: {
-                                                    ...character.predatorType,
-                                                    name: selectedPredatorType
-                                                }
+                                                ...adjustedPickedMeritsAndFlaws,
+                                                predatorType: nextPredatorType
                                             })
                                         }
                                     }}

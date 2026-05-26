@@ -1,9 +1,10 @@
 import type { Character, MeritFlaw } from "~/data/Character"
-import { PredatorTypes } from "~/data/PredatorType"
+import { getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 
 export type SheetMeritFlaw = {
     meritFlaw: MeritFlaw
     isFromPredatorType: boolean
+    isUpgradedFromPredatorType: boolean
 }
 
 export const getSheetMeritsAndFlaws = (
@@ -12,34 +13,7 @@ export const getSheetMeritsAndFlaws = (
     merits: SheetMeritFlaw[]
     flaws: SheetMeritFlaw[]
 } => {
-    const predatorType = PredatorTypes[character.predatorType.name]
-    const predatorTypeItems = [
-        ...predatorType.meritsAndFlaws,
-        ...character.predatorType.pickedMeritsAndFlaws
-    ].map((meritFlaw) => ({
-        meritFlaw,
-        isFromPredatorType: true
-    }))
-
-    const regularMerits = character.merits.map((meritFlaw) => ({
-        meritFlaw,
-        isFromPredatorType: false
-    }))
-    const regularFlaws = character.flaws.map((meritFlaw) => ({
-        meritFlaw,
-        isFromPredatorType: false
-    }))
-
-    return {
-        merits: [
-            ...regularMerits,
-            ...predatorTypeItems.filter(({ meritFlaw }) => meritFlaw.type === "merit")
-        ],
-        flaws: [
-            ...regularFlaws,
-            ...predatorTypeItems.filter(({ meritFlaw }) => meritFlaw.type === "flaw")
-        ]
-    }
+    return getResolvedMeritsAndFlaws(character)
 }
 
 export const hasSheetMeritsAndFlaws = (character: Character) => {

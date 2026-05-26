@@ -6,6 +6,7 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { SkillsKey } from "~/data/Skills"
 import { Character } from "../data/Character"
 import { clans } from "../data/Clans"
+import { getResolvedMeritsAndFlaws } from "../data/meritsAndFlawsResolution"
 import { PredatorTypes } from "../data/PredatorType"
 import { getValueForKey } from "./utils"
 
@@ -474,12 +475,10 @@ export const createWoD5EVttJson = (
         })
     }
 
+    const resolvedMeritsAndFlaws = getResolvedMeritsAndFlaws(character)
+
     // Merit items
-    const allMerits = [
-        ...(character.merits || []),
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "merit") || [])
-    ]
-    for (const merit of allMerits) {
+    for (const { meritFlaw: merit } of resolvedMeritsAndFlaws.merits) {
         items.push({
             name: merit.name,
             type: "feature",
@@ -494,11 +493,7 @@ export const createWoD5EVttJson = (
     }
 
     // Flaw items
-    const allFlaws = [
-        ...(character.flaws || []),
-        ...(character.predatorType?.pickedMeritsAndFlaws?.filter((m) => m.type === "flaw") || [])
-    ]
-    for (const flaw of allFlaws) {
+    for (const { meritFlaw: flaw } of resolvedMeritsAndFlaws.flaws) {
         items.push({
             name: flaw.name,
             type: "feature",

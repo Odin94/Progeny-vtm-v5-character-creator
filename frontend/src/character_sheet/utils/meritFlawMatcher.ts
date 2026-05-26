@@ -1,5 +1,6 @@
 import type { AttributesKey } from "~/data/Attributes"
 import type { Character, MeritFlaw } from "~/data/Character"
+import { getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import type { SkillsKey } from "~/data/Skills"
 
 export type ApplicableMeritFlawModifier = {
@@ -106,11 +107,10 @@ const meritFlawModifierRules: Array<{
     }
 ]
 
-const getCharacterMeritsAndFlaws = (character: Character): MeritFlaw[] => [
-    ...character.merits,
-    ...character.flaws,
-    ...character.predatorType.pickedMeritsAndFlaws
-]
+const getCharacterMeritsAndFlaws = (character: Character): MeritFlaw[] => {
+    const { merits, flaws } = getResolvedMeritsAndFlaws(character)
+    return [...merits, ...flaws].map(({ meritFlaw }) => meritFlaw)
+}
 
 export const getApplicableMeritFlawModifiers = (
     character: Character | undefined,
