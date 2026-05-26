@@ -197,12 +197,13 @@ export const SpecialtyModal = ({
                                     </Text>
                                     <TextInput
                                         value={bonusTexts[s]}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            const value = e.currentTarget.value
                                             setBonusTexts((prev) => ({
                                                 ...prev,
-                                                [s]: e.currentTarget.value
+                                                [s]: value
                                             }))
-                                        }
+                                        }}
                                         placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
                                         maxLength={40}
                                         color={RED}
