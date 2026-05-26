@@ -217,6 +217,7 @@ const SkillRow = ({
                                     editingSpecialty?.index === index
                                 return isEditing ? (
                                     <TextInput
+                                        key={`${skill}-edit-${specialty.name}-${index}`}
                                         value={editingValue}
                                         onChange={(e) => setEditingValue(e.target.value)}
                                         onBlur={() => {
@@ -300,6 +301,7 @@ const SkillRow = ({
                             editingSpecialty?.skill === skill && editingSpecialty?.index === index
                         return isEditing ? (
                             <TextInput
+                                key={`${skill}-edit-${specialty.name}-${index}`}
                                 value={editingValue}
                                 onChange={(e) => setEditingValue(e.target.value)}
                                 onBlur={() => {
