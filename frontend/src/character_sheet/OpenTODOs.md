@@ -1,12 +1,12 @@
-## Latest requests
+## Recent Requests
+
+- Make sure merits/flaws described on Loresheets are translated to character merits/flaws (some of them say things like "also get +1 in xyz merit")
 
 ## Character Sheet TODOs
 
-- Links from creator to sheet and vice versa
+- Changing predator type should bring up the modal
 - Notes popup with big text editor
-- Dice-roller popup
 - More bg images?
-- Make performance less terrible when editing character sheet
 - Make tooltips prettier, add floaty XP spend animations (can build something with framer motion or use a library..?)
 
 ### Disciplines

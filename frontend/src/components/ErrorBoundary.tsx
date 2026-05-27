@@ -42,11 +42,10 @@ class ErrorBoundary extends Component<Props, State> {
 
         try {
             const character = getCharacterFromStorage()
-            posthog.capture("$exception", {
-                $exception_message: error.message,
-                $exception_type: error.name,
-                $exception_stack_trace_raw: error.stack,
-                $exception_stack_trace: errorInfo.componentStack,
+            posthog.captureException(error, {
+                error_boundary: true,
+                error_boundary_fallback: "reddit_screenshot_request",
+                react_component_stack: errorInfo.componentStack,
                 character: character
             })
         } catch (posthogError) {

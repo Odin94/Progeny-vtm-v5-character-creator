@@ -65,9 +65,17 @@ export const Route = createRootRoute({
                     cookieless_mode: "on_reject",
                     before_send: (event) => {
                         if (event && event.event === "$exception") {
-                            const exceptionType = event.properties?.$exception_type
-                            const exceptionMessage = event.properties?.$exception_message
-                            const exceptionValue = event.properties?.$exception_values?.[0]
+                            const exceptionList = event.properties?.$exception_list
+                            const exceptionListEntry = Array.isArray(exceptionList)
+                                ? exceptionList[0]
+                                : undefined
+                            const exceptionType =
+                                event.properties?.$exception_type ?? exceptionListEntry?.type
+                            const exceptionMessage =
+                                event.properties?.$exception_message ?? exceptionListEntry?.value
+                            const exceptionValue =
+                                exceptionListEntry?.value ??
+                                event.properties?.$exception_values?.[0]
 
                             if (
                                 exceptionType === "CustomEvent" ||
