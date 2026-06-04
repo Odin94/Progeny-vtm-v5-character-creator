@@ -17,6 +17,7 @@ import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
+import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
 
 type SkillsProps = {
@@ -66,17 +67,23 @@ const SkillRow = ({
         index: number
     } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
-    const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
+    const { selectedSkill, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedDicePool: state.selectedDicePool,
+            selectedSkill: state.selectedDicePool.skill,
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
+    const { diceModalOpened, openDiceModal } = useDiceRollModalStore(
+        useShallow((state) => ({
+            diceModalOpened: state.opened,
+            openDiceModal: state.open
+        }))
+    )
 
-    const isSelected = selectedDicePool.skill === skill
+    const isSelected = selectedSkill === skill
 
     const handleSkillClick = () => {
-        const newSkill = options.diceModalOpened && isSelected ? null : skill
+        const newSkill = diceModalOpened && isSelected ? null : skill
         updateSelectedDicePool({
             skill: newSkill,
             discipline: null,
@@ -84,8 +91,8 @@ const SkillRow = ({
             selectedDisciplinePowers: [],
             selectedMeritFlaws: []
         })
-        if (!options.diceModalOpened) {
-            options.openDiceModal()
+        if (!diceModalOpened) {
+            openDiceModal()
         }
     }
 
@@ -275,15 +282,11 @@ const SkillRow = ({
                         style={{
                             ...textStyle,
                             cursor: "pointer",
-                            padding: options.diceModalOpened ? "4px 8px" : undefined,
-                            borderRadius: options.diceModalOpened ? "4px" : undefined,
+                            padding: diceModalOpened ? "4px 8px" : undefined,
+                            borderRadius: diceModalOpened ? "4px" : undefined,
                             backgroundColor:
-                                options.diceModalOpened && isSelected
-                                    ? `${primaryColor}33`
-                                    : undefined,
-                            transition: options.diceModalOpened
-                                ? "background-color 0.2s"
-                                : undefined
+                                diceModalOpened && isSelected ? `${primaryColor}33` : undefined,
+                            transition: diceModalOpened ? "background-color 0.2s" : undefined
                         }}
                         onClick={handleSkillClick}
                     >
@@ -359,7 +362,7 @@ const SkillRow = ({
             )}
             <Box
                 onClick={(e) => {
-                    if (options.diceModalOpened) {
+                    if (diceModalOpened) {
                         e.stopPropagation()
                     }
                 }}

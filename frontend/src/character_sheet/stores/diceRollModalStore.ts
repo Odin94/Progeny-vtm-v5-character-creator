@@ -7,9 +7,12 @@ type SetDiceFunction = {
 }
 
 type DiceRollModalStore = {
+    opened: boolean
     dice: DieResult[]
     diceCount: number
     activeTab: string | null
+    open: () => void
+    close: () => void
     setDice: SetDiceFunction
     setDiceCount: (count: number) => void
     setActiveTab: (tab: string | null) => void
@@ -17,6 +20,7 @@ type DiceRollModalStore = {
 }
 
 const initialState = {
+    opened: false,
     dice: [] as DieResult[],
     diceCount: 1,
     activeTab: "custom" as string | null
@@ -24,6 +28,8 @@ const initialState = {
 
 export const useDiceRollModalStore = create<DiceRollModalStore>((set) => ({
     ...initialState,
+    open: () => set({ opened: true }),
+    close: () => set({ opened: false }),
     setDice: ((diceOrUpdater: DieResult[] | ((prev: DieResult[]) => DieResult[])) => {
         set((state) => ({
             dice: typeof diceOrUpdater === "function" ? diceOrUpdater(state.dice) : diceOrUpdater

@@ -2,7 +2,7 @@ import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
 import posthog from "posthog-js"
 import RouseCheckButton from "../RouseCheckButton"
@@ -21,8 +21,6 @@ import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 
 type DiceRollModalProps = {
-    opened: boolean
-    onClose: () => void
     primaryColor: string
     character?: Character
     setCharacter?: (character: Character) => void
@@ -35,22 +33,19 @@ type DiceRollModalProps = {
 // * Roll history
 // * Share rolls with your session live
 
-const DiceRollModal = ({
-    opened,
-    onClose,
-    primaryColor,
-    character,
-    setCharacter
-}: DiceRollModalProps) => {
+const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
-    const { selectedDicePool } = useCharacterSheetStore(
+    const { selectedDicePool, resetSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedDicePool: state.selectedDicePool
+            selectedDicePool: state.selectedDicePool,
+            resetSelectedDicePool: state.resetSelectedDicePool
         }))
     )
     const {
+        opened,
+        close: closeModal,
         dice,
         setDice,
         diceCount,
@@ -59,6 +54,8 @@ const DiceRollModal = ({
         reset: resetModal
     } = useDiceRollModalStore(
         useShallow((state) => ({
+            opened: state.opened,
+            close: state.close,
             dice: state.dice,
             setDice: state.setDice,
             diceCount: state.diceCount,
@@ -73,6 +70,10 @@ const DiceRollModal = ({
     const currentRollIdRef = useRef<string | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
     const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat()
+    const handleClose = useCallback(() => {
+        closeModal()
+        resetSelectedDicePool()
+    }, [closeModal, resetSelectedDicePool])
 
     const hunger = character?.ephemeral?.hunger ?? 0
 
@@ -175,7 +176,12 @@ const DiceRollModal = ({
         if (selectedDicePool.attribute || selectedDicePool.skill || selectedDicePool.discipline) {
             setActiveTab("selected")
         }
-    }, [selectedDicePool])
+    }, [
+        selectedDicePool.attribute,
+        selectedDicePool.skill,
+        selectedDicePool.discipline,
+        setActiveTab
+    ])
 
     const rollDie = (): number => {
         if (typeof crypto !== "undefined" && crypto.getRandomValues) {
@@ -268,19 +274,22 @@ const DiceRollModal = ({
         return availableWillpower > 0 && selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
     }, [character, selectedDiceIds, isMobile, rerollableDice.length])
 
-    const handleDieClick = (dieId: number, isBloodDie: boolean) => {
-        if (isBloodDie || dice.some((d) => d.isRolling)) return
+    const handleDieClick = useCallback(
+        (dieId: number, isBloodDie: boolean) => {
+            if (isBloodDie || dice.some((d) => d.isRolling)) return
 
-        setSelectedDiceIds((prev) => {
-            const newSet = new Set(prev)
-            if (newSet.has(dieId)) {
-                newSet.delete(dieId)
-            } else if (newSet.size < 3) {
-                newSet.add(dieId)
-            }
-            return newSet
-        })
-    }
+            setSelectedDiceIds((prev) => {
+                const newSet = new Set(prev)
+                if (newSet.has(dieId)) {
+                    newSet.delete(dieId)
+                } else if (newSet.size < 3) {
+                    newSet.add(dieId)
+                }
+                return newSet
+            })
+        },
+        [dice]
+    )
 
     const handleReroll = () => {
         if (!character || !setCharacter || !canReroll) return
@@ -788,7 +797,7 @@ const DiceRollModal = ({
 
     const modalContent = (
         <>
-            <ModalHeader primaryColor={primaryColor} onClose={onClose} />
+            <ModalHeader primaryColor={primaryColor} onClose={handleClose} />
 
             <Stack
                 gap="lg"

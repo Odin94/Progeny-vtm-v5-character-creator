@@ -4,6 +4,7 @@ import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
+import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
 
 type AttributesProps = {
@@ -11,11 +12,17 @@ type AttributesProps = {
 }
 
 const Attributes = ({ options }: AttributesProps) => {
-    const { character, mode, diceModalOpened, openDiceModal } = options
-    const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
+    const { character, mode } = options
+    const { selectedAttribute, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedDicePool: state.selectedDicePool,
+            selectedAttribute: state.selectedDicePool.attribute,
             updateSelectedDicePool: state.updateSelectedDicePool
+        }))
+    )
+    const { diceModalOpened, openDiceModal } = useDiceRollModalStore(
+        useShallow((state) => ({
+            diceModalOpened: state.opened,
+            openDiceModal: state.open
         }))
     )
     const textStyle = {
@@ -24,8 +31,7 @@ const Attributes = ({ options }: AttributesProps) => {
 
     const handleAttributeClick = (attribute: AttributesKey) => {
         updateSelectedDicePool({
-            attribute:
-                diceModalOpened && selectedDicePool.attribute === attribute ? null : attribute,
+            attribute: diceModalOpened && selectedAttribute === attribute ? null : attribute,
             selectedDisciplinePowers: [],
             selectedMeritFlaws: []
         })
@@ -35,7 +41,7 @@ const Attributes = ({ options }: AttributesProps) => {
     }
 
     const renderAttributeRow = (attribute: AttributesKey) => {
-        const isSelected = selectedDicePool.attribute === attribute
+        const isSelected = selectedAttribute === attribute
         return (
             <Group
                 key={attribute}

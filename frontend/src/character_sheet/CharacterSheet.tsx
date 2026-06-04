@@ -9,7 +9,7 @@ import {
     SegmentedControl,
     Stack
 } from "@mantine/core"
-import { useDisclosure, useLocalStorage } from "@mantine/hooks"
+import { useLocalStorage } from "@mantine/hooks"
 import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
@@ -29,7 +29,7 @@ import defaultBackgroundImage from "./resources/backgrounds/pexels-skyriusmarket
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
 import DiceRollModal from "./components/diceRollModal/DiceRollModal"
 import ChatWindow from "./components/ChatWindow"
-import { useCharacterSheetStore } from "./stores/characterSheetStore"
+import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
@@ -39,8 +39,6 @@ export type SheetOptions = {
     primaryColor: string
     character: Character
     setCharacter: (character: Character) => void
-    diceModalOpened: boolean
-    openDiceModal: () => void
     preferences: UserPreferences
     onUpdatePreferences: (partial: Partial<UserPreferences>) => void
 }
@@ -68,8 +66,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         defaultValue: isEmptyCharacter ? "free" : "play",
         getInitialValueInEffect: false
     })
-    const [diceModalOpened, { open: openDiceModal, close: closeDiceModal }] = useDisclosure(false)
-    const resetSelectedDicePool = useCharacterSheetStore((state) => state.resetSelectedDicePool)
+    const openDiceModal = useDiceRollModalStore((state) => state.open)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
     const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
@@ -80,21 +77,10 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             primaryColor,
             character,
             setCharacter,
-            diceModalOpened,
-            openDiceModal,
             preferences,
             onUpdatePreferences: updatePreferences
         }),
-        [
-            mode,
-            primaryColor,
-            character,
-            setCharacter,
-            diceModalOpened,
-            openDiceModal,
-            preferences,
-            updatePreferences
-        ]
+        [mode, primaryColor, character, setCharacter, preferences, updatePreferences]
     )
 
     return (
@@ -245,11 +231,6 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             <CharacterSheetMenu options={sheetOptions} />
             <ChatWindow options={sheetOptions} />
             <DiceRollModal
-                opened={diceModalOpened}
-                onClose={() => {
-                    closeDiceModal()
-                    resetSelectedDicePool()
-                }}
                 primaryColor={primaryColor}
                 character={character}
                 setCharacter={setCharacter}

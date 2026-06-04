@@ -1,5 +1,6 @@
 import { Group } from "@mantine/core"
 import { AnimatePresence, motion } from "framer-motion"
+import { memo } from "react"
 import Die from "./Die"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -151,4 +152,4 @@ const DiceContainer = ({
     )
 }
 
-export default DiceContainer
+export default memo(DiceContainer)
