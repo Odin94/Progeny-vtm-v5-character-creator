@@ -45,7 +45,7 @@ const isKnownDiscipline = (name: DisciplineName): name is KnownDisciplineName =>
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
-    const { character, primaryColor, mode, setCharacter, diceModalOpened } = options
+    const { character, primaryColor, mode, setCharacter, diceModalOpened, openDiceModal } = options
     const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
@@ -86,12 +86,17 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const canAddCeremonies = isEditable && oblivionLevel > 0
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
-        if (!isClickable) return
         updateSelectedDicePool({
-            discipline: selectedDicePool.discipline === disciplineName ? null : disciplineName,
+            discipline:
+                diceModalOpened && selectedDicePool.discipline === disciplineName
+                    ? null
+                    : disciplineName,
             skill: null,
             selectedMeritFlaws: []
         })
+        if (!diceModalOpened) {
+            openDiceModal()
+        }
     }
 
     if (
@@ -214,7 +219,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 backgroundColor: paperBg,
                                                 cursor: isClickable ? "pointer" : "default"
                                             }}
-                                            onClick={() => handleDisciplineClick(disciplineName)}
+                                            onClick={
+                                                isClickable
+                                                    ? () => handleDisciplineClick(disciplineName)
+                                                    : undefined
+                                            }
                                         >
                                             <Group gap="md" mb="md" align="center">
                                                 {logo ? (
@@ -234,7 +243,14 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     style={{ flex: 1 }}
                                                     align="center"
                                                 >
-                                                    <Title order={4} style={{ margin: 0 }}>
+                                                    <Title
+                                                        order={4}
+                                                        style={{ margin: 0, cursor: "pointer" }}
+                                                        onClick={(event) => {
+                                                            event.stopPropagation()
+                                                            handleDisciplineClick(disciplineName)
+                                                        }}
+                                                    >
                                                         {upcase(disciplineName)}
                                                         {isCustom ? (
                                                             <Badge

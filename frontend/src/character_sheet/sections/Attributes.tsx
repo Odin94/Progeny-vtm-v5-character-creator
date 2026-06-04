@@ -11,7 +11,7 @@ type AttributesProps = {
 }
 
 const Attributes = ({ options }: AttributesProps) => {
-    const { character, mode, diceModalOpened } = options
+    const { character, mode, diceModalOpened, openDiceModal } = options
     const { selectedDicePool, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
@@ -22,15 +22,16 @@ const Attributes = ({ options }: AttributesProps) => {
         fontFamily: "Courier New"
     }
 
-    const isClickable = diceModalOpened
-
     const handleAttributeClick = (attribute: AttributesKey) => {
-        if (!isClickable) return
         updateSelectedDicePool({
-            attribute: selectedDicePool.attribute === attribute ? null : attribute,
+            attribute:
+                diceModalOpened && selectedDicePool.attribute === attribute ? null : attribute,
             selectedDisciplinePowers: [],
             selectedMeritFlaws: []
         })
+        if (!diceModalOpened) {
+            openDiceModal()
+        }
     }
 
     const renderAttributeRow = (attribute: AttributesKey) => {
@@ -41,7 +42,7 @@ const Attributes = ({ options }: AttributesProps) => {
                 justify="space-between"
                 mb="xs"
                 style={
-                    isClickable
+                    diceModalOpened
                         ? {
                               cursor: "pointer",
                               padding: "4px 8px",
@@ -53,9 +54,17 @@ const Attributes = ({ options }: AttributesProps) => {
                           }
                         : undefined
                 }
-                onClick={() => handleAttributeClick(attribute)}
+                onClick={diceModalOpened ? () => handleAttributeClick(attribute) : undefined}
             >
-                <Text style={textStyle}>{upcase(attribute)}</Text>
+                <Text
+                    style={{ ...textStyle, cursor: "pointer" }}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        handleAttributeClick(attribute)
+                    }}
+                >
+                    {upcase(attribute)}
+                </Text>
                 <Pips
                     level={character.attributes[attribute]}
                     minLevel={1}

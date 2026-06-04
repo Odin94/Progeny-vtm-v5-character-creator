@@ -40,6 +40,7 @@ export type SheetOptions = {
     character: Character
     setCharacter: (character: Character) => void
     diceModalOpened: boolean
+    openDiceModal: () => void
     preferences: UserPreferences
     onUpdatePreferences: (partial: Partial<UserPreferences>) => void
 }
@@ -80,6 +81,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             character,
             setCharacter,
             diceModalOpened,
+            openDiceModal,
             preferences,
             onUpdatePreferences: updatePreferences
         }),
@@ -89,6 +91,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             character,
             setCharacter,
             diceModalOpened,
+            openDiceModal,
             preferences,
             updatePreferences
         ]

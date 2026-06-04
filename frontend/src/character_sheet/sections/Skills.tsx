@@ -73,12 +73,10 @@ const SkillRow = ({
         }))
     )
 
-    const isClickable = options.diceModalOpened
     const isSelected = selectedDicePool.skill === skill
 
     const handleSkillClick = () => {
-        if (!isClickable) return
-        const newSkill = isSelected ? null : skill
+        const newSkill = options.diceModalOpened && isSelected ? null : skill
         updateSelectedDicePool({
             skill: newSkill,
             discipline: null,
@@ -86,6 +84,9 @@ const SkillRow = ({
             selectedDisciplinePowers: [],
             selectedMeritFlaws: []
         })
+        if (!options.diceModalOpened) {
+            options.openDiceModal()
+        }
     }
 
     useEffect(() => {
@@ -189,9 +190,9 @@ const SkillRow = ({
                         <Text
                             style={{
                                 ...textStyle,
-                                cursor: isClickable ? "pointer" : "default"
+                                cursor: "pointer"
                             }}
-                            onClick={isClickable ? handleSkillClick : undefined}
+                            onClick={handleSkillClick}
                         >
                             {upcase(skill)}
                         </Text>
@@ -273,14 +274,18 @@ const SkillRow = ({
                     <Text
                         style={{
                             ...textStyle,
-                            cursor: isClickable ? "pointer" : "default",
-                            padding: isClickable ? "4px 8px" : undefined,
-                            borderRadius: isClickable ? "4px" : undefined,
+                            cursor: "pointer",
+                            padding: options.diceModalOpened ? "4px 8px" : undefined,
+                            borderRadius: options.diceModalOpened ? "4px" : undefined,
                             backgroundColor:
-                                isClickable && isSelected ? `${primaryColor}33` : undefined,
-                            transition: isClickable ? "background-color 0.2s" : undefined
+                                options.diceModalOpened && isSelected
+                                    ? `${primaryColor}33`
+                                    : undefined,
+                            transition: options.diceModalOpened
+                                ? "background-color 0.2s"
+                                : undefined
                         }}
-                        onClick={isClickable ? handleSkillClick : undefined}
+                        onClick={handleSkillClick}
                     >
                         {upcase(skill)}
                     </Text>
@@ -354,7 +359,7 @@ const SkillRow = ({
             )}
             <Box
                 onClick={(e) => {
-                    if (isClickable) {
+                    if (options.diceModalOpened) {
                         e.stopPropagation()
                     }
                 }}
