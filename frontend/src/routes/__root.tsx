@@ -4,7 +4,7 @@ import { createTheme, MantineProvider } from "@mantine/core"
 import { generateColors } from "@mantine/colors-generator"
 import { Notifications } from "@mantine/notifications"
 import { useEffect } from "react"
-import posthog from "posthog-js"
+import posthog, { type PostHogConfig } from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
@@ -29,6 +29,55 @@ const queryClient = new QueryClient({
         }
     }
 })
+
+const posthogOptions: Partial<PostHogConfig> = {
+    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    defaults: "2025-05-24",
+    capture_exceptions: true,
+    cookieless_mode: "on_reject",
+    before_send: (event) => {
+        if (event && event.event === "$exception") {
+            const exceptionList = event.properties?.$exception_list
+            const exceptionListEntry = Array.isArray(exceptionList) ? exceptionList[0] : undefined
+            const exceptionType = event.properties?.$exception_type ?? exceptionListEntry?.type
+            const exceptionMessage =
+                event.properties?.$exception_message ?? exceptionListEntry?.value
+            const exceptionValue =
+                exceptionListEntry?.value ?? event.properties?.$exception_values?.[0]
+
+            if (
+                exceptionType === "CustomEvent" ||
+                (typeof exceptionValue === "string" && exceptionValue.includes("CustomEvent"))
+            ) {
+                return null
+            }
+
+            if (
+                exceptionType === "NotFoundError" &&
+                typeof exceptionMessage === "string" &&
+                exceptionMessage.includes("removeChild") &&
+                exceptionMessage.includes("not a child of this node")
+            ) {
+                return null
+            }
+
+            try {
+                const characterData = localStorage.getItem("character")
+                if (characterData) {
+                    const parsed = JSON.parse(characterData)
+                    event.properties = event.properties || {}
+                    event.properties.character = parsed
+                }
+            } catch (_error) {
+                // Silently fail
+            }
+        }
+        return event
+    }
+}
+
+// Restore persisted consent before children such as CookiesBanner read the PostHog client.
+posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, posthogOptions)
 
 const AuthUnauthorizedHandler = () => {
     useEffect(() => {
@@ -56,59 +105,7 @@ const AuthUnauthorizedHandler = () => {
 export const Route = createRootRoute({
     component: () => (
         <QueryClientProvider client={queryClient}>
-            <PostHogProvider
-                apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
-                options={{
-                    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-                    defaults: "2025-05-24",
-                    capture_exceptions: true,
-                    cookieless_mode: "on_reject",
-                    before_send: (event) => {
-                        if (event && event.event === "$exception") {
-                            const exceptionList = event.properties?.$exception_list
-                            const exceptionListEntry = Array.isArray(exceptionList)
-                                ? exceptionList[0]
-                                : undefined
-                            const exceptionType =
-                                event.properties?.$exception_type ?? exceptionListEntry?.type
-                            const exceptionMessage =
-                                event.properties?.$exception_message ?? exceptionListEntry?.value
-                            const exceptionValue =
-                                exceptionListEntry?.value ??
-                                event.properties?.$exception_values?.[0]
-
-                            if (
-                                exceptionType === "CustomEvent" ||
-                                (typeof exceptionValue === "string" &&
-                                    exceptionValue.includes("CustomEvent"))
-                            ) {
-                                return null
-                            }
-
-                            if (
-                                exceptionType === "NotFoundError" &&
-                                typeof exceptionMessage === "string" &&
-                                exceptionMessage.includes("removeChild") &&
-                                exceptionMessage.includes("not a child of this node")
-                            ) {
-                                return null
-                            }
-
-                            try {
-                                const characterData = localStorage.getItem("character")
-                                if (characterData) {
-                                    const parsed = JSON.parse(characterData)
-                                    event.properties = event.properties || {}
-                                    event.properties.character = parsed
-                                }
-                            } catch (_error) {
-                                // Silently fail
-                            }
-                        }
-                        return event
-                    }
-                }}
-            >
+            <PostHogProvider client={posthog}>
                 <MantineProvider
                     theme={createTheme({
                         colors: {

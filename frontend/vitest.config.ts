@@ -18,7 +18,7 @@ export default defineConfig({
         pool: "threads",
         minWorkers: 1,
         maxWorkers: 2,
-        isolate: false,
+        isolate: true,
         sequence: {
             shuffle: false
         },

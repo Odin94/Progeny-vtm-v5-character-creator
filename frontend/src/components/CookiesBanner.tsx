@@ -13,25 +13,26 @@ export const CookiesBanner = () => {
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     const { isAuthenticated } = useAuth()
 
-    const consentStatus = posthog.get_explicit_consent_status()
-
     useEffect(() => {
+        const consentStatus = posthog.get_explicit_consent_status()
         setShowBanner(!isAuthenticated && consentStatus === "pending")
-    }, [consentStatus, isAuthenticated])
+    }, [isAuthenticated])
 
     const handleAccept = () => {
+        setShowBanner(false)
+
         try {
             posthog.opt_in_capturing()
-            setShowBanner(false)
         } catch (error) {
             console.warn("Failed to opt in PostHog capturing:", error)
         }
     }
 
     const handleDecline = () => {
+        setShowBanner(false)
+
         try {
             posthog.opt_out_capturing()
-            setShowBanner(false)
         } catch (error) {
             console.warn("Failed to opt out PostHog capturing:", error)
         }
