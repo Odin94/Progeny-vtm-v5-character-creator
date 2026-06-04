@@ -119,6 +119,7 @@ describe("createPdf_nerdbert", () => {
                 discipline: "oblivion"
             }
         ]
+        character.touchstones.push({ name: " ", description: "", conviction: "" })
         const pdfBytes = await createPdf_nerdbert(character)
 
         expect(pdfBytes).toBeInstanceOf(Uint8Array)
@@ -136,9 +137,13 @@ describe("createPdf_nerdbert", () => {
         expect(form.getTextField("Sire").getText()).toBe(character.sire)
         expect(form.getTextField("Title").getText()).toBe(character.generation.toString())
 
-        const touchstonesText = form.getTextField("Convictions").getText()
-        expect(touchstonesText).toContain(character.touchstones[0].name)
-        expect(touchstonesText).toContain(character.touchstones[0].conviction)
+        const touchstone = character.touchstones[0]
+        expect(form.getTextField("Convictions").getText()).toBe(
+            `${touchstone.conviction} (${touchstone.name})`
+        )
+        expect(form.getTextField("touchstoneNotes").getText()).toBe(
+            `${touchstone.name}\n${touchstone.description}`
+        )
 
         const expText = form.getTextField("tEXP").getText()
         expect(expText).toContain(character.experience.toString())

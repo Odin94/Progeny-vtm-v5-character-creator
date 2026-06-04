@@ -464,10 +464,15 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     })
 
     // Touchstones & Convictions
+    const nonEmptyTouchstones = character.touchstones.filter(
+        ({ name, description, conviction }) =>
+            name.trim() !== "" || description.trim() !== "" || conviction.trim() !== ""
+    )
     form.getTextField("Convictions").setText(
-        character.touchstones
-            .map(({ name, description, conviction }) => `${name}: ${conviction}\n${description}`)
-            .join("\n\n")
+        nonEmptyTouchstones.map(({ name, conviction }) => `${conviction} (${name})`).join("\n\n")
+    )
+    form.getTextField("touchstoneNotes").setText(
+        nonEmptyTouchstones.map(({ name, description }) => `${name}\n${description}`).join("\n\n")
     )
 
     // Experience
