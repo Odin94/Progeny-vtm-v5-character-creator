@@ -33,9 +33,8 @@ const powerMatchingRules: Array<{
         powerName: "Weaving",
         discipline: "celerity",
         matches: (attribute, skill) => {
-            return skill === null
-        },
-        requiresPrerequisite: "Rapid Reflexes"
+            return attribute === "dexterity" && skill === "athletics"
+        }
     },
     {
         powerName: "Prowess",
