@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import { api, API_URL, type ApiError } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
+import { resetPostHogIdentity } from "~/utils/analytics"
 
 const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
 const DEFAULT_POST_AUTH_PATH = "/"
@@ -100,7 +101,7 @@ export const useAuth = () => {
 
             // Reset PostHog user identification on logout
             try {
-                posthog.reset()
+                resetPostHogIdentity()
             } catch (error) {
                 console.warn("PostHog reset failed:", error)
             }
@@ -117,7 +118,7 @@ export const useAuth = () => {
 
             // Reset PostHog user identification even on error
             try {
-                posthog.reset()
+                resetPostHogIdentity()
             } catch (error) {
                 console.warn("PostHog reset failed:", error)
             }

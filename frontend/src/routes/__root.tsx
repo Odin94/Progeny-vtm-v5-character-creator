@@ -11,6 +11,7 @@ import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { CookiesBanner } from "~/components/CookiesBanner"
 import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
+import { resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 
 const queryClient = new QueryClient({
@@ -30,11 +31,15 @@ const queryClient = new QueryClient({
     }
 })
 
+const POSTHOG_CONSENT_RETENTION_DAYS = 180
+
 const posthogOptions: Partial<PostHogConfig> = {
     api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
     defaults: "2025-05-24",
     capture_exceptions: true,
     cookieless_mode: "on_reject",
+    cookie_expiration: POSTHOG_CONSENT_RETENTION_DAYS,
+    opt_out_capturing_persistence_type: "cookie",
     before_send: (event) => {
         if (event && event.event === "$exception") {
             const exceptionList = event.properties?.$exception_list
@@ -89,7 +94,7 @@ const AuthUnauthorizedHandler = () => {
             queryClient.removeQueries({ queryKey: ["user", "preferences"] })
 
             try {
-                posthog.reset()
+                resetPostHogIdentity()
             } catch (error) {
                 console.warn("PostHog reset failed:", error)
             }

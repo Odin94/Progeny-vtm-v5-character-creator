@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import { CookiesBanner } from "~/components/CookiesBanner"
 
+const mockUseAuth = vi.fn(() => ({ isAuthenticated: false, isLoading: false }))
+
 vi.mock("~/hooks/useAuth", () => ({
-    useAuth: () => ({ isAuthenticated: false })
+    useAuth: () => mockUseAuth()
 }))
 
 vi.mock("posthog-js", () => ({
@@ -40,6 +42,7 @@ const renderBanner = () =>
 describe("CookiesBanner", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false })
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("pending")
     })
 
@@ -60,6 +63,17 @@ describe("CookiesBanner", () => {
 
         await waitFor(() => {
             expect(posthog.get_explicit_consent_status).toHaveBeenCalledOnce()
+        })
+        expect(screen.queryByText("Sink your fangs into some cookies!")).not.toBeInTheDocument()
+    })
+
+    it("does not read or show consent while auth is still loading", async () => {
+        mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true })
+
+        renderBanner()
+
+        await waitFor(() => {
+            expect(posthog.get_explicit_consent_status).not.toHaveBeenCalled()
         })
         expect(screen.queryByText("Sink your fangs into some cookies!")).not.toBeInTheDocument()
     })

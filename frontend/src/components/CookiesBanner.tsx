@@ -11,12 +11,17 @@ const LEARN_MORE_HREF = "https://odin-matthias.de/datenschutzerklaerung"
 export const CookiesBanner = () => {
     const [showBanner, setShowBanner] = useState(false)
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, isLoading } = useAuth()
 
     useEffect(() => {
+        if (isLoading) {
+            setShowBanner(false)
+            return
+        }
+
         const consentStatus = posthog.get_explicit_consent_status()
         setShowBanner(!isAuthenticated && consentStatus === "pending")
-    }, [isAuthenticated])
+    }, [isAuthenticated, isLoading])
 
     const handleAccept = () => {
         setShowBanner(false)
