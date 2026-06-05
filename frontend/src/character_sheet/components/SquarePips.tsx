@@ -1,5 +1,5 @@
 import { Group } from "@mantine/core"
-import { useRef, useMemo, useEffect } from "react"
+import { memo, useRef, useMemo, useEffect } from "react"
 import SimpleSquarePipButton from "./SimpleSquarePipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
@@ -67,26 +67,28 @@ const SquarePips = ({
 
         if (!options || !field) return
 
-        const { mode, character, setCharacter } = options
+        const { mode, setCharacter } = options
 
         if (mode === "play" && field !== "ephemeral.hunger") {
             return
         }
 
-        const update: Partial<Character> = {}
-        if (field === "humanity") {
-            update.humanity = clampedValue
-        } else if (field === "ephemeral.hunger") {
-            update.ephemeral = {
-                ...character.ephemeral,
-                hunger: clampedValue
+        setCharacter((character) => {
+            const update: Partial<Character> = {}
+            if (field === "humanity") {
+                update.humanity = clampedValue
+            } else if (field === "ephemeral.hunger") {
+                update.ephemeral = {
+                    ...character.ephemeral,
+                    hunger: clampedValue
+                }
+            } else if (field) {
+                update[field as keyof Character] = clampedValue as never
             }
-        } else if (field) {
-            update[field as keyof Character] = clampedValue as never
-        }
-        setCharacter({
-            ...character,
-            ...update
+            return {
+                ...character,
+                ...update
+            }
         })
     }
 
@@ -113,4 +115,18 @@ const SquarePips = ({
     )
 }
 
-export default SquarePips
+const getMemoCharacterKey = (options?: SheetOptions): string => {
+    if (!options) return ""
+    return [options.mode, options.primaryColor].join("|")
+}
+
+export default memo(SquarePips, (prev, next) => {
+    return (
+        prev.value === next.value &&
+        prev.maxLevel === next.maxLevel &&
+        prev.groupSize === next.groupSize &&
+        prev.field === next.field &&
+        prev.setValue === next.setValue &&
+        getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
+    )
+})

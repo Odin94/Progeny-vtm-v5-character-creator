@@ -1,5 +1,5 @@
 import { Group } from "@mantine/core"
-import { useRef, useMemo, useEffect } from "react"
+import { memo, useRef, useMemo, useEffect } from "react"
 import PipButton from "./PipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
@@ -190,56 +190,60 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             if (!canAffordUpgrade(availableXP, cost)) {
                 return
             }
+            setCharacter((currentCharacter) => {
+                const update: Partial<Character> = {}
+                // TODOdin: Find a way to stop looking for specific things here, and also get better type safety (no "as never")
+                if (field === "bloodPotency") {
+                    update.bloodPotency = clampedLevel
+                } else if (field.startsWith("attributes.")) {
+                    const attr = field.split(".")[1]
+                    update.attributes = { ...currentCharacter.attributes, [attr]: clampedLevel }
+                } else if (field.startsWith("skills.")) {
+                    const skill = field.split(".")[1]
+                    update.skills = { ...currentCharacter.skills, [skill]: clampedLevel }
+                } else {
+                    update[field as keyof Character] = clampedLevel as never
+                }
+                const updatedCharacter = {
+                    ...currentCharacter,
+                    ...update,
+                    ephemeral: {
+                        ...currentCharacter.ephemeral,
+                        experienceSpent: currentCharacter.ephemeral.experienceSpent + cost
+                    }
+                }
+                // Update health, willpower, blood potency, and humanity when attributes change
+                if (field.startsWith("attributes.")) {
+                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+                }
+                return updatedCharacter
+            })
+            return
+        }
+
+        setCharacter((currentCharacter) => {
             const update: Partial<Character> = {}
-            // TODOdin: Find a way to stop looking for specific things here, and also get better type safety (no "as never")
             if (field === "bloodPotency") {
                 update.bloodPotency = clampedLevel
             } else if (field.startsWith("attributes.")) {
                 const attr = field.split(".")[1]
-                update.attributes = { ...character.attributes, [attr]: clampedLevel }
+                update.attributes = { ...currentCharacter.attributes, [attr]: clampedLevel }
             } else if (field.startsWith("skills.")) {
                 const skill = field.split(".")[1]
-                update.skills = { ...character.skills, [skill]: clampedLevel }
+                update.skills = { ...currentCharacter.skills, [skill]: clampedLevel }
             } else {
                 update[field as keyof Character] = clampedLevel as never
             }
             const updatedCharacter = {
-                ...character,
-                ...update,
-                ephemeral: {
-                    ...character.ephemeral,
-                    experienceSpent: character.ephemeral.experienceSpent + cost
-                }
+                ...currentCharacter,
+                ...update
             }
             // Update health, willpower, blood potency, and humanity when attributes change
             if (field.startsWith("attributes.")) {
                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
             }
-            setCharacter(updatedCharacter)
-            return
-        }
-
-        const update: Partial<Character> = {}
-        if (field === "bloodPotency") {
-            update.bloodPotency = clampedLevel
-        } else if (field.startsWith("attributes.")) {
-            const attr = field.split(".")[1]
-            update.attributes = { ...character.attributes, [attr]: clampedLevel }
-        } else if (field.startsWith("skills.")) {
-            const skill = field.split(".")[1]
-            update.skills = { ...character.skills, [skill]: clampedLevel }
-        } else {
-            update[field as keyof Character] = clampedLevel as never
-        }
-        const updatedCharacter = {
-            ...character,
-            ...update
-        }
-        // Update health, willpower, blood potency, and humanity when attributes change
-        if (field.startsWith("attributes.")) {
-            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        }
-        setCharacter(updatedCharacter)
+            return updatedCharacter
+        })
     }
 
     return (
@@ -266,4 +270,24 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
     )
 }
 
-export default Pips
+const getMemoCharacterKey = (options?: SheetOptions): string => {
+    if (!options) return ""
+    const { character } = options
+    return [
+        options.mode,
+        options.primaryColor,
+        character.generation,
+        character.experience,
+        character.ephemeral.experienceSpent
+    ].join("|")
+}
+
+export default memo(Pips, (prev, next) => {
+    return (
+        prev.level === next.level &&
+        prev.maxLevel === next.maxLevel &&
+        prev.minLevel === next.minLevel &&
+        prev.field === next.field &&
+        getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
+    )
+})

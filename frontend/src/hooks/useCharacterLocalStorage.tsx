@@ -4,6 +4,8 @@ import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/
 import { applyCharacterCompatibilityPatches } from "~/data/Character"
 import { recordBrokenCharacter } from "./useBrokenCharacter"
 
+export type SetCharacter = (character: Character | ((character: Character) => Character)) => void
+
 export const useCharacterLocalStorage = () => {
     const [character, setCharacterInternal] = useLocalStorage<Character>({
         key: "character",
@@ -49,8 +51,16 @@ export const useCharacterLocalStorage = () => {
         }
     })
 
-    const setCharacter = (character: Character) => {
-        const characterWithVersion = { ...character, version: schemaVersion }
+    const setCharacter: SetCharacter = (characterOrUpdater) => {
+        if (typeof characterOrUpdater === "function") {
+            setCharacterInternal((currentCharacter) => ({
+                ...characterOrUpdater(currentCharacter),
+                version: schemaVersion
+            }))
+            return
+        }
+
+        const characterWithVersion = { ...characterOrUpdater, version: schemaVersion }
         setCharacterInternal(characterWithVersion)
     }
 

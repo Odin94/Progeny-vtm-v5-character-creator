@@ -10,7 +10,7 @@ import {
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
-import { useRef, useEffect, useState } from "react"
+import { memo, useRef, useEffect, useState } from "react"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
@@ -398,18 +398,26 @@ const Skills = ({ options }: SkillsProps) => {
             if (!canAffordUpgrade(availableXP, cost)) {
                 return
             }
-            setCharacter({
-                ...character,
-                skillSpecialties: [...character.skillSpecialties, { skill, name: "" }],
-                ephemeral: {
-                    ...character.ephemeral,
-                    experienceSpent: character.ephemeral.experienceSpent + cost
+            setCharacter((currentCharacter) => {
+                const currentAvailableXP = getAvailableXP(currentCharacter)
+                if (!canAffordUpgrade(currentAvailableXP, cost)) {
+                    return currentCharacter
+                }
+                return {
+                    ...currentCharacter,
+                    skillSpecialties: [...currentCharacter.skillSpecialties, { skill, name: "" }],
+                    ephemeral: {
+                        ...currentCharacter.ephemeral,
+                        experienceSpent: currentCharacter.ephemeral.experienceSpent + cost
+                    }
                 }
             })
         } else {
-            setCharacter({
-                ...character,
-                skillSpecialties: [...character.skillSpecialties, { skill, name: "" }]
+            setCharacter((currentCharacter) => {
+                return {
+                    ...currentCharacter,
+                    skillSpecialties: [...currentCharacter.skillSpecialties, { skill, name: "" }]
+                }
             })
         }
     }
@@ -425,35 +433,41 @@ const Skills = ({ options }: SkillsProps) => {
     }
 
     const updateSpecialty = (skill: SkillsKey, index: number, newName: string) => {
-        const skillSpecialties = [...character.skillSpecialties]
-        const skillSpecialtiesForThisSkill = skillSpecialties.filter((s) => s.skill === skill)
-        const specialtyToUpdate = skillSpecialtiesForThisSkill[index]
-        if (specialtyToUpdate) {
-            const globalIndex = skillSpecialties.indexOf(specialtyToUpdate)
-            if (globalIndex !== -1) {
-                skillSpecialties[globalIndex] = { skill, name: newName }
-                setCharacter({
-                    ...character,
-                    skillSpecialties
-                })
+        setCharacter((currentCharacter) => {
+            const skillSpecialties = [...currentCharacter.skillSpecialties]
+            const skillSpecialtiesForThisSkill = skillSpecialties.filter((s) => s.skill === skill)
+            const specialtyToUpdate = skillSpecialtiesForThisSkill[index]
+            if (specialtyToUpdate) {
+                const globalIndex = skillSpecialties.indexOf(specialtyToUpdate)
+                if (globalIndex !== -1) {
+                    skillSpecialties[globalIndex] = { skill, name: newName }
+                    return {
+                        ...currentCharacter,
+                        skillSpecialties
+                    }
+                }
             }
-        }
+            return currentCharacter
+        })
     }
 
     const removeSpecialty = (skill: SkillsKey, index: number) => {
-        const skillSpecialtiesForThisSkill = character.skillSpecialties.filter(
-            (s) => s.skill === skill
-        )
-        const specialtyToRemove = skillSpecialtiesForThisSkill[index]
-        if (specialtyToRemove) {
-            const skillSpecialties = character.skillSpecialties.filter(
-                (s) => s !== specialtyToRemove
+        setCharacter((currentCharacter) => {
+            const skillSpecialtiesForThisSkill = currentCharacter.skillSpecialties.filter(
+                (s) => s.skill === skill
             )
-            setCharacter({
-                ...character,
-                skillSpecialties
-            })
-        }
+            const specialtyToRemove = skillSpecialtiesForThisSkill[index]
+            if (specialtyToRemove) {
+                const skillSpecialties = currentCharacter.skillSpecialties.filter(
+                    (s) => s !== specialtyToRemove
+                )
+                return {
+                    ...currentCharacter,
+                    skillSpecialties
+                }
+            }
+            return currentCharacter
+        })
     }
 
     const renderSkillRow = (skill: SkillsKey) => {
@@ -542,4 +556,16 @@ const Skills = ({ options }: SkillsProps) => {
     )
 }
 
-export default Skills
+export default memo(Skills, (prev, next) => {
+    return (
+        prev.options.mode === next.options.mode &&
+        prev.options.primaryColor === next.options.primaryColor &&
+        prev.options.character.skills === next.options.character.skills &&
+        prev.options.character.skillSpecialties === next.options.character.skillSpecialties &&
+        prev.options.character.predatorType.pickedSpecialties ===
+            next.options.character.predatorType.pickedSpecialties &&
+        prev.options.character.experience === next.options.character.experience &&
+        prev.options.character.ephemeral.experienceSpent ===
+            next.options.character.ephemeral.experienceSpent
+    )
+})

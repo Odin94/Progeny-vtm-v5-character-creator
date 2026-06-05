@@ -1,4 +1,5 @@
 import { Box, Grid, Group, Text, Title } from "@mantine/core"
+import { memo } from "react"
 import { attributesKeySchema, AttributesKey } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
@@ -124,4 +125,14 @@ const Attributes = ({ options }: AttributesProps) => {
     )
 }
 
-export default Attributes
+export default memo(Attributes, (prev, next) => {
+    return (
+        prev.options.mode === next.options.mode &&
+        prev.options.primaryColor === next.options.primaryColor &&
+        prev.options.character.attributes === next.options.character.attributes &&
+        prev.options.character.generation === next.options.character.generation &&
+        prev.options.character.experience === next.options.character.experience &&
+        prev.options.character.ephemeral.experienceSpent ===
+            next.options.character.ephemeral.experienceSpent
+    )
+})

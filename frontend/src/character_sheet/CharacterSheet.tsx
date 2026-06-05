@@ -17,6 +17,7 @@ import posthog from "posthog-js"
 import { getPrimaryColor } from "./utils/style"
 import { type UserPreferences, getBackgroundSrc } from "./utils/preferences"
 import { useUserPreferences } from "~/hooks/useUserPreferences"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import Attributes from "./sections/Attributes"
 import BottomData from "./sections/BottomData"
 import Disciplines from "./sections/Disciplines"
@@ -38,14 +39,14 @@ export type SheetOptions = {
     mode: CharacterSheetMode
     primaryColor: string
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     preferences: UserPreferences
     onUpdatePreferences: (partial: Partial<UserPreferences>) => void
 }
 
 type CharacterSheetProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
 }
 
 const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
