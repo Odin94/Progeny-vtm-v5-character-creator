@@ -51,7 +51,6 @@ const Attributes = ({ options }: AttributesProps) => {
                     diceModalOpened
                         ? {
                               cursor: "pointer",
-                              padding: "4px 8px",
                               borderRadius: "4px",
                               backgroundColor: isSelected
                                   ? `${options.primaryColor}33`

@@ -282,7 +282,6 @@ const SkillRow = ({
                         style={{
                             ...textStyle,
                             cursor: "pointer",
-                            padding: diceModalOpened ? "4px 8px" : undefined,
                             borderRadius: diceModalOpened ? "4px" : undefined,
                             backgroundColor:
                                 diceModalOpened && isSelected ? `${primaryColor}33` : undefined,
