@@ -67,22 +67,15 @@ const SkillRow = ({
         index: number
     } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
-    const { selectedSkill, updateSelectedDicePool } = useCharacterSheetStore(
+    const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedSkill: state.selectedDicePool.skill,
+            isSelected: state.selectedDicePool.skill === skill,
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
-    const { diceModalOpened, openDiceModal } = useDiceRollModalStore(
-        useShallow((state) => ({
-            diceModalOpened: state.opened,
-            openDiceModal: state.open
-        }))
-    )
-
-    const isSelected = selectedSkill === skill
 
     const handleSkillClick = () => {
+        const diceModalOpened = useDiceRollModalStore.getState().opened
         const newSkill = diceModalOpened && isSelected ? null : skill
         updateSelectedDicePool({
             skill: newSkill,
@@ -92,7 +85,7 @@ const SkillRow = ({
             selectedMeritFlaws: []
         })
         if (!diceModalOpened) {
-            openDiceModal()
+            useDiceRollModalStore.getState().openSelectedPool()
         }
     }
 
@@ -282,10 +275,9 @@ const SkillRow = ({
                         style={{
                             ...textStyle,
                             cursor: "pointer",
-                            borderRadius: diceModalOpened ? "4px" : undefined,
-                            backgroundColor:
-                                diceModalOpened && isSelected ? `${primaryColor}33` : undefined,
-                            transition: diceModalOpened ? "background-color 0.2s" : undefined
+                            borderRadius: "4px",
+                            backgroundColor: isSelected ? `${primaryColor}33` : undefined,
+                            transition: "background-color 0.2s"
                         }}
                         onClick={handleSkillClick}
                     >
@@ -361,7 +353,7 @@ const SkillRow = ({
             )}
             <Box
                 onClick={(e) => {
-                    if (diceModalOpened) {
+                    if (useDiceRollModalStore.getState().opened) {
                         e.stopPropagation()
                     }
                 }}

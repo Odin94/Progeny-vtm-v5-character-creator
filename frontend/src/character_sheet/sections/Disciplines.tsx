@@ -47,16 +47,9 @@ const isKnownDiscipline = (name: DisciplineName): name is KnownDisciplineName =>
 
 const Disciplines = ({ options }: DisciplinesProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const { selectedDiscipline, updateSelectedDicePool } = useCharacterSheetStore(
+    const { updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedDiscipline: state.selectedDicePool.discipline,
             updateSelectedDicePool: state.updateSelectedDicePool
-        }))
-    )
-    const { diceModalOpened, openDiceModal } = useDiceRollModalStore(
-        useShallow((state) => ({
-            diceModalOpened: state.opened,
-            openDiceModal: state.open
         }))
     )
     const theme = useMantineTheme()
@@ -81,7 +74,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
-    const isClickable = diceModalOpened
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const bloodSorceryLevel = character.disciplines.filter(
         (power) => power.discipline === "blood sorcery"
@@ -93,6 +85,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const canAddCeremonies = isEditable && oblivionLevel > 0
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
+        const diceModalOpened = useDiceRollModalStore.getState().opened
+        const selectedDiscipline = useCharacterSheetStore.getState().selectedDicePool.discipline
         updateSelectedDicePool({
             discipline:
                 diceModalOpened && selectedDiscipline === disciplineName ? null : disciplineName,
@@ -100,7 +94,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             selectedMeritFlaws: []
         })
         if (!diceModalOpened) {
-            openDiceModal()
+            useDiceRollModalStore.getState().openSelectedPool()
         }
     }
 
@@ -222,13 +216,13 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             style={{
                                                 height: "100%",
                                                 backgroundColor: paperBg,
-                                                cursor: isClickable ? "pointer" : "default"
+                                                cursor: "default"
                                             }}
-                                            onClick={
-                                                isClickable
-                                                    ? () => handleDisciplineClick(disciplineName)
-                                                    : undefined
-                                            }
+                                            onClick={() => {
+                                                if (useDiceRollModalStore.getState().opened) {
+                                                    handleDisciplineClick(disciplineName)
+                                                }
+                                            }}
                                         >
                                             <Group gap="md" mb="md" align="center">
                                                 {logo ? (
@@ -316,7 +310,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             <Divider mb="sm" />
                                             <Stack
                                                 gap="sm"
-                                                onClick={(e) => isClickable && e.stopPropagation()}
+                                                onClick={(e) => {
+                                                    if (useDiceRollModalStore.getState().opened) {
+                                                        e.stopPropagation()
+                                                    }
+                                                }}
                                             >
                                                 {powers
                                                     .sort((a, b) => a.level - b.level)
@@ -382,9 +380,14 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 {isEditable ? (
                                                     <Center
                                                         mt="xs"
-                                                        onClick={(e) =>
-                                                            isClickable && e.stopPropagation()
-                                                        }
+                                                        onClick={(e) => {
+                                                            if (
+                                                                useDiceRollModalStore.getState()
+                                                                    .opened
+                                                            ) {
+                                                                e.stopPropagation()
+                                                            }
+                                                        }}
                                                     >
                                                         {isCustom ? (
                                                             <ActionIcon

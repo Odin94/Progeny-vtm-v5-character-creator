@@ -11,72 +11,81 @@ type AttributesProps = {
     options: SheetOptions
 }
 
-const Attributes = ({ options }: AttributesProps) => {
-    const { character, mode } = options
-    const { selectedAttribute, updateSelectedDicePool } = useCharacterSheetStore(
+type AttributeRowProps = {
+    attribute: AttributesKey
+    options: SheetOptions
+    textStyle: React.CSSProperties
+}
+
+const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
+    const { character } = options
+    const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            selectedAttribute: state.selectedDicePool.attribute,
+            isSelected: state.selectedDicePool.attribute === attribute,
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
-    const { diceModalOpened, openDiceModal } = useDiceRollModalStore(
-        useShallow((state) => ({
-            diceModalOpened: state.opened,
-            openDiceModal: state.open
-        }))
-    )
-    const textStyle = {
-        fontFamily: "Courier New"
-    }
 
     const handleAttributeClick = (attribute: AttributesKey) => {
+        const diceModalOpened = useDiceRollModalStore.getState().opened
         updateSelectedDicePool({
-            attribute: diceModalOpened && selectedAttribute === attribute ? null : attribute,
+            attribute: diceModalOpened && isSelected ? null : attribute,
             selectedDisciplinePowers: [],
             selectedMeritFlaws: []
         })
         if (!diceModalOpened) {
-            openDiceModal()
+            useDiceRollModalStore.getState().openSelectedPool()
         }
     }
 
-    const renderAttributeRow = (attribute: AttributesKey) => {
-        const isSelected = selectedAttribute === attribute
-        return (
-            <Group
-                key={attribute}
-                justify="space-between"
-                mb="xs"
-                style={
-                    diceModalOpened
-                        ? {
-                              cursor: "pointer",
-                              borderRadius: "4px",
-                              backgroundColor: isSelected
-                                  ? `${options.primaryColor}33`
-                                  : "transparent",
-                              transition: "background-color 0.2s"
-                          }
-                        : undefined
+    return (
+        <Group
+            justify="space-between"
+            mb="xs"
+            style={{
+                cursor: "pointer",
+                borderRadius: "4px",
+                backgroundColor: isSelected ? `${options.primaryColor}33` : "transparent",
+                transition: "background-color 0.2s"
+            }}
+            onClick={() => {
+                if (useDiceRollModalStore.getState().opened) {
+                    handleAttributeClick(attribute)
                 }
-                onClick={diceModalOpened ? () => handleAttributeClick(attribute) : undefined}
+            }}
+        >
+            <Text
+                style={{ ...textStyle, cursor: "pointer" }}
+                onClick={(event) => {
+                    event.stopPropagation()
+                    handleAttributeClick(attribute)
+                }}
             >
-                <Text
-                    style={{ ...textStyle, cursor: "pointer" }}
-                    onClick={(event) => {
-                        event.stopPropagation()
-                        handleAttributeClick(attribute)
-                    }}
-                >
-                    {upcase(attribute)}
-                </Text>
-                <Pips
-                    level={character.attributes[attribute]}
-                    minLevel={1}
-                    options={options}
-                    field={`attributes.${attribute}`}
-                />
-            </Group>
+                {upcase(attribute)}
+            </Text>
+            <Pips
+                level={character.attributes[attribute]}
+                minLevel={1}
+                options={options}
+                field={`attributes.${attribute}`}
+            />
+        </Group>
+    )
+}
+
+const Attributes = ({ options }: AttributesProps) => {
+    const textStyle = {
+        fontFamily: "Courier New"
+    }
+
+    const renderAttributeRow = (attribute: AttributesKey) => {
+        return (
+            <AttributeRow
+                key={attribute}
+                attribute={attribute}
+                options={options}
+                textStyle={textStyle}
+            />
         )
     }
 
