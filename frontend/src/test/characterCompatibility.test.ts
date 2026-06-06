@@ -17,4 +17,21 @@ describe("character compatibility patches", () => {
         expect(parsed.ceremonies).toEqual([])
         expect(parsed.version).toBe(schemaVersion)
     })
+
+    it("sets the default clan bane on pre-v7 characters", () => {
+        const parsed: Record<string, unknown> = {
+            version: 6,
+            rituals: [],
+            ceremonies: [],
+            availableDisciplineNames: [],
+            predatorType: {
+                pickedMeritsAndFlaws: []
+            }
+        }
+
+        applyCharacterCompatibilityPatches(parsed)
+
+        expect(parsed.clanBane).toBe("default")
+        expect(parsed.version).toBe(schemaVersion)
+    })
 })

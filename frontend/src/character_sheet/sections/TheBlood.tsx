@@ -1,6 +1,7 @@
 import {
     Badge,
     Box,
+    Button,
     Divider,
     Grid,
     Group,
@@ -11,8 +12,10 @@ import {
     Title,
     useMantineTheme
 } from "@mantine/core"
+import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { clans } from "~/data/Clans"
 import { potencyEffects } from "~/data/BloodPotency"
+import { getClanBaneText, hasVariantClanBane, variantClanBanes } from "~/data/VariantClanBanes"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
@@ -28,13 +31,13 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const effects = potencyEffects[Math.min(character.bloodPotency, 5)] || potencyEffects[0]
     const clan = clans[character.clan] || clans[""]
-    const baneText = clan.bane
-        ? clan.bane.replace(/BANE_SEVERITY/g, `${effects.bane} (bane severity)`)
-        : ""
+    const variantBane = variantClanBanes[character.clan]
+    const baneText = getClanBaneText(character, effects.bane)
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     const isExperienceEditable = mode === "xp" || mode === "free"
     const isExperienceSpentEditable = mode === "free"
+    const canToggleClanBane = mode !== "play" && hasVariantClanBane(character.clan)
 
     const experienceSpentField = useDebouncedUncontrolledNumberField({
         character,
@@ -234,6 +237,32 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                     {baneText}
                                 </Text>
                             </Group>
+                            {canToggleClanBane ? (
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color={primaryColor}
+                                    leftSection={<IconSwitchHorizontal size={14} />}
+                                    onClick={() =>
+                                        setCharacter({
+                                            ...character,
+                                            clanBane:
+                                                character.clanBane === "variant"
+                                                    ? "default"
+                                                    : "variant"
+                                        })
+                                    }
+                                    styles={{
+                                        root: {
+                                            alignSelf: "flex-start"
+                                        }
+                                    }}
+                                >
+                                    {character.clanBane === "variant"
+                                        ? "Use Default Bane"
+                                        : `Use ${variantBane?.name ?? "Variant"} Bane`}
+                                </Button>
+                            ) : null}
                             <Text size="sm">
                                 <Text span fw={600} c={primaryColor}>
                                     Clan Compulsion:

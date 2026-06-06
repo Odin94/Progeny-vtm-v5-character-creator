@@ -10,6 +10,7 @@ export const getBasicTestCharacter = (): Character => {
         chronicle: "",
         sect: "",
         clan: "Brujah",
+        clanBane: "default",
         predatorType: {
             name: "Sandman",
             pickedDiscipline: "auspex",
