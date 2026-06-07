@@ -232,6 +232,34 @@ describe("createPdf_nerdbert", () => {
         expect(notesText).toContain("Potence: potence Power 6")
         expect(notesText).toContain("Test potence power 6")
     })
+
+    it("writes fixed loresheet merit and flaw bonuses to the PDF", async () => {
+        const character = getBasicTestCharacter()
+        character.predatorType.pickedMeritsAndFlaws = []
+        character.merits = [
+            {
+                name: "Hand of the Heresy",
+                level: 2,
+                summary:
+                    "Take a total of three dots among Allies, Herd, Mawla or Retainers to represent your role in the city's Heresy group. Also take the Dark Secret (Heresy) flaw.",
+                type: "merit",
+                excludes: []
+            }
+        ]
+        character.flaws = []
+
+        const pdfBytes = await createPdf_nerdbert(character)
+        const pdfDoc = await PDFDocument.load(pdfBytes)
+        const form = pdfDoc.getForm()
+        const meritTexts = form
+            .getFields()
+            .filter((field) => field.getName().match(/^Merit\d+$/))
+            .map((field) => (field as PDFTextField).getText())
+            .join(" ")
+
+        expect(meritTexts).toContain("Hand of the Heresy")
+        expect(meritTexts).toContain("Dark Secret (Heresy)")
+    })
 })
 
 describe("PDF humanity helpers", () => {

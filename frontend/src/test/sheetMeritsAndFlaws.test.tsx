@@ -157,4 +157,47 @@ describe("sheet merits and flaws", () => {
             }
         ])
     })
+
+    it("marks loresheet granted flaws in the sheet UI", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            predatorType: {
+                ...getBasicTestCharacter().predatorType,
+                pickedMeritsAndFlaws: []
+            },
+            merits: [
+                {
+                    name: "Hand of the Heresy",
+                    level: 2,
+                    summary:
+                        "Take a total of three dots among Allies, Herd, Mawla or Retainers to represent your role in the city's Heresy group. Also take the Dark Secret (Heresy) flaw.",
+                    type: "merit" as const,
+                    excludes: []
+                }
+            ],
+            flaws: []
+        }
+
+        render(
+            <MantineProvider>
+                <MeritsAndFlaws
+                    options={{
+                        mode: "play",
+                        primaryColor: "red",
+                        character,
+                        setCharacter: vi.fn(),
+                        diceModalOpened: false,
+                        preferences: {
+                            colorTheme: null,
+                            backgroundImage: null
+                        },
+                        onUpdatePreferences: vi.fn()
+                    }}
+                />
+            </MantineProvider>
+        )
+
+        expect(screen.getByText("Dark Secret (Heresy)")).toBeInTheDocument()
+        expect(screen.getByText("From loresheet")).toBeInTheDocument()
+    })
 })

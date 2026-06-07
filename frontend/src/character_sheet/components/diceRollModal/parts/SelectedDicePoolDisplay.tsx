@@ -23,7 +23,11 @@ import { useMemo } from "react"
 type SelectedDicePoolDisplayProps = {
     character?: Character
     primaryColor: string
-    skillSpecialties: Array<{ name: string; skill: string; fromPredatorType?: boolean }>
+    skillSpecialties: Array<{
+        name: string
+        skill: string
+        fromPredatorType?: boolean
+    }>
 }
 
 const SelectedDicePoolDisplay = ({

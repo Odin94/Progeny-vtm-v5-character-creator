@@ -13,7 +13,7 @@ import { upcase } from "./utils"
 import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
-import { getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
+import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
@@ -455,9 +455,12 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     const meritsAndFlaws = [...resolvedMeritsAndFlaws.merits, ...resolvedMeritsAndFlaws.flaws].map(
         ({ meritFlaw }) => meritFlaw
     )
-    meritsAndFlaws.forEach(({ name, level, summary }, i) => {
+    meritsAndFlaws.forEach((meritFlaw, i) => {
+        const { level, summary } = meritFlaw
         const fieldNum = i + 1
-        form.getTextField(`Merit${fieldNum}`).setText(name + ": " + summary)
+        form.getTextField(`Merit${fieldNum}`).setText(
+            getMeritFlawDisplayName(meritFlaw) + ": " + summary
+        )
         for (let l = 1; l <= level; l++) {
             form.getCheckBox(`Merit${fieldNum}-${l}`).check()
         }

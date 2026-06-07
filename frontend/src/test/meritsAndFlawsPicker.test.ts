@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
     adjustPickedMeritsAndFlawsForPredatorTypeChange,
     getMeritFlawPointCost,
+    getMeritFlawDisplayName,
     getPredatorTypeMeritsByName,
     getResolvedMeritsAndFlaws
 } from "~/data/meritsAndFlawsResolution"
@@ -273,5 +274,46 @@ describe("MeritsAndFlawsPicker predator type merits and flaws", () => {
             merits: character.merits,
             flaws: []
         })
+    })
+
+    it("includes fixed merits and flaws granted by selected loresheet merits", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            merits: [
+                {
+                    name: "Hand of the Heresy",
+                    level: 2,
+                    summary:
+                        "Take a total of three dots among Allies, Herd, Mawla or Retainers to represent your role in the city's Heresy group. Also take the Dark Secret (Heresy) flaw.",
+                    type: "merit" as const,
+                    excludes: []
+                }
+            ],
+            flaws: [],
+            predatorType: {
+                ...getBasicTestCharacter().predatorType,
+                pickedMeritsAndFlaws: []
+            }
+        }
+
+        const { flaws } = getResolvedMeritsAndFlaws(character)
+
+        expect(flaws).toEqual([
+            {
+                meritFlaw: {
+                    name: "Dark Secret",
+                    level: 1,
+                    summary: "You are connected to the Cainite Heresy.",
+                    excludes: [],
+                    type: "flaw",
+                    text: "Heresy"
+                },
+                isFromPredatorType: false,
+                isUpgradedFromPredatorType: false,
+                isFromLoresheet: true,
+                isUpgradedFromLoresheet: false
+            }
+        ])
+        expect(getMeritFlawDisplayName(flaws[0].meritFlaw)).toBe("Dark Secret (Heresy)")
     })
 })

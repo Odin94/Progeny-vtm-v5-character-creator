@@ -22,6 +22,7 @@ import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
 import { MeritFlaw } from "~/data/Character"
 import { IconPlus, IconX } from "@tabler/icons-react"
 import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
+import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 
 type MeritsAndFlawsProps = {
     options: SheetOptions
@@ -94,10 +95,20 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         {
                                             meritFlaw: merit,
                                             isFromPredatorType,
-                                            isUpgradedFromPredatorType
+                                            isUpgradedFromPredatorType,
+                                            isFromLoresheet,
+                                            isUpgradedFromLoresheet
                                         },
                                         index
                                     ) => {
+                                        const isFromBonus = isFromPredatorType || isFromLoresheet
+                                        const badgeText = isFromLoresheet
+                                            ? isUpgradedFromLoresheet
+                                                ? "Upgraded from loresheet"
+                                                : "From loresheet"
+                                            : isUpgradedFromPredatorType
+                                              ? "Upgraded from predator type"
+                                              : "From predator type"
                                         const meritPaper = (
                                             <Paper
                                                 key={`${merit.name}-${merit.level}-${index}`}
@@ -108,7 +119,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     position: "relative"
                                                 }}
                                             >
-                                                {isFreeMode && !isFromPredatorType ? (
+                                                {isFreeMode && !isFromBonus ? (
                                                     <ActionIcon
                                                         size="sm"
                                                         variant="subtle"
@@ -134,7 +145,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             paddingRight: isFreeMode ? "60px" : "0"
                                                         }}
                                                     >
-                                                        {merit.name}
+                                                        {getMeritFlawDisplayName(merit)}
                                                     </Text>
                                                     {!isFreeMode ? (
                                                         <Badge color={primaryColor} circle>
@@ -161,26 +172,28 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             merit.summary.slice(1)}
                                                     </Text>
                                                 ) : null}
-                                                {isFromPredatorType ? (
+                                                {isFromBonus ? (
                                                     <Badge
                                                         size="xs"
                                                         variant="light"
                                                         color={primaryColor}
                                                         mt="xs"
                                                     >
-                                                        {isUpgradedFromPredatorType
-                                                            ? "Upgraded from predator type"
-                                                            : "From predator type"}
+                                                        {badgeText}
                                                     </Badge>
                                                 ) : null}
                                             </Paper>
                                         )
 
-                                        if (isFromPredatorType) {
+                                        if (isFromBonus) {
                                             return (
                                                 <Tooltip
                                                     key={index}
-                                                    label="Added by predator type"
+                                                    label={
+                                                        isFromLoresheet
+                                                            ? "Added by loresheet"
+                                                            : "Added by predator type"
+                                                    }
                                                     withArrow
                                                 >
                                                     <Box>{meritPaper}</Box>
@@ -235,10 +248,20 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         {
                                             meritFlaw: flaw,
                                             isFromPredatorType,
-                                            isUpgradedFromPredatorType
+                                            isUpgradedFromPredatorType,
+                                            isFromLoresheet,
+                                            isUpgradedFromLoresheet
                                         },
                                         index
                                     ) => {
+                                        const isFromBonus = isFromPredatorType || isFromLoresheet
+                                        const badgeText = isFromLoresheet
+                                            ? isUpgradedFromLoresheet
+                                                ? "Upgraded from loresheet"
+                                                : "From loresheet"
+                                            : isUpgradedFromPredatorType
+                                              ? "Upgraded from predator type"
+                                              : "From predator type"
                                         const flawPaper = (
                                             <Paper
                                                 key={`${flaw.name}-${flaw.level}-${index}`}
@@ -249,7 +272,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     position: "relative"
                                                 }}
                                             >
-                                                {isFreeMode && !isFromPredatorType ? (
+                                                {isFreeMode && !isFromBonus ? (
                                                     <ActionIcon
                                                         size="sm"
                                                         variant="subtle"
@@ -275,7 +298,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             paddingRight: isFreeMode ? "60px" : "0"
                                                         }}
                                                     >
-                                                        {flaw.name}
+                                                        {getMeritFlawDisplayName(flaw)}
                                                     </Text>
                                                     {!isFreeMode ? (
                                                         <Badge color="red" circle>
@@ -302,26 +325,30 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             flaw.summary.slice(1)}
                                                     </Text>
                                                 ) : null}
-                                                {isFromPredatorType ? (
+                                                {isFromBonus ? (
                                                     <Badge
                                                         size="xs"
                                                         variant="light"
-                                                        color="red"
+                                                        color={
+                                                            isFromLoresheet ? primaryColor : "red"
+                                                        }
                                                         mt="xs"
                                                     >
-                                                        {isUpgradedFromPredatorType
-                                                            ? "Upgraded from predator type"
-                                                            : "From predator type"}
+                                                        {badgeText}
                                                     </Badge>
                                                 ) : null}
                                             </Paper>
                                         )
 
-                                        if (isFromPredatorType) {
+                                        if (isFromBonus) {
                                             return (
                                                 <Tooltip
                                                     key={index}
-                                                    label="Added by predator type"
+                                                    label={
+                                                        isFromLoresheet
+                                                            ? "Added by loresheet"
+                                                            : "Added by predator type"
+                                                    }
                                                     withArrow
                                                 >
                                                     <Box>{flawPaper}</Box>

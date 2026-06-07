@@ -194,6 +194,28 @@ describe("createWoD5EVttJson", () => {
         })
     })
 
+    it("exports fixed loresheet merit and flaw bonuses", () => {
+        const character = getBasicTestCharacter()
+        character.predatorType.pickedMeritsAndFlaws = []
+        character.merits = [
+            {
+                name: "Hand of the Heresy",
+                level: 2,
+                summary:
+                    "Take a total of three dots among Allies, Herd, Mawla or Retainers to represent your role in the city's Heresy group. Also take the Dark Secret (Heresy) flaw.",
+                type: "merit",
+                excludes: []
+            }
+        ]
+        character.flaws = []
+
+        const { json, validationErrors } = createWoD5EVttJson(character)
+
+        expect(validationErrors).toEqual([])
+        expect(json.items.some((item: any) => item.name === "Hand of the Heresy")).toBe(true)
+        expect(json.items.some((item: any) => item.name === "Dark Secret (Heresy)")).toBe(true)
+    })
+
     it("should return validation errors for invalid data", () => {
         // @ts-expect-error - This is invalid data
         const invalidCharacter = {

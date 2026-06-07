@@ -14,7 +14,8 @@ export const meritFlawSchema = z.object({
     level: z.number().min(1).int(),
     summary: z.string(),
     excludes: z.string().array(),
-    type: z.union([z.literal("merit"), z.literal("flaw")])
+    type: z.union([z.literal("merit"), z.literal("flaw")]),
+    text: z.string().optional()
 })
 
 export type MeritFlaw = z.infer<typeof meritFlawSchema>

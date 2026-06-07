@@ -204,7 +204,7 @@ const SkillRow = ({
                                 if (specialty.fromPredatorType) {
                                     return (
                                         <Badge
-                                            key={`${skill}-pt-${specialty.name}-${index}`}
+                                            key={`${skill}-bonus-${specialty.name}-${index}`}
                                             variant="outline"
                                             size="sm"
                                             color={primaryColor}
@@ -287,7 +287,7 @@ const SkillRow = ({
                         if (specialty.fromPredatorType) {
                             return (
                                 <Badge
-                                    key={`${skill}-pt-${specialty.name}-${index}`}
+                                    key={`${skill}-bonus-${specialty.name}-${index}`}
                                     variant="outline"
                                     size="sm"
                                     color={primaryColor}
@@ -390,7 +390,6 @@ const Skills = ({ options }: SkillsProps) => {
         }
         specialtiesBySkill.get(specialty.skill)!.push({ ...specialty, fromPredatorType: true })
     })
-
     const addSpecialty = (skill: SkillsKey) => {
         if (mode === "xp") {
             const cost = getSpecialtyCost()

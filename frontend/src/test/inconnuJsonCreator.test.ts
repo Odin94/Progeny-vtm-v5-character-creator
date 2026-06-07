@@ -123,6 +123,27 @@ describe("createInconnuJson", () => {
         )
     })
 
+    it("exports loresheet bonuses as custom traits", () => {
+        const character = getBasicTestCharacter()
+        character.predatorType.pickedMeritsAndFlaws = []
+        character.merits = [
+            {
+                name: "Hand of the Heresy",
+                level: 2,
+                summary:
+                    "Take a total of three dots among Allies, Herd, Mawla or Retainers to represent your role in the city's Heresy group. Also take the Dark Secret (Heresy) flaw.",
+                type: "merit",
+                excludes: []
+            }
+        ]
+        character.flaws = []
+
+        const result = createInconnuJson(character)
+
+        expect(result.traits.some((trait) => trait.name === "Hand_Of_The_Heresy")).toBe(true)
+        expect(result.traits.some((trait) => trait.name === "Dark_Secret_Heresy")).toBe(true)
+    })
+
     it("normalizes data to satisfy Inconnu validation constraints", () => {
         const character = getBasicTestCharacter()
         character.name = "A name with @ symbols that is much too long for Inconnu"

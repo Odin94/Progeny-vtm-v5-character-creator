@@ -4,7 +4,7 @@ import {
     loresheets,
     thinbloodMeritsAndFlaws
 } from "./MeritsAndFlawsEssentials"
-import { Character } from "./Character"
+import type { Character, MeritFlaw } from "./Character"
 
 export type MeritFlawComplexity = "essential" | "advanced"
 
@@ -14,6 +14,11 @@ export type MeritOrFlaw = {
     summary: string
     excludes: string[]
     complexity?: MeritFlawComplexity
+    bonuses?: LoresheetMeritBonuses
+}
+
+export type LoresheetMeritBonuses = {
+    meritsOrFlaws?: MeritFlaw[]
 }
 
 export type MeritsAndFlaws = {

@@ -1,10 +1,13 @@
 import type { Character, MeritFlaw } from "./Character"
+import { getLoresheetBonusMeritsAndFlaws } from "./loresheetBonuses"
 import { PredatorTypes } from "./PredatorType"
 
 export type ResolvedMeritFlaw = {
     meritFlaw: MeritFlaw
     isFromPredatorType: boolean
     isUpgradedFromPredatorType: boolean
+    isFromLoresheet?: boolean
+    isUpgradedFromLoresheet?: boolean
 }
 
 const predatorTypeMeritFlawCatalogNameAliases = new Map<string, string>([
@@ -17,8 +20,12 @@ const predatorTypeMeritFlawCatalogNameAliases = new Map<string, string>([
 export const getCatalogMeritFlawName = (name: string) =>
     predatorTypeMeritFlawCatalogNameAliases.get(name) ?? name
 
-const getMeritFlawKey = (meritFlaw: Pick<MeritFlaw, "name" | "type">) =>
-    `${meritFlaw.type}:${getCatalogMeritFlawName(meritFlaw.name)}`
+const getMeritFlawKey = (
+    meritFlaw: Pick<MeritFlaw, "name" | "type"> & Partial<Pick<MeritFlaw, "text">>
+) => `${meritFlaw.type}:${getCatalogMeritFlawName(meritFlaw.name)}:${meritFlaw.text ?? ""}`
+
+export const getMeritFlawDisplayName = (meritFlaw: Pick<MeritFlaw, "name" | "text">): string =>
+    meritFlaw.text ? `${meritFlaw.name} (${meritFlaw.text})` : meritFlaw.name
 
 const mergeMeritFlawDetails = (base: MeritFlaw, incoming: MeritFlaw): MeritFlaw => ({
     ...base,
@@ -129,6 +136,7 @@ export const adjustPickedMeritsAndFlawsForPredatorTypeChange = (
 
 export const getResolvedMeritFlawList = (character: Character): ResolvedMeritFlaw[] => {
     const predatorTypeMeritsByName = getPredatorTypeMeritsByName(character)
+    const loresheetMeritsAndFlaws = getLoresheetBonusMeritsAndFlaws(character)
     const regularItems = [...(character.merits ?? []), ...(character.flaws ?? [])]
     const regularByKey = new Map<string, MeritFlaw>()
 
@@ -141,42 +149,82 @@ export const getResolvedMeritFlawList = (character: Character): ResolvedMeritFla
     })
 
     const regularOnlyItems: ResolvedMeritFlaw[] = []
-    const predatorTypeItems: ResolvedMeritFlaw[] = []
-    const resolvedPredatorKeys = new Set<string>()
+    const bonusItems: ResolvedMeritFlaw[] = []
+    const bonusItemsByKey = new Map<
+        string,
+        {
+            meritFlaw: MeritFlaw
+            isFromPredatorType: boolean
+            isFromLoresheet: boolean
+        }
+    >()
 
     predatorTypeMeritsByName.forEach((predatorTypeMeritFlaw) => {
         const key = getMeritFlawKey(predatorTypeMeritFlaw)
-        if (resolvedPredatorKeys.has(key)) return
-        resolvedPredatorKeys.add(key)
-
-        const regularItem = regularByKey.get(key)
-        if (!regularItem) {
-            predatorTypeItems.push({
-                meritFlaw: predatorTypeMeritFlaw,
-                isFromPredatorType: true,
-                isUpgradedFromPredatorType: false
-            })
-            return
-        }
-
-        const effectiveLevel = Math.max(predatorTypeMeritFlaw.level, regularItem.level)
-        predatorTypeItems.push({
-            meritFlaw: {
-                ...(regularItem.level >= predatorTypeMeritFlaw.level
-                    ? regularItem
-                    : predatorTypeMeritFlaw),
-                level: effectiveLevel,
-                excludes: Array.from(
-                    new Set([...predatorTypeMeritFlaw.excludes, ...regularItem.excludes])
-                )
-            },
+        const existing = bonusItemsByKey.get(key)
+        bonusItemsByKey.set(key, {
+            meritFlaw: existing
+                ? mergeDuplicateMeritFlawDetails(existing.meritFlaw, predatorTypeMeritFlaw)
+                : predatorTypeMeritFlaw,
             isFromPredatorType: true,
-            isUpgradedFromPredatorType: regularItem.level > predatorTypeMeritFlaw.level
+            isFromLoresheet: existing?.isFromLoresheet ?? false
         })
     })
 
+    loresheetMeritsAndFlaws.forEach((loresheetMeritFlaw) => {
+        const key = getMeritFlawKey(loresheetMeritFlaw)
+        const existing = bonusItemsByKey.get(key)
+        bonusItemsByKey.set(key, {
+            meritFlaw: existing
+                ? mergeDuplicateMeritFlawDetails(existing.meritFlaw, loresheetMeritFlaw)
+                : loresheetMeritFlaw,
+            isFromPredatorType: existing?.isFromPredatorType ?? false,
+            isFromLoresheet: true
+        })
+    })
+
+    bonusItemsByKey.forEach(
+        ({ meritFlaw: bonusMeritFlaw, isFromPredatorType, isFromLoresheet }) => {
+            const key = getMeritFlawKey(bonusMeritFlaw)
+
+            const regularItem = regularByKey.get(key)
+            if (!regularItem) {
+                bonusItems.push({
+                    meritFlaw: bonusMeritFlaw,
+                    isFromPredatorType,
+                    isUpgradedFromPredatorType: false,
+                    ...(isFromLoresheet
+                        ? { isFromLoresheet: true, isUpgradedFromLoresheet: false }
+                        : {})
+                })
+                return
+            }
+
+            const effectiveLevel = Math.max(bonusMeritFlaw.level, regularItem.level)
+            bonusItems.push({
+                meritFlaw: {
+                    ...(regularItem.level >= bonusMeritFlaw.level ? regularItem : bonusMeritFlaw),
+                    level: effectiveLevel,
+                    excludes: Array.from(
+                        new Set([...bonusMeritFlaw.excludes, ...regularItem.excludes])
+                    )
+                },
+                isFromPredatorType,
+                isUpgradedFromPredatorType: isFromPredatorType
+                    ? regularItem.level > bonusMeritFlaw.level
+                    : false,
+                ...(isFromLoresheet
+                    ? {
+                          isFromLoresheet: true,
+                          isUpgradedFromLoresheet: regularItem.level > bonusMeritFlaw.level
+                      }
+                    : {})
+            })
+        }
+    )
+
     regularItems.forEach((meritFlaw) => {
-        if (resolvedPredatorKeys.has(getMeritFlawKey(meritFlaw))) return
+        if (bonusItemsByKey.has(getMeritFlawKey(meritFlaw))) return
         regularOnlyItems.push({
             meritFlaw,
             isFromPredatorType: false,
@@ -184,7 +232,7 @@ export const getResolvedMeritFlawList = (character: Character): ResolvedMeritFla
         })
     })
 
-    const resolvedItems = [...regularOnlyItems, ...predatorTypeItems]
+    const resolvedItems = [...regularOnlyItems, ...bonusItems]
 
     return resolvedItems
 }

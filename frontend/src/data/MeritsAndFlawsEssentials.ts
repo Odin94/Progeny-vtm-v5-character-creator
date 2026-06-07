@@ -1,6 +1,11 @@
-import type { Character } from "./Character"
+import type { Character, MeritFlaw } from "./Character"
 import { ClanName } from "./NameSchemas"
-import type { Loresheet, MeritOrFlaw, MeritsAndFlaws } from "./MeritsAndFlaws"
+import type {
+    Loresheet,
+    LoresheetMeritBonuses,
+    MeritOrFlaw,
+    MeritsAndFlaws
+} from "./MeritsAndFlaws"
 
 export const thinbloodMeritsAndFlaws: MeritsAndFlaws = {
     title: "◐ Thin-blood specific",
@@ -519,11 +524,35 @@ const hasDiscipline = (discipline: string) => (character: Character) =>
     character.availableDisciplineNames.includes(discipline) ||
     character.disciplines.some((power) => power.discipline === discipline)
 
-const loreMerit = (name: string, cost: number, summary: string): MeritOrFlaw => ({
+const loreMerit = (
+    name: string,
+    cost: number,
+    summary: string,
+    bonuses?: LoresheetMeritBonuses
+): MeritOrFlaw => ({
     name,
     cost: [cost],
     summary,
-    excludes: []
+    excludes: [],
+    ...(bonuses ? { bonuses } : {})
+})
+
+const bonusMerit = (name: string, level: number, text = "", summary = ""): MeritFlaw => ({
+    name,
+    level,
+    summary,
+    excludes: [],
+    type: "merit",
+    ...(text ? { text } : {})
+})
+
+const bonusFlaw = (name: string, level: number, text = "", summary = ""): MeritFlaw => ({
+    name,
+    level,
+    summary,
+    excludes: [],
+    type: "flaw",
+    ...(text ? { text } : {})
 })
 
 export const loresheets: Loresheet[] = [
@@ -566,7 +595,17 @@ export const loresheets: Loresheet[] = [
                 cost: [5],
                 summary:
                     "Walk in first hour of daylight in the morning and before sunset, engage in intercourse without Blush of Life, gain 'Obvious Predator' flaw, Slander social tests against you have -1 difficulty, Vampires using Auspex against you have half Resolve and Willpower until end of scene.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [
+                        bonusFlaw(
+                            "Obvious Predator",
+                            2,
+                            "First-Cursed",
+                            "Mortals are scared of you, can't keep Herd"
+                        )
+                    ]
+                }
             }
         ]
     },
@@ -603,7 +642,10 @@ export const loresheets: Loresheet[] = [
                 cost: [4],
                 summary:
                     "Gain Theo Bell as a 5 dot Mawla, but your association with him also has drawbacks.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 5, "Theo Bell")]
+                }
             },
             {
                 name: "Sect Neutrality",
@@ -633,7 +675,17 @@ export const loresheets: Loresheet[] = [
                 cost: [2],
                 summary:
                     "Take a total of three dots among Allies, Herd, Mawla or Retainers to represent your role in the city's Heresy group. Also take the Dark Secret (Heresy) flaw.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [
+                        bonusFlaw(
+                            "Dark Secret",
+                            1,
+                            "Heresy",
+                            "You are connected to the Cainite Heresy."
+                        )
+                    ]
+                }
             },
             {
                 name: "Counter-Inquisition",
@@ -898,7 +950,10 @@ export const loresheets: Loresheet[] = [
                 name: "Ventrue Pillar",
                 cost: [3],
                 summary: "You always have 3 dots of Status with Ventrue.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Status", 3, "Ventrue")]
+                }
             },
             {
                 name: "Line to the Founders",
@@ -1034,7 +1089,10 @@ export const loresheets: Loresheet[] = [
                 cost: [4],
                 summary:
                     "Gain the Dracon as 5 dot Mawla. He can assisst you with spiritual and Discipline matters.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 5, "The Dracon")]
+                }
             },
             {
                 name: "The New Trinity",
@@ -1071,14 +1129,20 @@ export const loresheets: Loresheet[] = [
                 cost: [3],
                 summary:
                     "Gain Jeanette as a 4 dot Mawla, but only for Malkavian and Anarch dealings. She lets you use the club to host parties, lets you rest there during days and does favors for you.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 4, "Jeanette")]
+                }
             },
             {
                 name: "Therese's Favorite",
                 cost: [4],
                 summary:
                     "Gain Therese as a 3 dot Mawla. She speaks up for you in any regnum and can school you in business and finance.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 3, "Therese")]
+                }
             },
             {
                 name: "Asylum Operator",
@@ -1108,7 +1172,10 @@ export const loresheets: Loresheet[] = [
                 cost: [2],
                 summary:
                     "Gain 3 dots of Mawla representing a group of Ravnos as contacts. They carry news and warnings to you and can be convinced to cast mightly illusions once per story.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 3, "Ravnos contacts")]
+                }
             },
             {
                 name: "I Was There",
@@ -1166,7 +1233,10 @@ export const loresheets: Loresheet[] = [
                 cost: [4],
                 summary:
                     "Gain the Bear Pack as 3 dot Mawla. They can get in verbal and physical fights for you. Once per story, they and you get 1 automatic success when trying to rouse Anarchs against the establishment.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 3, "The Bear Pack")]
+                }
             },
             {
                 name: "Rudi's Army",
@@ -1327,7 +1397,10 @@ export const loresheets: Loresheet[] = [
                 cost: [2],
                 summary:
                     "You have bullied Low Clan Vampires equivalent to 3 dots of Mawla into loyalty to you. Gain 3 extra dice to Intimidation or Leadership against those Vampires. If you ever roll a total failure on such a test you must compensate them or they turn on you.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 3, "Low Clan vampires")]
+                }
             },
             {
                 name: "Elevate the Low",
@@ -1420,7 +1493,10 @@ export const loresheets: Loresheet[] = [
                 cost: [3],
                 summary:
                     "Consider Ambrus a 3 dot Mawla. He can set you up with your personal hacker for 'friend prices' or get intel on a wide array of topics like SI dealings or the current fashion trends in obscure subcultures.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 3, "Ambrus Maropis")]
+                }
             },
             {
                 name: "Back Door Panopticon",
@@ -1434,7 +1510,13 @@ export const loresheets: Loresheet[] = [
                 cost: [5],
                 summary:
                     "Gain two 2 dot Mask cover identities, gain the Zeroed merit, get 3 extra dice to resist attempts to discover your online activities or your undertakings in the mortal world.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [
+                        bonusMerit("Mask", 2, "two cover identities"),
+                        bonusMerit("Zeroed", 1)
+                    ]
+                }
             }
         ]
     },
@@ -1464,7 +1546,10 @@ export const loresheets: Loresheet[] = [
                 cost: [3],
                 summary:
                     "Serve as curator to a hidden library which serves as a 2 dot Haven with a 2 dot Library. Other Vampires meet there as well.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Haven", 2, "hidden library")]
+                }
             },
             {
                 name: "Interview With the Methuselah",
@@ -1508,7 +1593,10 @@ export const loresheets: Loresheet[] = [
                 cost: [3],
                 summary:
                     "Gain Fiorenza as 3 dot Mawla who can provide you with insider trading tips, expensive cars or private planes or sweet-talk ruffled Ventrue for you. If you overuse or abuse this connection, she will cut you off.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 3, "Fiorenza Savona")]
+                }
             },
             {
                 name: "The Directorate",
@@ -1566,7 +1654,10 @@ export const loresheets: Loresheet[] = [
                 cost: [5],
                 summary:
                     "Gain 3 dots in Haven-Library and pick 3 Specialties in Occult. Once per story, ask the Storyteller a simple question about non-Vampire supernatural creatures.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Haven", 3, "Library")]
+                }
             }
         ]
     },
@@ -1581,7 +1672,10 @@ export const loresheets: Loresheet[] = [
                 name: "Martyred Ancestor",
                 cost: [1],
                 summary: "Gain 2 dots of Status with other Gangrel in your domain.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Status", 2, "Gangrel in your domain")]
+                }
             },
             {
                 name: "Where the Bodies Are Buried",
@@ -1624,7 +1718,10 @@ export const loresheets: Loresheet[] = [
                 name: "Proud Childe",
                 cost: [1],
                 summary: "Gain 2 points to status while in a Hecata-controlled environment.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Status", 2, "Hecata-controlled environment")]
+                }
             },
             {
                 name: "Corpsense",
@@ -1692,7 +1789,13 @@ export const loresheets: Loresheet[] = [
                 cost: [5],
                 summary:
                     "Get 2 points of Status with Hecata, gain an Ally among the Anziani who acts as 5 dot Mawla once every other story.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [
+                        bonusMerit("Status", 2, "Hecata"),
+                        bonusMerit("Mawla", 5, "Anziani ally")
+                    ]
+                }
             }
         ]
     },
@@ -1773,14 +1876,20 @@ export const loresheets: Loresheet[] = [
                 cost: [4],
                 summary:
                     "You gain a spectre to act as your servant (4 dot 'Ally', use stats from Core book p. 377) that you can summon once per session. It will arrive within 10 hours.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Allies", 4, "spectre servant")]
+                }
             },
             {
                 name: "Aspiring Anziani",
                 cost: [5],
                 summary:
                     "Gain 5 dots of 'Status' among Hecata, and get a private audience with the Capuchin every few stories.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Status", 5, "Hecata")]
+                }
             }
         ]
     },
@@ -1824,7 +1933,10 @@ export const loresheets: Loresheet[] = [
                 cost: [5],
                 summary:
                     "You are next in the line of succession of the Baron. Before you step up into his position, you have him as a 5 dot Mawla (his help comes in cryptic and mysterious ways). If you take his place, it might just be a job, or maybe you gain his mystical powers. Either way, you certainly gain his enemies.",
-                excludes: []
+                excludes: [],
+                bonuses: {
+                    meritsOrFlaws: [bonusMerit("Mawla", 5, "the Baron")]
+                }
             }
         ]
     },
@@ -1887,7 +1999,12 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Unusual Connections",
                 4,
-                "Gain a 5-dot Mawla among Sabbat, Tzimisce, or Vollgirre descendants, but your Blood becomes vulnerable to bonding flaws."
+                "Gain a 5-dot Mawla among Sabbat, Tzimisce, or Vollgirre descendants, but your Blood becomes vulnerable to bonding flaws.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Mawla", 5, "Sabbat, Tzimisce, or Vollgirre descendants")
+                    ]
+                }
             ),
             loreMerit(
                 "Voice of Treachery",
@@ -2141,7 +2258,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Station Agent",
                 2,
-                "Gain a 2-dot Mask, Zeroed, and use of a 2-dot Express haven while handling risky local mail handoffs."
+                "Gain a 2-dot Mask, Zeroed, and use of a 2-dot Express haven while handling risky local mail handoffs.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Mask", 2, "Pony Express"),
+                        bonusMerit("Zeroed", 1),
+                        bonusMerit("Haven", 2, "Pony Express")
+                    ]
+                }
             ),
             loreMerit(
                 "Driver",
@@ -2238,7 +2362,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Chocolate Drop",
                 1,
-                "Gain 1 dot each in Fame and Contacts as Temple talent, plus a Stalker flaw."
+                "Gain 1 dot each in Fame and Contacts as Temple talent, plus a Stalker flaw.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Fame", 1, "Temple talent"),
+                        bonusMerit("Contacts", 1, "Temple talent"),
+                        bonusFlaw("Stalkers", 1, "Temple talent")
+                    ]
+                }
             ),
             loreMerit(
                 "Got Connections",
@@ -2292,7 +2423,13 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Amr-in-Waiting",
                 5,
-                "Gain Banu Haqim Status 5 and one free ritual, but also a powerful sorcerous Adversary."
+                "Gain Banu Haqim Status 5 and one free ritual, but also a powerful sorcerous Adversary.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Status", 5, "Banu Haqim"),
+                        bonusFlaw("Adversary", 2, "powerful sorcerer")
+                    ]
+                }
             )
         ]
     },
@@ -2317,12 +2454,19 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Diplomatic Power",
                 4,
-                "Gain Status 2 with both the Camarilla and the Anarchs."
+                "Gain Status 2 with both the Camarilla and the Anarchs.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Status", 2, "Camarilla"),
+                        bonusMerit("Status", 2, "Anarchs")
+                    ]
+                }
             ),
             loreMerit(
                 "Taunk's Patron",
                 5,
-                "Gain a 5-dot Mawla who can boost three approved formulae each story with rare ingredients."
+                "Gain a 5-dot Mawla who can boost three approved formulae each story with rare ingredients.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 5, "Taunk's patron")] }
             )
         ]
     },
@@ -2341,7 +2485,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Drawing the Flies",
                 2,
-                "Gain a 3-dot Herd of mortals drawn to earth energies, maintained by sharing discoveries."
+                "Gain a 3-dot Herd of mortals drawn to earth energies, maintained by sharing discoveries.",
+                { meritsOrFlaws: [bonusMerit("Herd", 3, "earth energies")] }
             ),
             loreMerit(
                 "Revelations of the Earth",
@@ -2375,7 +2520,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Off the Back of a Truck",
                 2,
-                "Gain a 3-dot Contact who can source restricted items from Vienna Zero if you can pay."
+                "Gain a 3-dot Contact who can source restricted items from Vienna Zero if you can pay.",
+                { meritsOrFlaws: [bonusMerit("Contacts", 3, "Vienna Zero restricted items")] }
             ),
             loreMerit(
                 "Instrument of Power",
@@ -2390,7 +2536,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Deep Clearance",
                 5,
-                "Gain Mask 3 with Zeroed and once per story borrow an artifact from Vienna Zero, but take a suspicious hunter Enemy."
+                "Gain Mask 3 with Zeroed and once per story borrow an artifact from Vienna Zero, but take a suspicious hunter Enemy.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Mask", 3, "Vienna Zero"),
+                        bonusMerit("Zeroed", 1),
+                        bonusFlaw("Enemy", 2, "suspicious hunter")
+                    ]
+                }
             )
         ]
     },
@@ -2453,7 +2606,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Friend of Beaumont",
                 4,
-                "Count Felicien Beaumont as a 5-dot Mawla who asks one minor boon each story."
+                "Count Felicien Beaumont as a 5-dot Mawla who asks one minor boon each story.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 5, "Felicien Beaumont")] }
             ),
             loreMerit(
                 "Bohemian Affinities",
@@ -2506,7 +2660,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Sponsorship",
                 1,
-                "Gain a 3-dot Mawla from the order who helps once per story and may police your conduct."
+                "Gain a 3-dot Mawla from the order who helps once per story and may police your conduct.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 3, "Order of Repentants")] }
             ),
             loreMerit(
                 "Surface Empathy",
@@ -2550,7 +2705,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "A Pretty Pet",
                 3,
-                "Count the Red Lady as a 2-dot Mawla and gain Herd 1 and Resources 1 while you remain favored."
+                "Count the Red Lady as a 2-dot Mawla and gain Herd 1 and Resources 1 while you remain favored.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Mawla", 2, "The Red Lady"),
+                        bonusMerit("Herd", 1, "The Red Lady"),
+                        bonusMerit("Resources", 1, "The Red Lady")
+                    ]
+                }
             ),
             loreMerit(
                 "A Trusted Friend",
@@ -2579,7 +2741,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Financial Problem-solving",
                 2,
-                "Gain 1 Resources and spend Willpower to secure a temporary professional Retainer for the story."
+                "Gain 1 Resources and spend Willpower to secure a temporary professional Retainer for the story.",
+                { meritsOrFlaws: [bonusMerit("Resources", 1, "Vanderbilt")] }
             ),
             loreMerit(
                 "Someone of Worth",
@@ -2686,17 +2849,31 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Internet Famous",
                 3,
-                "Gain 2 Resources and once per story arrange a meetup that provides Herd 1."
+                "Gain 2 Resources and once per story arrange a meetup that provides Herd 1.",
+                { meritsOrFlaws: [bonusMerit("Resources", 2, "internet famous")] }
             ),
             loreMerit(
                 "Collabs and Sponsorships",
                 4,
-                "Gain Fame 2, fan Allies 2, and a company Contact 2."
+                "Gain Fame 2, fan Allies 2, and a company Contact 2.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Fame", 2, "online platform"),
+                        bonusMerit("Allies", 2, "fans"),
+                        bonusMerit("Contacts", 2, "company")
+                    ]
+                }
             ),
             loreMerit(
                 "Superstar",
                 5,
-                "Gain Fame 3 and Resources 3 from your platform, but your visibility makes exposure deadly."
+                "Gain Fame 3 and Resources 3 from your platform, but your visibility makes exposure deadly.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Fame", 3, "online platform"),
+                        bonusMerit("Resources", 3, "online platform")
+                    ]
+                }
             )
         ]
     },
@@ -2725,12 +2902,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Coordination is Key",
                 4,
-                "Gain Anarch Status 3, Gary Influence 3, and once per story ask for recent movement intel."
+                "Gain Anarch Status 3, Gary Influence 3, and once per story ask for recent movement intel.",
+                { meritsOrFlaws: [bonusMerit("Status", 3, "Gary Anarchs")] }
             ),
             loreMerit(
                 "Rust Never Sleeps",
                 5,
-                "Count Juggler or Evelyn as a 4-dot Mawla and once per story turn another city's Anarch into a temporary Contact."
+                "Count Juggler or Evelyn as a 4-dot Mawla and once per story turn another city's Anarch into a temporary Contact.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 4, "Juggler or Evelyn")] }
             )
         ]
     },
@@ -2749,7 +2928,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Abandoned Real Estate",
                 2,
-                "Gain access to a Milwaukee haven with either an occult library or hidden armory."
+                "Gain access to a Milwaukee haven with either an occult library or hidden armory.",
+                { meritsOrFlaws: [bonusMerit("Haven", 1, "Milwaukee occult library or armory")] }
             ),
             loreMerit(
                 "Victor's Grimoire",
@@ -2759,7 +2939,13 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Objects of Desire",
                 4,
-                "Gain a precarious 4-dot haven near the Null Zone, plus serious enemies and rivals."
+                "Gain a precarious 4-dot haven near the Null Zone, plus serious enemies and rivals.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Haven", 4, "Null Zone"),
+                        bonusFlaw("Enemy", 2, "Null Zone rivals")
+                    ]
+                }
             ),
             loreMerit(
                 "Dr. Mortius's Haven",
@@ -2783,7 +2969,13 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Tyrant's Recognition",
                 2,
-                "Gain a 2-dot Herd and 1-dot Haven as feeding rights for protecting Milwaukee."
+                "Gain a 2-dot Herd and 1-dot Haven as feeding rights for protecting Milwaukee.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Herd", 2, "Milwaukee feeding rights"),
+                        bonusMerit("Haven", 1, "Milwaukee")
+                    ]
+                }
             ),
             loreMerit(
                 "One Strike",
@@ -2822,17 +3014,22 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Vanguard",
                 3,
-                "Gain Gary Status 3, a 2-dot Haven, and recognized local standing."
+                "Gain Gary Status 3, a 2-dot Haven, and recognized local standing.",
+                {
+                    meritsOrFlaws: [bonusMerit("Status", 3, "Gary"), bonusMerit("Haven", 2, "Gary")]
+                }
             ),
             loreMerit(
                 "The Art of Disappearing",
                 4,
-                "Once per story, Maxwell helps create or retire a 2-dot Mask for anonymous work."
+                "Once per story, Maxwell helps create or retire a 2-dot Mask for anonymous work.",
+                { meritsOrFlaws: [bonusMerit("Mask", 2, "Maxwell")] }
             ),
             loreMerit(
                 "The Once and Future Prince",
                 5,
-                "Gain Resources 5, access to Maxwell's boon list, and the obligation to spend his favors wisely."
+                "Gain Resources 5, access to Maxwell's boon list, and the obligation to spend his favors wisely.",
+                { meritsOrFlaws: [bonusMerit("Resources", 5, "Maxwell")] }
             )
         ]
     },
@@ -2881,7 +3078,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Windy City Ally",
                 2,
-                "Gain a 2-dot Retainer sent by Modius as thanks for supporting his Chicago ambitions."
+                "Gain a 2-dot Retainer sent by Modius as thanks for supporting his Chicago ambitions.",
+                { meritsOrFlaws: [bonusMerit("Retainer", 2, "Modius")] }
             ),
             loreMerit(
                 "Keys to the Mansion",
@@ -2891,12 +3089,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Since 1913",
                 4,
-                "Gain Gary Camarilla Status 4 and feeding permission throughout Gary, Anarch resistance notwithstanding."
+                "Gain Gary Camarilla Status 4 and feeding permission throughout Gary, Anarch resistance notwithstanding.",
+                { meritsOrFlaws: [bonusMerit("Status", 4, "Gary Camarilla")] }
             ),
             loreMerit(
                 "Pauper Dynasty",
                 5,
-                "Count Modius as a 5-dot Mawla and gain 2 Influence in a city he hopes you will one night rule."
+                "Count Modius as a 5-dot Mawla and gain 2 Influence in a city he hopes you will one night rule.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 5, "Modius")] }
             )
         ]
     },
@@ -2925,7 +3125,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "High Roller",
                 4,
-                "Increase Resources by 2 up to 4 and access Herd 2 in Atlantic City, but gain a jealous Adversary."
+                "Increase Resources by 2 up to 4 and access Herd 2 in Atlantic City, but gain a jealous Adversary.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Resources", 2, "Ruby Throat"),
+                        bonusMerit("Herd", 2, "Atlantic City"),
+                        bonusFlaw("Adversary", 1, "jealous")
+                    ]
+                }
             ),
             loreMerit(
                 "Dead Man's Hand",
@@ -2978,7 +3185,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Money Obfuscates",
                 1,
-                "Gain a 2-dot Mask backed by family money, provided you maintain it each story."
+                "Gain a 2-dot Mask backed by family money, provided you maintain it each story.",
+                { meritsOrFlaws: [bonusMerit("Mask", 2, "family money")] }
             ),
             loreMerit(
                 "Money Talks",
@@ -2993,12 +3201,14 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Money Multiplies",
                 4,
-                "Gain 3 Resources up to 5 and help your coterie recover from Destitute or buy Resources cheaply."
+                "Gain 3 Resources up to 5 and help your coterie recover from Destitute or buy Resources cheaply.",
+                { meritsOrFlaws: [bonusMerit("Resources", 3, "Dunsirn")] }
             ),
             loreMerit(
                 "Money Dictates",
                 5,
-                "Gain Hecata Status 3 and once per chronicle adjust Hecata Resources for a story, creating enemies if you take wealth away."
+                "Gain Hecata Status 3 and once per chronicle adjust Hecata Resources for a story, creating enemies if you take wealth away.",
+                { meritsOrFlaws: [bonusMerit("Status", 3, "Hecata")] }
             )
         ]
     },
@@ -3066,7 +3276,13 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "The Don",
                 5,
-                "Gain 3 dots each in criminal Contacts, Influence, and Resources, but maintaining them risks law-enforcement enemies."
+                "Gain 3 dots each in criminal Contacts, Influence, and Resources, but maintaining them risks law-enforcement enemies.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Contacts", 3, "criminal"),
+                        bonusMerit("Resources", 3, "criminal")
+                    ]
+                }
             )
         ]
     },
@@ -3125,7 +3341,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Dealmaker",
                 4,
-                "Gain a 5-dot Hecata Mawla from a secret deal, who becomes an Adversary if exposed."
+                "Gain a 5-dot Hecata Mawla from a secret deal, who becomes an Adversary if exposed.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 5, "Hecata secret deal")] }
             ),
             loreMerit(
                 "Spiritual Assault",
@@ -3325,7 +3542,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "It's My Job To Know This Stuff",
                 4,
-                "Gain Kindred Status 2 and mortal Influence 2 from your specialist security knowledge."
+                "Gain Kindred Status 2 and mortal Influence 2 from your specialist security knowledge.",
+                { meritsOrFlaws: [bonusMerit("Status", 2, "Kindred security specialist")] }
             ),
             loreMerit(
                 "The One That Got Away",
@@ -3423,12 +3641,25 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "One of Us",
                 4,
-                "Gain Resources 2, Capone Gang Allies 2, and 1 die to Streetwise about organized crime."
+                "Gain Resources 2, Capone Gang Allies 2, and 1 die to Streetwise about organized crime.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Resources", 2, "Capone Gang"),
+                        bonusMerit("Allies", 2, "Capone Gang")
+                    ]
+                }
             ),
             loreMerit(
                 "Prodigal Child",
                 5,
-                "Gain Capone Gang Contacts 4, Eddie Wu as Mawla 2, and a gang safehouse haven, while owing loyalty."
+                "Gain Capone Gang Contacts 4, Eddie Wu as Mawla 2, and a gang safehouse haven, while owing loyalty.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Contacts", 4, "Capone Gang"),
+                        bonusMerit("Mawla", 2, "Eddie Wu"),
+                        bonusMerit("Haven", 1, "Capone Gang safehouse")
+                    ]
+                }
             )
         ]
     },
@@ -3477,17 +3708,20 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Fresh Cutting",
                 2,
-                "Gain an Occult specialty in Bahari, Lilith, or the Ancestor and Status 1 with the Cultivars."
+                "Gain an Occult specialty in Bahari, Lilith, or the Ancestor and Status 1 with the Cultivars.",
+                { meritsOrFlaws: [bonusMerit("Status", 1, "Cultivars")] }
             ),
             loreMerit(
                 "Suppressing the Beast",
                 3,
-                "Gain Herd 3 and a once-per-story Haven 1 from cultists, but may never feed from animals again."
+                "Gain Herd 3 and a once-per-story Haven 1 from cultists, but may never feed from animals again.",
+                { meritsOrFlaws: [bonusMerit("Herd", 3, "Cultivars")] }
             ),
             loreMerit(
                 "Newly Made Initiate",
                 4,
-                "Gain Cultivar Status 3 and once per story add 2 dice to a Willpower roll by recalling your initiation."
+                "Gain Cultivar Status 3 and once per story add 2 dice to a Willpower roll by recalling your initiation.",
+                { meritsOrFlaws: [bonusMerit("Status", 3, "Cultivars")] }
             ),
             loreMerit(
                 "Jewel in the Garden",
@@ -3526,7 +3760,13 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Shalim Is",
                 5,
-                "Gain Herd 2, religious Influence 3, a Dark Secret, and automatic success hiding cult membership with Composure."
+                "Gain Herd 2, religious Influence 3, a Dark Secret, and automatic success hiding cult membership with Composure.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Herd", 2, "Cult of Shalim"),
+                        bonusFlaw("Dark Secret", 1, "Cult of Shalim")
+                    ]
+                }
             )
         ]
     },
@@ -3537,11 +3777,14 @@ export const loresheets: Loresheet[] = [
         source: "Chicago by Night p273",
         requirementFunctions: [isClan("Ventrue")],
         merits: [
-            loreMerit("Baby of the Family", 1, "Among Chicago Ventrue, always have Mawla 1."),
+            loreMerit("Baby of the Family", 1, "Among Chicago Ventrue, always have Mawla 1.", {
+                meritsOrFlaws: [bonusMerit("Mawla", 1, "Chicago Ventrue")]
+            }),
             loreMerit(
                 "Responsible Middle Childe",
                 2,
-                "Among peers of similar age and generation, always carry Status 2."
+                "Among peers of similar age and generation, always carry Status 2.",
+                { meritsOrFlaws: [bonusMerit("Status", 2, "peers")] }
             ),
             loreMerit(
                 "Black Sheep of the Family",
@@ -3556,7 +3799,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Long-Lost Relative",
                 5,
-                "Gain Ventrue and court Status 4, social attention, and a seat at the Prince's table."
+                "Gain Ventrue and court Status 4, social attention, and a seat at the Prince's table.",
+                { meritsOrFlaws: [bonusMerit("Status", 4, "Ventrue court")] }
             )
         ]
     },
@@ -3643,7 +3887,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Recent Graduate",
                 2,
-                "Gain a 2-dot Retainer ghoul who teaches Chicago and assists your assigned duties."
+                "Gain a 2-dot Retainer ghoul who teaches Chicago and assists your assigned duties.",
+                { meritsOrFlaws: [bonusMerit("Retainer", 2, "Kevin Jackson's ghoul")] }
             ),
             loreMerit(
                 "Up and Comer",
@@ -3658,7 +3903,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "The Prince's Lieutenant",
                 5,
-                "Gain Kevin Jackson as Mawla 4 and once per story request permission to Embrace a chosen mortal."
+                "Gain Kevin Jackson as Mawla 4 and once per story request permission to Embrace a chosen mortal.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 4, "Kevin Jackson")] }
             )
         ]
     },
@@ -3714,11 +3960,14 @@ export const loresheets: Loresheet[] = [
                 3,
                 "Know and can attend the monthly underground club night with a plus one."
             ),
-            loreMerit("Lydia's Lair", 4, "Gain access to Lydia the oracle as a 4-dot Mawla."),
+            loreMerit("Lydia's Lair", 4, "Gain access to Lydia the oracle as a 4-dot Mawla.", {
+                meritsOrFlaws: [bonusMerit("Mawla", 4, "Lydia the oracle")]
+            }),
             loreMerit(
                 "Hideout",
                 5,
-                "Gain Labyrinth Kindred Community Allies 4 for protection and hiding."
+                "Gain Labyrinth Kindred Community Allies 4 for protection and hiding.",
+                { meritsOrFlaws: [bonusMerit("Allies", 4, "Labyrinth Kindred Community")] }
             )
         ]
     },
@@ -3766,22 +4015,36 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Recruit",
                 1,
-                "Gain Bordruff as Mawla 2, but accept a one-step Blood Bond to him."
+                "Gain Bordruff as Mawla 2, but accept a one-step Blood Bond to him.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 2, "Nathaniel Bordruff")] }
             ),
             loreMerit(
                 "Collaborator",
                 2,
-                "Gain Resources 1 and Status 1 through favors that deepen Bordruff's hold."
+                "Gain Resources 1 and Status 1 through favors that deepen Bordruff's hold.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Resources", 1, "Bordruff"),
+                        bonusMerit("Status", 1, "Bordruff favors")
+                    ]
+                }
             ),
             loreMerit(
                 "Accomplice",
                 3,
-                "Gain a secured-room Haven, consistory Contacts, and insight into Bordruff's anti-Kindred cause."
+                "Gain a secured-room Haven, consistory Contacts, and insight into Bordruff's anti-Kindred cause.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Haven", 1, "secured room"),
+                        bonusMerit("Contacts", 1, "consistory")
+                    ]
+                }
             ),
             loreMerit(
                 "Conspirator",
                 4,
-                "Gain Allies 4 in Bordruff's ghoul church network devoted to destroying the undead."
+                "Gain Allies 4 in Bordruff's ghoul church network devoted to destroying the undead.",
+                { meritsOrFlaws: [bonusMerit("Allies", 4, "Bordruff's ghoul church network")] }
             ),
             loreMerit(
                 "Betrayer",
@@ -3810,12 +4073,19 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Schedule an Appointment",
                 3,
-                "Attend weekly, gain a 2-dot Retainer admirer, and improve counterculture Status if you get work done."
+                "Attend weekly, gain a 2-dot Retainer admirer, and improve counterculture Status if you get work done.",
+                { meritsOrFlaws: [bonusMerit("Retainer", 2, "Painted Lady admirer")] }
             ),
             loreMerit(
                 "VIP",
                 4,
-                "Gain Herd 3 and BDSM Community Contacts 2 through full VIP access."
+                "Gain Herd 3 and BDSM Community Contacts 2 through full VIP access.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Herd", 3, "Painted Lady VIP"),
+                        bonusMerit("Contacts", 2, "BDSM Community")
+                    ]
+                }
             ),
             loreMerit(
                 "A Beaubien Original",
@@ -3870,16 +4140,25 @@ export const loresheets: Loresheet[] = [
                 1,
                 "Once per story, ask for known information about the Society."
             ),
-            loreMerit("Novice", 2, "Gain 2-dot Contacts in your former religious community."),
+            loreMerit("Novice", 2, "Gain 2-dot Contacts in your former religious community.", {
+                meritsOrFlaws: [bonusMerit("Contacts", 2, "former religious community")]
+            }),
             loreMerit(
                 "Brother or Sister",
                 3,
-                "Gain 2 dice to religious-district Academics and Occult and once per story find a church Haven 1."
+                "Gain 2 dice to religious-district Academics and Occult and once per story find a church Haven 1.",
+                { meritsOrFlaws: [bonusMerit("Haven", 1, "church")] }
             ),
             loreMerit(
                 "Father or Mother",
                 4,
-                "Gain diocesan Influence 3 against the Society and Haven 2, but take Infamy."
+                "Gain diocesan Influence 3 against the Society and Haven 2, but take Infamy.",
+                {
+                    meritsOrFlaws: [
+                        bonusMerit("Haven", 2, "diocese"),
+                        bonusFlaw("Infamy", 1, "Society of St. Leopold")
+                    ]
+                }
             ),
             loreMerit(
                 "Inquisitor",
@@ -3913,7 +4192,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Trained Killer",
                 4,
-                "Once per chronicle, Talley acts as Mawla 4 and grants access to his portable armory."
+                "Once per chronicle, Talley acts as Mawla 4 and grants access to his portable armory.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 4, "Talley")] }
             ),
             loreMerit(
                 "Personal Defender",
@@ -3942,7 +4222,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Insider Connections",
                 3,
-                "Once per story, Wauneka provides a temporary inside Retainer 2 who can become a Contact."
+                "Once per story, Wauneka provides a temporary inside Retainer 2 who can become a Contact.",
+                { meritsOrFlaws: [bonusMerit("Retainer", 2, "Wauneka insider")] }
             ),
             loreMerit(
                 "Spy Skills",
@@ -3952,7 +4233,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Darkest Whispers",
                 5,
-                "Gain Wauneka and his underground associates as Allies 3, and once per story advise a political move."
+                "Gain Wauneka and his underground associates as Allies 3, and once per story advise a political move.",
+                { meritsOrFlaws: [bonusMerit("Allies", 3, "Wauneka's underground associates")] }
             )
         ]
     },
@@ -3981,7 +4263,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Favored Protege",
                 4,
-                "Count Parr as a 5-dot Mawla, but she makes frequent possessive demands."
+                "Count Parr as a 5-dot Mawla, but she makes frequent possessive demands.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 5, "Justicar Parr")] }
             ),
             loreMerit(
                 "Camarilla Archon",
@@ -4112,7 +4395,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Sympathetic Insider",
                 3,
-                "Once per story, ask a cautious 4-dot Contact about Antigen activity."
+                "Once per story, ask a cautious 4-dot Contact about Antigen activity.",
+                { meritsOrFlaws: [bonusMerit("Contacts", 4, "Operation Antigen")] }
             ),
             loreMerit(
                 "Get Out of Jail Free",
@@ -4151,7 +4435,8 @@ export const loresheets: Loresheet[] = [
             loreMerit(
                 "Mentor",
                 4,
-                "Count Anasov as a 4-dot Mawla with discounted services and recurring requests."
+                "Count Anasov as a 4-dot Mawla with discounted services and recurring requests.",
+                { meritsOrFlaws: [bonusMerit("Mawla", 4, "Oskar Anasov")] }
             ),
             loreMerit(
                 "Landlord Council",
