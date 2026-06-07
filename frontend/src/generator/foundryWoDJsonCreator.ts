@@ -440,6 +440,7 @@ export const createWoD5EVttJson = (
             type: "clan",
             system: {
                 description: clanDef?.description ?? "",
+                // TODO: Figure out how Foundry VTT uses variant clan banes and include them here.
                 bane: clanDef?.bane ?? "",
                 bonuses: []
             }

@@ -9,6 +9,9 @@ import { clans } from "./Clans"
 import { getAllKnownMeritsAndFlaws } from "./MeritsAndFlaws"
 import type { Power } from "./Disciplines.js"
 
+export const clanBaneSchema = z.enum(["default", "variant"])
+export type ClanBane = z.infer<typeof clanBaneSchema>
+
 export const meritFlawSchema = z.object({
     name: z.string(),
     level: z.number().min(1).int(),
@@ -28,7 +31,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 6
+export const schemaVersion = 7
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -40,6 +43,7 @@ export const characterSchema = z.object({
     sect: z.string().optional().default(""),
 
     clan: clanNameSchema,
+    clanBane: clanBaneSchema.optional().default("default"),
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
@@ -101,6 +105,7 @@ export const getEmptyCharacter = (): Character => {
         sect: "",
 
         clan: "",
+        clanBane: "default",
         predatorType: {
             name: "",
             pickedDiscipline: "",
@@ -241,6 +246,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV2ToV3Compatibility(parsed)
     patchV3ToV4Compatibility(parsed)
     patchV5ToV6Compatibility(parsed)
+    patchV6ToV7Compatibility(parsed)
 
     parsed["version"] = schemaVersion
 }
@@ -293,5 +299,11 @@ export const patchV3ToV4Compatibility = (parsed: Record<string, unknown>): void 
 export const patchV5ToV6Compatibility = (parsed: Record<string, unknown>): void => {
     if (!Array.isArray(parsed["ceremonies"])) {
         parsed["ceremonies"] = []
+    }
+}
+
+export const patchV6ToV7Compatibility = (parsed: Record<string, unknown>): void => {
+    if (parsed["clanBane"] === undefined || parsed["clanBane"] === null) {
+        parsed["clanBane"] = "default"
     }
 }

@@ -235,6 +235,7 @@ const createBiography = (character: Character): string => {
         .map((t) => `${t.name} (${t.conviction})${t.description ? `: ${t.description}` : ""}`)
         .join("\n")
 
+    // TODO: Figure out how Inconnu handles variant clan banes and include them in export.
     const biography = [
         character.clan ? `Clan: ${character.clan}` : "",
         character.predatorType?.name ? `Predator Type: ${character.predatorType.name}` : "",

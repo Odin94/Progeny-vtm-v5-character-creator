@@ -14,6 +14,7 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
+import { getClanBaneText } from "~/data/VariantClanBanes"
 
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
@@ -298,11 +299,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("Ambition").setText(character.ambition)
 
     form.getTextField("Clan").setText(character.clan)
-    const baneText = clans[character.clan].bane.replace(
-        "BANE_SEVERITY",
-        `${effects.bane} (bane severity)`
-    )
-    form.getTextField("ClanBane").setText(baneText)
+    form.getTextField("ClanBane").setText(getClanBaneText(character, effects.bane))
     form.getTextField("ClanCompulsion").setText(clans[character.clan].compulsion)
 
     form.getTextField("Sire").setText(character.sire)

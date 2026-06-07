@@ -24,7 +24,10 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 6
+export const clanBaneSchema = z.enum(["default", "variant"])
+export type ClanBane = z.infer<typeof clanBaneSchema>
+
+export const schemaVersion = 7
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -36,6 +39,7 @@ export const characterSchema = z.object({
     sect: z.string().optional().default(""),
 
     clan: clanNameSchema,
+    clanBane: clanBaneSchema.optional().default("default"),
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,

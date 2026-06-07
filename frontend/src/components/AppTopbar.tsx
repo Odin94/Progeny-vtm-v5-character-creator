@@ -1,7 +1,7 @@
 import { Anchor, Box, Burger, Button, Container, Group, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { IconLogout, IconUserShield } from "@tabler/icons-react"
-import { Link, useNavigate } from "@tanstack/react-router"
+import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { RAW_GREY, rgba } from "~/theme/colors"
 import { useAuth } from "~/hooks/useAuth"
@@ -21,6 +21,7 @@ const getUserLabel = (user: AdminUser) =>
 
 const AppTopbar = ({ asideBar }: AppTopbarProps) => {
     const navigate = useNavigate()
+    const location = useLocation()
     const queryClient = useQueryClient()
     const { isAuthenticated, signIn, user } = useAuth()
     const smallScreen = globals.isSmallScreen
@@ -57,6 +58,10 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
         textTransform: "uppercase" as const,
         color: navTextColor
     }
+    const isSheetPage = location.pathname === "/sheet"
+    const creatorNavLink = isSheetPage
+        ? ({ to: "/create", label: "Generator" } as const)
+        : ({ to: "/sheet", label: "Sheet" } as const)
 
     const handleAccountClick = (e: React.MouseEvent) => {
         e.preventDefault()
@@ -86,8 +91,13 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                     </Anchor>
 
                     <Group gap="md" align="center" wrap="nowrap">
-                        <Anchor component={Link} to="/sheet" underline="never" style={navLinkStyle}>
-                            Sheet
+                        <Anchor
+                            component={Link}
+                            to={creatorNavLink.to}
+                            underline="never"
+                            style={navLinkStyle}
+                        >
+                            {creatorNavLink.label}
                         </Anchor>
                         <Anchor
                             href="#"
