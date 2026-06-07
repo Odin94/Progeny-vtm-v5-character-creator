@@ -54,28 +54,46 @@ For setting up on an Ubuntu Hetzner server, use the provided setup script:
 1. Copy the setup script to your server:
 
 ```bash
-scp backend/setupServer.sh root@your-server:/root/
+scp backend/scripts/setupServer.sh root@your-server:/tmp/setupServer.sh
 ```
 
 2. SSH into your server and run the setup:
 
 ```bash
 ssh root@your-server
-chmod +x setupServer.sh
-./setupServer.sh
+apt install -y dos2unix
+dos2unix /tmp/setupServer.sh
+chmod +x /tmp/setupServer.sh
+/tmp/setupServer.sh
 ```
 
 The script will:
 
 - Update system packages
-- Install Node.js 22.x
+- Install Node.js 24.x
 - Install PM2 process manager
-- Install and configure nginx as reverse proxy
-- Configure firewall (UFW)
+- Install and configure Caddy as the HTTPS reverse proxy
 - Create application user and directories
-- Set up PM2 for automatic restarts
+- Clone the repository into `/opt/progeny`
+- Set up `pm2-progeny.service` for automatic restarts as the `progeny` user
 
-1. After setup, follow the instructions in `/opt/progeny/README-SETUP.md` to deploy your code.
+3. After setup, follow the instructions in `/opt/progeny/backend/README-SETUP.md` to deploy your code.
+
+PM2 commands for production should be run as the `progeny` user, not as `root`:
+
+```bash
+sudo su - progeny
+cd /opt/progeny/backend
+pm2 status
+```
+
+Before rebooting, make sure the saved `progeny` PM2 process list contains the backend:
+
+```bash
+sudo su - progeny -c "pm2 status"
+sudo su - progeny -c "pm2 save"
+sudo systemctl status pm2-progeny
+```
 
 **Note:** The setup script requires root/sudo access and will configure the server for production use.
 

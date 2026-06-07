@@ -142,6 +142,7 @@ if ! id "$APP_USER" &>/dev/null; then
     echo -e "${GREEN}✓ User $APP_USER created${NC}"
 else
     echo -e "${GREEN}User $APP_USER already exists${NC}"
+    usermod -d "$APP_DIR" -s /bin/bash "$APP_USER"
 fi
 
 # Create application directory
@@ -163,6 +164,7 @@ else
     echo -e "${YELLOW}Cloning repository...${NC}"
     runuser -u "$APP_USER" -- git clone https://github.com/Odin94/Progeny-vtm-v5-character-creator.git "$APP_DIR"
 fi
+chown -R "$APP_USER:$APP_USER" "$APP_DIR"
 
 # Install dependencies
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
@@ -174,7 +176,15 @@ runuser -u "$APP_USER" -- bash -lc "cd $APP_DIR/backend && pnpm run build"
 
 # Create systemd service for PM2
 echo -e "${YELLOW}⚙️  Setting up PM2 startup script...${NC}"
-PM2_STARTUP=$(runuser -u "$APP_USER" -- bash -lc "pm2 startup systemd -u $APP_USER --hp $APP_DIR" | grep -v "PM2" | tail -n 1)
+systemctl stop "pm2-$APP_USER" >/dev/null 2>&1 || true
+systemctl disable "pm2-$APP_USER" >/dev/null 2>&1 || true
+rm -f "/etc/systemd/system/pm2-$APP_USER.service"
+systemctl daemon-reload
+PM2_STARTUP=$(runuser -u "$APP_USER" -- bash -lc "pm2 startup systemd -u $APP_USER --hp $APP_DIR" | grep '^sudo env ' | tail -n 1)
+if [ -z "$PM2_STARTUP" ]; then
+    echo -e "${RED}Could not get PM2 startup command.${NC}"
+    exit 1
+fi
 eval "$PM2_STARTUP"
 
 # Install and configure PM2 log rotation
@@ -249,23 +259,35 @@ cat > "$APP_DIR/backend/README-SETUP.md" << 'HEREDOC_EOF'
 
 5. **Start with PM2:**
    ```bash
-   pm2 start ecosystem.config.cjs
-   pm2 save
+   sudo su - progeny -c "cd /opt/progeny/backend && pm2 start ecosystem.config.cjs && pm2 save"
+   sudo systemctl stop pm2-progeny
+   sudo systemctl reset-failed pm2-progeny
+   sudo su - progeny -c "pm2 kill"
+   sudo systemctl start pm2-progeny
+   sudo systemctl status pm2-progeny
    ```
 
 6. **Check status:**
    ```bash
-   pm2 status
-   pm2 logs progeny-backend
+   sudo su - progeny -c "pm2 status"
+   sudo su - progeny -c "pm2 logs progeny-backend"
+   ```
+
+7. **Before rebooting:**
+   ```bash
+   sudo systemctl status caddy
+   sudo systemctl status pm2-progeny
+   sudo su - progeny -c "pm2 status"
+   sudo su - progeny -c "pm2 save"
    ```
 
 ## Useful Commands:
 
-- View logs: `pm2 logs progeny-backend`
-- Restart: `pm2 restart progeny-backend`
-- Stop: `pm2 stop progeny-backend`
-- Monitor: `pm2 monit`
-- Update code: `./scripts/updateCode.sh`
+- View logs: `sudo su - progeny -c "pm2 logs progeny-backend"`
+- Restart: `sudo su - progeny -c "pm2 restart progeny-backend"`
+- Stop: `sudo su - progeny -c "pm2 stop progeny-backend"`
+- Monitor: `sudo su - progeny -c "pm2 monit"`
+- Update code as root or progeny: `/opt/progeny/backend/scripts/updateCode.sh`
 HEREDOC_EOF
 
 chown "$APP_USER:$APP_USER" "$APP_DIR/backend/README-SETUP.md"
@@ -294,10 +316,10 @@ Welcome to the Progeny VTM V5 Character Creator backend server.
 
 ## Useful Commands
 
-- View PM2 status: `pm2 status`
-- View logs: `pm2 logs progeny-backend`
-- Restart backend: `pm2 restart progeny-backend`
-- Update code: `./scripts/updateCode.sh` (from backend directory)
+- View PM2 status: `sudo su - progeny -c "pm2 status"`
+- View logs: `sudo su - progeny -c "pm2 logs progeny-backend"`
+- Restart backend: `sudo su - progeny -c "pm2 restart progeny-backend"`
+- Update code as root or progeny: `/opt/progeny/backend/scripts/updateCode.sh`
 EOF
 
 chown "$APP_USER:$APP_USER" "$APP_DIR/README.md"
