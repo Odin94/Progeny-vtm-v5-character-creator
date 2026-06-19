@@ -1,8 +1,8 @@
 procs:
   backend:
-    cmd: ["cmd", "/c", "cd backend && pnpm run dev"]
+    cmd: ["cmd", "/c", "node scripts/dev-preflight.mjs backend && cd backend && pnpm run dev"]
   frontend:
-    cmd: ["cmd", "/c", "cd frontend && pnpm start"]
+    cmd: ["cmd", "/c", "node scripts/dev-preflight.mjs frontend --wait-for-backend && cd frontend && pnpm start"]
   drizzle-studio:
     cmd: ["cmd", "/c", "cd backend && pnpm run db:studio"]
   

@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
+        "dev:preflight": "node scripts/dev-preflight.mjs",
         "lint": "pnpm --dir backend run lint && pnpm --dir frontend run lint",
         "fmt": "pnpm --dir backend run fmt && pnpm --dir frontend run fmt"
     },
