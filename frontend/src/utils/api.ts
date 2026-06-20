@@ -180,6 +180,7 @@ export type CoterieMemberResponse = {
     id: string
     characterId: string
     createdAt: ApiTimestamp
+    playerNickname?: string | null
     character?: CoterieCharacter
 }
 

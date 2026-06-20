@@ -2488,7 +2488,7 @@ const MePage = () => {
 }
 
 type CoterieSummaryContentProps = {
-    members: Array<{ characterId: string; character?: Character }>
+    members: Array<{ characterId: string; playerNickname?: string | null; character?: Character }>
     theme: ReturnType<typeof useMantineTheme>
 }
 
@@ -2656,7 +2656,8 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
                 const clan = character.clan ? clans[character.clan] : null
                 const backgroundColor = getBackgroundColor(strength.dominant)
                 const borderColor = getBorderColor(strength.dominant)
-                const playerName = character.player?.trim() || "Unknown player"
+                const playerName =
+                    member.playerNickname?.trim() || character.player?.trim() || "Unknown player"
 
                 return (
                     <Grid.Col key={member.characterId} span={{ base: 12, md: 6, lg: 4 }}>

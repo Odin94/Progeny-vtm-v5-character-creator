@@ -180,7 +180,7 @@ const seedBaseData = async () => {
             id: MEMBER_CHARACTER_ID,
             userId: MEMBER_ID,
             name: "Member Character",
-            data: JSON.stringify({ name: "Member Character", player: "Member" }),
+            data: JSON.stringify({ name: "Member Character", player: "Character Sheet Player" }),
             version: 1,
             characterVersion: 0
         },
@@ -333,6 +333,20 @@ describe("coterie invites and membership permissions", () => {
             payload: { characterId: MEMBER_CHARACTER_ID }
         })
         expect(addOwnCharacterResponse.statusCode).toBe(201)
+
+        const coteriesResponse = await app.inject({
+            method: "GET",
+            url: "/coteries",
+            headers: csrfHeaders
+        })
+        expect(coteriesResponse.statusCode).toBe(200)
+        const [joinedCoterie] = coteriesResponse.json() as Array<{
+            members: Array<{ characterId: string; playerNickname: string | null }>
+        }>
+        expect(
+            joinedCoterie.members.find((member) => member.characterId === MEMBER_CHARACTER_ID)
+                ?.playerNickname
+        ).toBe("Member")
 
         const addOtherCharacterResponse = await app.inject({
             method: "POST",

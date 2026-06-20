@@ -121,6 +121,26 @@ const buildCoterieResponse = async (
             character: true
         }
     })
+    const characterOwnerIds = Array.from(
+        new Set(
+            characterMembers
+                .map((member) => member.character?.userId)
+                .filter((userId): userId is string => !!userId)
+        )
+    )
+    const characterOwners =
+        characterOwnerIds.length > 0
+            ? await db
+                  .select({
+                      id: schema.users.id,
+                      nickname: schema.users.nickname
+                  })
+                  .from(schema.users)
+                  .where(inArray(schema.users.id, characterOwnerIds))
+            : []
+    const nicknameByUserId = new Map(
+        characterOwners.map((owner) => [owner.id, owner.nickname])
+    )
 
     return {
         ...withoutOwnerId(coterie),
@@ -134,6 +154,7 @@ const buildCoterieResponse = async (
                 id: member.id,
                 characterId: member.characterId,
                 createdAt: member.createdAt,
+                playerNickname: nicknameByUserId.get(member.character!.userId) ?? null,
                 character: parseCharacter(member.character!, userId)
             })),
         players: isOwner ? await getPlayerRoster(coterie) : undefined
