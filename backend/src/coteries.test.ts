@@ -247,6 +247,31 @@ describe("coterie invites and membership permissions", () => {
         await seedBaseData()
     })
 
+    it("lists newest invite links first", async () => {
+        const olderInvite = await createInvite(app)
+        const newerInvite = await createInvite(app)
+
+        await db
+            .update(schema.coterieInvites)
+            .set({ createdAt: new Date("2026-01-01T00:00:00.000Z") })
+            .where(eq(schema.coterieInvites.id, olderInvite.id))
+
+        await db
+            .update(schema.coterieInvites)
+            .set({ createdAt: new Date("2026-01-02T00:00:00.000Z") })
+            .where(eq(schema.coterieInvites.id, newerInvite.id))
+
+        const response = await app.inject({
+            method: "GET",
+            url: `/coteries/${COTERIE_ID}/invites`,
+            headers: csrfHeaders
+        })
+
+        expect(response.statusCode).toBe(200)
+        const invites = response.json() as Array<{ id: string }>
+        expect(invites.map((invite) => invite.id)).toEqual([newerInvite.id, olderInvite.id])
+    })
+
     it("accepts active invites and rejects revoked, expired, and no-nickname joins", async () => {
         const selfInvite = await createInvite(app)
         const selfAcceptResponse = await app.inject({

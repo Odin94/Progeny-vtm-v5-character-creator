@@ -591,7 +591,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
 
             const now = new Date()
             const invites = await db.query.coterieInvites.findMany({
-                where: eq(schema.coterieInvites.coterieId, coterieId)
+                where: eq(schema.coterieInvites.coterieId, coterieId),
+                orderBy: (invites, { desc }) => [desc(invites.createdAt)]
             })
 
             const inviteSummaries = invites.map((invite) => ({
