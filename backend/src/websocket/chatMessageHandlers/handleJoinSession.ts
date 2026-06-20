@@ -10,7 +10,12 @@ import {
     type SessionJoinedMessage,
     type UserJoinedMessage
 } from "../sessionChatTypes.js"
-import { temporarySessions, coterieSessions, ensureCoterieSession } from "../sessionChat.js"
+import {
+    clearRecentChatSession,
+    temporarySessions,
+    coterieSessions,
+    ensureCoterieSession
+} from "../sessionChat.js"
 import { recordSessionJoin } from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, broadcastToSession } from "../sessionChatUtils.js"
 import { removeParticipantFromSession } from "./handleLeaveSession.js"
@@ -121,6 +126,7 @@ export async function handleJoinSession(
         }
 
         currentSession.participants.set(userId, participant)
+        clearRecentChatSession(userId, currentSession)
         const joinedAt = Date.now()
         currentSession.lastActivity = joinedAt
         recordSessionJoin(currentSession, userId, joinedAt)

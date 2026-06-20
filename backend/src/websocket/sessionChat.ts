@@ -1,12 +1,21 @@
 import { FastifyInstance } from "fastify"
-import { authenticateWebSocketRequest, AuthenticatedRequest } from "../middleware/auth.js"
+import {
+    authenticateUser,
+    authenticateWebSocketRequest,
+    AuthenticatedRequest
+} from "../middleware/auth.js"
+import { eq, and } from "drizzle-orm"
+import { db, schema } from "../db/index.js"
 import { handleChatMessage } from "./chatMessageHandlers/handleChatMessage.js"
 import { handleDiceRoll } from "./chatMessageHandlers/handleDiceRoll.js"
 import { handleJoinSession } from "./chatMessageHandlers/handleJoinSession.js"
-import { handleLeaveSession } from "./chatMessageHandlers/handleLeaveSession.js"
+import {
+    handleLeaveSession,
+    removeParticipantFromSession
+} from "./chatMessageHandlers/handleLeaveSession.js"
 import { handleRemorseCheck } from "./chatMessageHandlers/handleRemorseCheck.js"
 import { handleRouseCheck } from "./chatMessageHandlers/handleRouseCheck.js"
-import { type Session, type UserLeftMessage, clientMessageSchema } from "./sessionChatTypes.js"
+import { type Session, clientMessageSchema } from "./sessionChatTypes.js"
 import { trackSessionClosed } from "./sessionChatLifecycle.js"
 import {
     MAX_JSON_SIZE,
@@ -16,8 +25,15 @@ import {
     validateWebSocketMessageSize
 } from "./sessionChatUtils.js"
 
+type RecentChatSession = {
+    sessionId: string
+    sessionType: "temporary" | "coterie"
+    coterieId?: string
+}
+
 export const temporarySessions = new Map<string, Session>()
 export const coterieSessions = new Map<string, Session>()
+const recentChatSessions = new Map<string, RecentChatSession>()
 
 export function ensureCoterieSession(coterieId: string, creatorUserId: string): Session {
     const existingSession = coterieSessions.get(coterieId)
@@ -51,6 +67,7 @@ export function removeCoterieSession(coterieId: string): void {
         session.lastActivity = Date.now()
     }
     coterieSessions.delete(coterieId)
+    clearRecentChatSessionsForSessionId(coterieId)
 }
 
 export function removeCoterieSessionParticipant(coterieId: string, userId: string): void {
@@ -71,10 +88,112 @@ export function removeCoterieSessionParticipant(coterieId: string, userId: strin
 
     session.participants.delete(userId)
     session.lastActivity = Date.now()
+    clearRecentChatSession(userId, session)
     broadcastToSession(session, {
         type: "user_left",
         userId
     })
+}
+
+export function rememberRecentChatSession(userId: string, session: Session): void {
+    const hasOtherParticipants = Array.from(session.participants.keys()).some(
+        (participantUserId) => participantUserId !== userId
+    )
+
+    if (!hasOtherParticipants) {
+        clearRecentChatSession(userId, session)
+        return
+    }
+
+    recentChatSessions.set(userId, {
+        sessionId: session.id,
+        sessionType: session.type,
+        coterieId: session.coterieId
+    })
+}
+
+export function clearRecentChatSession(userId: string, session?: Session): void {
+    const recentSession = recentChatSessions.get(userId)
+    if (!recentSession) {
+        return
+    }
+
+    if (!session || recentSession.sessionId === session.id) {
+        recentChatSessions.delete(userId)
+    }
+}
+
+export function clearRecentChatSessionsForSessionId(sessionId: string): void {
+    for (const [userId, recentSession] of recentChatSessions.entries()) {
+        if (recentSession.sessionId === sessionId) {
+            recentChatSessions.delete(userId)
+        }
+    }
+}
+
+function getSessionByRecentChat(recentSession: RecentChatSession): Session | null {
+    return recentSession.sessionType === "coterie"
+        ? coterieSessions.get(recentSession.sessionId) || null
+        : temporarySessions.get(recentSession.sessionId) || null
+}
+
+async function userCanAccessCoterie(coterieId: string, userId: string): Promise<boolean> {
+    const coterie = await db.query.coteries.findFirst({
+        where: eq(schema.coteries.id, coterieId)
+    })
+
+    if (!coterie) {
+        return false
+    }
+
+    if (coterie.ownerId === userId) {
+        return true
+    }
+
+    const membership = await db.query.coteriePlayerMemberships.findFirst({
+        where: and(
+            eq(schema.coteriePlayerMemberships.coterieId, coterieId),
+            eq(schema.coteriePlayerMemberships.userId, userId)
+        )
+    })
+
+    return !!membership
+}
+
+async function getJoinableRecentChatSession(userId: string) {
+    const recentSession = recentChatSessions.get(userId)
+    if (!recentSession) {
+        return null
+    }
+
+    const session = getSessionByRecentChat(recentSession)
+    const hasOtherParticipants =
+        session &&
+        Array.from(session.participants.keys()).some(
+            (participantUserId) => participantUserId !== userId
+        )
+
+    if (!session || !hasOtherParticipants) {
+        recentChatSessions.delete(userId)
+        return null
+    }
+
+    if (
+        recentSession.sessionType === "coterie" &&
+        recentSession.coterieId &&
+        !(await userCanAccessCoterie(recentSession.coterieId, userId))
+    ) {
+        recentChatSessions.delete(userId)
+        return null
+    }
+
+    return {
+        available: true as const,
+        sessionId: recentSession.sessionId,
+        sessionType: recentSession.sessionType,
+        coterieId: recentSession.coterieId,
+        participantCount: session.participants.size
+    }
 }
 
 const SESSION_EXPIRY_MS = 24 * 60 * 60 * 1000
@@ -85,12 +204,22 @@ const updateSessionExpiry = () => {
         if (now - session.lastActivity > SESSION_EXPIRY_MS) {
             trackSessionClosed(session, "timeout")
             temporarySessions.delete(sessionId)
+            clearRecentChatSessionsForSessionId(sessionId)
         }
     }
 }
 setInterval(updateSessionExpiry, 60 * 60 * 1000)
 
 export async function sessionChatWebSocket(fastify: FastifyInstance) {
+    fastify.get(
+        "/chat/recent-session",
+        { preHandler: authenticateUser },
+        async (request: AuthenticatedRequest) => {
+            const recentSession = await getJoinableRecentChatSession(request.user!.id)
+            return recentSession ?? { available: false }
+        }
+    )
+
     fastify.get(
         "/ws/sessions",
         { websocket: true },
@@ -223,20 +352,7 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
 
                 socket.on("close", () => {
                     if (currentSession) {
-                        currentSession.participants.delete(userId)
-                        currentSession.lastActivity = Date.now()
-
-                        if (currentSession.participants.size === 0) {
-                            if (currentSession.type === "temporary") {
-                                trackSessionClosed(currentSession, "empty", userId)
-                                temporarySessions.delete(currentSession.id)
-                            }
-                        } else {
-                            broadcastToSession(currentSession, {
-                                type: "user_left",
-                                userId
-                            } as UserLeftMessage)
-                        }
+                        removeParticipantFromSession(userId, currentSession)
                     }
                 })
             } catch (error) {

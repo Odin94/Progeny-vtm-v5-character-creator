@@ -220,6 +220,18 @@ export type AcceptCoterieInviteResponse = {
     coterie: CoterieResponse
 }
 
+export type RecentChatSessionResponse =
+    | {
+          available: false
+      }
+    | {
+          available: true
+          sessionId: string
+          sessionType: "temporary" | "coterie"
+          coterieId?: string
+          participantCount: number
+      }
+
 // TODOdin: Put proper types in APIs
 export const api = {
     // Auth
@@ -258,6 +270,7 @@ export const api = {
     getPreferences: () => apiRequest<UserPreferences>("/auth/preferences"),
     updatePreferences: (data: Partial<UserPreferences>) =>
         apiRequest<UserPreferences>("/auth/preferences", { method: "PUT", body: data }),
+    getRecentChatSession: () => apiRequest<RecentChatSessionResponse>("/chat/recent-session"),
 
     // Admin
     getAdminUsers: (query?: string) =>

@@ -23,6 +23,7 @@ import {
     IconHeartHandshake,
     IconInfoCircle,
     IconMessageCircle,
+    IconRefresh,
     IconUsers,
     IconX,
     IconArrowLeft
@@ -32,7 +33,7 @@ import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
-import { api } from "~/utils/api"
+import { api, type RecentChatSessionResponse } from "~/utils/api"
 import { RollData } from "../stores/sessionChatStore"
 
 type ChatWindowProps = {
@@ -61,6 +62,9 @@ const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
     const [sessionType, setSessionType] = useState<"temporary" | "coterie" | null>(null)
     const [copiedSessionId, setCopiedSessionId] = useState(false)
     const [coteries, setCoteries] = useState<Coterie[]>([])
+    const [recentChatSession, setRecentChatSession] = useState<
+        Extract<RecentChatSessionResponse, { available: true }> | null
+    >(null)
     const [autoShare, setAutoShare] = useState(getAutoShareDiceRolls())
     const [messageInput, setMessageInput] = useState("")
     const [joinError, setJoinError] = useState<string | null>(null)
@@ -92,6 +96,7 @@ const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
     useEffect(() => {
         if (expanded && isAuthenticated && connectionStatus === "disconnected") {
             loadCoteries()
+            loadRecentChatSession()
         }
     }, [expanded, isAuthenticated, connectionStatus])
 
@@ -120,6 +125,16 @@ const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
         }
     }
 
+    const loadRecentChatSession = async () => {
+        try {
+            const data = await api.getRecentChatSession()
+            setRecentChatSession(data.available ? data : null)
+        } catch (error) {
+            console.error("Failed to load recent chat session:", error)
+            setRecentChatSession(null)
+        }
+    }
+
     const handleCreateSession = () => {
         setSessionType("temporary")
         setSessionInput("")
@@ -137,6 +152,27 @@ const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
     const handleJoinCoterie = () => {
         setSessionType("coterie")
         setView("joiningCoterie")
+    }
+
+    const handleRejoinRecentChat = () => {
+        if (!recentChatSession) {
+            return
+        }
+
+        connect()
+        if (recentChatSession.sessionType === "coterie") {
+            joinSession({
+                coterieId: recentChatSession.coterieId ?? recentChatSession.sessionId,
+                characterName
+            })
+        } else {
+            joinSession({
+                sessionId: recentChatSession.sessionId,
+                characterName
+            })
+        }
+        setRecentChatSession(null)
+        setView("disconnected")
     }
 
     const handleBack = () => {
@@ -557,6 +593,18 @@ const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
                                 >
                                     Create Session
                                 </Button>
+                                {recentChatSession ? (
+                                    <Button
+                                        fullWidth
+                                        variant="light"
+                                        color={primaryColor}
+                                        onClick={handleRejoinRecentChat}
+                                        disabled={connectionStatus === "connecting"}
+                                        leftSection={<IconRefresh size={16} />}
+                                    >
+                                        Rejoin Last Chat
+                                    </Button>
+                                ) : null}
                                 <Button
                                     fullWidth
                                     variant="light"

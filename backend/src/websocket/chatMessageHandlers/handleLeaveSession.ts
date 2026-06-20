@@ -1,5 +1,10 @@
 import { type Session, type UserLeftMessage } from "../sessionChatTypes.js"
-import { temporarySessions } from "../sessionChat.js"
+import {
+    clearRecentChatSession,
+    clearRecentChatSessionsForSessionId,
+    rememberRecentChatSession,
+    temporarySessions
+} from "../sessionChat.js"
 import { trackSessionClosed } from "../sessionChatLifecycle.js"
 import { broadcastToSession } from "../sessionChatUtils.js"
 
@@ -19,9 +24,13 @@ export function removeParticipantFromSession(userId: string, session: Session): 
         if (session.type === "temporary") {
             trackSessionClosed(session, "empty", userId)
             temporarySessions.delete(session.id)
+            clearRecentChatSessionsForSessionId(session.id)
         }
+        clearRecentChatSession(userId, session)
         return
     }
+
+    rememberRecentChatSession(userId, session)
 
     broadcastToSession(session, {
         type: "user_left",
