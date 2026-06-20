@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 
@@ -75,6 +75,53 @@ export const coterieMembers = sqliteTable(
     })
 )
 
+export const coteriePlayerMemberships = sqliteTable(
+    "coterie_player_memberships",
+    {
+        id: text("id").primaryKey(),
+        coterieId: text("coterie_id")
+            .notNull()
+            .references(() => coteries.id, { onDelete: "cascade" }),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        coterieIdIdx: index("coterie_player_memberships_coterie_id_idx").on(table.coterieId),
+        userIdIdx: index("coterie_player_memberships_user_id_idx").on(table.userId),
+        uniqueMembership: uniqueIndex("coterie_player_memberships_unique_idx").on(
+            table.coterieId,
+            table.userId
+        )
+    })
+)
+
+export const coterieInvites = sqliteTable(
+    "coterie_invites",
+    {
+        id: text("id").primaryKey(),
+        coterieId: text("coterie_id")
+            .notNull()
+            .references(() => coteries.id, { onDelete: "cascade" }),
+        tokenHash: text("token_hash").notNull(),
+        createdById: text("created_by_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+        revokedAt: integer("revoked_at", { mode: "timestamp" })
+    },
+    (table) => ({
+        coterieIdIdx: index("coterie_invites_coterie_id_idx").on(table.coterieId),
+        tokenHashUnique: uniqueIndex("coterie_invites_token_hash_unique_idx").on(table.tokenHash)
+    })
+)
+
 export const characterShares = sqliteTable(
     "character_shares",
     {
@@ -140,6 +187,10 @@ export type Coterie = typeof coteries.$inferSelect
 export type NewCoterie = typeof coteries.$inferInsert
 export type CoterieMember = typeof coterieMembers.$inferSelect
 export type NewCoterieMember = typeof coterieMembers.$inferInsert
+export type CoteriePlayerMembership = typeof coteriePlayerMemberships.$inferSelect
+export type NewCoteriePlayerMembership = typeof coteriePlayerMemberships.$inferInsert
+export type CoterieInvite = typeof coterieInvites.$inferSelect
+export type NewCoterieInvite = typeof coterieInvites.$inferInsert
 export type CharacterShare = typeof characterShares.$inferSelect
 export type NewCharacterShare = typeof characterShares.$inferInsert
 export type ImpersonationSession = typeof impersonationSessions.$inferSelect
@@ -149,6 +200,7 @@ export type NewImpersonationSession = typeof impersonationSessions.$inferInsert
 export const usersRelations = relations(users, ({ many }) => ({
     characters: many(characters),
     ownedCoteries: many(coteries),
+    coteriePlayerMemberships: many(coteriePlayerMemberships),
     sharedCharacters: many(characterShares, { relationName: "sharedWith" }),
     sharedBy: many(characterShares, { relationName: "sharedBy" }),
     impersonationSessionsStarted: many(impersonationSessions, { relationName: "superadmin" }),
@@ -169,7 +221,9 @@ export const coteriesRelations = relations(coteries, ({ one, many }) => ({
         fields: [coteries.ownerId],
         references: [users.id]
     }),
-    members: many(coterieMembers)
+    members: many(coterieMembers),
+    playerMemberships: many(coteriePlayerMemberships),
+    invites: many(coterieInvites)
 }))
 
 export const coterieMembersRelations = relations(coterieMembers, ({ one }) => ({
@@ -180,6 +234,31 @@ export const coterieMembersRelations = relations(coterieMembers, ({ one }) => ({
     character: one(characters, {
         fields: [coterieMembers.characterId],
         references: [characters.id]
+    })
+}))
+
+export const coteriePlayerMembershipsRelations = relations(
+    coteriePlayerMemberships,
+    ({ one }) => ({
+        coterie: one(coteries, {
+            fields: [coteriePlayerMemberships.coterieId],
+            references: [coteries.id]
+        }),
+        user: one(users, {
+            fields: [coteriePlayerMemberships.userId],
+            references: [users.id]
+        })
+    })
+)
+
+export const coterieInvitesRelations = relations(coterieInvites, ({ one }) => ({
+    coterie: one(coteries, {
+        fields: [coterieInvites.coterieId],
+        references: [coteries.id]
+    }),
+    createdBy: one(users, {
+        fields: [coterieInvites.createdById],
+        references: [users.id]
     })
 }))
 

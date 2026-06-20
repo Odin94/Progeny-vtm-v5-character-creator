@@ -16,7 +16,26 @@ export const coterieParamsSchema = z.object({
     id: z.string().min(1)
 })
 
+export const coterieInviteParamsSchema = coterieParamsSchema.extend({
+    inviteId: z.string().min(1)
+})
+
+export const coteriePlayerParamsSchema = coterieParamsSchema.extend({
+    membershipId: z.string().min(1)
+})
+
+export const acceptCoterieInviteParamsSchema = z.object({
+    token: z
+        .string()
+        .min(32)
+        .max(128)
+        .regex(/^[a-zA-Z0-9_-]+$/)
+})
+
 export type CreateCoterieInput = z.infer<typeof createCoterieSchema>
 export type UpdateCoterieInput = z.infer<typeof updateCoterieSchema>
 export type AddCharacterToCoterieInput = z.infer<typeof addCharacterToCoterieSchema>
 export type CoterieParams = z.infer<typeof coterieParamsSchema>
+export type CoterieInviteParams = z.infer<typeof coterieInviteParamsSchema>
+export type CoteriePlayerParams = z.infer<typeof coteriePlayerParamsSchema>
+export type AcceptCoterieInviteParams = z.infer<typeof acceptCoterieInviteParamsSchema>

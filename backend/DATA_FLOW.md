@@ -94,6 +94,27 @@ POST /characters/:characterId/share
 GET /characters includes shared characters where sharedWithUserId = userId
 ```
 
+## Coterie Invite Flow
+
+```
+POST /coteries/:id/invites
+  ├── authenticateUser
+  ├── Verify caller owns coterie
+  ├── Generate high-entropy token
+  └── Store only SHA-256 token hash with expiry/revocation fields
+
+POST /coterie-invites/:token/accept
+  ├── authenticateUser
+  ├── Hash token and find active invite
+  ├── Require joining user to have a nickname
+  └── Insert coterie_player_memberships row
+
+GET /coteries and GET /coteries/:id
+  ├── authenticateUser
+  ├── Authorize via coterie owner or coterie_player_memberships
+  └── Return character members; owner responses also include nickname roster
+```
+
 ## Metrics Collection
 
 ```

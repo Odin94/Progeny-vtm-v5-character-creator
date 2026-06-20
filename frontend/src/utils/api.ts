@@ -162,6 +162,63 @@ export type StartImpersonationResponse = {
     impersonatedUser: AdminUser
 }
 
+type ApiTimestamp = string
+
+export type CoterieCharacter = {
+    id: string
+    name: string
+    data: unknown
+    version: number
+    characterVersion?: number
+    createdAt: ApiTimestamp
+    updatedAt: ApiTimestamp
+    shared?: boolean
+    ownedByCurrentUser?: boolean
+}
+
+export type CoterieMemberResponse = {
+    id: string
+    characterId: string
+    createdAt: ApiTimestamp
+    character?: CoterieCharacter
+}
+
+export type CoteriePlayerResponse = {
+    membershipId: string | null
+    nickname: string | null
+    isOwner: boolean
+    joinedAt: ApiTimestamp
+}
+
+export type CoterieResponse = {
+    id: string
+    name: string
+    createdAt: ApiTimestamp
+    updatedAt: ApiTimestamp
+    owned?: boolean
+    canEdit?: boolean
+    canManageInvites?: boolean
+    canManagePlayers?: boolean
+    members?: CoterieMemberResponse[]
+    players?: CoteriePlayerResponse[]
+}
+
+export type CoterieInviteResponse = {
+    id: string
+    createdAt: ApiTimestamp
+    expiresAt: ApiTimestamp
+    revokedAt?: ApiTimestamp | null
+    active?: boolean
+}
+
+export type CreatedCoterieInviteResponse = CoterieInviteResponse & {
+    token: string
+}
+
+export type AcceptCoterieInviteResponse = {
+    coterie: CoterieResponse
+}
+
 // TODOdin: Put proper types in APIs
 export const api = {
     // Auth
@@ -230,17 +287,34 @@ export const api = {
     deleteCharacter: (id: string) => apiRequest<void>(`/characters/${id}`, { method: "DELETE" }),
 
     // Coteries
-    getCoteries: () => apiRequest<Array<unknown>>("/coteries"),
-    getCoterie: (id: string) => apiRequest<unknown>(`/coteries/${id}`),
+    getCoteries: () => apiRequest<CoterieResponse[]>("/coteries"),
+    getCoterie: (id: string) => apiRequest<CoterieResponse>(`/coteries/${id}`),
     createCoterie: (data: { name: string }) =>
-        apiRequest<unknown>("/coteries", { method: "POST", body: data }),
+        apiRequest<CoterieResponse>("/coteries", { method: "POST", body: data }),
     updateCoterie: (id: string, data: { name?: string }) =>
-        apiRequest<unknown>(`/coteries/${id}`, { method: "PUT", body: data }),
+        apiRequest<CoterieResponse>(`/coteries/${id}`, { method: "PUT", body: data }),
     deleteCoterie: (id: string) => apiRequest<void>(`/coteries/${id}`, { method: "DELETE" }),
     addCharacterToCoterie: (coterieId: string, data: { characterId: string }) =>
         apiRequest<unknown>(`/coteries/${coterieId}/characters`, { method: "POST", body: data }),
     removeCharacterFromCoterie: (coterieId: string, characterId: string) =>
         apiRequest<void>(`/coteries/${coterieId}/characters/${characterId}`, { method: "DELETE" }),
+    createCoterieInvite: (coterieId: string) =>
+        apiRequest<CreatedCoterieInviteResponse>(`/coteries/${coterieId}/invites`, {
+            method: "POST"
+        }),
+    getCoterieInvites: (coterieId: string) =>
+        apiRequest<CoterieInviteResponse[]>(`/coteries/${coterieId}/invites`),
+    revokeCoterieInvite: (coterieId: string, inviteId: string) =>
+        apiRequest<void>(`/coteries/${coterieId}/invites/${inviteId}`, { method: "DELETE" }),
+    acceptCoterieInvite: (token: string) =>
+        apiRequest<AcceptCoterieInviteResponse>(
+            `/coterie-invites/${encodeURIComponent(token)}/accept`,
+            {
+                method: "POST"
+            }
+        ),
+    removeCoteriePlayer: (coterieId: string, membershipId: string) =>
+        apiRequest<void>(`/coteries/${coterieId}/players/${membershipId}`, { method: "DELETE" }),
 
     // Shares
     shareCharacter: (characterId: string, data: { sharedWithUserNickname: string }) =>

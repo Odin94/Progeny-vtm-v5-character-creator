@@ -24,15 +24,18 @@ import {
 import { notifications } from "@mantine/notifications"
 import {
     IconArrowRight,
+    IconCopy,
     IconDownload,
+    IconEyeOff,
     IconInfoCircle,
+    IconLink,
     IconTrash,
     IconUsers
 } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { Buffer } from "buffer"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
@@ -61,11 +64,16 @@ import {
     useUpdateCharacter
 } from "~/hooks/useCharacters"
 import {
+    useAcceptCoterieInvite,
     useAddCharacterToCoterie,
     useCoteries,
+    useCoterieInvites,
     useCreateCoterie,
+    useCreateCoterieInvite,
     useDeleteCoterie,
     useRemoveCharacterFromCoterie,
+    useRemoveCoteriePlayer,
+    useRevokeCoterieInvite,
     useUpdateCoterie
 } from "~/hooks/useCoteries"
 import { parseCharacterData } from "~/utils/characterData"
@@ -77,7 +85,13 @@ import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplas
 import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import Topbar from "~/topbar/Topbar"
-import { api } from "~/utils/api"
+import {
+    api,
+    type ApiError,
+    type CoterieInviteResponse,
+    type CoteriePlayerResponse,
+    type CoterieResponse
+} from "~/utils/api"
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
@@ -174,15 +188,13 @@ type Character = {
     id: string
     name: string
     shared?: boolean
+    ownedByCurrentUser?: boolean
     data?: unknown
 }
 
-type Coterie = {
-    id: string
-    name: string
-    owned?: boolean
-    members?: Array<{ characterId: string; character?: Character }>
-}
+type CoteriePlayer = CoteriePlayerResponse
+type Coterie = CoterieResponse
+type CoterieInvite = CoterieInviteResponse
 
 const getLimitedLabel = (value: string | null | undefined, fallback: string, maxLength: number) => {
     const label = value?.trim() || fallback
@@ -204,6 +216,14 @@ const getRemovedFromCoterieMessage = (
     return `${characterLabel} removed from coterie ${coterieLabel}`
 }
 
+const formatCoterieDate = (value: string | Date) => new Date(value).toLocaleString()
+
+const clearInviteTokenFromUrl = () => {
+    const cleanedUrl = new URL(window.location.href)
+    cleanedUrl.searchParams.delete("coterieInvite")
+    window.history.replaceState(null, "", `${cleanedUrl.pathname}${cleanedUrl.search}`)
+}
+
 // TODOdin: Refactorings:
 // * Turn mostly-samey confirm modals into one modal with some configs, in it's own file
 // * Adapt our current use(sometanStackQueryThing) hooks to expose their state
@@ -218,6 +238,7 @@ const MePage = () => {
         isAuthenticated,
         updateProfile,
         isUpdatingProfile,
+        signIn,
         signOut
     } = useAuth()
     const { data: characters } = useCharacters(isAuthenticated)
@@ -245,6 +266,10 @@ const MePage = () => {
     const deleteCoterieMutation = useDeleteCoterie()
     const addCharacterToCoterieMutation = useAddCharacterToCoterie()
     const removeCharacterFromCoterieMutation = useRemoveCharacterFromCoterie()
+    const createCoterieInviteMutation = useCreateCoterieInvite()
+    const revokeCoterieInviteMutation = useRevokeCoterieInvite()
+    const acceptCoterieInviteMutation = useAcceptCoterieInvite()
+    const removeCoteriePlayerMutation = useRemoveCoteriePlayer()
 
     // Shares
     const unshareCharacterMutation = useUnshareCharacter()
@@ -254,6 +279,12 @@ const MePage = () => {
     const [createCoterieModalOpened, setCreateCoterieModalOpened] = useState(false)
     const [editCoterieModalOpened, setEditCoterieModalOpened] = useState(false)
     const [addCharacterToCoterieModalOpened, setAddCharacterToCoterieModalOpened] = useState(false)
+    const [coterieInvitesModalOpened, setCoterieInvitesModalOpened] = useState(false)
+    const [inviteNicknameModalOpened, setInviteNicknameModalOpened] = useState(false)
+    const [removeCharacterFromCoterieModalOpened, setRemoveCharacterFromCoterieModalOpened] =
+        useState(false)
+    const [removeCoteriePlayerModalOpened, setRemoveCoteriePlayerModalOpened] = useState(false)
+    const [revokeInviteModalOpened, setRevokeInviteModalOpened] = useState(false)
     const [deleteCharacterModalOpened, setDeleteCharacterModalOpened] = useState(false)
     const [deleteCoterieModalOpened, setDeleteCoterieModalOpened] = useState(false)
     const [loadCharacterWarningModalOpened, setLoadCharacterWarningModalOpened] = useState(false)
@@ -293,10 +324,29 @@ const MePage = () => {
     const [editingCoterie, setEditingCoterie] = useState<Coterie | null>(null)
     const [selectedCoterieForAdd, setSelectedCoterieForAdd] = useState<Coterie | null>(null)
     const [selectedCharacterForCoterie, setSelectedCharacterForCoterie] = useState<string>("")
+    const [coterieForInvites, setCoterieForInvites] = useState<Coterie | null>(null)
+    const [generatedInviteUrl, setGeneratedInviteUrl] = useState("")
+    const [pendingInviteToken, setPendingInviteToken] = useState<string | null>(null)
+    const [inviteNicknameValue, setInviteNicknameValue] = useState("")
+    const [inviteToRevoke, setInviteToRevoke] = useState<CoterieInvite | null>(null)
+    const [characterToRemoveFromCoterie, setCharacterToRemoveFromCoterie] = useState<{
+        coterieId: string
+        characterId: string
+        characterName?: string | null
+        coterieName?: string | null
+    } | null>(null)
+    const [playerToRemoveFromCoterie, setPlayerToRemoveFromCoterie] = useState<{
+        coterie: Coterie
+        player: CoteriePlayer
+    } | null>(null)
     const [summaryModalOpened, setSummaryModalOpened] = useState(false)
     const [characterForSummary, setCharacterForSummary] = useState<Character | null>(null)
     const [coterieSummaryModalOpened, setCoterieSummaryModalOpened] = useState(false)
     const [coterieForSummary, setCoterieForSummary] = useState<Coterie | null>(null)
+    const { data: coterieInvites } = useCoterieInvites(
+        coterieInvitesModalOpened ? coterieForInvites?.id || null : null
+    )
+    const handledInviteTokenRef = useRef<string | null>(null)
 
     // Nickname editing
     const [isEditingNickname, setIsEditingNickname] = useState(false)
@@ -307,6 +357,60 @@ const MePage = () => {
             setNicknameValue(user.nickname || "")
         }
     }, [user?.nickname])
+
+    useEffect(() => {
+        const inviteToken = new URLSearchParams(window.location.search).get("coterieInvite")
+
+        if (!inviteToken || authLoading) {
+            return
+        }
+
+        if (!isAuthenticated) {
+            signIn()
+            return
+        }
+
+        if (handledInviteTokenRef.current === inviteToken) {
+            return
+        }
+
+        handledInviteTokenRef.current = inviteToken
+
+        acceptCoterieInviteMutation.mutate(inviteToken, {
+            onSuccess: () => {
+                clearInviteTokenFromUrl()
+                notifications.show({
+                    title: "Coterie joined",
+                    message: "You can now add your characters to this coterie.",
+                    color: "green"
+                })
+            },
+            onError: (error) => {
+                clearInviteTokenFromUrl()
+                const apiError = error as ApiError
+
+                if (
+                    apiError.status === 400 &&
+                    apiError.message.toLowerCase().includes("nickname")
+                ) {
+                    setPendingInviteToken(inviteToken)
+                    setInviteNicknameValue(user?.nickname || "")
+                    setInviteNicknameModalOpened(true)
+                    return
+                }
+
+                notifications.show({
+                    title: "Invite not accepted",
+                    message:
+                        apiError.message ||
+                        (error instanceof Error
+                            ? error.message
+                            : "This invite link is invalid or expired."),
+                    color: "red"
+                })
+            }
+        })
+    }, [acceptCoterieInviteMutation, authLoading, isAuthenticated, signIn, user?.nickname])
 
     const handleSaveNickname = () => {
         updateProfile(
@@ -340,6 +444,52 @@ const MePage = () => {
     const handleCancelNickname = () => {
         setNicknameValue(user?.nickname || "")
         setIsEditingNickname(false)
+    }
+
+    const handleSaveInviteNickname = () => {
+        const nickname = inviteNicknameValue.trim()
+
+        if (!nickname || !pendingInviteToken) {
+            return
+        }
+
+        updateProfile(
+            { nickname },
+            {
+                onSuccess: () => {
+                    acceptCoterieInviteMutation.mutate(pendingInviteToken, {
+                        onSuccess: () => {
+                            notifications.show({
+                                title: "Coterie joined",
+                                message: "You can now add your characters to this coterie.",
+                                color: "green"
+                            })
+                            setInviteNicknameModalOpened(false)
+                            setPendingInviteToken(null)
+                            setInviteNicknameValue("")
+                        },
+                        onError: (error) => {
+                            notifications.show({
+                                title: "Invite not accepted",
+                                message:
+                                    error instanceof Error
+                                        ? error.message
+                                        : "This invite link is invalid or expired.",
+                                color: "red"
+                            })
+                        }
+                    })
+                },
+                onError: (error) => {
+                    notifications.show({
+                        title: "Nickname not saved",
+                        message:
+                            error instanceof Error ? error.message : "Failed to update nickname",
+                        color: "red"
+                    })
+                }
+            }
+        )
     }
 
     useEffect(() => {
@@ -1242,6 +1392,12 @@ const MePage = () => {
         setAddCharacterToCoterieModalOpened(true)
     }
 
+    const handleManageCoterieInvites = (coterie: Coterie) => {
+        setCoterieForInvites(coterie)
+        setGeneratedInviteUrl("")
+        setCoterieInvitesModalOpened(true)
+    }
+
     const handleConfirmAddCharacterToCoterie = () => {
         if (!selectedCoterieForAdd || !selectedCharacterForCoterie) {
             return
@@ -1285,18 +1441,35 @@ const MePage = () => {
             coterieName?: string | null
         }
     ) => {
+        setCharacterToRemoveFromCoterie({
+            coterieId,
+            characterId,
+            characterName: details?.characterName,
+            coterieName: details?.coterieName
+        })
+        setRemoveCharacterFromCoterieModalOpened(true)
+    }
+
+    const handleConfirmRemoveCharacterFromCoterie = () => {
+        if (!characterToRemoveFromCoterie) return
+
         removeCharacterFromCoterieMutation.mutate(
-            { coterieId, characterId },
+            {
+                coterieId: characterToRemoveFromCoterie.coterieId,
+                characterId: characterToRemoveFromCoterie.characterId
+            },
             {
                 onSuccess: () => {
                     notifications.show({
                         title: "Success",
                         message: getRemovedFromCoterieMessage(
-                            details?.characterName,
-                            details?.coterieName
+                            characterToRemoveFromCoterie.characterName,
+                            characterToRemoveFromCoterie.coterieName
                         ),
                         color: "green"
                     })
+                    setRemoveCharacterFromCoterieModalOpened(false)
+                    setCharacterToRemoveFromCoterie(null)
                 },
                 onError: (error) => {
                     notifications.show({
@@ -1305,6 +1478,131 @@ const MePage = () => {
                             error instanceof Error
                                 ? error.message
                                 : "Failed to remove character from coterie",
+                        color: "red"
+                    })
+                }
+            }
+        )
+    }
+
+    const handleGenerateCoterieInvite = () => {
+        if (!coterieForInvites) return
+
+        createCoterieInviteMutation.mutate(coterieForInvites.id, {
+            onSuccess: (createdInvite) => {
+                if (!createdInvite.token) {
+                    notifications.show({
+                        title: "Invite created",
+                        message: "The invite was created, but no link was returned.",
+                        color: "yellow"
+                    })
+                    return
+                }
+
+                const url = new URL("/me", window.location.origin)
+                url.searchParams.set("coterieInvite", createdInvite.token)
+                setGeneratedInviteUrl(url.toString())
+                notifications.show({
+                    title: "Invite link created",
+                    message: "Share this link with the player you want to invite.",
+                    color: "green"
+                })
+            },
+            onError: (error) => {
+                notifications.show({
+                    title: "Error",
+                    message: error instanceof Error ? error.message : "Failed to create invite",
+                    color: "red"
+                })
+            }
+        })
+    }
+
+    const handleCopyGeneratedInvite = () => {
+        if (!generatedInviteUrl) return
+
+        navigator.clipboard
+            .writeText(generatedInviteUrl)
+            .then(() => {
+                notifications.show({
+                    title: "Copied",
+                    message: "Invite link copied to clipboard",
+                    color: "green"
+                })
+            })
+            .catch(() => {
+                notifications.show({
+                    title: "Copy failed",
+                    message: "The invite link is still visible in the field.",
+                    color: "yellow"
+                })
+            })
+    }
+
+    const handleHideGeneratedInvite = () => {
+        setGeneratedInviteUrl("")
+    }
+
+    const handleRequestRevokeInvite = (invite: CoterieInvite) => {
+        setInviteToRevoke(invite)
+        setRevokeInviteModalOpened(true)
+    }
+
+    const handleConfirmRevokeInvite = () => {
+        if (!coterieForInvites || !inviteToRevoke) return
+
+        revokeCoterieInviteMutation.mutate(
+            { coterieId: coterieForInvites.id, inviteId: inviteToRevoke.id },
+            {
+                onSuccess: () => {
+                    notifications.show({
+                        title: "Invite revoked",
+                        message: "This invite link can no longer be used.",
+                        color: "green"
+                    })
+                    setRevokeInviteModalOpened(false)
+                    setInviteToRevoke(null)
+                },
+                onError: (error) => {
+                    notifications.show({
+                        title: "Error",
+                        message: error instanceof Error ? error.message : "Failed to revoke invite",
+                        color: "red"
+                    })
+                }
+            }
+        )
+    }
+
+    const handleRemoveCoteriePlayer = (coterie: Coterie, player: CoteriePlayer) => {
+        setPlayerToRemoveFromCoterie({ coterie, player })
+        setRemoveCoteriePlayerModalOpened(true)
+    }
+
+    const handleConfirmRemoveCoteriePlayer = () => {
+        const target = playerToRemoveFromCoterie
+
+        if (!target?.player.membershipId) return
+
+        removeCoteriePlayerMutation.mutate(
+            {
+                coterieId: target.coterie.id,
+                membershipId: target.player.membershipId
+            },
+            {
+                onSuccess: () => {
+                    notifications.show({
+                        title: "Player removed",
+                        message: `${target.player.nickname || "Player"} was removed from ${target.coterie.name}.`,
+                        color: "green"
+                    })
+                    setRemoveCoteriePlayerModalOpened(false)
+                    setPlayerToRemoveFromCoterie(null)
+                },
+                onError: (error) => {
+                    notifications.show({
+                        title: "Error",
+                        message: error instanceof Error ? error.message : "Failed to remove player",
                         color: "red"
                     })
                 }
@@ -1411,7 +1709,7 @@ const MePage = () => {
     }
 
     const userCharacters = (characters as Character[]) || []
-    const userCoteries = (coteries as Coterie[]) || []
+    const userCoteries = coteries || []
     const ownedCharacters = userCharacters.filter((c) => !c.shared)
 
     // Find the currently loaded character in the list by ID
@@ -1538,6 +1836,9 @@ const MePage = () => {
                                     handleAddCharacterToCoterie={handleAddCharacterToCoterie}
                                     handleEditCoterie={handleEditCoterie}
                                     handleDeleteCoterie={handleDeleteCoterie}
+                                    handleManageCoterieInvites={handleManageCoterieInvites}
+                                    handleRemoveCoteriePlayer={handleRemoveCoteriePlayer}
+                                    handleShowCharacterSummary={handleShowSummary}
                                     handleRemoveCharacterFromCoterie={
                                         handleRemoveCharacterFromCoterie
                                     }
@@ -1721,6 +2022,221 @@ const MePage = () => {
                     </Group>
                 </Stack>
             </Modal>
+
+            <Modal
+                opened={inviteNicknameModalOpened}
+                onClose={() => {
+                    setInviteNicknameModalOpened(false)
+                    setPendingInviteToken(null)
+                    setInviteNicknameValue("")
+                }}
+                title="Set Nickname"
+                centered
+            >
+                <Stack gap="md">
+                    <Text size="sm" c="dimmed">
+                        Players in a coterie are shown by nickname. Pick one to join this coterie.
+                    </Text>
+                    <TextInput
+                        label="Nickname"
+                        placeholder="Enter your nickname"
+                        value={inviteNicknameValue}
+                        onChange={(event) => setInviteNicknameValue(event.currentTarget.value)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                handleSaveInviteNickname()
+                            }
+                        }}
+                    />
+                    <Group justify="flex-end">
+                        <Button
+                            variant="subtle"
+                            color="red"
+                            onClick={() => {
+                                setInviteNicknameModalOpened(false)
+                                setPendingInviteToken(null)
+                                setInviteNicknameValue("")
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="red"
+                            onClick={handleSaveInviteNickname}
+                            disabled={!inviteNicknameValue.trim() || !pendingInviteToken}
+                            loading={isUpdatingProfile || acceptCoterieInviteMutation.isPending}
+                        >
+                            Save and Join
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
+            {/* Coterie Invites Modal */}
+            <Modal
+                opened={coterieInvitesModalOpened}
+                onClose={() => {
+                    setCoterieInvitesModalOpened(false)
+                    setCoterieForInvites(null)
+                    setGeneratedInviteUrl("")
+                }}
+                title={`Invites for ${coterieForInvites?.name || "Coterie"}`}
+                centered
+                size="lg"
+            >
+                <Stack gap="md">
+                    <Button
+                        color="red"
+                        leftSection={<IconLink size={16} />}
+                        onClick={handleGenerateCoterieInvite}
+                        loading={createCoterieInviteMutation.isPending}
+                    >
+                        Generate Invite Link
+                    </Button>
+
+                    {generatedInviteUrl ? (
+                        <Stack gap="xs">
+                            <Text size="sm" c="dimmed">
+                                This full invite link is shown only once.
+                            </Text>
+                            <Group gap="xs" align="flex-end">
+                                <TextInput
+                                    label="New invite link"
+                                    value={generatedInviteUrl}
+                                    readOnly
+                                    style={{ flex: 1 }}
+                                />
+                                <Button
+                                    color="red"
+                                    variant="light"
+                                    leftSection={<IconCopy size={16} />}
+                                    onClick={handleCopyGeneratedInvite}
+                                >
+                                    Copy
+                                </Button>
+                                <Button
+                                    color="gray"
+                                    variant="subtle"
+                                    leftSection={<IconEyeOff size={16} />}
+                                    onClick={handleHideGeneratedInvite}
+                                >
+                                    Hide
+                                </Button>
+                            </Group>
+                        </Stack>
+                    ) : null}
+
+                    <Divider />
+
+                    <Stack gap="xs">
+                        {coterieInvites && coterieInvites.length > 0 ? (
+                            coterieInvites.map((invite) => (
+                                <Paper
+                                    key={invite.id}
+                                    p="sm"
+                                    withBorder
+                                    style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+                                >
+                                    <Group justify="space-between" align="center">
+                                        <Stack gap={2}>
+                                            <Text size="sm">
+                                                Expires {formatCoterieDate(invite.expiresAt)}
+                                            </Text>
+                                            <Text size="xs" c="dimmed">
+                                                Created {formatCoterieDate(invite.createdAt)}
+                                            </Text>
+                                        </Stack>
+                                        <Group gap="xs">
+                                            <Badge
+                                                color={invite.active ? "green" : "gray"}
+                                                variant="light"
+                                            >
+                                                {invite.active ? "Active" : "Inactive"}
+                                            </Badge>
+                                            {invite.active ? (
+                                                <Button
+                                                    size="xs"
+                                                    color="red"
+                                                    variant="light"
+                                                    onClick={() =>
+                                                        handleRequestRevokeInvite(invite)
+                                                    }
+                                                >
+                                                    Revoke
+                                                </Button>
+                                            ) : null}
+                                        </Group>
+                                    </Group>
+                                </Paper>
+                            ))
+                        ) : (
+                            <Text c="dimmed" size="sm">
+                                No invite links yet.
+                            </Text>
+                        )}
+                    </Stack>
+                </Stack>
+            </Modal>
+
+            <ConfirmActionModal
+                opened={removeCharacterFromCoterieModalOpened}
+                onClose={() => {
+                    setRemoveCharacterFromCoterieModalOpened(false)
+                    setCharacterToRemoveFromCoterie(null)
+                }}
+                onConfirm={handleConfirmRemoveCharacterFromCoterie}
+                title="Remove Character"
+                body={
+                    <>
+                        Remove{" "}
+                        <strong>
+                            {characterToRemoveFromCoterie?.characterName || "this character"}
+                        </strong>{" "}
+                        from{" "}
+                        <strong>
+                            {characterToRemoveFromCoterie?.coterieName || "this coterie"}
+                        </strong>
+                        ?
+                    </>
+                }
+                confirmLabel="Remove"
+                loading={removeCharacterFromCoterieMutation.isPending}
+            />
+
+            <ConfirmActionModal
+                opened={removeCoteriePlayerModalOpened}
+                onClose={() => {
+                    setRemoveCoteriePlayerModalOpened(false)
+                    setPlayerToRemoveFromCoterie(null)
+                }}
+                onConfirm={handleConfirmRemoveCoteriePlayer}
+                title="Remove Player"
+                body={
+                    <>
+                        Remove{" "}
+                        <strong>
+                            {playerToRemoveFromCoterie?.player.nickname || "this player"}
+                        </strong>{" "}
+                        from <strong>{playerToRemoveFromCoterie?.coterie.name}</strong>? Their
+                        characters will also be removed from the coterie.
+                    </>
+                }
+                confirmLabel="Remove"
+                loading={removeCoteriePlayerMutation.isPending}
+            />
+
+            <ConfirmActionModal
+                opened={revokeInviteModalOpened}
+                onClose={() => {
+                    setRevokeInviteModalOpened(false)
+                    setInviteToRevoke(null)
+                }}
+                onConfirm={handleConfirmRevokeInvite}
+                title="Revoke Invite"
+                body="This invite link will stop working immediately. Existing coterie members will remain."
+                confirmLabel="Revoke"
+                loading={revokeCoterieInviteMutation.isPending}
+            />
 
             <ConfirmActionModal
                 opened={deleteCharacterModalOpened}
@@ -2140,6 +2656,7 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
                 const clan = character.clan ? clans[character.clan] : null
                 const backgroundColor = getBackgroundColor(strength.dominant)
                 const borderColor = getBorderColor(strength.dominant)
+                const playerName = character.player?.trim() || "Unknown player"
 
                 return (
                     <Grid.Col key={member.characterId} span={{ base: 12, md: 6, lg: 4 }}>
@@ -2150,42 +2667,48 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
                             style={{
                                 backgroundColor,
                                 borderColor,
-                                borderWidth: 2
+                                borderWidth: 2,
+                                minHeight: 150,
+                                height: "100%",
+                                display: "flex"
                             }}
                         >
-                            <Stack gap="sm">
-                                <Group gap="sm" justify="space-between">
-                                    <Group gap="sm">
-                                        {clan?.logo ? (
-                                            <Box
-                                                style={{
-                                                    width: "40px",
-                                                    height: "40px",
-                                                    backgroundColor: borderColor,
-                                                    maskImage: `url(${clan.logo})`,
-                                                    maskSize: "contain",
-                                                    maskRepeat: "no-repeat",
-                                                    maskPosition: "center",
-                                                    WebkitMaskImage: `url(${clan.logo})`,
-                                                    WebkitMaskSize: "contain",
-                                                    WebkitMaskRepeat: "no-repeat",
-                                                    WebkitMaskPosition: "center"
-                                                }}
-                                            />
-                                        ) : null}
-                                        <Stack gap={2}>
-                                            <Text fw={600} size="lg">
-                                                {character.name}
-                                            </Text>
-                                            {character.player ? (
-                                                <Text size="sm" c="dimmed">
-                                                    {character.player}
-                                                </Text>
-                                            ) : null}
-                                        </Stack>
-                                    </Group>
-                                </Group>
-                            </Stack>
+                            <Group gap="md" align="center" wrap="nowrap" style={{ width: "100%" }}>
+                                {clan?.logo ? (
+                                    <Box
+                                        style={{
+                                            width: 52,
+                                            height: 52,
+                                            flex: "0 0 52px",
+                                            backgroundColor: borderColor,
+                                            maskImage: `url(${clan.logo})`,
+                                            maskSize: "contain",
+                                            maskRepeat: "no-repeat",
+                                            maskPosition: "center",
+                                            WebkitMaskImage: `url(${clan.logo})`,
+                                            WebkitMaskSize: "contain",
+                                            WebkitMaskRepeat: "no-repeat",
+                                            WebkitMaskPosition: "center"
+                                        }}
+                                    />
+                                ) : (
+                                    <Box
+                                        style={{
+                                            width: 52,
+                                            height: 52,
+                                            flex: "0 0 52px"
+                                        }}
+                                    />
+                                )}
+                                <Stack gap={4} style={{ minWidth: 0, flex: 1 }}>
+                                    <Text fw={700} size="lg" truncate="end">
+                                        {character.name}
+                                    </Text>
+                                    <Text size="sm" c="dimmed" truncate="end">
+                                        Player: {playerName}
+                                    </Text>
+                                </Stack>
+                            </Group>
                         </Paper>
                     </Grid.Col>
                 )

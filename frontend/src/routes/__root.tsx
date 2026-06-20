@@ -32,6 +32,31 @@ const queryClient = new QueryClient({
 })
 
 const POSTHOG_CONSENT_RETENTION_DAYS = 180
+const INVITE_QUERY_PARAM = "coterieInvite"
+
+const stripInviteToken = (value: unknown) => {
+    if (typeof value !== "string" || !value.includes(INVITE_QUERY_PARAM)) {
+        return value
+    }
+
+    try {
+        const parsed = new URL(value, window.location.origin)
+        parsed.searchParams.delete(INVITE_QUERY_PARAM)
+        return `${parsed.origin}${parsed.pathname}${parsed.search}${parsed.hash}`
+    } catch {
+        return value.replace(/([?&]coterieInvite=)[^&#]+/g, "$1[redacted]")
+    }
+}
+
+const scrubInviteTokensFromProperties = (properties: Record<string, unknown> | undefined) => {
+    if (!properties) {
+        return
+    }
+
+    for (const key of ["$current_url", "$initial_current_url", "current_url", "url"]) {
+        properties[key] = stripInviteToken(properties[key])
+    }
+}
 
 const posthogOptions: Partial<PostHogConfig> = {
     api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
@@ -41,6 +66,8 @@ const posthogOptions: Partial<PostHogConfig> = {
     cookie_expiration: POSTHOG_CONSENT_RETENTION_DAYS,
     opt_out_capturing_persistence_type: "cookie",
     before_send: (event) => {
+        scrubInviteTokensFromProperties(event?.properties)
+
         if (event && event.event === "$exception") {
             const exceptionList = event.properties?.$exception_list
             const exceptionListEntry = Array.isArray(exceptionList) ? exceptionList[0] : undefined

@@ -15,25 +15,18 @@ import {
     IconDots,
     IconEdit,
     IconInfoCircle,
+    IconLink,
     IconPlus,
     IconTrash,
+    IconUserMinus,
     IconUsers
 } from "@tabler/icons-react"
 import { parseCharacterData } from "~/utils/characterData"
+import type { CoterieCharacter, CoteriePlayerResponse, CoterieResponse } from "~/utils/api"
 
-type Character = {
-    id: string
-    name: string
-    shared?: boolean
-    data?: unknown
-}
-
-type Coterie = {
-    id: string
-    name: string
-    owned?: boolean
-    members?: Array<{ characterId: string; character?: Character }>
-}
+type Character = CoterieCharacter
+type CoteriePlayer = CoteriePlayerResponse
+type Coterie = CoterieResponse
 
 type CoteriesSectionProps = {
     userCoteries: Coterie[]
@@ -41,6 +34,9 @@ type CoteriesSectionProps = {
     handleAddCharacterToCoterie: (coterie: Coterie) => void
     handleEditCoterie: (coterie: Coterie) => void
     handleDeleteCoterie: (coterieId: string, coterieName: string) => void
+    handleManageCoterieInvites: (coterie: Coterie) => void
+    handleRemoveCoteriePlayer: (coterie: Coterie, player: CoteriePlayer) => void
+    handleShowCharacterSummary: (character: Character) => void
     handleRemoveCharacterFromCoterie: (
         coterieId: string,
         characterId: string,
@@ -59,6 +55,9 @@ const CoteriesSection = ({
     handleAddCharacterToCoterie,
     handleEditCoterie,
     handleDeleteCoterie,
+    handleManageCoterieInvites,
+    handleRemoveCoteriePlayer,
+    handleShowCharacterSummary,
     handleRemoveCharacterFromCoterie,
     setCoterieForSummary,
     setCoterieSummaryModalOpened
@@ -102,60 +101,120 @@ const CoteriesSection = ({
                                             </Badge>
                                         ) : (
                                             <Badge size="sm" color="red" variant="light">
-                                                Shared
+                                                Joined
                                             </Badge>
                                         )}
                                     </Group>
-                                    {coterie.owned ? (
-                                        <Group gap="xs">
-                                            <Button
-                                                size="xs"
-                                                color="red"
-                                                variant="light"
-                                                leftSection={<IconPlus size={14} />}
-                                                onClick={() => handleAddCharacterToCoterie(coterie)}
-                                            >
-                                                Add Character
-                                            </Button>
-                                            <Menu>
-                                                <Menu.Target>
-                                                    <ActionIcon color="red" variant="light">
-                                                        <IconDots size={16} />
-                                                    </ActionIcon>
-                                                </Menu.Target>
-                                                <Menu.Dropdown>
-                                                    <Menu.Item
-                                                        leftSection={<IconInfoCircle size={14} />}
-                                                        onClick={() => {
-                                                            setCoterieForSummary(coterie)
-                                                            setCoterieSummaryModalOpened(true)
-                                                        }}
-                                                    >
-                                                        Summary
-                                                    </Menu.Item>
-                                                    <Menu.Item
-                                                        leftSection={<IconEdit size={14} />}
-                                                        onClick={() => handleEditCoterie(coterie)}
-                                                    >
-                                                        Edit
-                                                    </Menu.Item>
-                                                    <Menu.Item
-                                                        leftSection={<IconTrash size={14} />}
-                                                        color="red"
-                                                        onClick={() =>
-                                                            handleDeleteCoterie(
-                                                                coterie.id,
-                                                                coterie.name
-                                                            )
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </Menu.Item>
-                                                </Menu.Dropdown>
-                                            </Menu>
-                                        </Group>
-                                    ) : null}
+                                    <Group gap="xs">
+                                        <Button
+                                            size="xs"
+                                            color="red"
+                                            variant="light"
+                                            leftSection={<IconPlus size={14} />}
+                                            onClick={() => handleAddCharacterToCoterie(coterie)}
+                                        >
+                                            Add Character
+                                        </Button>
+                                        <Menu>
+                                            <Menu.Target>
+                                                <ActionIcon color="red" variant="light">
+                                                    <IconDots size={16} />
+                                                </ActionIcon>
+                                            </Menu.Target>
+                                            <Menu.Dropdown>
+                                                <Menu.Item
+                                                    leftSection={<IconInfoCircle size={14} />}
+                                                    onClick={() => {
+                                                        setCoterieForSummary(coterie)
+                                                        setCoterieSummaryModalOpened(true)
+                                                    }}
+                                                >
+                                                    Summary
+                                                </Menu.Item>
+                                                {coterie.owned ? (
+                                                    <>
+                                                        <Menu.Item
+                                                            leftSection={<IconLink size={14} />}
+                                                            onClick={() =>
+                                                                handleManageCoterieInvites(coterie)
+                                                            }
+                                                        >
+                                                            Invites
+                                                        </Menu.Item>
+                                                        <Menu.Item
+                                                            leftSection={<IconEdit size={14} />}
+                                                            onClick={() =>
+                                                                handleEditCoterie(coterie)
+                                                            }
+                                                        >
+                                                            Edit
+                                                        </Menu.Item>
+                                                        <Menu.Item
+                                                            leftSection={<IconTrash size={14} />}
+                                                            color="red"
+                                                            onClick={() =>
+                                                                handleDeleteCoterie(
+                                                                    coterie.id,
+                                                                    coterie.name
+                                                                )
+                                                            }
+                                                        >
+                                                            Delete
+                                                        </Menu.Item>
+                                                    </>
+                                                ) : null}
+                                            </Menu.Dropdown>
+                                        </Menu>
+                                    </Group>
                                 </Group>
+                                {coterie.owned && coterie.players && coterie.players.length > 0 ? (
+                                    <>
+                                        <Divider />
+                                        <Text size="sm" fw={500}>
+                                            Players ({coterie.players.length}):
+                                        </Text>
+                                        <Stack gap="xs">
+                                            {coterie.players.map((player) => (
+                                                <Group
+                                                    key={player.membershipId ?? "owner"}
+                                                    gap="sm"
+                                                    pl="md"
+                                                    justify="space-between"
+                                                >
+                                                    <Group gap="sm">
+                                                        <Text size="sm">
+                                                            {player.nickname || "No nickname set"}
+                                                        </Text>
+                                                        {player.isOwner ? (
+                                                            <Badge
+                                                                size="xs"
+                                                                color="red"
+                                                                variant="light"
+                                                            >
+                                                                Owner
+                                                            </Badge>
+                                                        ) : null}
+                                                    </Group>
+                                                    {!player.isOwner && player.membershipId ? (
+                                                        <ActionIcon
+                                                            color="red"
+                                                            variant="light"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleRemoveCoteriePlayer(
+                                                                    coterie,
+                                                                    player
+                                                                )
+                                                            }
+                                                        >
+                                                            <IconUserMinus size={14} />
+                                                        </ActionIcon>
+                                                    ) : null}
+                                                </Group>
+                                            ))}
+                                        </Stack>
+                                    </>
+                                ) : null}
                                 {coterie.members && coterie.members.length > 0 ? (
                                     <>
                                         <Divider />
@@ -192,28 +251,44 @@ const CoteriesSection = ({
                                                                 </Badge>
                                                             ) : null}
                                                         </Group>
-                                                        {coterie.owned ? (
+                                                        <Group gap="xs">
                                                             <ActionIcon
                                                                 color="red"
                                                                 variant="light"
                                                                 size="sm"
                                                                 onClick={() =>
-                                                                    handleRemoveCharacterFromCoterie(
-                                                                        coterie.id,
-                                                                        member.characterId,
-                                                                        {
-                                                                            characterName:
-                                                                                member.character
-                                                                                    ?.name,
-                                                                            coterieName:
-                                                                                coterie.name
-                                                                        }
+                                                                    handleShowCharacterSummary(
+                                                                        member.character!
                                                                     )
                                                                 }
                                                             >
-                                                                <IconTrash size={14} />
+                                                                <IconInfoCircle size={14} />
                                                             </ActionIcon>
-                                                        ) : null}
+                                                            {coterie.owned ||
+                                                            member.character.ownedByCurrentUser ? (
+                                                                <ActionIcon
+                                                                    color="red"
+                                                                    variant="light"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleRemoveCharacterFromCoterie(
+                                                                            coterie.id,
+                                                                            member.characterId,
+                                                                            {
+                                                                                characterName:
+                                                                                    member
+                                                                                        .character
+                                                                                        ?.name,
+                                                                                coterieName:
+                                                                                    coterie.name
+                                                                            }
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <IconTrash size={14} />
+                                                                </ActionIcon>
+                                                            ) : null}
+                                                        </Group>
                                                     </Group>
                                                 ) : null
                                             })}

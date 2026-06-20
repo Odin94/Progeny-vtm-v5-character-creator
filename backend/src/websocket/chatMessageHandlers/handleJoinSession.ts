@@ -37,38 +37,26 @@ export async function handleJoinSession(
         }
 
         const isOwner = coterie.ownerId === userId
-        const members = await db
-            .select()
-            .from(schema.coterieMembers)
-            .where(eq(schema.coterieMembers.coterieId, coterieId))
-        const userCharacters = await db
-            .select()
-            .from(schema.characters)
-            .where(eq(schema.characters.userId, userId))
-        const userCharacterIds = new Set(userCharacters.map((c) => c.id))
-        const hasAccess = isOwner || members.some((m) => userCharacterIds.has(m.characterId))
+        const playerMembership = isOwner
+            ? null
+            : await db.query.coteriePlayerMemberships.findFirst({
+                  where: and(
+                      eq(schema.coteriePlayerMemberships.coterieId, coterieId),
+                      eq(schema.coteriePlayerMemberships.userId, userId)
+                  )
+              })
+        const hasAccess = isOwner || !!playerMembership
 
         if (!hasAccess) {
-            const sharedCharacters = await db
-                .select()
-                .from(schema.characterShares)
-                .where(
-                    and(
-                        eq(schema.characterShares.sharedWithUserId, userId),
-                        eq(schema.characterShares.characterId, members[0]?.characterId || "")
-                    )
-                )
-            if (sharedCharacters.length === 0) {
-                sendErrorAndTrack(
-                    socket,
-                    fastify,
-                    userId,
-                    "Forbidden: No access to coterie",
-                    "coterie_access_denied",
-                    { coterie_id: coterieId }
-                )
-                return currentSession
-            }
+            sendErrorAndTrack(
+                socket,
+                fastify,
+                userId,
+                "Forbidden: No access to coterie",
+                "coterie_access_denied",
+                { coterie_id: coterieId }
+            )
+            return currentSession
         }
 
         const isNewCoterieSession = !coterieSessions.has(coterieId)

@@ -17,6 +17,14 @@ export const useCoterie = (id: string | null) => {
     })
 }
 
+export const useCoterieInvites = (coterieId: string | null) => {
+    return useQuery({
+        queryKey: ["coteries", coterieId, "invites"],
+        queryFn: () => (coterieId ? api.getCoterieInvites(coterieId) : []),
+        enabled: !!coterieId
+    })
+}
+
 export const useCreateCoterie = () => {
     const queryClient = useQueryClient()
 
@@ -48,6 +56,55 @@ export const useDeleteCoterie = () => {
         mutationFn: (id: string) => api.deleteCoterie(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
+        }
+    })
+}
+
+export const useCreateCoterieInvite = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (coterieId: string) => api.createCoterieInvite(coterieId),
+        onSuccess: (_, coterieId) => {
+            queryClient.invalidateQueries({ queryKey: ["coteries", coterieId, "invites"] })
+        }
+    })
+}
+
+export const useRevokeCoterieInvite = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ coterieId, inviteId }: { coterieId: string; inviteId: string }) =>
+            api.revokeCoterieInvite(coterieId, inviteId),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: ["coteries", variables.coterieId, "invites"]
+            })
+        }
+    })
+}
+
+export const useAcceptCoterieInvite = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (token: string) => api.acceptCoterieInvite(token),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["coteries"] })
+        }
+    })
+}
+
+export const useRemoveCoteriePlayer = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ coterieId, membershipId }: { coterieId: string; membershipId: string }) =>
+            api.removeCoteriePlayer(coterieId, membershipId),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
         }
     })
 }
