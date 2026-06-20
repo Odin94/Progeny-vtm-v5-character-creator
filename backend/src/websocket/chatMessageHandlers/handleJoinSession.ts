@@ -13,7 +13,6 @@ import {
 import {
     clearRecentChatSession,
     temporarySessions,
-    coterieSessions,
     ensureCoterieSession
 } from "../sessionChat.js"
 import { recordSessionJoin } from "../sessionChatLifecycle.js"
@@ -66,19 +65,7 @@ export async function handleJoinSession(
             return currentSession
         }
 
-        const isNewCoterieSession = !coterieSessions.has(coterieId)
         currentSession = ensureCoterieSession(coterieId, coterie.ownerId)
-
-        if (isNewCoterieSession) {
-            trackEvent(
-                "chat-session-created",
-                {
-                    session_type: "coterie",
-                    session_id: coterieId
-                },
-                userId
-            )
-        }
     } else if (sessionId) {
         if (!temporarySessions.has(sessionId)) {
             sendErrorAndTrack(socket, fastify, userId, "Session not found", "session_not_found", {

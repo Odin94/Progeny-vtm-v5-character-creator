@@ -91,6 +91,12 @@ type UserLeftMessage = {
     userId: string
 }
 
+type SessionClosedMessage = {
+    type: "session_closed"
+    reason: "coterie_deleted" | "removed_from_coterie"
+    message: string
+}
+
 type ErrorMessage = {
     type: "error"
     message: string
@@ -101,6 +107,7 @@ type ServerMessage =
     | SessionJoinedMessage
     | UserJoinedMessage
     | UserLeftMessage
+    | SessionClosedMessage
     | ChatMessage
     | DiceRollMessage
     | RouseCheckMessage
@@ -309,22 +316,6 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                                 lastJoinOptions: options
                             })
                         }
-
-                        try {
-                            const lastJoinOptions = currentState.lastJoinOptions
-                            const isNewSession =
-                                !lastJoinOptions ||
-                                (!lastJoinOptions.sessionId && !lastJoinOptions.coterieId)
-
-                            posthog.capture("chat-session-joined", {
-                                session_type: data.sessionType,
-                                session_id: data.sessionId,
-                                participant_count: data.participants.length,
-                                is_new_session: isNewSession
-                            })
-                        } catch (error) {
-                            console.warn("PostHog chat-session-joined tracking failed:", error)
-                        }
                         break
                     }
 
@@ -386,6 +377,38 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                     case "remorse_check":
                         set((state) => ({ messages: [...state.messages, data] }))
                         break
+
+                    case "session_closed": {
+                        console.warn("Chat session closed:", data.message)
+                        saveLastJoinOptions(null)
+                        if (currentState.reconnectTimeout) {
+                            clearTimeout(currentState.reconnectTimeout)
+                        }
+                        set((state) => ({
+                            isManualDisconnect: true,
+                            reconnectTimeout: null,
+                            reconnectAttempts: 0,
+                            ws: null,
+                            connectionStatus: "disconnected",
+                            sessionId: null,
+                            sessionType: null,
+                            participants: [],
+                            lastJoinOptions: null,
+                            messageQueue: state.messageQueue.filter(
+                                (message) => message.type !== "join_session"
+                            ),
+                            messages: [
+                                ...state.messages,
+                                {
+                                    type: "error",
+                                    message: data.message,
+                                    timestamp: Date.now()
+                                }
+                            ]
+                        }))
+                        currentState.ws?.close()
+                        break
+                    }
 
                     case "error":
                         console.error("WebSocket error:", data.message)

@@ -247,18 +247,25 @@ describe("coterie invites and membership permissions", () => {
         await seedBaseData()
     })
 
-    it("lists newest invite links first", async () => {
+    it("lists newest invite links first with stable same-second ordering", async () => {
         const olderInvite = await createInvite(app)
         const newerInvite = await createInvite(app)
+        const sharedCreatedAt = new Date("2026-01-01T00:00:00.000Z")
 
         await db
             .update(schema.coterieInvites)
-            .set({ createdAt: new Date("2026-01-01T00:00:00.000Z") })
+            .set({
+                createdAt: sharedCreatedAt,
+                expiresAt: new Date("2099-01-31T00:00:00.000Z")
+            })
             .where(eq(schema.coterieInvites.id, olderInvite.id))
 
         await db
             .update(schema.coterieInvites)
-            .set({ createdAt: new Date("2026-01-02T00:00:00.000Z") })
+            .set({
+                createdAt: sharedCreatedAt,
+                expiresAt: new Date("2099-02-01T00:00:00.000Z")
+            })
             .where(eq(schema.coterieInvites.id, newerInvite.id))
 
         const response = await app.inject({

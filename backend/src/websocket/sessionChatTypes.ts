@@ -121,6 +121,12 @@ export type UserLeftMessage = {
     userId: string
 }
 
+export type SessionClosedMessage = {
+    type: "session_closed"
+    reason: "coterie_deleted" | "removed_from_coterie"
+    message: string
+}
+
 export type ChatMessageReceived = {
     type: "chat_message"
     userId: string
@@ -188,6 +194,7 @@ export type ServerMessage =
     | SessionJoinedMessage
     | UserJoinedMessage
     | UserLeftMessage
+    | SessionClosedMessage
     | ChatMessageReceived
     | DiceRollReceived
     | RouseCheckReceived

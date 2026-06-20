@@ -21,6 +21,7 @@ import {
     resetSessionAnalytics,
     trackSessionClosed
 } from "./sessionChatLifecycle.js"
+import { trackEvent } from "../utils/tracker.js"
 import {
     MAX_JSON_SIZE,
     broadcastToSession,
@@ -58,6 +59,15 @@ export function ensureCoterieSession(coterieId: string, creatorUserId: string): 
         maxParticipantCount: 0
     }
     coterieSessions.set(coterieId, session)
+    trackEvent(
+        "chat-session-created",
+        {
+            session_type: "coterie",
+            session_id: coterieId,
+            coterie_id: coterieId
+        },
+        creatorUserId
+    )
     return session
 }
 
@@ -65,7 +75,8 @@ export function removeCoterieSession(coterieId: string): void {
     const session = coterieSessions.get(coterieId)
     if (session) {
         broadcastToSession(session, {
-            type: "error",
+            type: "session_closed",
+            reason: "coterie_deleted",
             message: "Coterie chat closed because the coterie was deleted"
         })
         trackSessionClosed(session, "deleted")
@@ -86,7 +97,8 @@ export function removeCoterieSessionParticipant(coterieId: string, userId: strin
     if (participant.socket.readyState === 1) {
         participant.socket.send(
             JSON.stringify({
-                type: "error",
+                type: "session_closed",
+                reason: "removed_from_coterie",
                 message: "You were removed from this coterie chat"
             })
         )
