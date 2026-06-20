@@ -31,6 +31,9 @@ fi
 run_app "
     set -e
     cd '$BACKEND_DIR'
+    export CI=true
+    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+    export npm_config_confirm_modules_purge=false
 
     BACKUP_MONTH=\"\$(date +%Y_%m)\"
     BACKUP_DIR=\"db_backups/\$BACKUP_MONTH\"
@@ -43,7 +46,7 @@ run_app "
     echo \"Pulled latest code from git\"
 
     corepack enable
-    corepack pnpm install --frozen-lockfile
+    corepack pnpm install --frozen-lockfile --reporter=append-only
     echo \"Installed dependencies\"
 
     corepack pnpm run build
