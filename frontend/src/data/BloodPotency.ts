@@ -121,6 +121,28 @@ export const potencyEffects: Record<number, BloodPotencyEffect> = {
     }
 }
 
+const bloodPotencyDisciplineBonusByLevel: Record<number, number> = {
+    0: 0,
+    1: 0,
+    2: 1,
+    3: 1,
+    4: 2,
+    5: 2,
+    6: 3,
+    7: 3,
+    8: 4,
+    9: 4,
+    10: 5
+}
+
+export const getBloodPotencyEffectLevel = (bloodPotency: number): number =>
+    Math.max(0, Math.min(5, Math.floor(bloodPotency)))
+
+export const getBloodPotencyDisciplineBonus = (bloodPotency: number): number => {
+    const clampedBloodPotency = getBloodPotencyEffectLevel(bloodPotency)
+    return bloodPotencyDisciplineBonusByLevel[clampedBloodPotency] || 0
+}
+
 export const calculateBloodPotency = (character: Character): number => {
     let bloodPotency = (() => {
         switch (character.generation) {

@@ -19,6 +19,7 @@ import { useShallow } from "zustand/react/shallow"
 import { getApplicableDisciplinePowers } from "../../../utils/disciplinePowerMatcher"
 import { getApplicableMeritFlawModifiers } from "../../../utils/meritFlawMatcher"
 import { useMemo } from "react"
+import { getBloodPotencyDisciplineBonus } from "~/data/BloodPotency"
 
 type SelectedDicePoolDisplayProps = {
     character?: Character
@@ -71,6 +72,21 @@ const SelectedDicePoolDisplay = ({
         const absBonus = Math.abs(bonusDice)
         return `${sign}${bonusDice} ${absBonus === 1 ? "die" : "dice"}`
     }
+
+    const selectedDisciplineRating = selectedDicePool.discipline
+        ? (character?.disciplines.filter((p) => p.discipline === selectedDicePool.discipline)
+              .length ?? 0)
+        : 0
+    const bloodPotencyDisciplineBonus =
+        selectedDicePool.discipline && character
+            ? getBloodPotencyDisciplineBonus(character.bloodPotency)
+            : 0
+    const selectedDisciplineBadge = selectedDicePool.discipline ? (
+        <Badge variant="light" color={primaryColor} size="lg">
+            {upcase(selectedDicePool.discipline)}: {selectedDisciplineRating}
+            {bloodPotencyDisciplineBonus > 0 ? ` (+${bloodPotencyDisciplineBonus})` : ""}
+        </Badge>
+    ) : null
 
     return (
         <Box
@@ -162,12 +178,18 @@ const SelectedDicePoolDisplay = ({
                                     {character?.skills[selectedDicePool.skill] || 0}
                                 </Badge>
                             ) : selectedDicePool.discipline ? (
-                                <Badge variant="light" color={primaryColor} size="lg">
-                                    {upcase(selectedDicePool.discipline)}:{" "}
-                                    {character?.disciplines.filter(
-                                        (p) => p.discipline === selectedDicePool.discipline
-                                    ).length || 0}
-                                </Badge>
+                                bloodPotencyDisciplineBonus > 0 ? (
+                                    <Tooltip
+                                        label={`+${bloodPotencyDisciplineBonus} from blood potency`}
+                                        position="top"
+                                        withArrow
+                                        zIndex={3000}
+                                    >
+                                        <Box component="span">{selectedDisciplineBadge}</Box>
+                                    </Tooltip>
+                                ) : (
+                                    selectedDisciplineBadge
+                                )
                             ) : (
                                 <Text c="dimmed" size="sm">
                                     No skill/discipline selected

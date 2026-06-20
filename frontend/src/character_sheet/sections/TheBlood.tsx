@@ -14,7 +14,7 @@ import {
 } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { clans } from "~/data/Clans"
-import { potencyEffects } from "~/data/BloodPotency"
+import { getBloodPotencyEffectLevel, potencyEffects } from "~/data/BloodPotency"
 import { getClanBaneText, hasVariantClanBane, variantClanBanes } from "~/data/VariantClanBanes"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
@@ -29,7 +29,8 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const { character, primaryColor, mode, setCharacter } = options
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const effects = potencyEffects[Math.min(character.bloodPotency, 5)] || potencyEffects[0]
+    const effects =
+        potencyEffects[getBloodPotencyEffectLevel(character.bloodPotency)] || potencyEffects[0]
     const clan = clans[character.clan] || clans[""]
     const variantBane = variantClanBanes[character.clan]
     const baneText = getClanBaneText(character, effects.bane)

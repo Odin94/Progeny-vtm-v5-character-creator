@@ -19,6 +19,7 @@ import { getApplicableDisciplinePowers } from "../../utils/disciplinePowerMatche
 import { getSelectedMeritFlawModifierBonus } from "../../utils/meritFlawMatcher"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
+import { getBloodPotencyDisciplineBonus } from "~/data/BloodPotency"
 
 type DiceRollModalProps = {
     primaryColor: string
@@ -79,7 +80,12 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
 
     const selectedPoolBonuses = useMemo(() => {
         if (!character || !selectedDicePool.attribute) {
-            return { specialtyBonus: 0, disciplinePowerBonus: 0, meritFlawBonus: 0 }
+            return {
+                specialtyBonus: 0,
+                bloodPotencyDisciplineBonus: 0,
+                disciplinePowerBonus: 0,
+                meritFlawBonus: 0
+            }
         }
 
         let specialtyBonus = 0
@@ -87,6 +93,10 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
         if (selectedDicePool.skill) {
             specialtyBonus = selectedDicePool.selectedSpecialties.length
         }
+
+        const bloodPotencyDisciplineBonus = selectedDicePool.discipline
+            ? getBloodPotencyDisciplineBonus(character.bloodPotency)
+            : 0
 
         let disciplinePowerBonus = 0
         const applicablePowers = getApplicableDisciplinePowers(
@@ -121,7 +131,12 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
             selectedDicePool.selectedMeritFlaws
         )
 
-        return { specialtyBonus, disciplinePowerBonus, meritFlawBonus }
+        return {
+            specialtyBonus,
+            bloodPotencyDisciplineBonus,
+            disciplinePowerBonus,
+            meritFlawBonus
+        }
     }, [character, selectedDicePool])
 
     const selectedPoolDiceCount = useMemo(() => {
@@ -143,6 +158,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
             attributeValue +
             skillOrDisciplineValue +
             selectedPoolBonuses.specialtyBonus +
+            selectedPoolBonuses.bloodPotencyDisciplineBonus +
             bloodSurgeBonus +
             selectedPoolBonuses.disciplinePowerBonus +
             selectedPoolBonuses.meritFlawBonus
