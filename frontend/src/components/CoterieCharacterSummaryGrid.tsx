@@ -130,6 +130,18 @@ const HungerMeter = ({ hunger }: { hunger: number }) => (
     </Group>
 )
 
+const getTouchstoneText = (touchstone: Character["touchstones"][number]) => {
+    const name = touchstone.name.trim()
+    const conviction = touchstone.conviction.trim()
+    const description = touchstone.description.trim()
+
+    if (name && conviction) {
+        return `${name}: ${conviction}`
+    }
+
+    return name || conviction || description
+}
+
 const getDisciplineGroups = (character: Character) =>
     character.disciplines.reduce(
         (groups, power) => {
@@ -185,6 +197,12 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                 const meritsAndFlaws = [...character.merits, ...character.flaws]
                 const hunger = Math.max(0, Math.min(5, character.ephemeral.hunger ?? 0))
                 const humanity = Math.max(0, Math.min(10, character.humanity ?? 0))
+                const touchstones = character.touchstones
+                    .map((touchstone) => ({
+                        touchstone,
+                        text: getTouchstoneText(touchstone)
+                    }))
+                    .filter(({ text }) => text.length > 0)
 
                 return (
                     <Paper
@@ -246,18 +264,20 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                         {playerName}
                                     </Text>
                                 </Group>
-                                <Text
-                                    size="xs"
-                                    style={{
-                                        fontFamily: "Cinzel, Georgia, serif",
-                                        letterSpacing: "0.16em",
-                                        textTransform: "uppercase",
-                                        color: rgba(RAW_RED, 0.82)
-                                    }}
-                                >
-                                    Hunger
-                                </Text>
-                                <HungerMeter hunger={hunger} />
+                                <Group gap="xs" wrap="nowrap" align="center">
+                                    <Text
+                                        size="xs"
+                                        style={{
+                                            fontFamily: "Cinzel, Georgia, serif",
+                                            letterSpacing: "0.16em",
+                                            textTransform: "uppercase",
+                                            color: rgba(RAW_RED, 0.82)
+                                        }}
+                                    >
+                                        Hunger
+                                    </Text>
+                                    <HungerMeter hunger={hunger} />
+                                </Group>
                                 <Group gap="xs">
                                     <Badge color="red" variant="light">
                                         {clan?.name || upcase(character.clan)}
@@ -309,15 +329,6 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                             </Text>
                                             <Text span c={rgba(RAW_GOLD, 0.95)}>
                                                 {humanity} / 10
-                                            </Text>{" "}
-                                            <Text
-                                                span
-                                                style={{
-                                                    color: rgba(RAW_GOLD, 0.82),
-                                                    fontFamily: "Courier New, monospace"
-                                                }}
-                                            >
-                                                {renderPips(humanity, 10)}
                                             </Text>
                                         </Text>
                                     </Stack>
@@ -325,13 +336,13 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
 
                                 <Stack gap="xs">
                                     <SectionTitle>Touchstones</SectionTitle>
-                                    {character.touchstones.length > 0 ? (
-                                        character.touchstones.map((touchstone) => (
-                                            <Text key={touchstone.name} size="sm">
-                                                <Text span c="dimmed">
-                                                    {touchstone.name}:{" "}
-                                                </Text>
-                                                {touchstone.conviction}
+                                    {touchstones.length > 0 ? (
+                                        touchstones.map(({ touchstone, text }, index) => (
+                                            <Text
+                                                key={`${touchstone.name}-${touchstone.conviction}-${index}`}
+                                                size="sm"
+                                            >
+                                                {text}
                                             </Text>
                                         ))
                                     ) : (
