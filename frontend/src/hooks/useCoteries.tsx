@@ -129,6 +129,18 @@ export const useSaveCoterieNotes = () => {
     })
 }
 
+export const useRestoreCoterieNoteVersion = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ coterieId, versionId }: { coterieId: string; versionId: string }) =>
+            api.restoreCoterieNoteVersion(coterieId, versionId),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData(["coteries", variables.coterieId, "notes"], data)
+        }
+    })
+}
+
 export const useAddCharacterToCoterie = () => {
     const queryClient = useQueryClient()
 

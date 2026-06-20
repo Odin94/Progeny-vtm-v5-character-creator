@@ -354,17 +354,27 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
 
                     case "dice_roll": {
                         const rollData = data.rollData
-                        if (rollData.isReroll && rollData.rollId) {
+                        if (rollData.rollId) {
                             set((state) => ({
-                                messages: state.messages.map((msg) => {
-                                    if (
-                                        msg.type === "dice_roll" &&
-                                        msg.rollData.rollId === rollData.rollId
-                                    ) {
-                                        return data
+                                messages: (() => {
+                                    const existingRollIndex = state.messages.findIndex(
+                                        (msg) =>
+                                            msg.type === "dice_roll" &&
+                                            msg.rollData.rollId === rollData.rollId
+                                    )
+
+                                    if (existingRollIndex === -1) {
+                                        return [...state.messages, data]
                                     }
-                                    return msg
-                                })
+
+                                    if (!rollData.isReroll) {
+                                        return state.messages
+                                    }
+
+                                    return state.messages.map((msg, index) =>
+                                        index === existingRollIndex ? data : msg
+                                    )
+                                })()
                             }))
                         } else {
                             set((state) => ({ messages: [...state.messages, data] }))

@@ -37,7 +37,12 @@ import { rndInt } from "~/generator/utils"
 import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
-import { useCoterie, useCoterieNotes, useSaveCoterieNotes } from "~/hooks/useCoteries"
+import {
+    useCoterie,
+    useCoterieNotes,
+    useRestoreCoterieNoteVersion,
+    useSaveCoterieNotes
+} from "~/hooks/useCoteries"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg"
@@ -99,12 +104,17 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
     const [notesOpened, setNotesOpened] = useState(false)
     const [draftNotes, setDraftNotes] = useState("")
     const [lastSavedNotes, setLastSavedNotes] = useState("")
+    const [selectedHistoryVersion, setSelectedHistoryVersion] =
+        useState<CoterieNoteVersionResponse | null>(null)
     const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
     const initializedNotesIdRef = useRef<string | null>(null)
     const { connect, joinSession, sessionId, sessionType, connectionStatus } = useSessionChat()
     const noteBytes = useMemo(() => getUtf8ByteLength(draftNotes), [draftNotes])
     const versions = notes?.versions ?? []
     const currentNote = notes?.current ?? null
+    const isViewingHistory = !!selectedHistoryVersion
+    const displayedNotes = selectedHistoryVersion?.content ?? draftNotes
+    const restoreNotesMutation = useRestoreCoterieNoteVersion()
     const desktopChatDocked = !shouldInlineChat
     const chatInline = !desktopChatDocked
 
@@ -242,6 +252,7 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
     }, [draftNotes, lastSavedNotes, noteBytes, saveDraft])
 
     const openNotes = () => {
+        setSelectedHistoryVersion(null)
         setNotesOpened(true)
         posthog.capture("coterie-notes-opened", {
             coterieId,
@@ -252,17 +263,55 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
 
     const closeNotes = () => {
         saveDraft("close")
+        setSelectedHistoryVersion(null)
         setNotesOpened(false)
     }
 
-    const restoreVersion = (version: CoterieNoteVersionResponse) => {
-        setDraftNotes(version.content)
-        setSaveStatus("dirty")
-        posthog.capture("coterie-notes-version-restored", {
+    const previewVersion = (version: CoterieNoteVersionResponse) => {
+        setSelectedHistoryVersion(version)
+        posthog.capture("coterie-notes-version-previewed", {
             coterieId,
             versionId: version.id,
             versionCreatedAt: version.createdAt
         })
+    }
+
+    const restoreVersion = () => {
+        if (!coterie || !selectedHistoryVersion) {
+            return
+        }
+
+        setSaveStatus("saving")
+        restoreNotesMutation.mutate(
+            {
+                coterieId: coterie.id,
+                versionId: selectedHistoryVersion.id
+            },
+            {
+                onSuccess: (data) => {
+                    const restoredContent = data.current?.content ?? selectedHistoryVersion.content
+                    initializedNotesIdRef.current = data.current?.id ?? null
+                    setSelectedHistoryVersion(null)
+                    setDraftNotes(restoredContent)
+                    setLastSavedNotes(restoredContent)
+                    setSaveStatus("saved")
+                    posthog.capture("coterie-notes-version-restored", {
+                        coterieId: coterie.id,
+                        versionId: selectedHistoryVersion.id,
+                        newVersionId: data.current?.id,
+                        versionCount: data.versions.length
+                    })
+                },
+                onError: (error) => {
+                    setSaveStatus("error")
+                    notifications.show({
+                        title: "Version not restored",
+                        message: error instanceof Error ? error.message : "Please try again.",
+                        color: "red"
+                    })
+                }
+            }
+        )
     }
 
     const showSavePill = saveStatus === "saving" || saveStatus === "saved"
@@ -499,8 +548,15 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                 centered
                 zIndex={2200}
                 title={
-                    <Group justify="space-between" gap="md" style={{ width: "100%" }}>
-                        <Group gap="sm">
+                    <Box
+                        style={{
+                            width: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.75rem"
+                        }}
+                    >
+                        <Group gap="sm" style={{ flex: "1 1 auto", minWidth: 0 }}>
                             <IconBook2 size={20} color={rgba(RAW_GOLD, 0.92)} />
                             <Text fw={700}>Private Notes</Text>
                             {showSavePill ? (
@@ -517,34 +573,43 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                                 </Badge>
                             ) : null}
                         </Group>
-                        <Menu position="bottom-end" withinPortal>
-                            <Menu.Target>
-                                <ActionIcon
-                                    color="yellow"
-                                    variant="light"
-                                    aria-label="Note versions"
-                                >
-                                    <IconVersions size={18} />
-                                </ActionIcon>
-                            </Menu.Target>
-                            <Menu.Dropdown>
-                                <Menu.Label>Past versions</Menu.Label>
-                                {versions.slice(1).length > 0 ? (
-                                    versions.slice(1).map((version) => (
-                                        <Menu.Item
-                                            key={version.id}
-                                            leftSection={<IconVersions size={14} />}
-                                            onClick={() => restoreVersion(version)}
-                                        >
-                                            {formatDateTime(version.createdAt)}
-                                        </Menu.Item>
-                                    ))
-                                ) : (
-                                    <Menu.Item disabled>No past versions yet</Menu.Item>
-                                )}
-                            </Menu.Dropdown>
-                        </Menu>
-                    </Group>
+                        <Box
+                            style={{
+                                flex: "0 0 2rem",
+                                display: "flex",
+                                justifyContent: "flex-end"
+                            }}
+                        >
+                            <Menu position="bottom-end" withinPortal>
+                                <Menu.Target>
+                                    <ActionIcon
+                                        color="yellow"
+                                        variant="light"
+                                        aria-label="Version history"
+                                        title="Version history"
+                                    >
+                                        <IconVersions size={18} />
+                                    </ActionIcon>
+                                </Menu.Target>
+                                <Menu.Dropdown>
+                                    <Menu.Label>Past versions</Menu.Label>
+                                    {versions.slice(1).length > 0 ? (
+                                        versions.slice(1).map((version) => (
+                                            <Menu.Item
+                                                key={version.id}
+                                                leftSection={<IconVersions size={14} />}
+                                                onClick={() => previewVersion(version)}
+                                            >
+                                                {formatDateTime(version.createdAt)}
+                                            </Menu.Item>
+                                        ))
+                                    ) : (
+                                        <Menu.Item disabled>No past versions yet</Menu.Item>
+                                    )}
+                                </Menu.Dropdown>
+                            </Menu>
+                        </Box>
+                    </Box>
                 }
                 styles={{
                     content: {
@@ -555,13 +620,37 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                     header: {
                         background: "rgba(9, 8, 10, 0.98)",
                         borderBottom: `1px solid ${rgba(RAW_GOLD, 0.14)}`
+                    },
+                    title: {
+                        flex: 1,
+                        minWidth: 0
                     }
                 }}
             >
                 <Stack gap="sm">
+                    {selectedHistoryVersion ? (
+                        <Group justify="space-between" gap="sm">
+                            <Badge color="yellow" variant="light">
+                                Viewing {formatDateTime(selectedHistoryVersion.createdAt)}
+                            </Badge>
+                            <Button
+                                size="xs"
+                                color="gray"
+                                variant="subtle"
+                                onClick={() => setSelectedHistoryVersion(null)}
+                            >
+                                Back to latest
+                            </Button>
+                        </Group>
+                    ) : null}
                     <Textarea
-                        value={draftNotes}
-                        onChange={(event) => setDraftNotes(event.currentTarget.value)}
+                        value={displayedNotes}
+                        onChange={(event) => {
+                            if (!isViewingHistory) {
+                                setDraftNotes(event.currentTarget.value)
+                            }
+                        }}
+                        readOnly={isViewingHistory}
                         minRows={18}
                         maxRows={24}
                         autosize
@@ -580,9 +669,27 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                             }
                         }}
                     />
-                    <Text size="xs" c={noteBytes > noteMaxBytes ? "red" : "dimmed"}>
-                        {Math.round(noteBytes / 1024)} KB / 200 KB
-                    </Text>
+                    {selectedHistoryVersion ? (
+                        <Group justify="space-between" gap="sm">
+                            <Text size="xs" c="dimmed">
+                                Historical versions are read-only.
+                            </Text>
+                            <Button
+                                size="xs"
+                                color="yellow"
+                                variant="light"
+                                leftSection={<IconVersions size={14} />}
+                                loading={restoreNotesMutation.isPending}
+                                onClick={restoreVersion}
+                            >
+                                Restore this version
+                            </Button>
+                        </Group>
+                    ) : (
+                        <Text size="xs" c={noteBytes > noteMaxBytes ? "red" : "dimmed"}>
+                            {Math.round(noteBytes / 1024)} KB / 200 KB
+                        </Text>
+                    )}
                 </Stack>
             </Modal>
 

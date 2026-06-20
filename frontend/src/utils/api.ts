@@ -351,6 +351,13 @@ export const api = {
             method: "PUT",
             body: data
         }),
+    restoreCoterieNoteVersion: (coterieId: string, versionId: string) =>
+        apiRequest<SaveCoterieNotesResponse>(
+            `/coteries/${coterieId}/notes/versions/${versionId}/restore`,
+            {
+                method: "POST"
+            }
+        ),
 
     // Shares
     shareCharacter: (characterId: string, data: { sharedWithUserNickname: string }) =>

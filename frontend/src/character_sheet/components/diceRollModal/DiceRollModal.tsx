@@ -27,6 +27,24 @@ type DiceRollModalProps = {
     setCharacter?: (character: Character) => void
 }
 
+type RollShareContext = {
+    rollId: string
+    mode: "custom" | "selected"
+    diceCount: number
+    selectedPoolDiceCount: number
+    selectedDicePool: {
+        attribute?: string
+        skill?: string
+        discipline?: string
+        bloodSurge?: boolean
+    }
+    selectedPoolBonuses: {
+        specialtyBonus: number
+        disciplinePowerBonus: number
+        meritFlawBonus: number
+    }
+}
+
 // TODOdin:
 // * Boring mode - no fancy animations
 // * Selecting dice pool from sheet
@@ -67,8 +85,9 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
     )
     const x = useMotionValue(0)
     const y = useMotionValue(0)
-    const lastRollTrackedRef = useRef<number>(0)
+    const lastRollTrackedRef = useRef<string | null>(null)
     const currentRollIdRef = useRef<string | null>(null)
+    const currentRollContextRef = useRef<RollShareContext | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
     const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat()
     const handleClose = useCallback(() => {
@@ -182,8 +201,9 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
             resetModal()
             x.set(0)
             y.set(0)
-            lastRollTrackedRef.current = 0
+            lastRollTrackedRef.current = null
             currentRollIdRef.current = null
+            currentRollContextRef.current = null
             setSelectedDiceIds(new Set())
         }
     }, [opened, resetModal, x, y])
@@ -211,12 +231,71 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
         return Math.floor(Math.random() * 10) + 1
     }
 
+    const startRoll = () => {
+        const rollId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        currentRollIdRef.current = rollId
+        currentRollContextRef.current = {
+            rollId,
+            mode: activeTab === "selected" && selectedDicePool.attribute ? "selected" : "custom",
+            diceCount,
+            selectedPoolDiceCount,
+            selectedDicePool: {
+                attribute: selectedDicePool.attribute
+                    ? String(selectedDicePool.attribute)
+                    : undefined,
+                skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
+                discipline: selectedDicePool.discipline
+                    ? String(selectedDicePool.discipline)
+                    : undefined,
+                bloodSurge: selectedDicePool.bloodSurge
+            },
+            selectedPoolBonuses: {
+                specialtyBonus: selectedPoolBonuses.specialtyBonus,
+                disciplinePowerBonus: selectedPoolBonuses.disciplinePowerBonus,
+                meritFlawBonus: selectedPoolBonuses.meritFlawBonus
+            }
+        }
+    }
+
+    const getSharedPoolInfo = (rolledDice: DieResult[]) => {
+        const context = currentRollContextRef.current
+        const bloodDiceCount = rolledDice.filter((d) => d.isBloodDie).length
+
+        if (context?.mode === "selected" && context.selectedDicePool.attribute) {
+            return {
+                attribute: context.selectedDicePool.attribute,
+                skill: context.selectedDicePool.skill,
+                discipline: context.selectedDicePool.discipline,
+                diceCount: context.selectedPoolDiceCount,
+                bloodDiceCount,
+                bloodSurge: context.selectedDicePool.bloodSurge,
+                specialtyBonus:
+                    context.selectedPoolBonuses.specialtyBonus > 0
+                        ? context.selectedPoolBonuses.specialtyBonus
+                        : undefined,
+                disciplinePowerBonus:
+                    context.selectedPoolBonuses.disciplinePowerBonus > 0
+                        ? context.selectedPoolBonuses.disciplinePowerBonus
+                        : undefined,
+                meritFlawBonus:
+                    context.selectedPoolBonuses.meritFlawBonus !== 0
+                        ? context.selectedPoolBonuses.meritFlawBonus
+                        : undefined
+            }
+        }
+
+        return {
+            diceCount: context?.diceCount ?? diceCount,
+            bloodDiceCount
+        }
+    }
+
     const rollDice = () => {
         const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
         const bloodDiceCount = Math.min(hunger, countToUse)
-        currentRollIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
         if (isMobile) {
+            startRoll()
             const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                 id: Date.now() + i,
                 value: rollDie(),
@@ -228,7 +307,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
             if (dice.length > 0) {
                 setDice([])
                 setTimeout(() => {
-                    currentRollIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                    startRoll()
                     const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                         id: Date.now() + i,
                         value: 0,
@@ -248,7 +327,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
                     }, 1500)
                 }, 500)
             } else {
-                currentRollIdRef.current = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                startRoll()
                 const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                     id: Date.now() + i,
                     value: 0,
@@ -445,38 +524,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
                         results,
                         rollId: currentRollIdRef.current,
                         isReroll: true,
-                        poolInfo:
-                            activeTab === "selected" && selectedDicePool.attribute
-                                ? {
-                                      attribute: selectedDicePool.attribute
-                                          ? String(selectedDicePool.attribute)
-                                          : undefined,
-                                      skill: selectedDicePool.skill
-                                          ? String(selectedDicePool.skill)
-                                          : undefined,
-                                      discipline: selectedDicePool.discipline
-                                          ? String(selectedDicePool.discipline)
-                                          : undefined,
-                                      diceCount: selectedPoolDiceCount,
-                                      bloodDiceCount: newDice.filter((d) => d.isBloodDie).length,
-                                      bloodSurge: selectedDicePool.bloodSurge,
-                                      specialtyBonus:
-                                          selectedPoolBonuses.specialtyBonus > 0
-                                              ? selectedPoolBonuses.specialtyBonus
-                                              : undefined,
-                                      disciplinePowerBonus:
-                                          selectedPoolBonuses.disciplinePowerBonus > 0
-                                              ? selectedPoolBonuses.disciplinePowerBonus
-                                              : undefined,
-                                      meritFlawBonus:
-                                          selectedPoolBonuses.meritFlawBonus !== 0
-                                              ? selectedPoolBonuses.meritFlawBonus
-                                              : undefined
-                                  }
-                                : {
-                                      diceCount: diceCount,
-                                      bloodDiceCount: newDice.filter((d) => d.isBloodDie).length
-                                  }
+                        poolInfo: getSharedPoolInfo(newDice)
                     }
                     const characterName = character?.name || undefined
                     sendDiceRoll(rollData, characterName)
@@ -595,40 +643,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
                                 results,
                                 rollId: currentRollIdRef.current,
                                 isReroll: true,
-                                poolInfo:
-                                    activeTab === "selected" && selectedDicePool.attribute
-                                        ? {
-                                              attribute: selectedDicePool.attribute
-                                                  ? String(selectedDicePool.attribute)
-                                                  : undefined,
-                                              skill: selectedDicePool.skill
-                                                  ? String(selectedDicePool.skill)
-                                                  : undefined,
-                                              discipline: selectedDicePool.discipline
-                                                  ? String(selectedDicePool.discipline)
-                                                  : undefined,
-                                              diceCount: selectedPoolDiceCount,
-                                              bloodDiceCount: newDice.filter((d) => d.isBloodDie)
-                                                  .length,
-                                              bloodSurge: selectedDicePool.bloodSurge,
-                                              specialtyBonus:
-                                                  selectedPoolBonuses.specialtyBonus > 0
-                                                      ? selectedPoolBonuses.specialtyBonus
-                                                      : undefined,
-                                              disciplinePowerBonus:
-                                                  selectedPoolBonuses.disciplinePowerBonus > 0
-                                                      ? selectedPoolBonuses.disciplinePowerBonus
-                                                      : undefined,
-                                              meritFlawBonus:
-                                                  selectedPoolBonuses.meritFlawBonus !== 0
-                                                      ? selectedPoolBonuses.meritFlawBonus
-                                                      : undefined
-                                          }
-                                        : {
-                                              diceCount: diceCount,
-                                              bloodDiceCount: newDice.filter((d) => d.isBloodDie)
-                                                  .length
-                                          }
+                                poolInfo: getSharedPoolInfo(newDice)
                             }
                             const characterName = character?.name || undefined
                             sendDiceRoll(rollData, characterName)
@@ -700,8 +715,8 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
             !dice.some((d) => d.isRolling) &&
             calculateSuccesses.totalSuccesses >= 0
         ) {
-            const currentRollId = dice[0]?.id || 0
-            if (currentRollId !== lastRollTrackedRef.current) {
+            const currentRollId = currentRollIdRef.current
+            if (currentRollId && currentRollId !== lastRollTrackedRef.current) {
                 lastRollTrackedRef.current = currentRollId
 
                 try {
@@ -754,39 +769,8 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
                             })),
                             totalSuccesses: calculateSuccesses.totalSuccesses,
                             results: calculateSuccesses.results,
-                            rollId: currentRollIdRef.current,
-                            poolInfo:
-                                activeTab === "selected" && selectedDicePool.attribute
-                                    ? {
-                                          attribute: selectedDicePool.attribute
-                                              ? String(selectedDicePool.attribute)
-                                              : undefined,
-                                          skill: selectedDicePool.skill
-                                              ? String(selectedDicePool.skill)
-                                              : undefined,
-                                          discipline: selectedDicePool.discipline
-                                              ? String(selectedDicePool.discipline)
-                                              : undefined,
-                                          diceCount: selectedPoolDiceCount,
-                                          bloodDiceCount: dice.filter((d) => d.isBloodDie).length,
-                                          bloodSurge: selectedDicePool.bloodSurge,
-                                          specialtyBonus:
-                                              selectedPoolBonuses.specialtyBonus > 0
-                                                  ? selectedPoolBonuses.specialtyBonus
-                                                  : undefined,
-                                          disciplinePowerBonus:
-                                              selectedPoolBonuses.disciplinePowerBonus > 0
-                                                  ? selectedPoolBonuses.disciplinePowerBonus
-                                                  : undefined,
-                                          meritFlawBonus:
-                                              selectedPoolBonuses.meritFlawBonus !== 0
-                                                  ? selectedPoolBonuses.meritFlawBonus
-                                                  : undefined
-                                      }
-                                    : {
-                                          diceCount: diceCount,
-                                          bloodDiceCount: dice.filter((d) => d.isBloodDie).length
-                                      }
+                            rollId: currentRollId,
+                            poolInfo: getSharedPoolInfo(dice)
                         }
                         const characterName = character?.name || undefined
                         sendDiceRoll(rollData, characterName)

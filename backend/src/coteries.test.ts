@@ -538,6 +538,17 @@ describe("coterie invites and membership permissions", () => {
         expect(substantialEditResponse.json().versions).toHaveLength(2)
         expect(substantialEditResponse.json().createdNewVersion).toBe(true)
 
+        const previousVersion = substantialEditResponse.json().versions[1]
+        const restoreResponse = await app.inject({
+            method: "POST",
+            url: `/coteries/${COTERIE_ID}/notes/versions/${previousVersion.id}/restore`,
+            headers: csrfHeaders
+        })
+        expect(restoreResponse.statusCode).toBe(200)
+        expect(restoreResponse.json().createdNewVersion).toBe(true)
+        expect(restoreResponse.json().current.content).toBe(previousVersion.content)
+        expect(restoreResponse.json().versions).toHaveLength(3)
+
         for (let index = 0; index < 10; index += 1) {
             await db
                 .update(schema.coterieNoteVersions)
