@@ -132,6 +132,8 @@ export async function handleJoinSession(
         const joinedAt = Date.now()
         currentSession.lastActivity = joinedAt
         recordSessionJoin(currentSession, userId, joinedAt)
+        participant.joinedAt = joinedAt
+        participant.messageCount = 0
 
         const participants = Array.from(currentSession.participants.values()).map((p) => ({
             userId: p.userId,
@@ -153,6 +155,26 @@ export async function handleJoinSession(
                 userId
             )
         }
+
+        trackEvent(
+            "chat-session-connected",
+            {
+                session_type: currentSession.type,
+                session_id: currentSession.id,
+                coterie_id: currentSession.coterieId,
+                creator_user_id: currentSession.creatorUserId,
+                participant_count: participants.length,
+                player_count: participants.length,
+                max_participant_count: currentSession.maxParticipantCount,
+                participant_join_count: currentSession.participantJoinCount ?? 0,
+                unique_participant_count: currentSession.uniqueParticipantIds?.size ?? 0,
+                was_existing_active_session: wasExistingSession,
+                had_history: currentSession.history.length > 0,
+                history_message_count: currentSession.history.length,
+                message_count: currentSession.totalMessageCount ?? 0
+            },
+            userId
+        )
 
         socket.send(
             JSON.stringify({

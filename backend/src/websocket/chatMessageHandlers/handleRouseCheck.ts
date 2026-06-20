@@ -4,7 +4,11 @@ import {
     type RouseCheckMessage,
     type RouseCheckReceived
 } from "../sessionChatTypes.js"
-import { appendSessionHistory, recordSessionMessage } from "../sessionChatLifecycle.js"
+import {
+    appendSessionHistory,
+    recordSessionMessage,
+    trackChatMessageSent
+} from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, broadcastToSession } from "../sessionChatUtils.js"
 
 export async function handleRouseCheck(
@@ -30,7 +34,7 @@ export async function handleRouseCheck(
         return currentSession
     }
 
-    const timestamp = recordSessionMessage(currentSession)
+    const timestamp = recordSessionMessage(currentSession, "rouse_check", userId)
 
     const message: RouseCheckReceived = {
         type: "rouse_check",
@@ -44,6 +48,10 @@ export async function handleRouseCheck(
     }
 
     appendSessionHistory(currentSession, message)
+    trackChatMessageSent(currentSession, userId, "rouse_check", {
+        success: data.success,
+        new_hunger: data.newHunger
+    })
     broadcastToSession(currentSession, message, userId)
     socket.send(JSON.stringify(message))
     return currentSession

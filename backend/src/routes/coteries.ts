@@ -274,7 +274,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         coterieId,
-                        coterieName: name
+                        coterieName: name,
+                        ownedCoterieCount: (coterieCount[0]?.count ?? 0) + 1
                     },
                     userId,
                     request
@@ -551,7 +552,9 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     method: "POST",
                     userId,
                     coterieId,
-                    inviteId: invite.id
+                    inviteId: invite.id,
+                    inviteTtlHours: Math.round(INVITE_TTL_MS / (60 * 60 * 1000)),
+                    expiresAt: invite.expiresAt.toISOString()
                 },
                 userId,
                 request
@@ -591,8 +594,34 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 where: eq(schema.coterieInvites.coterieId, coterieId)
             })
 
+            const inviteSummaries = invites.map((invite) => ({
+                id: invite.id,
+                createdAt: invite.createdAt,
+                expiresAt: invite.expiresAt,
+                revokedAt: invite.revokedAt,
+                active: !invite.revokedAt && invite.expiresAt > now
+            }))
+
+            await trackEvent(
+                "coterie_invites_listed",
+                {
+                    endpoint: "/coteries/:id/invites",
+                    method: "GET",
+                    userId,
+                    coterieId,
+                    inviteCount: inviteSummaries.length,
+                    activeInviteCount: inviteSummaries.filter((invite) => invite.active).length,
+                    revokedInviteCount: inviteSummaries.filter((invite) => invite.revokedAt).length,
+                    expiredInviteCount: inviteSummaries.filter(
+                        (invite) => !invite.revokedAt && invite.expiresAt <= now
+                    ).length
+                },
+                userId,
+                request
+            )
+
             reply.send(
-                invites.map((invite) => ({
+                inviteSummaries.map((invite) => ({
                     id: invite.id,
                     createdAt: invite.createdAt,
                     expiresAt: invite.expiresAt,
@@ -646,7 +675,9 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     method: "DELETE",
                     userId,
                     coterieId,
-                    inviteId
+                    inviteId,
+                    alreadyRevoked: !!invite.revokedAt,
+                    inviteAgeHours: Math.round((Date.now() - invite.createdAt.getTime()) / 3_600_000)
                 },
                 userId,
                 request
@@ -677,12 +708,54 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 }
             })
 
-            if (!invite || invite.revokedAt || invite.expiresAt <= new Date() || !invite.coterie) {
+            const trackAcceptFailure = async (
+                failureReason: string,
+                matchedInvite?: typeof invite
+            ) => {
+                await trackEvent(
+                    "coterie_invite_accept_failed",
+                    {
+                        endpoint: "/coterie-invites/:token/accept",
+                        method: "POST",
+                        userId,
+                        failureReason,
+                        coterieId: matchedInvite?.coterieId,
+                        inviteId: matchedInvite?.id,
+                        inviteAgeHours: matchedInvite
+                            ? Math.round((Date.now() - matchedInvite.createdAt.getTime()) / 3_600_000)
+                            : null
+                    },
+                    userId,
+                    request
+                )
+            }
+
+            if (!invite) {
+                await trackAcceptFailure("not_found")
+                reply.code(404).send(inviteUnavailableReply)
+                return
+            }
+
+            if (!invite.coterie) {
+                await trackAcceptFailure("coterie_deleted", invite)
+                reply.code(404).send(inviteUnavailableReply)
+                return
+            }
+
+            if (invite.revokedAt) {
+                await trackAcceptFailure("revoked", invite)
+                reply.code(404).send(inviteUnavailableReply)
+                return
+            }
+
+            if (invite.expiresAt <= new Date()) {
+                await trackAcceptFailure("expired", invite)
                 reply.code(404).send(inviteUnavailableReply)
                 return
             }
 
             if (invite.coterie.ownerId === userId) {
+                await trackAcceptFailure("already_owner", invite)
                 reply.code(409).send({
                     error: "Already coterie owner",
                     message:
@@ -696,6 +769,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             })
 
             if (!user?.nickname) {
+                await trackAcceptFailure("nickname_required", invite)
                 reply.code(400).send({
                     error: "Nickname required",
                     message: "Set a nickname before joining a coterie."
@@ -726,7 +800,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     userId,
                     coterieId: invite.coterieId,
                     inviteId: invite.id,
-                    alreadyMember: !!existingMembership
+                    alreadyMember: !!existingMembership,
+                    inviteAgeHours: Math.round((Date.now() - invite.createdAt.getTime()) / 3_600_000)
                 },
                 userId,
                 request

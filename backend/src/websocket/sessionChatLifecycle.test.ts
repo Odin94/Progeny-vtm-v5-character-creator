@@ -52,19 +52,29 @@ describe("session chat lifecycle tracking", () => {
     it("records chat activity timestamps", () => {
         const session = createSession()
 
-        const timestamp = recordSessionMessage(session, 2_500)
+        const timestamp = recordSessionMessage(session, "chat_message", "creator-1", 2_500)
 
         expect(timestamp).toBe(2_500)
         expect(session.lastActivity).toBe(2_500)
         expect(session.lastMessageAt).toBe(2_500)
+        expect(session.totalMessageCount).toBe(1)
+        expect(session.chatMessageCount).toBe(1)
+        expect(session.participants.get("creator-1")?.messageCount).toBe(1)
     })
 
-    it("tracks closed sessions with active duration through the last message", () => {
+    it("tracks closed sessions with usage summary", () => {
         const session = createSession()
+        const nowSpy = vi.spyOn(Date, "now").mockReturnValue(5_000)
         session.participants.set("player-2", createParticipant("player-2"))
         session.maxParticipantCount = 2
         session.activeStartedAt = 1_000
         session.lastMessageAt = 4_500
+        session.analyticsStartedAt = 100
+        session.participantJoinCount = 2
+        session.uniqueParticipantIds = new Set(["creator-1", "player-2"])
+        session.totalMessageCount = 3
+        session.chatMessageCount = 2
+        session.diceRollCount = 1
 
         trackSessionClosed(session, "empty", "player-2")
         trackSessionClosed(session, "empty", "player-2")
@@ -79,12 +89,20 @@ describe("session chat lifecycle tracking", () => {
                 creator_user_id: "creator-1",
                 participant_count: 2,
                 max_participant_count: 2,
+                participant_join_count: 2,
+                unique_participant_count: 2,
+                message_count: 3,
+                chat_message_count: 2,
+                dice_roll_count: 1,
                 active_started_at: new Date(1_000).toISOString(),
                 last_message_at: new Date(4_500).toISOString(),
-                chat_active_duration_ms: 3_500,
+                chat_session_duration_ms: 4_900,
+                chat_session_duration_seconds: 5,
+                chat_active_duration_ms: 4_000,
                 chat_active_duration_seconds: 4
             }),
             "player-2"
         )
+        nowSpy.mockRestore()
     })
 })

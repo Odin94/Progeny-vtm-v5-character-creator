@@ -8,6 +8,8 @@ export type Participant = {
     userName: string
     characterName?: string
     socket: any
+    joinedAt?: number
+    messageCount?: number
 }
 
 export type Session = {
@@ -23,6 +25,14 @@ export type Session = {
     activeStartedAt?: number
     lastMessageAt?: number
     maxParticipantCount: number
+    analyticsStartedAt?: number
+    participantJoinCount?: number
+    uniqueParticipantIds?: Set<string>
+    totalMessageCount?: number
+    chatMessageCount?: number
+    diceRollCount?: number
+    rouseCheckCount?: number
+    remorseCheckCount?: number
     closedTrackedAt?: number
 }
 

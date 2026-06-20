@@ -5,7 +5,11 @@ import {
     rememberRecentChatSession,
     temporarySessions
 } from "../sessionChat.js"
-import { clearSessionHistory, trackSessionClosed } from "../sessionChatLifecycle.js"
+import {
+    clearSessionHistory,
+    resetSessionAnalytics,
+    trackSessionClosed
+} from "../sessionChatLifecycle.js"
 import { broadcastToSession } from "../sessionChatUtils.js"
 
 export function handleLeaveSession(userId: string, currentSession: Session | null): Session | null {
@@ -37,8 +41,10 @@ export function removeParticipantFromSession(
                 temporarySessions.delete(session.id)
                 clearRecentChatSessionsForSessionId(session.id)
             } else {
+                trackSessionClosed(session, "empty", userId)
                 clearSessionHistory(session)
                 clearRecentChatSessionsForSessionId(session.id)
+                resetSessionAnalytics(session)
             }
             clearRecentChatSession(userId, session)
         } else {

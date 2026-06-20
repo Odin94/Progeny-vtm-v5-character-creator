@@ -16,7 +16,11 @@ import {
 import { handleRemorseCheck } from "./chatMessageHandlers/handleRemorseCheck.js"
 import { handleRouseCheck } from "./chatMessageHandlers/handleRouseCheck.js"
 import { type Session, clientMessageSchema } from "./sessionChatTypes.js"
-import { clearSessionHistory, trackSessionClosed } from "./sessionChatLifecycle.js"
+import {
+    clearSessionHistory,
+    resetSessionAnalytics,
+    trackSessionClosed
+} from "./sessionChatLifecycle.js"
 import {
     MAX_JSON_SIZE,
     broadcastToSession,
@@ -64,6 +68,7 @@ export function removeCoterieSession(coterieId: string): void {
             type: "error",
             message: "Coterie chat closed because the coterie was deleted"
         })
+        trackSessionClosed(session, "deleted")
         session.participants.clear()
         session.lastActivity = Date.now()
     }
@@ -91,8 +96,10 @@ export function removeCoterieSessionParticipant(coterieId: string, userId: strin
     session.lastActivity = Date.now()
     clearRecentChatSession(userId, session)
     if (session.participants.size === 0) {
+        trackSessionClosed(session, "empty", userId)
         clearSessionHistory(session)
         clearRecentChatSessionsForSessionId(session.id)
+        resetSessionAnalytics(session)
         return
     }
     broadcastToSession(session, {
@@ -223,8 +230,10 @@ const updateSessionExpiry = () => {
     }
     for (const session of coterieSessions.values()) {
         if (session.emptySince && now - session.emptySince > EMPTY_SESSION_GRACE_MS) {
+            trackSessionClosed(session, "empty")
             clearSessionHistory(session)
             clearRecentChatSessionsForSessionId(session.id)
+            resetSessionAnalytics(session, now)
             session.emptySince = undefined
         }
         if (
