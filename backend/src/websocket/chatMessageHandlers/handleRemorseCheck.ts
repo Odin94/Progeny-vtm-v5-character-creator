@@ -4,7 +4,7 @@ import {
     type RemorseCheckMessage,
     type RemorseCheckReceived
 } from "../sessionChatTypes.js"
-import { recordSessionMessage } from "../sessionChatLifecycle.js"
+import { appendSessionHistory, recordSessionMessage } from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, broadcastToSession } from "../sessionChatUtils.js"
 
 export async function handleRemorseCheck(
@@ -34,6 +34,7 @@ export async function handleRemorseCheck(
 
     const message: RemorseCheckReceived = {
         type: "remorse_check",
+        userId,
         userName: participant.userName,
         characterName: data.characterName ?? participant.characterName,
         rolls: data.rolls,
@@ -43,6 +44,7 @@ export async function handleRemorseCheck(
         timestamp
     }
 
+    appendSessionHistory(currentSession, message)
     broadcastToSession(currentSession, message, userId)
     socket.send(JSON.stringify(message))
     return currentSession

@@ -5,31 +5,49 @@ import {
     rememberRecentChatSession,
     temporarySessions
 } from "../sessionChat.js"
-import { trackSessionClosed } from "../sessionChatLifecycle.js"
+import { clearSessionHistory, trackSessionClosed } from "../sessionChatLifecycle.js"
 import { broadcastToSession } from "../sessionChatUtils.js"
 
 export function handleLeaveSession(userId: string, currentSession: Session | null): Session | null {
     if (currentSession) {
-        removeParticipantFromSession(userId, currentSession)
+        removeParticipantFromSession(userId, currentSession, { clearEmptySession: true })
         return null
     }
     return currentSession
 }
 
-export function removeParticipantFromSession(userId: string, session: Session): void {
+export function removeParticipantFromSession(
+    userId: string,
+    session: Session,
+    options: { clearEmptySession?: boolean; socket?: any } = {}
+): void {
+    const participant = session.participants.get(userId)
+    if (options.socket && participant?.socket !== options.socket) {
+        return
+    }
+
     session.participants.delete(userId)
     session.lastActivity = Date.now()
 
     if (session.participants.size === 0) {
-        if (session.type === "temporary") {
-            trackSessionClosed(session, "empty", userId)
-            temporarySessions.delete(session.id)
-            clearRecentChatSessionsForSessionId(session.id)
+        session.emptySince = Date.now()
+        if (options.clearEmptySession) {
+            if (session.type === "temporary") {
+                trackSessionClosed(session, "empty", userId)
+                temporarySessions.delete(session.id)
+                clearRecentChatSessionsForSessionId(session.id)
+            } else {
+                clearSessionHistory(session)
+                clearRecentChatSessionsForSessionId(session.id)
+            }
+            clearRecentChatSession(userId, session)
+        } else {
+            clearRecentChatSession(userId, session)
         }
-        clearRecentChatSession(userId, session)
         return
     }
 
+    session.emptySince = undefined
     rememberRecentChatSession(userId, session)
 
     broadcastToSession(session, {

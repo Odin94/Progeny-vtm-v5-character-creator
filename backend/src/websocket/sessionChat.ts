@@ -16,7 +16,7 @@ import {
 import { handleRemorseCheck } from "./chatMessageHandlers/handleRemorseCheck.js"
 import { handleRouseCheck } from "./chatMessageHandlers/handleRouseCheck.js"
 import { type Session, clientMessageSchema } from "./sessionChatTypes.js"
-import { trackSessionClosed } from "./sessionChatLifecycle.js"
+import { clearSessionHistory, trackSessionClosed } from "./sessionChatLifecycle.js"
 import {
     MAX_JSON_SIZE,
     broadcastToSession,
@@ -48,6 +48,7 @@ export function ensureCoterieSession(coterieId: string, creatorUserId: string): 
         coterieId,
         creatorUserId,
         participants: new Map(),
+        history: [],
         createdAt: now,
         lastActivity: now,
         maxParticipantCount: 0
@@ -89,6 +90,11 @@ export function removeCoterieSessionParticipant(coterieId: string, userId: strin
     session.participants.delete(userId)
     session.lastActivity = Date.now()
     clearRecentChatSession(userId, session)
+    if (session.participants.size === 0) {
+        clearSessionHistory(session)
+        clearRecentChatSessionsForSessionId(session.id)
+        return
+    }
     broadcastToSession(session, {
         type: "user_left",
         userId
@@ -197,14 +203,36 @@ async function getJoinableRecentChatSession(userId: string) {
 }
 
 const SESSION_EXPIRY_MS = 24 * 60 * 60 * 1000
+const SESSION_HISTORY_EXPIRY_MS = 24 * 60 * 60 * 1000
+const EMPTY_SESSION_GRACE_MS = 60 * 1000
 
 const updateSessionExpiry = () => {
     const now = Date.now()
     for (const [sessionId, session] of temporarySessions.entries()) {
+        if (session.emptySince && now - session.emptySince > EMPTY_SESSION_GRACE_MS) {
+            trackSessionClosed(session, "empty")
+            temporarySessions.delete(sessionId)
+            clearRecentChatSessionsForSessionId(sessionId)
+            continue
+        }
         if (now - session.lastActivity > SESSION_EXPIRY_MS) {
             trackSessionClosed(session, "timeout")
             temporarySessions.delete(sessionId)
             clearRecentChatSessionsForSessionId(sessionId)
+        }
+    }
+    for (const session of coterieSessions.values()) {
+        if (session.emptySince && now - session.emptySince > EMPTY_SESSION_GRACE_MS) {
+            clearSessionHistory(session)
+            clearRecentChatSessionsForSessionId(session.id)
+            session.emptySince = undefined
+        }
+        if (
+            session.history.length > 0 &&
+            session.lastMessageAt &&
+            now - session.lastMessageAt > SESSION_HISTORY_EXPIRY_MS
+        ) {
+            clearSessionHistory(session)
         }
     }
 }
@@ -352,7 +380,7 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
 
                 socket.on("close", () => {
                     if (currentSession) {
-                        removeParticipantFromSession(userId, currentSession)
+                        removeParticipantFromSession(userId, currentSession, { socket })
                     }
                 })
             } catch (error) {

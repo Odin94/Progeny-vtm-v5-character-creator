@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 export const MAX_MESSAGE_LENGTH = 5000
+export const MAX_SESSION_HISTORY_MESSAGES = 100
 
 export type Participant = {
     userId: string
@@ -15,8 +16,10 @@ export type Session = {
     coterieId?: string
     creatorUserId: string
     participants: Map<string, Participant>
+    history: SessionHistoryMessage[]
     createdAt: number
     lastActivity: number
+    emptySince?: number
     activeStartedAt?: number
     lastMessageAt?: number
     maxParticipantCount: number
@@ -93,6 +96,7 @@ export type SessionJoinedMessage = {
     sessionType: "temporary" | "coterie"
     coterieId?: string
     participants: Array<{ userId: string; userName: string; characterName?: string }>
+    history: SessionHistoryMessage[]
 }
 
 export type UserJoinedMessage = {
@@ -109,6 +113,7 @@ export type UserLeftMessage = {
 
 export type ChatMessageReceived = {
     type: "chat_message"
+    userId: string
     userName: string
     characterName?: string
     message: string
@@ -117,6 +122,7 @@ export type ChatMessageReceived = {
 
 export type DiceRollReceived = {
     type: "dice_roll"
+    userId: string
     userName: string
     characterName?: string
     rollData: {
@@ -141,6 +147,7 @@ export type DiceRollReceived = {
 
 export type RouseCheckReceived = {
     type: "rouse_check"
+    userId: string
     userName: string
     characterName?: string
     roll: number
@@ -151,6 +158,7 @@ export type RouseCheckReceived = {
 
 export type RemorseCheckReceived = {
     type: "remorse_check"
+    userId: string
     userName: string
     characterName?: string
     rolls: number[]
@@ -159,6 +167,12 @@ export type RemorseCheckReceived = {
     newHumanity: number
     timestamp: number
 }
+
+export type SessionHistoryMessage =
+    | ChatMessageReceived
+    | DiceRollReceived
+    | RouseCheckReceived
+    | RemorseCheckReceived
 
 export type ServerMessage =
     | SessionJoinedMessage

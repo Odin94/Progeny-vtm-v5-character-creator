@@ -28,7 +28,7 @@ import {
     IconX,
     IconArrowLeft
 } from "@tabler/icons-react"
-import { useEffect, useRef, useState } from "react"
+import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
 import { SheetOptions } from "../CharacterSheet"
@@ -47,6 +47,20 @@ type Coterie = {
     id: string
     name: string
     owned: boolean
+}
+
+type SenderMessage = {
+    userId?: string
+    userName?: string
+    characterName?: string
+}
+
+const hashStringToHue = (value: string): number => {
+    let hash = 0
+    for (let i = 0; i < value.length; i += 1) {
+        hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+    }
+    return hash % 360
 }
 
 const ChatWindow = ({
@@ -75,7 +89,7 @@ const ChatWindow = ({
     const [messageInput, setMessageInput] = useState("")
     const [joinError, setJoinError] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
-    const { isAuthenticated, signIn } = useAuth()
+    const { user, isAuthenticated, signIn } = useAuth()
 
     const {
         connectionStatus,
@@ -86,6 +100,7 @@ const ChatWindow = ({
         connect,
         disconnect,
         joinSession,
+        restoreLastSession,
         leaveSession,
         sendChatMessage
     } = useSessionChat()
@@ -102,6 +117,12 @@ const ChatWindow = ({
             openExpanded()
         }
     }, [openSignal, openExpanded])
+
+    useEffect(() => {
+        if (isAuthenticated && connectionStatus === "disconnected") {
+            restoreLastSession(characterName)
+        }
+    }, [isAuthenticated, connectionStatus, restoreLastSession, characterName])
 
     useEffect(() => {
         if (expanded && isAuthenticated && connectionStatus === "disconnected") {
@@ -256,6 +277,39 @@ const ChatWindow = ({
             return `${characterName} (${userName})`
         }
         return userName
+    }
+
+    const isOwnMessage = (message: SenderMessage): boolean => {
+        return !!user?.id && message.userId === user.id
+    }
+
+    const getMessageRowStyle = (message: SenderMessage): CSSProperties => ({
+        display: "flex",
+        justifyContent: isOwnMessage(message) ? "flex-end" : "flex-start"
+    })
+
+    const getMessageBubbleStyle = (
+        message: SenderMessage,
+        variant: "chat" | "roll" = "chat"
+    ): CSSProperties => {
+        const ownMessage = isOwnMessage(message)
+        const hue = hashStringToHue(
+            message.userName || message.characterName || message.userId || "unknown"
+        )
+        const lightness = variant === "roll" ? 30 : 27
+        const backgroundAlpha = ownMessage ? 0.24 : 0.15
+        const borderAlpha =
+            variant === "roll" ? (ownMessage ? 0.5 : 0.36) : ownMessage ? 0.4 : 0.24
+
+        return {
+            backgroundColor: `hsla(${hue}, 52%, ${lightness}%, ${backgroundAlpha})`,
+            border: `1px solid hsla(${hue}, 62%, 58%, ${borderAlpha})`,
+            borderRadius: "4px",
+            maxWidth: "85%",
+            minWidth: "min(100%, 180px)",
+            width: "fit-content",
+            overflowWrap: "anywhere"
+        }
     }
 
     const getConnectionStatusColor = (): string => {
@@ -669,26 +723,21 @@ const ChatWindow = ({
                                 {messages.map((msg, idx) => {
                                     if (msg.type === "chat_message") {
                                         return (
-                                            <Box
-                                                key={idx}
-                                                p="xs"
-                                                style={{
-                                                    backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                                    borderRadius: "4px"
-                                                }}
-                                            >
-                                                <Group gap="xs" mb={4}>
-                                                    <Text size="sm" fw={600}>
-                                                        {formatMessageName(
-                                                            msg.userName,
-                                                            msg.characterName
-                                                        )}
-                                                    </Text>
-                                                    <Text size="xs" c="dimmed">
-                                                        {formatTimestamp(msg.timestamp)}
-                                                    </Text>
-                                                </Group>
-                                                <Text size="sm">{msg.message}</Text>
+                                            <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                <Box p="xs" style={getMessageBubbleStyle(msg)}>
+                                                    <Group gap="xs" mb={4}>
+                                                        <Text size="sm" fw={600}>
+                                                            {formatMessageName(
+                                                                msg.userName,
+                                                                msg.characterName
+                                                            )}
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed">
+                                                            {formatTimestamp(msg.timestamp)}
+                                                        </Text>
+                                                    </Group>
+                                                    <Text size="sm">{msg.message}</Text>
+                                                </Box>
                                             </Box>
                                         )
                                     } else if (msg.type === "dice_roll") {
@@ -742,151 +791,144 @@ const ChatWindow = ({
                                         }
 
                                         return (
-                                            <Box
-                                                key={idx}
-                                                p="xs"
-                                                style={{
-                                                    backgroundColor: "rgba(192, 63, 63, 0.1)",
-                                                    borderRadius: "4px",
-                                                    border: `1px solid ${colorValue}`
-                                                }}
-                                            >
-                                                <Group gap="xs" mb={4}>
-                                                    <IconDice size={14} />
-                                                    <Text size="sm" fw={600}>
-                                                        {formatMessageName(
-                                                            msg.userName,
-                                                            msg.characterName
-                                                        )}
+                                            <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                <Box
+                                                    p="xs"
+                                                    style={getMessageBubbleStyle(msg, "roll")}
+                                                >
+                                                    <Group gap="xs" mb={4}>
+                                                        <IconDice size={14} />
+                                                        <Text size="sm" fw={600}>
+                                                            {formatMessageName(
+                                                                msg.userName,
+                                                                msg.characterName
+                                                            )}
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed">
+                                                            {formatTimestamp(msg.timestamp)}
+                                                        </Text>
+                                                    </Group>
+                                                    <Text size="sm">
+                                                        Rolled{" "}
+                                                        {msg.rollData.poolInfo?.diceCount ||
+                                                            msg.rollData.dice.length}{" "}
+                                                        dice:{" "}
+                                                        <Text
+                                                            span
+                                                            fw={600}
+                                                            c={
+                                                                msg.rollData.totalSuccesses > 0
+                                                                    ? "green"
+                                                                    : "red"
+                                                            }
+                                                        >
+                                                            {msg.rollData.totalSuccesses}{" "}
+                                                            {msg.rollData.totalSuccesses === 1
+                                                                ? "success"
+                                                                : "successes"}
+                                                        </Text>
+                                                        {hasCriticals ? (
+                                                            <Text span c="yellow" fw={600}>
+                                                                {" "}
+                                                                (crit!)
+                                                            </Text>
+                                                        ) : null}
+                                                        {hasBestial ? (
+                                                            <Text span c="red" fw={600}>
+                                                                {" "}
+                                                                (bestial failure!)
+                                                            </Text>
+                                                        ) : null}
                                                     </Text>
-                                                    <Text size="xs" c="dimmed">
-                                                        {formatTimestamp(msg.timestamp)}
-                                                    </Text>
-                                                </Group>
-                                                <Text size="sm">
-                                                    Rolled{" "}
-                                                    {msg.rollData.poolInfo?.diceCount ||
-                                                        msg.rollData.dice.length}{" "}
-                                                    dice:{" "}
-                                                    <Text
-                                                        span
-                                                        fw={600}
-                                                        c={
-                                                            msg.rollData.totalSuccesses > 0
-                                                                ? "green"
-                                                                : "red"
-                                                        }
-                                                    >
-                                                        {msg.rollData.totalSuccesses}{" "}
-                                                        {msg.rollData.totalSuccesses === 1
-                                                            ? "success"
-                                                            : "successes"}
-                                                    </Text>
-                                                    {hasCriticals ? (
-                                                        <Text span c="yellow" fw={600}>
-                                                            {" "}
-                                                            (crit!)
+                                                    {msg.rollData.poolInfo ? (
+                                                        <Text size="xs" c="dimmed" mt={4}>
+                                                            {msg.rollData.poolInfo.attribute
+                                                                ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
+                                                                : "Custom pool"}
                                                         </Text>
                                                     ) : null}
-                                                    {hasBestial ? (
-                                                        <Text span c="red" fw={600}>
-                                                            {" "}
-                                                            (bestial failure!)
+                                                    {msg.rollData.isReroll ? (
+                                                        <Text size="xs" c="yellow" mt={4} fw={600}>
+                                                            Willpower Reroll
                                                         </Text>
                                                     ) : null}
-                                                </Text>
-                                                {msg.rollData.poolInfo ? (
-                                                    <Text size="xs" c="dimmed" mt={4}>
-                                                        {msg.rollData.poolInfo.attribute
-                                                            ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
-                                                            : "Custom pool"}
-                                                    </Text>
-                                                ) : null}
-                                                {msg.rollData.isReroll ? (
-                                                    <Text size="xs" c="yellow" mt={4} fw={600}>
-                                                        Willpower Reroll
-                                                    </Text>
-                                                ) : null}
+                                                </Box>
                                             </Box>
                                         )
                                     } else if (msg.type === "rouse_check") {
                                         return (
-                                            <Box
-                                                key={idx}
-                                                p="xs"
-                                                style={{
-                                                    backgroundColor: "rgba(192, 63, 63, 0.1)",
-                                                    borderRadius: "4px",
-                                                    border: `1px solid ${colorValue}`
-                                                }}
-                                            >
-                                                <Group gap="xs" mb={4}>
-                                                    <IconDroplet size={14} />
-                                                    <Text size="sm" fw={600}>
-                                                        {formatMessageName(
-                                                            msg.userName,
-                                                            msg.characterName
-                                                        )}
+                                            <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                <Box
+                                                    p="xs"
+                                                    style={getMessageBubbleStyle(msg, "roll")}
+                                                >
+                                                    <Group gap="xs" mb={4}>
+                                                        <IconDroplet size={14} />
+                                                        <Text size="sm" fw={600}>
+                                                            {formatMessageName(
+                                                                msg.userName,
+                                                                msg.characterName
+                                                            )}
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed">
+                                                            {formatTimestamp(msg.timestamp)}
+                                                        </Text>
+                                                    </Group>
+                                                    <Text size="sm">
+                                                        Rouse Check:{" "}
+                                                        <Text
+                                                            span
+                                                            fw={600}
+                                                            c={msg.success ? "green" : "red"}
+                                                        >
+                                                            {msg.success ? "✓ Passed" : "✗ Failed"}
+                                                        </Text>
                                                     </Text>
-                                                    <Text size="xs" c="dimmed">
-                                                        {formatTimestamp(msg.timestamp)}
+                                                    <Text size="xs" c="dimmed" mt={4}>
+                                                        Hunger: {msg.newHunger}/5
                                                     </Text>
-                                                </Group>
-                                                <Text size="sm">
-                                                    Rouse Check:{" "}
-                                                    <Text
-                                                        span
-                                                        fw={600}
-                                                        c={msg.success ? "green" : "red"}
-                                                    >
-                                                        {msg.success ? "✓ Passed" : "✗ Failed"}
-                                                    </Text>
-                                                </Text>
-                                                <Text size="xs" c="dimmed" mt={4}>
-                                                    Hunger: {msg.newHunger}/5
-                                                </Text>
+                                                </Box>
                                             </Box>
                                         )
                                     } else if (msg.type === "remorse_check") {
                                         return (
-                                            <Box
-                                                key={idx}
-                                                p="xs"
-                                                style={{
-                                                    backgroundColor: "rgba(192, 63, 63, 0.1)",
-                                                    borderRadius: "4px",
-                                                    border: `1px solid ${colorValue}`
-                                                }}
-                                            >
-                                                <Group gap="xs" mb={4}>
-                                                    <IconHeartHandshake size={14} />
-                                                    <Text size="sm" fw={600}>
-                                                        {formatMessageName(
-                                                            msg.userName,
-                                                            msg.characterName
-                                                        )}
+                                            <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                <Box
+                                                    p="xs"
+                                                    style={getMessageBubbleStyle(msg, "roll")}
+                                                >
+                                                    <Group gap="xs" mb={4}>
+                                                        <IconHeartHandshake size={14} />
+                                                        <Text size="sm" fw={600}>
+                                                            {formatMessageName(
+                                                                msg.userName,
+                                                                msg.characterName
+                                                            )}
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed">
+                                                            {formatTimestamp(msg.timestamp)}
+                                                        </Text>
+                                                    </Group>
+                                                    <Text size="sm">
+                                                        Remorse Test: [{msg.rolls.join(", ")}] –{" "}
+                                                        {msg.successes}{" "}
+                                                        {msg.successes === 1
+                                                            ? "success"
+                                                            : "successes"}
+                                                        <Text
+                                                            span
+                                                            fw={600}
+                                                            c={msg.passed ? "green" : "red"}
+                                                        >
+                                                            {msg.passed ? " ✓ Passed" : " ✗ Failed"}
+                                                        </Text>
                                                     </Text>
-                                                    <Text size="xs" c="dimmed">
-                                                        {formatTimestamp(msg.timestamp)}
+                                                    <Text size="xs" c="dimmed" mt={4}>
+                                                        {msg.passed
+                                                            ? "Stains cleared."
+                                                            : `Humanity decreased to ${msg.newHumanity}.`}
                                                     </Text>
-                                                </Group>
-                                                <Text size="sm">
-                                                    Remorse Test: [{msg.rolls.join(", ")}] –{" "}
-                                                    {msg.successes}{" "}
-                                                    {msg.successes === 1 ? "success" : "successes"}
-                                                    <Text
-                                                        span
-                                                        fw={600}
-                                                        c={msg.passed ? "green" : "red"}
-                                                    >
-                                                        {msg.passed ? " ✓ Passed" : " ✗ Failed"}
-                                                    </Text>
-                                                </Text>
-                                                <Text size="xs" c="dimmed" mt={4}>
-                                                    {msg.passed
-                                                        ? "Stains cleared."
-                                                        : `Humanity decreased to ${msg.newHumanity}.`}
-                                                </Text>
+                                                </Box>
                                             </Box>
                                         )
                                     } else if (msg.type === "error") {

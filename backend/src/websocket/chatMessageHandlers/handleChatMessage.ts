@@ -6,7 +6,7 @@ import {
     type ChatMessageReceived,
     MAX_MESSAGE_LENGTH
 } from "../sessionChatTypes.js"
-import { recordSessionMessage } from "../sessionChatLifecycle.js"
+import { appendSessionHistory, recordSessionMessage } from "../sessionChatLifecycle.js"
 import {
     sendErrorAndTrack,
     checkRateLimit,
@@ -72,12 +72,14 @@ export async function handleChatMessage(
 
     const message: ChatMessageReceived = {
         type: "chat_message",
+        userId,
         userName: participant.userName,
         characterName: data.characterName ?? participant.characterName,
         message: sanitizedMessage,
         timestamp
     }
 
+    appendSessionHistory(currentSession, message)
     broadcastToSession(currentSession, message, userId)
     socket.send(JSON.stringify(message))
     return currentSession

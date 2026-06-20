@@ -10,6 +10,7 @@ type Participant = {
 
 type ChatMessage = {
     type: "chat_message"
+    userId: string
     userName: string
     characterName?: string
     message: string
@@ -37,6 +38,7 @@ export type RollData = {
 
 export type DiceRollMessage = {
     type: "dice_roll"
+    userId: string
     userName: string
     characterName?: string
     rollData: RollData
@@ -45,6 +47,7 @@ export type DiceRollMessage = {
 
 type RouseCheckMessage = {
     type: "rouse_check"
+    userId: string
     userName: string
     characterName?: string
     roll: number
@@ -55,6 +58,7 @@ type RouseCheckMessage = {
 
 type RemorseCheckMessage = {
     type: "remorse_check"
+    userId: string
     userName: string
     characterName?: string
     rolls: number[]
@@ -70,6 +74,9 @@ type SessionJoinedMessage = {
     sessionType: "temporary" | "coterie"
     coterieId?: string
     participants: Participant[]
+    history?: Array<
+        ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage
+    >
 }
 
 type UserJoinedMessage = {
@@ -119,6 +126,12 @@ const getWebSocketUrl = (): string => {
 
 const STORAGE_KEY = "sessionChat_lastJoinOptions"
 
+type JoinOptions = {
+    sessionId?: string
+    coterieId?: string
+    characterName?: string
+}
+
 type SessionChatStore = {
     connectionStatus: ConnectionStatus
     sessionId: string | null
@@ -132,14 +145,11 @@ type SessionChatStore = {
     reconnectAttempts: number
     messageQueue: Array<{ type: string; [key: string]: unknown }>
     isManualDisconnect: boolean
-    lastJoinOptions: { sessionId?: string; coterieId?: string } | null
+    lastJoinOptions: JoinOptions | null
     connect: () => void
     disconnect: () => void
-    joinSession: (options?: {
-        sessionId?: string
-        coterieId?: string
-        characterName?: string
-    }) => void
+    joinSession: (options?: JoinOptions) => void
+    restoreLastSession: (characterName?: string) => void
     leaveSession: () => void
     sendChatMessage: (message: string, characterName?: string) => void
     sendDiceRoll: (
@@ -177,7 +187,7 @@ type SessionChatStore = {
 }
 
 export const useSessionChatStore = create<SessionChatStore>((set, get) => {
-    const loadLastJoinOptions = (): { sessionId?: string; coterieId?: string } | null => {
+    const loadLastJoinOptions = (): JoinOptions | null => {
         if (typeof window === "undefined") return null
         try {
             const stored = localStorage.getItem(STORAGE_KEY)
@@ -187,11 +197,17 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         }
     }
 
-    const saveLastJoinOptions = (options: { sessionId?: string; coterieId?: string } | null) => {
+    const saveLastJoinOptions = (options: JoinOptions | null) => {
         if (typeof window === "undefined") return
         try {
             if (options) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(options))
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify({
+                        sessionId: options.sessionId,
+                        coterieId: options.coterieId
+                    })
+                )
             } else {
                 localStorage.removeItem(STORAGE_KEY)
             }
@@ -279,7 +295,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                                 sessionId: data.sessionId,
                                 sessionType: data.sessionType,
                                 participants: data.participants,
-                                messages: [],
+                                messages: data.history ?? [],
                                 lastJoinOptions: options
                             })
                         } else {
@@ -289,7 +305,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                                 sessionId: data.sessionId,
                                 sessionType: data.sessionType,
                                 participants: data.participants,
-                                messages: [],
+                                messages: data.history ?? [],
                                 lastJoinOptions: options
                             })
                         }
@@ -445,11 +461,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         })
     }
 
-    const joinSession = (options?: {
-        sessionId?: string
-        coterieId?: string
-        characterName?: string
-    }) => {
+    const joinSession = (options?: JoinOptions) => {
         const joinOptions = options
             ? { sessionId: options.sessionId, coterieId: options.coterieId }
             : null
@@ -494,6 +506,18 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         ) {
             connect()
         }
+    }
+
+    const restoreLastSession = (characterName?: string) => {
+        const options = get().lastJoinOptions || loadLastJoinOptions()
+        if (!options?.sessionId && !options?.coterieId) {
+            return
+        }
+
+        joinSession({
+            ...options,
+            characterName
+        })
     }
 
     const leaveSession = () => {
@@ -623,6 +647,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         connect,
         disconnect,
         joinSession,
+        restoreLastSession,
         leaveSession,
         sendChatMessage,
         sendDiceRoll,

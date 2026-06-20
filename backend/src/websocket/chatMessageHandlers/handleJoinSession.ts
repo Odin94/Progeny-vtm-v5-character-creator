@@ -95,6 +95,7 @@ export async function handleJoinSession(
             type: "temporary",
             creatorUserId: userId,
             participants: new Map(),
+            history: [],
             createdAt: Date.now(),
             lastActivity: Date.now(),
             maxParticipantCount: 0
@@ -126,6 +127,7 @@ export async function handleJoinSession(
         }
 
         currentSession.participants.set(userId, participant)
+        currentSession.emptySince = undefined
         clearRecentChatSession(userId, currentSession)
         const joinedAt = Date.now()
         currentSession.lastActivity = joinedAt
@@ -158,7 +160,8 @@ export async function handleJoinSession(
                 sessionId: currentSession.id,
                 sessionType: currentSession.type,
                 coterieId: currentSession.coterieId,
-                participants
+                participants,
+                history: currentSession.history
             } as SessionJoinedMessage)
         )
 

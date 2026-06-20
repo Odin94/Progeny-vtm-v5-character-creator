@@ -27,6 +27,7 @@ function createSession(): Session {
         type: "temporary",
         creatorUserId: "creator-1",
         participants: new Map([["creator-1", createParticipant("creator-1")]]),
+        history: [],
         createdAt: 100,
         lastActivity: 100,
         maxParticipantCount: 1

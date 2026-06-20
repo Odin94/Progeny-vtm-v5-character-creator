@@ -1,6 +1,11 @@
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
-import { type Session } from "./sessionChatTypes.js"
+import {
+    MAX_SESSION_HISTORY_MESSAGES,
+    type DiceRollReceived,
+    type Session,
+    type SessionHistoryMessage
+} from "./sessionChatTypes.js"
 
 export function recordSessionJoin(session: Session, userId: string, joinedAt = Date.now()): void {
     session.maxParticipantCount = Math.max(session.maxParticipantCount, session.participants.size)
@@ -18,6 +23,30 @@ export function recordSessionMessage(session: Session, timestamp = Date.now()): 
     session.lastActivity = timestamp
     session.lastMessageAt = timestamp
     return timestamp
+}
+
+export function appendSessionHistory(session: Session, message: SessionHistoryMessage): void {
+    if (message.type === "dice_roll" && message.rollData.isReroll && message.rollData.rollId) {
+        const existingRollIndex = session.history.findIndex(
+            (historyMessage): historyMessage is DiceRollReceived =>
+                historyMessage.type === "dice_roll" &&
+                historyMessage.rollData.rollId === message.rollData.rollId
+        )
+
+        if (existingRollIndex !== -1) {
+            session.history[existingRollIndex] = message
+            return
+        }
+    }
+
+    session.history.push(message)
+    if (session.history.length > MAX_SESSION_HISTORY_MESSAGES) {
+        session.history.splice(0, session.history.length - MAX_SESSION_HISTORY_MESSAGES)
+    }
+}
+
+export function clearSessionHistory(session: Session): void {
+    session.history = []
 }
 
 export function trackSessionClosed(
