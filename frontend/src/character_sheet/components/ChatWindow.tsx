@@ -41,6 +41,10 @@ type ChatWindowProps = {
     openSignal?: number
     sessionLabel?: string | null
     sessionLabelSessionId?: string | null
+    initiallyExpanded?: boolean
+    lockedOpen?: boolean
+    docked?: boolean
+    inline?: boolean
 }
 
 type Coterie = {
@@ -67,14 +71,19 @@ const ChatWindow = ({
     options,
     openSignal,
     sessionLabel,
-    sessionLabelSessionId
+    sessionLabelSessionId,
+    initiallyExpanded = false,
+    lockedOpen = false,
+    docked = false,
+    inline = false
 }: ChatWindowProps) => {
     const { primaryColor, character } = options
     const theme = useMantineTheme()
     const colorValue = primaryColor.startsWith("#")
         ? primaryColor
         : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const [expanded, { toggle: toggleExpanded, open: openExpanded }] = useDisclosure(false)
+    const [expanded, { toggle: toggleExpanded, open: openExpanded }] =
+        useDisclosure(initiallyExpanded)
     const [view, setView] = useState<"disconnected" | "creating" | "joining" | "joiningCoterie">(
         "disconnected"
     )
@@ -112,11 +121,13 @@ const ChatWindow = ({
         (!sessionLabelSessionId || sessionLabelSessionId === sessionId)
     const chatTitle = showSessionLabel ? `${sessionLabel} Chat` : "Chat"
 
+    const isExpanded = lockedOpen || expanded
+
     useEffect(() => {
-        if (openSignal) {
+        if (openSignal || lockedOpen) {
             openExpanded()
         }
-    }, [openSignal, openExpanded])
+    }, [lockedOpen, openSignal, openExpanded])
 
     useEffect(() => {
         if (isAuthenticated && connectionStatus === "disconnected") {
@@ -125,17 +136,17 @@ const ChatWindow = ({
     }, [isAuthenticated, connectionStatus, restoreLastSession, characterName])
 
     useEffect(() => {
-        if (expanded && isAuthenticated && connectionStatus === "disconnected") {
+        if (isExpanded && isAuthenticated && connectionStatus === "disconnected") {
             loadCoteries()
             loadRecentChatSession()
         }
-    }, [expanded, isAuthenticated, connectionStatus])
+    }, [isExpanded, isAuthenticated, connectionStatus])
 
     useEffect(() => {
-        if (expanded && messages.length > 0) {
+        if (isExpanded && messages.length > 0) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
         }
-    }, [messages, expanded])
+    }, [messages, isExpanded])
 
     useEffect(() => {
         const errorMessage = messages.find((msg) => msg.type === "error")
@@ -344,7 +355,7 @@ const ChatWindow = ({
         return ""
     }
 
-    if (!expanded) {
+    if (!isExpanded) {
         const isConnected =
             connectionStatus === "connected" && sessionId !== null && sessionId !== undefined
         return (
@@ -384,13 +395,14 @@ const ChatWindow = ({
                 p="md"
                 radius="md"
                 style={{
-                    position: "fixed",
-                    bottom: "2rem",
-                    right: "6rem",
-                    width: "400px",
-                    height: "500px",
-                    maxHeight: "calc(100vh - 4rem)",
-                    zIndex: 1000,
+                    position: inline ? "relative" : "fixed",
+                    bottom: inline ? undefined : docked ? "1.25rem" : "2rem",
+                    right: inline ? undefined : docked ? "1.25rem" : "6rem",
+                    width: inline ? "100%" : docked ? "430px" : "400px",
+                    height: inline ? "min(72vh, 620px)" : docked ? "calc(100vh - 6.5rem)" : "500px",
+                    maxHeight: inline ? undefined : docked ? "760px" : "calc(100vh - 4rem)",
+                    zIndex: inline ? 1 : 1000,
+                    boxSizing: "border-box",
                     backgroundColor: "rgba(0, 0, 0, 0.9)",
                     backdropFilter: "blur(10px)",
                     border: `2px solid ${colorValue}`,
@@ -430,7 +442,7 @@ const ChatWindow = ({
                         )}
                     </Group>
                     <Group gap="xs">
-                        {connectionStatus === "connected" ? (
+                        {connectionStatus === "connected" && !lockedOpen ? (
                             <ActionIcon
                                 size="sm"
                                 variant="subtle"
@@ -440,14 +452,16 @@ const ChatWindow = ({
                                 <IconX size={16} />
                             </ActionIcon>
                         ) : null}
-                        <ActionIcon
-                            size="sm"
-                            variant="subtle"
-                            color={primaryColor}
-                            onClick={toggleExpanded}
-                        >
-                            <IconChevronDown size={16} />
-                        </ActionIcon>
+                        {!lockedOpen ? (
+                            <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color={primaryColor}
+                                onClick={toggleExpanded}
+                            >
+                                <IconChevronDown size={16} />
+                            </ActionIcon>
+                        ) : null}
                     </Group>
                 </Group>
 

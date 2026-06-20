@@ -220,7 +220,8 @@ const diceRollPoolInfoSchema = z.object({
     bloodDiceCount: z.number().int().min(0),
     bloodSurge: z.boolean().optional(),
     specialtyBonus: z.number().int().min(0).optional(),
-    disciplinePowerBonus: z.number().int().min(0).optional()
+    disciplinePowerBonus: z.number().int().min(0).optional(),
+    meritFlawBonus: z.number().int().optional()
 })
 
 const diceRollResultSchema = z.object({

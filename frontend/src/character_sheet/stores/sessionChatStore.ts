@@ -22,9 +22,9 @@ export type RollData = {
     totalSuccesses: number
     results: Array<{ type: string; value: number }>
     poolInfo?: {
-        attribute?: string
-        skill?: string
-        discipline?: string
+        attribute?: string | null
+        skill?: string | null
+        discipline?: string | null
         diceCount: number
         bloodDiceCount: number
         bloodSurge?: boolean
@@ -32,7 +32,7 @@ export type RollData = {
         disciplinePowerBonus?: number
         meritFlawBonus?: number
     }
-    rollId?: string
+    rollId?: string | null
     isReroll?: boolean
 }
 
@@ -165,9 +165,9 @@ type SessionChatStore = {
             totalSuccesses: number
             results: Array<{ type: string; value: number }>
             poolInfo?: {
-                attribute?: string
-                skill?: string
-                discipline?: string
+                attribute?: string | null
+                skill?: string | null
+                discipline?: string | null
                 diceCount: number
                 bloodDiceCount: number
                 bloodSurge?: boolean
@@ -175,6 +175,8 @@ type SessionChatStore = {
                 disciplinePowerBonus?: number
                 meritFlawBonus?: number
             }
+            rollId?: string | null
+            isReroll?: boolean
         },
         characterName?: string
     ) => void
@@ -531,6 +533,15 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         }
     }
 
+    const optionalString = (value: string | null | undefined): string | undefined => {
+        if (typeof value !== "string") {
+            return undefined
+        }
+
+        const trimmed = value.trim()
+        return trimmed.length > 0 ? trimmed : undefined
+    }
+
     const restoreLastSession = (characterName?: string) => {
         const options = get().lastJoinOptions || loadLastJoinOptions()
         if (!options?.sessionId && !options?.coterieId) {
@@ -578,9 +589,9 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             totalSuccesses: number
             results: Array<{ type: string; value: number }>
             poolInfo?: {
-                attribute?: string
-                skill?: string
-                discipline?: string
+                attribute?: string | null
+                skill?: string | null
+                discipline?: string | null
                 diceCount: number
                 bloodDiceCount: number
                 bloodSurge?: boolean
@@ -588,7 +599,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 disciplinePowerBonus?: number
                 meritFlawBonus?: number
             }
-            rollId?: string
+            rollId?: string | null
             isReroll?: boolean
         },
         characterName?: string
@@ -598,10 +609,32 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             console.warn("Cannot send dice roll: not in a session")
             return
         }
+
+        const poolInfo = rollData.poolInfo
+            ? {
+                  attribute: optionalString(rollData.poolInfo.attribute),
+                  skill: optionalString(rollData.poolInfo.skill),
+                  discipline: optionalString(rollData.poolInfo.discipline),
+                  diceCount: rollData.poolInfo.diceCount,
+                  bloodDiceCount: rollData.poolInfo.bloodDiceCount,
+                  bloodSurge: rollData.poolInfo.bloodSurge,
+                  specialtyBonus: rollData.poolInfo.specialtyBonus,
+                  disciplinePowerBonus: rollData.poolInfo.disciplinePowerBonus,
+                  meritFlawBonus: rollData.poolInfo.meritFlawBonus
+              }
+            : undefined
+
         sendMessage({
             type: "dice_roll",
-            rollData,
-            characterName
+            rollData: {
+                dice: rollData.dice,
+                totalSuccesses: rollData.totalSuccesses,
+                results: rollData.results,
+                poolInfo,
+                rollId: optionalString(rollData.rollId),
+                isReroll: rollData.isReroll
+            },
+            characterName: optionalString(characterName)
         })
     }
 

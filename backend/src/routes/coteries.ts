@@ -1,12 +1,14 @@
+import { Buffer } from "node:buffer"
 import { createHash } from "node:crypto"
 import { FastifyInstance } from "fastify"
-import { eq, and, sql, inArray } from "drizzle-orm"
+import { eq, and, sql, inArray, desc, asc } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
     createCoterieSchema,
     updateCoterieSchema,
     addCharacterToCoterieSchema,
+    coterieNoteSchema,
     coterieParamsSchema,
     coterieInviteParamsSchema,
     coteriePlayerParamsSchema,
@@ -17,7 +19,8 @@ import {
     CoteriePlayerParams,
     AcceptCoterieInviteParams,
     UpdateCoterieInput,
-    AddCharacterToCoterieInput
+    AddCharacterToCoterieInput,
+    CoterieNoteInput
 } from "../schemas/coterie.js"
 import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
@@ -31,10 +34,64 @@ import {
 import z from "zod"
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000
+const NOTE_MAX_BYTES = 200 * 1024
+const NOTE_VERSION_LIMIT = 10
+const NOTE_VERSION_SPLIT_MS = 60 * 60 * 1000
+const NOTE_SUBSTANTIAL_MIN_CHANGED_WORDS = 4
+const NOTE_SUBSTANTIAL_MIN_CHANGED_CHARS = 24
 
 const hashInviteToken = (token: string) => createHash("sha256").update(token).digest("hex")
 
 const inviteUnavailableReply = { error: "Invite link is invalid or expired" }
+
+const getUtf8ByteLength = (value: string) => Buffer.byteLength(value, "utf8")
+
+const tokenizeNoteWords = (value: string) =>
+    value
+        .toLowerCase()
+        .match(/[\p{L}\p{N}']+/gu) ?? []
+
+const getMultisetWordDelta = (previous: string, next: string) => {
+    const counts = new Map<string, number>()
+
+    for (const word of tokenizeNoteWords(previous)) {
+        counts.set(word, (counts.get(word) ?? 0) + 1)
+    }
+
+    for (const word of tokenizeNoteWords(next)) {
+        counts.set(word, (counts.get(word) ?? 0) - 1)
+    }
+
+    let changedWords = 0
+    for (const count of counts.values()) {
+        changedWords += Math.abs(count)
+    }
+
+    return changedWords
+}
+
+const isSubstantialNoteEdit = (previous: string, next: string) => {
+    const normalizedPrevious = previous.trim().replace(/\s+/g, " ")
+    const normalizedNext = next.trim().replace(/\s+/g, " ")
+
+    if (normalizedPrevious === normalizedNext) {
+        return false
+    }
+
+    const changedWords = getMultisetWordDelta(normalizedPrevious, normalizedNext)
+    const changedChars = Math.abs(normalizedNext.length - normalizedPrevious.length)
+
+    return (
+        changedWords >= NOTE_SUBSTANTIAL_MIN_CHANGED_WORDS ||
+        changedChars >= NOTE_SUBSTANTIAL_MIN_CHANGED_CHARS
+    )
+}
+
+const serializeNoteVersion = (version: typeof schema.coterieNoteVersions.$inferSelect) => ({
+    id: version.id,
+    content: version.content,
+    createdAt: version.createdAt
+})
 
 const withoutOwnerId = <T extends { ownerId: string }>(coterie: T) => {
     const { ownerId: _, ...safeCoterie } = coterie
@@ -399,6 +456,215 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             )
 
             reply.send(await buildCoterieResponse(access.coterie, userId, access.isOwner))
+        }
+    )
+
+    // Get current user's private notes for a coterie
+    fastify.get<{ Params: CoterieParams }>(
+        "/coteries/:id/notes",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: zodToFastifySchema(coterieParamsSchema)
+            }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { id: coterieId } = request.params as CoterieParams
+
+            const access = await getCoterieAccess(coterieId, userId)
+
+            if (!access) {
+                reply.code(404).send({ error: "Coterie not found" })
+                return
+            }
+
+            if (!access.hasAccess) {
+                reply.code(403).send({ error: "Forbidden: You don't have access to this coterie" })
+                return
+            }
+
+            const versions = await db.query.coterieNoteVersions.findMany({
+                where: and(
+                    eq(schema.coterieNoteVersions.coterieId, coterieId),
+                    eq(schema.coterieNoteVersions.userId, userId)
+                ),
+                orderBy: [desc(schema.coterieNoteVersions.createdAt)]
+            })
+
+            await trackEvent(
+                "coterie_private_notes_loaded",
+                {
+                    endpoint: "/coteries/:id/notes",
+                    method: "GET",
+                    userId,
+                    coterieId,
+                    versionCount: versions.length,
+                    hasNotes: versions.length > 0
+                },
+                userId,
+                request
+            )
+
+            reply.send({
+                current: versions[0] ? serializeNoteVersion(versions[0]) : null,
+                versions: versions.map(serializeNoteVersion)
+            })
+        }
+    )
+
+    // Save current user's private notes for a coterie
+    fastify.put<{
+        Params: CoterieParams
+        Body: CoterieNoteInput
+    }>(
+        "/coteries/:id/notes",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: zodToFastifySchema(coterieParamsSchema),
+                body: zodToFastifySchema(coterieNoteSchema)
+            }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { id: coterieId } = request.params as CoterieParams
+            const { content } = request.body as CoterieNoteInput
+            const contentBytes = getUtf8ByteLength(content)
+
+            if (contentBytes > NOTE_MAX_BYTES) {
+                await trackEvent(
+                    "coterie_private_notes_save_rejected",
+                    {
+                        endpoint: "/coteries/:id/notes",
+                        method: "PUT",
+                        userId,
+                        coterieId,
+                        reason: "content_too_large",
+                        contentBytes,
+                        limitBytes: NOTE_MAX_BYTES
+                    },
+                    userId,
+                    request
+                )
+
+                reply.code(413).send({
+                    error: "Notes too large",
+                    message: "Private notes must be 200 KB or less."
+                })
+                return
+            }
+
+            const access = await getCoterieAccess(coterieId, userId)
+
+            if (!access) {
+                reply.code(404).send({ error: "Coterie not found" })
+                return
+            }
+
+            if (!access.hasAccess) {
+                reply.code(403).send({ error: "Forbidden: You don't have access to this coterie" })
+                return
+            }
+
+            const existingVersions = await db.query.coterieNoteVersions.findMany({
+                where: and(
+                    eq(schema.coterieNoteVersions.coterieId, coterieId),
+                    eq(schema.coterieNoteVersions.userId, userId)
+                ),
+                orderBy: [desc(schema.coterieNoteVersions.createdAt)]
+            })
+            const latestVersion = existingVersions[0]
+
+            if (latestVersion?.content === content) {
+                reply.send({
+                    current: serializeNoteVersion(latestVersion),
+                    versions: existingVersions.map(serializeNoteVersion),
+                    createdNewVersion: false
+                })
+                return
+            }
+
+            const shouldCreateNewVersion =
+                !latestVersion ||
+                (Date.now() - latestVersion.createdAt.getTime() > NOTE_VERSION_SPLIT_MS &&
+                    isSubstantialNoteEdit(latestVersion.content, content))
+
+            const currentVersion = db.transaction((tx) => {
+                if (shouldCreateNewVersion) {
+                    const inserted = tx
+                        .insert(schema.coterieNoteVersions)
+                        .values({
+                            id: nanoid(),
+                            coterieId,
+                            userId,
+                            content
+                        })
+                        .returning()
+                        .get()
+
+                    const prunableVersions = tx
+                        .select({ id: schema.coterieNoteVersions.id })
+                        .from(schema.coterieNoteVersions)
+                        .where(
+                            and(
+                                eq(schema.coterieNoteVersions.coterieId, coterieId),
+                                eq(schema.coterieNoteVersions.userId, userId)
+                            )
+                        )
+                        .orderBy(asc(schema.coterieNoteVersions.createdAt))
+                        .all()
+
+                    const versionsToDelete = prunableVersions.slice(
+                        0,
+                        Math.max(0, prunableVersions.length - NOTE_VERSION_LIMIT)
+                    )
+
+                    for (const version of versionsToDelete) {
+                        tx.delete(schema.coterieNoteVersions)
+                            .where(eq(schema.coterieNoteVersions.id, version.id))
+                            .run()
+                    }
+
+                    return inserted
+                }
+
+                return tx
+                    .update(schema.coterieNoteVersions)
+                    .set({ content })
+                    .where(eq(schema.coterieNoteVersions.id, latestVersion!.id))
+                    .returning()
+                    .get()
+            })
+
+            const versions = await db.query.coterieNoteVersions.findMany({
+                where: and(
+                    eq(schema.coterieNoteVersions.coterieId, coterieId),
+                    eq(schema.coterieNoteVersions.userId, userId)
+                ),
+                orderBy: [desc(schema.coterieNoteVersions.createdAt)]
+            })
+
+            await trackEvent(
+                "coterie_private_notes_saved",
+                {
+                    endpoint: "/coteries/:id/notes",
+                    method: "PUT",
+                    userId,
+                    coterieId,
+                    contentBytes,
+                    createdNewVersion: shouldCreateNewVersion,
+                    versionCount: versions.length
+                },
+                userId,
+                request
+            )
+
+            reply.send({
+                current: serializeNoteVersion(currentVersion),
+                versions: versions.map(serializeNoteVersion),
+                createdNewVersion: shouldCreateNewVersion
+            })
         }
     )
 

@@ -11,6 +11,7 @@ import { Route as SheetRouteImport } from './routes/sheet'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoteriesCoterieIdRouteImport } from './routes/coteries.$coterieId'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminImpersonationRouteImport } from './routes/admin.impersonation'
 
@@ -34,6 +35,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoteriesCoterieIdRoute = CoteriesCoterieIdRouteImport.update({
+  id: '/coteries/$coterieId',
+  path: '/coteries/$coterieId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -50,6 +56,7 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/sheet': typeof SheetRoute
+  '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/impersonation': typeof AdminImpersonationRoute
 }
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/sheet': typeof SheetRoute
+  '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/impersonation': typeof AdminImpersonationRoute
 }
@@ -67,15 +75,16 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/sheet': typeof SheetRoute
+  '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/impersonation': typeof AdminImpersonationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/me' | '/sheet' | '/auth/callback' | '/admin/impersonation'
+  fullPaths: '/' | '/create' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/me' | '/sheet' | '/auth/callback' | '/admin/impersonation'
-  id: '__root__' | '/' | '/create' | '/me' | '/sheet' | '/auth/callback' | '/admin/impersonation'
+  to: '/' | '/create' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  id: '__root__' | '/' | '/create' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,6 +92,7 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   MeRoute: typeof MeRoute
   SheetRoute: typeof SheetRoute
+  CoteriesCoterieIdRoute: typeof CoteriesCoterieIdRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AdminImpersonationRoute: typeof AdminImpersonationRoute
 }
@@ -101,6 +111,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coteries/$coterieId': {
+      id: '/coteries/$coterieId'
+      path: '/coteries/$coterieId'
+      fullPath: '/coteries/$coterieId'
+      preLoaderRoute: typeof CoteriesCoterieIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -139,6 +156,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   MeRoute: MeRoute,
   SheetRoute: SheetRoute,
+  CoteriesCoterieIdRoute: CoteriesCoterieIdRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AdminImpersonationRoute: AdminImpersonationRoute,
 }

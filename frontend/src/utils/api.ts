@@ -220,6 +220,21 @@ export type AcceptCoterieInviteResponse = {
     coterie: CoterieResponse
 }
 
+export type CoterieNoteVersionResponse = {
+    id: string
+    content: string
+    createdAt: ApiTimestamp
+}
+
+export type CoterieNotesResponse = {
+    current: CoterieNoteVersionResponse | null
+    versions: CoterieNoteVersionResponse[]
+}
+
+export type SaveCoterieNotesResponse = CoterieNotesResponse & {
+    createdNewVersion: boolean
+}
+
 export type RecentChatSessionResponse =
     | {
           available: false
@@ -329,6 +344,13 @@ export const api = {
         ),
     removeCoteriePlayer: (coterieId: string, membershipId: string) =>
         apiRequest<void>(`/coteries/${coterieId}/players/${membershipId}`, { method: "DELETE" }),
+    getCoterieNotes: (coterieId: string) =>
+        apiRequest<CoterieNotesResponse>(`/coteries/${coterieId}/notes`),
+    saveCoterieNotes: (coterieId: string, data: { content: string }) =>
+        apiRequest<SaveCoterieNotesResponse>(`/coteries/${coterieId}/notes`, {
+            method: "PUT",
+            body: data
+        }),
 
     // Shares
     shareCharacter: (characterId: string, data: { sharedWithUserNickname: string }) =>

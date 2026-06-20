@@ -50,6 +50,13 @@
       "when": 1781873236787,
       "tag": "0006_mature_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1781960338481,
+      "tag": "0007_chief_edwin_jarvis",
+      "breakpoints": true
     }
   ]
 }

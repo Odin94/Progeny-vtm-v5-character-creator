@@ -25,6 +25,14 @@ export const useCoterieInvites = (coterieId: string | null) => {
     })
 }
 
+export const useCoterieNotes = (coterieId: string | null) => {
+    return useQuery({
+        queryKey: ["coteries", coterieId, "notes"],
+        queryFn: () => (coterieId ? api.getCoterieNotes(coterieId) : null),
+        enabled: !!coterieId
+    })
+}
+
 export const useCreateCoterie = () => {
     const queryClient = useQueryClient()
 
@@ -105,6 +113,18 @@ export const useRemoveCoteriePlayer = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
+        }
+    })
+}
+
+export const useSaveCoterieNotes = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ coterieId, content }: { coterieId: string; content: string }) =>
+            api.saveCoterieNotes(coterieId, { content }),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData(["coteries", variables.coterieId, "notes"], data)
         }
     })
 }

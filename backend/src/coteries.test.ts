@@ -125,9 +125,21 @@ const createTables = async () => {
             revoked_at integer
         )`)
     )
+    await db.run(
+        sql.raw(`CREATE TABLE IF NOT EXISTS coterie_note_versions (
+            id text PRIMARY KEY NOT NULL,
+            coterie_id text NOT NULL REFERENCES coteries(id) ON DELETE cascade,
+            user_id text NOT NULL REFERENCES users(id) ON DELETE cascade,
+            content text NOT NULL,
+            created_at integer DEFAULT (unixepoch()) NOT NULL
+        )`)
+    )
 }
 
 const cleanup = async () => {
+    await db
+        .delete(schema.coterieNoteVersions)
+        .where(eq(schema.coterieNoteVersions.coterieId, COTERIE_ID))
     await db.delete(schema.coterieInvites).where(eq(schema.coterieInvites.coterieId, COTERIE_ID))
     await db
         .delete(schema.coteriePlayerMemberships)
@@ -443,5 +455,109 @@ describe("coterie invites and membership permissions", () => {
             where: eq(schema.coterieMembers.characterId, MEMBER_CHARACTER_ID)
         })
         expect(removedCharacterMembership).toBeUndefined()
+    })
+
+    it("keeps private coterie notes per user and caps substantial old versions at ten", async () => {
+        const ownerSaveResponse = await app.inject({
+            method: "PUT",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: "First private owner note" }
+        })
+        expect(ownerSaveResponse.statusCode).toBe(200)
+        expect(ownerSaveResponse.json().versions).toHaveLength(1)
+
+        const otherUserResponse = await app.inject({
+            method: "GET",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders
+        })
+        expect(otherUserResponse.statusCode).toBe(200)
+        expect(otherUserResponse.json().current.content).toBe("First private owner note")
+
+        setWorkosUser(OTHER_ID)
+        const forbiddenResponse = await app.inject({
+            method: "GET",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders
+        })
+        expect(forbiddenResponse.statusCode).toBe(403)
+
+        const invite = await createInvite(app)
+        setWorkosUser(MEMBER_ID)
+        const acceptResponse = await app.inject({
+            method: "POST",
+            url: `/coterie-invites/${invite.token}/accept`,
+            headers: csrfHeaders
+        })
+        expect(acceptResponse.statusCode).toBe(200)
+
+        const memberNotesResponse = await app.inject({
+            method: "GET",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders
+        })
+        expect(memberNotesResponse.statusCode).toBe(200)
+        expect(memberNotesResponse.json().current).toBeNull()
+
+        const memberSaveResponse = await app.inject({
+            method: "PUT",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: "Member-only note" }
+        })
+        expect(memberSaveResponse.statusCode).toBe(200)
+        expect(memberSaveResponse.json().current.content).toBe("Member-only note")
+
+        setWorkosUser(OWNER_ID)
+        const oldTimestamp = new Date(Date.now() - 2 * 60 * 60 * 1000)
+        await db
+            .update(schema.coterieNoteVersions)
+            .set({ createdAt: oldTimestamp })
+            .where(eq(schema.coterieNoteVersions.userId, OWNER_ID))
+
+        const tinyEditResponse = await app.inject({
+            method: "PUT",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: "First private owner note!" }
+        })
+        expect(tinyEditResponse.statusCode).toBe(200)
+        expect(tinyEditResponse.json().versions).toHaveLength(1)
+        expect(tinyEditResponse.json().createdNewVersion).toBe(false)
+
+        const substantialEditResponse = await app.inject({
+            method: "PUT",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders,
+            payload: {
+                content: "First private owner note, but now the prince has demanded a new favor."
+            }
+        })
+        expect(substantialEditResponse.statusCode).toBe(200)
+        expect(substantialEditResponse.json().versions).toHaveLength(2)
+        expect(substantialEditResponse.json().createdNewVersion).toBe(true)
+
+        for (let index = 0; index < 10; index += 1) {
+            await db
+                .update(schema.coterieNoteVersions)
+                .set({ createdAt: oldTimestamp })
+                .where(eq(schema.coterieNoteVersions.userId, OWNER_ID))
+
+            const response = await app.inject({
+                method: "PUT",
+                url: `/coteries/${COTERIE_ID}/notes`,
+                headers: csrfHeaders,
+                payload: {
+                    content: `Version ${index} adds enough different words to trigger a new note snapshot.`
+                }
+            })
+            expect(response.statusCode).toBe(200)
+        }
+
+        const ownerVersions = await db.query.coterieNoteVersions.findMany({
+            where: eq(schema.coterieNoteVersions.userId, OWNER_ID)
+        })
+        expect(ownerVersions).toHaveLength(10)
     })
 })

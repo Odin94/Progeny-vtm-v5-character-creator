@@ -122,6 +122,30 @@ export const coterieInvites = sqliteTable(
     })
 )
 
+export const coterieNoteVersions = sqliteTable(
+    "coterie_note_versions",
+    {
+        id: text("id").primaryKey(),
+        coterieId: text("coterie_id")
+            .notNull()
+            .references(() => coteries.id, { onDelete: "cascade" }),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        content: text("content").notNull(),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        coterieUserIdx: index("coterie_note_versions_coterie_user_idx").on(
+            table.coterieId,
+            table.userId
+        ),
+        createdAtIdx: index("coterie_note_versions_created_at_idx").on(table.createdAt)
+    })
+)
+
 export const characterShares = sqliteTable(
     "character_shares",
     {
@@ -191,6 +215,8 @@ export type CoteriePlayerMembership = typeof coteriePlayerMemberships.$inferSele
 export type NewCoteriePlayerMembership = typeof coteriePlayerMemberships.$inferInsert
 export type CoterieInvite = typeof coterieInvites.$inferSelect
 export type NewCoterieInvite = typeof coterieInvites.$inferInsert
+export type CoterieNoteVersion = typeof coterieNoteVersions.$inferSelect
+export type NewCoterieNoteVersion = typeof coterieNoteVersions.$inferInsert
 export type CharacterShare = typeof characterShares.$inferSelect
 export type NewCharacterShare = typeof characterShares.$inferInsert
 export type ImpersonationSession = typeof impersonationSessions.$inferSelect
@@ -223,7 +249,8 @@ export const coteriesRelations = relations(coteries, ({ one, many }) => ({
     }),
     members: many(coterieMembers),
     playerMemberships: many(coteriePlayerMemberships),
-    invites: many(coterieInvites)
+    invites: many(coterieInvites),
+    noteVersions: many(coterieNoteVersions)
 }))
 
 export const coterieMembersRelations = relations(coterieMembers, ({ one }) => ({
@@ -258,6 +285,17 @@ export const coterieInvitesRelations = relations(coterieInvites, ({ one }) => ({
     }),
     createdBy: one(users, {
         fields: [coterieInvites.createdById],
+        references: [users.id]
+    })
+}))
+
+export const coterieNoteVersionsRelations = relations(coterieNoteVersions, ({ one }) => ({
+    coterie: one(coteries, {
+        fields: [coterieNoteVersions.coterieId],
+        references: [coteries.id]
+    }),
+    user: one(users, {
+        fields: [coterieNoteVersions.userId],
         references: [users.id]
     })
 }))

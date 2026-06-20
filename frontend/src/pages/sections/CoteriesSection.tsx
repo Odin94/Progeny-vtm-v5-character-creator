@@ -11,9 +11,11 @@ import {
     Text,
     Title
 } from "@mantine/core"
+import { Link } from "@tanstack/react-router"
 import {
     IconDots,
     IconEdit,
+    IconExternalLink,
     IconInfoCircle,
     IconLink,
     IconMessageCircle,
@@ -109,6 +111,17 @@ const CoteriesSection = ({
                                         )}
                                     </Group>
                                     <Group gap="xs">
+                                        <Button
+                                            component={Link}
+                                            to="/coteries/$coterieId"
+                                            params={{ coterieId: coterie.id }}
+                                            size="xs"
+                                            color="red"
+                                            variant="filled"
+                                            leftSection={<IconExternalLink size={14} />}
+                                        >
+                                            View
+                                        </Button>
                                         <Button
                                             size="xs"
                                             color="red"
