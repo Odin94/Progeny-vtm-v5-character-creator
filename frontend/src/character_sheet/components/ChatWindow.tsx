@@ -40,6 +40,7 @@ type ChatWindowProps = {
     options: Pick<SheetOptions, "primaryColor" | "character">
     openSignal?: number
     sessionLabel?: string | null
+    sessionLabelSessionId?: string | null
 }
 
 type Coterie = {
@@ -48,7 +49,12 @@ type Coterie = {
     owned: boolean
 }
 
-const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
+const ChatWindow = ({
+    options,
+    openSignal,
+    sessionLabel,
+    sessionLabelSessionId
+}: ChatWindowProps) => {
     const { primaryColor, character } = options
     const theme = useMantineTheme()
     const colorValue = primaryColor.startsWith("#")
@@ -85,7 +91,11 @@ const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
     } = useSessionChat()
 
     const characterName = character?.name || undefined
-    const chatTitle = sessionLabel ? `${sessionLabel} Chat` : "Chat"
+    const showSessionLabel =
+        !!sessionLabel &&
+        currentSessionType === "coterie" &&
+        (!sessionLabelSessionId || sessionLabelSessionId === sessionId)
+    const chatTitle = showSessionLabel ? `${sessionLabel} Chat` : "Chat"
 
     useEffect(() => {
         if (openSignal) {

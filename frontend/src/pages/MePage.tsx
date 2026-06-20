@@ -347,6 +347,7 @@ const MePage = () => {
     const [coterieForSummary, setCoterieForSummary] = useState<Coterie | null>(null)
     const [chatOpenSignal, setChatOpenSignal] = useState(0)
     const [activeChatCoterieName, setActiveChatCoterieName] = useState<string | null>(null)
+    const [activeChatCoterieId, setActiveChatCoterieId] = useState<string | null>(null)
     const { data: coterieInvites } = useCoterieInvites(
         coterieInvitesModalOpened ? coterieForInvites?.id || null : null
     )
@@ -1406,6 +1407,7 @@ const MePage = () => {
         const characterName = character.name.trim() || undefined
 
         setActiveChatCoterieName(coterie.name)
+        setActiveChatCoterieId(coterie.id)
         setChatOpenSignal((value) => value + 1)
         connectChat()
         joinChatSession({ coterieId: coterie.id, characterName })
@@ -2493,6 +2495,7 @@ const MePage = () => {
                 }}
                 openSignal={chatOpenSignal}
                 sessionLabel={activeChatCoterieName}
+                sessionLabelSessionId={activeChatCoterieId}
             />
         </>
     )

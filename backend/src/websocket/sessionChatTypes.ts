@@ -91,6 +91,7 @@ export type SessionJoinedMessage = {
     type: "session_joined"
     sessionId: string
     sessionType: "temporary" | "coterie"
+    coterieId?: string
     participants: Array<{ userId: string; userName: string; characterName?: string }>
 }
 

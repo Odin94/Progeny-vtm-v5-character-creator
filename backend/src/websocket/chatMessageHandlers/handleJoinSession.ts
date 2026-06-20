@@ -157,6 +157,7 @@ export async function handleJoinSession(
                 type: "session_joined",
                 sessionId: currentSession.id,
                 sessionType: currentSession.type,
+                coterieId: currentSession.coterieId,
                 participants
             } as SessionJoinedMessage)
         )

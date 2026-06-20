@@ -68,6 +68,7 @@ type SessionJoinedMessage = {
     type: "session_joined"
     sessionId: string
     sessionType: "temporary" | "coterie"
+    coterieId?: string
     participants: Participant[]
 }
 
@@ -233,7 +234,10 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 const queue = [...currentState.messageQueue]
                 set({ messageQueue: [] })
                 queue.forEach((queuedMessage) => {
-                    if (ws.readyState === WebSocket.OPEN) {
+                    if (
+                        queuedMessage.type !== "join_session" &&
+                        ws.readyState === WebSocket.OPEN
+                    ) {
                         ws.send(JSON.stringify(queuedMessage))
                     }
                 })
@@ -252,7 +256,10 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             const queue = [...currentState.messageQueue]
             set({ messageQueue: [] })
             queue.forEach((queuedMessage) => {
-                if (ws.readyState === WebSocket.OPEN) {
+                if (
+                    queuedMessage.type !== "join_session" &&
+                    ws.readyState === WebSocket.OPEN
+                ) {
                     ws.send(JSON.stringify(queuedMessage))
                 }
             })
@@ -266,7 +273,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 switch (data.type) {
                     case "session_joined": {
                         if (data.sessionType === "coterie") {
-                            const options = { coterieId: data.sessionId }
+                            const options = { coterieId: data.coterieId ?? data.sessionId }
                             saveLastJoinOptions(options)
                             set({
                                 sessionId: data.sessionId,
@@ -447,7 +454,11 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             ? { sessionId: options.sessionId, coterieId: options.coterieId }
             : null
         saveLastJoinOptions(joinOptions)
-        set({ lastJoinOptions: joinOptions, isManualDisconnect: false })
+        set((state) => ({
+            lastJoinOptions: joinOptions,
+            isManualDisconnect: false,
+            messageQueue: state.messageQueue.filter((message) => message.type !== "join_session")
+        }))
 
         try {
             const isCreating = !options || (!options.sessionId && !options.coterieId)
@@ -467,12 +478,22 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             console.warn("PostHog chat tracking failed:", error)
         }
 
-        sendMessage({
+        const joinMessage = {
             type: "join_session",
             sessionId: options?.sessionId,
             coterieId: options?.coterieId,
             characterName: options?.characterName
-        })
+        }
+
+        const state = get()
+        if (state.ws?.readyState === WebSocket.OPEN) {
+            state.ws.send(JSON.stringify(joinMessage))
+        } else if (
+            state.connectionStatus === "disconnected" ||
+            state.connectionStatus === "error"
+        ) {
+            connect()
+        }
     }
 
     const leaveSession = () => {
