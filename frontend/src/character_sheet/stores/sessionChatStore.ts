@@ -447,7 +447,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             ? { sessionId: options.sessionId, coterieId: options.coterieId }
             : null
         saveLastJoinOptions(joinOptions)
-        set({ lastJoinOptions: joinOptions })
+        set({ lastJoinOptions: joinOptions, isManualDisconnect: false })
 
         try {
             const isCreating = !options || (!options.sessionId && !options.coterieId)

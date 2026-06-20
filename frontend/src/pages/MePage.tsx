@@ -78,6 +78,7 @@ import {
 } from "~/hooks/useCoteries"
 import { parseCharacterData } from "~/utils/characterData"
 import { useCharacterShares, useUnshareCharacter } from "~/hooks/useShares"
+import { useSessionChat } from "~/hooks/useSessionChat"
 import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
 import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
@@ -253,6 +254,7 @@ const MePage = () => {
     const theme = useMantineTheme()
     const redColorValue = theme.colors.red[6]
     const queryClient = useQueryClient()
+    const { connect: connectChat, joinSession: joinChatSession } = useSessionChat()
 
     // Character CRUD
     // TODOdin: Load character after creation; but don't use onSuccess, but instead use query state (onSuccess is deprecated)
@@ -343,6 +345,8 @@ const MePage = () => {
     const [characterForSummary, setCharacterForSummary] = useState<Character | null>(null)
     const [coterieSummaryModalOpened, setCoterieSummaryModalOpened] = useState(false)
     const [coterieForSummary, setCoterieForSummary] = useState<Coterie | null>(null)
+    const [chatOpenSignal, setChatOpenSignal] = useState(0)
+    const [activeChatCoterieName, setActiveChatCoterieName] = useState<string | null>(null)
     const { data: coterieInvites } = useCoterieInvites(
         coterieInvitesModalOpened ? coterieForInvites?.id || null : null
     )
@@ -1398,6 +1402,15 @@ const MePage = () => {
         setCoterieInvitesModalOpened(true)
     }
 
+    const handleJoinCoterieChat = (coterie: Coterie) => {
+        const characterName = character.name.trim() || undefined
+
+        setActiveChatCoterieName(coterie.name)
+        setChatOpenSignal((value) => value + 1)
+        connectChat()
+        joinChatSession({ coterieId: coterie.id, characterName })
+    }
+
     const handleConfirmAddCharacterToCoterie = () => {
         if (!selectedCoterieForAdd || !selectedCharacterForCoterie) {
             return
@@ -1837,6 +1850,7 @@ const MePage = () => {
                                     handleEditCoterie={handleEditCoterie}
                                     handleDeleteCoterie={handleDeleteCoterie}
                                     handleManageCoterieInvites={handleManageCoterieInvites}
+                                    handleJoinCoterieChat={handleJoinCoterieChat}
                                     handleRemoveCoteriePlayer={handleRemoveCoteriePlayer}
                                     handleShowCharacterSummary={handleShowSummary}
                                     handleRemoveCharacterFromCoterie={
@@ -2474,14 +2488,11 @@ const MePage = () => {
             </Modal>
             <ChatWindow
                 options={{
-                    mode: "play",
                     primaryColor: "red",
-                    character,
-                    setCharacter,
-                    diceModalOpened: false,
-                    preferences: { colorTheme: null, backgroundImage: null },
-                    onUpdatePreferences: () => undefined
+                    character
                 }}
+                openSignal={chatOpenSignal}
+                sessionLabel={activeChatCoterieName}
             />
         </>
     )

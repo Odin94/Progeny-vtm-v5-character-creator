@@ -23,6 +23,11 @@ import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
+import {
+    ensureCoterieSession,
+    removeCoterieSession,
+    removeCoterieSessionParticipant
+} from "../websocket/sessionChat.js"
 import z from "zod"
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000
@@ -252,6 +257,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
 
                     return createdCoterie
                 })
+                ensureCoterieSession(coterieId, userId)
 
                 logger.info("Coterie created", {
                     endpoint: "/coteries",
@@ -486,6 +492,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             }
 
             await db.delete(schema.coteries).where(eq(schema.coteries.id, id))
+            removeCoterieSession(id)
 
             await trackEvent(
                 "coterie_deleted",
@@ -795,6 +802,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     .where(eq(schema.coteriePlayerMemberships.id, membershipId))
                     .run()
             })
+            removeCoterieSessionParticipant(coterieId, membership.userId)
 
             await trackEvent(
                 "coterie_player_removed",

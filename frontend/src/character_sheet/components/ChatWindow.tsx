@@ -36,7 +36,9 @@ import { api } from "~/utils/api"
 import { RollData } from "../stores/sessionChatStore"
 
 type ChatWindowProps = {
-    options: SheetOptions
+    options: Pick<SheetOptions, "primaryColor" | "character">
+    openSignal?: number
+    sessionLabel?: string | null
 }
 
 type Coterie = {
@@ -45,13 +47,13 @@ type Coterie = {
     owned: boolean
 }
 
-const ChatWindow = ({ options }: ChatWindowProps) => {
+const ChatWindow = ({ options, openSignal, sessionLabel }: ChatWindowProps) => {
     const { primaryColor, character } = options
     const theme = useMantineTheme()
     const colorValue = primaryColor.startsWith("#")
         ? primaryColor
         : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const [expanded, { toggle: toggleExpanded }] = useDisclosure(false)
+    const [expanded, { toggle: toggleExpanded, open: openExpanded }] = useDisclosure(false)
     const [view, setView] = useState<"disconnected" | "creating" | "joining" | "joiningCoterie">(
         "disconnected"
     )
@@ -79,6 +81,13 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
     } = useSessionChat()
 
     const characterName = character?.name || undefined
+    const chatTitle = sessionLabel ? `${sessionLabel} Chat` : "Chat"
+
+    useEffect(() => {
+        if (openSignal) {
+            openExpanded()
+        }
+    }, [openSignal, openExpanded])
 
     useEffect(() => {
         if (expanded && isAuthenticated && connectionStatus === "disconnected") {
@@ -293,7 +302,7 @@ const ChatWindow = ({ options }: ChatWindowProps) => {
                 <Group justify="space-between" mb="xs">
                     <Group gap="xs">
                         <Text fw={600} size="lg">
-                            Chat
+                            {chatTitle}
                         </Text>
                         <Tooltip
                             label="Chat messages are not stored on the server and will be lost when the chat is closed"

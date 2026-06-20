@@ -1,28 +1,30 @@
 import { type Session, type UserLeftMessage } from "../sessionChatTypes.js"
-import { temporarySessions, coterieSessions } from "../sessionChat.js"
+import { temporarySessions } from "../sessionChat.js"
 import { trackSessionClosed } from "../sessionChatLifecycle.js"
 import { broadcastToSession } from "../sessionChatUtils.js"
 
 export function handleLeaveSession(userId: string, currentSession: Session | null): Session | null {
     if (currentSession) {
-        currentSession.participants.delete(userId)
-        currentSession.lastActivity = Date.now()
-
-        if (currentSession.participants.size === 0) {
-            trackSessionClosed(currentSession, "empty", userId)
-            if (currentSession.type === "temporary") {
-                temporarySessions.delete(currentSession.id)
-            } else {
-                coterieSessions.delete(currentSession.id)
-            }
-        } else {
-            broadcastToSession(currentSession, {
-                type: "user_left",
-                userId
-            } as UserLeftMessage)
-        }
-
+        removeParticipantFromSession(userId, currentSession)
         return null
     }
     return currentSession
+}
+
+export function removeParticipantFromSession(userId: string, session: Session): void {
+    session.participants.delete(userId)
+    session.lastActivity = Date.now()
+
+    if (session.participants.size === 0) {
+        if (session.type === "temporary") {
+            trackSessionClosed(session, "empty", userId)
+            temporarySessions.delete(session.id)
+        }
+        return
+    }
+
+    broadcastToSession(session, {
+        type: "user_left",
+        userId
+    } as UserLeftMessage)
 }

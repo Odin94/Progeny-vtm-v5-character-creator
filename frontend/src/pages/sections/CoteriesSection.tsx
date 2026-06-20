@@ -16,6 +16,7 @@ import {
     IconEdit,
     IconInfoCircle,
     IconLink,
+    IconMessageCircle,
     IconPlus,
     IconTrash,
     IconUserMinus,
@@ -35,6 +36,7 @@ type CoteriesSectionProps = {
     handleEditCoterie: (coterie: Coterie) => void
     handleDeleteCoterie: (coterieId: string, coterieName: string) => void
     handleManageCoterieInvites: (coterie: Coterie) => void
+    handleJoinCoterieChat: (coterie: Coterie) => void
     handleRemoveCoteriePlayer: (coterie: Coterie, player: CoteriePlayer) => void
     handleShowCharacterSummary: (character: Character) => void
     handleRemoveCharacterFromCoterie: (
@@ -56,6 +58,7 @@ const CoteriesSection = ({
     handleEditCoterie,
     handleDeleteCoterie,
     handleManageCoterieInvites,
+    handleJoinCoterieChat,
     handleRemoveCoteriePlayer,
     handleShowCharacterSummary,
     handleRemoveCharacterFromCoterie,
@@ -106,6 +109,15 @@ const CoteriesSection = ({
                                         )}
                                     </Group>
                                     <Group gap="xs">
+                                        <Button
+                                            size="xs"
+                                            color="red"
+                                            variant="light"
+                                            leftSection={<IconMessageCircle size={14} />}
+                                            onClick={() => handleJoinCoterieChat(coterie)}
+                                        >
+                                            Chat
+                                        </Button>
                                         <Button
                                             size="xs"
                                             color="red"

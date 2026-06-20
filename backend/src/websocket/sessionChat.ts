@@ -19,6 +19,64 @@ import {
 export const temporarySessions = new Map<string, Session>()
 export const coterieSessions = new Map<string, Session>()
 
+export function ensureCoterieSession(coterieId: string, creatorUserId: string): Session {
+    const existingSession = coterieSessions.get(coterieId)
+    if (existingSession) {
+        return existingSession
+    }
+
+    const now = Date.now()
+    const session: Session = {
+        id: coterieId,
+        type: "coterie",
+        coterieId,
+        creatorUserId,
+        participants: new Map(),
+        createdAt: now,
+        lastActivity: now,
+        maxParticipantCount: 0
+    }
+    coterieSessions.set(coterieId, session)
+    return session
+}
+
+export function removeCoterieSession(coterieId: string): void {
+    const session = coterieSessions.get(coterieId)
+    if (session) {
+        broadcastToSession(session, {
+            type: "error",
+            message: "Coterie chat closed because the coterie was deleted"
+        })
+        session.participants.clear()
+        session.lastActivity = Date.now()
+    }
+    coterieSessions.delete(coterieId)
+}
+
+export function removeCoterieSessionParticipant(coterieId: string, userId: string): void {
+    const session = coterieSessions.get(coterieId)
+    const participant = session?.participants.get(userId)
+    if (!session || !participant) {
+        return
+    }
+
+    if (participant.socket.readyState === 1) {
+        participant.socket.send(
+            JSON.stringify({
+                type: "error",
+                message: "You were removed from this coterie chat"
+            })
+        )
+    }
+
+    session.participants.delete(userId)
+    session.lastActivity = Date.now()
+    broadcastToSession(session, {
+        type: "user_left",
+        userId
+    })
+}
+
 const SESSION_EXPIRY_MS = 24 * 60 * 60 * 1000
 
 const updateSessionExpiry = () => {
@@ -169,11 +227,9 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
                         currentSession.lastActivity = Date.now()
 
                         if (currentSession.participants.size === 0) {
-                            trackSessionClosed(currentSession, "empty", userId)
                             if (currentSession.type === "temporary") {
+                                trackSessionClosed(currentSession, "empty", userId)
                                 temporarySessions.delete(currentSession.id)
-                            } else {
-                                coterieSessions.delete(currentSession.id)
                             }
                         } else {
                             broadcastToSession(currentSession, {

@@ -10,9 +10,10 @@ import {
     type SessionJoinedMessage,
     type UserJoinedMessage
 } from "../sessionChatTypes.js"
-import { temporarySessions, coterieSessions } from "../sessionChat.js"
+import { temporarySessions, coterieSessions, ensureCoterieSession } from "../sessionChat.js"
 import { recordSessionJoin } from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, broadcastToSession } from "../sessionChatUtils.js"
+import { removeParticipantFromSession } from "./handleLeaveSession.js"
 
 export async function handleJoinSession(
     data: JoinSessionMessage,
@@ -23,6 +24,7 @@ export async function handleJoinSession(
     currentSession: Session | null
 ): Promise<Session | null> {
     const { sessionId, coterieId, characterName } = data
+    const previousSession = currentSession
 
     if (coterieId) {
         const coterie = await db.query.coteries.findFirst({
@@ -60,20 +62,7 @@ export async function handleJoinSession(
         }
 
         const isNewCoterieSession = !coterieSessions.has(coterieId)
-        if (isNewCoterieSession) {
-            coterieSessions.set(coterieId, {
-                id: coterieId,
-                type: "coterie",
-                coterieId,
-                creatorUserId: userId,
-                participants: new Map(),
-                createdAt: Date.now(),
-                lastActivity: Date.now(),
-                maxParticipantCount: 0
-            })
-        }
-
-        currentSession = coterieSessions.get(coterieId)!
+        currentSession = ensureCoterieSession(coterieId, coterie.ownerId)
 
         if (isNewCoterieSession) {
             trackEvent(
@@ -119,6 +108,10 @@ export async function handleJoinSession(
     }
 
     if (currentSession) {
+        if (previousSession && previousSession.id !== currentSession.id) {
+            removeParticipantFromSession(userId, previousSession)
+        }
+
         const wasExistingSession = currentSession.participants.size > 0
         const participant: Participant = {
             userId,
