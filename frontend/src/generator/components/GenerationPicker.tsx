@@ -48,10 +48,16 @@ const generationOptions: GenerationOption[] = [
     { value: "10", label: "10th Gen - Ancilla", tier: "Ancilla" }
 ]
 
+const getGenerationBonusXp = (generation: number) => {
+    if (generation === 13 || generation === 12) return 15
+    if (generation === 11 || generation === 10) return 35
+    return 0
+}
+
 const getGenerationSummary = (generation: number) => {
     const baseCharacter = { ...getEmptyCharacter(), generation }
     const bloodPotency = calculateBloodPotency(baseCharacter)
-    const bonusXp = generation === 14 ? 0 : generation === 13 ? 15 : 35
+    const bonusXp = getGenerationBonusXp(generation)
     const additionalAdvantageDots = generation === 10 || generation === 11 ? 2 : 0
     const additionalFlawDots = generation === 10 || generation === 11 ? 2 : 0
 
@@ -298,13 +304,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                         const genValue = parseInt(generation ?? "0")
                         let experience = 0
                         if (character.experience === 0) {
-                            if (genValue === 14) {
-                                experience = 0
-                            } else if (genValue === 13) {
-                                experience = 15
-                            } else if (genValue <= 12) {
-                                experience = 35
-                            }
+                            experience = getGenerationBonusXp(genValue)
                         }
                         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                         setCharacter({ ...character, generation: genValue, experience })
