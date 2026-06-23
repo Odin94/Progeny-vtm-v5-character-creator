@@ -239,7 +239,10 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
 
     const connect = () => {
         const state = get()
-        if (state.ws?.readyState === WebSocket.OPEN) {
+        if (
+            state.ws?.readyState === WebSocket.OPEN ||
+            state.ws?.readyState === WebSocket.CONNECTING
+        ) {
             return
         }
 

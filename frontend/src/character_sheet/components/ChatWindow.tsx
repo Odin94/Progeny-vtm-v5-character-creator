@@ -28,7 +28,7 @@ import {
     IconX,
     IconArrowLeft
 } from "@tabler/icons-react"
-import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
 import { SheetOptions } from "../CharacterSheet"
@@ -98,6 +98,8 @@ const ChatWindow = ({
     const [messageInput, setMessageInput] = useState("")
     const [joinError, setJoinError] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const restoredSessionForUserRef = useRef<string | null>(null)
+    const loadedOpenPanelDataRef = useRef(false)
     const { user, isAuthenticated, signIn } = useAuth()
 
     const {
@@ -123,6 +125,25 @@ const ChatWindow = ({
 
     const isExpanded = lockedOpen || expanded
 
+    const loadCoteries = useCallback(async () => {
+        try {
+            const data = await api.getCoteries()
+            setCoteries(data as Coterie[])
+        } catch (error) {
+            console.error("Failed to load coteries:", error)
+        }
+    }, [])
+
+    const loadRecentChatSession = useCallback(async () => {
+        try {
+            const data = await api.getRecentChatSession()
+            setRecentChatSession(data.available ? data : null)
+        } catch (error) {
+            console.error("Failed to load recent chat session:", error)
+            setRecentChatSession(null)
+        }
+    }, [])
+
     useEffect(() => {
         if (openSignal || lockedOpen) {
             openExpanded()
@@ -130,17 +151,39 @@ const ChatWindow = ({
     }, [lockedOpen, openSignal, openExpanded])
 
     useEffect(() => {
-        if (isAuthenticated && connectionStatus === "disconnected") {
+        if (!isAuthenticated) {
+            restoredSessionForUserRef.current = null
+            return
+        }
+
+        const userKey = user?.id ?? "authenticated"
+        if (
+            connectionStatus === "disconnected" &&
+            restoredSessionForUserRef.current !== userKey
+        ) {
+            restoredSessionForUserRef.current = userKey
             restoreLastSession(characterName)
         }
-    }, [isAuthenticated, connectionStatus, restoreLastSession, characterName])
+    }, [isAuthenticated, user?.id, connectionStatus, restoreLastSession, characterName])
 
     useEffect(() => {
-        if (isExpanded && isAuthenticated && connectionStatus === "disconnected") {
-            loadCoteries()
-            loadRecentChatSession()
+        if (!isAuthenticated) {
+            loadedOpenPanelDataRef.current = false
+            setCoteries([])
+            setRecentChatSession(null)
+            return
         }
-    }, [isExpanded, isAuthenticated, connectionStatus])
+
+        if (!isExpanded) {
+            loadedOpenPanelDataRef.current = false
+            return
+        }
+
+        if (!loadedOpenPanelDataRef.current) {
+            loadedOpenPanelDataRef.current = true
+            void Promise.all([loadCoteries(), loadRecentChatSession()])
+        }
+    }, [isExpanded, isAuthenticated, loadCoteries, loadRecentChatSession])
 
     useEffect(() => {
         if (isExpanded && messages.length > 0) {
@@ -157,25 +200,6 @@ const ChatWindow = ({
             setView("disconnected")
         }
     }, [messages, connectionStatus, sessionId, view])
-
-    const loadCoteries = async () => {
-        try {
-            const data = await api.getCoteries()
-            setCoteries(data as Coterie[])
-        } catch (error) {
-            console.error("Failed to load coteries:", error)
-        }
-    }
-
-    const loadRecentChatSession = async () => {
-        try {
-            const data = await api.getRecentChatSession()
-            setRecentChatSession(data.available ? data : null)
-        } catch (error) {
-            console.error("Failed to load recent chat session:", error)
-            setRecentChatSession(null)
-        }
-    }
 
     const handleCreateSession = () => {
         setSessionType("temporary")
