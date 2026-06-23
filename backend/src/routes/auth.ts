@@ -11,6 +11,12 @@ import { clearImpersonationCookie, endImpersonationSession } from "../middleware
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
 import { clearSessionCookie, setSessionCookie } from "../utils/sessionCookie.js"
+import {
+    authCallbackRateLimit,
+    authProfileMutationRateLimit,
+    authRedirectRateLimit,
+    authSessionRateLimit
+} from "../utils/rateLimit.js"
 
 const DEFAULT_POST_AUTH_PATH = "/"
 
@@ -52,232 +58,251 @@ function getSafeReturnPath(returnTo?: string): string {
 
 export async function authRoutes(fastify: FastifyInstance) {
     // Sign-in endpoint - redirects to WorkOS AuthKit
-    fastify.get("/auth/login", async (request, reply) => {
-        try {
-            const loginQueryResult = loginQuerySchema.safeParse(request.query)
-            const returnTo = loginQueryResult.success
-                ? getSafeReturnPath(loginQueryResult.data.returnTo)
-                : DEFAULT_POST_AUTH_PATH
-
-            // Construct the frontend URL for the callback
-            // WorkOS will redirect to the frontend, which then calls the backend API
-            let redirectUri: string
-            const hostHeader = request.headers.host
-            const isLocalhost =
-                hostHeader?.includes("localhost") ||
-                hostHeader?.includes("127.0.0.1") ||
-                request.hostname === "localhost" ||
-                request.hostname === "127.0.0.1"
-
-            if (env.FRONTEND_URL) {
-                redirectUri = `${env.FRONTEND_URL}/auth/callback`
-            } else {
-                const protocol =
-                    request.protocol || (env.NODE_ENV === "production" ? "https" : "http")
-
-                // In development, use localhost:3000 (frontend port)
-                // In production, extract hostname from request
-                if (isLocalhost) {
-                    redirectUri = `http://localhost:3000/auth/callback`
-                } else {
-                    // Try to get host from Host header, fallback to hostname
-                    const host = hostHeader || request.hostname || "localhost"
-                    // Remove port if present (frontend uses standard ports)
-                    const hostname = host.split(":")[0]
-                    redirectUri = `${protocol}://${hostname}/auth/callback`
-                }
+    fastify.get(
+        "/auth/login",
+        {
+            config: {
+                rateLimit: authRedirectRateLimit
             }
+        },
+        async (request, reply) => {
+            try {
+                const loginQueryResult = loginQuerySchema.safeParse(request.query)
+                const returnTo = loginQueryResult.success
+                    ? getSafeReturnPath(loginQueryResult.data.returnTo)
+                    : DEFAULT_POST_AUTH_PATH
 
-            const authorizationUrl = workos.userManagement.getAuthorizationUrl({
-                provider: "authkit",
-                redirectUri,
-                clientId: WORKOS_CLIENT_ID,
-                state: returnTo
-            })
+                // Construct the frontend URL for the callback
+                // WorkOS will redirect to the frontend, which then calls the backend API
+                let redirectUri: string
+                const hostHeader = request.headers.host
+                const isLocalhost =
+                    hostHeader?.includes("localhost") ||
+                    hostHeader?.includes("127.0.0.1") ||
+                    request.hostname === "localhost" ||
+                    request.hostname === "127.0.0.1"
 
-            await trackEvent(
-                "auth_login_initiated",
-                {
-                    endpoint: "/auth/login",
-                    method: "GET",
-                    returnTo
-                },
-                "anonymous",
-                request
-            )
+                if (env.FRONTEND_URL) {
+                    redirectUri = `${env.FRONTEND_URL}/auth/callback`
+                } else {
+                    const protocol =
+                        request.protocol || (env.NODE_ENV === "production" ? "https" : "http")
 
-            reply.redirect(authorizationUrl)
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Failed to initiate sign-in"
-            fastify.log.error({ err: error }, "Sign-in initiation error")
-            logger.error("Sign-in initiation error", error, {
-                endpoint: "/auth/login"
-            })
-            reply.code(500).send({
-                error: "Internal server error",
-                message: errorMessage
-            })
+                    // In development, use localhost:3000 (frontend port)
+                    // In production, extract hostname from request
+                    if (isLocalhost) {
+                        redirectUri = `http://localhost:3000/auth/callback`
+                    } else {
+                        // Try to get host from Host header, fallback to hostname
+                        const host = hostHeader || request.hostname || "localhost"
+                        // Remove port if present (frontend uses standard ports)
+                        const hostname = host.split(":")[0]
+                        redirectUri = `${protocol}://${hostname}/auth/callback`
+                    }
+                }
+
+                const authorizationUrl = workos.userManagement.getAuthorizationUrl({
+                    provider: "authkit",
+                    redirectUri,
+                    clientId: WORKOS_CLIENT_ID,
+                    state: returnTo
+                })
+
+                await trackEvent(
+                    "auth_login_initiated",
+                    {
+                        endpoint: "/auth/login",
+                        method: "GET",
+                        returnTo
+                    },
+                    "anonymous",
+                    request
+                )
+
+                reply.redirect(authorizationUrl)
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "Failed to initiate sign-in"
+                fastify.log.error({ err: error }, "Sign-in initiation error")
+                logger.error("Sign-in initiation error", error, {
+                    endpoint: "/auth/login"
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: errorMessage
+                })
+            }
         }
-    })
+    )
 
     // AuthKit Callback endpoint
-    fastify.get("/auth/callback", async (request, reply) => {
-        try {
-            // Validate query parameters
-            const queryResult = callbackQuerySchema.safeParse(request.query)
-            if (!queryResult.success) {
-                logger.warn("Invalid auth callback request", {
-                    endpoint: "/auth/callback",
-                    method: "GET",
-                    validationErrorCount: queryResult.error.issues.length
-                })
-                reply.code(400).send({
-                    error: "Invalid request",
-                    details: queryResult.error.issues
-                })
-                return
+    fastify.get(
+        "/auth/callback",
+        {
+            config: {
+                rateLimit: authCallbackRateLimit
             }
-
-            const { code, state } = queryResult.data
-            const returnTo = getSafeReturnPath(state)
-
-            const cookiePassword = env.WORKOS_COOKIE_PASSWORD
-
-            // Exchange authorization code for user and sealed session
-            const authenticateResponse = await workos.userManagement.authenticateWithCode({
-                code,
-                clientId: WORKOS_CLIENT_ID,
-                session: {
-                    sealSession: true,
-                    cookiePassword
+        },
+        async (request, reply) => {
+            try {
+                // Validate query parameters
+                const queryResult = callbackQuerySchema.safeParse(request.query)
+                if (!queryResult.success) {
+                    logger.warn("Invalid auth callback request", {
+                        endpoint: "/auth/callback",
+                        method: "GET",
+                        validationErrorCount: queryResult.error.issues.length
+                    })
+                    reply.code(400).send({
+                        error: "Invalid request",
+                        details: queryResult.error.issues
+                    })
+                    return
                 }
-            })
 
-            const { user, sealedSession } = authenticateResponse
+                const { code, state } = queryResult.data
+                const returnTo = getSafeReturnPath(state)
 
-            if (!user || !sealedSession) {
-                logger.warn("Failed to retrieve user or create session", {
-                    endpoint: "/auth/callback",
-                    method: "GET",
-                    hasUser: !!user,
-                    hasSealedSession: !!sealedSession
+                const cookiePassword = env.WORKOS_COOKIE_PASSWORD
+
+                // Exchange authorization code for user and sealed session
+                const authenticateResponse = await workos.userManagement.authenticateWithCode({
+                    code,
+                    clientId: WORKOS_CLIENT_ID,
+                    session: {
+                        sealSession: true,
+                        cookiePassword
+                    }
                 })
-                reply.code(401).send({
-                    error: "Unauthorized",
-                    message: "Failed to retrieve user or create session"
+
+                const { user, sealedSession } = authenticateResponse
+
+                if (!user || !sealedSession) {
+                    logger.warn("Failed to retrieve user or create session", {
+                        endpoint: "/auth/callback",
+                        method: "GET",
+                        hasUser: !!user,
+                        hasSealedSession: !!sealedSession
+                    })
+                    reply.code(401).send({
+                        error: "Unauthorized",
+                        message: "Failed to retrieve user or create session"
+                    })
+                    return
+                }
+
+                // Create or update user in database
+                const existingUser = await db.query.users.findFirst({
+                    where: eq(schema.users.id, user.id)
                 })
-                return
-            }
 
-            // Create or update user in database
-            const existingUser = await db.query.users.findFirst({
-                where: eq(schema.users.id, user.id)
-            })
-
-            if (existingUser) {
-                // Update existing user
-                await db
-                    .update(schema.users)
-                    .set({
+                if (existingUser) {
+                    // Update existing user
+                    await db
+                        .update(schema.users)
+                        .set({
+                            email: user.email,
+                            firstName: user.firstName || null,
+                            lastName: user.lastName || null,
+                            updatedAt: new Date()
+                        })
+                        .where(eq(schema.users.id, user.id))
+                } else {
+                    // Create new user
+                    await db.insert(schema.users).values({
+                        id: user.id,
                         email: user.email,
                         firstName: user.firstName || null,
-                        lastName: user.lastName || null,
-                        updatedAt: new Date()
+                        lastName: user.lastName || null
                     })
-                    .where(eq(schema.users.id, user.id))
-            } else {
-                // Create new user
-                await db.insert(schema.users).values({
-                    id: user.id,
-                    email: user.email,
-                    firstName: user.firstName || null,
-                    lastName: user.lastName || null
+
+                    // Track account creation
+                    await trackEvent(
+                        "account_created",
+                        {
+                            endpoint: "/auth/callback",
+                            method: "GET",
+                            userId: user.id,
+                            email: user.email,
+                            hasFirstName: !!user.firstName,
+                            hasLastName: !!user.lastName
+                        },
+                        user.id,
+                        request
+                    )
+                }
+
+                // Store the sealed session in a cookie
+                // For cross-origin requests (frontend on different subdomain), we need:
+                // - sameSite: "none" (allows cross-origin cookies)
+                // - secure: true (required when sameSite is "none")
+                setSessionCookie(reply, sealedSession)
+
+                if (env.NODE_ENV === "development") {
+                    fastify.log.info(
+                        {
+                            hasSealedSession: !!sealedSession,
+                            sessionLength: sealedSession?.length
+                        },
+                        "Cookie set in /auth/callback"
+                    )
+                }
+
+                // Get user from database to include nickname
+                const dbUser = await db.query.users.findFirst({
+                    where: eq(schema.users.id, user.id)
                 })
 
-                // Track account creation
                 await trackEvent(
-                    "account_created",
+                    "auth_callback_success",
                     {
                         endpoint: "/auth/callback",
                         method: "GET",
                         userId: user.id,
-                        email: user.email,
-                        hasFirstName: !!user.firstName,
-                        hasLastName: !!user.lastName
+                        isNewUser: !existingUser
                     },
                     user.id,
                     request
                 )
+
+                // Return success response instead of redirecting
+                // The frontend will handle the redirect
+                reply.send({
+                    success: true,
+                    returnTo,
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        nickname: dbUser?.nickname ?? null,
+                        isSuperadmin: dbUser?.isSuperadmin ?? false,
+                        actorIsSuperadmin: dbUser?.isSuperadmin ?? false,
+                        impersonation: { active: false }
+                    }
+                })
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : "Failed to process SSO callback"
+                fastify.log.error({ err: error }, "SSO callback error")
+                logger.error("SSO callback error", error, {
+                    endpoint: "/auth/callback"
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message: errorMessage
+                })
             }
-
-            // Store the sealed session in a cookie
-            // For cross-origin requests (frontend on different subdomain), we need:
-            // - sameSite: "none" (allows cross-origin cookies)
-            // - secure: true (required when sameSite is "none")
-            setSessionCookie(reply, sealedSession)
-
-            if (env.NODE_ENV === "development") {
-                fastify.log.info(
-                    {
-                        hasSealedSession: !!sealedSession,
-                        sessionLength: sealedSession?.length
-                    },
-                    "Cookie set in /auth/callback"
-                )
-            }
-
-            // Get user from database to include nickname
-            const dbUser = await db.query.users.findFirst({
-                where: eq(schema.users.id, user.id)
-            })
-
-            await trackEvent(
-                "auth_callback_success",
-                {
-                    endpoint: "/auth/callback",
-                    method: "GET",
-                    userId: user.id,
-                    isNewUser: !existingUser
-                },
-                user.id,
-                request
-            )
-
-            // Return success response instead of redirecting
-            // The frontend will handle the redirect
-            reply.send({
-                success: true,
-                returnTo,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    nickname: dbUser?.nickname ?? null,
-                    isSuperadmin: dbUser?.isSuperadmin ?? false,
-                    actorIsSuperadmin: dbUser?.isSuperadmin ?? false,
-                    impersonation: { active: false }
-                }
-            })
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Failed to process SSO callback"
-            fastify.log.error({ err: error }, "SSO callback error")
-            logger.error("SSO callback error", error, {
-                endpoint: "/auth/callback"
-            })
-            reply.code(500).send({
-                error: "Internal server error",
-                message: errorMessage
-            })
         }
-    })
+    )
 
     // Logout endpoint
     fastify.get(
         "/auth/logout",
         {
+            config: {
+                rateLimit: authSessionRateLimit
+            },
             preHandler: authenticateUser
         },
         async (request: AuthenticatedRequest, reply) => {
@@ -423,6 +448,9 @@ export async function authRoutes(fastify: FastifyInstance) {
     }>(
         "/auth/me",
         {
+            config: {
+                rateLimit: authProfileMutationRateLimit
+            },
             preHandler: authenticateUser,
             schema: {
                 body: zodToFastifySchema(updateUserSchema)

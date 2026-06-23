@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify"
 import { eq, and } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateWebSocketRequest, AuthenticatedRequest } from "../middleware/auth.js"
+import { websocketConnectionRateLimit } from "../utils/rateLimit.js"
 
 interface CharacterUpdateMessage {
     type: "character_update"
@@ -32,7 +33,12 @@ const characterSubscriptions = new Map<string, Set<any>>()
 export async function characterSyncWebSocket(fastify: FastifyInstance) {
     fastify.get(
         "/ws/characters",
-        { websocket: true },
+        {
+            websocket: true,
+            config: {
+                rateLimit: websocketConnectionRateLimit
+            }
+        },
         async (connection, request: AuthenticatedRequest) => {
             // Authenticate WebSocket connection using WorkOS session (same as REST endpoints)
             const user = await authenticateWebSocketRequest(request)

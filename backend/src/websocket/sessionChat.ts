@@ -22,6 +22,7 @@ import {
     trackSessionClosed
 } from "./sessionChatLifecycle.js"
 import { trackEvent } from "../utils/tracker.js"
+import { websocketConnectionRateLimit } from "../utils/rateLimit.js"
 import {
     MAX_JSON_SIZE,
     broadcastToSession,
@@ -271,7 +272,12 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
 
     fastify.get(
         "/ws/sessions",
-        { websocket: true },
+        {
+            websocket: true,
+            config: {
+                rateLimit: websocketConnectionRateLimit
+            }
+        },
         async (socket, request: AuthenticatedRequest) => {
             if (!socket) {
                 fastify.log.error("WebSocket socket is undefined")
