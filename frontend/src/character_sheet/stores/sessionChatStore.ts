@@ -74,9 +74,7 @@ type SessionJoinedMessage = {
     sessionType: "temporary" | "coterie"
     coterieId?: string
     participants: Participant[]
-    history?: Array<
-        ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage
-    >
+    history?: Array<ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage>
 }
 
 type UserJoinedMessage = {
@@ -132,6 +130,18 @@ const getWebSocketUrl = (): string => {
 }
 
 const STORAGE_KEY = "sessionChat_lastJoinOptions"
+const MAX_RECONNECT_ATTEMPTS = 5
+const RECONNECT_BASE_DELAY_MS = 1000
+const RECONNECT_MAX_DELAY_MS = 30000
+
+const getReconnectDelay = (attempts: number) => {
+    const cappedDelay = Math.min(
+        RECONNECT_BASE_DELAY_MS * Math.pow(2, attempts),
+        RECONNECT_MAX_DELAY_MS
+    )
+    const jitterFloor = cappedDelay / 2
+    return Math.round(jitterFloor + Math.random() * jitterFloor)
+}
 
 type JoinOptions = {
     sessionId?: string
@@ -262,10 +272,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 const queue = [...currentState.messageQueue]
                 set({ messageQueue: [] })
                 queue.forEach((queuedMessage) => {
-                    if (
-                        queuedMessage.type !== "join_session" &&
-                        ws.readyState === WebSocket.OPEN
-                    ) {
+                    if (queuedMessage.type !== "join_session" && ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify(queuedMessage))
                     }
                 })
@@ -284,10 +291,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             const queue = [...currentState.messageQueue]
             set({ messageQueue: [] })
             queue.forEach((queuedMessage) => {
-                if (
-                    queuedMessage.type !== "join_session" &&
-                    ws.readyState === WebSocket.OPEN
-                ) {
+                if (queuedMessage.type !== "join_session" && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify(queuedMessage))
                 }
             })
@@ -452,9 +456,12 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             const currentState = get()
             set({ connectionStatus: "disconnected" })
 
-            if (!currentState.isManualDisconnect && currentState.reconnectAttempts < 5) {
+            if (
+                !currentState.isManualDisconnect &&
+                currentState.reconnectAttempts < MAX_RECONNECT_ATTEMPTS
+            ) {
                 const attempts = currentState.reconnectAttempts + 1
-                const delay = Math.min(1000 * Math.pow(2, attempts), 30000)
+                const delay = getReconnectDelay(attempts)
                 const timeout = setTimeout(() => {
                     get().connect()
                 }, delay)

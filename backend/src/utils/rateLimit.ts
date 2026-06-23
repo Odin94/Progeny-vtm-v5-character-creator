@@ -19,6 +19,6 @@ export const authProfileMutationRateLimit = {
 } as const
 
 export const websocketConnectionRateLimit = {
-    max: 60,
+    max: 120,
     timeWindow: "1 minute"
 } as const
