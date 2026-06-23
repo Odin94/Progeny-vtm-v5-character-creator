@@ -10,7 +10,6 @@ import {
     Container,
     Group,
     Loader,
-    Menu,
     Modal,
     Stack,
     Text,
@@ -62,6 +61,8 @@ const backgrounds = [club, bloodGuy, batWoman, alley]
 const topbarHeight = 52
 const noteMaxBytes = 200 * 1024
 const chatDockBreakpoint = 1100
+const notesModalZIndex = 2200
+const notesHistoryModalZIndex = notesModalZIndex + 1
 
 const getUtf8ByteLength = (value: string) => new TextEncoder().encode(value).length
 
@@ -102,6 +103,7 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
     const [showAsideBar, setShowAsideBar] = useState(!isSmallScreen)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
     const [notesOpened, setNotesOpened] = useState(false)
+    const [historyOpened, setHistoryOpened] = useState(false)
     const [draftNotes, setDraftNotes] = useState("")
     const [lastSavedNotes, setLastSavedNotes] = useState("")
     const [selectedHistoryVersion, setSelectedHistoryVersion] =
@@ -264,11 +266,13 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
     const closeNotes = () => {
         saveDraft("close")
         setSelectedHistoryVersion(null)
+        setHistoryOpened(false)
         setNotesOpened(false)
     }
 
     const previewVersion = (version: CoterieNoteVersionResponse) => {
         setSelectedHistoryVersion(version)
+        setHistoryOpened(false)
         posthog.capture("coterie-notes-version-previewed", {
             coterieId,
             versionId: version.id,
@@ -546,7 +550,7 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                         : "min(80rem, calc(100vw - 2rem))"
                 }
                 centered
-                zIndex={2200}
+                zIndex={notesModalZIndex}
                 title={
                     <Box
                         style={{
@@ -577,37 +581,19 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                             style={{
                                 flex: "0 0 2rem",
                                 display: "flex",
-                                justifyContent: "flex-end"
+                                justifyContent: "flex-end",
+                                marginRight: "0.75rem"
                             }}
                         >
-                            <Menu position="bottom-end" withinPortal>
-                                <Menu.Target>
-                                    <ActionIcon
-                                        color="yellow"
-                                        variant="light"
-                                        aria-label="Version history"
-                                        title="Version history"
-                                    >
-                                        <IconVersions size={18} />
-                                    </ActionIcon>
-                                </Menu.Target>
-                                <Menu.Dropdown>
-                                    <Menu.Label>Past versions</Menu.Label>
-                                    {versions.slice(1).length > 0 ? (
-                                        versions.slice(1).map((version) => (
-                                            <Menu.Item
-                                                key={version.id}
-                                                leftSection={<IconVersions size={14} />}
-                                                onClick={() => previewVersion(version)}
-                                            >
-                                                {formatDateTime(version.createdAt)}
-                                            </Menu.Item>
-                                        ))
-                                    ) : (
-                                        <Menu.Item disabled>No past versions yet</Menu.Item>
-                                    )}
-                                </Menu.Dropdown>
-                            </Menu>
+                            <ActionIcon
+                                color="yellow"
+                                variant="light"
+                                aria-label="Version history"
+                                title="Version history"
+                                onClick={() => setHistoryOpened(true)}
+                            >
+                                <IconVersions size={18} />
+                            </ActionIcon>
                         </Box>
                     </Box>
                 }
@@ -688,6 +674,51 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                     ) : (
                         <Text size="xs" c={noteBytes > noteMaxBytes ? "red" : "dimmed"}>
                             {Math.round(noteBytes / 1024)} KB / 200 KB
+                        </Text>
+                    )}
+                </Stack>
+            </Modal>
+
+            <Modal
+                opened={historyOpened}
+                onClose={() => setHistoryOpened(false)}
+                title={
+                    <Group gap="sm">
+                        <IconVersions size={20} color={rgba(RAW_GOLD, 0.92)} />
+                        <Text fw={700}>Version history</Text>
+                    </Group>
+                }
+                centered
+                size="sm"
+                zIndex={notesHistoryModalZIndex}
+                styles={{
+                    content: {
+                        background: "rgba(9, 8, 10, 0.98)",
+                        border: `1px solid ${rgba(RAW_GOLD, 0.22)}`
+                    },
+                    header: {
+                        background: "rgba(9, 8, 10, 0.98)",
+                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.14)}`
+                    }
+                }}
+            >
+                <Stack gap="xs">
+                    {versions.slice(1).length > 0 ? (
+                        versions.slice(1).map((version) => (
+                            <Button
+                                key={version.id}
+                                color="yellow"
+                                variant="subtle"
+                                justify="flex-start"
+                                leftSection={<IconVersions size={16} />}
+                                onClick={() => previewVersion(version)}
+                            >
+                                {formatDateTime(version.createdAt)}
+                            </Button>
+                        ))
+                    ) : (
+                        <Text c="dimmed" size="sm">
+                            No past versions yet.
                         </Text>
                     )}
                 </Stack>
