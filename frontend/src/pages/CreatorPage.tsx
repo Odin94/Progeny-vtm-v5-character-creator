@@ -172,6 +172,8 @@ export default function CreatorPage() {
         } as CharacterType & { id: string; characterVersion: number })
 
         await queryClient.invalidateQueries({ queryKey: ["characters"] })
+        await queryClient.invalidateQueries({ queryKey: ["coteries"] })
+        await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
     }
 
     const isCurrentCharacterEmpty = () =>
@@ -298,6 +300,8 @@ export default function CreatorPage() {
                     0
             } as CharacterType & { id: string; characterVersion: number })
             await queryClient.invalidateQueries({ queryKey: ["characters"] })
+            await queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
 
             const action = pendingSwitchAction
             closeNameBeforeSwitchModal()

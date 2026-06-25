@@ -35,7 +35,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { Buffer } from "buffer"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
@@ -68,6 +68,7 @@ import {
     useAddCharacterToCoterie,
     useCoteries,
     useCoterieInvites,
+    useCoterieVitals,
     useCreateCoterie,
     useCreateCoterieInvite,
     useDeleteCoterie,
@@ -96,6 +97,8 @@ import {
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
+import { getCharacterVitals, isCharacterVitals } from "~/utils/characterVitals"
+import type { CharacterVitals } from "~/utils/characterVitals"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 const topbarHeight = 52
@@ -244,6 +247,18 @@ const MePage = () => {
     } = useAuth()
     const { data: characters } = useCharacters(isAuthenticated)
     const { data: coteries } = useCoteries(isAuthenticated)
+    const { data: coterieVitals } = useCoterieVitals(isAuthenticated)
+    const vitalsByCharacterId = useMemo(() => {
+        const vitalsMap: Record<string, CharacterVitals> = {}
+
+        ;(coterieVitals || []).forEach((vitals) => {
+            if (isCharacterVitals(vitals)) {
+                vitalsMap[vitals.characterId] = vitals
+            }
+        })
+
+        return vitalsMap
+    }, [coterieVitals])
     const [character, setCharacter] = useCharacterLocalStorage()
     const computedColorScheme = useComputedColorScheme("dark", {
         getInitialValueInEffect: true
@@ -1726,6 +1741,9 @@ const MePage = () => {
     const userCharacters = (characters as Character[]) || []
     const userCoteries = coteries || []
     const ownedCharacters = userCharacters.filter((c) => !c.shared)
+    const currentCoterieForSummary = coterieForSummary
+        ? (userCoteries.find((coterie) => coterie.id === coterieForSummary.id) ?? coterieForSummary)
+        : null
 
     // Find the currently loaded character in the list by ID
     const currentlyLoadedCharacter = character.id
@@ -1860,6 +1878,7 @@ const MePage = () => {
                                     }
                                     setCoterieForSummary={setCoterieForSummary}
                                     setCoterieSummaryModalOpened={setCoterieSummaryModalOpened}
+                                    vitalsByCharacterId={vitalsByCharacterId}
                                 />
                             </Stack>
                         </Container>
@@ -2447,17 +2466,21 @@ const MePage = () => {
                     <Group gap="xs">
                         <IconUsers size={20} />
                         <Text fw={600} size="lg">
-                            Coterie Summary: {coterieForSummary?.name || ""}
+                            Coterie Summary: {currentCoterieForSummary?.name || ""}
                         </Text>
                     </Group>
                 }
                 centered
                 size="xl"
             >
-                {coterieForSummary &&
-                coterieForSummary.members &&
-                coterieForSummary.members.length > 0 ? (
-                    <CoterieSummaryContent members={coterieForSummary.members} theme={theme} />
+                {currentCoterieForSummary &&
+                currentCoterieForSummary.members &&
+                currentCoterieForSummary.members.length > 0 ? (
+                    <CoterieSummaryContent
+                        members={currentCoterieForSummary.members}
+                        theme={theme}
+                        vitalsByCharacterId={vitalsByCharacterId}
+                    />
                 ) : (
                     <Text c="dimmed">No members in this coterie.</Text>
                 )}
@@ -2504,10 +2527,15 @@ const MePage = () => {
 type CoterieSummaryContentProps = {
     members: Array<{ characterId: string; playerNickname?: string | null; character?: Character }>
     theme: ReturnType<typeof useMantineTheme>
+    vitalsByCharacterId: Record<string, CharacterVitals>
 }
 
 // TODOdin: Move modals and their contents from MePage into their own components under sections/
-const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) => {
+const CoterieSummaryContent = ({
+    members,
+    theme,
+    vitalsByCharacterId
+}: CoterieSummaryContentProps) => {
     const getDisciplineCategory = (
         disciplineName: DisciplineName
     ): "physical" | "social" | "mental" => {
@@ -2660,14 +2688,26 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
         }
     }
 
+    const memberSummaries = useMemo(
+        () =>
+            members.flatMap((member) => {
+                const character = parseCharacterData(member.character?.data)
+                if (!character) return []
+
+                return {
+                    member,
+                    character,
+                    strength: calculateCharacterStrength(character),
+                    clan: character.clan ? clans[character.clan] : null,
+                    vitals: vitalsByCharacterId[member.characterId] ?? getCharacterVitals(character)
+                }
+            }),
+        [members, vitalsByCharacterId]
+    )
+
     return (
         <Grid>
-            {members.map((member) => {
-                const character = parseCharacterData(member.character?.data)
-                if (!character) return null
-
-                const strength = calculateCharacterStrength(character)
-                const clan = character.clan ? clans[character.clan] : null
+            {memberSummaries.map(({ member, character, strength, clan, vitals }) => {
                 const backgroundColor = getBackgroundColor(strength.dominant)
                 const borderColor = getBorderColor(strength.dominant)
                 const playerName =
@@ -2722,6 +2762,20 @@ const CoterieSummaryContent = ({ members, theme }: CoterieSummaryContentProps) =
                                     <Text size="sm" c="dimmed" truncate="end">
                                         Player: {playerName}
                                     </Text>
+                                    <Group gap="xs">
+                                        <Badge size="sm" color="red" variant="light">
+                                            Hunger {vitals.hunger}/5
+                                        </Badge>
+                                        <Badge size="lg" color="grape" variant="filled">
+                                            Willpower {vitals.currentWillpower}/{vitals.willpower}
+                                        </Badge>
+                                        <Badge size="sm" color="blue" variant="light">
+                                            Humanity {vitals.humanity}/10
+                                            {vitals.humanityStains > 0
+                                                ? ` · ${vitals.humanityStains} stains`
+                                                : ""}
+                                        </Badge>
+                                    </Group>
                                 </Stack>
                             </Group>
                         </Paper>

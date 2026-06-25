@@ -184,7 +184,18 @@ const seedBaseData = async () => {
             id: OWNER_CHARACTER_ID,
             userId: OWNER_ID,
             name: "Owner Character",
-            data: JSON.stringify({ name: "Owner Character", player: "Owner" }),
+            data: JSON.stringify({
+                name: "Owner Character",
+                player: "Owner",
+                willpower: 6,
+                humanity: 7,
+                ephemeral: {
+                    hunger: 2,
+                    superficialWillpowerDamage: 1,
+                    aggravatedWillpowerDamage: 1,
+                    humanityStains: 1
+                }
+            }),
             version: 1,
             characterVersion: 0
         },
@@ -192,7 +203,18 @@ const seedBaseData = async () => {
             id: MEMBER_CHARACTER_ID,
             userId: MEMBER_ID,
             name: "Member Character",
-            data: JSON.stringify({ name: "Member Character", player: "Character Sheet Player" }),
+            data: JSON.stringify({
+                name: "Member Character",
+                player: "Character Sheet Player",
+                willpower: 5,
+                humanity: 6,
+                ephemeral: {
+                    hunger: 3,
+                    superficialWillpowerDamage: 1,
+                    aggravatedWillpowerDamage: 0,
+                    humanityStains: 2
+                }
+            }),
             version: 1,
             characterVersion: 0
         },
@@ -200,7 +222,18 @@ const seedBaseData = async () => {
             id: OTHER_CHARACTER_ID,
             userId: OTHER_ID,
             name: "Other Character",
-            data: JSON.stringify({ name: "Other Character", player: "Other" }),
+            data: JSON.stringify({
+                name: "Other Character",
+                player: "Other",
+                willpower: 4,
+                humanity: 5,
+                ephemeral: {
+                    hunger: 1,
+                    superficialWillpowerDamage: 0,
+                    aggravatedWillpowerDamage: 0,
+                    humanityStains: 0
+                }
+            }),
             version: 1,
             characterVersion: 0
         }
@@ -257,6 +290,116 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(OWNER_ID)
         await cleanup()
         await seedBaseData()
+    })
+
+    it("updates and shares lightweight live vitals with every coterie participant", async () => {
+        const ownerVitalsResponse = await app.inject({
+            method: "GET",
+            url: "/coteries/vitals",
+            headers: csrfHeaders
+        })
+        expect(ownerVitalsResponse.statusCode).toBe(200)
+        expect(ownerVitalsResponse.json()).toEqual([
+            expect.objectContaining({
+                coterieId: COTERIE_ID,
+                characterId: OWNER_CHARACTER_ID,
+                hunger: 2,
+                currentWillpower: 4,
+                willpower: 6,
+                humanity: 7,
+                humanityStains: 1
+            })
+        ])
+
+        const updateResponse = await app.inject({
+            method: "PATCH",
+            url: `/characters/${OWNER_CHARACTER_ID}/vitals`,
+            headers: csrfHeaders,
+            payload: {
+                willpower: 7,
+                humanity: 6,
+                ephemeral: {
+                    hunger: 4,
+                    superficialWillpowerDamage: 2,
+                    aggravatedWillpowerDamage: 1,
+                    humanityStains: 3
+                }
+            }
+        })
+        expect(updateResponse.statusCode).toBe(200)
+        expect(updateResponse.json().characterVersion).toBe(1)
+
+        const refreshedOwnerVitalsResponse = await app.inject({
+            method: "GET",
+            url: "/coteries/vitals",
+            headers: csrfHeaders
+        })
+        expect(refreshedOwnerVitalsResponse.json()).toEqual([
+            expect.objectContaining({
+                characterId: OWNER_CHARACTER_ID,
+                hunger: 4,
+                currentWillpower: 4,
+                willpower: 7,
+                humanity: 6,
+                humanityStains: 3,
+                characterVersion: 1
+            })
+        ])
+
+        const invite = await createInvite(app)
+        setWorkosUser(MEMBER_ID)
+        const acceptResponse = await app.inject({
+            method: "POST",
+            url: `/coterie-invites/${invite.token}/accept`,
+            headers: csrfHeaders
+        })
+        expect(acceptResponse.statusCode).toBe(200)
+
+        const addCharacterResponse = await app.inject({
+            method: "POST",
+            url: `/coteries/${COTERIE_ID}/characters`,
+            headers: csrfHeaders,
+            payload: { characterId: MEMBER_CHARACTER_ID }
+        })
+        expect(addCharacterResponse.statusCode).toBe(201)
+
+        const memberVitalsResponse = await app.inject({
+            method: "GET",
+            url: "/coteries/vitals",
+            headers: csrfHeaders
+        })
+        expect(memberVitalsResponse.statusCode).toBe(200)
+        expect(
+            (memberVitalsResponse.json() as Array<{ characterId: string }>).map(
+                ({ characterId }) => characterId
+            )
+        ).toEqual(expect.arrayContaining([OWNER_CHARACTER_ID, MEMBER_CHARACTER_ID]))
+
+        const forbiddenUpdateResponse = await app.inject({
+            method: "PATCH",
+            url: `/characters/${OWNER_CHARACTER_ID}/vitals`,
+            headers: csrfHeaders,
+            payload: {
+                willpower: 6,
+                humanity: 6,
+                ephemeral: {
+                    hunger: 1,
+                    superficialWillpowerDamage: 0,
+                    aggravatedWillpowerDamage: 0,
+                    humanityStains: 0
+                }
+            }
+        })
+        expect(forbiddenUpdateResponse.statusCode).toBe(403)
+
+        setWorkosUser(OTHER_ID)
+        const unrelatedUserResponse = await app.inject({
+            method: "GET",
+            url: "/coteries/vitals",
+            headers: csrfHeaders
+        })
+        expect(unrelatedUserResponse.statusCode).toBe(200)
+        expect(unrelatedUserResponse.json()).toEqual([])
     })
 
     it("lists newest invite links first with stable same-second ordering", async () => {

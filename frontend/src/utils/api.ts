@@ -164,6 +164,35 @@ export type StartImpersonationResponse = {
 
 type ApiTimestamp = string
 
+export type UpdateCharacterVitalsPayload = {
+    willpower: number
+    humanity: number
+    ephemeral: {
+        hunger: number
+        superficialWillpowerDamage: number
+        aggravatedWillpowerDamage: number
+        humanityStains: number
+    }
+}
+
+export type UpdateCharacterVitalsResponse = {
+    id: string
+    characterVersion: number
+    updatedAt: ApiTimestamp
+}
+
+export type CoterieVitalsResponse = {
+    coterieId: string
+    characterId: string
+    hunger: number
+    willpower: number
+    currentWillpower: number
+    humanity: number
+    humanityStains: number
+    characterVersion: number
+    updatedAt: ApiTimestamp
+}
+
 export type CoterieCharacter = {
     id: string
     name: string
@@ -313,10 +342,16 @@ export const api = {
         apiRequest<unknown>("/characters", { method: "POST", body: data }),
     updateCharacter: (id: string, data: { name?: string; data?: unknown; version?: number }) =>
         apiRequest<unknown>(`/characters/${id}`, { method: "PUT", body: data }),
+    updateCharacterVitals: (id: string, data: UpdateCharacterVitalsPayload) =>
+        apiRequest<UpdateCharacterVitalsResponse>(`/characters/${id}/vitals`, {
+            method: "PATCH",
+            body: data
+        }),
     deleteCharacter: (id: string) => apiRequest<void>(`/characters/${id}`, { method: "DELETE" }),
 
     // Coteries
     getCoteries: () => apiRequest<CoterieResponse[]>("/coteries"),
+    getCoterieVitals: () => apiRequest<CoterieVitalsResponse[]>("/coteries/vitals"),
     getCoterie: (id: string) => apiRequest<CoterieResponse>(`/coteries/${id}`),
     createCoterie: (data: { name: string }) =>
         apiRequest<CoterieResponse>("/coteries", { method: "POST", body: data }),

@@ -17,6 +17,7 @@ import posthog from "posthog-js"
 import { getPrimaryColor } from "./utils/style"
 import { type UserPreferences, getBackgroundSrc } from "./utils/preferences"
 import { useUserPreferences } from "~/hooks/useUserPreferences"
+import { useAutosaveCharacterVitals } from "~/hooks/useAutosaveCharacterVitals"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import Attributes from "./sections/Attributes"
 import BottomData from "./sections/BottomData"
@@ -71,6 +72,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
     const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
+    useAutosaveCharacterVitals(character, setCharacter)
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({

@@ -48,10 +48,7 @@ const inviteUnavailableReply = { error: "Invite link is invalid or expired" }
 
 const getUtf8ByteLength = (value: string) => Buffer.byteLength(value, "utf8")
 
-const tokenizeNoteWords = (value: string) =>
-    value
-        .toLowerCase()
-        .match(/[\p{L}\p{N}']+/gu) ?? []
+const tokenizeNoteWords = (value: string) => value.toLowerCase().match(/[\p{L}\p{N}']+/gu) ?? []
 
 const getMultisetWordDelta = (previous: string, next: string) => {
     const counts = new Map<string, number>()
@@ -240,9 +237,7 @@ const buildCoterieResponse = async (
                   .from(schema.users)
                   .where(inArray(schema.users.id, characterOwnerIds))
             : []
-    const nicknameByUserId = new Map(
-        characterOwners.map((owner) => [owner.id, owner.nickname])
-    )
+    const nicknameByUserId = new Map(characterOwners.map((owner) => [owner.id, owner.nickname]))
 
     return {
         ...withoutOwnerId(coterie),
@@ -281,6 +276,61 @@ const requireOwnedCoterie = async (coterieId: string, userId: string) => {
     }
 
     return { coterie, errorCode: null, error: null }
+}
+
+const parseCharacterVitals = (data: string) => {
+    try {
+        const character = JSON.parse(data) as {
+            willpower?: unknown
+            humanity?: unknown
+            ephemeral?: {
+                hunger?: unknown
+                superficialWillpowerDamage?: unknown
+                aggravatedWillpowerDamage?: unknown
+                humanityStains?: unknown
+            }
+        }
+        const willpower = typeof character.willpower === "number" ? character.willpower : null
+        const humanity = typeof character.humanity === "number" ? character.humanity : null
+        const hunger =
+            typeof character.ephemeral?.hunger === "number" ? character.ephemeral.hunger : null
+        const superficialWillpowerDamage =
+            typeof character.ephemeral?.superficialWillpowerDamage === "number"
+                ? character.ephemeral.superficialWillpowerDamage
+                : null
+        const aggravatedWillpowerDamage =
+            typeof character.ephemeral?.aggravatedWillpowerDamage === "number"
+                ? character.ephemeral.aggravatedWillpowerDamage
+                : null
+        const humanityStains =
+            typeof character.ephemeral?.humanityStains === "number"
+                ? character.ephemeral.humanityStains
+                : null
+
+        if (
+            willpower === null ||
+            humanity === null ||
+            hunger === null ||
+            superficialWillpowerDamage === null ||
+            aggravatedWillpowerDamage === null ||
+            humanityStains === null
+        ) {
+            return null
+        }
+
+        return {
+            hunger,
+            willpower,
+            humanity,
+            humanityStains,
+            currentWillpower: Math.max(
+                willpower - superficialWillpowerDamage - aggravatedWillpowerDamage,
+                0
+            )
+        }
+    } catch (_error) {
+        return null
+    }
 }
 
 export async function coterieRoutes(fastify: FastifyInstance) {
@@ -454,6 +504,69 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             )
 
             reply.send(allCoteries)
+        }
+    )
+
+    // Get lightweight live vitals for coterie member characters
+    fastify.get(
+        "/coteries/vitals",
+        {
+            preHandler: authenticateUser
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+
+            const [ownedCoteries, playerMemberships] = await Promise.all([
+                db
+                    .select({ coterieId: schema.coteries.id })
+                    .from(schema.coteries)
+                    .where(eq(schema.coteries.ownerId, userId)),
+                db
+                    .select({ coterieId: schema.coteriePlayerMemberships.coterieId })
+                    .from(schema.coteriePlayerMemberships)
+                    .where(eq(schema.coteriePlayerMemberships.userId, userId))
+            ])
+            const accessibleCoterieIds = Array.from(
+                new Set([
+                    ...ownedCoteries.map(({ coterieId }) => coterieId),
+                    ...playerMemberships.map(({ coterieId }) => coterieId)
+                ])
+            )
+
+            if (accessibleCoterieIds.length === 0) {
+                reply.send([])
+                return
+            }
+
+            const rows = await db
+                .select({
+                    coterieId: schema.coterieMembers.coterieId,
+                    characterId: schema.characters.id,
+                    data: schema.characters.data,
+                    characterVersion: schema.characters.characterVersion,
+                    updatedAt: schema.characters.updatedAt
+                })
+                .from(schema.coterieMembers)
+                .innerJoin(
+                    schema.characters,
+                    eq(schema.characters.id, schema.coterieMembers.characterId)
+                )
+                .where(inArray(schema.coterieMembers.coterieId, accessibleCoterieIds))
+
+            reply.send(
+                rows.flatMap((row) => {
+                    const vitals = parseCharacterVitals(row.data)
+                    if (!vitals) return []
+
+                    return {
+                        coterieId: row.coterieId,
+                        characterId: row.characterId,
+                        characterVersion: row.characterVersion,
+                        updatedAt: row.updatedAt,
+                        ...vitals
+                    }
+                })
+            )
         }
     )
 
@@ -1025,7 +1138,9 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     coterieId,
                     inviteId,
                     alreadyRevoked: !!invite.revokedAt,
-                    inviteAgeHours: Math.round((Date.now() - invite.createdAt.getTime()) / 3_600_000)
+                    inviteAgeHours: Math.round(
+                        (Date.now() - invite.createdAt.getTime()) / 3_600_000
+                    )
                 },
                 userId,
                 request
@@ -1070,7 +1185,9 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         coterieId: matchedInvite?.coterieId,
                         inviteId: matchedInvite?.id,
                         inviteAgeHours: matchedInvite
-                            ? Math.round((Date.now() - matchedInvite.createdAt.getTime()) / 3_600_000)
+                            ? Math.round(
+                                  (Date.now() - matchedInvite.createdAt.getTime()) / 3_600_000
+                              )
                             : null
                     },
                     userId,
@@ -1149,7 +1266,9 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     coterieId: invite.coterieId,
                     inviteId: invite.id,
                     alreadyMember: !!existingMembership,
-                    inviteAgeHours: Math.round((Date.now() - invite.createdAt.getTime()) / 3_600_000)
+                    inviteAgeHours: Math.round(
+                        (Date.now() - invite.createdAt.getTime()) / 3_600_000
+                    )
                 },
                 userId,
                 request
@@ -1429,8 +1548,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                         characterId
                     })
                     reply.code(403).send({
-                        error:
-                            "Forbidden: You can only remove your own characters unless you own the coterie"
+                        error: "Forbidden: You can only remove your own characters unless you own the coterie"
                     })
                     return
                 }
