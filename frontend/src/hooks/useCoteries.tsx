@@ -9,6 +9,17 @@ export const useCoteries = (enabled = true) => {
     })
 }
 
+export const useCoterieVitals = (enabled = true) => {
+    return useQuery({
+        queryKey: ["coterieVitals"],
+        queryFn: () => api.getCoterieVitals(),
+        enabled,
+        refetchInterval: enabled ? 2000 : false,
+        refetchIntervalInBackground: false,
+        refetchOnWindowFocus: true
+    })
+}
+
 export const useCoterie = (id: string | null) => {
     return useQuery({
         queryKey: ["coteries", id],
@@ -40,6 +51,7 @@ export const useCreateCoterie = () => {
         mutationFn: (data: { name: string }) => api.createCoterie(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }
@@ -53,6 +65,7 @@ export const useUpdateCoterie = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.id] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }
@@ -64,6 +77,7 @@ export const useDeleteCoterie = () => {
         mutationFn: (id: string) => api.deleteCoterie(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }
@@ -150,6 +164,7 @@ export const useAddCharacterToCoterie = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }
@@ -163,6 +178,7 @@ export const useRemoveCharacterFromCoterie = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }

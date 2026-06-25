@@ -24,6 +24,8 @@ export const useCreateCharacter = () => {
             api.createCharacter(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
+            queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }
@@ -42,6 +44,8 @@ export const useUpdateCharacter = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["characters", variables.id] })
+            queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }
@@ -53,6 +57,8 @@ export const useDeleteCharacter = () => {
         mutationFn: (id: string) => api.deleteCharacter(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
+            queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         }
     })
 }

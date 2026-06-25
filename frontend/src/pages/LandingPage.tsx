@@ -167,6 +167,8 @@ export default function LandingPage() {
             }
 
             await queryClient.invalidateQueries({ queryKey: ["characters"] })
+            await queryClient.invalidateQueries({ queryKey: ["coteries"] })
+            await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
 
             notifications.show({
                 title: "Character saved",

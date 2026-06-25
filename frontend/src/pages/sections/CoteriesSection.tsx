@@ -24,8 +24,11 @@ import {
     IconUserMinus,
     IconUsers
 } from "@tabler/icons-react"
+import { useMemo } from "react"
 import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieCharacter, CoteriePlayerResponse, CoterieResponse } from "~/utils/api"
+import { getCharacterVitals } from "~/utils/characterVitals"
+import type { CharacterVitals } from "~/utils/characterVitals"
 
 type Character = CoterieCharacter
 type CoteriePlayer = CoteriePlayerResponse
@@ -51,6 +54,7 @@ type CoteriesSectionProps = {
     ) => void
     setCoterieForSummary: (coterie: Coterie) => void
     setCoterieSummaryModalOpened: (opened: boolean) => void
+    vitalsByCharacterId: Record<string, CharacterVitals>
 }
 
 const CoteriesSection = ({
@@ -65,8 +69,35 @@ const CoteriesSection = ({
     handleShowCharacterSummary,
     handleRemoveCharacterFromCoterie,
     setCoterieForSummary,
-    setCoterieSummaryModalOpened
+    setCoterieSummaryModalOpened,
+    vitalsByCharacterId
 }: CoteriesSectionProps) => {
+    const memberDetailsByCharacterId = useMemo(() => {
+        const details: Record<
+            string,
+            {
+                playerName?: string
+                vitals?: CharacterVitals
+            }
+        > = {}
+
+        userCoteries.forEach((coterie) => {
+            coterie.members?.forEach((member) => {
+                const characterData = parseCharacterData(member.character?.data)
+                const liveVitals = vitalsByCharacterId[member.characterId]
+
+                details[member.characterId] = {
+                    playerName: member.playerNickname?.trim() || characterData?.player || undefined,
+                    vitals:
+                        liveVitals ??
+                        (characterData ? getCharacterVitals(characterData) : undefined)
+                }
+            })
+        })
+
+        return details
+    }, [userCoteries, vitalsByCharacterId])
+
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
             <Group gap="md" mb="md" justify="space-between">
@@ -248,10 +279,10 @@ const CoteriesSection = ({
                                         </Text>
                                         <Stack gap="xs">
                                             {coterie.members.map((member) => {
-                                                const memberCharData = parseCharacterData(
-                                                    member.character?.data
-                                                )
-                                                const memberPlayerName = memberCharData?.player
+                                                const memberDetails =
+                                                    memberDetailsByCharacterId[member.characterId]
+                                                const memberPlayerName = memberDetails?.playerName
+                                                const memberVitals = memberDetails?.vitals
                                                 return member.character ? (
                                                     <Group
                                                         key={member.characterId}
@@ -277,6 +308,41 @@ const CoteriesSection = ({
                                                             ) : null}
                                                         </Group>
                                                         <Group gap="xs">
+                                                            {memberVitals ? (
+                                                                <>
+                                                                    <Badge
+                                                                        size="xs"
+                                                                        color="red"
+                                                                        variant="light"
+                                                                    >
+                                                                        Hunger {memberVitals.hunger}
+                                                                        /5
+                                                                    </Badge>
+                                                                    <Badge
+                                                                        size="md"
+                                                                        color="grape"
+                                                                        variant="filled"
+                                                                    >
+                                                                        Willpower{" "}
+                                                                        {
+                                                                            memberVitals.currentWillpower
+                                                                        }
+                                                                        /{memberVitals.willpower}
+                                                                    </Badge>
+                                                                    <Badge
+                                                                        size="xs"
+                                                                        color="blue"
+                                                                        variant="light"
+                                                                    >
+                                                                        Humanity{" "}
+                                                                        {memberVitals.humanity}/10
+                                                                        {memberVitals.humanityStains >
+                                                                        0
+                                                                            ? ` · ${memberVitals.humanityStains} stains`
+                                                                            : ""}
+                                                                    </Badge>
+                                                                </>
+                                                            ) : null}
                                                             <ActionIcon
                                                                 color="red"
                                                                 variant="light"
@@ -301,8 +367,7 @@ const CoteriesSection = ({
                                                                             member.characterId,
                                                                             {
                                                                                 characterName:
-                                                                                    member
-                                                                                        .character
+                                                                                    member.character
                                                                                         ?.name,
                                                                                 coterieName:
                                                                                     coterie.name

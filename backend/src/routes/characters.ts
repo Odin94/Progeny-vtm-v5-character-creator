@@ -5,10 +5,12 @@ import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
     createCharacterSchema,
     updateCharacterSchema,
+    updateCharacterVitalsSchema,
     characterParamsSchema,
     CreateCharacterInput,
     CharacterParams,
-    UpdateCharacterInput
+    UpdateCharacterInput,
+    UpdateCharacterVitalsInput
 } from "../schemas/character.js"
 import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
@@ -361,6 +363,85 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 reply.code(500).send({
                     error: "Internal server error",
                     message: error instanceof Error ? error.message : "Failed to update character"
+                })
+            }
+        }
+    )
+
+    // Update character play-state vitals only
+    fastify.patch<{
+        Params: CharacterParams
+        Body: UpdateCharacterVitalsInput
+    }>(
+        "/characters/:id/vitals",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: zodToFastifySchema(characterParamsSchema),
+                body: zodToFastifySchema(updateCharacterVitalsSchema)
+            }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const { id: characterId } = request.params as CharacterParams
+            const updateData = request.body as UpdateCharacterVitalsInput
+            try {
+                const userId = request.user!.id
+
+                const character = await db.query.characters.findFirst({
+                    where: eq(schema.characters.id, characterId)
+                })
+
+                if (!character) {
+                    reply.code(404).send({ error: "Character not found" })
+                    return
+                }
+
+                if (character.userId !== userId) {
+                    reply
+                        .code(403)
+                        .send({ error: "Forbidden: You can only edit your own characters" })
+                    return
+                }
+
+                const currentData = JSON.parse(character.data)
+                const newCharacterVersion = (character.characterVersion ?? 0) + 1
+                const updatedData = {
+                    ...currentData,
+                    willpower: updateData.willpower,
+                    humanity: updateData.humanity,
+                    ephemeral: {
+                        ...currentData.ephemeral,
+                        ...updateData.ephemeral
+                    },
+                    characterVersion: newCharacterVersion
+                }
+
+                const [updated] = await db
+                    .update(schema.characters)
+                    .set({
+                        data: JSON.stringify(updatedData),
+                        characterVersion: newCharacterVersion,
+                        updatedAt: new Date()
+                    })
+                    .where(eq(schema.characters.id, characterId))
+                    .returning()
+
+                reply.send({
+                    id: updated.id,
+                    characterVersion: updated.characterVersion,
+                    updatedAt: updated.updatedAt
+                })
+            } catch (error) {
+                logger.error("Failed to update character vitals", error, {
+                    endpoint: "/characters/:id/vitals",
+                    method: "PATCH",
+                    userId: request.user?.id ?? null,
+                    characterId
+                })
+                reply.code(500).send({
+                    error: "Internal server error",
+                    message:
+                        error instanceof Error ? error.message : "Failed to update character vitals"
                 })
             }
         }
