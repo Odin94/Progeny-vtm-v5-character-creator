@@ -407,6 +407,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const newCharacterVersion = (character.characterVersion ?? 0) + 1
                 const updatedData = {
                     ...currentData,
+                    maxHealth: updateData.maxHealth ?? currentData.maxHealth,
                     willpower: updateData.willpower,
                     humanity: updateData.humanity,
                     ephemeral: {

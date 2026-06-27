@@ -22,6 +22,7 @@ type SuccessResultsProps = {
     selectedDiceCount?: number
     rerollableDiceCount?: number
     isMobile?: boolean
+    rerollDisabledReason?: string
 }
 
 const SuccessResults = ({
@@ -32,7 +33,8 @@ const SuccessResults = ({
     canReroll = false,
     selectedDiceCount = 0,
     rerollableDiceCount = 0,
-    isMobile = false
+    isMobile = false,
+    rerollDisabledReason
 }: SuccessResultsProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
@@ -125,13 +127,14 @@ const SuccessResults = ({
                                 ) : null}
                                 <Tooltip
                                     label={
-                                        isMobile
+                                        rerollDisabledReason ??
+                                        (isMobile
                                             ? rerollableDiceCount > 0
                                                 ? `Reroll ${rerollableDiceCount} non-success dice (1 willpower)`
                                                 : "No dice to reroll"
                                             : selectedDiceCount > 0
                                               ? `Reroll ${selectedDiceCount} dice (1 willpower)`
-                                              : "Select up to 3 non-blood dice to reroll (1 willpower)"
+                                              : "Select up to 3 non-blood dice to reroll (1 willpower)")
                                     }
                                     zIndex={2100}
                                 >

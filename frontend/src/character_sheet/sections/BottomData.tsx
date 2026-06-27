@@ -57,6 +57,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                                 })
                             }
                             color={options.primaryColor}
+                            disabledReason={options.editDisabledReason}
                         />
                     </Stack>
                 </Paper>
@@ -90,6 +91,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                                 })
                             }
                             color={options.primaryColor}
+                            disabledReason={options.editDisabledReason}
                         />
                     </Stack>
                 </Paper>
@@ -104,6 +106,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                             primaryColor={primaryColor}
                             size="sm"
                             iconSize={16}
+                            disabledReason={options.editDisabledReason}
                         />
                     </Group>
                     <Stack gap="xs">
@@ -140,6 +143,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                             primaryColor={primaryColor}
                             size="sm"
                             iconSize={16}
+                            disabledReason={options.editDisabledReason}
                         />
                     </Group>
                     <SquarePips

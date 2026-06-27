@@ -47,7 +47,11 @@ const SquarePips = ({
             return undefined
         }
 
-        const { mode } = options
+        const { mode, canEdit, editDisabledReason } = options
+        if (!canEdit) {
+            return editDisabledReason
+        }
+
         if (mode === "play" && field !== "ephemeral.hunger") {
             return "Editing is disabled in Play mode"
         }
@@ -117,7 +121,9 @@ const SquarePips = ({
 
 const getMemoCharacterKey = (options?: SheetOptions): string => {
     if (!options) return ""
-    return [options.mode, options.primaryColor].join("|")
+    return [options.mode, options.primaryColor, options.canEdit, options.editDisabledReason].join(
+        "|"
+    )
 }
 
 export default memo(SquarePips, (prev, next) => {

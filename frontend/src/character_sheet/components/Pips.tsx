@@ -86,7 +86,11 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
     const getDisabledReason = (index: number): string | undefined => {
         if (!options || !field) return "No options or field provided"
 
-        const { mode, character } = options
+        const { mode, character, canEdit, editDisabledReason } = options
+        if (!canEdit) {
+            return editDisabledReason
+        }
+
         let newLevel: number
         if (level === 1 && index === 0) {
             newLevel = 0
@@ -276,6 +280,8 @@ const getMemoCharacterKey = (options?: SheetOptions): string => {
     return [
         options.mode,
         options.primaryColor,
+        options.canEdit,
+        options.editDisabledReason,
         character.generation,
         character.experience,
         character.ephemeral.experienceSpent

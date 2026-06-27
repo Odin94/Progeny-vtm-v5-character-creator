@@ -7,13 +7,16 @@ import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 import type { DisciplineName } from "~/data/NameSchemas"
 import { skillsKeySchema } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
-import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { RAW_GOLD, RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieMemberResponse } from "~/utils/api"
+import { getCharacterVitals } from "~/utils/characterVitals"
+import type { CharacterVitals } from "~/utils/characterVitals"
 import type { ReactNode } from "react"
 
 type CoterieCharacterSummaryGridProps = {
     members: CoterieMemberResponse[]
+    vitalsByCharacterId: Record<string, CharacterVitals>
 }
 
 const attributeGroups = [
@@ -119,7 +122,8 @@ const HungerMeter = ({ hunger }: { hunger: number }) => (
                     width: 10,
                     height: 10,
                     borderRadius: 2,
-                    backgroundColor: index < hunger ? rgba(RAW_RED, 0.96) : "rgba(255, 255, 255, 0.1)",
+                    backgroundColor:
+                        index < hunger ? rgba(RAW_RED, 0.96) : "rgba(255, 255, 255, 0.1)",
                     border: `1px solid ${
                         index < hunger ? rgba(RAW_RED, 0.88) : "rgba(255, 255, 255, 0.16)"
                     }`,
@@ -127,6 +131,81 @@ const HungerMeter = ({ hunger }: { hunger: number }) => (
                 }}
             />
         ))}
+    </Group>
+)
+
+const StatusLabel = ({ children, color }: { children: ReactNode; color: string }) => (
+    <Text
+        size="xs"
+        style={{
+            fontFamily: "Cinzel, Georgia, serif",
+            fontSize: "var(--mantine-font-size-xs)",
+            letterSpacing: "0.16em",
+            lineHeight: 1.2,
+            textTransform: "uppercase",
+            color
+        }}
+    >
+        {children}
+    </Text>
+)
+
+const DamageMeter = ({
+    label,
+    maximum,
+    superficialDamage,
+    aggravatedDamage
+}: {
+    label: string
+    maximum: number
+    superficialDamage: number
+    aggravatedDamage: number
+}) => (
+    <Group
+        gap={4}
+        wrap="nowrap"
+        aria-label={`${label} damage: ${superficialDamage} superficial, ${aggravatedDamage} aggravated`}
+    >
+        {Array.from({ length: maximum }, (_, index) => {
+            const pipNumber = index + 1
+            const isAggravated = pipNumber <= aggravatedDamage
+            const isSuperficial = pipNumber <= superficialDamage
+
+            return (
+                <Box
+                    key={index}
+                    style={{
+                        width: 10,
+                        height: 10,
+                        flex: "0 0 10px",
+                        border: `1px solid ${rgba(RAW_GRAPE, 0.9)}`,
+                        borderRadius: 2,
+                        position: "relative",
+                        marginRight: (index + 1) % 5 === 0 && index < maximum - 1 ? 8 : undefined
+                    }}
+                >
+                    {isSuperficial || isAggravated ? (
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke={rgba(RAW_GRAPE, 0.96)}
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            aria-hidden="true"
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                width: "100%",
+                                height: "100%"
+                            }}
+                        >
+                            <line x1="22" y1="2" x2="2" y2="22" />
+                            {isAggravated ? <line x1="2" y1="2" x2="22" y2="22" /> : null}
+                        </svg>
+                    ) : null}
+                </Box>
+            )
+        })}
     </Group>
 )
 
@@ -159,7 +238,10 @@ const getDisciplineLogo = (character: Character, disciplineName: DisciplineName)
     disciplines[disciplineName as keyof typeof disciplines]?.logo ||
     ""
 
-const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridProps) => {
+const CoterieCharacterSummaryGrid = ({
+    members,
+    vitalsByCharacterId
+}: CoterieCharacterSummaryGridProps) => {
     const parsedMembers = members
         .map((member) => ({
             member,
@@ -195,8 +277,22 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                     member.playerNickname?.trim() || character.player?.trim() || "Unknown player"
                 const disciplineGroups = getDisciplineGroups(character)
                 const meritsAndFlaws = [...character.merits, ...character.flaws]
-                const hunger = Math.max(0, Math.min(5, character.ephemeral.hunger ?? 0))
-                const humanity = Math.max(0, Math.min(10, character.humanity ?? 0))
+                const vitals =
+                    vitalsByCharacterId[member.characterId] ?? getCharacterVitals(character)
+                const maxHealth = Math.max(0, Math.min(10, vitals.maxHealth))
+                const superficialDamage = Math.max(0, Math.min(maxHealth, vitals.superficialDamage))
+                const aggravatedDamage = Math.max(0, Math.min(maxHealth, vitals.aggravatedDamage))
+                const hunger = Math.max(0, Math.min(5, vitals.hunger))
+                const willpower = Math.max(0, vitals.willpower)
+                const superficialWillpowerDamage = Math.max(
+                    0,
+                    Math.min(willpower, vitals.superficialWillpowerDamage)
+                )
+                const aggravatedWillpowerDamage = Math.max(
+                    0,
+                    Math.min(willpower, vitals.aggravatedWillpowerDamage)
+                )
+                const humanity = Math.max(0, Math.min(10, vitals.humanity))
                 const touchstones = character.touchstones
                     .map((touchstone) => ({
                         touchstone,
@@ -264,20 +360,36 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                         {playerName}
                                     </Text>
                                 </Group>
-                                <Group gap="xs" wrap="nowrap" align="center">
-                                    <Text
-                                        size="xs"
-                                        style={{
-                                            fontFamily: "Cinzel, Georgia, serif",
-                                            letterSpacing: "0.16em",
-                                            textTransform: "uppercase",
-                                            color: rgba(RAW_RED, 0.82)
-                                        }}
-                                    >
-                                        Hunger
-                                    </Text>
-                                    <HungerMeter hunger={hunger} />
-                                </Group>
+                                <Stack gap={6}>
+                                    <Group gap="xs" wrap="nowrap" align="center">
+                                        <StatusLabel color={rgba(RAW_RED, 0.82)}>
+                                            Hunger
+                                        </StatusLabel>
+                                        <HungerMeter hunger={hunger} />
+                                    </Group>
+                                    <Group gap="xs" wrap="nowrap" align="center">
+                                        <StatusLabel color={rgba(RAW_GRAPE, 0.9)}>
+                                            Health
+                                        </StatusLabel>
+                                        <DamageMeter
+                                            label="Health"
+                                            maximum={maxHealth}
+                                            superficialDamage={superficialDamage}
+                                            aggravatedDamage={aggravatedDamage}
+                                        />
+                                    </Group>
+                                    <Group gap="xs" wrap="nowrap" align="center">
+                                        <StatusLabel color={rgba(RAW_GRAPE, 0.9)}>
+                                            Willpower
+                                        </StatusLabel>
+                                        <DamageMeter
+                                            label="Willpower"
+                                            maximum={willpower}
+                                            superficialDamage={superficialWillpowerDamage}
+                                            aggravatedDamage={aggravatedWillpowerDamage}
+                                        />
+                                    </Group>
+                                </Stack>
                                 <Group gap="xs">
                                     <Badge color="red" variant="light">
                                         {clan?.name || upcase(character.clan)}
@@ -329,6 +441,9 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                             </Text>
                                             <Text span c={rgba(RAW_GOLD, 0.95)}>
                                                 {humanity} / 10
+                                                {vitals.humanityStains > 0
+                                                    ? ` · ${vitals.humanityStains} stains`
+                                                    : ""}
                                             </Text>
                                         </Text>
                                     </Stack>
@@ -380,7 +495,8 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                 {skillGroups.map((group) => {
                                     const nonZeroSkills = group.items.filter(
                                         (skill) =>
-                                            (character.skills[skillsKeySchema.parse(skill)] ?? 0) > 0
+                                            (character.skills[skillsKeySchema.parse(skill)] ?? 0) >
+                                            0
                                     )
 
                                     return (
@@ -454,8 +570,7 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                                                         width: 18,
                                                                         height: 18,
                                                                         objectFit: "contain",
-                                                                        filter:
-                                                                            "drop-shadow(0 0 6px rgba(224, 49, 49, 0.35))"
+                                                                        filter: "drop-shadow(0 0 6px rgba(224, 49, 49, 0.35))"
                                                                     }}
                                                                 />
                                                             ) : null}
@@ -530,7 +645,11 @@ const CoterieCharacterSummaryGrid = ({ members }: CoterieCharacterSummaryGridPro
                                                             </Badge>
                                                         </Group>
                                                         {rite.summary ? (
-                                                            <Text size="xs" c="dimmed" lineClamp={2}>
+                                                            <Text
+                                                                size="xs"
+                                                                c="dimmed"
+                                                                lineClamp={2}
+                                                            >
                                                                 {rite.summary}
                                                             </Text>
                                                         ) : null}

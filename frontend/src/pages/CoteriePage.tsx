@@ -20,12 +20,7 @@ import {
 import { useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { Link } from "@tanstack/react-router"
-import {
-    IconArrowLeft,
-    IconBook2,
-    IconVersions,
-    IconUsers
-} from "@tabler/icons-react"
+import { IconArrowLeft, IconBook2, IconVersions, IconUsers } from "@tabler/icons-react"
 import posthog from "posthog-js"
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -39,6 +34,7 @@ import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import {
     useCoterie,
     useCoterieNotes,
+    useCoterieVitals,
     useRestoreCoterieNoteVersion,
     useSaveCoterieNotes
 } from "~/hooks/useCoteries"
@@ -50,6 +46,8 @@ import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import Topbar from "~/topbar/Topbar"
 import { type CoterieNoteVersionResponse } from "~/utils/api"
+import { isCharacterVitals } from "~/utils/characterVitals"
+import type { CharacterVitals } from "~/utils/characterVitals"
 
 type CoteriePageProps = {
     coterieId: string
@@ -75,14 +73,24 @@ const formatDateTime = (value: string) =>
     })
 
 const CoteriePage = ({ coterieId }: CoteriePageProps) => {
+    const { isLoading: authLoading, isAuthenticated, signIn } = useAuth()
     const {
-        isLoading: authLoading,
-        isAuthenticated,
-        signIn
-    } = useAuth()
-    const { data: coterie, isLoading: coterieLoading, error: coterieError } = useCoterie(
-        isAuthenticated ? coterieId : null
-    )
+        data: coterie,
+        isLoading: coterieLoading,
+        error: coterieError
+    } = useCoterie(isAuthenticated ? coterieId : null)
+    const { data: coterieVitals } = useCoterieVitals(isAuthenticated)
+    const vitalsByCharacterId = useMemo(() => {
+        const vitalsMap: Record<string, CharacterVitals> = {}
+
+        ;(coterieVitals || []).forEach((vitals) => {
+            if (vitals.coterieId === coterieId && isCharacterVitals(vitals)) {
+                vitalsMap[vitals.characterId] = vitals
+            }
+        })
+
+        return vitalsMap
+    }, [coterieId, coterieVitals])
     const { data: notes } = useCoterieNotes(isAuthenticated ? coterieId : null)
     const saveNotesMutation = useSaveCoterieNotes()
     const [character] = useCharacterLocalStorage()
@@ -90,16 +98,12 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
     const computedColorScheme = useComputedColorScheme("dark", {
         getInitialValueInEffect: true
     })
-    const isSmallScreen = useMediaQuery(
-        `(max-width: ${globals.smallScreenW}px)`,
-        undefined,
-        { getInitialValueInEffect: false }
-    )
-    const shouldInlineChat = useMediaQuery(
-        `(max-width: ${chatDockBreakpoint}px)`,
-        undefined,
-        { getInitialValueInEffect: false }
-    )
+    const isSmallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`, undefined, {
+        getInitialValueInEffect: false
+    })
+    const shouldInlineChat = useMediaQuery(`(max-width: ${chatDockBreakpoint}px)`, undefined, {
+        getInitialValueInEffect: false
+    })
     const [showAsideBar, setShowAsideBar] = useState(!isSmallScreen)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
     const [notesOpened, setNotesOpened] = useState(false)
@@ -335,7 +339,9 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                 },
                 main: {
                     backgroundColor:
-                        computedColorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
+                        computedColorScheme === "dark"
+                            ? theme.colors.dark[8]
+                            : theme.colors.gray[0],
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
@@ -483,7 +489,8 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                                                 variant="outline"
                                                 leftSection={<IconUsers size={12} />}
                                             >
-                                                {memberCount} {memberCount === 1 ? "member" : "members"}
+                                                {memberCount}{" "}
+                                                {memberCount === 1 ? "member" : "members"}
                                             </Badge>
                                         </Group>
                                         <Button
@@ -510,7 +517,10 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                                         transition: "padding-right 160ms ease"
                                     }}
                                 >
-                                    <CoterieCharacterSummaryGrid members={coterie.members ?? []} />
+                                    <CoterieCharacterSummaryGrid
+                                        members={coterie.members ?? []}
+                                        vitalsByCharacterId={vitalsByCharacterId}
+                                    />
                                 </Box>
 
                                 {chatInline ? (

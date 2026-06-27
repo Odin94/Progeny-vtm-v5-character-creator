@@ -7,6 +7,7 @@ type DamagePipsProps = {
     aggravated: number
     onChange: (superficial: number, aggravated: number) => void
     color?: string
+    disabledReason?: string
 }
 
 const DamagePips = ({
@@ -14,7 +15,8 @@ const DamagePips = ({
     superficial,
     aggravated,
     onChange,
-    color = "grape"
+    color = "grape",
+    disabledReason
 }: DamagePipsProps) => {
     const getPipState = (pipIndex: number): "none" | "superficial" | "aggravated" => {
         const pipNumber = pipIndex + 1
@@ -67,6 +69,7 @@ const DamagePips = ({
                                 : undefined
                         }
                         color={color}
+                        disabledReason={disabledReason}
                     />
                 )
             })}

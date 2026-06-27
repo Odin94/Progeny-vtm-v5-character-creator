@@ -17,6 +17,7 @@ type RemorseTestButtonProps = {
     iconSize?: number
     tooltipZIndex?: number
     onRemorseTest?: (rolls: number[], successes: number, passed: boolean) => void
+    disabledReason?: string
 }
 
 const RemorseTestButton = ({
@@ -26,14 +27,15 @@ const RemorseTestButton = ({
     size = "sm",
     iconSize = 16,
     tooltipZIndex,
-    onRemorseTest
+    onRemorseTest,
+    disabledReason
 }: RemorseTestButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
     const { sendRemorseCheck, sessionId, connectionStatus } = useSessionChat()
 
     const handleRemorseTest = () => {
-        if (!character || !setCharacter) return
+        if (!character || !setCharacter || disabledReason) return
 
         const humanityStains = character.ephemeral?.humanityStains ?? 0
         const maxStains = 10 - character.humanity
@@ -116,14 +118,15 @@ const RemorseTestButton = ({
     const maxStains = 10 - character.humanity
     const unmarkedStains = maxStains - humanityStains
     const diceCount = Math.max(1, unmarkedStains)
-    const isDisabled = diceCount === 0 || humanityStains === 0
+    const isDisabled = !!disabledReason || diceCount === 0 || humanityStains === 0
 
     return (
         <Tooltip
             label={
-                isDisabled
+                disabledReason ??
+                (isDisabled
                     ? "No stains to test"
-                    : `Roll remorse test (${diceCount} ${diceCount === 1 ? "die" : "dice"})`
+                    : `Roll remorse test (${diceCount} ${diceCount === 1 ? "die" : "dice"})`)
             }
             zIndex={tooltipZIndex}
         >

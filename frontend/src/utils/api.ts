@@ -165,9 +165,12 @@ export type StartImpersonationResponse = {
 type ApiTimestamp = string
 
 export type UpdateCharacterVitalsPayload = {
+    maxHealth: number
     willpower: number
     humanity: number
     ephemeral: {
+        superficialDamage: number
+        aggravatedDamage: number
         hunger: number
         superficialWillpowerDamage: number
         aggravatedWillpowerDamage: number
@@ -184,9 +187,14 @@ export type UpdateCharacterVitalsResponse = {
 export type CoterieVitalsResponse = {
     coterieId: string
     characterId: string
+    maxHealth: number
+    superficialDamage: number
+    aggravatedDamage: number
     hunger: number
     willpower: number
     currentWillpower: number
+    superficialWillpowerDamage: number
+    aggravatedWillpowerDamage: number
     humanity: number
     humanityStains: number
     characterVersion: number

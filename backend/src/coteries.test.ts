@@ -187,9 +187,12 @@ const seedBaseData = async () => {
             data: JSON.stringify({
                 name: "Owner Character",
                 player: "Owner",
+                maxHealth: 7,
                 willpower: 6,
                 humanity: 7,
                 ephemeral: {
+                    superficialDamage: 2,
+                    aggravatedDamage: 1,
                     hunger: 2,
                     superficialWillpowerDamage: 1,
                     aggravatedWillpowerDamage: 1,
@@ -206,9 +209,12 @@ const seedBaseData = async () => {
             data: JSON.stringify({
                 name: "Member Character",
                 player: "Character Sheet Player",
+                maxHealth: 6,
                 willpower: 5,
                 humanity: 6,
                 ephemeral: {
+                    superficialDamage: 1,
+                    aggravatedDamage: 0,
                     hunger: 3,
                     superficialWillpowerDamage: 1,
                     aggravatedWillpowerDamage: 0,
@@ -225,9 +231,12 @@ const seedBaseData = async () => {
             data: JSON.stringify({
                 name: "Other Character",
                 player: "Other",
+                maxHealth: 5,
                 willpower: 4,
                 humanity: 5,
                 ephemeral: {
+                    superficialDamage: 0,
+                    aggravatedDamage: 0,
                     hunger: 1,
                     superficialWillpowerDamage: 0,
                     aggravatedWillpowerDamage: 0,
@@ -303,9 +312,14 @@ describe("coterie invites and membership permissions", () => {
             expect.objectContaining({
                 coterieId: COTERIE_ID,
                 characterId: OWNER_CHARACTER_ID,
+                maxHealth: 7,
+                superficialDamage: 2,
+                aggravatedDamage: 1,
                 hunger: 2,
                 currentWillpower: 4,
                 willpower: 6,
+                superficialWillpowerDamage: 1,
+                aggravatedWillpowerDamage: 1,
                 humanity: 7,
                 humanityStains: 1
             })
@@ -316,9 +330,12 @@ describe("coterie invites and membership permissions", () => {
             url: `/characters/${OWNER_CHARACTER_ID}/vitals`,
             headers: csrfHeaders,
             payload: {
+                maxHealth: 8,
                 willpower: 7,
                 humanity: 6,
                 ephemeral: {
+                    superficialDamage: 3,
+                    aggravatedDamage: 2,
                     hunger: 4,
                     superficialWillpowerDamage: 2,
                     aggravatedWillpowerDamage: 1,
@@ -337,9 +354,14 @@ describe("coterie invites and membership permissions", () => {
         expect(refreshedOwnerVitalsResponse.json()).toEqual([
             expect.objectContaining({
                 characterId: OWNER_CHARACTER_ID,
+                maxHealth: 8,
+                superficialDamage: 3,
+                aggravatedDamage: 2,
                 hunger: 4,
                 currentWillpower: 4,
                 willpower: 7,
+                superficialWillpowerDamage: 2,
+                aggravatedWillpowerDamage: 1,
                 humanity: 6,
                 humanityStains: 3,
                 characterVersion: 1
@@ -380,9 +402,12 @@ describe("coterie invites and membership permissions", () => {
             url: `/characters/${OWNER_CHARACTER_ID}/vitals`,
             headers: csrfHeaders,
             payload: {
+                maxHealth: 6,
                 willpower: 6,
                 humanity: 6,
                 ephemeral: {
+                    superficialDamage: 0,
+                    aggravatedDamage: 0,
                     hunger: 1,
                     superficialWillpowerDamage: 0,
                     aggravatedWillpowerDamage: 0,

@@ -11,6 +11,9 @@ const RETRY_DELAY_MS = 3000
 const getVitalsKey = (character: Character) =>
     JSON.stringify({
         id: character.id || null,
+        maxHealth: character.maxHealth,
+        superficialDamage: character.ephemeral.superficialDamage,
+        aggravatedDamage: character.ephemeral.aggravatedDamage,
         hunger: character.ephemeral.hunger,
         willpower: character.willpower,
         superficialWillpowerDamage: character.ephemeral.superficialWillpowerDamage,
@@ -19,7 +22,11 @@ const getVitalsKey = (character: Character) =>
         humanityStains: character.ephemeral.humanityStains
     })
 
-export const useAutosaveCharacterVitals = (character: Character, setCharacter: SetCharacter) => {
+export const useAutosaveCharacterVitals = (
+    character: Character,
+    setCharacter: SetCharacter,
+    enabled = true
+) => {
     const { isAuthenticated } = useAuth()
     const queryClient = useQueryClient()
     const latestCharacterRef = useRef(character)
@@ -39,9 +46,12 @@ export const useAutosaveCharacterVitals = (character: Character, setCharacter: S
         () => getVitalsKey(character),
         [
             character.id,
+            character.maxHealth,
+            character.ephemeral.aggravatedDamage,
             character.ephemeral.aggravatedWillpowerDamage,
             character.ephemeral.hunger,
             character.ephemeral.humanityStains,
+            character.ephemeral.superficialDamage,
             character.ephemeral.superficialWillpowerDamage,
             character.humanity,
             character.willpower
@@ -57,7 +67,7 @@ export const useAutosaveCharacterVitals = (character: Character, setCharacter: S
             return
         }
 
-        if (!isAuthenticated || !characterId) {
+        if (!enabled || !isAuthenticated || !characterId) {
             lastSavedVitalsKeyRef.current = vitalsKey
             return
         }
@@ -80,9 +90,12 @@ export const useAutosaveCharacterVitals = (character: Character, setCharacter: S
 
             try {
                 const savedCharacter = await api.updateCharacterVitals(characterId, {
+                    maxHealth: latestCharacter.maxHealth,
                     willpower: latestCharacter.willpower,
                     humanity: latestCharacter.humanity,
                     ephemeral: {
+                        superficialDamage: latestCharacter.ephemeral.superficialDamage,
+                        aggravatedDamage: latestCharacter.ephemeral.aggravatedDamage,
                         hunger: latestCharacter.ephemeral.hunger,
                         superficialWillpowerDamage:
                             latestCharacter.ephemeral.superficialWillpowerDamage,
@@ -122,5 +135,5 @@ export const useAutosaveCharacterVitals = (character: Character, setCharacter: S
                 window.clearTimeout(retryTimeout)
             }
         }
-    }, [character.id, isAuthenticated, queryClient, vitalsKey])
+    }, [character.id, enabled, isAuthenticated, queryClient, vitalsKey])
 }

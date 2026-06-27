@@ -281,17 +281,29 @@ const requireOwnedCoterie = async (coterieId: string, userId: string) => {
 const parseCharacterVitals = (data: string) => {
     try {
         const character = JSON.parse(data) as {
+            maxHealth?: unknown
             willpower?: unknown
             humanity?: unknown
             ephemeral?: {
+                superficialDamage?: unknown
+                aggravatedDamage?: unknown
                 hunger?: unknown
                 superficialWillpowerDamage?: unknown
                 aggravatedWillpowerDamage?: unknown
                 humanityStains?: unknown
             }
         }
+        const maxHealth = typeof character.maxHealth === "number" ? character.maxHealth : null
         const willpower = typeof character.willpower === "number" ? character.willpower : null
         const humanity = typeof character.humanity === "number" ? character.humanity : null
+        const superficialDamage =
+            typeof character.ephemeral?.superficialDamage === "number"
+                ? character.ephemeral.superficialDamage
+                : null
+        const aggravatedDamage =
+            typeof character.ephemeral?.aggravatedDamage === "number"
+                ? character.ephemeral.aggravatedDamage
+                : null
         const hunger =
             typeof character.ephemeral?.hunger === "number" ? character.ephemeral.hunger : null
         const superficialWillpowerDamage =
@@ -308,8 +320,11 @@ const parseCharacterVitals = (data: string) => {
                 : null
 
         if (
+            maxHealth === null ||
             willpower === null ||
             humanity === null ||
+            superficialDamage === null ||
+            aggravatedDamage === null ||
             hunger === null ||
             superficialWillpowerDamage === null ||
             aggravatedWillpowerDamage === null ||
@@ -319,8 +334,13 @@ const parseCharacterVitals = (data: string) => {
         }
 
         return {
+            maxHealth,
+            superficialDamage,
+            aggravatedDamage,
             hunger,
             willpower,
+            superficialWillpowerDamage,
+            aggravatedWillpowerDamage,
             humanity,
             humanityStains,
             currentWillpower: Math.max(
