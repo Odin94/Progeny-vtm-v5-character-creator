@@ -14,9 +14,12 @@ export const updateCharacterSchema = z.object({
 })
 
 export const updateCharacterVitalsSchema = z.object({
+    maxHealth: z.number().min(0).max(10).int().optional(),
     willpower: z.number().min(0).max(10).int(),
     humanity: z.number().min(0).max(10).int(),
     ephemeral: z.object({
+        superficialDamage: z.number().min(0).max(10).int().optional(),
+        aggravatedDamage: z.number().min(0).max(10).int().optional(),
         hunger: z.number().min(0).max(5).int(),
         superficialWillpowerDamage: z.number().min(0).max(10).int(),
         aggravatedWillpowerDamage: z.number().min(0).max(10).int(),

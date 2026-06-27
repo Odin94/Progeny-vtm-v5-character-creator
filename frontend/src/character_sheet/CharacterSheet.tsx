@@ -7,10 +7,11 @@ import {
     MantineProvider,
     Paper,
     SegmentedControl,
-    Stack
+    Stack,
+    Tooltip
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
 import posthog from "posthog-js"
@@ -33,6 +34,8 @@ import DiceRollModal from "./components/diceRollModal/DiceRollModal"
 import ChatWindow from "./components/ChatWindow"
 import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
+import { useAuth } from "~/hooks/useAuth"
+import { useCharacters } from "~/hooks/useCharacters"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
 
@@ -41,9 +44,13 @@ export type SheetOptions = {
     primaryColor: string
     character: Character
     setCharacter: SetCharacter
+    canEdit: boolean
+    editDisabledReason?: string
     preferences: UserPreferences
     onUpdatePreferences: (partial: Partial<UserPreferences>) => void
 }
+
+export const CHARACTER_OWNERSHIP_EDIT_REASON = "You can only edit your own characters"
 
 type CharacterSheetProps = {
     character: Character
@@ -68,22 +75,60 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         defaultValue: isEmptyCharacter ? "free" : "play",
         getInitialValueInEffect: false
     })
+    const { isAuthenticated, isLoading: authLoading } = useAuth()
+    const { data: userCharacters, isLoading: charactersLoading } = useCharacters(
+        isAuthenticated && !!character.id
+    )
+    const loadedCharacter = (
+        (userCharacters as Array<{ id: string; shared?: boolean }> | undefined) ?? []
+    ).find((candidate) => candidate.id === character.id)
+    const ownershipLoading =
+        !!character.id && (authLoading || (isAuthenticated && charactersLoading))
+    const canEdit =
+        !character.id ||
+        (!authLoading && !isAuthenticated) ||
+        (!ownershipLoading && !!loadedCharacter && !loadedCharacter.shared)
+    const editDisabledReason = canEdit ? undefined : CHARACTER_OWNERSHIP_EDIT_REASON
+    const editableSetCharacter = useCallback<SetCharacter>(
+        (update) => {
+            if (canEdit) {
+                setCharacter(update)
+            }
+        },
+        [canEdit, setCharacter]
+    )
+    const effectiveMode = canEdit ? mode : "play"
     const openDiceModal = useDiceRollModalStore((state) => state.open)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
     const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
-    useAutosaveCharacterVitals(character, setCharacter)
+    useAutosaveCharacterVitals(character, setCharacter, canEdit)
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
-            mode,
+            mode: effectiveMode,
             primaryColor,
             character,
-            setCharacter,
+            setCharacter: editableSetCharacter,
+            canEdit,
+            editDisabledReason,
             preferences,
             onUpdatePreferences: updatePreferences
         }),
-        [mode, primaryColor, character, setCharacter, preferences, updatePreferences]
+        [
+            effectiveMode,
+            primaryColor,
+            character,
+            editableSetCharacter,
+            canEdit,
+            editDisabledReason,
+            preferences,
+            updatePreferences
+        ]
+    )
+    const characterMenuOptions = useMemo(
+        () => ({ ...sheetOptions, setCharacter }),
+        [setCharacter, sheetOptions]
     )
 
     return (
@@ -178,17 +223,22 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             >
                                 <IconDice size={24} />
                             </ActionIcon>
-                            <SegmentedControl
-                                value={mode}
-                                onChange={(value) => setMode(value as CharacterSheetMode)}
-                                data={[
-                                    { label: "Play", value: "play" },
-                                    { label: "XP", value: "xp" },
-                                    { label: "Free", value: "free" }
-                                ]}
-                                color={primaryColor}
-                                orientation="vertical"
-                            />
+                            <Tooltip label={editDisabledReason} disabled={canEdit} withArrow>
+                                <span>
+                                    <SegmentedControl
+                                        value={effectiveMode}
+                                        onChange={(value) => setMode(value as CharacterSheetMode)}
+                                        data={[
+                                            { label: "Play", value: "play" },
+                                            { label: "XP", value: "xp" },
+                                            { label: "Free", value: "free" }
+                                        ]}
+                                        color={primaryColor}
+                                        orientation="vertical"
+                                        disabled={!canEdit}
+                                    />
+                                </span>
+                            </Tooltip>
                         </Box>
 
                         <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
@@ -231,12 +281,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                     </Box>
                 </Container>
             </Box>
-            <CharacterSheetMenu options={sheetOptions} />
+            <CharacterSheetMenu options={characterMenuOptions} />
             <ChatWindow options={sheetOptions} />
             <DiceRollModal
                 primaryColor={primaryColor}
                 character={character}
-                setCharacter={setCharacter}
+                setCharacter={editableSetCharacter}
+                editDisabledReason={editDisabledReason}
             />
         </MantineProvider>
     )

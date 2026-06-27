@@ -1,4 +1,4 @@
-import { ActionIcon, useMantineTheme } from "@mantine/core"
+import { ActionIcon, Tooltip, useMantineTheme } from "@mantine/core"
 import { useRef, useMemo } from "react"
 import { motion } from "framer-motion"
 
@@ -7,6 +7,7 @@ type SquarePipButtonProps = {
     style?: React.CSSProperties
     damageState?: "none" | "superficial" | "aggravated"
     color?: string
+    disabledReason?: string
 }
 
 // TODOdin: Consider highlighting clickable buttons or low-lighting non-clickable buttons
@@ -14,12 +15,14 @@ const SquarePipButton = ({
     onClick,
     style,
     damageState = "none",
-    color = "grape"
+    color = "grape",
+    disabledReason
 }: SquarePipButtonProps) => {
     const theme = useMantineTheme()
     const prevState = useRef(damageState)
     const keyCounter = useRef(0)
     const strokeColor = theme.colors[color][6]
+    const isDisabled = !!disabledReason
 
     const { superficialKey, aggravatedKey } = useMemo(() => {
         const isNewSuperficial = damageState !== "none" && prevState.current === "none"
@@ -42,22 +45,23 @@ const SquarePipButton = ({
         border: `2px solid ${theme.colors[color][6]}`,
         borderRadius: "4px",
         backgroundColor: "transparent",
-        cursor: onClick ? "pointer" : "default",
+        cursor: onClick && !isDisabled ? "pointer" : "default",
         transition: "transform 0.2s ease",
         position: "relative",
         overflow: "visible",
         ...style
     }
 
-    return (
+    const pip = (
         <ActionIcon
             variant="subtle"
             color={color}
-            onClick={onClick}
+            onClick={isDisabled ? undefined : onClick}
             size="xs"
             style={buttonStyle}
+            disabled={isDisabled}
             onMouseEnter={(e) => {
-                if (onClick) {
+                if (onClick && !isDisabled) {
                     e.currentTarget.style.transform = "scale(1.15)"
                 }
             }}
@@ -117,6 +121,14 @@ const SquarePipButton = ({
                 )}
             </svg>
         </ActionIcon>
+    )
+
+    return disabledReason ? (
+        <Tooltip label={disabledReason} withArrow>
+            <span style={{ display: "inline-flex" }}>{pip}</span>
+        </Tooltip>
+    ) : (
+        pip
     )
 }
 

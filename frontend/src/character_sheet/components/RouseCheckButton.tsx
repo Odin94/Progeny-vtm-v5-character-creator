@@ -17,6 +17,7 @@ type RouseCheckButtonProps = {
     iconSize?: number
     tooltipZIndex?: number
     onRouseCheck?: (roll: number, success: boolean) => void
+    disabledReason?: string
 }
 
 const RouseCheckButton = ({
@@ -26,14 +27,15 @@ const RouseCheckButton = ({
     size = "sm",
     iconSize = 16,
     tooltipZIndex,
-    onRouseCheck
+    onRouseCheck,
+    disabledReason
 }: RouseCheckButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
     const { sendRouseCheck, sessionId, connectionStatus } = useSessionChat()
 
     const handleRouseCheck = () => {
-        if (!character || !setCharacter) return
+        if (!character || !setCharacter || disabledReason) return
 
         const hunger = character.ephemeral?.hunger ?? 0
         const roll = Math.floor(Math.random() * 10) + 1
@@ -91,11 +93,14 @@ const RouseCheckButton = ({
     }
 
     const hunger = character.ephemeral?.hunger ?? 0
-    const isDisabled = hunger >= 5
+    const isDisabled = !!disabledReason || hunger >= 5
 
     return (
         <Tooltip
-            label={isDisabled ? "Cannot rouse check at hunger 5" : "Roll rouse check"}
+            label={
+                disabledReason ??
+                (hunger >= 5 ? "Cannot rouse check at hunger 5" : "Roll rouse check")
+            }
             zIndex={tooltipZIndex}
         >
             <ActionIcon

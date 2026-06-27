@@ -25,6 +25,7 @@ type DiceRollModalProps = {
     primaryColor: string
     character?: Character
     setCharacter?: (character: Character) => void
+    editDisabledReason?: string
 }
 
 type RollShareContext = {
@@ -52,7 +53,12 @@ type RollShareContext = {
 // * Roll history
 // * Share rolls with your session live
 
-const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalProps) => {
+const DiceRollModal = ({
+    primaryColor,
+    character,
+    setCharacter,
+    editDisabledReason
+}: DiceRollModalProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
@@ -358,7 +364,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
     }, [dice])
 
     const canReroll = useMemo(() => {
-        if (!character || !setCharacter) return false
+        if (!character || !setCharacter || editDisabledReason) return false
         const totalWillpowerDamage =
             (character.ephemeral?.superficialWillpowerDamage ?? 0) +
             (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
@@ -367,7 +373,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
             return availableWillpower > 0 && rerollableDice.length > 0
         }
         return availableWillpower > 0 && selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
-    }, [character, selectedDiceIds, isMobile, rerollableDice.length])
+    }, [character, editDisabledReason, selectedDiceIds, isMobile, rerollableDice.length])
 
     const handleDieClick = useCallback(
         (dieId: number, isBloodDie: boolean) => {
@@ -387,7 +393,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
     )
 
     const handleReroll = () => {
-        if (!character || !setCharacter || !canReroll) return
+        if (!character || !setCharacter || editDisabledReason || !canReroll) return
 
         const totalWillpowerDamage =
             (character.ephemeral?.superficialWillpowerDamage ?? 0) +
@@ -848,6 +854,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
                             size="lg"
                             iconSize={20}
                             tooltipZIndex={3000}
+                            disabledReason={editDisabledReason}
                         />
                     ) : (
                         <div style={{ width: 36 }} />
@@ -876,6 +883,7 @@ const DiceRollModal = ({ primaryColor, character, setCharacter }: DiceRollModalP
                                     : undefined
                             }
                             canReroll={canReroll}
+                            rerollDisabledReason={editDisabledReason}
                             selectedDiceCount={selectedDiceIds.size}
                             rerollableDiceCount={rerollableDice.length}
                             isMobile={isMobile}

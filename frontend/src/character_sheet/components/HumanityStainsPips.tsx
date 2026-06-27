@@ -22,6 +22,10 @@ const HumanityStainsPips = ({
             return "No options provided"
         }
 
+        if (!options.canEdit) {
+            return options.editDisabledReason
+        }
+
         return undefined
     }
 
@@ -58,6 +62,7 @@ const HumanityStainsPips = ({
                         onClick={disabledReason ? undefined : () => handlePipClick(index)}
                         damageState={isFilled ? "superficial" : "none"}
                         color={options?.primaryColor || "grape"}
+                        disabledReason={disabledReason}
                     />
                 )
             })}
