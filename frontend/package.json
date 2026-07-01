@@ -45,7 +45,7 @@
         "buffer": "^6.0.3",
         "framer-motion": "^12.39.0",
         "pdf-lib": "^1.17.1",
-        "posthog-js": "^1.391.2",
+        "posthog-js": "^1.395.0",
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
         "react-ga4": "^3.0.1",

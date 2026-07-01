@@ -59,7 +59,8 @@ const scrubInviteTokensFromProperties = (properties: Record<string, unknown> | u
 }
 
 const posthogOptions: Partial<PostHogConfig> = {
-    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    api_host: "https://info.odin-matthias.com",
+    ui_host: "https://eu.posthog.com",
     defaults: "2025-05-24",
     capture_exceptions: true,
     cookieless_mode: "on_reject",
