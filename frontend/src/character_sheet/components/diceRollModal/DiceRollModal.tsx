@@ -4,6 +4,7 @@ import { notifications } from "@mantine/notifications"
 import { AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import RouseCheckButton from "../RouseCheckButton"
 import { useCharacterSheetStore } from "../../stores/characterSheetStore"
@@ -24,7 +25,7 @@ import { getBloodPotencyDisciplineBonus } from "~/data/BloodPotency"
 type DiceRollModalProps = {
     primaryColor: string
     character?: Character
-    setCharacter?: (character: Character) => void
+    setCharacter?: SetCharacter
     editDisabledReason?: string
 }
 

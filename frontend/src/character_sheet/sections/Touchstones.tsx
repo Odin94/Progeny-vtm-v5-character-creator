@@ -13,7 +13,7 @@ import {
     Divider,
     Stack
 } from "@mantine/core"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import TouchstoneModal from "../components/TouchstoneModal"
@@ -44,9 +44,9 @@ const Touchstones = ({ options }: TouchstonesProps) => {
     const confirmDelete = () => {
         if (!touchstoneToDelete) return
 
-        setCharacter({
-            ...character,
-            touchstones: character.touchstones.filter(
+        setCharacter((current) => ({
+            ...current,
+            touchstones: current.touchstones.filter(
                 (t) =>
                     !(
                         t.name === touchstoneToDelete.name &&
@@ -54,7 +54,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                         t.conviction === touchstoneToDelete.conviction
                     )
             )
-        })
+        }))
 
         setTouchstoneToDelete(null)
     }
@@ -205,4 +205,15 @@ const Touchstones = ({ options }: TouchstonesProps) => {
     )
 }
 
-export default Touchstones
+export default memo(Touchstones, (prev, next) => {
+    const p = prev.options
+    const n = next.options
+    return (
+        p.mode === n.mode &&
+        p.primaryColor === n.primaryColor &&
+        p.canEdit === n.canEdit &&
+        p.editDisabledReason === n.editDisabledReason &&
+        p.setCharacter === n.setCharacter &&
+        p.character.touchstones === n.character.touchstones
+    )
+})

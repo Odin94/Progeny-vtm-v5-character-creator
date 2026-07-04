@@ -114,24 +114,26 @@ const CustomCeremonyModal = ({
             isCustom: true
         }
 
-        const updatedCharacter = {
-            ...character,
-            ceremonies: editingCeremony
-                ? character.ceremonies.map((existing) =>
-                      existing === editingCeremony ? ceremony : existing
-                  )
-                : [...character.ceremonies, ceremony]
-        }
-
-        if (!editingCeremony && mode === "xp") {
-            updatedCharacter.ephemeral = {
-                ...updatedCharacter.ephemeral,
-                experienceSpent:
-                    updatedCharacter.ephemeral.experienceSpent + getRitualCost(ceremony.level)
+        setCharacter((current) => {
+            const updatedCharacter = {
+                ...current,
+                ceremonies: editingCeremony
+                    ? current.ceremonies.map((existing) =>
+                          existing === editingCeremony ? ceremony : existing
+                      )
+                    : [...current.ceremonies, ceremony]
             }
-        }
 
-        setCharacter(updatedCharacter)
+            if (!editingCeremony && mode === "xp") {
+                updatedCharacter.ephemeral = {
+                    ...updatedCharacter.ephemeral,
+                    experienceSpent:
+                        updatedCharacter.ephemeral.experienceSpent + getRitualCost(ceremony.level)
+                }
+            }
+
+            return updatedCharacter
+        })
         if (onSave) {
             onSave()
         } else {
@@ -142,10 +144,10 @@ const CustomCeremonyModal = ({
     const handleDelete = () => {
         if (!editingCeremony) return
 
-        setCharacter({
-            ...character,
-            ceremonies: character.ceremonies.filter((ceremony) => ceremony !== editingCeremony)
-        })
+        setCharacter((current) => ({
+            ...current,
+            ceremonies: current.ceremonies.filter((ceremony) => ceremony !== editingCeremony)
+        }))
         onClose()
     }
 

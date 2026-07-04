@@ -152,29 +152,31 @@ const CustomPowerModal = ({
             isCustom: true
         }
 
-        let updatedCharacter
-        if (editingPower) {
-            updatedCharacter = {
-                ...character,
-                disciplines: character.disciplines.map((p) => (p === editingPower ? power : p))
-            }
-        } else {
-            updatedCharacter = {
-                ...character,
-                disciplines: [...character.disciplines, power]
-            }
+        setCharacter((current) => {
+            let updatedCharacter
+            if (editingPower) {
+                updatedCharacter = {
+                    ...current,
+                    disciplines: current.disciplines.map((p) => (p === editingPower ? power : p))
+                }
+            } else {
+                updatedCharacter = {
+                    ...current,
+                    disciplines: [...current.disciplines, power]
+                }
 
-            if (mode === "xp") {
-                const cost = getDisciplineCost(character, disciplineName)
-                updatedCharacter.ephemeral = {
-                    ...updatedCharacter.ephemeral,
-                    experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost
+                if (mode === "xp") {
+                    const cost = getDisciplineCost(current, disciplineName)
+                    updatedCharacter.ephemeral = {
+                        ...updatedCharacter.ephemeral,
+                        experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost
+                    }
                 }
             }
-        }
 
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        setCharacter(updatedCharacter)
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+            return updatedCharacter
+        })
         if (onSave) {
             onSave()
         } else {

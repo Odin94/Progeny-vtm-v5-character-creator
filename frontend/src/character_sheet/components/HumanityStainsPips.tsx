@@ -32,20 +32,20 @@ const HumanityStainsPips = ({
     const handlePipClick = (index: number) => {
         if (!options) return
 
-        const { character, setCharacter } = options
+        const { setCharacter } = options
 
         const reversedIndex = maxLevel - 1 - index
         const isFilled = reversedIndex < value
         const newValue = isFilled ? reversedIndex : reversedIndex + 1
         const clampedValue = Math.min(Math.max(0, newValue), maxLevel)
 
-        setCharacter({
-            ...character,
+        setCharacter((current) => ({
+            ...current,
             ephemeral: {
-                ...character.ephemeral,
+                ...current.ephemeral,
                 humanityStains: clampedValue
             }
-        })
+        }))
     }
 
     const disabledReason = getDisabledReason()

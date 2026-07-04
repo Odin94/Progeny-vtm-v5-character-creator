@@ -166,59 +166,50 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 return
             }
             if (existingMerit) {
-                const updatedMerits = character.merits.map((m) =>
-                    m === existingMerit ? newMeritFlaw : m
-                )
-                setCharacter({
-                    ...character,
-                    merits: updatedMerits,
+                setCharacter((current) => ({
+                    ...current,
+                    merits: current.merits.map((m) => (m === existingMerit ? newMeritFlaw : m)),
                     ephemeral: {
-                        ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost
+                        ...current.ephemeral,
+                        experienceSpent: current.ephemeral.experienceSpent + cost
                     }
-                })
+                }))
             } else {
-                setCharacter({
-                    ...character,
-                    merits: [...character.merits, newMeritFlaw],
+                setCharacter((current) => ({
+                    ...current,
+                    merits: [...current.merits, newMeritFlaw],
                     ephemeral: {
-                        ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost
+                        ...current.ephemeral,
+                        experienceSpent: current.ephemeral.experienceSpent + cost
                     }
-                })
+                }))
             }
         } else {
             if (type === "merit") {
                 const existingMerit = character.merits.find((m) => m.name === meritFlaw.name)
                 if (existingMerit) {
-                    const updatedMerits = character.merits.map((m) =>
-                        m === existingMerit ? newMeritFlaw : m
-                    )
-                    setCharacter({
-                        ...character,
-                        merits: updatedMerits
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        merits: current.merits.map((m) => (m === existingMerit ? newMeritFlaw : m))
+                    }))
                 } else {
-                    setCharacter({
-                        ...character,
-                        merits: [...character.merits, newMeritFlaw]
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        merits: [...current.merits, newMeritFlaw]
+                    }))
                 }
             } else {
                 const existingFlaw = character.flaws.find((f) => f.name === meritFlaw.name)
                 if (existingFlaw) {
-                    const updatedFlaws = character.flaws.map((f) =>
-                        f === existingFlaw ? newMeritFlaw : f
-                    )
-                    setCharacter({
-                        ...character,
-                        flaws: updatedFlaws
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        flaws: current.flaws.map((f) => (f === existingFlaw ? newMeritFlaw : f))
+                    }))
                 } else {
-                    setCharacter({
-                        ...character,
-                        flaws: [...character.flaws, newMeritFlaw]
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        flaws: [...current.flaws, newMeritFlaw]
+                    }))
                 }
             }
         }
@@ -264,59 +255,52 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 return
             }
             if (existingMerit) {
-                const updatedMerits = character.merits.map((m) =>
-                    m === existingMerit ? customMeritFlaw : m
-                )
-                setCharacter({
-                    ...character,
-                    merits: updatedMerits,
+                setCharacter((current) => ({
+                    ...current,
+                    merits: current.merits.map((m) => (m === existingMerit ? customMeritFlaw : m)),
                     ephemeral: {
-                        ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost
+                        ...current.ephemeral,
+                        experienceSpent: current.ephemeral.experienceSpent + cost
                     }
-                })
+                }))
             } else {
-                setCharacter({
-                    ...character,
-                    merits: [...character.merits, customMeritFlaw],
+                setCharacter((current) => ({
+                    ...current,
+                    merits: [...current.merits, customMeritFlaw],
                     ephemeral: {
-                        ...character.ephemeral,
-                        experienceSpent: character.ephemeral.experienceSpent + cost
+                        ...current.ephemeral,
+                        experienceSpent: current.ephemeral.experienceSpent + cost
                     }
-                })
+                }))
             }
         } else {
             if (type === "merit") {
                 const existingMerit = character.merits.find((m) => m.name === customName.trim())
                 if (existingMerit) {
-                    const updatedMerits = character.merits.map((m) =>
-                        m === existingMerit ? customMeritFlaw : m
-                    )
-                    setCharacter({
-                        ...character,
-                        merits: updatedMerits
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        merits: current.merits.map((m) =>
+                            m === existingMerit ? customMeritFlaw : m
+                        )
+                    }))
                 } else {
-                    setCharacter({
-                        ...character,
-                        merits: [...character.merits, customMeritFlaw]
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        merits: [...current.merits, customMeritFlaw]
+                    }))
                 }
             } else {
                 const existingFlaw = character.flaws.find((f) => f.name === customName.trim())
                 if (existingFlaw) {
-                    const updatedFlaws = character.flaws.map((f) =>
-                        f === existingFlaw ? customMeritFlaw : f
-                    )
-                    setCharacter({
-                        ...character,
-                        flaws: updatedFlaws
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        flaws: current.flaws.map((f) => (f === existingFlaw ? customMeritFlaw : f))
+                    }))
                 } else {
-                    setCharacter({
-                        ...character,
-                        flaws: [...character.flaws, customMeritFlaw]
-                    })
+                    setCharacter((current) => ({
+                        ...current,
+                        flaws: [...current.flaws, customMeritFlaw]
+                    }))
                 }
             }
         }

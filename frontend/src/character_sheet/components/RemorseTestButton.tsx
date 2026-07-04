@@ -5,13 +5,14 @@ import { motion } from "framer-motion"
 import { useState } from "react"
 import posthog from "posthog-js"
 import { Character } from "~/data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 import { vtmRed } from "../utils/style"
 
 type RemorseTestButtonProps = {
     character?: Character
-    setCharacter?: (character: Character) => void
+    setCharacter?: SetCharacter
     primaryColor: string
     size?: "sm" | "md" | "lg" | "xl"
     iconSize?: number
@@ -64,14 +65,14 @@ const RemorseTestButton = ({
             newHumanity = Math.max(0, character.humanity - 1)
         }
 
-        setCharacter({
-            ...character,
+        setCharacter((current) => ({
+            ...current,
             humanity: newHumanity,
             ephemeral: {
-                ...character.ephemeral,
+                ...current.ephemeral,
                 humanityStains: newHumanityStains
             }
-        })
+        }))
 
         const rollsText = rolls.join(", ")
         let message = `Remorse Test: [${rollsText}] - ${successes} ${successes === 1 ? "success" : "successes"}`

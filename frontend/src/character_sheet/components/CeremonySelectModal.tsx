@@ -45,20 +45,22 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
     const sortedLevels = Array.from(ceremoniesByLevel.keys()).sort((a, b) => a - b)
 
     const handleSelectCeremony = (ceremony: Ceremony) => {
-        const updatedCharacter = {
-            ...character,
-            ceremonies: [...character.ceremonies, ceremony]
-        }
-
-        if (mode === "xp") {
-            updatedCharacter.ephemeral = {
-                ...updatedCharacter.ephemeral,
-                experienceSpent:
-                    updatedCharacter.ephemeral.experienceSpent + getRitualCost(ceremony.level)
+        setCharacter((current) => {
+            const updatedCharacter = {
+                ...current,
+                ceremonies: [...current.ceremonies, ceremony]
             }
-        }
 
-        setCharacter(updatedCharacter)
+            if (mode === "xp") {
+                updatedCharacter.ephemeral = {
+                    ...updatedCharacter.ephemeral,
+                    experienceSpent:
+                        updatedCharacter.ephemeral.experienceSpent + getRitualCost(ceremony.level)
+                }
+            }
+
+            return updatedCharacter
+        })
 
         try {
             posthog.capture("sheet-ceremony-pick", {
