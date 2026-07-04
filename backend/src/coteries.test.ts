@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import { createHash } from "node:crypto"
 import { eq, sql } from "drizzle-orm"
 import { buildApp } from "./app.js"
 import { db, schema } from "./db/index.js"
@@ -277,7 +278,9 @@ const createInvite = async (app: Awaited<ReturnType<typeof buildApp>>) => {
 
     expect(response.statusCode).toBe(201)
 
-    return response.json() as { id: string; token: string }
+    const invite = response.json() as { id: string; token: string }
+    expect(invite.token).toMatch(/^[A-Za-z0-9]{48}$/)
+    return invite
 }
 
 describe("coterie invites and membership permissions", () => {
@@ -372,8 +375,9 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(MEMBER_ID)
         const acceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${invite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: invite.token }
         })
         expect(acceptResponse.statusCode).toBe(200)
 
@@ -459,12 +463,35 @@ describe("coterie invites and membership permissions", () => {
         expect(invites.map((invite) => invite.id)).toEqual([newerInvite.id, olderInvite.id])
     })
 
-    it("accepts active invites and rejects revoked, expired, and no-nickname joins", async () => {
+    it("keeps the deprecated path-token invite endpoint compatible", async () => {
+        const invite = await createInvite(app)
+        const legacyToken = "legacy_token-with-url-safe-characters-1234567890"
+        const legacyTokenHash = createHash("sha256").update(legacyToken).digest("hex")
+        await db
+            .update(schema.coterieInvites)
+            .set({ tokenHash: legacyTokenHash })
+            .where(eq(schema.coterieInvites.id, invite.id))
+
+        setWorkosUser(MEMBER_ID)
+        const response = await app.inject({
+            method: "POST",
+            url: `/coterie-invites/${legacyToken}/accept`,
+            headers: csrfHeaders
+        })
+
+        expect(response.statusCode).toBe(200)
+        expect(response.headers.deprecation).toBe("true")
+        expect(response.headers.link).toBe('</coterie-invites/accept>; rel="successor-version"')
+        expect(response.json().coterie.id).toBe(COTERIE_ID)
+    })
+
+    it("accepts active invites, including nickname-less users, and rejects unavailable invites", async () => {
         const selfInvite = await createInvite(app)
         const selfAcceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${selfInvite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: selfInvite.token }
         })
         expect(selfAcceptResponse.statusCode).toBe(409)
         expect(selfAcceptResponse.json().error).toBe("Already coterie owner")
@@ -474,8 +501,9 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(MEMBER_ID)
         const acceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${activeInvite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: activeInvite.token }
         })
 
         expect(acceptResponse.statusCode).toBe(200)
@@ -497,8 +525,9 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(OTHER_ID)
         const revokedAcceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${revokedInvite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: revokedInvite.token }
         })
         expect(revokedAcceptResponse.statusCode).toBe(404)
 
@@ -511,8 +540,9 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(OTHER_ID)
         const expiredAcceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${expiredInvite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: expiredInvite.token }
         })
         expect(expiredAcceptResponse.statusCode).toBe(404)
 
@@ -520,11 +550,28 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(NO_NICKNAME_ID)
         const noNicknameAcceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${noNicknameInvite.token}/accept`,
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: noNicknameInvite.token }
+        })
+        expect(noNicknameAcceptResponse.statusCode).toBe(200)
+
+        setWorkosUser(OWNER_ID)
+        const ownerCoterieResponse = await app.inject({
+            method: "GET",
+            url: `/coteries/${COTERIE_ID}`,
             headers: csrfHeaders
         })
-        expect(noNicknameAcceptResponse.statusCode).toBe(400)
-        expect(noNicknameAcceptResponse.json().error).toBe("Nickname required")
+        expect(ownerCoterieResponse.statusCode).toBe(200)
+        const nicknameLessPlayer = (
+            ownerCoterieResponse.json() as {
+                players: Array<{ nickname: string }>
+            }
+        ).players.find((player) => player.nickname === "cot")
+        expect(nicknameLessPlayer).toBeDefined()
+        expect(JSON.stringify(ownerCoterieResponse.json())).not.toContain(
+            `${NO_NICKNAME_ID}@progeny.invalid`
+        )
     })
 
     it("enforces character add and remove permissions for players and owners", async () => {
@@ -533,8 +580,9 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(MEMBER_ID)
         const acceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${invite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: invite.token }
         })
         expect(acceptResponse.statusCode).toBe(200)
 
@@ -655,8 +703,9 @@ describe("coterie invites and membership permissions", () => {
         setWorkosUser(MEMBER_ID)
         const acceptResponse = await app.inject({
             method: "POST",
-            url: `/coterie-invites/${invite.token}/accept`,
-            headers: csrfHeaders
+            url: "/coterie-invites/accept",
+            headers: csrfHeaders,
+            payload: { token: invite.token }
         })
         expect(acceptResponse.statusCode).toBe(200)
 

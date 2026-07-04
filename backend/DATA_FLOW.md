@@ -100,19 +100,22 @@ GET /characters includes shared characters where sharedWithUserId = userId
 POST /coteries/:id/invites
   ├── authenticateUser
   ├── Verify caller owns coterie
-  ├── Generate high-entropy token
+  ├── Generate high-entropy alphanumeric token
   └── Store only SHA-256 token hash with expiry/revocation fields
 
-POST /coterie-invites/:token/accept
+POST /coterie-invites/accept { token }
   ├── authenticateUser
   ├── Hash token and find active invite
-  ├── Require joining user to have a nickname
   └── Insert coterie_player_memberships row
+
+POST /coterie-invites/:token/accept
+  └── Deprecated compatibility alias for cached clients; emits a Deprecation header
 
 GET /coteries and GET /coteries/:id
   ├── authenticateUser
   ├── Authorize via coterie owner or coterie_player_memberships
-  └── Return character members; owner responses also include nickname roster
+  └── Return backend-derived display nicknames; missing nicknames fall back to the
+      first three characters of the email local part without returning email addresses
 ```
 
 ## Metrics Collection

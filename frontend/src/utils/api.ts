@@ -379,12 +379,10 @@ export const api = {
     revokeCoterieInvite: (coterieId: string, inviteId: string) =>
         apiRequest<void>(`/coteries/${coterieId}/invites/${inviteId}`, { method: "DELETE" }),
     acceptCoterieInvite: (token: string) =>
-        apiRequest<AcceptCoterieInviteResponse>(
-            `/coterie-invites/${encodeURIComponent(token)}/accept`,
-            {
-                method: "POST"
-            }
-        ),
+        apiRequest<AcceptCoterieInviteResponse>("/coterie-invites/accept", {
+            method: "POST",
+            body: { token }
+        }),
     removeCoteriePlayer: (coterieId: string, membershipId: string) =>
         apiRequest<void>(`/coteries/${coterieId}/players/${membershipId}`, { method: "DELETE" }),
     getCoterieNotes: (coterieId: string) =>

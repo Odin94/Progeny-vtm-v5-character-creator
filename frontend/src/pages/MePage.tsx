@@ -89,7 +89,6 @@ import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import Topbar from "~/topbar/Topbar"
 import {
     api,
-    type ApiError,
     type CoterieInviteResponse,
     type CoteriePlayerResponse,
     type CoterieResponse
@@ -297,7 +296,6 @@ const MePage = () => {
     const [editCoterieModalOpened, setEditCoterieModalOpened] = useState(false)
     const [addCharacterToCoterieModalOpened, setAddCharacterToCoterieModalOpened] = useState(false)
     const [coterieInvitesModalOpened, setCoterieInvitesModalOpened] = useState(false)
-    const [inviteNicknameModalOpened, setInviteNicknameModalOpened] = useState(false)
     const [removeCharacterFromCoterieModalOpened, setRemoveCharacterFromCoterieModalOpened] =
         useState(false)
     const [removeCoteriePlayerModalOpened, setRemoveCoteriePlayerModalOpened] = useState(false)
@@ -343,8 +341,6 @@ const MePage = () => {
     const [selectedCharacterForCoterie, setSelectedCharacterForCoterie] = useState<string>("")
     const [coterieForInvites, setCoterieForInvites] = useState<Coterie | null>(null)
     const [generatedInviteUrl, setGeneratedInviteUrl] = useState("")
-    const [pendingInviteToken, setPendingInviteToken] = useState<string | null>(null)
-    const [inviteNicknameValue, setInviteNicknameValue] = useState("")
     const [inviteToRevoke, setInviteToRevoke] = useState<CoterieInvite | null>(null)
     const [characterToRemoveFromCoterie, setCharacterToRemoveFromCoterie] = useState<{
         coterieId: string
@@ -407,30 +403,17 @@ const MePage = () => {
             },
             onError: (error) => {
                 clearInviteTokenFromUrl()
-                const apiError = error as ApiError
-
-                if (
-                    apiError.status === 400 &&
-                    apiError.message.toLowerCase().includes("nickname")
-                ) {
-                    setPendingInviteToken(inviteToken)
-                    setInviteNicknameValue(user?.nickname || "")
-                    setInviteNicknameModalOpened(true)
-                    return
-                }
-
                 notifications.show({
                     title: "Invite not accepted",
                     message:
-                        apiError.message ||
-                        (error instanceof Error
+                        error instanceof Error
                             ? error.message
-                            : "This invite link is invalid or expired."),
+                            : "This invite link is invalid or expired.",
                     color: "red"
                 })
             }
         })
-    }, [acceptCoterieInviteMutation, authLoading, isAuthenticated, signIn, user?.nickname])
+    }, [acceptCoterieInviteMutation, authLoading, isAuthenticated, signIn])
 
     const handleSaveNickname = () => {
         updateProfile(
@@ -464,52 +447,6 @@ const MePage = () => {
     const handleCancelNickname = () => {
         setNicknameValue(user?.nickname || "")
         setIsEditingNickname(false)
-    }
-
-    const handleSaveInviteNickname = () => {
-        const nickname = inviteNicknameValue.trim()
-
-        if (!nickname || !pendingInviteToken) {
-            return
-        }
-
-        updateProfile(
-            { nickname },
-            {
-                onSuccess: () => {
-                    acceptCoterieInviteMutation.mutate(pendingInviteToken, {
-                        onSuccess: () => {
-                            notifications.show({
-                                title: "Coterie joined",
-                                message: "You can now add your characters to this coterie.",
-                                color: "green"
-                            })
-                            setInviteNicknameModalOpened(false)
-                            setPendingInviteToken(null)
-                            setInviteNicknameValue("")
-                        },
-                        onError: (error) => {
-                            notifications.show({
-                                title: "Invite not accepted",
-                                message:
-                                    error instanceof Error
-                                        ? error.message
-                                        : "This invite link is invalid or expired.",
-                                color: "red"
-                            })
-                        }
-                    })
-                },
-                onError: (error) => {
-                    notifications.show({
-                        title: "Nickname not saved",
-                        message:
-                            error instanceof Error ? error.message : "Failed to update nickname",
-                        color: "red"
-                    })
-                }
-            }
-        )
     }
 
     useEffect(() => {
@@ -2053,55 +1990,6 @@ const MePage = () => {
                             disabled={!selectedCharacterForCoterie}
                         >
                             Add
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
-
-            <Modal
-                opened={inviteNicknameModalOpened}
-                onClose={() => {
-                    setInviteNicknameModalOpened(false)
-                    setPendingInviteToken(null)
-                    setInviteNicknameValue("")
-                }}
-                title="Set Nickname"
-                centered
-            >
-                <Stack gap="md">
-                    <Text size="sm" c="dimmed">
-                        Players in a coterie are shown by nickname. Pick one to join this coterie.
-                    </Text>
-                    <TextInput
-                        label="Nickname"
-                        placeholder="Enter your nickname"
-                        value={inviteNicknameValue}
-                        onChange={(event) => setInviteNicknameValue(event.currentTarget.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter") {
-                                handleSaveInviteNickname()
-                            }
-                        }}
-                    />
-                    <Group justify="flex-end">
-                        <Button
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                                setInviteNicknameModalOpened(false)
-                                setPendingInviteToken(null)
-                                setInviteNicknameValue("")
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleSaveInviteNickname}
-                            disabled={!inviteNicknameValue.trim() || !pendingInviteToken}
-                            loading={isUpdatingProfile || acceptCoterieInviteMutation.isPending}
-                        >
-                            Save and Join
                         </Button>
                     </Group>
                 </Stack>

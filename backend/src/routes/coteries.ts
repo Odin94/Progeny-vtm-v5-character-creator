@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer"
 import { createHash } from "node:crypto"
-import { FastifyInstance } from "fastify"
+import { FastifyInstance, FastifyReply } from "fastify"
 import { eq, and, sql, inArray, desc, asc } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
@@ -13,18 +13,18 @@ import {
     coterieInviteParamsSchema,
     coteriePlayerParamsSchema,
     coterieNoteVersionParamsSchema,
-    acceptCoterieInviteParamsSchema,
+    acceptCoterieInviteSchema,
     CreateCoterieInput,
     CoterieParams,
     CoterieInviteParams,
     CoteriePlayerParams,
     CoterieNoteVersionParams,
-    AcceptCoterieInviteParams,
+    AcceptCoterieInviteInput,
     UpdateCoterieInput,
     AddCharacterToCoterieInput,
     CoterieNoteInput
 } from "../schemas/coterie.js"
-import { nanoid } from "nanoid"
+import { customAlphabet, nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
@@ -41,10 +41,32 @@ const NOTE_VERSION_LIMIT = 10
 const NOTE_VERSION_SPLIT_MS = 60 * 60 * 1000
 const NOTE_SUBSTANTIAL_MIN_CHANGED_WORDS = 4
 const NOTE_SUBSTANTIAL_MIN_CHANGED_CHARS = 24
+const createInviteToken = customAlphabet(
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    48
+)
 
 const hashInviteToken = (token: string) => createHash("sha256").update(token).digest("hex")
 
 const inviteUnavailableReply = { error: "Invite link is invalid or expired" }
+
+const getCoterieNickname = (
+    user:
+        | {
+              email: string
+              nickname: string | null
+          }
+        | null
+        | undefined
+) => {
+    const nickname = user?.nickname?.trim()
+    if (nickname) {
+        return nickname
+    }
+
+    const emailLocalPart = user?.email.split("@", 1)[0] ?? ""
+    return Array.from(emailLocalPart).slice(0, 3).join("") || "Player"
+}
 
 const getUtf8ByteLength = (value: string) => Buffer.byteLength(value, "utf8")
 
@@ -157,12 +179,12 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
 
     const roster: Array<{
         membershipId: string | null
-        nickname: string | null
+        nickname: string
         isOwner: boolean
         joinedAt: Date
     }> = memberships.map((membership) => ({
         membershipId: membership.id,
-        nickname: membership.user?.nickname ?? null,
+        nickname: getCoterieNickname(membership.user),
         isOwner: membership.userId === coterie.ownerId,
         joinedAt: membership.createdAt
     }))
@@ -174,7 +196,7 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
 
         roster.unshift({
             membershipId: null,
-            nickname: owner?.nickname ?? null,
+            nickname: getCoterieNickname(owner),
             isOwner: true,
             joinedAt: coterie.createdAt
         })
@@ -232,12 +254,15 @@ const buildCoterieResponse = async (
             ? await db
                   .select({
                       id: schema.users.id,
+                      email: schema.users.email,
                       nickname: schema.users.nickname
                   })
                   .from(schema.users)
                   .where(inArray(schema.users.id, characterOwnerIds))
             : []
-    const nicknameByUserId = new Map(characterOwners.map((owner) => [owner.id, owner.nickname]))
+    const nicknameByUserId = new Map(
+        characterOwners.map((owner) => [owner.id, getCoterieNickname(owner)])
+    )
 
     return {
         ...withoutOwnerId(coterie),
@@ -276,6 +301,114 @@ const requireOwnedCoterie = async (coterieId: string, userId: string) => {
     }
 
     return { coterie, errorCode: null, error: null }
+}
+
+const acceptCoterieInvite = async (
+    token: string,
+    endpoint: string,
+    request: AuthenticatedRequest,
+    reply: FastifyReply
+) => {
+    const userId = request.user!.id
+    const tokenHash = hashInviteToken(token)
+
+    const invite = await db.query.coterieInvites.findFirst({
+        where: eq(schema.coterieInvites.tokenHash, tokenHash),
+        with: {
+            coterie: true
+        }
+    })
+
+    const trackAcceptFailure = async (failureReason: string, matchedInvite?: typeof invite) => {
+        await trackEvent(
+            "coterie_invite_accept_failed",
+            {
+                endpoint,
+                method: "POST",
+                userId,
+                failureReason,
+                coterieId: matchedInvite?.coterieId,
+                inviteId: matchedInvite?.id,
+                inviteAgeHours: matchedInvite
+                    ? Math.round((Date.now() - matchedInvite.createdAt.getTime()) / 3_600_000)
+                    : null
+            },
+            userId,
+            request
+        )
+    }
+
+    if (!invite) {
+        await trackAcceptFailure("not_found")
+        reply.code(404).send(inviteUnavailableReply)
+        return
+    }
+
+    if (!invite.coterie) {
+        await trackAcceptFailure("coterie_deleted", invite)
+        reply.code(404).send(inviteUnavailableReply)
+        return
+    }
+
+    if (invite.revokedAt) {
+        await trackAcceptFailure("revoked", invite)
+        reply.code(404).send(inviteUnavailableReply)
+        return
+    }
+
+    if (invite.expiresAt <= new Date()) {
+        await trackAcceptFailure("expired", invite)
+        reply.code(404).send(inviteUnavailableReply)
+        return
+    }
+
+    if (invite.coterie.ownerId === userId) {
+        await trackAcceptFailure("already_owner", invite)
+        reply.code(409).send({
+            error: "Already coterie owner",
+            message:
+                "You already own this coterie. Sign in with a different account to join as a player."
+        })
+        return
+    }
+
+    const existingMembership = await db.query.coteriePlayerMemberships.findFirst({
+        where: and(
+            eq(schema.coteriePlayerMemberships.coterieId, invite.coterieId),
+            eq(schema.coteriePlayerMemberships.userId, userId)
+        )
+    })
+
+    if (!existingMembership) {
+        await db.insert(schema.coteriePlayerMemberships).values({
+            id: nanoid(),
+            coterieId: invite.coterieId,
+            userId
+        })
+    }
+
+    await trackEvent(
+        "coterie_invite_accepted",
+        {
+            endpoint,
+            method: "POST",
+            userId,
+            coterieId: invite.coterieId,
+            inviteId: invite.id,
+            alreadyMember: !!existingMembership,
+            inviteAgeHours: Math.round((Date.now() - invite.createdAt.getTime()) / 3_600_000)
+        },
+        userId,
+        request
+    )
+
+    reply.send({
+        coterie: await buildCoterieResponse(
+            invite.coterie,
+            userId,
+            invite.coterie.ownerId === userId
+        )
+    })
 }
 
 const parseCharacterVitals = (data: string) => {
@@ -1010,7 +1143,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const token = nanoid(48)
+            const token = createInviteToken()
             const tokenHash = hashInviteToken(token)
             const expiresAt = new Date(Date.now() + INVITE_TTL_MS)
 
@@ -1171,136 +1304,37 @@ export async function coterieRoutes(fastify: FastifyInstance) {
     )
 
     // Accept coterie invite
-    fastify.post<{ Params: AcceptCoterieInviteParams }>(
+    fastify.post<{ Body: AcceptCoterieInviteInput }>(
+        "/coterie-invites/accept",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                body: zodToFastifySchema(acceptCoterieInviteSchema)
+            }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const { token } = request.body as AcceptCoterieInviteInput
+            await acceptCoterieInvite(token, "/coterie-invites/accept", request, reply)
+        }
+    )
+
+    /**
+     * @deprecated Use POST /coterie-invites/accept with the token in the request body.
+     * Retained for cached frontend bundles and existing API clients.
+     */
+    fastify.post<{ Params: AcceptCoterieInviteInput }>(
         "/coterie-invites/:token/accept",
         {
             preHandler: authenticateUser,
             schema: {
-                params: zodToFastifySchema(acceptCoterieInviteParamsSchema)
+                params: zodToFastifySchema(acceptCoterieInviteSchema)
             }
         },
         async (request: AuthenticatedRequest, reply) => {
-            const userId = request.user!.id
-            const { token } = request.params as AcceptCoterieInviteParams
-            const tokenHash = hashInviteToken(token)
-
-            const invite = await db.query.coterieInvites.findFirst({
-                where: eq(schema.coterieInvites.tokenHash, tokenHash),
-                with: {
-                    coterie: true
-                }
-            })
-
-            const trackAcceptFailure = async (
-                failureReason: string,
-                matchedInvite?: typeof invite
-            ) => {
-                await trackEvent(
-                    "coterie_invite_accept_failed",
-                    {
-                        endpoint: "/coterie-invites/:token/accept",
-                        method: "POST",
-                        userId,
-                        failureReason,
-                        coterieId: matchedInvite?.coterieId,
-                        inviteId: matchedInvite?.id,
-                        inviteAgeHours: matchedInvite
-                            ? Math.round(
-                                  (Date.now() - matchedInvite.createdAt.getTime()) / 3_600_000
-                              )
-                            : null
-                    },
-                    userId,
-                    request
-                )
-            }
-
-            if (!invite) {
-                await trackAcceptFailure("not_found")
-                reply.code(404).send(inviteUnavailableReply)
-                return
-            }
-
-            if (!invite.coterie) {
-                await trackAcceptFailure("coterie_deleted", invite)
-                reply.code(404).send(inviteUnavailableReply)
-                return
-            }
-
-            if (invite.revokedAt) {
-                await trackAcceptFailure("revoked", invite)
-                reply.code(404).send(inviteUnavailableReply)
-                return
-            }
-
-            if (invite.expiresAt <= new Date()) {
-                await trackAcceptFailure("expired", invite)
-                reply.code(404).send(inviteUnavailableReply)
-                return
-            }
-
-            if (invite.coterie.ownerId === userId) {
-                await trackAcceptFailure("already_owner", invite)
-                reply.code(409).send({
-                    error: "Already coterie owner",
-                    message:
-                        "You already own this coterie. Sign in with a different account to join as a player."
-                })
-                return
-            }
-
-            const user = await db.query.users.findFirst({
-                where: eq(schema.users.id, userId)
-            })
-
-            if (!user?.nickname) {
-                await trackAcceptFailure("nickname_required", invite)
-                reply.code(400).send({
-                    error: "Nickname required",
-                    message: "Set a nickname before joining a coterie."
-                })
-                return
-            }
-
-            const existingMembership = await db.query.coteriePlayerMemberships.findFirst({
-                where: and(
-                    eq(schema.coteriePlayerMemberships.coterieId, invite.coterieId),
-                    eq(schema.coteriePlayerMemberships.userId, userId)
-                )
-            })
-
-            if (!existingMembership) {
-                await db.insert(schema.coteriePlayerMemberships).values({
-                    id: nanoid(),
-                    coterieId: invite.coterieId,
-                    userId
-                })
-            }
-
-            await trackEvent(
-                "coterie_invite_accepted",
-                {
-                    endpoint: "/coterie-invites/:token/accept",
-                    method: "POST",
-                    userId,
-                    coterieId: invite.coterieId,
-                    inviteId: invite.id,
-                    alreadyMember: !!existingMembership,
-                    inviteAgeHours: Math.round(
-                        (Date.now() - invite.createdAt.getTime()) / 3_600_000
-                    )
-                },
-                userId,
-                request
-            )
-
-            reply.send({
-                coterie: await buildCoterieResponse(
-                    invite.coterie,
-                    userId,
-                    invite.coterie.ownerId === userId
-                )
-            })
+            const { token } = request.params as AcceptCoterieInviteInput
+            reply.header("Deprecation", "true")
+            reply.header("Link", '</coterie-invites/accept>; rel="successor-version"')
+            await acceptCoterieInvite(token, "/coterie-invites/:token/accept", request, reply)
         }
     )
 
