@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const captureMock = vi.fn()
 
@@ -91,6 +91,12 @@ describe("sessionChatStore joinSession", () => {
         resetStore()
     })
 
+    afterEach(() => {
+        resetStore()
+        vi.clearAllTimers()
+        vi.useRealTimers()
+    })
+
     it("joins a coterie once and sends a single join over the socket", () => {
         const store = useSessionChatStore.getState()
         store.connect()
@@ -150,5 +156,32 @@ describe("sessionChatStore joinSession", () => {
 
         const joins = joinMessagesOf(ws)
         expect(joins[joins.length - 1].coterieId).toBe("coterie-2")
+    })
+
+    it("starts a new coterie reconnect cycle after a longer timeout", () => {
+        vi.useFakeTimers()
+        const store = useSessionChatStore.getState()
+        store.connect()
+        store.joinSession({ coterieId: "coterie-1" })
+
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+            FakeWebSocket.instances.at(-1)?.close()
+            vi.runOnlyPendingTimers()
+        }
+
+        FakeWebSocket.instances.at(-1)?.close()
+        const instancesAfterFastRetries = FakeWebSocket.instances.length
+
+        vi.advanceTimersByTime(59999)
+        expect(FakeWebSocket.instances).toHaveLength(instancesAfterFastRetries)
+
+        vi.advanceTimersByTime(1)
+        expect(FakeWebSocket.instances).toHaveLength(instancesAfterFastRetries + 1)
+
+        const retrySocket = FakeWebSocket.instances.at(-1)!
+        retrySocket.open()
+        expect(joinMessagesOf(retrySocket)).toEqual([
+            expect.objectContaining({ coterieId: "coterie-1" })
+        ])
     })
 })
