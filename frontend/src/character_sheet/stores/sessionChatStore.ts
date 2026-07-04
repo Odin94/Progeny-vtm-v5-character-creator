@@ -133,6 +133,7 @@ const STORAGE_KEY = "sessionChat_lastJoinOptions"
 const MAX_RECONNECT_ATTEMPTS = 5
 const RECONNECT_BASE_DELAY_MS = 1000
 const RECONNECT_MAX_DELAY_MS = 30000
+const COTERIE_RETRY_DELAY_MS = 60000
 
 const getReconnectDelay = (attempts: number) => {
     const cappedDelay = Math.min(
@@ -467,9 +468,20 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                 }, delay)
                 set({ reconnectAttempts: attempts, reconnectTimeout: timeout })
             } else {
+                const shouldRetryCoterie =
+                    !currentState.isManualDisconnect &&
+                    Boolean(currentState.lastJoinOptions?.coterieId)
+                const reconnectTimeout = shouldRetryCoterie
+                    ? setTimeout(() => {
+                          set({ reconnectTimeout: null })
+                          get().connect()
+                      }, COTERIE_RETRY_DELAY_MS)
+                    : null
+
                 set({
                     reconnectAttempts: 0,
                     isManualDisconnect: false,
+                    reconnectTimeout,
                     sessionId: null,
                     sessionType: null,
                     participants: []
