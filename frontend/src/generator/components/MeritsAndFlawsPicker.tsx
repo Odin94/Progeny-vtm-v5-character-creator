@@ -14,6 +14,7 @@ import {
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
+import { notifications } from "@mantine/notifications"
 import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
@@ -112,7 +113,21 @@ const MeritOrFlawCard = memo(
         const createButton = (level: number) => {
             const nextCost = Math.max(0, level - meritInPredatorTypeLevel)
             const previousCost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
-            return (
+            const pointType = isThinbloodMerit(meritOrFlaw.name)
+                ? "Thin-blood Merit Points"
+                : type === "flaw"
+                  ? "Flaw Points"
+                  : "Advantage Points"
+            const availablePoints = isThinbloodMerit(meritOrFlaw.name)
+                ? remainingThinbloodMeritPoints + previousCost
+                : type === "flaw"
+                  ? remainingFlaws + previousCost
+                  : remainingMerits + previousCost
+            const hasEnoughPoints =
+                isThinbloodFlaw(meritOrFlaw.name) || availablePoints >= nextCost
+            const insufficientPointsMessage = `Not enough ${pointType}. Need ${nextCost}, have ${availablePoints}.`
+
+            const button = (
                 <Button
                     key={meritOrFlaw.name + level}
                     disabled={
@@ -121,16 +136,25 @@ const MeritOrFlawCard = memo(
                         wasPickedLevel === level
                     }
                     onClick={() => {
+                        if (!hasEnoughPoints) {
+                            if (phoneScreen) {
+                                notifications.show({
+                                    title: "Not enough points",
+                                    message: insufficientPointsMessage,
+                                    color: "red",
+                                    autoClose: 2500
+                                })
+                            }
+                            return
+                        }
+
                         if (isThinbloodFlaw(meritOrFlaw.name)) {
                             setRemainingThinbloodMeritPoints((prev) => prev + 1)
                         } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                            if (remainingThinbloodMeritPoints + previousCost < nextCost) return
                             setRemainingThinbloodMeritPoints((prev) => prev - 1)
                         } else if (type === "flaw") {
-                            if (remainingFlaws + previousCost < nextCost) return
                             setRemainingFlaws((prev) => prev + previousCost - nextCost)
                         } else {
-                            if (remainingMerits + previousCost < nextCost) return
                             setRemainingMerits((prev) => prev + previousCost - nextCost)
                         }
                         setPickedMeritsAndFlaws((prev) => [
@@ -169,6 +193,20 @@ const MeritOrFlawCard = memo(
                     {level}
                 </Button>
             )
+
+            if (!phoneScreen && !hasEnoughPoints) {
+                return (
+                    <Tooltip
+                        key={meritOrFlaw.name + level}
+                        label={insufficientPointsMessage}
+                        withArrow
+                    >
+                        {button}
+                    </Tooltip>
+                )
+            }
+
+            return button
         }
 
         const cost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
