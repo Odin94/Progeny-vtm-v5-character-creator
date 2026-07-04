@@ -13,6 +13,7 @@ import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
 import { resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
+import { isFramelessSyntheticNoise, type ExceptionListEntry } from "~/utils/exceptionFilter"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -71,7 +72,9 @@ const posthogOptions: Partial<PostHogConfig> = {
 
         if (event && event.event === "$exception") {
             const exceptionList = event.properties?.$exception_list
-            const exceptionListEntry = Array.isArray(exceptionList) ? exceptionList[0] : undefined
+            const exceptionListEntry: ExceptionListEntry | undefined = Array.isArray(exceptionList)
+                ? exceptionList[0]
+                : undefined
             const exceptionType = event.properties?.$exception_type ?? exceptionListEntry?.type
             const exceptionMessage =
                 event.properties?.$exception_message ?? exceptionListEntry?.value
@@ -91,6 +94,10 @@ const posthogOptions: Partial<PostHogConfig> = {
                 exceptionMessage.includes("removeChild") &&
                 exceptionMessage.includes("not a child of this node")
             ) {
+                return null
+            }
+
+            if (isFramelessSyntheticNoise(exceptionListEntry)) {
                 return null
             }
 
