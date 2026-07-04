@@ -6,7 +6,7 @@
     "scripts": {
         "start": "vite",
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && posthog-cli --dotenv-file .env sourcemap inject --directory ./build --exclude '**/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields-*' && posthog-cli --dotenv-file .env sourcemap upload --directory ./build --exclude '**/VtM5e_ENG_CharacterSheet_2pMINI_noTxtRichFields-*' --release-name progeny-vtm-v5-character-generator --delete-after",
         "serve": "vite preview",
         "lint": "oxlint src",
         "lint:fix": "oxlint src --fix",
@@ -56,6 +56,7 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.60.0",
+        "@posthog/cli": "^0.7.34",
         "@testing-library/dom": "^10.4.1",
         "@vitejs/plugin-react": "^6.0.2",
         "@vitest/ui": "^4.1.9",
