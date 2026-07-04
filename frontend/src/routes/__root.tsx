@@ -94,6 +94,22 @@ const posthogOptions: Partial<PostHogConfig> = {
                 return null
             }
 
+            // Drop synthetic captures of non-Error values thrown by injected scripts /
+            // browser extensions (e.g. a bare string "he" swept up by posthog-js's global
+            // uncaught handler). These arrive as stackless, synthetic:true exceptions whose
+            // message is posthog-js's wrapper text and are never produced by our own code.
+            const mechanism = exceptionListEntry?.mechanism
+            const frameCount = exceptionListEntry?.stacktrace?.frames?.length ?? 0
+            if (
+                typeof exceptionValue === "string" &&
+                exceptionValue.includes("captured as exception with message") &&
+                mechanism?.synthetic === true &&
+                mechanism?.handled === false &&
+                frameCount === 0
+            ) {
+                return null
+            }
+
             try {
                 const characterData = localStorage.getItem("character")
                 if (characterData) {
