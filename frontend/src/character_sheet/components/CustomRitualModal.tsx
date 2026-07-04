@@ -161,24 +161,26 @@ const CustomRitualModal = ({
             isCustom: true
         }
 
-        const updatedCharacter = {
-            ...character,
-            rituals: editingRitual
-                ? character.rituals.map((existing) =>
-                      existing === editingRitual ? ritual : existing
-                  )
-                : [...character.rituals, ritual]
-        }
-
-        if (!editingRitual && mode === "xp") {
-            updatedCharacter.ephemeral = {
-                ...updatedCharacter.ephemeral,
-                experienceSpent:
-                    updatedCharacter.ephemeral.experienceSpent + getRitualCost(ritual.level)
+        setCharacter((current) => {
+            const updatedCharacter = {
+                ...current,
+                rituals: editingRitual
+                    ? current.rituals.map((existing) =>
+                          existing === editingRitual ? ritual : existing
+                      )
+                    : [...current.rituals, ritual]
             }
-        }
 
-        setCharacter(updatedCharacter)
+            if (!editingRitual && mode === "xp") {
+                updatedCharacter.ephemeral = {
+                    ...updatedCharacter.ephemeral,
+                    experienceSpent:
+                        updatedCharacter.ephemeral.experienceSpent + getRitualCost(ritual.level)
+                }
+            }
+
+            return updatedCharacter
+        })
         if (onSave) {
             onSave()
         } else {
@@ -189,10 +191,10 @@ const CustomRitualModal = ({
     const handleDelete = () => {
         if (!editingRitual) return
 
-        setCharacter({
-            ...character,
-            rituals: character.rituals.filter((ritual) => ritual !== editingRitual)
-        })
+        setCharacter((current) => ({
+            ...current,
+            rituals: current.rituals.filter((ritual) => ritual !== editingRitual)
+        }))
         onClose()
     }
 

@@ -13,6 +13,7 @@ import {
     useMantineTheme
 } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
+import { memo } from "react"
 import { clans } from "~/data/Clans"
 import { getBloodPotencyEffectLevel, potencyEffects } from "~/data/BloodPotency"
 import { getClanBaneText, hasVariantClanBane, variantClanBanes } from "~/data/VariantClanBanes"
@@ -245,13 +246,13 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                     color={primaryColor}
                                     leftSection={<IconSwitchHorizontal size={14} />}
                                     onClick={() =>
-                                        setCharacter({
-                                            ...character,
+                                        setCharacter((current) => ({
+                                            ...current,
                                             clanBane:
-                                                character.clanBane === "variant"
+                                                current.clanBane === "variant"
                                                     ? "default"
                                                     : "variant"
-                                        })
+                                        }))
                                     }
                                     styles={{
                                         root: {
@@ -278,4 +279,20 @@ const TheBlood = ({ options }: TheBloodProps) => {
     )
 }
 
-export default TheBlood
+export default memo(TheBlood, (prev, next) => {
+    const p = prev.options
+    const n = next.options
+    return (
+        p.mode === n.mode &&
+        p.primaryColor === n.primaryColor &&
+        p.canEdit === n.canEdit &&
+        p.editDisabledReason === n.editDisabledReason &&
+        p.setCharacter === n.setCharacter &&
+        p.character.bloodPotency === n.character.bloodPotency &&
+        p.character.clan === n.character.clan &&
+        p.character.clanBane === n.character.clanBane &&
+        p.character.experience === n.character.experience &&
+        p.character.generation === n.character.generation &&
+        p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent
+    )
+})

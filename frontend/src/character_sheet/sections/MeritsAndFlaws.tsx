@@ -15,7 +15,7 @@ import {
     Divider,
     Tooltip
 } from "@mantine/core"
-import { useState, useMemo } from "react"
+import { memo, useState, useMemo } from "react"
 import type { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
@@ -63,15 +63,15 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
         if (!itemToDelete) return
 
         if (itemToDelete.type === "merit") {
-            setCharacter({
-                ...character,
-                merits: character.merits.filter((m) => m !== itemToDelete.item)
-            })
+            setCharacter((current) => ({
+                ...current,
+                merits: current.merits.filter((m) => m !== itemToDelete.item)
+            }))
         } else {
-            setCharacter({
-                ...character,
-                flaws: character.flaws.filter((f) => f !== itemToDelete.item)
-            })
+            setCharacter((current) => ({
+                ...current,
+                flaws: current.flaws.filter((f) => f !== itemToDelete.item)
+            }))
         }
 
         setItemToDelete(null)
@@ -440,4 +440,22 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     )
 }
 
-export default MeritsAndFlaws
+export default memo(MeritsAndFlaws, (prev, next) => {
+    const p = prev.options
+    const n = next.options
+    return (
+        p.mode === n.mode &&
+        p.primaryColor === n.primaryColor &&
+        p.canEdit === n.canEdit &&
+        p.editDisabledReason === n.editDisabledReason &&
+        p.setCharacter === n.setCharacter &&
+        p.character.merits === n.character.merits &&
+        p.character.flaws === n.character.flaws &&
+        p.character.clan === n.character.clan &&
+        p.character.predatorType === n.character.predatorType &&
+        p.character.availableDisciplineNames === n.character.availableDisciplineNames &&
+        p.character.disciplines === n.character.disciplines &&
+        p.character.experience === n.character.experience &&
+        p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent
+    )
+})

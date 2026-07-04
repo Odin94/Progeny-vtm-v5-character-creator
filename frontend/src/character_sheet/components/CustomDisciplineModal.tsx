@@ -61,28 +61,30 @@ const CustomDisciplineModal = ({
             logo: sanitizedLogo
         }
 
-        const updatedCustomDisciplines = {
-            ...character.customDisciplines,
-            [disciplineNameKey]: customDiscipline
-        }
+        setCharacter((current) => {
+            const updatedCustomDisciplines = {
+                ...current.customDisciplines,
+                [disciplineNameKey]: customDiscipline
+            }
 
-        if (editingDisciplineName && editingDisciplineName !== disciplineNameKey) {
-            delete updatedCustomDisciplines[editingDisciplineName]
-        }
+            if (editingDisciplineName && editingDisciplineName !== disciplineNameKey) {
+                delete updatedCustomDisciplines[editingDisciplineName]
+            }
 
-        const updatedCharacter = {
-            ...character,
-            customDisciplines: updatedCustomDisciplines
-        }
+            const updatedCharacter = {
+                ...current,
+                customDisciplines: updatedCustomDisciplines
+            }
 
-        if (!character.availableDisciplineNames.includes(disciplineNameKey)) {
-            updatedCharacter.availableDisciplineNames = [
-                ...character.availableDisciplineNames,
-                disciplineNameKey
-            ]
-        }
+            if (!current.availableDisciplineNames.includes(disciplineNameKey)) {
+                updatedCharacter.availableDisciplineNames = [
+                    ...current.availableDisciplineNames,
+                    disciplineNameKey
+                ]
+            }
 
-        setCharacter(updatedCharacter)
+            return updatedCharacter
+        })
         if (onSave) {
             onSave()
         } else {

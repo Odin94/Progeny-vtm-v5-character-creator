@@ -5,13 +5,14 @@ import { motion } from "framer-motion"
 import { useState } from "react"
 import posthog from "posthog-js"
 import { Character } from "~/data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { vtmRed } from "../utils/style"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 
 type RouseCheckButtonProps = {
     character?: Character
-    setCharacter?: (character: Character) => void
+    setCharacter?: SetCharacter
     primaryColor: string
     size?: "sm" | "md" | "lg" | "xl"
     iconSize?: number
@@ -46,13 +47,13 @@ const RouseCheckButton = ({
         let newHunger = hunger
         if (!success) {
             newHunger = Math.min(hunger + 1, 5)
-            setCharacter({
-                ...character,
+            setCharacter((current) => ({
+                ...current,
                 ephemeral: {
-                    ...character.ephemeral,
+                    ...current.ephemeral,
                     hunger: newHunger
                 }
-            })
+            }))
         }
 
         let message = `Rouse Check: ${roll}`

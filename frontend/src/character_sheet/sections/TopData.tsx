@@ -11,6 +11,7 @@ import {
     useMantineTheme,
     Select
 } from "@mantine/core"
+import { memo } from "react"
 import { clans } from "~/data/Clans"
 import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAndFlawsResolution"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
@@ -161,12 +162,12 @@ const TopData = ({ options }: TopDataProps) => {
                                     onChange={(value) => {
                                         if (value) {
                                             const selectedClan = value as ClanName
-                                            setCharacter({
-                                                ...character,
+                                            setCharacter((current) => ({
+                                                ...current,
                                                 clan: selectedClan,
                                                 availableDisciplineNames:
                                                     clans[selectedClan].nativeDisciplines
-                                            })
+                                            }))
                                         }
                                     }}
                                     size="sm"
@@ -212,16 +213,14 @@ const TopData = ({ options }: TopDataProps) => {
                                                 pickedSpecialties: [],
                                                 pickedMeritsAndFlaws: []
                                             }
-                                            const adjustedPickedMeritsAndFlaws =
-                                                adjustPickedMeritsAndFlawsForPredatorTypeChange(
-                                                    character,
+                                            setCharacter((current) => ({
+                                                ...current,
+                                                ...adjustPickedMeritsAndFlawsForPredatorTypeChange(
+                                                    current,
                                                     nextPredatorType
-                                                )
-                                            setCharacter({
-                                                ...character,
-                                                ...adjustedPickedMeritsAndFlaws,
+                                                ),
                                                 predatorType: nextPredatorType
-                                            })
+                                            }))
                                         }
                                     }}
                                     size="sm"
@@ -381,4 +380,23 @@ const TopData = ({ options }: TopDataProps) => {
     )
 }
 
-export default TopData
+export default memo(TopData, (prev, next) => {
+    const p = prev.options
+    const n = next.options
+    return (
+        p.mode === n.mode &&
+        p.primaryColor === n.primaryColor &&
+        p.canEdit === n.canEdit &&
+        p.editDisabledReason === n.editDisabledReason &&
+        p.setCharacter === n.setCharacter &&
+        p.character.name === n.character.name &&
+        p.character.description === n.character.description &&
+        p.character.sire === n.character.sire &&
+        p.character.player === n.character.player &&
+        p.character.ambition === n.character.ambition &&
+        p.character.desire === n.character.desire &&
+        p.character.clan === n.character.clan &&
+        p.character.generation === n.character.generation &&
+        p.character.predatorType === n.character.predatorType
+    )
+})

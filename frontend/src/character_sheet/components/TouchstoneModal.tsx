@@ -40,25 +40,28 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
         }
 
         if (initialTouchstone) {
-            const index = character.touchstones.findIndex(
-                (t) =>
-                    t.name === initialTouchstone.name &&
-                    t.description === initialTouchstone.description &&
-                    t.conviction === initialTouchstone.conviction
-            )
-            if (index !== -1) {
-                const updatedTouchstones = [...character.touchstones]
+            setCharacter((current) => {
+                const index = current.touchstones.findIndex(
+                    (t) =>
+                        t.name === initialTouchstone.name &&
+                        t.description === initialTouchstone.description &&
+                        t.conviction === initialTouchstone.conviction
+                )
+                if (index === -1) {
+                    return current
+                }
+                const updatedTouchstones = [...current.touchstones]
                 updatedTouchstones[index] = newTouchstone
-                setCharacter({
-                    ...character,
+                return {
+                    ...current,
                     touchstones: updatedTouchstones
-                })
-            }
-        } else {
-            setCharacter({
-                ...character,
-                touchstones: [...character.touchstones, newTouchstone]
+                }
             })
+        } else {
+            setCharacter((current) => ({
+                ...current,
+                touchstones: [...current.touchstones, newTouchstone]
+            }))
         }
 
         onClose()
