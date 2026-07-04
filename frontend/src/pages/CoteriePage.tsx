@@ -151,41 +151,48 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
         }
     }, [currentNote])
 
-    const joinCoterieChat = useCallback(
-        (source: "desktop-dock" | "inline") => {
-            if (!coterie) {
-                return
-            }
-
-            const alreadyInCoterieChat =
-                connectionStatus === "connected" &&
-                sessionType === "coterie" &&
-                sessionId === coterie.id
-
-            if (!alreadyInCoterieChat) {
-                connect()
-                joinSession({
-                    coterieId: coterie.id,
-                    characterName: character.name.trim() || undefined
-                })
-            }
-
-            posthog.capture("coterie-page-chat-joined", {
-                coterieId: coterie.id,
-                source,
-                alreadyInCoterieChat
-            })
-        },
-        [character.name, connect, connectionStatus, coterie, joinSession, sessionId, sessionType]
-    )
+    // Join the coterie chat once per coterie. Reconnection after a dropped
+    // socket is owned by the chat store, which retries with exponential backoff
+    // (capped) and re-sends the stored join on reconnect. We must NOT re-join on
+    // every connection-status change: doing so bypasses that backoff and, when a
+    // join never completes, spins into a retry storm that also re-fires the
+    // join-attempt and coterie-page-chat-joined analytics events on every pass.
+    const joinedCoterieIdRef = useRef<string | null>(null)
 
     useEffect(() => {
-        if (!coterie) {
+        if (!coterie || joinedCoterieIdRef.current === coterie.id) {
             return
         }
+        joinedCoterieIdRef.current = coterie.id
 
-        joinCoterieChat(desktopChatDocked ? "desktop-dock" : "inline")
-    }, [coterie, desktopChatDocked, joinCoterieChat])
+        const alreadyInCoterieChat =
+            connectionStatus === "connected" &&
+            sessionType === "coterie" &&
+            sessionId === coterie.id
+
+        if (!alreadyInCoterieChat) {
+            connect()
+            joinSession({
+                coterieId: coterie.id,
+                characterName: character.name.trim() || undefined
+            })
+        }
+
+        posthog.capture("coterie-page-chat-joined", {
+            coterieId: coterie.id,
+            source: desktopChatDocked ? "desktop-dock" : "inline",
+            alreadyInCoterieChat
+        })
+    }, [
+        coterie,
+        connectionStatus,
+        sessionType,
+        sessionId,
+        connect,
+        joinSession,
+        character.name,
+        desktopChatDocked
+    ])
 
     const saveDraft = useCallback(
         (source: "debounce" | "close") => {

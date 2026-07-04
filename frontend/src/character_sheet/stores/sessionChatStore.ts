@@ -510,6 +510,20 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         const joinOptions = options
             ? { sessionId: options.sessionId, coterieId: options.coterieId }
             : null
+
+        // Skip redundant re-joins to the session we're already connected to, so a
+        // re-rendering caller can't spam join attempts (and analytics events) at
+        // an already-active session. For coteries the session id equals the
+        // coterie id, so a single check covers both session types.
+        const targetSessionId = options?.coterieId ?? options?.sessionId
+        if (
+            targetSessionId &&
+            get().connectionStatus === "connected" &&
+            get().sessionId === targetSessionId
+        ) {
+            return
+        }
+
         saveLastJoinOptions(joinOptions)
         set((state) => ({
             lastJoinOptions: joinOptions,
