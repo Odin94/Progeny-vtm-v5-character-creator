@@ -1,9 +1,9 @@
 import { MantineProvider } from "@mantine/core"
-import { render } from "@testing-library/react"
+import { act, render, renderHook } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { SheetOptions } from "~/character_sheet/CharacterSheet"
 import { getEmptyCharacter, type Character } from "~/data/Character"
-import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
+import { useCharacterLocalStorage, type SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
 // Count how many times the Touchstones section actually renders by instrumenting a
 // child it always mounts. When the memo comparator bails out, the child is not
@@ -45,6 +45,19 @@ const makeOptions = (character: Character, setCharacter: SetCharacter): SheetOpt
 })
 
 describe("sheet section memoization", () => {
+    it("keeps the real setCharacter callback stable across character updates", () => {
+        localStorage.clear()
+        const { result } = renderHook(() => useCharacterLocalStorage())
+        const initialSetCharacter = result.current[1]
+
+        act(() => {
+            result.current[1]((current) => ({ ...current, name: "Nosferatu Bob" }))
+        })
+
+        expect(result.current[0].name).toBe("Nosferatu Bob")
+        expect(result.current[1]).toBe(initialSetCharacter)
+    })
+
     it("does not re-render Touchstones when an unrelated character slice changes", () => {
         const setCharacter = vi.fn()
         const character = getEmptyCharacter()

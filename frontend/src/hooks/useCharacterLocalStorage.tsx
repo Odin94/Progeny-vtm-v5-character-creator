@@ -1,4 +1,5 @@
 import { useLocalStorage } from "@mantine/hooks"
+import { useCallback } from "react"
 import { z } from "zod"
 import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
 import { applyCharacterCompatibilityPatches } from "~/data/Character"
@@ -51,18 +52,21 @@ export const useCharacterLocalStorage = () => {
         }
     })
 
-    const setCharacter: SetCharacter = (characterOrUpdater) => {
-        if (typeof characterOrUpdater === "function") {
-            setCharacterInternal((currentCharacter) => ({
-                ...characterOrUpdater(currentCharacter),
-                version: schemaVersion
-            }))
-            return
-        }
+    const setCharacter = useCallback<SetCharacter>(
+        (characterOrUpdater) => {
+            if (typeof characterOrUpdater === "function") {
+                setCharacterInternal((currentCharacter) => ({
+                    ...characterOrUpdater(currentCharacter),
+                    version: schemaVersion
+                }))
+                return
+            }
 
-        const characterWithVersion = { ...characterOrUpdater, version: schemaVersion }
-        setCharacterInternal(characterWithVersion)
-    }
+            const characterWithVersion = { ...characterOrUpdater, version: schemaVersion }
+            setCharacterInternal(characterWithVersion)
+        },
+        [setCharacterInternal]
+    )
 
     return [character, setCharacter] as const
 }
