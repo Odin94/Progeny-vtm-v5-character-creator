@@ -38,20 +38,22 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
     const sortedLevels = Array.from(ritualsByLevel.keys()).sort((a, b) => a - b)
 
     const handleSelectRitual = (ritual: Ritual) => {
-        const updatedCharacter = {
-            ...character,
-            rituals: [...character.rituals, ritual]
-        }
-
-        if (mode === "xp") {
-            updatedCharacter.ephemeral = {
-                ...updatedCharacter.ephemeral,
-                experienceSpent:
-                    updatedCharacter.ephemeral.experienceSpent + getRitualCost(ritual.level)
+        setCharacter((current) => {
+            const updatedCharacter = {
+                ...current,
+                rituals: [...current.rituals, ritual]
             }
-        }
 
-        setCharacter(updatedCharacter)
+            if (mode === "xp") {
+                updatedCharacter.ephemeral = {
+                    ...updatedCharacter.ephemeral,
+                    experienceSpent:
+                        updatedCharacter.ephemeral.experienceSpent + getRitualCost(ritual.level)
+                }
+            }
+
+            return updatedCharacter
+        })
 
         try {
             posthog.capture("sheet-ritual-pick", {

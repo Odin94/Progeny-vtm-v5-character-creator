@@ -122,21 +122,23 @@ const DisciplineSelectModal = ({
     }
 
     const handleSelectPower = (power: Power) => {
-        const updatedCharacter = {
-            ...character,
-            disciplines: [...character.disciplines, power]
-        }
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-
-        if (options.mode === "xp") {
-            const cost = getDisciplineCost(character, power.discipline)
-            updatedCharacter.ephemeral = {
-                ...updatedCharacter.ephemeral,
-                experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost
+        setCharacter((current) => {
+            const updatedCharacter = {
+                ...current,
+                disciplines: [...current.disciplines, power]
             }
-        }
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
 
-        setCharacter(updatedCharacter)
+            if (options.mode === "xp") {
+                const cost = getDisciplineCost(current, power.discipline)
+                updatedCharacter.ephemeral = {
+                    ...updatedCharacter.ephemeral,
+                    experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost
+                }
+            }
+
+            return updatedCharacter
+        })
 
         try {
             posthog.capture("sheet-power-pick", {

@@ -1,4 +1,5 @@
 import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
+import { memo } from "react"
 import DamagePips from "~/character_sheet/components/DamagePips"
 import HumanityStainsPips from "~/character_sheet/components/HumanityStainsPips"
 import Pips from "~/character_sheet/components/Pips"
@@ -47,14 +48,14 @@ const BottomData = ({ options }: BottomDataProps) => {
                             superficial={superficialDamage}
                             aggravated={aggravatedDamage}
                             onChange={(newSuperficial, newAggravated) =>
-                                options.setCharacter({
-                                    ...character,
+                                options.setCharacter((current) => ({
+                                    ...current,
                                     ephemeral: {
-                                        ...character.ephemeral,
+                                        ...current.ephemeral,
                                         superficialDamage: newSuperficial,
                                         aggravatedDamage: newAggravated
                                     }
-                                })
+                                }))
                             }
                             color={options.primaryColor}
                             disabledReason={options.editDisabledReason}
@@ -81,14 +82,14 @@ const BottomData = ({ options }: BottomDataProps) => {
                             superficial={superficialWillpowerDamage}
                             aggravated={aggravatedWillpowerDamage}
                             onChange={(newSuperficial, newAggravated) =>
-                                options.setCharacter({
-                                    ...character,
+                                options.setCharacter((current) => ({
+                                    ...current,
                                     ephemeral: {
-                                        ...character.ephemeral,
+                                        ...current.ephemeral,
                                         superficialWillpowerDamage: newSuperficial,
                                         aggravatedWillpowerDamage: newAggravated
                                     }
-                                })
+                                }))
                             }
                             color={options.primaryColor}
                             disabledReason={options.editDisabledReason}
@@ -158,4 +159,18 @@ const BottomData = ({ options }: BottomDataProps) => {
     )
 }
 
-export default BottomData
+export default memo(BottomData, (prev, next) => {
+    const p = prev.options
+    const n = next.options
+    return (
+        p.mode === n.mode &&
+        p.primaryColor === n.primaryColor &&
+        p.canEdit === n.canEdit &&
+        p.editDisabledReason === n.editDisabledReason &&
+        p.setCharacter === n.setCharacter &&
+        p.character.maxHealth === n.character.maxHealth &&
+        p.character.willpower === n.character.willpower &&
+        p.character.humanity === n.character.humanity &&
+        p.character.ephemeral === n.character.ephemeral
+    )
+})

@@ -15,7 +15,7 @@ import {
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
@@ -146,44 +146,47 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const confirmDelete = () => {
         if (!itemToDelete) return
 
-        let updatedCharacter
-        if (itemToDelete.type === "power") {
-            updatedCharacter = {
-                ...character,
-                disciplines: character.disciplines.filter((p) => p !== itemToDelete.power)
-            }
-        } else if (itemToDelete.type === "ritual") {
-            updatedCharacter = {
-                ...character,
-                rituals: character.rituals.filter((ritual) => ritual !== itemToDelete.ritual)
-            }
-        } else if (itemToDelete.type === "ceremony") {
-            updatedCharacter = {
-                ...character,
-                ceremonies: character.ceremonies.filter(
-                    (ceremony) => ceremony !== itemToDelete.ceremony
-                )
-            }
-        } else {
-            const updatedCustomDisciplines = { ...character.customDisciplines }
-            delete updatedCustomDisciplines[itemToDelete.disciplineName]
+        setCharacter((current) => {
+            let updatedCharacter
+            if (itemToDelete.type === "power") {
+                updatedCharacter = {
+                    ...current,
+                    disciplines: current.disciplines.filter((p) => p !== itemToDelete.power)
+                }
+            } else if (itemToDelete.type === "ritual") {
+                updatedCharacter = {
+                    ...current,
+                    rituals: current.rituals.filter((ritual) => ritual !== itemToDelete.ritual)
+                }
+            } else if (itemToDelete.type === "ceremony") {
+                updatedCharacter = {
+                    ...current,
+                    ceremonies: current.ceremonies.filter(
+                        (ceremony) => ceremony !== itemToDelete.ceremony
+                    )
+                }
+            } else {
+                const updatedCustomDisciplines = { ...current.customDisciplines }
+                delete updatedCustomDisciplines[itemToDelete.disciplineName]
 
-            updatedCharacter = {
-                ...character,
-                customDisciplines: updatedCustomDisciplines,
-                availableDisciplineNames: character.availableDisciplineNames.filter(
-                    (disciplineName) => disciplineName !== itemToDelete.disciplineName
-                ),
-                disciplines: character.disciplines.filter(
-                    (p) => p.discipline !== itemToDelete.disciplineName
-                ),
-                rituals: itemToDelete.disciplineName === "blood sorcery" ? [] : character.rituals,
-                ceremonies: itemToDelete.disciplineName === "oblivion" ? [] : character.ceremonies
+                updatedCharacter = {
+                    ...current,
+                    customDisciplines: updatedCustomDisciplines,
+                    availableDisciplineNames: current.availableDisciplineNames.filter(
+                        (disciplineName) => disciplineName !== itemToDelete.disciplineName
+                    ),
+                    disciplines: current.disciplines.filter(
+                        (p) => p.discipline !== itemToDelete.disciplineName
+                    ),
+                    rituals: itemToDelete.disciplineName === "blood sorcery" ? [] : current.rituals,
+                    ceremonies:
+                        itemToDelete.disciplineName === "oblivion" ? [] : current.ceremonies
+                }
             }
-        }
 
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        setCharacter(updatedCharacter)
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+            return updatedCharacter
+        })
         setItemToDelete(null)
     }
 
@@ -920,4 +923,25 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     )
 }
 
-export default Disciplines
+export default memo(Disciplines, (prev, next) => {
+    const p = prev.options
+    const n = next.options
+    return (
+        p.mode === n.mode &&
+        p.primaryColor === n.primaryColor &&
+        p.canEdit === n.canEdit &&
+        p.editDisabledReason === n.editDisabledReason &&
+        p.setCharacter === n.setCharacter &&
+        p.character.disciplines === n.character.disciplines &&
+        p.character.rituals === n.character.rituals &&
+        p.character.ceremonies === n.character.ceremonies &&
+        p.character.customDisciplines === n.character.customDisciplines &&
+        p.character.availableDisciplineNames === n.character.availableDisciplineNames &&
+        p.character.clan === n.character.clan &&
+        p.character.predatorType === n.character.predatorType &&
+        p.character.attributes === n.character.attributes &&
+        p.character.skills === n.character.skills &&
+        p.character.experience === n.character.experience &&
+        p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent
+    )
+})

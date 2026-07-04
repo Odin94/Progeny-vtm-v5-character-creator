@@ -1,16 +1,17 @@
 import { useRef, useCallback, useEffect, useMemo } from "react"
 import { Character } from "~/data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
 type UseDebouncedUncontrolledStringFieldOptions = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     field: keyof Character
     delay?: number
 }
 
 type UseDebouncedUncontrolledNumberFieldOptions = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     field: keyof Character | string
     delay?: number
     getValue?: (character: Character) => number
@@ -56,15 +57,18 @@ export const useDebouncedUncontrolledStringField = ({
             pendingValueRef.current = value
 
             timeoutRef.current = setTimeout(() => {
-                const currentCharacter = characterRef.current ?? character
-                setCharacter({
+                // Use the functional updater so the write merges into the freshest
+                // character rather than a possibly-stale closure/ref. This keeps the
+                // debounced edit safe even when this field's component is memoized and
+                // has not re-rendered since another field changed elsewhere.
+                setCharacter((currentCharacter) => ({
                     ...currentCharacter,
                     [field]: value
-                })
+                }))
                 timeoutRef.current = null
             }, delay)
         },
-        [setCharacter, field, delay, character]
+        [setCharacter, field, delay]
     )
 
     useEffect(() => {
@@ -133,19 +137,22 @@ export const useDebouncedUncontrolledNumberField = ({
             pendingValueRef.current = transformedValue
 
             timeoutRef.current = setTimeout(() => {
-                const currentCharacter = characterRef.current ?? character
+                // Use the functional updater so the write merges into the freshest
+                // character rather than a possibly-stale closure/ref. This keeps the
+                // debounced edit safe even when this field's component is memoized and
+                // has not re-rendered since another field changed elsewhere.
                 if (updateFn) {
-                    setCharacter(updateFn(currentCharacter, transformedValue))
+                    setCharacter((currentCharacter) => updateFn(currentCharacter, transformedValue))
                 } else {
-                    setCharacter({
+                    setCharacter((currentCharacter) => ({
                         ...currentCharacter,
                         [field as keyof Character]: transformedValue
-                    })
+                    }))
                 }
                 timeoutRef.current = null
             }, delay)
         },
-        [setCharacter, field, delay, updateFn, character]
+        [setCharacter, field, delay, updateFn]
     )
 
     useEffect(() => {
