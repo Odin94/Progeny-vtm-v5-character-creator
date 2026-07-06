@@ -16,6 +16,7 @@ import { trackEvent } from "../utils/analytics"
 import { Character, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
 import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "../data/meritsAndFlawsResolution"
+import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../generator/utils"
 import { globals } from "../globals"
@@ -209,7 +210,10 @@ const PredatorTypeModal = ({
         return subPointStates.some((s) => s.selectedPoints > 0)
     })
 
-    const canConfirm = exclusiveGroupsFilled
+    const clanExcluded =
+        clans[character.clan]?.excludedPredatorTypes?.includes(pickedPredatorType) ?? false
+
+    const canConfirm = exclusiveGroupsFilled && !clanExcluded
 
     const hasMeritsSection =
         predatorType.meritsAndFlaws.length !== 0 ||
@@ -285,6 +289,43 @@ const PredatorTypeModal = ({
 
             {/* Body */}
             <Stack gap="md" p="xl" pt="lg">
+                {/* Clan restriction notice */}
+                {clanExcluded && (
+                    <div
+                        style={{
+                            padding: "12px 14px",
+                            borderRadius: 10,
+                            background: rgba(RAW_RED, 0.1),
+                            border: `1px solid ${rgba(RAW_RED, 0.35)}`
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontFamily: "Inter, Segoe UI, sans-serif",
+                                fontSize: "0.72rem",
+                                letterSpacing: "0.18em",
+                                textTransform: "uppercase",
+                                color: "rgba(250, 82, 82, 0.95)",
+                                marginBottom: 4
+                            }}
+                        >
+                            Locked for {character.clan}
+                        </Text>
+                        <Text
+                            style={{
+                                fontFamily: "Crimson Text, Georgia, serif",
+                                fontSize: "0.98rem",
+                                color: rgba(RAW_GREY, 0.8),
+                                lineHeight: 1.35
+                            }}
+                        >
+                            The {character.clan} clan can&apos;t take the {predatorType.name}{" "}
+                            predator type. Go back to the clan step and pick a different clan to
+                            unlock it — the disciplines you&apos;ve already chosen stay put.
+                        </Text>
+                    </div>
+                )}
+
                 {/* Stat changes */}
                 {hasStatChanges && (
                     <div>

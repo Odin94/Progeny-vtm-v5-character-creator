@@ -103,7 +103,6 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const createCard = (predatorTypeName: PredatorTypeName, meta: CategoryMeta) => {
         const clanDisabled =
             clans[character.clan]?.excludedPredatorTypes?.includes(predatorTypeName) ?? false
-        const isDisabled = clanDisabled || isThinBlood
         const isSelected = character.predatorType.name === predatorTypeName
         const predatorType = PredatorTypes[predatorTypeName]
 
@@ -112,7 +111,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 data-testid={`predator-type-${predatorTypeName.toLowerCase().replace(/\s+/g, "-")}-card`}
                 key={predatorTypeName}
                 onClick={() => {
-                    if (isDisabled) return
+                    // Locked cards stay openable so the coupling is legible rather than a dead
+                    // end: the modal explains the clan restriction instead of blocking the click.
                     const firstSpecialtyOption = predatorType.specialtyOptions[0]
                     const firstDisciplineOption = predatorType.disciplineOptions[0]
                     setPickedPredatorType(predatorTypeName)
@@ -121,7 +121,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     openModal()
                 }}
                 onMouseEnter={(e) => {
-                    if (!isDisabled && !isSelected) {
+                    if (!isSelected) {
                         e.currentTarget.style.background = meta.bgActiveColor
                         e.currentTarget.style.borderColor = meta.borderColor
                         e.currentTarget.style.transform = "translateY(-2px)"
@@ -141,8 +141,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     borderRadius: "12px",
                     border: `1px solid ${isSelected ? meta.borderActiveColor : meta.borderColor}`,
                     background: isSelected ? meta.bgActiveColor : meta.bgColor,
-                    cursor: isDisabled ? "not-allowed" : "pointer",
-                    opacity: isDisabled ? 0.38 : 1,
+                    cursor: "pointer",
+                    opacity: clanDisabled ? 0.7 : 1,
                     transition:
                         "background 200ms ease, border-color 200ms ease, transform 160ms ease",
                     display: "flex",
@@ -165,14 +165,20 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                         <span
                             style={{
                                 marginLeft: 8,
-                                fontSize: "0.78rem",
-                                color: "rgba(244, 236, 232, 0.35)",
+                                fontSize: "0.72rem",
+                                color: rgba(RAW_RED, 0.95),
                                 fontFamily: "Inter, sans-serif",
-                                fontWeight: 400,
-                                letterSpacing: 0
+                                fontWeight: 600,
+                                letterSpacing: "0.04em",
+                                textTransform: "uppercase",
+                                padding: "1px 8px",
+                                borderRadius: "999px",
+                                border: `1px solid ${rgba(RAW_RED, 0.4)}`,
+                                background: rgba(RAW_RED, 0.14),
+                                whiteSpace: "nowrap"
                             }}
                         >
-                            excluded for {character.clan}
+                            Locked for {character.clan}
                         </span>
                     )}
                 </Text>
@@ -187,6 +193,19 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 >
                     {predatorType.summary}
                 </Text>
+
+                {clanDisabled && (
+                    <Text
+                        style={{
+                            fontFamily: "Inter, sans-serif",
+                            fontSize: "0.76rem",
+                            color: rgba(RAW_RED, 0.8),
+                            lineHeight: 1.35
+                        }}
+                    >
+                        Not available to the {character.clan} clan — switch clans to unlock it.
+                    </Text>
+                )}
 
                 <div
                     style={{
