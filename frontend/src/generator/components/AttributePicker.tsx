@@ -1,9 +1,15 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
+import { IconRefresh } from "@tabler/icons-react"
 import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
-import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
+import {
+    Attributes,
+    AttributesKey,
+    attributeDescriptions,
+    attributesKeySchema
+} from "../../data/Attributes"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
@@ -21,17 +27,39 @@ type AttributeSetting = {
     medium: AttributesKey[]
 }
 
+const emptyAttributeSetting: AttributeSetting = { strongest: null, weakest: null, medium: [] }
+
+// Rebuild the picker's selections from an already-saved character so that
+// revisiting the step (back button, sidebar, hash normalization) shows what was
+// chosen instead of a blank slate. Attributes are only written to the character
+// once fully picked, so a level-4 attribute signals a completed pick to rehydrate.
+const deriveAttributeSetting = (attributes: Attributes): AttributeSetting => {
+    const entries = Object.entries(attributes) as [AttributesKey, number][]
+    const strongest = entries.find(([, level]) => level === 4)?.[0] ?? null
+    if (!strongest) {
+        return emptyAttributeSetting
+    }
+    return {
+        strongest,
+        weakest: entries.find(([, level]) => level === 1)?.[0] ?? null,
+        medium: entries.filter(([, level]) => level === 3).map(([key]) => key)
+    }
+}
+
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
     useEffect(() => {
         ReactGA.send({ hitType: "pageview", title: "Attribute Picker" })
     }, [])
 
-    const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({
-        strongest: null,
-        weakest: null,
-        medium: []
-    })
+    const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>(() =>
+        deriveAttributeSetting(character.attributes)
+    )
+
+    const hasPicks =
+        !!pickedAttributes.strongest ||
+        !!pickedAttributes.weakest ||
+        pickedAttributes.medium.length > 0
 
     const createButton = (attribute: AttributesKey, i: number) => {
         const alreadyPicked = [
@@ -255,6 +283,21 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                 phoneScreen={phoneScreen}
                 footerText="Remaining attributes will be lvl 2"
             />
+
+            {hasPicks ? (
+                <Group justify="center" mb="xs">
+                    <Button
+                        data-testid="attribute-reset-button"
+                        variant="subtle"
+                        color="gray"
+                        size="xs"
+                        leftSection={<IconRefresh size={14} />}
+                        onClick={() => setPickedAttributes(emptyAttributeSetting)}
+                    >
+                        Reset attributes
+                    </Button>
+                </Group>
+            ) : null}
 
             <GeneratorSectionDivider label="Attributes" />
 

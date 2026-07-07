@@ -1,4 +1,5 @@
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
+import { IconRefresh } from "@tabler/icons-react"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
@@ -69,6 +70,50 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
     return Object.values(skillSetting).reduce((acc, s) => [...acc, ...s], [])
 }
 
+const emptySkillsSetting: SkillsSetting = {
+    special: [],
+    strongest: [],
+    decent: [],
+    acceptable: []
+}
+
+// Rebuild the picker's selections from an already-saved character so that
+// revisiting the step (back button, sidebar, hash normalization) shows what was
+// chosen instead of a blank slate.
+const deriveSkillsSetting = (skills: Skills): SkillsSetting => {
+    const entries = Object.entries(skills) as [SkillsKey, number][]
+    return {
+        special: entries.filter(([, level]) => level === 4).map(([key]) => key),
+        strongest: entries.filter(([, level]) => level === 3).map(([key]) => key),
+        decent: entries.filter(([, level]) => level === 2).map(([key]) => key),
+        acceptable: entries.filter(([, level]) => level === 1).map(([key]) => key)
+    }
+}
+
+// Distribution isn't stored on the character, so infer it from the picked counts
+// to restore which skill layout the user was working in.
+const deriveDistribution = (setting: SkillsSetting): DistributionKey | null => {
+    const pickedCount =
+        setting.special.length +
+        setting.strongest.length +
+        setting.decent.length +
+        setting.acceptable.length
+    if (pickedCount === 0) {
+        return null
+    }
+    return (
+        (Object.keys(distributionByType) as DistributionKey[]).find((key) => {
+            const distribution = distributionByType[key]
+            return (
+                setting.special.length === distribution.special &&
+                setting.strongest.length === distribution.strongest &&
+                setting.decent.length === distribution.decent &&
+                setting.acceptable.length === distribution.acceptable
+            )
+        }) ?? null
+    )
+}
+
 const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
@@ -77,14 +122,19 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     }, [])
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
-    const [skills, setSkills] = useState(emptySkills)
-    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({
-        special: [],
-        strongest: [],
-        decent: [],
-        acceptable: []
-    })
-    const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
+    const [skills, setSkills] = useState<Skills>(character.skills)
+    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>(() =>
+        deriveSkillsSetting(character.skills)
+    )
+    const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(() =>
+        deriveDistribution(deriveSkillsSetting(character.skills))
+    )
+
+    const resetSkills = () => {
+        setPickedSkills(emptySkillsSetting)
+        setSkills(emptySkills)
+        setPickedDistribution(null)
+    }
     const distr = pickedDistribution
         ? distributionByType[pickedDistribution]
         : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
@@ -464,6 +514,21 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                     caption={pickedDistribution}
                 />
             )}
+
+            {pickedDistribution ? (
+                <Group justify="center" mb="xs">
+                    <Button
+                        data-testid="skill-reset-button"
+                        variant="subtle"
+                        color="gray"
+                        size="xs"
+                        leftSection={<IconRefresh size={14} />}
+                        onClick={resetSkills}
+                    >
+                        Change distribution
+                    </Button>
+                </Group>
+            ) : null}
 
             <GeneratorSectionDivider label="Skills" />
 
