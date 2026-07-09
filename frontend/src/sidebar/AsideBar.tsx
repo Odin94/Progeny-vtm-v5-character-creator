@@ -8,6 +8,7 @@ import {
 } from "../generator/steps"
 import { isDefault } from "../generator/utils"
 import { globals } from "../globals"
+import { trackEvent } from "../utils/analytics"
 
 export type AsideBarProps = {
     selectedStep: GeneratorStepId
@@ -64,7 +65,17 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                         <Box key={step.id}>
                             <UnstyledButton
                                 onClick={() => {
-                                    if (isAccessible) setSelectedStep(step.id)
+                                    if (!isAccessible) return
+                                    // Track jumps back to an earlier step so abandonment that
+                                    // starts with re-editing a previous step is measurable.
+                                    if (index < activeIndex) {
+                                        trackEvent({
+                                            action: "generator step back navigation",
+                                            category: "generator",
+                                            label: `${selectedStep} -> ${step.id}`
+                                        })
+                                    }
+                                    setSelectedStep(step.id)
                                 }}
                                 disabled={!isAccessible}
                                 style={{
