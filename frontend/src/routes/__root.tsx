@@ -13,7 +13,11 @@ import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
 import { resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
-import { isFramelessSyntheticNoise, type ExceptionListEntry } from "~/utils/exceptionFilter"
+import {
+    isFramelessSyntheticNoise,
+    isRrwebRecursionNoise,
+    type ExceptionListEntry
+} from "~/utils/exceptionFilter"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -98,6 +102,10 @@ const posthogOptions: Partial<PostHogConfig> = {
             }
 
             if (isFramelessSyntheticNoise(exceptionListEntry)) {
+                return null
+            }
+
+            if (isRrwebRecursionNoise(exceptionListEntry)) {
                 return null
             }
 
