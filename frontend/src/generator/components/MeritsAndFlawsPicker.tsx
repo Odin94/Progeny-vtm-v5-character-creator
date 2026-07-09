@@ -416,6 +416,14 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const isConfirmDisabled = isThinBlood && remainingThinbloodMeritPoints < 0
     const handleReset = () => {
+        if (resetTarget) {
+            trackEvent({
+                action: "merits reset confirmed",
+                category: "merits",
+                label: resetTarget
+            })
+        }
+
         if (resetTarget === "merit") {
             const nextPickedMeritsAndFlaws = pickedMeritsAndFlaws.filter(
                 (item) => item.type !== "merit"

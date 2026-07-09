@@ -1,6 +1,8 @@
 import { Text } from "@mantine/core"
+import { useEffect } from "react"
 import ErrorBoundary from "../components/ErrorBoundary"
 import { Character } from "../data/Character"
+import { trackEvent } from "../utils/analytics"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
 import ClanPicker from "./components/ClanPicker"
@@ -24,6 +26,17 @@ export type GeneratorProps = {
 }
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
+    // Fire a PostHog step-view event whenever a generator step is shown. Individual steps only
+    // send a GA pageview and a confirm-click event, so without this we cannot measure step-level
+    // drop-off (how many people reach a step vs. confirm it) outside of session replay.
+    useEffect(() => {
+        trackEvent({
+            action: "generator step viewed",
+            category: "generator",
+            label: selectedStep
+        })
+    }, [selectedStep])
+
     const nextStep = (characterOverride?: Character) => {
         setSelectedStep(getNextGeneratorStepId(characterOverride ?? character, selectedStep))
     }
