@@ -1,5 +1,6 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer"
 
 import * as path from "path"
 
@@ -38,6 +39,27 @@ export default defineConfig({
             jsxImportSource: "@emotion/react",
             babel: {
                 plugins: ["@emotion/babel-plugin"]
+            }
+        }),
+        ViteImageOptimizer({
+            ansiColors: false,
+            jpeg: {
+                quality: 60,
+                mozjpeg: true,
+                progressive: true
+            },
+            jpg: {
+                quality: 60,
+                mozjpeg: true,
+                progressive: true
+            },
+            png: {
+                compressionLevel: 9,
+                quality: 82,
+                palette: true
+            },
+            webp: {
+                quality: 82
             }
         })
     ],

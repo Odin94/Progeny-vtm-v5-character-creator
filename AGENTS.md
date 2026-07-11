@@ -49,8 +49,7 @@ When the task description below says "run the build" or "verify", these are the 
 - DB migrations: snapshot is consistent (`cd backend && pnpm run db:generate`) — required after any schema change
 
 ## Scoped Guidance
-- When working mostly in `frontend/`, read `frontend/AGENTS.md`.
-- When working mostly in `backend/`, read `backend/AGENTS.md`.
+- When working with posthog cli, run `posthog-cli api --agent-help` to learn how to use it
 
 ## Deep Docs
 - `docs/architecture-overview.md`

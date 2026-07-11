@@ -13,6 +13,7 @@
         "fmt": "oxfmt --write .",
         "fmt:check": "oxfmt --check .",
         "pdf-to-base64": "pnpm exec ts-node --project ./scripts/tsconfig.json ./scripts/pdfToBase64.ts",
+        "verify:image-optimization": "node ./scripts/verifyImageOptimization.mjs",
         "test": "vitest",
         "test:run": "vitest run",
         "test:e2e": "playwright test"
@@ -64,8 +65,11 @@
         "jsdom": "^29.1.1",
         "oxfmt": "^0.51.0",
         "oxlint": "^1.66.0",
+        "sharp": "^0.35.3",
+        "svgo": "^4.0.1",
         "ts-node": "^10.9.2",
         "vite": "^8.0.16",
+        "vite-plugin-image-optimizer": "^2.0.3",
         "vite-plugin-svgr": "^5.2.0",
         "vitest": "^4.1.9"
     },
