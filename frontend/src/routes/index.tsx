@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { lazy, Suspense } from "react"
 import RenderProfiler from "~/components/RenderProfiler"
-import LandingPage from "~/pages/LandingPage"
+
+const LandingPage = lazy(() => import("~/pages/LandingPage"))
 
 export const Route = createFileRoute("/")({
     component: Index
@@ -9,7 +11,9 @@ export const Route = createFileRoute("/")({
 function Index() {
     return (
         <RenderProfiler id="LandingPage">
-            <LandingPage />
+            <Suspense fallback={null}>
+                <LandingPage />
+            </Suspense>
         </RenderProfiler>
     )
 }

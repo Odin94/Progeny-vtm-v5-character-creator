@@ -17,6 +17,7 @@ import { essentialLoresheets, Loresheet, MeritOrFlaw } from "../../data/MeritsAn
 import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
+import { useProgressiveRendering } from "./useProgressiveRendering"
 
 type LoresheetProps = {
     character: Character
@@ -48,6 +49,7 @@ export const Loresheets = ({
             }),
         [character, normalizedLoresheetQuery]
     )
+    const { visibleCount, sentinelRef } = useProgressiveRendering(filteredLoresheets.length, 9, 6)
 
     const getLoresheetCol = (loresheet: Loresheet) => {
         const sheetPicked =
@@ -175,7 +177,7 @@ export const Loresheets = ({
                     />
                     <Grid w={"100%"} m={0} gutter="lg">
                         {filteredLoresheets.length > 0 ? (
-                            filteredLoresheets.map(getLoresheetCol)
+                            filteredLoresheets.slice(0, visibleCount).map(getLoresheetCol)
                         ) : (
                             <Grid.Col span={12}>
                                 <Text
@@ -192,6 +194,9 @@ export const Loresheets = ({
                             </Grid.Col>
                         )}
                     </Grid>
+                    {visibleCount < filteredLoresheets.length ? (
+                        <div ref={sentinelRef} aria-hidden="true" />
+                    ) : null}
                 </Stack>
             )}
         </Box>

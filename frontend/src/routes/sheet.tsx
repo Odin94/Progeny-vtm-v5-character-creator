@@ -1,13 +1,14 @@
 import { AppShell } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
-import { useEffect, useRef } from "react"
+import { lazy, Suspense, useEffect, useRef } from "react"
 import { RAW_GOLD, rgba } from "~/theme/colors"
-import CharacterSheet from "~/character_sheet/CharacterSheet"
 import RenderProfiler from "~/components/RenderProfiler"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
 import { getEmptyCharacter } from "~/data/Character"
 import Topbar from "~/topbar/Topbar"
+
+const CharacterSheet = lazy(() => import("~/character_sheet/CharacterSheet"))
 
 export const Route = createFileRoute("/sheet")({
     component: Sheet
@@ -71,7 +72,9 @@ function Sheet() {
                 </RenderProfiler>
             </AppShell.Header>
             <RenderProfiler id="CharacterSheet">
-                <CharacterSheet character={character} setCharacter={setCharacter} />
+                <Suspense fallback={null}>
+                    <CharacterSheet character={character} setCharacter={setCharacter} />
+                </Suspense>
             </RenderProfiler>
         </AppShell>
     )

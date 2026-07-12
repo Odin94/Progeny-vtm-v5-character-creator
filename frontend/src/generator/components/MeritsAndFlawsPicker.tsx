@@ -44,6 +44,7 @@ import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyl
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
+import { useProgressiveRendering } from "./useProgressiveRendering"
 
 type MeritsAndFlawsPickerProps = {
     character: Character
@@ -123,8 +124,7 @@ const MeritOrFlawCard = memo(
                 : type === "flaw"
                   ? remainingFlaws + previousCost
                   : remainingMerits + previousCost
-            const hasEnoughPoints =
-                isThinbloodFlaw(meritOrFlaw.name) || availablePoints >= nextCost
+            const hasEnoughPoints = isThinbloodFlaw(meritOrFlaw.name) || availablePoints >= nextCost
             const insufficientPointsMessage = `Not enough ${pointType}. Need ${nextCost}, have ${availablePoints}.`
 
             const button = (
@@ -313,6 +313,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const [activeTab, setActiveTab] = useState<string | null>("merits")
     const [resetTarget, setResetTarget] = useState<ResetTarget>(null)
+    const { visibleCount: visibleCategoryCount, sentinelRef: categorySentinelRef } =
+        useProgressiveRendering(essentialMeritsAndFlaws.length, 4, 2)
 
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([
         ...character.merits,
@@ -509,6 +511,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 color="red"
                                 value={activeTab}
                                 onChange={setActiveTab}
+                                keepMounted={false}
                                 styles={{
                                     list: {
                                         gap: 10,
@@ -618,31 +621,43 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                   )
                                                 : null}
 
-                                            {essentialMeritsAndFlaws.map((category) => {
-                                                return (
-                                                    <Grid.Col
-                                                        span={phoneScreen ? 12 : 6}
-                                                        key={category.title}
-                                                    >
-                                                        <Stack gap="sm">
-                                                            <GeneratorSectionDivider
-                                                                label={category.title}
-                                                                accentAlpha={0.32}
-                                                                titleSize="0.96rem"
-                                                                lineHeight={1}
-                                                                marginY="xs"
-                                                            />
-                                                            {category.merits.map((merit) =>
-                                                                getMeritOrFlawLine(merit, "merit")
-                                                            )}
-                                                            {category.flaws.map((flaw) =>
-                                                                getMeritOrFlawLine(flaw, "flaw")
-                                                            )}
-                                                        </Stack>
-                                                    </Grid.Col>
-                                                )
-                                            })}
+                                            {essentialMeritsAndFlaws
+                                                .slice(0, visibleCategoryCount)
+                                                .map((category) => {
+                                                    return (
+                                                        <Grid.Col
+                                                            span={phoneScreen ? 12 : 6}
+                                                            key={category.title}
+                                                            style={{
+                                                                contentVisibility: "auto",
+                                                                containIntrinsicSize: "900px"
+                                                            }}
+                                                        >
+                                                            <Stack gap="sm">
+                                                                <GeneratorSectionDivider
+                                                                    label={category.title}
+                                                                    accentAlpha={0.32}
+                                                                    titleSize="0.96rem"
+                                                                    lineHeight={1}
+                                                                    marginY="xs"
+                                                                />
+                                                                {category.merits.map((merit) =>
+                                                                    getMeritOrFlawLine(
+                                                                        merit,
+                                                                        "merit"
+                                                                    )
+                                                                )}
+                                                                {category.flaws.map((flaw) =>
+                                                                    getMeritOrFlawLine(flaw, "flaw")
+                                                                )}
+                                                            </Stack>
+                                                        </Grid.Col>
+                                                    )
+                                                })}
                                         </Grid>
+                                        {visibleCategoryCount < essentialMeritsAndFlaws.length ? (
+                                            <div ref={categorySentinelRef} aria-hidden="true" />
+                                        ) : null}
                                     </Box>
                                 </Tabs.Panel>
 

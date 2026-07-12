@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { lazy, Suspense } from "react"
 import RenderProfiler from "~/components/RenderProfiler"
-import CoteriePage from "~/pages/CoteriePage"
+
+const CoteriePage = lazy(() => import("~/pages/CoteriePage"))
 
 export const Route = createFileRoute("/coteries/$coterieId")({
     component: Coterie
@@ -11,7 +13,9 @@ function Coterie() {
 
     return (
         <RenderProfiler id="CoteriePage">
-            <CoteriePage coterieId={coterieId} />
+            <Suspense fallback={null}>
+                <CoteriePage coterieId={coterieId} />
+            </Suspense>
         </RenderProfiler>
     )
 }

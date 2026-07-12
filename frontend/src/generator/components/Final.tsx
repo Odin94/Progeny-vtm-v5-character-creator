@@ -26,7 +26,6 @@ import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
-import { downloadCharacterSheet } from "../pdfCreator"
 import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 
@@ -78,11 +77,14 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         window.location.reload()
     }
 
-    const handleDownloadPDF = () => {
-        downloadCharacterSheet(character).catch((e) => {
+    const handleDownloadPDF = async () => {
+        try {
+            const { downloadCharacterSheet } = await import("../pdfCreator")
+            await downloadCharacterSheet(character)
+        } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
-        })
+        }
         trackEvent({
             action: "PDF downloaded",
             category: "downloads",
