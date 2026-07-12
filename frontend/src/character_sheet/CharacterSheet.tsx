@@ -97,8 +97,12 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         },
         [canEdit, setCharacter]
     )
-    const effectiveMode = canEdit ? mode : "play"
+    // Keep the selected mode while ownership is loading so editable characters do not
+    // briefly render in Play mode before switching to their saved/default mode.
+    // Editing remains disabled through canEdit until ownership has been confirmed.
+    const effectiveMode = canEdit || ownershipLoading ? mode : "play"
     const openDiceModal = useDiceRollModalStore((state) => state.open)
+    const diceModalOpened = useDiceRollModalStore((state) => state.opened)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
     const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
@@ -229,9 +233,39 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                         value={effectiveMode}
                                         onChange={(value) => setMode(value as CharacterSheetMode)}
                                         data={[
-                                            { label: "Play", value: "play" },
-                                            { label: "XP", value: "xp" },
-                                            { label: "Free", value: "free" }
+                                            {
+                                                label: (
+                                                    <Tooltip
+                                                        label="Lock editing, except for hunger, health etc."
+                                                        position="left"
+                                                    >
+                                                        <span>Play</span>
+                                                    </Tooltip>
+                                                ),
+                                                value: "play"
+                                            },
+                                            {
+                                                label: (
+                                                    <Tooltip
+                                                        label="Spend XP to upgrade your character"
+                                                        position="left"
+                                                    >
+                                                        <span>XP</span>
+                                                    </Tooltip>
+                                                ),
+                                                value: "xp"
+                                            },
+                                            {
+                                                label: (
+                                                    <Tooltip
+                                                        label="Free edit, no XP costs"
+                                                        position="left"
+                                                    >
+                                                        <span>Free</span>
+                                                    </Tooltip>
+                                                ),
+                                                value: "free"
+                                            }
                                         ]}
                                         color={primaryColor}
                                         orientation="vertical"
@@ -283,12 +317,14 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             </Box>
             <CharacterSheetMenu options={characterMenuOptions} />
             <ChatWindow options={sheetOptions} />
-            <DiceRollModal
-                primaryColor={primaryColor}
-                character={character}
-                setCharacter={editableSetCharacter}
-                editDisabledReason={editDisabledReason}
-            />
+            {diceModalOpened ? (
+                <DiceRollModal
+                    primaryColor={primaryColor}
+                    character={character}
+                    setCharacter={editableSetCharacter}
+                    editDisabledReason={editDisabledReason}
+                />
+            ) : null}
         </MantineProvider>
     )
 }

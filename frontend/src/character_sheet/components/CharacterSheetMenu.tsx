@@ -235,275 +235,291 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 <IconMenu2 size={24} />
             </ActionIcon>
 
-            <Modal
-                opened={menuOpened}
-                onClose={handleMenuClose}
-                title={menuTitle}
-                centered
-                size="lg"
-                zIndex={2000}
-                classNames={{
-                    overlay: "sheet-menu__overlay",
-                    content: "sheet-menu__modal",
-                    header: "sheet-menu__header",
-                    body: "sheet-menu__body",
-                    close: "sheet-menu__close"
-                }}
-            >
-                <div
-                    ref={wrapperRef}
-                    style={{
-                        overflow: "hidden",
-                        position: "relative",
-                        minHeight: wrapperMinHeight
+            {menuOpened ? (
+                <Modal
+                    opened={menuOpened}
+                    onClose={handleMenuClose}
+                    title={menuTitle}
+                    centered
+                    size="lg"
+                    zIndex={2000}
+                    classNames={{
+                        overlay: "sheet-menu__overlay",
+                        content: "sheet-menu__modal",
+                        header: "sheet-menu__header",
+                        body: "sheet-menu__body",
+                        close: "sheet-menu__close"
                     }}
                 >
-                    <AnimatePresence mode="wait" custom={direction.current} initial={false}>
-                        <motion.div
-                            key={view}
-                            custom={direction.current}
-                            variants={slideVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{ type: "tween", duration: 0.18, ease: "easeInOut" }}
-                        >
-                            {view === "menu" ? (
-                                <Stack gap="xl">
-                                    <section>
-                                        <Text className="sheet-menu__section-label">
-                                            Export & save
-                                        </Text>
-                                        <div className="sheet-menu__action-grid">
+                    <div
+                        ref={wrapperRef}
+                        style={{
+                            overflow: "hidden",
+                            position: "relative",
+                            minHeight: wrapperMinHeight
+                        }}
+                    >
+                        <AnimatePresence mode="wait" custom={direction.current} initial={false}>
+                            <motion.div
+                                key={view}
+                                custom={direction.current}
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ type: "tween", duration: 0.18, ease: "easeInOut" }}
+                            >
+                                {view === "menu" ? (
+                                    <Stack gap="xl">
+                                        <section>
+                                            <Text className="sheet-menu__section-label">
+                                                Export & save
+                                            </Text>
+                                            <div className="sheet-menu__action-grid">
+                                                <Button
+                                                    leftSection={<IconFileTypePdf size={22} />}
+                                                    onClick={handleDownloadPDF}
+                                                    className="sheet-menu__action sheet-menu__action--featured"
+                                                    justify="flex-start"
+                                                >
+                                                    <div className="sheet-menu__action-copy">
+                                                        <strong>Download PDF</strong>
+                                                        <small>Print-ready character sheet</small>
+                                                    </div>
+                                                </Button>
+                                                <Button
+                                                    leftSection={<IconDownload size={22} />}
+                                                    onClick={handleDownloadJSON}
+                                                    className="sheet-menu__action"
+                                                    justify="flex-start"
+                                                >
+                                                    <div className="sheet-menu__action-copy">
+                                                        <strong>Save file</strong>
+                                                        <small>Keep a JSON backup</small>
+                                                    </div>
+                                                </Button>
+                                                <FileButton
+                                                    onChange={handleLoadFromFile}
+                                                    accept="application/json"
+                                                >
+                                                    {(props) => (
+                                                        <Button
+                                                            leftSection={<IconUpload size={22} />}
+                                                            {...props}
+                                                            className="sheet-menu__action"
+                                                            justify="flex-start"
+                                                        >
+                                                            <div className="sheet-menu__action-copy">
+                                                                <strong>Load file</strong>
+                                                                <small>
+                                                                    Restore a saved character
+                                                                </small>
+                                                            </div>
+                                                        </Button>
+                                                    )}
+                                                </FileButton>
+                                                <Button
+                                                    leftSection={<IconShare size={22} />}
+                                                    onClick={() => navigateTo("export")}
+                                                    className="sheet-menu__action"
+                                                    justify="flex-start"
+                                                >
+                                                    <div className="sheet-menu__action-copy">
+                                                        <strong>Export</strong>
+                                                        <small>Foundry, Inconnu & more</small>
+                                                    </div>
+                                                </Button>
+                                            </div>
+                                        </section>
+
+                                        <div className="sheet-menu__utility-row">
                                             <Button
-                                                leftSection={<IconFileTypePdf size={22} />}
-                                                onClick={handleDownloadPDF}
-                                                className="sheet-menu__action sheet-menu__action--featured"
-                                                justify="flex-start"
+                                                leftSection={<IconPalette size={18} />}
+                                                variant="subtle"
+                                                onClick={() => navigateTo("preferences")}
                                             >
-                                                <div className="sheet-menu__action-copy">
-                                                    <strong>Download PDF</strong>
-                                                    <small>Print-ready character sheet</small>
-                                                </div>
+                                                Preferences
                                             </Button>
                                             <Button
-                                                leftSection={<IconDownload size={22} />}
-                                                onClick={handleDownloadJSON}
-                                                className="sheet-menu__action"
-                                                justify="flex-start"
+                                                component="a"
+                                                href={CONTACT_LINKS.kofi.href}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                leftSection={<IconHeart size={18} />}
+                                                variant="subtle"
                                             >
-                                                <div className="sheet-menu__action-copy">
-                                                    <strong>Save file</strong>
-                                                    <small>Keep a JSON backup</small>
-                                                </div>
+                                                Support the project
                                             </Button>
-                                            <FileButton
-                                                onChange={handleLoadFromFile}
-                                                accept="application/json"
-                                            >
-                                                {(props) => (
-                                                    <Button
-                                                        leftSection={<IconUpload size={22} />}
-                                                        {...props}
-                                                        className="sheet-menu__action"
-                                                        justify="flex-start"
-                                                    >
-                                                        <div className="sheet-menu__action-copy">
-                                                            <strong>Load file</strong>
-                                                            <small>Restore a saved character</small>
-                                                        </div>
-                                                    </Button>
-                                                )}
-                                            </FileButton>
                                             <Button
-                                                leftSection={<IconShare size={22} />}
-                                                onClick={() => navigateTo("export")}
-                                                className="sheet-menu__action"
-                                                justify="flex-start"
+                                                leftSection={<IconAlertCircle size={18} />}
+                                                variant="subtle"
+                                                onClick={() => navigateTo("disclaimer")}
                                             >
-                                                <div className="sheet-menu__action-copy">
-                                                    <strong>Export</strong>
-                                                    <small>Foundry, Inconnu & more</small>
-                                                </div>
+                                                Disclaimer
                                             </Button>
                                         </div>
-                                    </section>
+                                    </Stack>
+                                ) : view === "preferences" ? (
+                                    <Stack gap="md">
+                                        <PreferencesContent
+                                            preferences={preferences}
+                                            onUpdate={onUpdatePreferences}
+                                            primaryColor={primaryColor}
+                                        />
+                                    </Stack>
+                                ) : view === "export" ? (
+                                    <Stack gap="md" className="sheet-menu__export-view">
+                                        <div>
+                                            <Text className="sheet-menu__section-label">
+                                                Export
+                                            </Text>
+                                            <Text className="sheet-menu__view-title">
+                                                Download a character file prepared for your platform
+                                                of choice.
+                                            </Text>
+                                        </div>
 
-                                    <div className="sheet-menu__utility-row">
-                                        <Button
-                                            leftSection={<IconPalette size={18} />}
-                                            variant="subtle"
-                                            onClick={() => navigateTo("preferences")}
-                                        >
-                                            Preferences
-                                        </Button>
-                                        <Button
-                                            component="a"
-                                            href={CONTACT_LINKS.kofi.href}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            leftSection={<IconHeart size={18} />}
-                                            variant="subtle"
-                                        >
-                                            Support the project
-                                        </Button>
-                                        <Button
-                                            leftSection={<IconAlertCircle size={18} />}
-                                            variant="subtle"
-                                            onClick={() => navigateTo("disclaimer")}
-                                        >
-                                            Disclaimer
-                                        </Button>
-                                    </div>
-                                </Stack>
-                            ) : view === "preferences" ? (
-                                <Stack gap="md">
-                                    <PreferencesContent
-                                        preferences={preferences}
-                                        onUpdate={onUpdatePreferences}
-                                        primaryColor={primaryColor}
-                                    />
-                                </Stack>
-                            ) : view === "export" ? (
-                                <Stack gap="md" className="sheet-menu__export-view">
-                                    <div>
-                                        <Text className="sheet-menu__section-label">Export</Text>
-                                        <Text className="sheet-menu__view-title">
-                                            Download a character file prepared for your platform of
-                                            choice.
-                                        </Text>
-                                    </div>
-
-                                    <div className="sheet-menu__export-options">
-                                        <div className="sheet-menu__export-card">
-                                            <div className="sheet-menu__export-icon">
-                                                <IconDeviceGamepad2 size={24} />
+                                        <div className="sheet-menu__export-options">
+                                            <div className="sheet-menu__export-card">
+                                                <div className="sheet-menu__export-icon">
+                                                    <IconDeviceGamepad2 size={24} />
+                                                </div>
+                                                <div className="sheet-menu__export-copy">
+                                                    <div className="sheet-menu__export-heading">
+                                                        <a
+                                                            href="https://foundryvtt.com/packages/vtm5e"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            Foundry WoD5E VTT{" "}
+                                                            <IconExternalLink size={14} />
+                                                        </a>
+                                                        <button
+                                                            type="button"
+                                                            className="sheet-menu__help-button"
+                                                            aria-label="How to import into Foundry"
+                                                            aria-expanded={foundryHelpOpen}
+                                                            onClick={() =>
+                                                                setFoundryHelpOpen((open) => !open)
+                                                            }
+                                                        >
+                                                            <IconHelpHexagon size={18} />
+                                                        </button>
+                                                    </div>
+                                                    <Text>
+                                                        Import your character into the Foundry
+                                                        virtual tabletop.
+                                                    </Text>
+                                                </div>
+                                                <Button
+                                                    leftSection={<IconDownload size={17} />}
+                                                    onClick={handleExportToFoundry}
+                                                >
+                                                    Export JSON
+                                                </Button>
+                                                {foundryHelpOpen ? (
+                                                    <div className="sheet-menu__foundry-help">
+                                                        <Text className="sheet-menu__foundry-help-title">
+                                                            Import into Foundry
+                                                        </Text>
+                                                        <ol>
+                                                            <li>Export the character to JSON.</li>
+                                                            <li>
+                                                                Create a Vampire character in
+                                                                Foundry.
+                                                            </li>
+                                                            <li>
+                                                                Right-click that character under
+                                                                Actors.
+                                                            </li>
+                                                            <li>
+                                                                Select Import Data and upload the
+                                                                JSON file.
+                                                            </li>
+                                                        </ol>
+                                                    </div>
+                                                ) : null}
                                             </div>
-                                            <div className="sheet-menu__export-copy">
-                                                <div className="sheet-menu__export-heading">
+
+                                            <div className="sheet-menu__export-card">
+                                                <div className="sheet-menu__export-icon">
+                                                    <IconBrandDiscord size={24} />
+                                                </div>
+                                                <div className="sheet-menu__export-copy">
                                                     <a
-                                                        href="https://foundryvtt.com/packages/vtm5e"
+                                                        href="https://docs.inconnu.app"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
-                                                        Foundry WoD5E VTT{" "}
+                                                        Inconnu Discord Bot{" "}
                                                         <IconExternalLink size={14} />
                                                     </a>
-                                                    <button
-                                                        type="button"
-                                                        className="sheet-menu__help-button"
-                                                        aria-label="How to import into Foundry"
-                                                        aria-expanded={foundryHelpOpen}
-                                                        onClick={() =>
-                                                            setFoundryHelpOpen((open) => !open)
-                                                        }
-                                                    >
-                                                        <IconHelpHexagon size={18} />
-                                                    </button>
-                                                </div>
-                                                <Text>
-                                                    Import your character into the Foundry virtual
-                                                    tabletop.
-                                                </Text>
-                                            </div>
-                                            <Button
-                                                leftSection={<IconDownload size={17} />}
-                                                onClick={handleExportToFoundry}
-                                            >
-                                                Export JSON
-                                            </Button>
-                                            {foundryHelpOpen ? (
-                                                <div className="sheet-menu__foundry-help">
-                                                    <Text className="sheet-menu__foundry-help-title">
-                                                        Import into Foundry
+                                                    <Text>
+                                                        Use your character with the Inconnu Discord
+                                                        manager.
                                                     </Text>
-                                                    <ol>
-                                                        <li>Export the character to JSON.</li>
-                                                        <li>Create a Vampire character in Foundry.</li>
-                                                        <li>Right-click that character under Actors.</li>
-                                                        <li>
-                                                            Select Import Data and upload the JSON file.
-                                                        </li>
-                                                    </ol>
                                                 </div>
-                                            ) : null}
-                                        </div>
-
-                                        <div className="sheet-menu__export-card">
-                                            <div className="sheet-menu__export-icon">
-                                                <IconBrandDiscord size={24} />
-                                            </div>
-                                            <div className="sheet-menu__export-copy">
-                                                <a
-                                                    href="https://docs.inconnu.app"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <Button
+                                                    leftSection={<IconDownload size={17} />}
+                                                    onClick={handleExportToInconnu}
                                                 >
-                                                    Inconnu Discord Bot{" "}
-                                                    <IconExternalLink size={14} />
-                                                </a>
-                                                <Text>
-                                                    Use your character with the Inconnu Discord
-                                                    manager.
-                                                </Text>
+                                                    Export JSON
+                                                </Button>
                                             </div>
-                                            <Button
-                                                leftSection={<IconDownload size={17} />}
-                                                onClick={handleExportToInconnu}
-                                            >
-                                                Export JSON
-                                            </Button>
                                         </div>
-                                    </div>
-                                </Stack>
-                            ) : (
-                                <Stack gap="md" className="sheet-menu__disclaimer">
-                                    <Text>
-                                        This is an independent production and is not affiliated with
-                                        or endorsed by World of Darkness, Paradox Interactive, or
-                                        any of their subsidiaries.
-                                    </Text>
-                                    <Text>
-                                        This tool is created under the{" "}
-                                        <a
-                                            href="https://www.worldofdarkness.com/dark-pack"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            Dark Pack License
-                                        </a>
-                                        .
-                                    </Text>
-                                    <Text>
-                                        Vampire: The Masquerade and World of Darkness are trademarks
-                                        of Paradox Interactive. All rights reserved.
-                                    </Text>
-                                    <Text c="dimmed" size="sm">
-                                        The PDF template used for exporting is kindly provided by{" "}
-                                        <a
-                                            href="https://linktr.ee/nerdbert"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            Nerdbert
-                                        </a>
-                                        .
-                                    </Text>
-                                </Stack>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
-            </Modal>
+                                    </Stack>
+                                ) : (
+                                    <Stack gap="md" className="sheet-menu__disclaimer">
+                                        <Text>
+                                            This is an independent production and is not affiliated
+                                            with or endorsed by World of Darkness, Paradox
+                                            Interactive, or any of their subsidiaries.
+                                        </Text>
+                                        <Text>
+                                            This tool is created under the{" "}
+                                            <a
+                                                href="https://www.worldofdarkness.com/dark-pack"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Dark Pack License
+                                            </a>
+                                            .
+                                        </Text>
+                                        <Text>
+                                            Vampire: The Masquerade and World of Darkness are
+                                            trademarks of Paradox Interactive. All rights reserved.
+                                        </Text>
+                                        <Text c="dimmed" size="sm">
+                                            The PDF template used for exporting is kindly provided
+                                            by{" "}
+                                            <a
+                                                href="https://linktr.ee/nerdbert"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Nerdbert
+                                            </a>
+                                            .
+                                        </Text>
+                                    </Stack>
+                                )}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+                </Modal>
+            ) : null}
 
-            <ConfirmActionModal
-                opened={loadModalOpened}
-                onClose={closeLoadModal}
-                onConfirm={handleConfirmLoad}
-                title="Overwrite Character?"
-                body="This will overwrite the current character with the selected file. This action cannot be undone."
-                confirmLabel="Overwrite"
-            />
+            {loadModalOpened ? (
+                <ConfirmActionModal
+                    opened
+                    onClose={closeLoadModal}
+                    onConfirm={handleConfirmLoad}
+                    title="Overwrite Character?"
+                    body="This will overwrite the current character with the selected file. This action cannot be undone."
+                    confirmLabel="Overwrite"
+                />
+            ) : null}
 
             {downloadError ? (
                 <Modal

@@ -179,8 +179,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                         (p) => p.discipline !== itemToDelete.disciplineName
                     ),
                     rituals: itemToDelete.disciplineName === "blood sorcery" ? [] : current.rituals,
-                    ceremonies:
-                        itemToDelete.disciplineName === "oblivion" ? [] : current.ceremonies
+                    ceremonies: itemToDelete.disciplineName === "oblivion" ? [] : current.ceremonies
                 }
             }
 
@@ -825,100 +824,116 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     </Grid>
                 </Box>
             ) : null}
-            <DisciplineSelectModal
-                opened={modalOpened}
-                onClose={() => {
-                    setModalOpened(false)
-                    setInitialDiscipline(null)
-                }}
-                options={options}
-                initialDiscipline={initialDiscipline}
-                hideBackButton={initialDiscipline !== null}
-            />
-            <RitualSelectModal
-                opened={ritualModalOpened}
-                onClose={() => setRitualModalOpened(false)}
-                options={options}
-            />
-            <CustomRitualModal
-                opened={customRitualModalOpened}
-                onClose={() => {
-                    setCustomRitualModalOpened(false)
-                    setEditingRitual(null)
-                }}
-                options={options}
-                editingRitual={editingRitual}
-            />
-            <CeremonySelectModal
-                opened={ceremonyModalOpened}
-                onClose={() => setCeremonyModalOpened(false)}
-                options={options}
-            />
-            <CustomCeremonyModal
-                opened={customCeremonyModalOpened}
-                onClose={() => {
-                    setCustomCeremonyModalOpened(false)
-                    setEditingCeremony(null)
-                }}
-                options={options}
-                editingCeremony={editingCeremony}
-            />
-            <CustomDisciplineModal
-                opened={customDisciplineModalOpened}
-                onClose={() => {
-                    setCustomDisciplineModalOpened(false)
-                    setEditingDisciplineName(null)
-                }}
-                options={options}
-                editingDisciplineName={editingDisciplineName}
-            />
-            <CustomPowerModal
-                opened={customPowerModalOpened}
-                onClose={() => {
-                    setCustomPowerModalOpened(false)
-                    setEditingDisciplineName(null)
-                    setEditingPower(null)
-                }}
-                options={options}
-                disciplineName={editingDisciplineName || ""}
-                editingPower={editingPower}
-            />
-            <Modal
-                opened={!!itemToDelete}
-                onClose={() => {
-                    setItemToDelete(null)
-                }}
-                title=""
-                centered
-                withCloseButton={false}
-            >
-                <Stack>
-                    <Text fz="xl" ta="center">
-                        {itemToDelete?.type === "power"
-                            ? `Delete power "${itemToDelete.power.name}"?`
-                            : itemToDelete?.type === "ritual"
-                              ? `Delete ritual "${itemToDelete.ritual.name}"?`
-                              : itemToDelete?.type === "ceremony"
-                                ? `Delete ceremony "${itemToDelete.ceremony.name}"?`
-                                : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
-                    </Text>
-                    <Divider my="sm" />
-                    <Group justify="space-between">
-                        <Button
-                            color="yellow"
-                            variant="subtle"
-                            onClick={() => {
-                                setItemToDelete(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button color="red" onClick={confirmDelete}>
-                            Delete
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+            {modalOpened ? (
+                <DisciplineSelectModal
+                    opened
+                    onClose={() => {
+                        setModalOpened(false)
+                        setInitialDiscipline(null)
+                    }}
+                    options={options}
+                    initialDiscipline={initialDiscipline}
+                    hideBackButton={initialDiscipline !== null}
+                />
+            ) : null}
+            {ritualModalOpened ? (
+                <RitualSelectModal
+                    opened
+                    onClose={() => setRitualModalOpened(false)}
+                    options={options}
+                />
+            ) : null}
+            {customRitualModalOpened ? (
+                <CustomRitualModal
+                    opened
+                    onClose={() => {
+                        setCustomRitualModalOpened(false)
+                        setEditingRitual(null)
+                    }}
+                    options={options}
+                    editingRitual={editingRitual}
+                />
+            ) : null}
+            {ceremonyModalOpened ? (
+                <CeremonySelectModal
+                    opened
+                    onClose={() => setCeremonyModalOpened(false)}
+                    options={options}
+                />
+            ) : null}
+            {customCeremonyModalOpened ? (
+                <CustomCeremonyModal
+                    opened
+                    onClose={() => {
+                        setCustomCeremonyModalOpened(false)
+                        setEditingCeremony(null)
+                    }}
+                    options={options}
+                    editingCeremony={editingCeremony}
+                />
+            ) : null}
+            {customDisciplineModalOpened ? (
+                <CustomDisciplineModal
+                    opened
+                    onClose={() => {
+                        setCustomDisciplineModalOpened(false)
+                        setEditingDisciplineName(null)
+                    }}
+                    options={options}
+                    editingDisciplineName={editingDisciplineName}
+                />
+            ) : null}
+            {customPowerModalOpened ? (
+                <CustomPowerModal
+                    opened
+                    onClose={() => {
+                        setCustomPowerModalOpened(false)
+                        setEditingDisciplineName(null)
+                        setEditingPower(null)
+                    }}
+                    options={options}
+                    disciplineName={editingDisciplineName || ""}
+                    editingPower={editingPower}
+                />
+            ) : null}
+            {itemToDelete ? (
+                <Modal
+                    opened={!!itemToDelete}
+                    onClose={() => {
+                        setItemToDelete(null)
+                    }}
+                    title=""
+                    centered
+                    withCloseButton={false}
+                >
+                    <Stack>
+                        <Text fz="xl" ta="center">
+                            {itemToDelete?.type === "power"
+                                ? `Delete power "${itemToDelete.power.name}"?`
+                                : itemToDelete?.type === "ritual"
+                                  ? `Delete ritual "${itemToDelete.ritual.name}"?`
+                                  : itemToDelete?.type === "ceremony"
+                                    ? `Delete ceremony "${itemToDelete.ceremony.name}"?`
+                                    : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
+                        </Text>
+                        <Divider my="sm" />
+                        <Group justify="space-between">
+                            <Button
+                                color="yellow"
+                                variant="subtle"
+                                onClick={() => {
+                                    setItemToDelete(null)
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button color="red" onClick={confirmDelete}>
+                                Delete
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Modal>
+            ) : null}
         </>
     )
 }

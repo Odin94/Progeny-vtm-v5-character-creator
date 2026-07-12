@@ -1,12 +1,12 @@
 import { MantineProvider } from "@mantine/core"
-import { act, render, renderHook } from "@testing-library/react"
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { SheetOptions } from "~/character_sheet/CharacterSheet"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import { useCharacterLocalStorage, type SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
-// Count how many times the Touchstones section actually renders by instrumenting a
-// child it always mounts. When the memo comparator bails out, the child is not
+// Count how many times the Touchstones section actually renders by instrumenting its
+// editor after opening it. When the memo comparator bails out, the child is not
 // re-invoked, so the counter stays flat.
 const touchstoneModalRenders = { count: 0 }
 vi.mock("~/character_sheet/components/TouchstoneModal", () => ({
@@ -68,6 +68,7 @@ describe("sheet section memoization", () => {
                 <Touchstones options={options} />
             </MantineProvider>
         )
+        fireEvent.click(screen.getByRole("button"))
         const rendersAfterMount = touchstoneModalRenders.count
         expect(rendersAfterMount).toBeGreaterThan(0)
 
@@ -94,6 +95,7 @@ describe("sheet section memoization", () => {
                 <Touchstones options={makeOptions(character, setCharacter)} />
             </MantineProvider>
         )
+        fireEvent.click(screen.getByRole("button"))
         const rendersAfterMount = touchstoneModalRenders.count
 
         const editedCharacter = {

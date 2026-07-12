@@ -394,48 +394,54 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                     ) : null}
                 </Grid>
             </Box>
-            <MeritFlawSelectModal
-                opened={meritModalOpened}
-                onClose={() => setMeritModalOpened(false)}
-                options={options}
-                type="merit"
-            />
-            <MeritFlawSelectModal
-                opened={flawModalOpened}
-                onClose={() => setFlawModalOpened(false)}
-                options={options}
-                type="flaw"
-            />
-            <Modal
-                opened={!!itemToDelete}
-                onClose={() => {
-                    setItemToDelete(null)
-                }}
-                title=""
-                centered
-                withCloseButton={false}
-            >
-                <Stack>
-                    <Text fz="xl" ta="center">
-                        Delete {itemToDelete?.type} &quot;{itemToDelete?.item.name}&quot;?
-                    </Text>
-                    <Divider my="sm" />
-                    <Group justify="space-between">
-                        <Button
-                            color="yellow"
-                            variant="subtle"
-                            onClick={() => {
-                                setItemToDelete(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button color="red" onClick={confirmDelete}>
-                            Delete
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+            {meritModalOpened ? (
+                <MeritFlawSelectModal
+                    opened
+                    onClose={() => setMeritModalOpened(false)}
+                    options={options}
+                    type="merit"
+                />
+            ) : null}
+            {flawModalOpened ? (
+                <MeritFlawSelectModal
+                    opened
+                    onClose={() => setFlawModalOpened(false)}
+                    options={options}
+                    type="flaw"
+                />
+            ) : null}
+            {itemToDelete ? (
+                <Modal
+                    opened={!!itemToDelete}
+                    onClose={() => {
+                        setItemToDelete(null)
+                    }}
+                    title=""
+                    centered
+                    withCloseButton={false}
+                >
+                    <Stack>
+                        <Text fz="xl" ta="center">
+                            Delete {itemToDelete?.type} &quot;{itemToDelete?.item.name}&quot;?
+                        </Text>
+                        <Divider my="sm" />
+                        <Group justify="space-between">
+                            <Button
+                                color="yellow"
+                                variant="subtle"
+                                onClick={() => {
+                                    setItemToDelete(null)
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button color="red" onClick={confirmDelete}>
+                                Delete
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Modal>
+            ) : null}
         </>
     )
 }

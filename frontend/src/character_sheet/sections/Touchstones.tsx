@@ -162,45 +162,49 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                     ) : null}
                 </Grid>
             </Box>
-            <TouchstoneModal
-                opened={modalOpened}
-                onClose={() => {
-                    setModalOpened(false)
-                    setInitialTouchstone(null)
-                }}
-                options={options}
-                initialTouchstone={initialTouchstone}
-            />
-            <Modal
-                opened={!!touchstoneToDelete}
-                onClose={() => {
-                    setTouchstoneToDelete(null)
-                }}
-                title=""
-                centered
-                withCloseButton={false}
-            >
-                <Stack>
-                    <Text fz="xl" ta="center">
-                        Delete touchstone &quot;{touchstoneToDelete?.name}&quot;?
-                    </Text>
-                    <Divider my="sm" />
-                    <Group justify="space-between">
-                        <Button
-                            color="yellow"
-                            variant="subtle"
-                            onClick={() => {
-                                setTouchstoneToDelete(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button color="red" onClick={confirmDelete}>
-                            Delete
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+            {modalOpened ? (
+                <TouchstoneModal
+                    opened
+                    onClose={() => {
+                        setModalOpened(false)
+                        setInitialTouchstone(null)
+                    }}
+                    options={options}
+                    initialTouchstone={initialTouchstone}
+                />
+            ) : null}
+            {touchstoneToDelete ? (
+                <Modal
+                    opened={!!touchstoneToDelete}
+                    onClose={() => {
+                        setTouchstoneToDelete(null)
+                    }}
+                    title=""
+                    centered
+                    withCloseButton={false}
+                >
+                    <Stack>
+                        <Text fz="xl" ta="center">
+                            Delete touchstone &quot;{touchstoneToDelete?.name}&quot;?
+                        </Text>
+                        <Divider my="sm" />
+                        <Group justify="space-between">
+                            <Button
+                                color="yellow"
+                                variant="subtle"
+                                onClick={() => {
+                                    setTouchstoneToDelete(null)
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button color="red" onClick={confirmDelete}>
+                                Delete
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Modal>
+            ) : null}
         </>
     )
 }
