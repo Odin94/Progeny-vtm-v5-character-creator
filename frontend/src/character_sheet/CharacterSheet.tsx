@@ -97,10 +97,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         },
         [canEdit, setCharacter]
     )
-    // Keep the selected mode while ownership is loading so editable characters do not
-    // briefly render in Play mode before switching to their saved/default mode.
-    // Editing remains disabled through canEdit until ownership has been confirmed.
-    const effectiveMode = canEdit || ownershipLoading ? mode : "play"
+    // Mode is a display concern only: switching it changes which controls are shown,
+    // never whether they can be edited. Editing is independently gated by canEdit (via
+    // editableSetCharacter), so the mode control stays interactive even while ownership
+    // is loading and for shared/unowned characters. This avoids a disabled Mantine
+    // control silently swallowing clicks with no feedback.
     const openDiceModal = useDiceRollModalStore((state) => state.open)
     const diceModalOpened = useDiceRollModalStore((state) => state.opened)
     const { preferences, updatePreferences } = useUserPreferences()
@@ -110,7 +111,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
 
     const sheetOptions: SheetOptions = useMemo(
         () => ({
-            mode: effectiveMode,
+            mode,
             primaryColor,
             character,
             setCharacter: editableSetCharacter,
@@ -120,7 +121,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             onUpdatePreferences: updatePreferences
         }),
         [
-            effectiveMode,
+            mode,
             primaryColor,
             character,
             editableSetCharacter,
@@ -227,52 +228,47 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             >
                                 <IconDice size={24} />
                             </ActionIcon>
-                            <Tooltip label={editDisabledReason} disabled={canEdit} withArrow>
-                                <span>
-                                    <SegmentedControl
-                                        value={effectiveMode}
-                                        onChange={(value) => setMode(value as CharacterSheetMode)}
-                                        data={[
-                                            {
-                                                label: (
-                                                    <Tooltip
-                                                        label="Lock editing, except for hunger, health etc."
-                                                        position="left"
-                                                    >
-                                                        <span>Play</span>
-                                                    </Tooltip>
-                                                ),
-                                                value: "play"
-                                            },
-                                            {
-                                                label: (
-                                                    <Tooltip
-                                                        label="Spend XP to upgrade your character"
-                                                        position="left"
-                                                    >
-                                                        <span>XP</span>
-                                                    </Tooltip>
-                                                ),
-                                                value: "xp"
-                                            },
-                                            {
-                                                label: (
-                                                    <Tooltip
-                                                        label="Free edit, no XP costs"
-                                                        position="left"
-                                                    >
-                                                        <span>Free</span>
-                                                    </Tooltip>
-                                                ),
-                                                value: "free"
-                                            }
-                                        ]}
-                                        color={primaryColor}
-                                        orientation="vertical"
-                                        disabled={!canEdit}
-                                    />
-                                </span>
-                            </Tooltip>
+                            <SegmentedControl
+                                value={mode}
+                                onChange={(value) => setMode(value as CharacterSheetMode)}
+                                data={[
+                                    {
+                                        label: (
+                                            <Tooltip
+                                                label="Lock editing, except for hunger, health etc."
+                                                position="left"
+                                            >
+                                                <span>Play</span>
+                                            </Tooltip>
+                                        ),
+                                        value: "play"
+                                    },
+                                    {
+                                        label: (
+                                            <Tooltip
+                                                label="Spend XP to upgrade your character"
+                                                position="left"
+                                            >
+                                                <span>XP</span>
+                                            </Tooltip>
+                                        ),
+                                        value: "xp"
+                                    },
+                                    {
+                                        label: (
+                                            <Tooltip
+                                                label="Free edit, no XP costs"
+                                                position="left"
+                                            >
+                                                <span>Free</span>
+                                            </Tooltip>
+                                        ),
+                                        value: "free"
+                                    }
+                                ]}
+                                color={primaryColor}
+                                orientation="vertical"
+                            />
                         </Box>
 
                         <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
