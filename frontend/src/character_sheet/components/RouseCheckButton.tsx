@@ -19,6 +19,7 @@ type RouseCheckButtonProps = {
     tooltipZIndex?: number
     onRouseCheck?: (roll: number, success: boolean) => void
     disabledReason?: string
+    showHungerInTooltip?: boolean
 }
 
 const RouseCheckButton = ({
@@ -29,7 +30,8 @@ const RouseCheckButton = ({
     iconSize = 16,
     tooltipZIndex,
     onRouseCheck,
-    disabledReason
+    disabledReason,
+    showHungerInTooltip = false
 }: RouseCheckButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
@@ -100,7 +102,9 @@ const RouseCheckButton = ({
         <Tooltip
             label={
                 disabledReason ??
-                (hunger >= 5 ? "Cannot rouse check at hunger 5" : "Roll rouse check")
+                (hunger >= 5
+                    ? "Cannot rouse check at hunger 5"
+                    : `Roll rouse check${showHungerInTooltip ? ` (${hunger}/5)` : ""}`)
             }
             zIndex={tooltipZIndex}
         >

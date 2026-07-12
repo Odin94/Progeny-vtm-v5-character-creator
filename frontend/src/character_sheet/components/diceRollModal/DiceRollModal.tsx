@@ -856,6 +856,7 @@ const DiceRollModal = ({
                             iconSize={20}
                             tooltipZIndex={3000}
                             disabledReason={editDisabledReason}
+                            showHungerInTooltip
                         />
                     ) : (
                         <div style={{ width: 36 }} />
