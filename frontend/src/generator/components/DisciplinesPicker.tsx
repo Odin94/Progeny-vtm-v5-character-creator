@@ -8,7 +8,8 @@ import {
     List,
     ScrollArea,
     Stack,
-    Text
+    Text,
+    Tooltip
 } from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
@@ -107,9 +108,24 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     }
 
     const allPowersPicked = () => pickedPowers.length >= 3
-    const confirmDisabled = !(allPowersPicked() && pickedPredatorTypePower)
-    const getPickedPowerCountForDiscipline = (disciplineName: string) =>
-        allPickedPowers.filter((power) => power.discipline === disciplineName).length
+    const confirmTooltip = (() => {
+        if (pickedPowers.length < 2) return "Pick two clan disciplines"
+        if (!allPowersPicked()) return "Pick another clan discipline"
+        if (!pickedPredatorTypePower) return "Pick predator type discipline"
+        return undefined
+    })()
+    const confirmDisabled = Boolean(confirmTooltip)
+    const getPickedPowerCountForDiscipline = (
+        disciplineName: string,
+        isPredatorType: boolean
+    ) => {
+        const powersForTab = isPredatorType
+            ? pickedPredatorTypePower
+                ? [pickedPredatorTypePower]
+                : []
+            : pickedPowers
+        return powersForTab.filter((power) => power.discipline === disciplineName).length
+    }
 
     // Check prerequisites using an explicit set of picked powers (not the closure variable)
     const hasMissingPrerequisites = (
@@ -397,7 +413,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         const columnGroups = canReachLvl3 ? [lvl1, lvl2, lvl3] : [lvl1, lvl2]
         const colWidth = phoneScreen ? "100%" : `${Math.floor(100 / columnGroups.length)}%`
-        const pickedPowerCount = getPickedPowerCountForDiscipline(disciplineName)
+        const pickedPowerCount = getPickedPowerCountForDiscipline(
+            disciplineName,
+            isPredatorType
+        )
 
         return (
             <Accordion.Item
@@ -610,42 +629,53 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                         </Accordion>
 
                         <Group justify="center" mt="xl">
-                            <Button
-                                data-testid="disciplines-confirm-button"
-                                disabled={confirmDisabled}
-                                color="grape"
-                                styles={{
-                                    ...generatorConfirmButtonStyles,
-                                    root: {
-                                        ...generatorConfirmButtonStyles.root,
-                                        background: confirmDisabled
-                                            ? "rgba(80, 80, 80, 0.75)"
-                                            : generatorConfirmButtonStyles.root.background,
-                                        boxShadow: confirmDisabled
-                                            ? "none"
-                                            : generatorConfirmButtonStyles.root.boxShadow,
-                                        color: confirmDisabled ? rgba(RAW_GREY, 0.55) : undefined,
-                                        cursor: confirmDisabled ? "not-allowed" : undefined
-                                    }
-                                }}
-                                onClick={() => {
-                                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                                    const updatedCharacter = {
-                                        ...character,
-                                        disciplines: allPickedPowers,
-                                        rituals: containsBloodSorcery(allPickedPowers)
-                                            ? character.rituals
-                                            : [],
-                                        ceremonies: containsOblivion(allPickedPowers)
-                                            ? character.ceremonies
-                                            : []
-                                    }
-                                    setCharacter(updatedCharacter)
-                                    nextStep(updatedCharacter)
-                                }}
+                            <Tooltip
+                                label={confirmTooltip}
+                                disabled={!confirmDisabled}
+                                withArrow
+                                events={globals.tooltipTriggerEvents}
                             >
-                                Confirm
-                            </Button>
+                                <span>
+                                    <Button
+                                        data-testid="disciplines-confirm-button"
+                                        disabled={confirmDisabled}
+                                        color="grape"
+                                        styles={{
+                                            ...generatorConfirmButtonStyles,
+                                            root: {
+                                                ...generatorConfirmButtonStyles.root,
+                                                background: confirmDisabled
+                                                    ? "rgba(80, 80, 80, 0.75)"
+                                                    : generatorConfirmButtonStyles.root.background,
+                                                boxShadow: confirmDisabled
+                                                    ? "none"
+                                                    : generatorConfirmButtonStyles.root.boxShadow,
+                                                color: confirmDisabled
+                                                    ? rgba(RAW_GREY, 0.55)
+                                                    : undefined,
+                                                cursor: confirmDisabled ? "not-allowed" : undefined
+                                            }
+                                        }}
+                                        onClick={() => {
+                                            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+                                            const updatedCharacter = {
+                                                ...character,
+                                                disciplines: allPickedPowers,
+                                                rituals: containsBloodSorcery(allPickedPowers)
+                                                    ? character.rituals
+                                                    : [],
+                                                ceremonies: containsOblivion(allPickedPowers)
+                                                    ? character.ceremonies
+                                                    : []
+                                            }
+                                            setCharacter(updatedCharacter)
+                                            nextStep(updatedCharacter)
+                                        }}
+                                    >
+                                        Confirm
+                                    </Button>
+                                </span>
+                            </Tooltip>
                         </Group>
                     </Box>
                 </div>
