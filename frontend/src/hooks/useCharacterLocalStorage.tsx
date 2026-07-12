@@ -1,5 +1,5 @@
 import { useLocalStorage } from "@mantine/hooks"
-import { useCallback } from "react"
+import { useCallback, useRef } from "react"
 import { z } from "zod"
 import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
 import { applyCharacterCompatibilityPatches } from "~/data/Character"
@@ -51,18 +51,21 @@ export const useCharacterLocalStorage = () => {
             return JSON.stringify(value)
         }
     })
+    const latestCharacterRef = useRef(character)
+    latestCharacterRef.current = character
 
     const setCharacter = useCallback<SetCharacter>(
         (characterOrUpdater) => {
-            if (typeof characterOrUpdater === "function") {
-                setCharacterInternal((currentCharacter) => ({
-                    ...characterOrUpdater(currentCharacter),
-                    version: schemaVersion
-                }))
-                return
-            }
+            const updatedCharacter =
+                typeof characterOrUpdater === "function"
+                    ? characterOrUpdater(latestCharacterRef.current)
+                    : characterOrUpdater
+            const characterWithVersion = { ...updatedCharacter, version: schemaVersion }
 
-            const characterWithVersion = { ...characterOrUpdater, version: schemaVersion }
+            // Calculate updater results outside Mantine's state updater. React can invoke state
+            // updaters more than once in Strict Mode, while Mantine writes storage from inside
+            // that updater, causing duplicate storage events and duplicate sheet commits.
+            latestCharacterRef.current = characterWithVersion
             setCharacterInternal(characterWithVersion)
         },
         [setCharacterInternal]

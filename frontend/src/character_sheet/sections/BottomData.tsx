@@ -1,5 +1,5 @@
 import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import DamagePips from "~/character_sheet/components/DamagePips"
 import HumanityStainsPips from "~/character_sheet/components/HumanityStainsPips"
 import Pips from "~/character_sheet/components/Pips"
@@ -26,6 +26,30 @@ const BottomData = ({ options }: BottomDataProps) => {
     } = character.ephemeral
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const emptyHumanityPips = 10 - character.humanity
+    const updateHealthDamage = useCallback(
+        (newSuperficial: number, newAggravated: number) =>
+            setCharacter((current) => ({
+                ...current,
+                ephemeral: {
+                    ...current.ephemeral,
+                    superficialDamage: newSuperficial,
+                    aggravatedDamage: newAggravated
+                }
+            })),
+        [setCharacter]
+    )
+    const updateWillpowerDamage = useCallback(
+        (newSuperficial: number, newAggravated: number) =>
+            setCharacter((current) => ({
+                ...current,
+                ephemeral: {
+                    ...current.ephemeral,
+                    superficialWillpowerDamage: newSuperficial,
+                    aggravatedWillpowerDamage: newAggravated
+                }
+            })),
+        [setCharacter]
+    )
 
     return (
         <Grid justify="space-between">
@@ -47,16 +71,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                             maxValue={character.maxHealth}
                             superficial={superficialDamage}
                             aggravated={aggravatedDamage}
-                            onChange={(newSuperficial, newAggravated) =>
-                                options.setCharacter((current) => ({
-                                    ...current,
-                                    ephemeral: {
-                                        ...current.ephemeral,
-                                        superficialDamage: newSuperficial,
-                                        aggravatedDamage: newAggravated
-                                    }
-                                }))
-                            }
+                            onChange={updateHealthDamage}
                             color={options.primaryColor}
                             disabledReason={options.editDisabledReason}
                         />
@@ -81,16 +96,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                             maxValue={character.willpower}
                             superficial={superficialWillpowerDamage}
                             aggravated={aggravatedWillpowerDamage}
-                            onChange={(newSuperficial, newAggravated) =>
-                                options.setCharacter((current) => ({
-                                    ...current,
-                                    ephemeral: {
-                                        ...current.ephemeral,
-                                        superficialWillpowerDamage: newSuperficial,
-                                        aggravatedWillpowerDamage: newAggravated
-                                    }
-                                }))
-                            }
+                            onChange={updateWillpowerDamage}
                             color={options.primaryColor}
                             disabledReason={options.editDisabledReason}
                         />

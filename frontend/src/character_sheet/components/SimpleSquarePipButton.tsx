@@ -1,6 +1,5 @@
 import { ActionIcon, Tooltip, useMantineTheme } from "@mantine/core"
-import { useRef, useMemo, useEffect } from "react"
-import { motion } from "framer-motion"
+import { memo, useEffect, useMemo, useRef } from "react"
 import { SheetOptions } from "../CharacterSheet"
 
 type SimpleSquarePipButtonProps = {
@@ -67,35 +66,32 @@ const SimpleSquarePipButton = ({
     }
 
     const actionIcon = (
-        <motion.div
-            whileHover={!isDisabled && onClick ? { scale: 1.15 } : undefined}
-            style={{ display: "inline-block" }}
+        <ActionIcon
+            variant="subtle"
+            color={color}
+            onClick={isDisabled ? undefined : onClick}
+            size="xs"
+            style={buttonStyle}
+            disabled={isDisabled}
+            onMouseEnter={(event) => {
+                if (onClick && !isDisabled) event.currentTarget.style.transform = "scale(1.15)"
+            }}
+            onMouseLeave={(event) => {
+                event.currentTarget.style.transform = "scale(1)"
+            }}
         >
-            <ActionIcon
-                variant="subtle"
-                color={color}
-                onClick={isDisabled ? undefined : onClick}
-                size="xs"
-                style={buttonStyle}
-                disabled={isDisabled}
-            >
-                <motion.div
-                    initial={false}
-                    animate={{ scale: filled ? 1.3 : 0 }}
-                    transition={{
-                        duration: 0.3,
-                        ease: "easeOut",
-                        delay: delay
-                    }}
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        backgroundColor: baseColor,
-                        borderRadius: "4px"
-                    }}
-                />
-            </ActionIcon>
-        </motion.div>
+            <span
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: baseColor,
+                    borderRadius: "4px",
+                    transform: filled ? "scale(1.3)" : "scale(0)",
+                    transition: `transform 0.3s ease-out ${delay}s`,
+                    pointerEvents: "none"
+                }}
+            />
+        </ActionIcon>
     )
 
     const button = actionIcon
@@ -111,4 +107,4 @@ const SimpleSquarePipButton = ({
     return button
 }
 
-export default SimpleSquarePipButton
+export default memo(SimpleSquarePipButton)

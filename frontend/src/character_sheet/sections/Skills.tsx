@@ -1,16 +1,5 @@
-import {
-    Box,
-    Grid,
-    Group,
-    Text,
-    Title,
-    Badge,
-    Stack,
-    TextInput,
-    Tooltip,
-    useMantineTheme
-} from "@mantine/core"
-import { memo, useRef, useEffect, useState } from "react"
+import { Box, Grid, Group, Text, Title, Badge, Stack, TextInput, Tooltip } from "@mantine/core"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
@@ -30,17 +19,18 @@ type SpecialtyEntry = {
     fromPredatorType?: boolean
 }
 
+const noSpecialties: SpecialtyEntry[] = []
+
 type SkillRowProps = {
     skill: SkillsKey
     specialties: SpecialtyEntry[]
     character: SheetOptions["character"]
     options: SheetOptions
     primaryColor: string
-    colorValue: string
     textStyle: React.CSSProperties
     isEditable: boolean
     addSpecialty: (skill: SkillsKey) => void
-    getAddSpecialtyDisabledReason: () => string | undefined
+    addSpecialtyDisabledReason?: string
     updateSpecialty: (skill: SkillsKey, index: number, newName: string) => void
     removeSpecialty: (skill: SkillsKey, index: number) => void
 }
@@ -51,11 +41,10 @@ const SkillRow = ({
     character,
     options,
     primaryColor,
-    colorValue,
     textStyle,
     isEditable,
     addSpecialty,
-    getAddSpecialtyDisabledReason,
+    addSpecialtyDisabledReason,
     updateSpecialty,
     removeSpecialty
 }: SkillRowProps) => {
@@ -125,7 +114,7 @@ const SkillRow = ({
     }, [specialties.length, skill, character.skills[skill]])
 
     const renderAddSpecialtyBadge = () => {
-        const disabledReason = getAddSpecialtyDisabledReason()
+        const disabledReason = addSpecialtyDisabledReason
         const cost = options.mode === "xp" ? getSpecialtyCost() : undefined
         const tooltipLabel = disabledReason || (cost !== undefined ? `${cost} XP` : undefined)
         const badge = (
@@ -364,64 +353,90 @@ const SkillRow = ({
     )
 }
 
+const MemoizedSkillRow = memo(SkillRow, (prev, next) => {
+    const previous = prev.options
+    const following = next.options
+    return (
+        prev.skill === next.skill &&
+        prev.specialties === next.specialties &&
+        prev.primaryColor === next.primaryColor &&
+        prev.isEditable === next.isEditable &&
+        prev.addSpecialtyDisabledReason === next.addSpecialtyDisabledReason &&
+        prev.addSpecialty === next.addSpecialty &&
+        prev.updateSpecialty === next.updateSpecialty &&
+        prev.removeSpecialty === next.removeSpecialty &&
+        previous.mode === following.mode &&
+        previous.canEdit === following.canEdit &&
+        previous.editDisabledReason === following.editDisabledReason &&
+        previous.setCharacter === following.setCharacter &&
+        previous.character.skills[prev.skill] === following.character.skills[next.skill] &&
+        previous.character.generation === following.character.generation &&
+        previous.character.experience === following.character.experience &&
+        previous.character.ephemeral.experienceSpent ===
+            following.character.ephemeral.experienceSpent
+    )
+})
+
+const skillTextStyle: React.CSSProperties = {
+    fontFamily: "Courier New"
+}
+
 // TODOdin: Refund XP when a newly created specialty is removed
 const Skills = ({ options }: SkillsProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const theme = useMantineTheme()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const textStyle = {
-        fontFamily: "Courier New"
-    }
     const isEditable = mode === "xp" || mode === "free"
 
     // Map skill to array of specialty objects (not just names) for editing
-    const specialtiesBySkill = new Map<string, SpecialtyEntry[]>()
-    character.skillSpecialties.forEach((specialty) => {
-        if (!specialtiesBySkill.has(specialty.skill)) {
-            specialtiesBySkill.set(specialty.skill, [])
-        }
-        specialtiesBySkill.get(specialty.skill)!.push(specialty)
-    })
-    // Include predator type specialties as read-only entries
-    character.predatorType.pickedSpecialties.forEach((specialty) => {
-        if (!specialty.name) return
-        if (!specialtiesBySkill.has(specialty.skill)) {
-            specialtiesBySkill.set(specialty.skill, [])
-        }
-        specialtiesBySkill.get(specialty.skill)!.push({ ...specialty, fromPredatorType: true })
-    })
-    const addSpecialty = (skill: SkillsKey) => {
-        if (mode === "xp") {
-            const cost = getSpecialtyCost()
-            const availableXP = getAvailableXP(character)
-            if (!canAffordUpgrade(availableXP, cost)) {
-                return
+    const specialtiesBySkill = useMemo(() => {
+        const groupedSpecialties = new Map<string, SpecialtyEntry[]>()
+        character.skillSpecialties.forEach((specialty) => {
+            if (!groupedSpecialties.has(specialty.skill)) {
+                groupedSpecialties.set(specialty.skill, [])
             }
-            setCharacter((currentCharacter) => {
-                const currentAvailableXP = getAvailableXP(currentCharacter)
-                if (!canAffordUpgrade(currentAvailableXP, cost)) {
-                    return currentCharacter
-                }
-                return {
-                    ...currentCharacter,
-                    skillSpecialties: [...currentCharacter.skillSpecialties, { skill, name: "" }],
-                    ephemeral: {
-                        ...currentCharacter.ephemeral,
-                        experienceSpent: currentCharacter.ephemeral.experienceSpent + cost
+            groupedSpecialties.get(specialty.skill)!.push(specialty)
+        })
+        // Include predator type specialties as read-only entries
+        character.predatorType.pickedSpecialties.forEach((specialty) => {
+            if (!specialty.name) return
+            if (!groupedSpecialties.has(specialty.skill)) {
+                groupedSpecialties.set(specialty.skill, [])
+            }
+            groupedSpecialties.get(specialty.skill)!.push({ ...specialty, fromPredatorType: true })
+        })
+        return groupedSpecialties
+    }, [character.predatorType.pickedSpecialties, character.skillSpecialties])
+    const addSpecialty = useCallback(
+        (skill: SkillsKey) => {
+            if (mode === "xp") {
+                const cost = getSpecialtyCost()
+                setCharacter((currentCharacter) => {
+                    const currentAvailableXP = getAvailableXP(currentCharacter)
+                    if (!canAffordUpgrade(currentAvailableXP, cost)) {
+                        return currentCharacter
                     }
-                }
-            })
-        } else {
-            setCharacter((currentCharacter) => {
-                return {
+                    return {
+                        ...currentCharacter,
+                        skillSpecialties: [
+                            ...currentCharacter.skillSpecialties,
+                            { skill, name: "" }
+                        ],
+                        ephemeral: {
+                            ...currentCharacter.ephemeral,
+                            experienceSpent: currentCharacter.ephemeral.experienceSpent + cost
+                        }
+                    }
+                })
+            } else {
+                setCharacter((currentCharacter) => ({
                     ...currentCharacter,
                     skillSpecialties: [...currentCharacter.skillSpecialties, { skill, name: "" }]
-                }
-            })
-        }
-    }
+                }))
+            }
+        },
+        [mode, setCharacter]
+    )
 
-    const getAddSpecialtyDisabledReason = (): string | undefined => {
+    const addSpecialtyDisabledReason = useMemo((): string | undefined => {
         if (mode !== "xp") return undefined
         const cost = getSpecialtyCost()
         const availableXP = getAvailableXP(character)
@@ -429,61 +444,66 @@ const Skills = ({ options }: SkillsProps) => {
             return `Insufficient XP. Need ${cost}, have ${availableXP}`
         }
         return undefined
-    }
+    }, [character, mode])
 
-    const updateSpecialty = (skill: SkillsKey, index: number, newName: string) => {
-        setCharacter((currentCharacter) => {
-            const skillSpecialties = [...currentCharacter.skillSpecialties]
-            const skillSpecialtiesForThisSkill = skillSpecialties.filter((s) => s.skill === skill)
-            const specialtyToUpdate = skillSpecialtiesForThisSkill[index]
-            if (specialtyToUpdate) {
-                const globalIndex = skillSpecialties.indexOf(specialtyToUpdate)
-                if (globalIndex !== -1) {
-                    skillSpecialties[globalIndex] = { skill, name: newName }
-                    return {
-                        ...currentCharacter,
-                        skillSpecialties
+    const updateSpecialty = useCallback(
+        (skill: SkillsKey, index: number, newName: string) => {
+            setCharacter((currentCharacter) => {
+                const skillSpecialties = [...currentCharacter.skillSpecialties]
+                const skillSpecialtiesForThisSkill = skillSpecialties.filter(
+                    (specialty) => specialty.skill === skill
+                )
+                const specialtyToUpdate = skillSpecialtiesForThisSkill[index]
+                if (specialtyToUpdate) {
+                    const globalIndex = skillSpecialties.indexOf(specialtyToUpdate)
+                    if (globalIndex !== -1) {
+                        skillSpecialties[globalIndex] = { skill, name: newName }
+                        return { ...currentCharacter, skillSpecialties }
                     }
                 }
-            }
-            return currentCharacter
-        })
-    }
+                return currentCharacter
+            })
+        },
+        [setCharacter]
+    )
 
-    const removeSpecialty = (skill: SkillsKey, index: number) => {
-        setCharacter((currentCharacter) => {
-            const skillSpecialtiesForThisSkill = currentCharacter.skillSpecialties.filter(
-                (s) => s.skill === skill
-            )
-            const specialtyToRemove = skillSpecialtiesForThisSkill[index]
-            if (specialtyToRemove) {
-                const skillSpecialties = currentCharacter.skillSpecialties.filter(
-                    (s) => s !== specialtyToRemove
+    const removeSpecialty = useCallback(
+        (skill: SkillsKey, index: number) => {
+            setCharacter((currentCharacter) => {
+                const skillSpecialtiesForThisSkill = currentCharacter.skillSpecialties.filter(
+                    (specialty) => specialty.skill === skill
                 )
+                const specialtyToRemove = skillSpecialtiesForThisSkill[index]
+                if (!specialtyToRemove) return currentCharacter
                 return {
                     ...currentCharacter,
-                    skillSpecialties
+                    skillSpecialties: currentCharacter.skillSpecialties.filter(
+                        (specialty) => specialty !== specialtyToRemove
+                    )
                 }
-            }
-            return currentCharacter
-        })
-    }
+            })
+        },
+        [setCharacter]
+    )
 
+    /*
+     * Keep row callbacks stable so changing one skill does not invalidate every skill row.
+     * XP affordability is passed as a primitive because it legitimately affects all rows.
+     */
     const renderSkillRow = (skill: SkillsKey) => {
-        const specialties = specialtiesBySkill.get(skill) || []
+        const specialties = specialtiesBySkill.get(skill) || noSpecialties
         return (
-            <SkillRow
+            <MemoizedSkillRow
                 key={skill}
                 skill={skill}
                 specialties={specialties}
                 character={character}
                 options={options}
                 primaryColor={primaryColor}
-                colorValue={colorValue}
-                textStyle={textStyle}
+                textStyle={skillTextStyle}
                 isEditable={isEditable}
                 addSpecialty={addSpecialty}
-                getAddSpecialtyDisabledReason={getAddSpecialtyDisabledReason}
+                addSpecialtyDisabledReason={addSpecialtyDisabledReason}
                 updateSpecialty={updateSpecialty}
                 removeSpecialty={removeSpecialty}
             />

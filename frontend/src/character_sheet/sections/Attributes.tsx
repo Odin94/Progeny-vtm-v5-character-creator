@@ -18,6 +18,10 @@ type AttributeRowProps = {
     textStyle: React.CSSProperties
 }
 
+const attributeTextStyle: React.CSSProperties = {
+    fontFamily: "Courier New"
+}
+
 const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
     const { character } = options
     const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
@@ -74,18 +78,33 @@ const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
     )
 }
 
-const Attributes = ({ options }: AttributesProps) => {
-    const textStyle = {
-        fontFamily: "Courier New"
-    }
+const MemoizedAttributeRow = memo(AttributeRow, (prev, next) => {
+    const previous = prev.options
+    const following = next.options
+    return (
+        prev.attribute === next.attribute &&
+        previous.mode === following.mode &&
+        previous.primaryColor === following.primaryColor &&
+        previous.canEdit === following.canEdit &&
+        previous.editDisabledReason === following.editDisabledReason &&
+        previous.setCharacter === following.setCharacter &&
+        previous.character.attributes[prev.attribute] ===
+            following.character.attributes[next.attribute] &&
+        previous.character.generation === following.character.generation &&
+        previous.character.experience === following.character.experience &&
+        previous.character.ephemeral.experienceSpent ===
+            following.character.ephemeral.experienceSpent
+    )
+})
 
+const Attributes = ({ options }: AttributesProps) => {
     const renderAttributeRow = (attribute: AttributesKey) => {
         return (
-            <AttributeRow
+            <MemoizedAttributeRow
                 key={attribute}
                 attribute={attribute}
                 options={options}
-                textStyle={textStyle}
+                textStyle={attributeTextStyle}
             />
         )
     }

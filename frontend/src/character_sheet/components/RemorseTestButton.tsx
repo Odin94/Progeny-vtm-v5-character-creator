@@ -2,7 +2,7 @@ import { ActionIcon, Tooltip } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { IconHeartHandshake } from "@tabler/icons-react"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { memo, useState } from "react"
 import posthog from "posthog-js"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
@@ -164,4 +164,17 @@ const RemorseTestButton = ({
     )
 }
 
-export default RemorseTestButton
+export default memo(RemorseTestButton, (previous, next) => {
+    return (
+        previous.character?.name === next.character?.name &&
+        previous.character?.humanity === next.character?.humanity &&
+        previous.character?.ephemeral.humanityStains === next.character?.ephemeral.humanityStains &&
+        previous.setCharacter === next.setCharacter &&
+        previous.primaryColor === next.primaryColor &&
+        previous.size === next.size &&
+        previous.iconSize === next.iconSize &&
+        previous.tooltipZIndex === next.tooltipZIndex &&
+        previous.onRemorseTest === next.onRemorseTest &&
+        previous.disabledReason === next.disabledReason
+    )
+})

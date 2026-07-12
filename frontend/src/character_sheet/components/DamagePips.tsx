@@ -1,4 +1,5 @@
 import { Group } from "@mantine/core"
+import { memo } from "react"
 import SquarePipButton from "~/character_sheet/components/SquarePipButton"
 
 type DamagePipsProps = {
@@ -77,4 +78,13 @@ const DamagePips = ({
     )
 }
 
-export default DamagePips
+export default memo(DamagePips, (previous, next) => {
+    return (
+        previous.maxValue === next.maxValue &&
+        previous.superficial === next.superficial &&
+        previous.aggravated === next.aggravated &&
+        previous.onChange === next.onChange &&
+        previous.color === next.color &&
+        previous.disabledReason === next.disabledReason
+    )
+})

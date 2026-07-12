@@ -1,6 +1,6 @@
 import { AppShell } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { RAW_GOLD, rgba } from "~/theme/colors"
 import CharacterSheet from "~/character_sheet/CharacterSheet"
 import RenderProfiler from "~/components/RenderProfiler"
@@ -15,19 +15,23 @@ export const Route = createFileRoute("/sheet")({
 
 function Sheet() {
     const [character, setCharacter] = useCharacterLocalStorage()
-
-    useEffect(() => {
-        try {
+    const initialCharacterWasEmpty = useRef(
+        (() => {
             const emptyChar = getEmptyCharacter()
-            const isEmpty =
+            return (
                 character.name === emptyChar.name &&
                 character.clan === emptyChar.clan &&
                 character.sire === emptyChar.sire &&
                 character.disciplines.length === 0 &&
                 character.merits.length === 0 &&
                 character.flaws.length === 0
+            )
+        })()
+    ).current
 
-            if (isEmpty) {
+    useEffect(() => {
+        try {
+            if (initialCharacterWasEmpty) {
                 posthog.capture("sheet-page-visit-empty", {
                     page: "/sheet"
                 })
@@ -39,7 +43,7 @@ function Sheet() {
         } catch (error) {
             console.warn("PostHog sheet page visit tracking failed:", error)
         }
-    }, [character])
+    }, [initialCharacterWasEmpty])
 
     return (
         <AppShell

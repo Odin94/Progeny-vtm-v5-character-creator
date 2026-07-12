@@ -418,8 +418,8 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                             textShadow: `0 0 18px ${rgba(RAW_RED, 0.14)}`
                         }}
                     >
-                        Character creation complete. Save your work, export for your favourite
-                        tools, or jump straight into play.
+                        Character creation complete. Your character is saved in the browser. Export
+                        for your favourite tools, or jump straight into play.
                     </p>
                 </div>
 

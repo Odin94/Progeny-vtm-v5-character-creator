@@ -2,7 +2,7 @@ import { ActionIcon, Tooltip } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { IconDroplet } from "@tabler/icons-react"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { memo, useState } from "react"
 import posthog from "posthog-js"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
@@ -141,4 +141,17 @@ const RouseCheckButton = ({
     )
 }
 
-export default RouseCheckButton
+export default memo(RouseCheckButton, (previous, next) => {
+    return (
+        previous.character?.name === next.character?.name &&
+        previous.character?.ephemeral.hunger === next.character?.ephemeral.hunger &&
+        previous.setCharacter === next.setCharacter &&
+        previous.primaryColor === next.primaryColor &&
+        previous.size === next.size &&
+        previous.iconSize === next.iconSize &&
+        previous.tooltipZIndex === next.tooltipZIndex &&
+        previous.onRouseCheck === next.onRouseCheck &&
+        previous.disabledReason === next.disabledReason &&
+        previous.showHungerInTooltip === next.showHungerInTooltip
+    )
+})

@@ -3,8 +3,10 @@ import {
     Box,
     Button,
     Card,
+    Center,
     Grid,
     Group,
+    Loader,
     Modal,
     ScrollArea,
     Stack,
@@ -49,7 +51,18 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const [customName, setCustomName] = useState("")
     const [customLevel, setCustomLevel] = useState<number>(1)
     const [customDescription, setCustomDescription] = useState("")
+    const [contentReady, setContentReady] = useState(false)
     const isEditable = mode === "xp" || mode === "free"
+
+    useEffect(() => {
+        if (!opened) {
+            setContentReady(false)
+            return
+        }
+
+        const frame = window.requestAnimationFrame(() => setContentReady(true))
+        return () => window.cancelAnimationFrame(frame)
+    }, [opened])
 
     useEffect(() => {
         if (!opened) {
@@ -590,319 +603,335 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             title={`Select a ${type === "merit" ? "Merit" : "Flaw"}`}
             size="lg"
         >
-            <Stack gap="md">
-                {selectedMeritFlaw ? (
-                    <>
-                        <Box>
-                            <Title order={4} mb="sm" c={primaryColor}>
-                                {selectedMeritFlaw.name}
-                            </Title>
-                            <Text size="sm" c="dimmed" mb="md">
-                                {selectedMeritFlaw.summary}
-                            </Text>
-                            <Text size="sm" fw={600} mb="xs">
-                                Select Level:
-                            </Text>
-                            <Group gap="xs">
-                                {selectedMeritFlaw.cost.map((_, index) => {
-                                    const level = index + 1
-                                    const cost = getCostForLevel(level)
-                                    const availableXP = getAvailableXP(character)
-                                    const canAfford =
-                                        type === "flaw" ||
-                                        mode !== "xp" ||
-                                        canAffordUpgrade(availableXP, cost)
-                                    const disabledReason =
-                                        type === "flaw" || mode !== "xp"
-                                            ? undefined
-                                            : canAfford
-                                              ? undefined
-                                              : `Insufficient XP. Need ${cost}, have ${availableXP}`
-
-                                    return (
-                                        <PipButton
-                                            key={level}
-                                            filled={selectedLevel >= level}
-                                            onClick={() => setSelectedLevel(level)}
-                                            options={options}
-                                            disabledReason={disabledReason}
-                                            xpCost={
-                                                type === "flaw" || mode !== "xp" ? undefined : cost
-                                            }
-                                        />
-                                    )
-                                })}
-                            </Group>
-                        </Box>
-                        <Group justify="flex-end" mt="md">
-                            <Button
-                                variant="subtle"
-                                onClick={() => setSelectedMeritFlaw(null)}
-                                color={primaryColor}
-                            >
-                                Back
-                            </Button>
-                            <Button
-                                onClick={handleSelect}
-                                color={primaryColor}
-                                disabled={
-                                    mode === "xp" &&
-                                    type === "merit" &&
-                                    !canAffordUpgrade(
-                                        getAvailableXP(character),
-                                        getCostForLevel(selectedLevel)
-                                    )
-                                }
-                            >
-                                Add
-                            </Button>
-                        </Group>
-                    </>
-                ) : (
-                    <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
-                        <Tabs.List>
-                            <Tabs.Tab value="regular">
-                                {type === "merit" ? "Merits" : "Flaws"}
-                            </Tabs.Tab>
-                            {type === "merit" ? (
-                                <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
-                            ) : null}
-                            {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
-                        </Tabs.List>
-
-                        <Tabs.Panel value="regular" pt="md">
-                            {availableItems.length === 0 ? (
-                                <Text c="dimmed" ta="center" py="xl">
-                                    No available {type === "merit" ? "merits" : "flaws"} to add.
+            {contentReady ? (
+                <Stack gap="md">
+                    {selectedMeritFlaw ? (
+                        <>
+                            <Box>
+                                <Title order={4} mb="sm" c={primaryColor}>
+                                    {selectedMeritFlaw.name}
+                                </Title>
+                                <Text size="sm" c="dimmed" mb="md">
+                                    {selectedMeritFlaw.summary}
                                 </Text>
-                            ) : (
-                                <Stack gap="lg">
-                                    {allMeritsAndFlaws.map((category) => {
-                                        const items =
-                                            type === "merit" ? category.merits : category.flaws
-                                        const availableCategoryItems = items.filter(
-                                            (item) => !characterMeritFlawNames.has(item.name)
-                                        )
-
-                                        if (availableCategoryItems.length === 0) return null
+                                <Text size="sm" fw={600} mb="xs">
+                                    Select Level:
+                                </Text>
+                                <Group gap="xs">
+                                    {selectedMeritFlaw.cost.map((_, index) => {
+                                        const level = index + 1
+                                        const cost = getCostForLevel(level)
+                                        const availableXP = getAvailableXP(character)
+                                        const canAfford =
+                                            type === "flaw" ||
+                                            mode !== "xp" ||
+                                            canAffordUpgrade(availableXP, cost)
+                                        const disabledReason =
+                                            type === "flaw" || mode !== "xp"
+                                                ? undefined
+                                                : canAfford
+                                                  ? undefined
+                                                  : `Insufficient XP. Need ${cost}, have ${availableXP}`
 
                                         return (
-                                            <Stack key={category.title} gap="md">
-                                                <Title order={4} c={primaryColor}>
-                                                    {category.title}
-                                                </Title>
-                                                <Grid gutter="md">
-                                                    {availableCategoryItems.map((item) => {
-                                                        const excludingItems =
-                                                            exclusionMap.get(item.name) ?? []
-                                                        const isExcluded = excludingItems.length > 0
-                                                        const lowestLevel = item.cost[0]
-                                                        const lowestCost =
-                                                            mode === "xp" && type === "merit"
-                                                                ? getCostForItem(item, lowestLevel)
-                                                                : 0
-                                                        const availableXP =
-                                                            getAvailableXP(character)
-                                                        const canAffordLowest =
-                                                            type === "flaw" ||
-                                                            mode !== "xp" ||
-                                                            canAffordUpgrade(
-                                                                availableXP,
-                                                                lowestCost
-                                                            )
-                                                        const canClick =
-                                                            !isExcluded && canAffordLowest
-                                                        const tooltipLabel = isExcluded
-                                                            ? `Excluded by: ${excludingItems.join(", ")}`
-                                                            : mode === "xp" &&
-                                                                type === "merit" &&
-                                                                !canAffordLowest
-                                                              ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                                              : undefined
+                                            <PipButton
+                                                key={level}
+                                                filled={selectedLevel >= level}
+                                                onClick={() => setSelectedLevel(level)}
+                                                options={options}
+                                                disabledReason={disabledReason}
+                                                xpCost={
+                                                    type === "flaw" || mode !== "xp"
+                                                        ? undefined
+                                                        : cost
+                                                }
+                                            />
+                                        )
+                                    })}
+                                </Group>
+                            </Box>
+                            <Group justify="flex-end" mt="md">
+                                <Button
+                                    variant="subtle"
+                                    onClick={() => setSelectedMeritFlaw(null)}
+                                    color={primaryColor}
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    onClick={handleSelect}
+                                    color={primaryColor}
+                                    disabled={
+                                        mode === "xp" &&
+                                        type === "merit" &&
+                                        !canAffordUpgrade(
+                                            getAvailableXP(character),
+                                            getCostForLevel(selectedLevel)
+                                        )
+                                    }
+                                >
+                                    Add
+                                </Button>
+                            </Group>
+                        </>
+                    ) : (
+                        <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
+                            <Tabs.List>
+                                <Tabs.Tab value="regular">
+                                    {type === "merit" ? "Merits" : "Flaws"}
+                                </Tabs.Tab>
+                                {type === "merit" ? (
+                                    <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
+                                ) : null}
+                                {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
+                            </Tabs.List>
 
-                                                        const boxContent = (
-                                                            <Box
-                                                                p="xs"
-                                                                onClick={() =>
-                                                                    handleItemClick(item)
-                                                                }
-                                                                style={{
-                                                                    border: "1px solid var(--mantine-color-gray-8)",
-                                                                    borderRadius:
-                                                                        "var(--mantine-radius-sm)",
-                                                                    cursor: canClick
-                                                                        ? "pointer"
-                                                                        : "default",
-                                                                    transition:
-                                                                        "background-color 0.2s",
-                                                                    opacity: isExcluded ? 0.5 : 1
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    if (canClick) {
-                                                                        e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                            <Tabs.Panel value="regular" pt="md">
+                                {availableItems.length === 0 ? (
+                                    <Text c="dimmed" ta="center" py="xl">
+                                        No available {type === "merit" ? "merits" : "flaws"} to add.
+                                    </Text>
+                                ) : (
+                                    <Stack gap="lg">
+                                        {allMeritsAndFlaws.map((category) => {
+                                            const items =
+                                                type === "merit" ? category.merits : category.flaws
+                                            const availableCategoryItems = items.filter(
+                                                (item) => !characterMeritFlawNames.has(item.name)
+                                            )
+
+                                            if (availableCategoryItems.length === 0) return null
+
+                                            return (
+                                                <Stack key={category.title} gap="md">
+                                                    <Title order={4} c={primaryColor}>
+                                                        {category.title}
+                                                    </Title>
+                                                    <Grid gutter="md">
+                                                        {availableCategoryItems.map((item) => {
+                                                            const excludingItems =
+                                                                exclusionMap.get(item.name) ?? []
+                                                            const isExcluded =
+                                                                excludingItems.length > 0
+                                                            const lowestLevel = item.cost[0]
+                                                            const lowestCost =
+                                                                mode === "xp" && type === "merit"
+                                                                    ? getCostForItem(
+                                                                          item,
+                                                                          lowestLevel
+                                                                      )
+                                                                    : 0
+                                                            const availableXP =
+                                                                getAvailableXP(character)
+                                                            const canAffordLowest =
+                                                                type === "flaw" ||
+                                                                mode !== "xp" ||
+                                                                canAffordUpgrade(
+                                                                    availableXP,
+                                                                    lowestCost
+                                                                )
+                                                            const canClick =
+                                                                !isExcluded && canAffordLowest
+                                                            const tooltipLabel = isExcluded
+                                                                ? `Excluded by: ${excludingItems.join(", ")}`
+                                                                : mode === "xp" &&
+                                                                    type === "merit" &&
+                                                                    !canAffordLowest
+                                                                  ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+                                                                  : undefined
+
+                                                            const boxContent = (
+                                                                <Box
+                                                                    p="xs"
+                                                                    onClick={() =>
+                                                                        handleItemClick(item)
                                                                     }
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    e.currentTarget.style.backgroundColor =
-                                                                        "transparent"
-                                                                }}
-                                                            >
-                                                                <Stack gap="xs">
-                                                                    <Group
-                                                                        justify="space-between"
-                                                                        align="flex-start"
-                                                                    >
-                                                                        <Text
-                                                                            fw={600}
-                                                                            size="sm"
-                                                                            style={{ flex: 1 }}
-                                                                            c={
-                                                                                isExcluded
-                                                                                    ? "dimmed"
-                                                                                    : undefined
-                                                                            }
+                                                                    style={{
+                                                                        border: "1px solid var(--mantine-color-gray-8)",
+                                                                        borderRadius:
+                                                                            "var(--mantine-radius-sm)",
+                                                                        cursor: canClick
+                                                                            ? "pointer"
+                                                                            : "default",
+                                                                        transition:
+                                                                            "background-color 0.2s",
+                                                                        opacity: isExcluded
+                                                                            ? 0.5
+                                                                            : 1
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        if (canClick) {
+                                                                            e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                                                                        }
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundColor =
+                                                                            "transparent"
+                                                                    }}
+                                                                >
+                                                                    <Stack gap="xs">
+                                                                        <Group
+                                                                            justify="space-between"
+                                                                            align="flex-start"
                                                                         >
-                                                                            {item.name}
-                                                                        </Text>
-                                                                        <Badge
-                                                                            size="sm"
-                                                                            variant="dot"
-                                                                            color={
-                                                                                type === "flaw"
-                                                                                    ? "red"
-                                                                                    : primaryColor
-                                                                            }
-                                                                        >
-                                                                            {item.cost.join("/")}
-                                                                        </Badge>
-                                                                    </Group>
-                                                                    {item.summary ? (
-                                                                        <Text
-                                                                            size="xs"
-                                                                            c="dimmed"
-                                                                            lineClamp={3}
-                                                                        >
-                                                                            {item.summary}
-                                                                        </Text>
-                                                                    ) : null}
-                                                                </Stack>
-                                                            </Box>
-                                                        )
+                                                                            <Text
+                                                                                fw={600}
+                                                                                size="sm"
+                                                                                style={{ flex: 1 }}
+                                                                                c={
+                                                                                    isExcluded
+                                                                                        ? "dimmed"
+                                                                                        : undefined
+                                                                                }
+                                                                            >
+                                                                                {item.name}
+                                                                            </Text>
+                                                                            <Badge
+                                                                                size="sm"
+                                                                                variant="dot"
+                                                                                color={
+                                                                                    type === "flaw"
+                                                                                        ? "red"
+                                                                                        : primaryColor
+                                                                                }
+                                                                            >
+                                                                                {item.cost.join(
+                                                                                    "/"
+                                                                                )}
+                                                                            </Badge>
+                                                                        </Group>
+                                                                        {item.summary ? (
+                                                                            <Text
+                                                                                size="xs"
+                                                                                c="dimmed"
+                                                                                lineClamp={3}
+                                                                            >
+                                                                                {item.summary}
+                                                                            </Text>
+                                                                        ) : null}
+                                                                    </Stack>
+                                                                </Box>
+                                                            )
 
-                                                        if (tooltipLabel) {
+                                                            if (tooltipLabel) {
+                                                                return (
+                                                                    <Grid.Col
+                                                                        key={item.name}
+                                                                        span={{ base: 12, sm: 6 }}
+                                                                    >
+                                                                        <Tooltip
+                                                                            label={tooltipLabel}
+                                                                            withArrow
+                                                                        >
+                                                                            {boxContent}
+                                                                        </Tooltip>
+                                                                    </Grid.Col>
+                                                                )
+                                                            }
+
                                                             return (
                                                                 <Grid.Col
                                                                     key={item.name}
                                                                     span={{ base: 12, sm: 6 }}
                                                                 >
-                                                                    <Tooltip
-                                                                        label={tooltipLabel}
-                                                                        withArrow
-                                                                    >
-                                                                        {boxContent}
-                                                                    </Tooltip>
+                                                                    {boxContent}
                                                                 </Grid.Col>
                                                             )
-                                                        }
-
-                                                        return (
-                                                            <Grid.Col
-                                                                key={item.name}
-                                                                span={{ base: 12, sm: 6 }}
-                                                            >
-                                                                {boxContent}
-                                                            </Grid.Col>
-                                                        )
-                                                    })}
-                                                </Grid>
-                                            </Stack>
-                                        )
-                                    })}
-                                </Stack>
-                            )}
-                        </Tabs.Panel>
-
-                        {type === "merit" ? (
-                            <Tabs.Panel value="loresheets" pt="md">
-                                {renderLoresheetsContent()}
+                                                        })}
+                                                    </Grid>
+                                                </Stack>
+                                            )
+                                        })}
+                                    </Stack>
+                                )}
                             </Tabs.Panel>
-                        ) : null}
-                        {isEditable ? (
-                            <Tabs.Panel value="custom" pt="md">
-                                <Stack gap="md">
-                                    <TextInput
-                                        label="Name"
-                                        placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} name`}
-                                        value={customName}
-                                        onChange={(e) => setCustomName(e.target.value)}
-                                        required
-                                    />
-                                    <Textarea
-                                        label="Description"
-                                        placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} description (optional)`}
-                                        value={customDescription}
-                                        onChange={(e) => setCustomDescription(e.target.value)}
-                                        minRows={3}
-                                    />
-                                    <Box>
-                                        <Text size="sm" fw={600} mb="xs">
-                                            Select Level:
-                                        </Text>
-                                        <Group gap="xs">
-                                            {[1, 2, 3, 4, 5].map((level) => {
-                                                const cost = getCustomMeritCost(level)
-                                                const availableXP = getAvailableXP(character)
-                                                const canAfford =
-                                                    type === "flaw" ||
-                                                    mode !== "xp" ||
-                                                    canAffordUpgrade(availableXP, cost)
-                                                const disabledReason =
-                                                    type === "flaw" || mode !== "xp"
-                                                        ? undefined
-                                                        : canAfford
-                                                          ? undefined
-                                                          : `Insufficient XP. Need ${cost}, have ${availableXP}`
 
-                                                return (
-                                                    <PipButton
-                                                        key={level}
-                                                        filled={customLevel >= level}
-                                                        onClick={() => setCustomLevel(level)}
-                                                        options={options}
-                                                        disabledReason={disabledReason}
-                                                        xpCost={
-                                                            type === "flaw" || mode !== "xp"
-                                                                ? undefined
-                                                                : cost
-                                                        }
-                                                    />
-                                                )
-                                            })}
+                            {type === "merit" ? (
+                                <Tabs.Panel value="loresheets" pt="md">
+                                    {renderLoresheetsContent()}
+                                </Tabs.Panel>
+                            ) : null}
+                            {isEditable ? (
+                                <Tabs.Panel value="custom" pt="md">
+                                    <Stack gap="md">
+                                        <TextInput
+                                            label="Name"
+                                            placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} name`}
+                                            value={customName}
+                                            onChange={(e) => setCustomName(e.target.value)}
+                                            required
+                                        />
+                                        <Textarea
+                                            label="Description"
+                                            placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} description (optional)`}
+                                            value={customDescription}
+                                            onChange={(e) => setCustomDescription(e.target.value)}
+                                            minRows={3}
+                                        />
+                                        <Box>
+                                            <Text size="sm" fw={600} mb="xs">
+                                                Select Level:
+                                            </Text>
+                                            <Group gap="xs">
+                                                {[1, 2, 3, 4, 5].map((level) => {
+                                                    const cost = getCustomMeritCost(level)
+                                                    const availableXP = getAvailableXP(character)
+                                                    const canAfford =
+                                                        type === "flaw" ||
+                                                        mode !== "xp" ||
+                                                        canAffordUpgrade(availableXP, cost)
+                                                    const disabledReason =
+                                                        type === "flaw" || mode !== "xp"
+                                                            ? undefined
+                                                            : canAfford
+                                                              ? undefined
+                                                              : `Insufficient XP. Need ${cost}, have ${availableXP}`
+
+                                                    return (
+                                                        <PipButton
+                                                            key={level}
+                                                            filled={customLevel >= level}
+                                                            onClick={() => setCustomLevel(level)}
+                                                            options={options}
+                                                            disabledReason={disabledReason}
+                                                            xpCost={
+                                                                type === "flaw" || mode !== "xp"
+                                                                    ? undefined
+                                                                    : cost
+                                                            }
+                                                        />
+                                                    )
+                                                })}
+                                            </Group>
+                                        </Box>
+                                        <Group justify="flex-end" mt="md">
+                                            <Button
+                                                onClick={handleAddCustom}
+                                                color={primaryColor}
+                                                disabled={
+                                                    !customName.trim() ||
+                                                    (mode === "xp" &&
+                                                        type === "merit" &&
+                                                        !canAffordUpgrade(
+                                                            getAvailableXP(character),
+                                                            getCustomMeritCost(customLevel)
+                                                        ))
+                                                }
+                                            >
+                                                Add
+                                            </Button>
                                         </Group>
-                                    </Box>
-                                    <Group justify="flex-end" mt="md">
-                                        <Button
-                                            onClick={handleAddCustom}
-                                            color={primaryColor}
-                                            disabled={
-                                                !customName.trim() ||
-                                                (mode === "xp" &&
-                                                    type === "merit" &&
-                                                    !canAffordUpgrade(
-                                                        getAvailableXP(character),
-                                                        getCustomMeritCost(customLevel)
-                                                    ))
-                                            }
-                                        >
-                                            Add
-                                        </Button>
-                                    </Group>
-                                </Stack>
-                            </Tabs.Panel>
-                        ) : null}
-                    </Tabs>
-                )}
-            </Stack>
+                                    </Stack>
+                                </Tabs.Panel>
+                            ) : null}
+                        </Tabs>
+                    )}
+                </Stack>
+            ) : (
+                <Center mih={320}>
+                    <Loader color={primaryColor} />
+                </Center>
+            )}
         </Modal>
     )
 }

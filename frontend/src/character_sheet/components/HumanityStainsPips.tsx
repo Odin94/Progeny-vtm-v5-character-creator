@@ -1,4 +1,5 @@
 import { Group } from "@mantine/core"
+import { memo } from "react"
 import { SheetOptions } from "../CharacterSheet"
 import SquarePipButton from "./SquarePipButton"
 
@@ -70,4 +71,15 @@ const HumanityStainsPips = ({
     )
 }
 
-export default HumanityStainsPips
+export default memo(HumanityStainsPips, (previous, next) => {
+    return (
+        previous.value === next.value &&
+        previous.maxLevel === next.maxLevel &&
+        previous.filledHumanity === next.filledHumanity &&
+        previous.humanityPipsRef === next.humanityPipsRef &&
+        previous.options?.primaryColor === next.options?.primaryColor &&
+        previous.options?.canEdit === next.options?.canEdit &&
+        previous.options?.editDisabledReason === next.options?.editDisabledReason &&
+        previous.options?.setCharacter === next.options?.setCharacter
+    )
+})

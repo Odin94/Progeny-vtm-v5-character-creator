@@ -1,4 +1,17 @@
-import { Button, Badge, Box, Divider, Grid, Group, Modal, Stack, Text, Title } from "@mantine/core"
+import {
+    Badge,
+    Box,
+    Button,
+    Center,
+    Divider,
+    Grid,
+    Group,
+    Loader,
+    Modal,
+    Stack,
+    Text,
+    Title
+} from "@mantine/core"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
@@ -35,6 +48,17 @@ const DisciplineSelectModal = ({
     )
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
     const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
+    const [contentReady, setContentReady] = useState(false)
+
+    useEffect(() => {
+        if (!opened) {
+            setContentReady(false)
+            return
+        }
+
+        const frame = window.requestAnimationFrame(() => setContentReady(true))
+        return () => window.cancelAnimationFrame(frame)
+    }, [opened])
 
     useEffect(() => {
         if (opened && initialDiscipline) {
@@ -181,130 +205,145 @@ const DisciplineSelectModal = ({
             }
             size="lg"
         >
-            <Stack gap="md">
-                {opened && selectedDiscipline ? (
-                    <PowerPicker
-                        availablePowers={availablePowers}
-                        primaryColor={primaryColor}
-                        onSelectPower={handleSelectPower}
-                        onBack={handleBack}
-                        onCreateCustomPower={() => setCustomPowerModalOpened(true)}
-                        hideBackButton={hideBackButton}
-                        character={character}
-                        hasAmalgamPrerequisites={hasAmalgamPrerequisites}
-                        getAmalgamTooltip={getAmalgamTooltip}
-                    />
-                ) : opened ? (
-                    <>
-                        {availableDisciplines.length === 0 ? (
-                            <Text c="dimmed" ta="center" py="xl">
-                                No available disciplines to add.
-                            </Text>
-                        ) : (
-                            <Grid gutter="md">
-                                {availableDisciplines.map((disciplineName) => {
-                                    const discipline = disciplines[disciplineName]
-                                    if (!discipline) return null
+            {contentReady ? (
+                <Stack gap="md">
+                    {opened && selectedDiscipline ? (
+                        <PowerPicker
+                            availablePowers={availablePowers}
+                            primaryColor={primaryColor}
+                            onSelectPower={handleSelectPower}
+                            onBack={handleBack}
+                            onCreateCustomPower={() => setCustomPowerModalOpened(true)}
+                            hideBackButton={hideBackButton}
+                            character={character}
+                            hasAmalgamPrerequisites={hasAmalgamPrerequisites}
+                            getAmalgamTooltip={getAmalgamTooltip}
+                        />
+                    ) : opened ? (
+                        <>
+                            {availableDisciplines.length === 0 ? (
+                                <Text c="dimmed" ta="center" py="xl">
+                                    No available disciplines to add.
+                                </Text>
+                            ) : (
+                                <Grid gutter="md">
+                                    {availableDisciplines.map((disciplineName) => {
+                                        const discipline = disciplines[disciplineName]
+                                        if (!discipline) return null
 
-                                    return (
-                                        <Grid.Col key={disciplineName} span={{ base: 12, sm: 6 }}>
-                                            <Box
-                                                style={{ position: "relative", minHeight: "180px" }}
+                                        return (
+                                            <Grid.Col
+                                                key={disciplineName}
+                                                span={{ base: 12, sm: 6 }}
                                             >
-                                                <Button
-                                                    variant="light"
-                                                    color={primaryColor}
-                                                    fullWidth
-                                                    h="auto"
-                                                    p="md"
-                                                    onClick={() =>
-                                                        handleSelectDiscipline(disciplineName)
-                                                    }
-                                                    style={{ height: "100%", minHeight: "180px" }}
+                                                <Box
+                                                    style={{
+                                                        position: "relative",
+                                                        minHeight: "180px"
+                                                    }}
                                                 >
-                                                    <Stack
-                                                        gap="xs"
-                                                        align="center"
-                                                        style={{ width: "100%" }}
-                                                    >
-                                                        <Box
-                                                            style={{
-                                                                width: "60px",
-                                                                height: "60px",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center"
-                                                            }}
-                                                        >
-                                                            {discipline.logo ? (
-                                                                <img
-                                                                    src={discipline.logo}
-                                                                    alt={upcase(disciplineName)}
-                                                                    style={{
-                                                                        width: "60px",
-                                                                        height: "60px"
-                                                                    }}
-                                                                />
-                                                            ) : null}
-                                                        </Box>
-                                                        <Title order={4} style={{ margin: 0 }}>
-                                                            {upcase(disciplineName)}
-                                                        </Title>
-                                                        <Box
-                                                            style={{
-                                                                minHeight: "40px",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center"
-                                                            }}
-                                                        >
-                                                            {discipline.summary ? (
-                                                                <Text
-                                                                    size="sm"
-                                                                    c="dimmed"
-                                                                    ta="center"
-                                                                    lineClamp={2}
-                                                                >
-                                                                    {discipline.summary}
-                                                                </Text>
-                                                            ) : null}
-                                                        </Box>
-                                                    </Stack>
-                                                </Button>
-                                                {clanDisciplines.has(disciplineName) ? (
-                                                    <Badge
-                                                        size="sm"
+                                                    <Button
                                                         variant="light"
                                                         color={primaryColor}
+                                                        fullWidth
+                                                        h="auto"
+                                                        p="md"
+                                                        onClick={() =>
+                                                            handleSelectDiscipline(disciplineName)
+                                                        }
                                                         style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "8px"
+                                                            height: "100%",
+                                                            minHeight: "180px"
                                                         }}
                                                     >
-                                                        Clan
-                                                    </Badge>
-                                                ) : null}
-                                            </Box>
-                                        </Grid.Col>
-                                    )
-                                })}
-                            </Grid>
-                        )}
-                        <Divider my="md" />
-                        <Button
-                            variant="filled"
-                            color="black"
-                            fullWidth
-                            onClick={() => {
-                                setCustomDisciplineModalOpened(true)
-                            }}
-                        >
-                            Create Custom Discipline
-                        </Button>
-                    </>
-                ) : null}
-            </Stack>
+                                                        <Stack
+                                                            gap="xs"
+                                                            align="center"
+                                                            style={{ width: "100%" }}
+                                                        >
+                                                            <Box
+                                                                style={{
+                                                                    width: "60px",
+                                                                    height: "60px",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center"
+                                                                }}
+                                                            >
+                                                                {discipline.logo ? (
+                                                                    <img
+                                                                        src={discipline.logo}
+                                                                        alt={upcase(disciplineName)}
+                                                                        style={{
+                                                                            width: "60px",
+                                                                            height: "60px"
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                            </Box>
+                                                            <Title order={4} style={{ margin: 0 }}>
+                                                                {upcase(disciplineName)}
+                                                            </Title>
+                                                            <Box
+                                                                style={{
+                                                                    minHeight: "40px",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center"
+                                                                }}
+                                                            >
+                                                                {discipline.summary ? (
+                                                                    <Text
+                                                                        size="sm"
+                                                                        c="dimmed"
+                                                                        ta="center"
+                                                                        lineClamp={2}
+                                                                    >
+                                                                        {discipline.summary}
+                                                                    </Text>
+                                                                ) : null}
+                                                            </Box>
+                                                        </Stack>
+                                                    </Button>
+                                                    {clanDisciplines.has(disciplineName) ? (
+                                                        <Badge
+                                                            size="sm"
+                                                            variant="light"
+                                                            color={primaryColor}
+                                                            style={{
+                                                                position: "absolute",
+                                                                top: "8px",
+                                                                right: "8px"
+                                                            }}
+                                                        >
+                                                            Clan
+                                                        </Badge>
+                                                    ) : null}
+                                                </Box>
+                                            </Grid.Col>
+                                        )
+                                    })}
+                                </Grid>
+                            )}
+                            <Divider my="md" />
+                            <Button
+                                variant="filled"
+                                color="black"
+                                fullWidth
+                                onClick={() => {
+                                    setCustomDisciplineModalOpened(true)
+                                }}
+                            >
+                                Create Custom Discipline
+                            </Button>
+                        </>
+                    ) : null}
+                </Stack>
+            ) : (
+                <Center mih={240}>
+                    <Loader color={primaryColor} />
+                </Center>
+            )}
             <CustomDisciplineModal
                 opened={customDisciplineModalOpened}
                 onClose={() => {

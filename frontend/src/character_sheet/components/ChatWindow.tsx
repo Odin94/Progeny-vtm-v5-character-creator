@@ -28,7 +28,7 @@ import {
     IconX,
     IconArrowLeft
 } from "@tabler/icons-react"
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
+import { memo, type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
 import { SheetOptions } from "../CharacterSheet"
@@ -91,9 +91,10 @@ const ChatWindow = ({
     const [sessionType, setSessionType] = useState<"temporary" | "coterie" | null>(null)
     const [copiedSessionId, setCopiedSessionId] = useState(false)
     const [coteries, setCoteries] = useState<Coterie[]>([])
-    const [recentChatSession, setRecentChatSession] = useState<
-        Extract<RecentChatSessionResponse, { available: true }> | null
-    >(null)
+    const [recentChatSession, setRecentChatSession] = useState<Extract<
+        RecentChatSessionResponse,
+        { available: true }
+    > | null>(null)
     const [autoShare, setAutoShare] = useState(getAutoShareDiceRolls())
     const [messageInput, setMessageInput] = useState("")
     const [joinError, setJoinError] = useState<string | null>(null)
@@ -157,10 +158,7 @@ const ChatWindow = ({
         }
 
         const userKey = user?.id ?? "authenticated"
-        if (
-            connectionStatus === "disconnected" &&
-            restoredSessionForUserRef.current !== userKey
-        ) {
+        if (connectionStatus === "disconnected" && restoredSessionForUserRef.current !== userKey) {
             restoredSessionForUserRef.current = userKey
             restoreLastSession(characterName)
         }
@@ -333,8 +331,7 @@ const ChatWindow = ({
         )
         const lightness = variant === "roll" ? 30 : 27
         const backgroundAlpha = ownMessage ? 0.24 : 0.15
-        const borderAlpha =
-            variant === "roll" ? (ownMessage ? 0.5 : 0.36) : ownMessage ? 0.4 : 0.24
+        const borderAlpha = variant === "roll" ? (ownMessage ? 0.5 : 0.36) : ownMessage ? 0.4 : 0.24
 
         return {
             backgroundColor: `hsla(${hue}, 52%, ${lightness}%, ${backgroundAlpha})`,
@@ -1062,4 +1059,16 @@ const ChatWindow = ({
     )
 }
 
-export default ChatWindow
+export default memo(ChatWindow, (previous, next) => {
+    return (
+        previous.options.primaryColor === next.options.primaryColor &&
+        previous.options.character.name === next.options.character.name &&
+        previous.openSignal === next.openSignal &&
+        previous.sessionLabel === next.sessionLabel &&
+        previous.sessionLabelSessionId === next.sessionLabelSessionId &&
+        previous.initiallyExpanded === next.initiallyExpanded &&
+        previous.lockedOpen === next.lockedOpen &&
+        previous.docked === next.docked &&
+        previous.inline === next.inline
+    )
+})
