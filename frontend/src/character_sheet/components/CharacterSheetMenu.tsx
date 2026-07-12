@@ -1,22 +1,21 @@
-import {
-    faFileArrowUp,
-    faFileExport,
-    faFilePdf,
-    faFloppyDisk
-} from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { ActionIcon, Button, FileButton, Modal, Stack, Text, Divider, Group } from "@mantine/core"
+import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import {
     IconMenu2,
     IconAlertCircle,
-    IconExternalLink,
-    IconArrowRight,
     IconPalette,
-    IconChevronLeft
+    IconChevronLeft,
+    IconFileTypePdf,
+    IconDownload,
+    IconUpload,
+    IconShare,
+    IconHeart,
+    IconDeviceGamepad2,
+    IconBrandDiscord,
+    IconExternalLink,
+    IconHelpHexagon
 } from "@tabler/icons-react"
-import { Link, useNavigate } from "@tanstack/react-router"
 import { Buffer } from "buffer"
 import { AnimatePresence, motion } from "framer-motion"
 import { useRef, useState } from "react"
@@ -34,10 +33,10 @@ import {
     updateHealthAndWillpowerAndBloodPotencyAndHumanity
 } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
-import { useAuth } from "~/hooks/useAuth"
 import PreferencesContent from "./PreferencesModal"
+import "./CharacterSheetMenu.css"
 
-type MenuView = "menu" | "preferences"
+type MenuView = "menu" | "preferences" | "disclaimer" | "export"
 
 type CharacterSheetMenuProps = {
     options: SheetOptions
@@ -51,15 +50,11 @@ const slideVariants = {
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
-    const { isLoading: authLoading, isAuthenticated, signIn } = useAuth()
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
-    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
-        useDisclosure(false)
-    const [disclaimerOpened, { open: openDisclaimer, close: closeDisclaimer }] =
-        useDisclosure(false)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
+    const [foundryHelpOpen, setFoundryHelpOpen] = useState(false)
 
     const [view, setView] = useState<MenuView>("menu")
     const direction = useRef<1 | -1>(1)
@@ -67,8 +62,8 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const [wrapperMinHeight, setWrapperMinHeight] = useState<number | undefined>(undefined)
 
     const navigateTo = (nextView: MenuView) => {
-        direction.current = nextView === "preferences" ? 1 : -1
-        if (nextView === "preferences" && wrapperRef.current) {
+        direction.current = nextView === "menu" ? -1 : 1
+        if (nextView !== "menu" && wrapperRef.current) {
             setWrapperMinHeight(wrapperRef.current.offsetHeight)
         }
         setView(nextView)
@@ -77,9 +72,8 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const handleMenuClose = () => {
         closeMenu()
         setView("menu")
+        setFoundryHelpOpen(false)
     }
-
-    const navigate = useNavigate()
 
     const handleDownloadPDF = () => {
         downloadCharacterSheet(character).catch((e) => {
@@ -130,7 +124,6 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 })
             }
 
-            closeExportModal()
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -154,7 +147,6 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 window.URL.revokeObjectURL(link.href)
             }, 100)
 
-            closeExportModal()
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -209,21 +201,25 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 
     const menuTitle =
         view === "menu" ? (
-            "Menu"
+            <div>
+                <Text className="sheet-menu__title">Character sheet</Text>
+            </div>
         ) : (
             <Button
                 leftSection={<IconChevronLeft size={16} />}
                 size="sm"
-                color="gray"
                 variant="subtle"
                 onClick={() => navigateTo("menu")}
-                style={{ alignSelf: "flex-start" }}
-            ></Button>
+                className="sheet-menu__back"
+            >
+                Back to menu
+            </Button>
         )
 
     return (
         <>
             <ActionIcon
+                aria-label="Open character sheet menu"
                 size="xl"
                 variant="light"
                 color={primaryColor}
@@ -233,13 +229,27 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     position: "fixed",
                     bottom: "2rem",
                     right: "2rem",
-                    zIndex: 1000
+                    zIndex: 100
                 }}
             >
                 <IconMenu2 size={24} />
             </ActionIcon>
 
-            <Modal opened={menuOpened} onClose={handleMenuClose} title={menuTitle} centered>
+            <Modal
+                opened={menuOpened}
+                onClose={handleMenuClose}
+                title={menuTitle}
+                centered
+                size="lg"
+                zIndex={2000}
+                classNames={{
+                    overlay: "sheet-menu__overlay",
+                    content: "sheet-menu__modal",
+                    header: "sheet-menu__header",
+                    body: "sheet-menu__body",
+                    close: "sheet-menu__close"
+                }}
+            >
                 <div
                     ref={wrapperRef}
                     style={{
@@ -248,7 +258,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                         minHeight: wrapperMinHeight
                     }}
                 >
-                    <AnimatePresence mode="wait" custom={direction.current}>
+                    <AnimatePresence mode="wait" custom={direction.current} initial={false}>
                         <motion.div
                             key={view}
                             custom={direction.current}
@@ -259,147 +269,94 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             transition={{ type: "tween", duration: 0.18, ease: "easeInOut" }}
                         >
                             {view === "menu" ? (
-                                <Stack gap="md">
-                                    <Button
-                                        leftSection={<FontAwesomeIcon icon={faFilePdf} />}
-                                        size="lg"
-                                        color="grape"
-                                        onClick={handleDownloadPDF}
-                                        fullWidth
-                                    >
-                                        Download as PDF
-                                    </Button>
+                                <Stack gap="xl">
+                                    <section>
+                                        <Text className="sheet-menu__section-label">
+                                            Export & save
+                                        </Text>
+                                        <div className="sheet-menu__action-grid">
+                                            <Button
+                                                leftSection={<IconFileTypePdf size={22} />}
+                                                onClick={handleDownloadPDF}
+                                                className="sheet-menu__action sheet-menu__action--featured"
+                                                justify="flex-start"
+                                            >
+                                                <div className="sheet-menu__action-copy">
+                                                    <strong>Download PDF</strong>
+                                                    <small>Print-ready character sheet</small>
+                                                </div>
+                                            </Button>
+                                            <Button
+                                                leftSection={<IconDownload size={22} />}
+                                                onClick={handleDownloadJSON}
+                                                className="sheet-menu__action"
+                                                justify="flex-start"
+                                            >
+                                                <div className="sheet-menu__action-copy">
+                                                    <strong>Save file</strong>
+                                                    <small>Keep a JSON backup</small>
+                                                </div>
+                                            </Button>
+                                            <FileButton
+                                                onChange={handleLoadFromFile}
+                                                accept="application/json"
+                                            >
+                                                {(props) => (
+                                                    <Button
+                                                        leftSection={<IconUpload size={22} />}
+                                                        {...props}
+                                                        className="sheet-menu__action"
+                                                        justify="flex-start"
+                                                    >
+                                                        <div className="sheet-menu__action-copy">
+                                                            <strong>Load file</strong>
+                                                            <small>Restore a saved character</small>
+                                                        </div>
+                                                    </Button>
+                                                )}
+                                            </FileButton>
+                                            <Button
+                                                leftSection={<IconShare size={22} />}
+                                                onClick={() => navigateTo("export")}
+                                                className="sheet-menu__action"
+                                                justify="flex-start"
+                                            >
+                                                <div className="sheet-menu__action-copy">
+                                                    <strong>Export</strong>
+                                                    <small>Foundry, Inconnu & more</small>
+                                                </div>
+                                            </Button>
+                                        </div>
+                                    </section>
 
-                                    <Group gap="md" grow>
+                                    <div className="sheet-menu__utility-row">
                                         <Button
-                                            leftSection={<FontAwesomeIcon icon={faFloppyDisk} />}
-                                            size="lg"
-                                            color="yellow"
-                                            variant="light"
-                                            onClick={handleDownloadJSON}
+                                            leftSection={<IconPalette size={18} />}
+                                            variant="subtle"
+                                            onClick={() => navigateTo("preferences")}
                                         >
-                                            Save JSON
+                                            Preferences
                                         </Button>
-                                        <FileButton
-                                            onChange={handleLoadFromFile}
-                                            accept="application/json"
-                                        >
-                                            {(props) => (
-                                                <Button
-                                                    leftSection={
-                                                        <FontAwesomeIcon icon={faFileArrowUp} />
-                                                    }
-                                                    size="lg"
-                                                    color="green"
-                                                    variant="light"
-                                                    {...props}
-                                                >
-                                                    Load JSON
-                                                </Button>
-                                            )}
-                                        </FileButton>
-                                    </Group>
-
-                                    <Button
-                                        leftSection={<FontAwesomeIcon icon={faFileExport} />}
-                                        size="lg"
-                                        color="blue"
-                                        variant="light"
-                                        onClick={() => openExportModal()}
-                                        fullWidth
-                                    >
-                                        Export to...
-                                    </Button>
-
-                                    <Group gap="md" grow>
                                         <Button
-                                            component={Link}
-                                            to="/"
-                                            size="lg"
-                                            color="grape"
-                                            variant="outline"
-                                            leftSection={<IconArrowRight size={18} />}
+                                            component="a"
+                                            href={CONTACT_LINKS.kofi.href}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            leftSection={<IconHeart size={18} />}
+                                            variant="subtle"
                                         >
-                                            Generator
+                                            Support the project
                                         </Button>
-                                        {authLoading ? (
-                                            <Button
-                                                size="lg"
-                                                color="gray"
-                                                variant="outline"
-                                                loading
-                                                leftSection={<IconArrowRight size={18} />}
-                                            >
-                                                Loading...
-                                            </Button>
-                                        ) : !isAuthenticated ? (
-                                            <Button
-                                                size="lg"
-                                                color="grape"
-                                                variant="outline"
-                                                leftSection={<IconArrowRight size={18} />}
-                                                onClick={() => {
-                                                    signIn()
-                                                    handleMenuClose()
-                                                }}
-                                            >
-                                                Sign In
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                component={Link}
-                                                to="/me"
-                                                size="lg"
-                                                color="grape"
-                                                variant="outline"
-                                                leftSection={<IconArrowRight size={18} />}
-                                            >
-                                                Account
-                                            </Button>
-                                        )}
-                                    </Group>
-
-                                    <Button
-                                        leftSection={<IconPalette size={18} />}
-                                        size="lg"
-                                        color={primaryColor}
-                                        variant="light"
-                                        onClick={() => navigateTo("preferences")}
-                                        fullWidth
-                                    >
-                                        Preferences
-                                    </Button>
-
-                                    <Divider />
-
-                                    <Button
-                                        component="a"
-                                        href={CONTACT_LINKS.kofi.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        leftSection={<IconExternalLink size={18} />}
-                                        size="lg"
-                                        color="gray"
-                                        variant="light"
-                                        fullWidth
-                                    >
-                                        Support Odin on Ko-fi
-                                    </Button>
-
-                                    <Divider />
-
-                                    <Button
-                                        leftSection={<IconAlertCircle size={18} />}
-                                        size="sm"
-                                        color="gray"
-                                        variant="subtle"
-                                        onClick={() => openDisclaimer()}
-                                        fullWidth
-                                    >
-                                        Disclaimer
-                                    </Button>
+                                        <Button
+                                            leftSection={<IconAlertCircle size={18} />}
+                                            variant="subtle"
+                                            onClick={() => navigateTo("disclaimer")}
+                                        >
+                                            Disclaimer
+                                        </Button>
+                                    </div>
                                 </Stack>
-                            ) : (
+                            ) : view === "preferences" ? (
                                 <Stack gap="md">
                                     <PreferencesContent
                                         preferences={preferences}
@@ -407,124 +364,136 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                         primaryColor={primaryColor}
                                     />
                                 </Stack>
+                            ) : view === "export" ? (
+                                <Stack gap="md" className="sheet-menu__export-view">
+                                    <div>
+                                        <Text className="sheet-menu__section-label">Export</Text>
+                                        <Text className="sheet-menu__view-title">
+                                            Download a character file prepared for your platform of
+                                            choice.
+                                        </Text>
+                                    </div>
+
+                                    <div className="sheet-menu__export-options">
+                                        <div className="sheet-menu__export-card">
+                                            <div className="sheet-menu__export-icon">
+                                                <IconDeviceGamepad2 size={24} />
+                                            </div>
+                                            <div className="sheet-menu__export-copy">
+                                                <div className="sheet-menu__export-heading">
+                                                    <a
+                                                        href="https://foundryvtt.com/packages/vtm5e"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        Foundry WoD5E VTT{" "}
+                                                        <IconExternalLink size={14} />
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        className="sheet-menu__help-button"
+                                                        aria-label="How to import into Foundry"
+                                                        aria-expanded={foundryHelpOpen}
+                                                        onClick={() =>
+                                                            setFoundryHelpOpen((open) => !open)
+                                                        }
+                                                    >
+                                                        <IconHelpHexagon size={18} />
+                                                    </button>
+                                                </div>
+                                                <Text>
+                                                    Import your character into the Foundry virtual
+                                                    tabletop.
+                                                </Text>
+                                            </div>
+                                            <Button
+                                                leftSection={<IconDownload size={17} />}
+                                                onClick={handleExportToFoundry}
+                                            >
+                                                Export JSON
+                                            </Button>
+                                            {foundryHelpOpen ? (
+                                                <div className="sheet-menu__foundry-help">
+                                                    <Text className="sheet-menu__foundry-help-title">
+                                                        Import into Foundry
+                                                    </Text>
+                                                    <ol>
+                                                        <li>Export the character to JSON.</li>
+                                                        <li>Create a Vampire character in Foundry.</li>
+                                                        <li>Right-click that character under Actors.</li>
+                                                        <li>
+                                                            Select Import Data and upload the JSON file.
+                                                        </li>
+                                                    </ol>
+                                                </div>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="sheet-menu__export-card">
+                                            <div className="sheet-menu__export-icon">
+                                                <IconBrandDiscord size={24} />
+                                            </div>
+                                            <div className="sheet-menu__export-copy">
+                                                <a
+                                                    href="https://docs.inconnu.app"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    Inconnu Discord Bot{" "}
+                                                    <IconExternalLink size={14} />
+                                                </a>
+                                                <Text>
+                                                    Use your character with the Inconnu Discord
+                                                    manager.
+                                                </Text>
+                                            </div>
+                                            <Button
+                                                leftSection={<IconDownload size={17} />}
+                                                onClick={handleExportToInconnu}
+                                            >
+                                                Export JSON
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </Stack>
+                            ) : (
+                                <Stack gap="md" className="sheet-menu__disclaimer">
+                                    <Text>
+                                        This is an independent production and is not affiliated with
+                                        or endorsed by World of Darkness, Paradox Interactive, or
+                                        any of their subsidiaries.
+                                    </Text>
+                                    <Text>
+                                        This tool is created under the{" "}
+                                        <a
+                                            href="https://www.worldofdarkness.com/dark-pack"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Dark Pack License
+                                        </a>
+                                        .
+                                    </Text>
+                                    <Text>
+                                        Vampire: The Masquerade and World of Darkness are trademarks
+                                        of Paradox Interactive. All rights reserved.
+                                    </Text>
+                                    <Text c="dimmed" size="sm">
+                                        The PDF template used for exporting is kindly provided by{" "}
+                                        <a
+                                            href="https://linktr.ee/nerdbert"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Nerdbert
+                                        </a>
+                                        .
+                                    </Text>
+                                </Stack>
                             )}
                         </motion.div>
                     </AnimatePresence>
                 </div>
-            </Modal>
-
-            <Modal
-                opened={exportModalOpened}
-                onClose={closeExportModal}
-                title="Export to other platforms"
-                centered
-            >
-                <Stack gap="md">
-                    <Text fz="lg" mb="md">
-                        Progeny can export file formats compatible with the following platforms:
-                    </Text>
-
-                    <Group
-                        justify="space-between"
-                        align="center"
-                        p="md"
-                        style={{
-                            backgroundColor: "rgba(0, 0, 0, 0.4)",
-                            borderRadius: "8px"
-                        }}
-                    >
-                        <Stack gap="xs" style={{ flex: 1 }}>
-                            <Text fw={600} size="md">
-                                <a
-                                    href="https://foundryvtt.com/packages/vtm5e"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ color: "#1976d2", textDecoration: "underline" }}
-                                >
-                                    Foundry WoD5E VTT
-                                </a>
-                            </Text>
-                            <Text fz="sm" c="dimmed">
-                                Use your character in the foundry virtual tabletop
-                            </Text>
-                        </Stack>
-                        <Button color="grape" size="sm" onClick={handleExportToFoundry}>
-                            Export JSON
-                        </Button>
-                    </Group>
-
-                    <Group
-                        justify="space-between"
-                        align="center"
-                        p="md"
-                        style={{
-                            backgroundColor: "rgba(0, 0, 0, 0.4)",
-                            borderRadius: "8px"
-                        }}
-                    >
-                        <Stack gap="xs" style={{ flex: 1 }}>
-                            <Text fw={600} size="md">
-                                <a
-                                    href="https://docs.inconnu.app"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ color: "#1976d2", textDecoration: "underline" }}
-                                >
-                                    Inconnu Discord Bot
-                                </a>
-                            </Text>
-                            <Text fz="sm" c="dimmed">
-                                Export for use with the Inconnu Discord character manager
-                            </Text>
-                        </Stack>
-                        <Button color="grape" size="sm" onClick={handleExportToInconnu}>
-                            Export JSON
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
-
-            <Modal
-                opened={disclaimerOpened}
-                onClose={closeDisclaimer}
-                title="Disclaimer"
-                centered
-                size="lg"
-            >
-                <Stack gap="md">
-                    <Text>
-                        This is an independent production and is not affiliated with or endorsed by
-                        World of Darkness, Paradox Interactive, or any of their subsidiaries.
-                    </Text>
-                    <Text>
-                        This tool is created under the{" "}
-                        <a
-                            href="https://www.worldofdarkness.com/dark-pack"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#9c36b5" }}
-                        >
-                            Dark Pack License
-                        </a>
-                        .
-                    </Text>
-                    <Text>
-                        Vampire: The Masquerade and World of Darkness are trademarks of Paradox
-                        Interactive. All rights reserved.
-                    </Text>
-                    <Text c="dimmed" size="sm">
-                        The PDF template used for exporting is kindly provided by{" "}
-                        <a
-                            href="https://linktr.ee/nerdbert"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#9c36b5" }}
-                        >
-                            Nerdbert
-                        </a>
-                        .
-                    </Text>
-                </Stack>
             </Modal>
 
             <ConfirmActionModal

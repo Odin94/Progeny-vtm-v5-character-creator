@@ -1743,27 +1743,7 @@ const MePage = () => {
                         }}
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
-                            <Group gap="md" mb="xl" justify="space-between">
-                                <Group gap="md">
-                                    <Button
-                                        component={Link}
-                                        to="/"
-                                        color="red"
-                                        variant="outline"
-                                        leftSection={<IconArrowRight size={18} />}
-                                    >
-                                        Generator
-                                    </Button>
-                                    <Button
-                                        component={Link}
-                                        to="/sheet"
-                                        color="red"
-                                        variant="outline"
-                                        leftSection={<IconArrowRight size={18} />}
-                                    >
-                                        Character Sheet
-                                    </Button>
-                                </Group>
+                            <Group mb="xl" justify="flex-end">
                                 <Button onClick={signOut} color="red" variant="outline">
                                     Sign Out
                                 </Button>
