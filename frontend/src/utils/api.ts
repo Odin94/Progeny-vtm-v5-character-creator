@@ -53,9 +53,13 @@ const notifyAuthUnauthorized = () => {
 const ensureCsrfToken = async (): Promise<void> => {
     if (!getCsrfToken()) {
         // Make a GET request to trigger CSRF token generation
-        await fetch(`${API_URL}/health`, {
+        const response = await fetch(`${API_URL}/health`, {
             credentials: "include"
         })
+        const csrfFromHeader = response.headers.get("X-CSRF-Token")
+        if (csrfFromHeader) {
+            csrfTokenCache = csrfFromHeader
+        }
     }
 }
 

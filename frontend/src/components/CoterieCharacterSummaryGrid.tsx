@@ -150,6 +150,19 @@ const StatusLabel = ({ children, color }: { children: ReactNode; color: string }
     </Text>
 )
 
+const StatusMeterRow = ({ children }: { children: ReactNode }) => (
+    <Box
+        style={{
+            alignItems: "center",
+            columnGap: "var(--mantine-spacing-xs)",
+            display: "grid",
+            gridTemplateColumns: "8.75rem minmax(0, 1fr)"
+        }}
+    >
+        {children}
+    </Box>
+)
+
 const DamageMeter = ({
     label,
     maximum,
@@ -361,13 +374,13 @@ const CoterieCharacterSummaryGrid = ({
                                     </Text>
                                 </Group>
                                 <Stack gap={6}>
-                                    <Group gap="xs" wrap="nowrap" align="center">
+                                    <StatusMeterRow>
                                         <StatusLabel color={rgba(RAW_RED, 0.82)}>
                                             Hunger
                                         </StatusLabel>
                                         <HungerMeter hunger={hunger} />
-                                    </Group>
-                                    <Group gap="xs" wrap="nowrap" align="center">
+                                    </StatusMeterRow>
+                                    <StatusMeterRow>
                                         <StatusLabel color={rgba(RAW_GRAPE, 0.9)}>
                                             Health
                                         </StatusLabel>
@@ -377,8 +390,8 @@ const CoterieCharacterSummaryGrid = ({
                                             superficialDamage={superficialDamage}
                                             aggravatedDamage={aggravatedDamage}
                                         />
-                                    </Group>
-                                    <Group gap="xs" wrap="nowrap" align="center">
+                                    </StatusMeterRow>
+                                    <StatusMeterRow>
                                         <StatusLabel color={rgba(RAW_GRAPE, 0.9)}>
                                             Willpower
                                         </StatusLabel>
@@ -388,7 +401,7 @@ const CoterieCharacterSummaryGrid = ({
                                             superficialDamage={superficialWillpowerDamage}
                                             aggravatedDamage={aggravatedWillpowerDamage}
                                         />
-                                    </Group>
+                                    </StatusMeterRow>
                                 </Stack>
                                 <Group gap="xs">
                                     <Badge color="red" variant="light">
