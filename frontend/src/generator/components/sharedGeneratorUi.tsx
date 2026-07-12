@@ -190,7 +190,11 @@ export const GeneratorPhasePrompt = ({
     caption,
     marginBottom = "md"
 }: GeneratorPhasePromptProps) => (
-    <Stack gap={6} align="center" mb={marginBottom}>
+    // translate="no" / notranslate: this subtree re-renders its text on every pick (the
+    // "Pick N" counter and active-line switch). Browser page-translation (Chrome, Safari,
+    // Edge) rewrites text nodes out from under React, so those re-renders would otherwise
+    // crash the reconciler with a DOMException (insertBefore/removeChild NotFoundError).
+    <Stack gap={6} align="center" mb={marginBottom} className="notranslate" translate="no">
         {caption ? (
             <Text
                 ta="center"
