@@ -110,7 +110,10 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
             <div
                 data-testid={`predator-type-${predatorTypeName.toLowerCase().replace(/\s+/g, "-")}-card`}
                 key={predatorTypeName}
+                aria-disabled={isThinBlood}
                 onClick={() => {
+                    if (isThinBlood) return
+
                     // Locked cards stay openable so the coupling is legible rather than a dead
                     // end: the modal explains the clan restriction instead of blocking the click.
                     const firstSpecialtyOption = predatorType.specialtyOptions[0]
@@ -121,7 +124,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     openModal()
                 }}
                 onMouseEnter={(e) => {
-                    if (!isSelected) {
+                    if (!isThinBlood && !isSelected) {
                         e.currentTarget.style.background = meta.bgActiveColor
                         e.currentTarget.style.borderColor = meta.borderColor
                         e.currentTarget.style.transform = "translateY(-2px)"
@@ -141,8 +144,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                     borderRadius: "12px",
                     border: `1px solid ${isSelected ? meta.borderActiveColor : meta.borderColor}`,
                     background: isSelected ? meta.bgActiveColor : meta.bgColor,
-                    cursor: "pointer",
-                    opacity: clanDisabled ? 0.7 : 1,
+                    cursor: isThinBlood ? "not-allowed" : "pointer",
+                    opacity: isThinBlood ? 0.38 : clanDisabled ? 0.7 : 1,
                     transition:
                         "background 200ms ease, border-color 200ms ease, transform 160ms ease",
                     display: "flex",
@@ -276,6 +279,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                         <b>Thin-bloods</b> do not have a predator type
                     </Text>
                     <Button
+                        data-testid="thin-blood-predator-type-continue-button"
                         ml={"20px"}
                         color={"red"}
                         styles={generatorConfirmButtonStyles}
@@ -306,7 +310,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 </ScrollArea>
             )}
 
-            {pickedPredatorType != "" ? (
+            {!isThinBlood && pickedPredatorType != "" ? (
                 <PredatorTypeModal
                     modalOpened={modalOpened}
                     closeModal={closeModal}
