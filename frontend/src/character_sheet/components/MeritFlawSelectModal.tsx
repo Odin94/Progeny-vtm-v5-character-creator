@@ -48,6 +48,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const [activeTab, setActiveTab] = useState<string | null>("regular")
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const [loresheetQuery, setLoresheetQuery] = useState("")
+    const [regularQuery, setRegularQuery] = useState("")
     const [customName, setCustomName] = useState("")
     const [customLevel, setCustomLevel] = useState<number>(1)
     const [customDescription, setCustomDescription] = useState("")
@@ -71,6 +72,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             setActiveTab("regular")
             setOpenLoresheetTitle("")
             setLoresheetQuery("")
+            setRegularQuery("")
             setCustomName("")
             setCustomLevel(1)
             setCustomDescription("")
@@ -692,156 +694,245 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                         No available {type === "merit" ? "merits" : "flaws"} to add.
                                     </Text>
                                 ) : (
-                                    <Stack gap="lg">
-                                        {allMeritsAndFlaws.map((category) => {
-                                            const items =
-                                                type === "merit" ? category.merits : category.flaws
-                                            const availableCategoryItems = items.filter(
-                                                (item) => !characterMeritFlawNames.has(item.name)
-                                            )
+                                    <Stack gap="md">
+                                        <TextInput
+                                            aria-label={`Search ${type === "merit" ? "merits" : "flaws"}`}
+                                            leftSection={<IconSearch size={16} />}
+                                            placeholder={`Search ${type === "merit" ? "merits" : "flaws"} by name`}
+                                            value={regularQuery}
+                                            onChange={(event) =>
+                                                setRegularQuery(event.currentTarget.value)
+                                            }
+                                        />
+                                        {(() => {
+                                            const normalizedRegularQuery = regularQuery
+                                                .trim()
+                                                .toLocaleLowerCase()
+                                            const matchesQuery = (name: string) =>
+                                                normalizedRegularQuery.length === 0 ||
+                                                name
+                                                    .toLocaleLowerCase()
+                                                    .includes(normalizedRegularQuery)
 
-                                            if (availableCategoryItems.length === 0) return null
+                                            const visibleCategories = allMeritsAndFlaws
+                                                .map((category) => {
+                                                    const items =
+                                                        type === "merit"
+                                                            ? category.merits
+                                                            : category.flaws
+                                                    const availableCategoryItems = items.filter(
+                                                        (item) =>
+                                                            !characterMeritFlawNames.has(
+                                                                item.name
+                                                            ) && matchesQuery(item.name)
+                                                    )
+                                                    return { category, availableCategoryItems }
+                                                })
+                                                .filter(
+                                                    ({ availableCategoryItems }) =>
+                                                        availableCategoryItems.length > 0
+                                                )
+
+                                            if (visibleCategories.length === 0) {
+                                                return (
+                                                    <Text c="dimmed" ta="center" py="xl">
+                                                        No {type === "merit" ? "merits" : "flaws"}{" "}
+                                                        match that name.
+                                                    </Text>
+                                                )
+                                            }
 
                                             return (
-                                                <Stack key={category.title} gap="md">
-                                                    <Title order={4} c={primaryColor}>
-                                                        {category.title}
-                                                    </Title>
-                                                    <Grid gutter="md">
-                                                        {availableCategoryItems.map((item) => {
-                                                            const excludingItems =
-                                                                exclusionMap.get(item.name) ?? []
-                                                            const isExcluded =
-                                                                excludingItems.length > 0
-                                                            const lowestLevel = item.cost[0]
-                                                            const lowestCost =
-                                                                mode === "xp" && type === "merit"
-                                                                    ? getCostForItem(
-                                                                          item,
-                                                                          lowestLevel
-                                                                      )
-                                                                    : 0
-                                                            const availableXP =
-                                                                getAvailableXP(character)
-                                                            const canAffordLowest =
-                                                                type === "flaw" ||
-                                                                mode !== "xp" ||
-                                                                canAffordUpgrade(
-                                                                    availableXP,
-                                                                    lowestCost
-                                                                )
-                                                            const canClick =
-                                                                !isExcluded && canAffordLowest
-                                                            const tooltipLabel = isExcluded
-                                                                ? `Excluded by: ${excludingItems.join(", ")}`
-                                                                : mode === "xp" &&
-                                                                    type === "merit" &&
-                                                                    !canAffordLowest
-                                                                  ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                                                  : undefined
+                                                <Stack gap="lg">
+                                                    {visibleCategories.map(
+                                                        ({ category, availableCategoryItems }) => (
+                                                            <Stack key={category.title} gap="md">
+                                                                <Title order={4} c={primaryColor}>
+                                                                    {category.title}
+                                                                </Title>
+                                                                <Grid gutter="md">
+                                                                    {availableCategoryItems.map(
+                                                                        (item) => {
+                                                                            const excludingItems =
+                                                                                exclusionMap.get(
+                                                                                    item.name
+                                                                                ) ?? []
+                                                                            const isExcluded =
+                                                                                excludingItems.length >
+                                                                                0
+                                                                            const lowestLevel =
+                                                                                item.cost[0]
+                                                                            const lowestCost =
+                                                                                mode === "xp" &&
+                                                                                type === "merit"
+                                                                                    ? getCostForItem(
+                                                                                          item,
+                                                                                          lowestLevel
+                                                                                      )
+                                                                                    : 0
+                                                                            const availableXP =
+                                                                                getAvailableXP(
+                                                                                    character
+                                                                                )
+                                                                            const canAffordLowest =
+                                                                                type === "flaw" ||
+                                                                                mode !== "xp" ||
+                                                                                canAffordUpgrade(
+                                                                                    availableXP,
+                                                                                    lowestCost
+                                                                                )
+                                                                            const canClick =
+                                                                                !isExcluded &&
+                                                                                canAffordLowest
+                                                                            const tooltipLabel =
+                                                                                isExcluded
+                                                                                    ? `Excluded by: ${excludingItems.join(", ")}`
+                                                                                    : mode ===
+                                                                                            "xp" &&
+                                                                                        type ===
+                                                                                            "merit" &&
+                                                                                        !canAffordLowest
+                                                                                      ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+                                                                                      : undefined
 
-                                                            const boxContent = (
-                                                                <Box
-                                                                    p="xs"
-                                                                    onClick={() =>
-                                                                        handleItemClick(item)
-                                                                    }
-                                                                    style={{
-                                                                        border: "1px solid var(--mantine-color-gray-8)",
-                                                                        borderRadius:
-                                                                            "var(--mantine-radius-sm)",
-                                                                        cursor: canClick
-                                                                            ? "pointer"
-                                                                            : "default",
-                                                                        transition:
-                                                                            "background-color 0.2s",
-                                                                        opacity: isExcluded
-                                                                            ? 0.5
-                                                                            : 1
-                                                                    }}
-                                                                    onMouseEnter={(e) => {
-                                                                        if (canClick) {
-                                                                            e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                                                                            const boxContent = (
+                                                                                <Box
+                                                                                    p="xs"
+                                                                                    onClick={() =>
+                                                                                        handleItemClick(
+                                                                                            item
+                                                                                        )
+                                                                                    }
+                                                                                    style={{
+                                                                                        border: "1px solid var(--mantine-color-gray-8)",
+                                                                                        borderRadius:
+                                                                                            "var(--mantine-radius-sm)",
+                                                                                        cursor: canClick
+                                                                                            ? "pointer"
+                                                                                            : "default",
+                                                                                        transition:
+                                                                                            "background-color 0.2s",
+                                                                                        opacity:
+                                                                                            isExcluded
+                                                                                                ? 0.5
+                                                                                                : 1
+                                                                                    }}
+                                                                                    onMouseEnter={(
+                                                                                        e
+                                                                                    ) => {
+                                                                                        if (
+                                                                                            canClick
+                                                                                        ) {
+                                                                                            e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
+                                                                                        }
+                                                                                    }}
+                                                                                    onMouseLeave={(
+                                                                                        e
+                                                                                    ) => {
+                                                                                        e.currentTarget.style.backgroundColor =
+                                                                                            "transparent"
+                                                                                    }}
+                                                                                >
+                                                                                    <Stack gap="xs">
+                                                                                        <Group
+                                                                                            justify="space-between"
+                                                                                            align="flex-start"
+                                                                                        >
+                                                                                            <Text
+                                                                                                fw={
+                                                                                                    600
+                                                                                                }
+                                                                                                size="sm"
+                                                                                                style={{
+                                                                                                    flex: 1
+                                                                                                }}
+                                                                                                c={
+                                                                                                    isExcluded
+                                                                                                        ? "dimmed"
+                                                                                                        : undefined
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    item.name
+                                                                                                }
+                                                                                            </Text>
+                                                                                            <Badge
+                                                                                                size="sm"
+                                                                                                variant="dot"
+                                                                                                color={
+                                                                                                    type ===
+                                                                                                    "flaw"
+                                                                                                        ? "red"
+                                                                                                        : primaryColor
+                                                                                                }
+                                                                                            >
+                                                                                                {item.cost.join(
+                                                                                                    "/"
+                                                                                                )}
+                                                                                            </Badge>
+                                                                                        </Group>
+                                                                                        {item.summary ? (
+                                                                                            <Text
+                                                                                                size="xs"
+                                                                                                c="dimmed"
+                                                                                                lineClamp={
+                                                                                                    3
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    item.summary
+                                                                                                }
+                                                                                            </Text>
+                                                                                        ) : null}
+                                                                                    </Stack>
+                                                                                </Box>
+                                                                            )
+
+                                                                            if (tooltipLabel) {
+                                                                                return (
+                                                                                    <Grid.Col
+                                                                                        key={
+                                                                                            item.name
+                                                                                        }
+                                                                                        span={{
+                                                                                            base: 12,
+                                                                                            sm: 6
+                                                                                        }}
+                                                                                    >
+                                                                                        <Tooltip
+                                                                                            label={
+                                                                                                tooltipLabel
+                                                                                            }
+                                                                                            withArrow
+                                                                                        >
+                                                                                            {
+                                                                                                boxContent
+                                                                                            }
+                                                                                        </Tooltip>
+                                                                                    </Grid.Col>
+                                                                                )
+                                                                            }
+
+                                                                            return (
+                                                                                <Grid.Col
+                                                                                    key={item.name}
+                                                                                    span={{
+                                                                                        base: 12,
+                                                                                        sm: 6
+                                                                                    }}
+                                                                                >
+                                                                                    {boxContent}
+                                                                                </Grid.Col>
+                                                                            )
                                                                         }
-                                                                    }}
-                                                                    onMouseLeave={(e) => {
-                                                                        e.currentTarget.style.backgroundColor =
-                                                                            "transparent"
-                                                                    }}
-                                                                >
-                                                                    <Stack gap="xs">
-                                                                        <Group
-                                                                            justify="space-between"
-                                                                            align="flex-start"
-                                                                        >
-                                                                            <Text
-                                                                                fw={600}
-                                                                                size="sm"
-                                                                                style={{ flex: 1 }}
-                                                                                c={
-                                                                                    isExcluded
-                                                                                        ? "dimmed"
-                                                                                        : undefined
-                                                                                }
-                                                                            >
-                                                                                {item.name}
-                                                                            </Text>
-                                                                            <Badge
-                                                                                size="sm"
-                                                                                variant="dot"
-                                                                                color={
-                                                                                    type === "flaw"
-                                                                                        ? "red"
-                                                                                        : primaryColor
-                                                                                }
-                                                                            >
-                                                                                {item.cost.join(
-                                                                                    "/"
-                                                                                )}
-                                                                            </Badge>
-                                                                        </Group>
-                                                                        {item.summary ? (
-                                                                            <Text
-                                                                                size="xs"
-                                                                                c="dimmed"
-                                                                                lineClamp={3}
-                                                                            >
-                                                                                {item.summary}
-                                                                            </Text>
-                                                                        ) : null}
-                                                                    </Stack>
-                                                                </Box>
-                                                            )
-
-                                                            if (tooltipLabel) {
-                                                                return (
-                                                                    <Grid.Col
-                                                                        key={item.name}
-                                                                        span={{ base: 12, sm: 6 }}
-                                                                    >
-                                                                        <Tooltip
-                                                                            label={tooltipLabel}
-                                                                            withArrow
-                                                                        >
-                                                                            {boxContent}
-                                                                        </Tooltip>
-                                                                    </Grid.Col>
-                                                                )
-                                                            }
-
-                                                            return (
-                                                                <Grid.Col
-                                                                    key={item.name}
-                                                                    span={{ base: 12, sm: 6 }}
-                                                                >
-                                                                    {boxContent}
-                                                                </Grid.Col>
-                                                            )
-                                                        })}
-                                                    </Grid>
+                                                                    )}
+                                                                </Grid>
+                                                            </Stack>
+                                                        )
+                                                    )}
                                                 </Stack>
                                             )
-                                        })}
+                                        })()}
                                     </Stack>
                                 )}
                             </Tabs.Panel>
