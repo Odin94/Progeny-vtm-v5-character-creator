@@ -74,3 +74,45 @@ test("Ventrue-locked predator types stay legible and openable", async ({ page })
     await alleycat.click()
     await expect(page.getByTestId("predator-type-confirm-button")).toBeEnabled()
 })
+
+test("Thin-blood characters cannot select or confirm a predator type", async ({ page }) => {
+    await page.goto("/create")
+    await page.getByTestId("cookie-banner-close").click()
+
+    await page.getByTestId("clan-thin-blood-card").click()
+    await pickButtons(page, ["Strength", "Manipulation", "Dexterity", "Charisma", "Wits"])
+    await page.getByTestId("skill-distribution-balanced-button").click()
+    await pickButtons(page, [
+        "Athletics",
+        "Brawl",
+        "Intimidation",
+        "Awareness",
+        "Insight",
+        "Drive",
+        "Firearms",
+        "Melee",
+        "Stealth",
+        "Persuasion",
+        "Streetwise",
+        "Subterfuge",
+        "Investigation",
+        "Occult",
+        "Technology"
+    ])
+    await page.getByTestId("skill-specialty-confirm-button").click()
+    await page.getByTestId("generation-confirm-button").click()
+
+    await expect(page).toHaveURL(/#predator-type$/)
+    await expect(page.getByText("Thin-bloods do not have a predator type")).toBeVisible()
+    await expect(page.getByTestId("predator-type-alleycat-card")).toHaveCount(0)
+    await expect(page.getByTestId("predator-type-confirm-button")).toHaveCount(0)
+
+    await page.getByTestId("thin-blood-predator-type-continue-button").click()
+    await expect(page).toHaveURL(/#basics$/)
+
+    const savedPredatorTypeName = await page.evaluate(() => {
+        const savedCharacter = JSON.parse(localStorage.getItem("character") ?? "{}")
+        return savedCharacter.predatorType?.name
+    })
+    expect(savedPredatorTypeName).toBe("")
+})
