@@ -16,6 +16,14 @@ export const useCharacter = (id: string | null) => {
     })
 }
 
+export const useCharacterNotes = (characterId: string | null, enabled = true) => {
+    return useQuery({
+        queryKey: ["characters", characterId, "notes"],
+        queryFn: () => (characterId ? api.getCharacterNotes(characterId) : null),
+        enabled: enabled && !!characterId
+    })
+}
+
 export const useCreateCharacter = () => {
     const queryClient = useQueryClient()
 
@@ -59,6 +67,30 @@ export const useDeleteCharacter = () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
+        }
+    })
+}
+
+export const useSaveCharacterNotes = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ characterId, content }: { characterId: string; content: string }) =>
+            api.saveCharacterNotes(characterId, { content }),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData(["characters", variables.characterId, "notes"], data)
+        }
+    })
+}
+
+export const useRestoreCharacterNoteVersion = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ characterId, versionId }: { characterId: string; versionId: string }) =>
+            api.restoreCharacterNoteVersion(characterId, versionId),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData(["characters", variables.characterId, "notes"], data)
         }
     })
 }

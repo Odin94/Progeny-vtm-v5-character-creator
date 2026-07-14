@@ -31,7 +31,17 @@ export const characterParamsSchema = z.object({
     id: z.string().min(1)
 })
 
+export const characterNoteVersionParamsSchema = characterParamsSchema.extend({
+    versionId: z.string().min(1)
+})
+
+export const characterNoteSchema = z.object({
+    content: z.string()
+})
+
 export type CreateCharacterInput = z.infer<typeof createCharacterSchema>
 export type UpdateCharacterInput = z.infer<typeof updateCharacterSchema>
 export type UpdateCharacterVitalsInput = z.infer<typeof updateCharacterVitalsSchema>
 export type CharacterParams = z.infer<typeof characterParamsSchema>
+export type CharacterNoteVersionParams = z.infer<typeof characterNoteVersionParamsSchema>
+export type CharacterNoteInput = z.infer<typeof characterNoteSchema>

@@ -146,6 +146,30 @@ export const coterieNoteVersions = sqliteTable(
     })
 )
 
+export const characterNoteVersions = sqliteTable(
+    "character_note_versions",
+    {
+        id: text("id").primaryKey(),
+        characterId: text("character_id")
+            .notNull()
+            .references(() => characters.id, { onDelete: "cascade" }),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        content: text("content").notNull(),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        characterUserIdx: index("character_note_versions_character_user_idx").on(
+            table.characterId,
+            table.userId
+        ),
+        createdAtIdx: index("character_note_versions_created_at_idx").on(table.createdAt)
+    })
+)
+
 export const characterShares = sqliteTable(
     "character_shares",
     {
@@ -217,6 +241,8 @@ export type CoterieInvite = typeof coterieInvites.$inferSelect
 export type NewCoterieInvite = typeof coterieInvites.$inferInsert
 export type CoterieNoteVersion = typeof coterieNoteVersions.$inferSelect
 export type NewCoterieNoteVersion = typeof coterieNoteVersions.$inferInsert
+export type CharacterNoteVersion = typeof characterNoteVersions.$inferSelect
+export type NewCharacterNoteVersion = typeof characterNoteVersions.$inferInsert
 export type CharacterShare = typeof characterShares.$inferSelect
 export type NewCharacterShare = typeof characterShares.$inferInsert
 export type ImpersonationSession = typeof impersonationSessions.$inferSelect
@@ -227,6 +253,7 @@ export const usersRelations = relations(users, ({ many }) => ({
     characters: many(characters),
     ownedCoteries: many(coteries),
     coteriePlayerMemberships: many(coteriePlayerMemberships),
+    characterNoteVersions: many(characterNoteVersions),
     sharedCharacters: many(characterShares, { relationName: "sharedWith" }),
     sharedBy: many(characterShares, { relationName: "sharedBy" }),
     impersonationSessionsStarted: many(impersonationSessions, { relationName: "superadmin" }),
@@ -239,6 +266,7 @@ export const charactersRelations = relations(characters, ({ one, many }) => ({
         references: [users.id]
     }),
     coterieMembers: many(coterieMembers),
+    noteVersions: many(characterNoteVersions),
     shares: many(characterShares)
 }))
 
@@ -296,6 +324,17 @@ export const coterieNoteVersionsRelations = relations(coterieNoteVersions, ({ on
     }),
     user: one(users, {
         fields: [coterieNoteVersions.userId],
+        references: [users.id]
+    })
+}))
+
+export const characterNoteVersionsRelations = relations(characterNoteVersions, ({ one }) => ({
+    character: one(characters, {
+        fields: [characterNoteVersions.characterId],
+        references: [characters.id]
+    }),
+    user: one(users, {
+        fields: [characterNoteVersions.userId],
         references: [users.id]
     })
 }))

@@ -32,6 +32,7 @@ import defaultBackgroundImage from "./resources/backgrounds/pexels-skyriusmarket
 import CharacterSheetMenu from "./components/CharacterSheetMenu"
 import DiceRollModal from "./components/diceRollModal/DiceRollModal"
 import ChatWindow from "./components/ChatWindow"
+import CharacterNotesControl from "./components/CharacterNotesControl"
 import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 import { useAuth } from "~/hooks/useAuth"
@@ -227,6 +228,14 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             >
                                 <IconDice size={24} />
                             </ActionIcon>
+                            <CharacterNotesControl
+                                characterId={character.id}
+                                isAuthenticated={isAuthenticated}
+                                authLoading={authLoading}
+                                characterAccessLoading={ownershipLoading}
+                                hasCharacterAccess={!!loadedCharacter}
+                                primaryColor={primaryColor}
+                            />
                             <Tooltip label={editDisabledReason} disabled={canEdit} withArrow>
                                 <span>
                                     <SegmentedControl

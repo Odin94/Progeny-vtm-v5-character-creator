@@ -1,4 +1,3 @@
-import { Buffer } from "node:buffer"
 import { createHash } from "node:crypto"
 import { FastifyInstance, FastifyReply } from "fastify"
 import { eq, and, sql, inArray, desc, asc } from "drizzle-orm"
@@ -34,13 +33,16 @@ import {
     removeCoterieSessionParticipant
 } from "../websocket/sessionChat.js"
 import z from "zod"
+import {
+    getUtf8ByteLength,
+    getNextNoteVersionCreatedAt,
+    isSubstantialNoteEdit,
+    NOTE_MAX_BYTES,
+    NOTE_VERSION_LIMIT,
+    NOTE_VERSION_SPLIT_MS
+} from "../utils/privateNotes.js"
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000
-const NOTE_MAX_BYTES = 200 * 1024
-const NOTE_VERSION_LIMIT = 10
-const NOTE_VERSION_SPLIT_MS = 60 * 60 * 1000
-const NOTE_SUBSTANTIAL_MIN_CHANGED_WORDS = 4
-const NOTE_SUBSTANTIAL_MIN_CHANGED_CHARS = 24
 const createInviteToken = customAlphabet(
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
     48
@@ -66,46 +68,6 @@ const getCoterieNickname = (
 
     const emailLocalPart = user?.email.split("@", 1)[0] ?? ""
     return Array.from(emailLocalPart).slice(0, 3).join("") || "Player"
-}
-
-const getUtf8ByteLength = (value: string) => Buffer.byteLength(value, "utf8")
-
-const tokenizeNoteWords = (value: string) => value.toLowerCase().match(/[\p{L}\p{N}']+/gu) ?? []
-
-const getMultisetWordDelta = (previous: string, next: string) => {
-    const counts = new Map<string, number>()
-
-    for (const word of tokenizeNoteWords(previous)) {
-        counts.set(word, (counts.get(word) ?? 0) + 1)
-    }
-
-    for (const word of tokenizeNoteWords(next)) {
-        counts.set(word, (counts.get(word) ?? 0) - 1)
-    }
-
-    let changedWords = 0
-    for (const count of counts.values()) {
-        changedWords += Math.abs(count)
-    }
-
-    return changedWords
-}
-
-const isSubstantialNoteEdit = (previous: string, next: string) => {
-    const normalizedPrevious = previous.trim().replace(/\s+/g, " ")
-    const normalizedNext = next.trim().replace(/\s+/g, " ")
-
-    if (normalizedPrevious === normalizedNext) {
-        return false
-    }
-
-    const changedWords = getMultisetWordDelta(normalizedPrevious, normalizedNext)
-    const changedChars = Math.abs(normalizedNext.length - normalizedPrevious.length)
-
-    return (
-        changedWords >= NOTE_SUBSTANTIAL_MIN_CHANGED_WORDS ||
-        changedChars >= NOTE_SUBSTANTIAL_MIN_CHANGED_CHARS
-    )
 }
 
 const serializeNoteVersion = (version: typeof schema.coterieNoteVersions.$inferSelect) => ({
@@ -892,7 +854,8 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                             id: nanoid(),
                             coterieId,
                             userId,
-                            content
+                            content,
+                            createdAt: getNextNoteVersionCreatedAt(latestVersion?.createdAt)
                         })
                         .returning()
                         .get()
@@ -974,13 +937,25 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             }
 
             const restoredVersion = db.transaction((tx) => {
+                const latestVersion = tx
+                    .select({ createdAt: schema.coterieNoteVersions.createdAt })
+                    .from(schema.coterieNoteVersions)
+                    .where(
+                        and(
+                            eq(schema.coterieNoteVersions.coterieId, coterieId),
+                            eq(schema.coterieNoteVersions.userId, userId)
+                        )
+                    )
+                    .orderBy(desc(schema.coterieNoteVersions.createdAt))
+                    .get()
                 const inserted = tx
                     .insert(schema.coterieNoteVersions)
                     .values({
                         id: nanoid(),
                         coterieId,
                         userId,
-                        content: versionToRestore.content
+                        content: versionToRestore.content,
+                        createdAt: getNextNoteVersionCreatedAt(latestVersion?.createdAt)
                     })
                     .returning()
                     .get()

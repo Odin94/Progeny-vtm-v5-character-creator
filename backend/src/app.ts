@@ -5,6 +5,7 @@ import cookie from "@fastify/cookie"
 import rateLimit from "@fastify/rate-limit"
 import { readFileSync } from "fs"
 import { characterRoutes } from "./routes/characters.js"
+import { characterNoteRoutes } from "./routes/characterNotes.js"
 import { coterieRoutes } from "./routes/coteries.js"
 import { shareRoutes } from "./routes/shares.js"
 import { authRoutes } from "./routes/auth.js"
@@ -167,6 +168,7 @@ export async function buildApp() {
     await fastify.register(adminRoutes)
     await fastify.register(preferencesRoutes)
     await fastify.register(characterRoutes)
+    await fastify.register(characterNoteRoutes)
     await fastify.register(coterieRoutes)
     await fastify.register(shareRoutes)
 

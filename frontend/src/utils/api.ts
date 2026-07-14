@@ -261,20 +261,27 @@ export type AcceptCoterieInviteResponse = {
     coterie: CoterieResponse
 }
 
-export type CoterieNoteVersionResponse = {
+export type PrivateNoteVersionResponse = {
     id: string
     content: string
     createdAt: ApiTimestamp
 }
 
-export type CoterieNotesResponse = {
-    current: CoterieNoteVersionResponse | null
-    versions: CoterieNoteVersionResponse[]
+export type PrivateNotesResponse = {
+    current: PrivateNoteVersionResponse | null
+    versions: PrivateNoteVersionResponse[]
 }
 
-export type SaveCoterieNotesResponse = CoterieNotesResponse & {
+export type SavePrivateNotesResponse = PrivateNotesResponse & {
     createdNewVersion: boolean
 }
+
+export type CoterieNoteVersionResponse = PrivateNoteVersionResponse
+export type CoterieNotesResponse = PrivateNotesResponse
+export type SaveCoterieNotesResponse = SavePrivateNotesResponse
+export type CharacterNoteVersionResponse = PrivateNoteVersionResponse
+export type CharacterNotesResponse = PrivateNotesResponse
+export type SaveCharacterNotesResponse = SavePrivateNotesResponse
 
 export type RecentChatSessionResponse =
     | {
@@ -360,6 +367,18 @@ export const api = {
             body: data
         }),
     deleteCharacter: (id: string) => apiRequest<void>(`/characters/${id}`, { method: "DELETE" }),
+    getCharacterNotes: (characterId: string) =>
+        apiRequest<CharacterNotesResponse>(`/characters/${characterId}/notes`),
+    saveCharacterNotes: (characterId: string, data: { content: string }) =>
+        apiRequest<SaveCharacterNotesResponse>(`/characters/${characterId}/notes`, {
+            method: "PUT",
+            body: data
+        }),
+    restoreCharacterNoteVersion: (characterId: string, versionId: string) =>
+        apiRequest<SaveCharacterNotesResponse>(
+            `/characters/${characterId}/notes/versions/${versionId}/restore`,
+            { method: "POST" }
+        ),
 
     // Coteries
     getCoteries: () => apiRequest<CoterieResponse[]>("/coteries"),

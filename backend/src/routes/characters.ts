@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { eq, and, sql } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
@@ -16,6 +16,7 @@ import { nanoid } from "nanoid"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
+import { getCharacterAccess } from "../utils/characterAccess.js"
 
 export async function characterRoutes(fastify: FastifyInstance) {
     // Create character
@@ -207,26 +208,14 @@ export async function characterRoutes(fastify: FastifyInstance) {
         async (request: AuthenticatedRequest, reply) => {
             const userId = request.user!.id
             const { id } = request.params as CharacterParams
+            const access = await getCharacterAccess(id, userId)
 
-            const character = await db.query.characters.findFirst({
-                where: eq(schema.characters.id, id)
-            })
-
-            if (!character) {
+            if (!access) {
                 reply.code(404).send({ error: "Character not found" })
                 return
             }
 
-            // Check if user owns or has access to character
-            const isOwner = character.userId === userId
-            const isShared = await db.query.characterShares.findFirst({
-                where: and(
-                    eq(schema.characterShares.characterId, id),
-                    eq(schema.characterShares.sharedWithUserId, userId)
-                )
-            })
-
-            if (!isOwner && !isShared) {
+            if (!access.hasAccess) {
                 reply
                     .code(403)
                     .send({ error: "Forbidden: You don't have access to this character" })
@@ -240,18 +229,18 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     method: "GET",
                     userId,
                     characterId: id,
-                    isOwner,
-                    isShared: !!isShared
+                    isOwner: access.isOwner,
+                    isShared: access.isShared
                 },
                 userId,
                 request
             )
 
-            const { userId: _, ...characterWithoutUserId } = character
+            const { userId: _, ...characterWithoutUserId } = access.character
             reply.send({
                 ...characterWithoutUserId,
-                data: JSON.parse(character.data),
-                canEdit: isOwner
+                data: JSON.parse(access.character.data),
+                canEdit: access.isOwner
             })
         }
     )
