@@ -4,7 +4,7 @@ import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import RenderProfiler from "~/components/RenderProfiler"
@@ -75,18 +75,38 @@ export default function CreatorPage() {
 
     const routeHash = location.hash.replace(/^#/, "")
     const fallbackStep = normalizeGeneratorStepId(storedSelectedStep, character)
-    const selectedStep = normalizeGeneratorStepId(routeHash || fallbackStep, character)
+
+    // The selected step is authoritative React state rather than a value derived
+    // from the (asynchronously-updated) route hash. Deriving it from the hash meant
+    // a Confirm click that called setCharacter + advanced in the same handler could
+    // be undone: the character mutation retriggered the reconciliation effect below
+    // while the hash still lagged on the previous step, cancelling the advance and
+    // stranding the user (e.g. stuck on #basics). Holding it in state lets Confirm
+    // advance immediately; the URL is kept in sync as a mirror for deep links and
+    // back/forward navigation.
+    const [selectedStep, setSelectedStepState] = useState<GeneratorStepId>(() =>
+        normalizeGeneratorStepId(routeHash || fallbackStep, character)
+    )
+
+    // True while we've asked the router to move to a new step but the URL hash has
+    // not caught up yet. Guards the reconciliation effect from adopting the stale
+    // hash mid-advance.
+    const pendingNavigationRef = useRef(false)
 
     const setSelectedStep = (step: GeneratorStepId, options?: { replace?: boolean }) => {
+        setSelectedStepState(step)
+
         if (storedSelectedStep !== step) {
             setStoredSelectedStep(step)
         }
 
         const nextHash = `#${step}`
         if (location.hash === nextHash) {
+            pendingNavigationRef.current = false
             return
         }
 
+        pendingNavigationRef.current = true
         navigate({
             to: "/create",
             hash: step,
@@ -335,14 +355,29 @@ export default function CreatorPage() {
         // Find a cleaner fix for this
         if (location.pathname !== "/create") return
 
-        const normalizedHash = routeHash
-            ? normalizeGeneratorStepId(routeHash, character)
-            : fallbackStep
-
-        if (normalizedHash !== selectedStep || location.hash !== `#${selectedStep}`) {
-            setSelectedStep(normalizedHash, { replace: true })
+        // An advance we initiated is still propagating to the URL: don't reconcile
+        // against the stale hash, or we'd stomp the freshly-selected step. Clear the
+        // flag once the hash catches up to the authoritative step.
+        if (pendingNavigationRef.current) {
+            if (location.hash === `#${selectedStep}`) {
+                pendingNavigationRef.current = false
+            }
+            return
         }
-    }, [character, fallbackStep, location.hash, location.pathname, routeHash, selectedStep])
+
+        // Otherwise the hash changed on its own (back/forward, a deep link, or an
+        // empty/invalid/now-unavailable step). Adopt the step it normalizes to and
+        // keep the URL honest.
+        const desiredStep = normalizeGeneratorStepId(routeHash || fallbackStep, character)
+
+        if (desiredStep !== selectedStep) {
+            setSelectedStepState(desiredStep)
+        }
+        if (location.hash !== `#${desiredStep}`) {
+            pendingNavigationRef.current = true
+            navigate({ to: "/create", hash: desiredStep, replace: true })
+        }
+    }, [character, fallbackStep, location.hash, location.pathname, routeHash, selectedStep, navigate])
 
     return (
         <>

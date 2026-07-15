@@ -58,7 +58,12 @@ test("creates a Brujah character and downloads the PDF sheet", async ({ page }) 
     await page
         .getByTestId("basic-description-input")
         .fill("A sharp-eyed Brujah courier with a battered leather jacket.")
+    // Regression guard: confirming the Basics step must advance off #basics in a
+    // single click. The step navigation used to race a reconciliation effect that
+    // could re-navigate back to #basics on the same click's character mutation,
+    // stranding users on this step no matter how often they clicked Confirm.
     await page.getByTestId("basics-confirm-button").click()
+    await expect(page).toHaveURL(/#disciplines$/)
 
     await takePower(page, "POTENCE", "Lethal Body")
     await takePower(page, "POTENCE", "Prowess")
