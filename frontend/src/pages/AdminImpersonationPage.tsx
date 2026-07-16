@@ -21,6 +21,7 @@ import { IconSearch, IconUserShield } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import Topbar from "~/topbar/Topbar"
+import NameTag from "~/components/NameTag"
 import { useAuth } from "~/hooks/useAuth"
 import { api, type AdminUser } from "~/utils/api"
 import { refreshIdentityBoundQueries } from "~/utils/impersonation"
@@ -53,6 +54,22 @@ const AdminImpersonationPage = () => {
         onError: (error) => {
             notifications.show({
                 title: "Could not update superadmin",
+                message: error instanceof Error ? error.message : "Please try again.",
+                color: "red"
+            })
+        }
+    })
+
+    const toggleNameTagMutation = useMutation({
+        mutationFn: ({ id, nameTagEnabled }: { id: string; nameTagEnabled: boolean }) =>
+            api.updateNameTagAccess(id, { nameTagEnabled }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
+            queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+        },
+        onError: (error) => {
+            notifications.show({
+                title: "Could not update name tag access",
                 message: error instanceof Error ? error.message : "Please try again.",
                 color: "red"
             })
@@ -94,7 +111,11 @@ const AdminImpersonationPage = () => {
                       <Table.Td>
                           <Stack gap={2}>
                               <Group gap="xs">
-                                  <Text fw={600}>{getUserLabel(candidate)}</Text>
+                                  {candidate.nameTagEnabled && candidate.nameTagVisible ? (
+                                      <NameTag name={getUserLabel(candidate)} size="xs" />
+                                  ) : (
+                                      <Text fw={600}>{getUserLabel(candidate)}</Text>
+                                  )}
                                   {candidate.isSuperadmin ? (
                                       <Badge color="yellow" variant="light">
                                           Superadmin
@@ -132,6 +153,19 @@ const AdminImpersonationPage = () => {
                                   })
                               }}
                               aria-label={`Set ${candidate.email} superadmin status`}
+                          />
+                      </Table.Td>
+                      <Table.Td>
+                          <Switch
+                              checked={candidate.nameTagEnabled}
+                              disabled={toggleNameTagMutation.isPending}
+                              onChange={(event) =>
+                                  toggleNameTagMutation.mutate({
+                                      id: candidate.id,
+                                      nameTagEnabled: event.currentTarget.checked
+                                  })
+                              }
+                              aria-label={`Set ${candidate.email} name tag access`}
                           />
                       </Table.Td>
                       <Table.Td>
@@ -237,9 +271,10 @@ const AdminImpersonationPage = () => {
                             <Stack gap="lg">
                                 <Group justify="space-between" align="flex-end">
                                     <Stack gap={4}>
-                                        <Title order={1}>Impersonation</Title>
+                                        <Title order={1}>User administration</Title>
                                         <Text c="dimmed">
-                                            Select a regular user to start a 10 minute session.
+                                            Manage name tags, superadmins, and 10 minute
+                                            impersonation sessions.
                                         </Text>
                                     </Stack>
                                     <TextInput
@@ -280,6 +315,7 @@ const AdminImpersonationPage = () => {
                                                     <Table.Tr>
                                                         <Table.Th>User</Table.Th>
                                                         <Table.Th>Superadmin</Table.Th>
+                                                        <Table.Th>Name tag</Table.Th>
                                                         <Table.Th>Impersonation</Table.Th>
                                                     </Table.Tr>
                                                 </Table.Thead>

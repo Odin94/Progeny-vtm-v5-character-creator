@@ -6,6 +6,7 @@ export const MAX_SESSION_HISTORY_MESSAGES = 100
 export type Participant = {
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     socket: any
     joinedAt?: number
@@ -105,7 +106,12 @@ export type SessionJoinedMessage = {
     sessionId: string
     sessionType: "temporary" | "coterie"
     coterieId?: string
-    participants: Array<{ userId: string; userName: string; characterName?: string }>
+    participants: Array<{
+        userId: string
+        userName: string
+        showNameTag: boolean
+        characterName?: string
+    }>
     history: SessionHistoryMessage[]
 }
 
@@ -113,12 +119,19 @@ export type UserJoinedMessage = {
     type: "user_joined"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
 }
 
 export type UserLeftMessage = {
     type: "user_left"
     userId: string
+}
+
+export type UserIdentityUpdatedMessage = {
+    type: "user_identity_updated"
+    userId: string
+    showNameTag: boolean
 }
 
 export type SessionClosedMessage = {
@@ -131,6 +144,7 @@ export type ChatMessageReceived = {
     type: "chat_message"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     message: string
     timestamp: number
@@ -140,6 +154,7 @@ export type DiceRollReceived = {
     type: "dice_roll"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     rollData: {
         dice: Array<{ id: number; value: number; isBloodDie: boolean }>
@@ -165,6 +180,7 @@ export type RouseCheckReceived = {
     type: "rouse_check"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     roll: number
     success: boolean
@@ -176,6 +192,7 @@ export type RemorseCheckReceived = {
     type: "remorse_check"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     rolls: number[]
     successes: number
@@ -194,6 +211,7 @@ export type ServerMessage =
     | SessionJoinedMessage
     | UserJoinedMessage
     | UserLeftMessage
+    | UserIdentityUpdatedMessage
     | SessionClosedMessage
     | ChatMessageReceived
     | DiceRollReceived

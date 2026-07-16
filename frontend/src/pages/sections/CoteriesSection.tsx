@@ -29,6 +29,7 @@ import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieCharacter, CoteriePlayerResponse, CoterieResponse } from "~/utils/api"
 import { getCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
+import NameTag from "~/components/NameTag"
 
 type Character = CoterieCharacter
 type CoteriePlayer = CoteriePlayerResponse
@@ -77,6 +78,7 @@ const CoteriesSection = ({
             string,
             {
                 playerName?: string
+                showPlayerNameTag: boolean
                 vitals?: CharacterVitals
             }
         > = {}
@@ -88,6 +90,7 @@ const CoteriesSection = ({
 
                 details[member.characterId] = {
                     playerName: member.playerNickname?.trim() || characterData?.player || undefined,
+                    showPlayerNameTag: !!member.showPlayerNameTag,
                     vitals:
                         liveVitals ??
                         (characterData ? getCharacterVitals(characterData) : undefined)
@@ -238,9 +241,17 @@ const CoteriesSection = ({
                                                     justify="space-between"
                                                 >
                                                     <Group gap="sm">
-                                                        <Text size="sm">
-                                                            {player.nickname || "No nickname set"}
-                                                        </Text>
+                                                        {player.showNameTag && player.nickname ? (
+                                                            <NameTag
+                                                                name={player.nickname}
+                                                                size="xs"
+                                                            />
+                                                        ) : (
+                                                            <Text size="sm">
+                                                                {player.nickname ||
+                                                                    "No nickname set"}
+                                                            </Text>
+                                                        )}
                                                         {player.isOwner ? (
                                                             <Badge
                                                                 size="xs"
@@ -282,6 +293,8 @@ const CoteriesSection = ({
                                                 const memberDetails =
                                                     memberDetailsByCharacterId[member.characterId]
                                                 const memberPlayerName = memberDetails?.playerName
+                                                const showPlayerNameTag =
+                                                    memberDetails?.showPlayerNameTag
                                                 const memberVitals = memberDetails?.vitals
                                                 return member.character ? (
                                                     <Group
@@ -293,10 +306,18 @@ const CoteriesSection = ({
                                                         <Group gap="sm">
                                                             <Text size="sm">
                                                                 • {member.character.name}
-                                                                {memberPlayerName
+                                                                {memberPlayerName &&
+                                                                !showPlayerNameTag
                                                                     ? ` | ${memberPlayerName}`
                                                                     : ""}
                                                             </Text>
+                                                            {memberPlayerName &&
+                                                            showPlayerNameTag ? (
+                                                                <NameTag
+                                                                    name={memberPlayerName}
+                                                                    size="xs"
+                                                                />
+                                                            ) : null}
                                                             {member.character.shared ? (
                                                                 <Badge
                                                                     size="xs"

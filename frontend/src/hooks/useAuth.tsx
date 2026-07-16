@@ -163,7 +163,8 @@ export const useAuth = () => {
     }
 
     const updateProfileMutation = useMutation({
-        mutationFn: (data: { nickname?: string | null }) => api.updateUserProfile(data),
+        mutationFn: (data: { nickname?: string | null; nameTagVisible?: boolean }) =>
+            api.updateUserProfile(data),
         onSuccess: (data) => {
             queryClient.setQueryData(["auth", "me"], data)
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] })

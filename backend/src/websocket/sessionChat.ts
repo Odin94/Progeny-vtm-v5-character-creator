@@ -41,6 +41,30 @@ export const temporarySessions = new Map<string, Session>()
 export const coterieSessions = new Map<string, Session>()
 const recentChatSessions = new Map<string, RecentChatSession>()
 
+export function updateSessionNameTag(userId: string, showNameTag: boolean): void {
+    for (const sessions of [temporarySessions, coterieSessions]) {
+        for (const session of sessions.values()) {
+            const participant = session.participants.get(userId)
+            if (!participant) {
+                continue
+            }
+
+            participant.showNameTag = showNameTag
+            for (const message of session.history) {
+                if (message.userId === userId) {
+                    message.showNameTag = showNameTag
+                }
+            }
+
+            broadcastToSession(session, {
+                type: "user_identity_updated",
+                userId,
+                showNameTag
+            })
+        }
+    }
+}
+
 export function ensureCoterieSession(coterieId: string, creatorUserId: string): Session {
     const existingSession = coterieSessions.get(coterieId)
     if (existingSession) {
@@ -293,6 +317,7 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
 
             const userId = user.id
             const userName = getUserName(user)
+            const showNameTag = user.nameTagEnabled && user.nameTagVisible
             let currentSession: Session | null = null
 
             try {
@@ -335,6 +360,7 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
                                     fastify,
                                     userId,
                                     userName,
+                                    showNameTag,
                                     currentSession
                                 )
                                 break

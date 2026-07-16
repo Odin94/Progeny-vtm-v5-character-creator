@@ -14,6 +14,11 @@ import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
 import z from "zod"
 
+const serializeSharedUser = (user: typeof schema.users.$inferSelect | null | undefined) => ({
+    nickname: user?.nickname || null,
+    showNameTag: !!user && user.nameTagEnabled && user.nameTagVisible
+})
+
 export async function shareRoutes(fastify: FastifyInstance) {
     // Share character with user
     fastify.post<{
@@ -152,7 +157,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
                     characterId: share.characterId,
                     createdAt: share.createdAt,
                     sharedWith: {
-                        nickname: sharedWithUser.nickname || null
+                        ...serializeSharedUser(sharedWithUser)
                     }
                 })
             } catch (error) {
@@ -300,7 +305,7 @@ export async function shareRoutes(fastify: FastifyInstance) {
                 characterName: character.name,
                 createdAt: share.createdAt,
                 sharedWith: {
-                    nickname: share.sharedWith?.nickname || null
+                    ...serializeSharedUser(share.sharedWith)
                 }
             }))
 

@@ -10,11 +10,7 @@ import {
     type SessionJoinedMessage,
     type UserJoinedMessage
 } from "../sessionChatTypes.js"
-import {
-    clearRecentChatSession,
-    temporarySessions,
-    ensureCoterieSession
-} from "../sessionChat.js"
+import { clearRecentChatSession, temporarySessions, ensureCoterieSession } from "../sessionChat.js"
 import { recordSessionJoin } from "../sessionChatLifecycle.js"
 import { sendErrorAndTrack, broadcastToSession } from "../sessionChatUtils.js"
 import { removeParticipantFromSession } from "./handleLeaveSession.js"
@@ -25,6 +21,7 @@ export async function handleJoinSession(
     fastify: FastifyInstance,
     userId: string,
     userName: string,
+    showNameTag: boolean,
     currentSession: Session | null
 ): Promise<Session | null> {
     const { sessionId, coterieId, characterName } = data
@@ -109,6 +106,7 @@ export async function handleJoinSession(
         const participant: Participant = {
             userId,
             userName,
+            showNameTag,
             characterName,
             socket: socket
         }
@@ -125,6 +123,7 @@ export async function handleJoinSession(
         const participants = Array.from(currentSession.participants.values()).map((p) => ({
             userId: p.userId,
             userName: p.userName,
+            showNameTag: p.showNameTag,
             characterName: p.characterName
         }))
 
@@ -180,6 +179,7 @@ export async function handleJoinSession(
                 type: "user_joined",
                 userId,
                 userName,
+                showNameTag,
                 characterName: participant.characterName
             } as UserJoinedMessage,
             userId

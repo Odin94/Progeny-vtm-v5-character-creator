@@ -70,6 +70,8 @@ const createTables = async () => {
             nickname text UNIQUE,
             preferences text,
             is_superadmin integer DEFAULT false NOT NULL,
+            name_tag_enabled integer DEFAULT false NOT NULL,
+            name_tag_visible integer DEFAULT false NOT NULL,
             created_at integer DEFAULT (unixepoch()) NOT NULL,
             updated_at integer DEFAULT (unixepoch()) NOT NULL
         )`)
@@ -167,7 +169,9 @@ const seedBaseData = async () => {
         {
             id: MEMBER_ID,
             email: `${MEMBER_ID}@progeny.invalid`,
-            nickname: "Member"
+            nickname: "Member",
+            nameTagEnabled: true,
+            nameTagVisible: true
         },
         {
             id: OTHER_ID,
@@ -601,12 +605,20 @@ describe("coterie invites and membership permissions", () => {
         })
         expect(coteriesResponse.statusCode).toBe(200)
         const [joinedCoterie] = coteriesResponse.json() as Array<{
-            members: Array<{ characterId: string; playerNickname: string | null }>
+            members: Array<{
+                characterId: string
+                playerNickname: string | null
+                showPlayerNameTag: boolean
+            }>
         }>
         expect(
             joinedCoterie.members.find((member) => member.characterId === MEMBER_CHARACTER_ID)
                 ?.playerNickname
         ).toBe("Member")
+        expect(
+            joinedCoterie.members.find((member) => member.characterId === MEMBER_CHARACTER_ID)
+                ?.showPlayerNameTag
+        ).toBe(true)
 
         const addOtherCharacterResponse = await app.inject({
             method: "POST",

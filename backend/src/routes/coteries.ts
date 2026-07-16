@@ -70,6 +70,9 @@ const getCoterieNickname = (
     return Array.from(emailLocalPart).slice(0, 3).join("") || "Player"
 }
 
+const shouldShowNameTag = (user: { nameTagEnabled: boolean; nameTagVisible: boolean }) =>
+    user.nameTagEnabled && user.nameTagVisible
+
 const serializeNoteVersion = (version: typeof schema.coterieNoteVersions.$inferSelect) => ({
     id: version.id,
     content: version.content,
@@ -139,11 +142,13 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
     const roster: Array<{
         membershipId: string | null
         nickname: string
+        showNameTag: boolean
         isOwner: boolean
         joinedAt: Date
     }> = memberships.map((membership) => ({
         membershipId: membership.id,
         nickname: getCoterieNickname(membership.user),
+        showNameTag: shouldShowNameTag(membership.user),
         isOwner: membership.userId === coterie.ownerId,
         joinedAt: membership.createdAt
     }))
@@ -156,6 +161,7 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
         roster.unshift({
             membershipId: null,
             nickname: getCoterieNickname(owner),
+            showNameTag: owner ? shouldShowNameTag(owner) : false,
             isOwner: true,
             joinedAt: coterie.createdAt
         })
@@ -214,13 +220,21 @@ const buildCoterieResponse = async (
                   .select({
                       id: schema.users.id,
                       email: schema.users.email,
-                      nickname: schema.users.nickname
+                      nickname: schema.users.nickname,
+                      nameTagEnabled: schema.users.nameTagEnabled,
+                      nameTagVisible: schema.users.nameTagVisible
                   })
                   .from(schema.users)
                   .where(inArray(schema.users.id, characterOwnerIds))
             : []
-    const nicknameByUserId = new Map(
-        characterOwners.map((owner) => [owner.id, getCoterieNickname(owner)])
+    const identityByUserId = new Map(
+        characterOwners.map((owner) => [
+            owner.id,
+            {
+                nickname: getCoterieNickname(owner),
+                showNameTag: shouldShowNameTag(owner)
+            }
+        ])
     )
 
     return {
@@ -235,7 +249,9 @@ const buildCoterieResponse = async (
                 id: member.id,
                 characterId: member.characterId,
                 createdAt: member.createdAt,
-                playerNickname: nicknameByUserId.get(member.character!.userId) ?? null,
+                playerNickname: identityByUserId.get(member.character!.userId)?.nickname ?? null,
+                showPlayerNameTag:
+                    identityByUserId.get(member.character!.userId)?.showNameTag ?? false,
                 character: parseCharacter(member.character!, userId)
             })),
         players: isOwner ? await getPlayerRoster(coterie) : undefined

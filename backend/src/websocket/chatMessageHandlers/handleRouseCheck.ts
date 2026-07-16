@@ -40,6 +40,7 @@ export async function handleRouseCheck(
         type: "rouse_check",
         userId,
         userName: participant.userName,
+        showNameTag: participant.showNameTag,
         characterName: data.characterName ?? participant.characterName,
         roll: data.roll,
         success: data.success,

@@ -1,6 +1,17 @@
-import { ActionIcon, Button, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core"
+import {
+    ActionIcon,
+    Button,
+    Card,
+    Group,
+    Stack,
+    Switch,
+    Text,
+    TextInput,
+    Title
+} from "@mantine/core"
 import { IconEdit, IconEye, IconEyeOff, IconUser } from "@tabler/icons-react"
 import { useState } from "react"
+import NameTag from "~/components/NameTag"
 
 type UserProfileSectionProps = {
     user: {
@@ -8,6 +19,8 @@ type UserProfileSectionProps = {
         firstName?: string | null
         lastName?: string | null
         nickname?: string | null
+        nameTagEnabled: boolean
+        nameTagVisible: boolean
     } | null
     isEditingNickname: boolean
     nicknameValue: string
@@ -17,6 +30,7 @@ type UserProfileSectionProps = {
     redColorValue: string
     handleSaveNickname: () => void
     handleCancelNickname: () => void
+    handleNameTagToggle: (visible: boolean) => void
 }
 
 const UserProfileSection = ({
@@ -28,9 +42,12 @@ const UserProfileSection = ({
     isUpdatingProfile,
     redColorValue,
     handleSaveNickname,
-    handleCancelNickname
+    handleCancelNickname,
+    handleNameTagToggle
 }: UserProfileSectionProps) => {
     const [emailVisible, setEmailVisible] = useState(false)
+    const nameTagLabel =
+        user?.nickname || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Player"
 
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
@@ -105,6 +122,19 @@ const UserProfileSection = ({
                         </Group>
                     )}
                 </Group>
+                {user?.nameTagEnabled ? (
+                    <Group gap="md" align="center" mt="xs">
+                        <Switch
+                            color="grape"
+                            checked={user.nameTagVisible}
+                            disabled={isUpdatingProfile}
+                            onChange={(event) => handleNameTagToggle(event.currentTarget.checked)}
+                            label="Show my name tag to other players"
+                            description="Adds a highlighted player tag beside your name in chats and coteries."
+                        />
+                        {user.nameTagVisible ? <NameTag name={nameTagLabel} /> : null}
+                    </Group>
+                ) : null}
             </Stack>
         </Card>
     )

@@ -10,6 +10,7 @@ import { upcase } from "~/generator/utils"
 import { RAW_GOLD, RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieMemberResponse } from "~/utils/api"
+import NameTag from "~/components/NameTag"
 import { getCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
 import type { ReactNode } from "react"
@@ -364,14 +365,18 @@ const CoterieCharacterSummaryGrid = ({
                                     >
                                         {character.name}
                                     </Text>
-                                    <Text
-                                        size="sm"
-                                        c="dimmed"
-                                        truncate="end"
-                                        style={{ minWidth: 0 }}
-                                    >
-                                        {playerName}
-                                    </Text>
+                                    {member.showPlayerNameTag ? (
+                                        <NameTag name={playerName} size="xs" />
+                                    ) : (
+                                        <Text
+                                            size="sm"
+                                            c="dimmed"
+                                            truncate="end"
+                                            style={{ minWidth: 0 }}
+                                        >
+                                            {playerName}
+                                        </Text>
+                                    )}
                                 </Group>
                                 <Stack gap={6}>
                                     <StatusMeterRow>

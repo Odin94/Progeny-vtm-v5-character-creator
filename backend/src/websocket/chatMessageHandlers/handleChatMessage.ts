@@ -78,6 +78,7 @@ export async function handleChatMessage(
         type: "chat_message",
         userId,
         userName: participant.userName,
+        showNameTag: participant.showNameTag,
         characterName: data.characterName ?? participant.characterName,
         message: sanitizedMessage,
         timestamp

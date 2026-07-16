@@ -40,6 +40,7 @@ import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import NameTag from "~/components/NameTag"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
 import { characterSchema, Character as CharacterType, getEmptyCharacter } from "~/data/Character"
@@ -125,13 +126,7 @@ const ShareCharacterModalContent = ({
         characterToShare?.id || null
     )
 
-    const sharedWithNicknames =
-        shares
-            ?.map((share: unknown) => {
-                const s = share as { sharedWith: { nickname: string | null } }
-                return s.sharedWith?.nickname
-            })
-            .filter((nickname: string | null | undefined): nickname is string => !!nickname) || []
+    const sharedWithUsers = shares?.filter((share) => !!share.sharedWith.nickname) || []
 
     return (
         <Stack gap="md">
@@ -156,17 +151,24 @@ const ShareCharacterModalContent = ({
                 <Text c="dimmed" size="sm">
                     Loading...
                 </Text>
-            ) : sharedWithNicknames.length > 0 ? (
+            ) : sharedWithUsers.length > 0 ? (
                 <Stack gap="xs">
                     <Text fw={500} size="sm">
                         Currently shared with:
                     </Text>
                     <Group gap="xs">
-                        {sharedWithNicknames.map((nickname: string) => (
-                            <Badge key={nickname} color="red" variant="light">
-                                {nickname}
-                            </Badge>
-                        ))}
+                        {sharedWithUsers.map((share) =>
+                            share.sharedWith.showNameTag ? (
+                                <NameTag
+                                    key={share.sharedWith.nickname}
+                                    name={share.sharedWith.nickname!}
+                                />
+                            ) : (
+                                <Badge key={share.sharedWith.nickname} color="red" variant="light">
+                                    {share.sharedWith.nickname}
+                                </Badge>
+                            )
+                        )}
                     </Group>
                 </Stack>
             ) : null}
@@ -447,6 +449,30 @@ const MePage = () => {
     const handleCancelNickname = () => {
         setNicknameValue(user?.nickname || "")
         setIsEditingNickname(false)
+    }
+
+    const handleNameTagToggle = (nameTagVisible: boolean) => {
+        updateProfile(
+            { nameTagVisible },
+            {
+                onSuccess: () => {
+                    notifications.show({
+                        title: nameTagVisible ? "Name tag enabled" : "Name tag hidden",
+                        message: nameTagVisible
+                            ? "Other players will see your highlighted name tag."
+                            : "Your name will use the standard display.",
+                        color: nameTagVisible ? "grape" : "gray"
+                    })
+                },
+                onError: (error) => {
+                    notifications.show({
+                        title: "Could not update name tag",
+                        message: error instanceof Error ? error.message : "Please try again.",
+                        color: "red"
+                    })
+                }
+            }
+        )
     }
 
     useEffect(() => {
@@ -1759,6 +1785,7 @@ const MePage = () => {
                                     redColorValue={redColorValue}
                                     handleSaveNickname={handleSaveNickname}
                                     handleCancelNickname={handleCancelNickname}
+                                    handleNameTagToggle={handleNameTagToggle}
                                 />
 
                                 <CharactersSection
@@ -2627,9 +2654,18 @@ const CoterieSummaryContent = ({
                                     <Text fw={700} size="lg" truncate="end">
                                         {character.name}
                                     </Text>
-                                    <Text size="sm" c="dimmed" truncate="end">
-                                        Player: {playerName}
-                                    </Text>
+                                    <Group gap="xs" wrap="nowrap">
+                                        <Text size="sm" c="dimmed">
+                                            Player:
+                                        </Text>
+                                        {member.showPlayerNameTag ? (
+                                            <NameTag name={playerName} size="xs" />
+                                        ) : (
+                                            <Text size="sm" c="dimmed" truncate="end">
+                                                {playerName}
+                                            </Text>
+                                        )}
+                                    </Group>
                                     <Group gap="xs">
                                         <Badge size="sm" color="red" variant="light">
                                             Hunger {vitals.hunger}/5

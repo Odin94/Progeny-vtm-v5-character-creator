@@ -40,6 +40,7 @@ export async function handleRemorseCheck(
         type: "remorse_check",
         userId,
         userName: participant.userName,
+        showNameTag: participant.showNameTag,
         characterName: data.characterName ?? participant.characterName,
         rolls: data.rolls,
         successes: data.successes,

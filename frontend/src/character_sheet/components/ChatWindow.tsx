@@ -35,6 +35,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
 import { api, type RecentChatSessionResponse } from "~/utils/api"
 import { RollData } from "../stores/sessionChatStore"
+import NameTag from "~/components/NameTag"
 
 type ChatWindowProps = {
     options: Pick<SheetOptions, "primaryColor" | "character">
@@ -56,6 +57,7 @@ type Coterie = {
 type SenderMessage = {
     userId?: string
     userName?: string
+    showNameTag?: boolean
     characterName?: string
 }
 
@@ -310,6 +312,27 @@ const ChatWindow = ({
             return `${characterName} (${userName})`
         }
         return userName
+    }
+
+    const renderMessageName = (message: SenderMessage) => {
+        if (message.showNameTag && message.userName) {
+            return (
+                <>
+                    {message.characterName && message.characterName !== message.userName ? (
+                        <Text size="sm" fw={600}>
+                            {message.characterName}
+                        </Text>
+                    ) : null}
+                    <NameTag name={message.userName} size="xs" />
+                </>
+            )
+        }
+
+        return (
+            <Text size="sm" fw={600}>
+                {formatMessageName(message.userName, message.characterName)}
+            </Text>
+        )
     }
 
     const isOwnMessage = (message: SenderMessage): boolean => {
@@ -747,9 +770,22 @@ const ChatWindow = ({
                                 }}
                             >
                                 <IconUsers size={14} />
-                                <Text size="xs" c="dimmed">
-                                    {participants.map((p) => p.userName).join(", ")}
-                                </Text>
+                                {participants.map((participant, index) => (
+                                    <Group key={participant.userId} gap={4} wrap="nowrap">
+                                        {index > 0 ? (
+                                            <Text size="xs" c="dimmed">
+                                                ·
+                                            </Text>
+                                        ) : null}
+                                        {participant.showNameTag ? (
+                                            <NameTag name={participant.userName} size="xs" />
+                                        ) : (
+                                            <Text size="xs" c="dimmed">
+                                                {participant.userName}
+                                            </Text>
+                                        )}
+                                    </Group>
+                                ))}
                             </Group>
                         ) : null}
 
@@ -761,12 +797,7 @@ const ChatWindow = ({
                                             <Box key={idx} style={getMessageRowStyle(msg)}>
                                                 <Box p="xs" style={getMessageBubbleStyle(msg)}>
                                                     <Group gap="xs" mb={4}>
-                                                        <Text size="sm" fw={600}>
-                                                            {formatMessageName(
-                                                                msg.userName,
-                                                                msg.characterName
-                                                            )}
-                                                        </Text>
+                                                        {renderMessageName(msg)}
                                                         <Text size="xs" c="dimmed">
                                                             {formatTimestamp(msg.timestamp)}
                                                         </Text>
@@ -833,12 +864,7 @@ const ChatWindow = ({
                                                 >
                                                     <Group gap="xs" mb={4}>
                                                         <IconDice size={14} />
-                                                        <Text size="sm" fw={600}>
-                                                            {formatMessageName(
-                                                                msg.userName,
-                                                                msg.characterName
-                                                            )}
-                                                        </Text>
+                                                        {renderMessageName(msg)}
                                                         <Text size="xs" c="dimmed">
                                                             {formatTimestamp(msg.timestamp)}
                                                         </Text>
@@ -899,12 +925,7 @@ const ChatWindow = ({
                                                 >
                                                     <Group gap="xs" mb={4}>
                                                         <IconDroplet size={14} />
-                                                        <Text size="sm" fw={600}>
-                                                            {formatMessageName(
-                                                                msg.userName,
-                                                                msg.characterName
-                                                            )}
-                                                        </Text>
+                                                        {renderMessageName(msg)}
                                                         <Text size="xs" c="dimmed">
                                                             {formatTimestamp(msg.timestamp)}
                                                         </Text>
@@ -934,12 +955,7 @@ const ChatWindow = ({
                                                 >
                                                     <Group gap="xs" mb={4}>
                                                         <IconHeartHandshake size={14} />
-                                                        <Text size="sm" fw={600}>
-                                                            {formatMessageName(
-                                                                msg.userName,
-                                                                msg.characterName
-                                                            )}
-                                                        </Text>
+                                                        {renderMessageName(msg)}
                                                         <Text size="xs" c="dimmed">
                                                             {formatTimestamp(msg.timestamp)}
                                                         </Text>

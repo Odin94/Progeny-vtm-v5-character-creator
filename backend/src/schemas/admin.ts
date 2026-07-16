@@ -12,6 +12,10 @@ export const updateSuperadminSchema = z.object({
     isSuperadmin: z.boolean()
 })
 
+export const updateNameTagSchema = z.object({
+    nameTagEnabled: z.boolean()
+})
+
 export const startImpersonationSchema = z.object({
     userId: z.string().min(1)
 })
@@ -19,4 +23,5 @@ export const startImpersonationSchema = z.object({
 export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>
 export type AdminUserParams = z.infer<typeof adminUserParamsSchema>
 export type UpdateSuperadminInput = z.infer<typeof updateSuperadminSchema>
+export type UpdateNameTagInput = z.infer<typeof updateNameTagSchema>
 export type StartImpersonationInput = z.infer<typeof startImpersonationSchema>

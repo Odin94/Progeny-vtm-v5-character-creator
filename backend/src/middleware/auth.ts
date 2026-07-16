@@ -20,6 +20,8 @@ export type AuthenticatedUser = {
     lastName?: string
     nickname?: string | null
     isSuperadmin: boolean
+    nameTagEnabled: boolean
+    nameTagVisible: boolean
 }
 
 export type ImpersonationRequestState = {
@@ -54,7 +56,9 @@ async function toAuthenticatedUser(user: WorkosUser): Promise<AuthenticatedUser>
         firstName: dbUser?.firstName ?? user.firstName ?? undefined,
         lastName: dbUser?.lastName ?? user.lastName ?? undefined,
         nickname: dbUser?.nickname ?? null,
-        isSuperadmin: dbUser?.isSuperadmin ?? false
+        isSuperadmin: dbUser?.isSuperadmin ?? false,
+        nameTagEnabled: dbUser?.nameTagEnabled ?? false,
+        nameTagVisible: dbUser?.nameTagVisible ?? false
     }
 }
 
@@ -73,7 +77,9 @@ async function getDbAuthenticatedUser(userId: string): Promise<AuthenticatedUser
         firstName: user.firstName ?? undefined,
         lastName: user.lastName ?? undefined,
         nickname: user.nickname,
-        isSuperadmin: user.isSuperadmin
+        isSuperadmin: user.isSuperadmin,
+        nameTagEnabled: user.nameTagEnabled,
+        nameTagVisible: user.nameTagVisible
     }
 }
 

@@ -6,6 +6,7 @@ import {
     trackSessionClosed
 } from "./sessionChatLifecycle.js"
 import { type Participant, type Session } from "./sessionChatTypes.js"
+import { temporarySessions, updateSessionNameTag } from "./sessionChat.js"
 
 vi.mock("../utils/tracker.js", () => ({
     trackEvent: vi.fn(() => Promise.resolve())
@@ -17,6 +18,7 @@ function createParticipant(userId: string): Participant {
     return {
         userId,
         userName: userId,
+        showNameTag: false,
         socket: {}
     }
 }
@@ -37,6 +39,39 @@ function createSession(): Session {
 describe("session chat lifecycle tracking", () => {
     beforeEach(() => {
         trackEventMock.mockClear()
+        temporarySessions.clear()
+    })
+
+    it("updates active participants and history when name-tag visibility changes", () => {
+        const session = createSession()
+        const send = vi.fn()
+        session.participants.get("creator-1")!.socket = { readyState: 1, send }
+        session.history.push({
+            type: "chat_message",
+            userId: "creator-1",
+            userName: "Creator",
+            showNameTag: false,
+            message: "Hello",
+            timestamp: 1
+        })
+        temporarySessions.set(session.id, session)
+
+        updateSessionNameTag("creator-1", true)
+        expect(session.participants.get("creator-1")?.showNameTag).toBe(true)
+        expect(session.history[0]?.showNameTag).toBe(true)
+        expect(JSON.parse(send.mock.calls[0][0])).toMatchObject({
+            type: "user_identity_updated",
+            userId: "creator-1",
+            showNameTag: true
+        })
+
+        updateSessionNameTag("creator-1", false)
+        expect(session.participants.get("creator-1")?.showNameTag).toBe(false)
+        expect(session.history[0]?.showNameTag).toBe(false)
+        expect(JSON.parse(send.mock.calls[1][0])).toMatchObject({
+            type: "user_identity_updated",
+            showNameTag: false
+        })
     })
 
     it("starts active duration when a non-creator joins", () => {

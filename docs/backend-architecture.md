@@ -21,7 +21,8 @@ Steps 2–3 run for all requests including unauthenticated ones. Step 4 only run
 Superadmin support is layered onto the same auth boundary:
 
 - `users.is_superadmin` is the DB-backed admin flag; the first superadmin is bootstrapped manually in SQLite.
-- `src/routes/admin.ts` exposes user search, superadmin toggling, and impersonation start/stop endpoints.
+- `src/routes/admin.ts` exposes user search, superadmin toggling, name-tag entitlement toggling, and impersonation start/stop endpoints.
+- Name tags use two DB-backed flags: `users.name_tag_enabled` is the superadmin-controlled entitlement, while `users.name_tag_visible` is the user's preference. Public coterie and chat payloads expose only the effective `enabled && visible` state.
 - `authenticateUser` always resolves the real WorkOS actor first, then applies a signed `impersonation-session` cookie when an active in-memory session exists.
 - During impersonation, existing route handlers continue to read `request.user` as the effective user. Admin checks must use `request.actorUser` through `requireSuperadmin` so an impersonated identity cannot grant admin access.
 - Mutating REST calls during impersonation are appended by the global `onResponse` hook to `impersonation_sessions.audit_log`; WebSocket messages are not audited there.

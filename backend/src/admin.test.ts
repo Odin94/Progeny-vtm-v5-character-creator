@@ -103,6 +103,8 @@ describe("superadmin impersonation", () => {
             nickname text UNIQUE,
             preferences text,
             is_superadmin integer DEFAULT false NOT NULL,
+            name_tag_enabled integer DEFAULT false NOT NULL,
+            name_tag_visible integer DEFAULT false NOT NULL,
             created_at integer DEFAULT (unixepoch()) NOT NULL,
             updated_at integer DEFAULT (unixepoch()) NOT NULL
         )`)
@@ -188,6 +190,59 @@ describe("superadmin impersonation", () => {
         })
         expect(toggleResponse.statusCode).toBe(200)
         expect(toggleResponse.json().isSuperadmin).toBe(true)
+    })
+
+    it("grants name tag access and lets the user control visibility", async () => {
+        const grantResponse = await app.inject({
+            method: "PATCH",
+            url: `/admin/users/${TARGET_ID}/name-tag`,
+            headers: csrfHeaders,
+            payload: { nameTagEnabled: true }
+        })
+        expect(grantResponse.statusCode).toBe(200)
+        expect(grantResponse.json()).toMatchObject({
+            id: TARGET_ID,
+            nameTagEnabled: true,
+            nameTagVisible: false
+        })
+
+        setWorkosUser(TARGET_ID, TARGET_EMAIL)
+        const visibilityResponse = await app.inject({
+            method: "PUT",
+            url: "/auth/me",
+            headers: csrfHeaders,
+            payload: { nameTagVisible: true }
+        })
+        expect(visibilityResponse.statusCode).toBe(200)
+        expect(visibilityResponse.json()).toMatchObject({
+            nameTagEnabled: true,
+            nameTagVisible: true
+        })
+
+        setWorkosUser(ADMIN_ID, ADMIN_EMAIL)
+        const revokeResponse = await app.inject({
+            method: "PATCH",
+            url: `/admin/users/${TARGET_ID}/name-tag`,
+            headers: csrfHeaders,
+            payload: { nameTagEnabled: false }
+        })
+        expect(revokeResponse.statusCode).toBe(200)
+        expect(revokeResponse.json()).toMatchObject({
+            nameTagEnabled: false,
+            nameTagVisible: false
+        })
+    })
+
+    it("does not let a user enable an ungranted name tag", async () => {
+        setWorkosUser(TARGET_ID, TARGET_EMAIL)
+        const response = await app.inject({
+            method: "PUT",
+            url: "/auth/me",
+            headers: csrfHeaders,
+            payload: { nameTagVisible: true }
+        })
+
+        expect(response.statusCode).toBe(403)
     })
 
     it("searches users in SQL before applying the list limit", async () => {

@@ -64,6 +64,13 @@
       "when": 1784062500451,
       "tag": "0008_eager_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1784136495770,
+      "tag": "0009_chemical_havok",
+      "breakpoints": true
     }
   ]
 }

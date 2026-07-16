@@ -137,6 +137,8 @@ export type CurrentUser = {
     lastName?: string
     nickname?: string | null
     isSuperadmin: boolean
+    nameTagEnabled: boolean
+    nameTagVisible: boolean
     actorIsSuperadmin: boolean
     impersonation:
         | { active: false }
@@ -155,6 +157,8 @@ export type AdminUser = {
     lastName?: string | null
     nickname?: string | null
     isSuperadmin: boolean
+    nameTagEnabled: boolean
+    nameTagVisible: boolean
     isActive?: boolean
     lastActiveAt?: string | null
 }
@@ -222,12 +226,14 @@ export type CoterieMemberResponse = {
     characterId: string
     createdAt: ApiTimestamp
     playerNickname?: string | null
+    showPlayerNameTag?: boolean
     character?: CoterieCharacter
 }
 
 export type CoteriePlayerResponse = {
     membershipId: string | null
     nickname: string | null
+    showNameTag: boolean
     isOwner: boolean
     joinedAt: ApiTimestamp
 }
@@ -295,6 +301,17 @@ export type RecentChatSessionResponse =
           participantCount: number
       }
 
+export type CharacterShareResponse = {
+    id?: string
+    characterId: string
+    characterName?: string
+    createdAt: ApiTimestamp
+    sharedWith: {
+        nickname: string | null
+        showNameTag: boolean
+    }
+}
+
 // TODOdin: Put proper types in APIs
 export const api = {
     // Auth
@@ -328,7 +345,7 @@ export const api = {
             `/auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`
         ),
     logout: () => apiRequest<{ success: true; logoutUrl: string | null }>("/auth/logout"),
-    updateUserProfile: (data: { nickname?: string | null }) =>
+    updateUserProfile: (data: { nickname?: string | null; nameTagVisible?: boolean }) =>
         apiRequest<CurrentUser>("/auth/me", { method: "PUT", body: data }),
     getPreferences: () => apiRequest<UserPreferences>("/auth/preferences"),
     updatePreferences: (data: Partial<UserPreferences>) =>
@@ -342,6 +359,11 @@ export const api = {
         ),
     updateSuperadmin: (id: string, data: { isSuperadmin: boolean }) =>
         apiRequest<AdminUser>(`/admin/users/${id}/superadmin`, {
+            method: "PATCH",
+            body: data
+        }),
+    updateNameTagAccess: (id: string, data: { nameTagEnabled: boolean }) =>
+        apiRequest<AdminUser>(`/admin/users/${id}/name-tag`, {
             method: "PATCH",
             body: data
         }),
@@ -425,11 +447,14 @@ export const api = {
 
     // Shares
     shareCharacter: (characterId: string, data: { sharedWithUserNickname: string }) =>
-        apiRequest<unknown>(`/characters/${characterId}/share`, { method: "POST", body: data }),
+        apiRequest<CharacterShareResponse>(`/characters/${characterId}/share`, {
+            method: "POST",
+            body: data
+        }),
     unshareCharacter: (characterId: string, userId: string) =>
         apiRequest<void>(`/characters/${characterId}/share/${userId}`, { method: "DELETE" }),
     getCharacterShares: (characterId: string) =>
-        apiRequest<Array<unknown>>(`/characters/${characterId}/shares`)
+        apiRequest<CharacterShareResponse[]>(`/characters/${characterId}/shares`)
 }
 
 export { API_URL }

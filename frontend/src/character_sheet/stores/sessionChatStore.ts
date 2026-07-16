@@ -5,6 +5,7 @@ import posthog from "posthog-js"
 type Participant = {
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
 }
 
@@ -12,6 +13,7 @@ type ChatMessage = {
     type: "chat_message"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     message: string
     timestamp: number
@@ -40,6 +42,7 @@ export type DiceRollMessage = {
     type: "dice_roll"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     rollData: RollData
     timestamp: number
@@ -49,6 +52,7 @@ type RouseCheckMessage = {
     type: "rouse_check"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     roll: number
     success: boolean
@@ -60,6 +64,7 @@ type RemorseCheckMessage = {
     type: "remorse_check"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
     rolls: number[]
     successes: number
@@ -81,12 +86,19 @@ type UserJoinedMessage = {
     type: "user_joined"
     userId: string
     userName: string
+    showNameTag: boolean
     characterName?: string
 }
 
 type UserLeftMessage = {
     type: "user_left"
     userId: string
+}
+
+type UserIdentityUpdatedMessage = {
+    type: "user_identity_updated"
+    userId: string
+    showNameTag: boolean
 }
 
 type SessionClosedMessage = {
@@ -105,6 +117,7 @@ type ServerMessage =
     | SessionJoinedMessage
     | UserJoinedMessage
     | UserLeftMessage
+    | UserIdentityUpdatedMessage
     | SessionClosedMessage
     | ChatMessage
     | DiceRollMessage
@@ -338,6 +351,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                                     {
                                         userId: data.userId,
                                         userName: data.userName,
+                                        showNameTag: data.showNameTag,
                                         characterName: data.characterName
                                     }
                                 ]
@@ -355,6 +369,21 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                         })
                         break
                     }
+
+                    case "user_identity_updated":
+                        set((state) => ({
+                            participants: state.participants.map((participant) =>
+                                participant.userId === data.userId
+                                    ? { ...participant, showNameTag: data.showNameTag }
+                                    : participant
+                            ),
+                            messages: state.messages.map((message) =>
+                                "userId" in message && message.userId === data.userId
+                                    ? { ...message, showNameTag: data.showNameTag }
+                                    : message
+                            )
+                        }))
+                        break
 
                     case "chat_message":
                         set((state) => ({ messages: [...state.messages, data] }))

@@ -65,6 +65,8 @@ const createTables = async () => {
             nickname text UNIQUE,
             preferences text,
             is_superadmin integer DEFAULT false NOT NULL,
+            name_tag_enabled integer DEFAULT false NOT NULL,
+            name_tag_visible integer DEFAULT false NOT NULL,
             created_at integer DEFAULT (unixepoch()) NOT NULL,
             updated_at integer DEFAULT (unixepoch()) NOT NULL
         )`)

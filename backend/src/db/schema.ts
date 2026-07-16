@@ -10,6 +10,8 @@ export const users = sqliteTable("users", {
     nickname: text("nickname").unique(),
     preferences: text("preferences"),
     isSuperadmin: integer("is_superadmin", { mode: "boolean" }).notNull().default(false),
+    nameTagEnabled: integer("name_tag_enabled", { mode: "boolean" }).notNull().default(false),
+    nameTagVisible: integer("name_tag_visible", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp" })
         .notNull()
         .default(sql`(unixepoch())`),
@@ -292,19 +294,16 @@ export const coterieMembersRelations = relations(coterieMembers, ({ one }) => ({
     })
 }))
 
-export const coteriePlayerMembershipsRelations = relations(
-    coteriePlayerMemberships,
-    ({ one }) => ({
-        coterie: one(coteries, {
-            fields: [coteriePlayerMemberships.coterieId],
-            references: [coteries.id]
-        }),
-        user: one(users, {
-            fields: [coteriePlayerMemberships.userId],
-            references: [users.id]
-        })
+export const coteriePlayerMembershipsRelations = relations(coteriePlayerMemberships, ({ one }) => ({
+    coterie: one(coteries, {
+        fields: [coteriePlayerMemberships.coterieId],
+        references: [coteries.id]
+    }),
+    user: one(users, {
+        fields: [coteriePlayerMemberships.userId],
+        references: [users.id]
     })
-)
+}))
 
 export const coterieInvitesRelations = relations(coterieInvites, ({ one }) => ({
     coterie: one(coteries, {

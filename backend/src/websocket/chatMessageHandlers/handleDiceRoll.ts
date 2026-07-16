@@ -66,6 +66,7 @@ export async function handleDiceRoll(
         type: "dice_roll",
         userId,
         userName: participant.userName,
+        showNameTag: participant.showNameTag,
         characterName: data.characterName ?? participant.characterName,
         rollData: data.rollData,
         timestamp

@@ -6,6 +6,7 @@ import { env } from "../config/env.js"
 import { z } from "zod"
 import { updateUserSchema, type UpdateUserInput } from "../schemas/user.js"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { updateSessionNameTag } from "../websocket/sessionChat.js"
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.js"
 import { clearImpersonationCookie, endImpersonationSession } from "../middleware/impersonation.js"
 import { logger } from "../utils/logger.js"
@@ -277,6 +278,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                         lastName: user.lastName,
                         nickname: dbUser?.nickname ?? null,
                         isSuperadmin: dbUser?.isSuperadmin ?? false,
+                        nameTagEnabled: dbUser?.nameTagEnabled ?? false,
+                        nameTagVisible: dbUser?.nameTagVisible ?? false,
                         actorIsSuperadmin: dbUser?.isSuperadmin ?? false,
                         impersonation: { active: false }
                     }
@@ -423,6 +426,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                     lastName: user.lastName,
                     nickname: user.nickname ?? null,
                     isSuperadmin: user.isSuperadmin,
+                    nameTagEnabled: user.nameTagEnabled,
+                    nameTagVisible: user.nameTagVisible,
                     actorIsSuperadmin: actorUser.isSuperadmin,
                     impersonation: serializeImpersonationState(request)
                 })
@@ -460,15 +465,27 @@ export async function authRoutes(fastify: FastifyInstance) {
             try {
                 const userId = request.user!.id
                 const updateData = request.body as UpdateUserInput
+                const hasNicknameUpdate = Object.hasOwn(updateData, "nickname")
+                const hasNameTagUpdate = Object.hasOwn(updateData, "nameTagVisible")
 
-                if (!updateData.nickname) {
+                if (updateData.nameTagVisible && !request.user!.nameTagEnabled) {
+                    reply.code(403).send({
+                        error: "Forbidden",
+                        message: "Name tags have not been enabled for this account"
+                    })
+                    return
+                }
+
+                if (!hasNicknameUpdate && !hasNameTagUpdate) {
                     reply.code(200).send({
                         id: userId,
                         email: request.user!.email,
                         firstName: request.user!.firstName,
                         lastName: request.user!.lastName,
-                        nickname: null,
+                        nickname: request.user!.nickname ?? null,
                         isSuperadmin: request.user!.isSuperadmin,
+                        nameTagEnabled: request.user!.nameTagEnabled,
+                        nameTagVisible: request.user!.nameTagVisible,
                         actorIsSuperadmin:
                             request.actorUser?.isSuperadmin ?? request.user!.isSuperadmin,
                         impersonation: serializeImpersonationState(request)
@@ -479,7 +496,12 @@ export async function authRoutes(fastify: FastifyInstance) {
                 const [updated] = await db
                     .update(schema.users)
                     .set({
-                        ...(updateData.nickname && { nickname: updateData.nickname }),
+                        ...(hasNicknameUpdate && {
+                            nickname: updateData.nickname?.trim() || null
+                        }),
+                        ...(hasNameTagUpdate && {
+                            nameTagVisible: updateData.nameTagVisible
+                        }),
                         updatedAt: new Date()
                     })
                     .where(eq(schema.users.id, userId))
@@ -495,6 +517,13 @@ export async function authRoutes(fastify: FastifyInstance) {
                         error: "User not found"
                     })
                     return
+                }
+
+                if (hasNameTagUpdate) {
+                    updateSessionNameTag(
+                        updated.id,
+                        updated.nameTagEnabled && updated.nameTagVisible
+                    )
                 }
 
                 // Get WorkOS user data for email, firstName, lastName
@@ -522,7 +551,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                     endpoint: "/auth/me",
                     method: "PUT",
                     userId: updated.id,
-                    updatedFields: updateData.nickname
+                    updatedFields: [
+                        ...(hasNicknameUpdate ? ["nickname"] : []),
+                        ...(hasNameTagUpdate ? ["nameTagVisible"] : [])
+                    ]
                 })
 
                 await trackEvent(
@@ -531,7 +563,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                         endpoint: "/auth/me",
                         method: "PUT",
                         userId,
-                        updatedFields: updateData.nickname ? ["nickname"] : []
+                        updatedFields: [
+                            ...(hasNicknameUpdate ? ["nickname"] : []),
+                            ...(hasNameTagUpdate ? ["nameTagVisible"] : [])
+                        ]
                     },
                     userId,
                     request
@@ -544,6 +579,8 @@ export async function authRoutes(fastify: FastifyInstance) {
                     lastName: workosUser?.lastName || updated.lastName,
                     nickname: updated.nickname,
                     isSuperadmin: updated.isSuperadmin,
+                    nameTagEnabled: updated.nameTagEnabled,
+                    nameTagVisible: updated.nameTagVisible,
                     actorIsSuperadmin: request.actorUser?.isSuperadmin ?? updated.isSuperadmin,
                     impersonation: serializeImpersonationState(request)
                 })

@@ -18,13 +18,16 @@ import {
     adminUserParamsSchema,
     adminUsersQuerySchema,
     startImpersonationSchema,
+    updateNameTagSchema,
     updateSuperadminSchema,
     type AdminUserParams,
     type AdminUsersQuery,
     type StartImpersonationInput,
+    type UpdateNameTagInput,
     type UpdateSuperadminInput
 } from "../schemas/admin.js"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { updateSessionNameTag } from "../websocket/sessionChat.js"
 
 const serializeAdminUser = (user: {
     id: string
@@ -33,6 +36,8 @@ const serializeAdminUser = (user: {
     lastName: string | null
     nickname: string | null
     isSuperadmin: boolean
+    nameTagEnabled: boolean
+    nameTagVisible: boolean
 }) => ({
     id: user.id,
     email: user.email,
@@ -40,6 +45,8 @@ const serializeAdminUser = (user: {
     lastName: user.lastName,
     nickname: user.nickname,
     isSuperadmin: user.isSuperadmin,
+    nameTagEnabled: user.nameTagEnabled,
+    nameTagVisible: user.nameTagVisible,
     ...getUserActivity(user.id)
 })
 
@@ -49,7 +56,9 @@ const serializeImpersonationUser = (user: AuthenticatedUser) => ({
     firstName: user.firstName,
     lastName: user.lastName,
     nickname: user.nickname ?? null,
-    isSuperadmin: user.isSuperadmin
+    isSuperadmin: user.isSuperadmin,
+    nameTagEnabled: user.nameTagEnabled,
+    nameTagVisible: user.nameTagVisible
 })
 
 const escapeLikePattern = (value: string) => value.replace(/[\\%_]/g, "\\$&")
@@ -123,6 +132,42 @@ export async function adminRoutes(fastify: FastifyInstance) {
                 reply.code(404).send({ error: "User not found" })
                 return
             }
+
+            reply.send(serializeAdminUser(updated))
+        }
+    )
+
+    fastify.patch<{
+        Params: AdminUserParams
+        Body: UpdateNameTagInput
+    }>(
+        "/admin/users/:id/name-tag",
+        {
+            preHandler: [authenticateUser, requireSuperadmin],
+            schema: {
+                params: zodToFastifySchema(adminUserParamsSchema),
+                body: zodToFastifySchema(updateNameTagSchema)
+            }
+        },
+        async (request, reply) => {
+            const { id } = request.params
+            const { nameTagEnabled } = request.body
+            const [updated] = await db
+                .update(schema.users)
+                .set({
+                    nameTagEnabled,
+                    ...(!nameTagEnabled && { nameTagVisible: false }),
+                    updatedAt: new Date()
+                })
+                .where(eq(schema.users.id, id))
+                .returning()
+
+            if (!updated) {
+                reply.code(404).send({ error: "User not found" })
+                return
+            }
+
+            updateSessionNameTag(updated.id, updated.nameTagEnabled && updated.nameTagVisible)
 
             reply.send(serializeAdminUser(updated))
         }
