@@ -126,12 +126,18 @@ export const getPrivateNoteWriteAction = ({
     }
 
     const isOldEnoughForPeriodicSnapshot =
-        latestCreatedAt !== undefined && now - latestCreatedAt.getTime() > NOTE_VERSION_SPLIT_MS
+        latestCreatedAt !== undefined && now - latestCreatedAt.getTime() >= NOTE_VERSION_SPLIT_MS
 
     return isOldEnoughForPeriodicSnapshot && isSubstantialNoteEdit(previousContent, nextContent)
         ? "create"
         : "update"
 }
+
+export const getPrivateNoteDuplicateVersionIdAfterUpdate = <T extends {
+    id: string
+    content: string
+}>(nextContent: string, previousHistoricalVersion?: T) =>
+    previousHistoricalVersion?.content === nextContent ? previousHistoricalVersion.id : undefined
 
 export const getPrivateNoteVersionIdsToPrune = <T extends { id: string }>(
     versionsOldestFirst: T[]

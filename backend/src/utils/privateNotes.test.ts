@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+    getPrivateNoteDuplicateVersionIdAfterUpdate,
     getPrivateNoteWriteAction,
     getPrivateNoteVersionIdsToPrune,
     isDestructiveNoteEdit,
@@ -10,7 +11,7 @@ import {
 describe("private note history policy", () => {
     const now = new Date("2026-07-16T12:00:00.000Z").getTime()
     const recent = new Date(now - 60_000)
-    const old = new Date(now - NOTE_VERSION_SPLIT_MS - 1)
+    const old = new Date(now - NOTE_VERSION_SPLIT_MS)
 
     it("preserves cleared and substantially removed content immediately", () => {
         const largeNote = "A carefully recorded clue. ".repeat(20)
@@ -81,5 +82,20 @@ describe("private note history policy", () => {
         }))
 
         expect(getPrivateNoteVersionIdsToPrune(versions)).toEqual(["version-0", "version-1"])
+    })
+
+    it("identifies an adjacent duplicate created by updating the current note", () => {
+        expect(
+            getPrivateNoteDuplicateVersionIdAfterUpdate("Original clue", {
+                id: "historical-version",
+                content: "Original clue"
+            })
+        ).toBe("historical-version")
+        expect(
+            getPrivateNoteDuplicateVersionIdAfterUpdate("Different clue", {
+                id: "historical-version",
+                content: "Original clue"
+            })
+        ).toBeUndefined()
     })
 })

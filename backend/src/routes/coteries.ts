@@ -36,6 +36,7 @@ import z from "zod"
 import {
     getUtf8ByteLength,
     getNextNoteVersionCreatedAt,
+    getPrivateNoteDuplicateVersionIdAfterUpdate,
     getPrivateNoteWriteAction,
     getPrivateNoteVersionIdsToPrune,
     NOTE_MAX_BYTES
@@ -843,6 +844,10 @@ export async function coterieRoutes(fastify: FastifyInstance) {
             }
 
             const shouldCreateNewVersion = writeAction === "create"
+            const duplicateVersionId =
+                writeAction === "update"
+                    ? getPrivateNoteDuplicateVersionIdAfterUpdate(content, existingVersions[1])
+                    : undefined
 
             const currentVersion = db.transaction((tx) => {
                 if (shouldCreateNewVersion) {
@@ -863,12 +868,20 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     return inserted
                 }
 
-                return tx
+                const updated = tx
                     .update(schema.coterieNoteVersions)
                     .set({ content })
                     .where(eq(schema.coterieNoteVersions.id, latestVersion!.id))
                     .returning()
                     .get()
+
+                if (duplicateVersionId) {
+                    tx.delete(schema.coterieNoteVersions)
+                        .where(eq(schema.coterieNoteVersions.id, duplicateVersionId))
+                        .run()
+                }
+
+                return updated
             })
 
             const versions = await getPrivateNoteVersions(coterieId, userId)

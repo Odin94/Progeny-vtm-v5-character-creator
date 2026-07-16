@@ -227,7 +227,23 @@ describe("character private notes", () => {
         expect(deleteResponse.json().versions).toHaveLength(2)
         expect(deleteResponse.json().versions[1].content).toBe(originalContent)
 
-        const originalVersionId = deleteResponse.json().versions[1].id as string
+        const undoResponse = await app.inject({
+            method: "PUT",
+            url: `/characters/${CHARACTER_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: originalContent }
+        })
+        expect(undoResponse.statusCode).toBe(200)
+        expect(undoResponse.json().createdNewVersion).toBe(false)
+        expect(undoResponse.json().versions).toHaveLength(1)
+
+        const secondDeleteResponse = await app.inject({
+            method: "PUT",
+            url: `/characters/${CHARACTER_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: "" }
+        })
+        const originalVersionId = secondDeleteResponse.json().versions[1].id as string
         const restoreResponse = await app.inject({
             method: "POST",
             url: `/characters/${CHARACTER_ID}/notes/versions/${originalVersionId}/restore`,

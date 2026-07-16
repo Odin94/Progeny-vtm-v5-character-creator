@@ -14,6 +14,7 @@ import {
 import { getCharacterAccess } from "../utils/characterAccess.js"
 import {
     getNextNoteVersionCreatedAt,
+    getPrivateNoteDuplicateVersionIdAfterUpdate,
     getPrivateNoteWriteAction,
     getPrivateNoteVersionIdsToPrune,
     getUtf8ByteLength,
@@ -184,6 +185,10 @@ export async function characterNoteRoutes(fastify: FastifyInstance) {
             }
 
             const shouldCreateNewVersion = writeAction === "create"
+            const duplicateVersionId =
+                writeAction === "update"
+                    ? getPrivateNoteDuplicateVersionIdAfterUpdate(content, existingVersions[1])
+                    : undefined
 
             const currentVersion = db.transaction((tx) => {
                 if (shouldCreateNewVersion) {
@@ -203,12 +208,20 @@ export async function characterNoteRoutes(fastify: FastifyInstance) {
                     return inserted
                 }
 
-                return tx
+                const updated = tx
                     .update(schema.characterNoteVersions)
                     .set({ content })
                     .where(eq(schema.characterNoteVersions.id, latestVersion!.id))
                     .returning()
                     .get()
+
+                if (duplicateVersionId) {
+                    tx.delete(schema.characterNoteVersions)
+                        .where(eq(schema.characterNoteVersions.id, duplicateVersionId))
+                        .run()
+                }
+
+                return updated
             })
 
             const versions = await getPrivateNoteVersions(characterId, userId)
