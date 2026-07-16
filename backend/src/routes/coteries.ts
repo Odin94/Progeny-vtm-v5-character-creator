@@ -36,10 +36,9 @@ import z from "zod"
 import {
     getUtf8ByteLength,
     getNextNoteVersionCreatedAt,
-    isSubstantialNoteEdit,
-    NOTE_MAX_BYTES,
-    NOTE_VERSION_LIMIT,
-    NOTE_VERSION_SPLIT_MS
+    getPrivateNoteWriteAction,
+    getPrivateNoteVersionIdsToPrune,
+    NOTE_MAX_BYTES
 } from "../utils/privateNotes.js"
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000
@@ -102,14 +101,11 @@ const prunePrivateNoteVersions = (
         .orderBy(asc(schema.coterieNoteVersions.createdAt))
         .all()
 
-    const versionsToDelete = prunableVersions.slice(
-        0,
-        Math.max(0, prunableVersions.length - NOTE_VERSION_LIMIT)
-    )
+    const versionIdsToDelete = getPrivateNoteVersionIdsToPrune(prunableVersions)
 
-    for (const version of versionsToDelete) {
+    for (const versionId of versionIdsToDelete) {
         tx.delete(schema.coterieNoteVersions)
-            .where(eq(schema.coterieNoteVersions.id, version.id))
+            .where(eq(schema.coterieNoteVersions.id, versionId))
             .run()
     }
 }
@@ -831,20 +827,22 @@ export async function coterieRoutes(fastify: FastifyInstance) {
 
             const existingVersions = await getPrivateNoteVersions(coterieId, userId)
             const latestVersion = existingVersions[0]
+            const writeAction = getPrivateNoteWriteAction({
+                previousContent: latestVersion?.content,
+                nextContent: content,
+                latestCreatedAt: latestVersion?.createdAt
+            })
 
-            if (latestVersion?.content === content) {
+            if (writeAction === "unchanged") {
                 reply.send({
-                    current: serializeNoteVersion(latestVersion),
+                    current: latestVersion ? serializeNoteVersion(latestVersion) : null,
                     versions: existingVersions.map(serializeNoteVersion),
                     createdNewVersion: false
                 })
                 return
             }
 
-            const shouldCreateNewVersion =
-                !latestVersion ||
-                (Date.now() - latestVersion.createdAt.getTime() > NOTE_VERSION_SPLIT_MS &&
-                    isSubstantialNoteEdit(latestVersion.content, content))
+            const shouldCreateNewVersion = writeAction === "create"
 
             const currentVersion = db.transaction((tx) => {
                 if (shouldCreateNewVersion) {
@@ -936,18 +934,19 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
+            const existingVersions = await getPrivateNoteVersions(coterieId, userId)
+            const latestVersion = existingVersions[0]
+
+            if (latestVersion?.content === versionToRestore.content) {
+                reply.send({
+                    current: serializeNoteVersion(latestVersion),
+                    versions: existingVersions.map(serializeNoteVersion),
+                    createdNewVersion: false
+                })
+                return
+            }
+
             const restoredVersion = db.transaction((tx) => {
-                const latestVersion = tx
-                    .select({ createdAt: schema.coterieNoteVersions.createdAt })
-                    .from(schema.coterieNoteVersions)
-                    .where(
-                        and(
-                            eq(schema.coterieNoteVersions.coterieId, coterieId),
-                            eq(schema.coterieNoteVersions.userId, userId)
-                        )
-                    )
-                    .orderBy(desc(schema.coterieNoteVersions.createdAt))
-                    .get()
                 const inserted = tx
                     .insert(schema.coterieNoteVersions)
                     .values({

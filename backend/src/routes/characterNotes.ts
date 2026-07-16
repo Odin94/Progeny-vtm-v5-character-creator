@@ -14,11 +14,10 @@ import {
 import { getCharacterAccess } from "../utils/characterAccess.js"
 import {
     getNextNoteVersionCreatedAt,
+    getPrivateNoteWriteAction,
+    getPrivateNoteVersionIdsToPrune,
     getUtf8ByteLength,
-    isSubstantialNoteEdit,
-    NOTE_MAX_BYTES,
-    NOTE_VERSION_LIMIT,
-    NOTE_VERSION_SPLIT_MS
+    NOTE_MAX_BYTES
 } from "../utils/privateNotes.js"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { trackEvent } from "../utils/tracker.js"
@@ -55,14 +54,11 @@ const prunePrivateNoteVersions = (
         .orderBy(asc(schema.characterNoteVersions.createdAt))
         .all()
 
-    const versionsToDelete = prunableVersions.slice(
-        0,
-        Math.max(0, prunableVersions.length - NOTE_VERSION_LIMIT)
-    )
+    const versionIdsToDelete = getPrivateNoteVersionIdsToPrune(prunableVersions)
 
-    for (const version of versionsToDelete) {
+    for (const versionId of versionIdsToDelete) {
         tx.delete(schema.characterNoteVersions)
-            .where(eq(schema.characterNoteVersions.id, version.id))
+            .where(eq(schema.characterNoteVersions.id, versionId))
             .run()
     }
 }
@@ -172,20 +168,22 @@ export async function characterNoteRoutes(fastify: FastifyInstance) {
 
             const existingVersions = await getPrivateNoteVersions(characterId, userId)
             const latestVersion = existingVersions[0]
+            const writeAction = getPrivateNoteWriteAction({
+                previousContent: latestVersion?.content,
+                nextContent: content,
+                latestCreatedAt: latestVersion?.createdAt
+            })
 
-            if (latestVersion?.content === content) {
+            if (writeAction === "unchanged") {
                 reply.send({
-                    current: serializeNoteVersion(latestVersion),
+                    current: latestVersion ? serializeNoteVersion(latestVersion) : null,
                     versions: existingVersions.map(serializeNoteVersion),
                     createdNewVersion: false
                 })
                 return
             }
 
-            const shouldCreateNewVersion =
-                !latestVersion ||
-                (Date.now() - latestVersion.createdAt.getTime() > NOTE_VERSION_SPLIT_MS &&
-                    isSubstantialNoteEdit(latestVersion.content, content))
+            const shouldCreateNewVersion = writeAction === "create"
 
             const currentVersion = db.transaction((tx) => {
                 if (shouldCreateNewVersion) {
@@ -276,18 +274,19 @@ export async function characterNoteRoutes(fastify: FastifyInstance) {
                 return
             }
 
+            const existingVersions = await getPrivateNoteVersions(characterId, userId)
+            const latestVersion = existingVersions[0]
+
+            if (latestVersion?.content === versionToRestore.content) {
+                reply.send({
+                    current: serializeNoteVersion(latestVersion),
+                    versions: existingVersions.map(serializeNoteVersion),
+                    createdNewVersion: false
+                })
+                return
+            }
+
             const restoredVersion = db.transaction((tx) => {
-                const latestVersion = tx
-                    .select({ createdAt: schema.characterNoteVersions.createdAt })
-                    .from(schema.characterNoteVersions)
-                    .where(
-                        and(
-                            eq(schema.characterNoteVersions.characterId, characterId),
-                            eq(schema.characterNoteVersions.userId, userId)
-                        )
-                    )
-                    .orderBy(desc(schema.characterNoteVersions.createdAt))
-                    .get()
                 const inserted = tx
                     .insert(schema.characterNoteVersions)
                     .values({

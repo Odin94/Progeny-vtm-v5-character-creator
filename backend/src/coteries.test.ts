@@ -673,7 +673,48 @@ describe("coterie invites and membership permissions", () => {
         expect(removedCharacterMembership).toBeUndefined()
     })
 
-    it("keeps private coterie notes per user and caps substantial old versions at ten", async () => {
+    it("preserves immediately deleted private coterie notes", async () => {
+        const originalContent = "A critical coterie clue. ".repeat(20)
+        const saveResponse = await app.inject({
+            method: "PUT",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: originalContent }
+        })
+        expect(saveResponse.statusCode).toBe(200)
+
+        const deleteResponse = await app.inject({
+            method: "PUT",
+            url: `/coteries/${COTERIE_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: "" }
+        })
+        expect(deleteResponse.statusCode).toBe(200)
+        expect(deleteResponse.json().createdNewVersion).toBe(true)
+        expect(deleteResponse.json().current.content).toBe("")
+        expect(deleteResponse.json().versions).toHaveLength(2)
+        expect(deleteResponse.json().versions[1].content).toBe(originalContent)
+
+        const originalVersionId = deleteResponse.json().versions[1].id as string
+        const restoreResponse = await app.inject({
+            method: "POST",
+            url: `/coteries/${COTERIE_ID}/notes/versions/${originalVersionId}/restore`,
+            headers: csrfHeaders
+        })
+        expect(restoreResponse.statusCode).toBe(200)
+        expect(restoreResponse.json().current.content).toBe(originalContent)
+
+        const duplicateRestoreResponse = await app.inject({
+            method: "POST",
+            url: `/coteries/${COTERIE_ID}/notes/versions/${originalVersionId}/restore`,
+            headers: csrfHeaders
+        })
+        expect(duplicateRestoreResponse.statusCode).toBe(200)
+        expect(duplicateRestoreResponse.json().createdNewVersion).toBe(false)
+        expect(duplicateRestoreResponse.json().versions).toHaveLength(3)
+    })
+
+    it("keeps private coterie notes per user and caps substantial old versions at ten historical entries", async () => {
         const ownerSaveResponse = await app.inject({
             method: "PUT",
             url: `/coteries/${COTERIE_ID}/notes`,
@@ -786,6 +827,6 @@ describe("coterie invites and membership permissions", () => {
         const ownerVersions = await db.query.coterieNoteVersions.findMany({
             where: eq(schema.coterieNoteVersions.userId, OWNER_ID)
         })
-        expect(ownerVersions).toHaveLength(10)
+        expect(ownerVersions).toHaveLength(11)
     })
 })

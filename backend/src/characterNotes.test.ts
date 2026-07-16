@@ -205,6 +205,49 @@ describe("character private notes", () => {
         expect(forbiddenResponse.statusCode).toBe(403)
     })
 
+    it("preserves immediately deleted content and avoids duplicate restores", async () => {
+        const originalContent = "A critical private clue. ".repeat(20)
+        const saveResponse = await app.inject({
+            method: "PUT",
+            url: `/characters/${CHARACTER_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: originalContent }
+        })
+        expect(saveResponse.statusCode).toBe(200)
+
+        const deleteResponse = await app.inject({
+            method: "PUT",
+            url: `/characters/${CHARACTER_ID}/notes`,
+            headers: csrfHeaders,
+            payload: { content: "" }
+        })
+        expect(deleteResponse.statusCode).toBe(200)
+        expect(deleteResponse.json().createdNewVersion).toBe(true)
+        expect(deleteResponse.json().current.content).toBe("")
+        expect(deleteResponse.json().versions).toHaveLength(2)
+        expect(deleteResponse.json().versions[1].content).toBe(originalContent)
+
+        const originalVersionId = deleteResponse.json().versions[1].id as string
+        const restoreResponse = await app.inject({
+            method: "POST",
+            url: `/characters/${CHARACTER_ID}/notes/versions/${originalVersionId}/restore`,
+            headers: csrfHeaders
+        })
+        expect(restoreResponse.statusCode).toBe(200)
+        expect(restoreResponse.json().createdNewVersion).toBe(true)
+        expect(restoreResponse.json().current.content).toBe(originalContent)
+        expect(restoreResponse.json().versions).toHaveLength(3)
+
+        const duplicateRestoreResponse = await app.inject({
+            method: "POST",
+            url: `/characters/${CHARACTER_ID}/notes/versions/${originalVersionId}/restore`,
+            headers: csrfHeaders
+        })
+        expect(duplicateRestoreResponse.statusCode).toBe(200)
+        expect(duplicateRestoreResponse.json().createdNewVersion).toBe(false)
+        expect(duplicateRestoreResponse.json().versions).toHaveLength(3)
+    })
+
     it("creates, caps, and restores substantial historical versions", async () => {
         for (let index = 0; index < 12; index += 1) {
             const latest = await db.query.characterNoteVersions.findFirst({
@@ -239,7 +282,7 @@ describe("character private notes", () => {
                 eq(schema.characterNoteVersions.userId, OWNER_ID)
             )
         })
-        expect(versions).toHaveLength(10)
+        expect(versions).toHaveLength(11)
 
         const versionToRestore = versions.find((version) => version.content.includes("Version 5"))
         const nextVersionToRestore = versions.find((version) =>
@@ -255,7 +298,7 @@ describe("character private notes", () => {
         })
         expect(restoreResponse.statusCode).toBe(200)
         expect(restoreResponse.json().current.content).toBe(versionToRestore!.content)
-        expect(restoreResponse.json().versions).toHaveLength(10)
+        expect(restoreResponse.json().versions).toHaveLength(11)
 
         const nextRestoreResponse = await app.inject({
             method: "POST",
