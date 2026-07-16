@@ -1,5 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import type { FastifyInstance } from "fastify"
+import { eq, sql } from "drizzle-orm"
 import { trackEvent } from "../utils/tracker.js"
+import { db, schema } from "../db/index.js"
 import {
     recordSessionJoin,
     recordSessionMessage,
@@ -7,6 +10,8 @@ import {
 } from "./sessionChatLifecycle.js"
 import { type Participant, type Session } from "./sessionChatTypes.js"
 import { temporarySessions, updateSessionNameTag } from "./sessionChat.js"
+import { handleJoinSession } from "./chatMessageHandlers/handleJoinSession.js"
+import { handleLeaveSession } from "./chatMessageHandlers/handleLeaveSession.js"
 
 vi.mock("../utils/tracker.js", () => ({
     trackEvent: vi.fn(() => Promise.resolve())
@@ -37,9 +42,32 @@ function createSession(): Session {
 }
 
 describe("session chat lifecycle tracking", () => {
-    beforeEach(() => {
+    beforeAll(async () => {
+        await db.run(
+            sql.raw(`CREATE TABLE IF NOT EXISTS users (
+                id text PRIMARY KEY NOT NULL,
+                email text NOT NULL UNIQUE,
+                first_name text,
+                last_name text,
+                nickname text UNIQUE,
+                preferences text,
+                is_superadmin integer DEFAULT false NOT NULL,
+                name_tag_enabled integer DEFAULT false NOT NULL,
+                name_tag_visible integer DEFAULT false NOT NULL,
+                created_at integer DEFAULT (unixepoch()) NOT NULL,
+                updated_at integer DEFAULT (unixepoch()) NOT NULL
+            )`)
+        )
+    })
+
+    afterAll(async () => {
+        await db.delete(schema.users).where(eq(schema.users.id, "rejoin-user"))
+    })
+
+    beforeEach(async () => {
         trackEventMock.mockClear()
         temporarySessions.clear()
+        await db.delete(schema.users).where(eq(schema.users.id, "rejoin-user"))
     })
 
     it("updates active participants and history when name-tag visibility changes", () => {
@@ -71,6 +99,61 @@ describe("session chat lifecycle tracking", () => {
         expect(JSON.parse(send.mock.calls[1][0])).toMatchObject({
             type: "user_identity_updated",
             showNameTag: false
+        })
+    })
+
+    it("resolves current name-tag access when the same socket rejoins", async () => {
+        await db.insert(schema.users).values({
+            id: "rejoin-user",
+            email: "rejoin-user@progeny.invalid",
+            nameTagEnabled: true,
+            nameTagVisible: true
+        })
+
+        const observer = createParticipant("observer")
+        const firstSession = createSession()
+        firstSession.id = "first-session"
+        firstSession.participants = new Map([[observer.userId, observer]])
+        const secondSession = createSession()
+        secondSession.id = "second-session"
+        secondSession.participants = new Map([[observer.userId, observer]])
+        temporarySessions.set(firstSession.id, firstSession)
+        temporarySessions.set(secondSession.id, secondSession)
+
+        const socket = { readyState: 1, send: vi.fn() }
+        const fastify = {} as FastifyInstance
+        const joinedFirst = await handleJoinSession(
+            { type: "join_session", sessionId: firstSession.id },
+            socket,
+            fastify,
+            "rejoin-user",
+            "Rejoin User",
+            null
+        )
+        expect(joinedFirst?.participants.get("rejoin-user")?.showNameTag).toBe(true)
+
+        handleLeaveSession("rejoin-user", joinedFirst)
+        await db
+            .update(schema.users)
+            .set({ nameTagEnabled: false, nameTagVisible: false })
+            .where(eq(schema.users.id, "rejoin-user"))
+
+        const joinedSecond = await handleJoinSession(
+            { type: "join_session", sessionId: secondSession.id },
+            socket,
+            fastify,
+            "rejoin-user",
+            "Rejoin User",
+            null
+        )
+
+        expect(joinedSecond?.participants.get("rejoin-user")?.showNameTag).toBe(false)
+        const lastPayload = JSON.parse(socket.send.mock.calls.at(-1)?.[0] ?? "{}")
+        expect(lastPayload).toMatchObject({
+            type: "session_joined",
+            participants: expect.arrayContaining([
+                expect.objectContaining({ userId: "rejoin-user", showNameTag: false })
+            ])
         })
     })
 

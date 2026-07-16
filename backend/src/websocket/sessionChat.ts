@@ -45,22 +45,26 @@ export function updateSessionNameTag(userId: string, showNameTag: boolean): void
     for (const sessions of [temporarySessions, coterieSessions]) {
         for (const session of sessions.values()) {
             const participant = session.participants.get(userId)
-            if (!participant) {
-                continue
+            let identityChanged = false
+            if (participant) {
+                participant.showNameTag = showNameTag
+                identityChanged = true
             }
 
-            participant.showNameTag = showNameTag
             for (const message of session.history) {
                 if (message.userId === userId) {
                     message.showNameTag = showNameTag
+                    identityChanged = true
                 }
             }
 
-            broadcastToSession(session, {
-                type: "user_identity_updated",
-                userId,
-                showNameTag
-            })
+            if (identityChanged) {
+                broadcastToSession(session, {
+                    type: "user_identity_updated",
+                    userId,
+                    showNameTag
+                })
+            }
         }
     }
 }
@@ -317,7 +321,6 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
 
             const userId = user.id
             const userName = getUserName(user)
-            const showNameTag = user.nameTagEnabled && user.nameTagVisible
             let currentSession: Session | null = null
 
             try {
@@ -360,7 +363,6 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
                                     fastify,
                                     userId,
                                     userName,
-                                    showNameTag,
                                     currentSession
                                 )
                                 break

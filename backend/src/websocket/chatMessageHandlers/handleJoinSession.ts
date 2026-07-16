@@ -21,7 +21,6 @@ export async function handleJoinSession(
     fastify: FastifyInstance,
     userId: string,
     userName: string,
-    showNameTag: boolean,
     currentSession: Session | null
 ): Promise<Session | null> {
     const { sessionId, coterieId, characterName } = data
@@ -98,6 +97,16 @@ export async function handleJoinSession(
     }
 
     if (currentSession) {
+        const currentUser = await db.query.users.findFirst({
+            where: eq(schema.users.id, userId),
+            columns: {
+                nameTagEnabled: true,
+                nameTagVisible: true
+            }
+        })
+        const showNameTag =
+            !!currentUser && currentUser.nameTagEnabled && currentUser.nameTagVisible
+
         if (previousSession && previousSession.id !== currentSession.id) {
             removeParticipantFromSession(userId, previousSession)
         }
