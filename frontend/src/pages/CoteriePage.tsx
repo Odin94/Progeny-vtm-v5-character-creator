@@ -48,6 +48,7 @@ import Topbar from "~/topbar/Topbar"
 import { type CoterieNoteVersionResponse } from "~/utils/api"
 import { isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
+import { formatPrivateNoteWordCount } from "~/utils/privateNotes"
 
 type CoteriePageProps = {
     coterieId: string
@@ -730,7 +731,8 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                                 leftSection={<IconVersions size={16} />}
                                 onClick={() => previewVersion(version)}
                             >
-                                {formatDateTime(version.createdAt)}
+                                {formatDateTime(version.createdAt)} ·{" "}
+                                {formatPrivateNoteWordCount(version.content)}
                             </Button>
                         ))
                     ) : (

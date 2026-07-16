@@ -19,6 +19,7 @@ import {
 } from "~/character_sheet/hooks/useCharacterNotesController"
 import { memo } from "react"
 import { RAW_GOLD, RAW_RED, rgba } from "~/theme/colors"
+import { formatPrivateNoteWordCount } from "~/utils/privateNotes"
 
 type CharacterNotesControlProps = {
     characterId: string
@@ -288,7 +289,8 @@ const CharacterNotesControl = memo(
                                     leftSection={<IconVersions size={16} />}
                                     onClick={() => previewVersion(version)}
                                 >
-                                    {formatDateTime(version.createdAt)}
+                                    {formatDateTime(version.createdAt)} ·{" "}
+                                    {formatPrivateNoteWordCount(version.content)}
                                 </Button>
                             ))
                         ) : (
