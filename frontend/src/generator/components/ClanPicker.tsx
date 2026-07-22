@@ -18,15 +18,10 @@ import ReactGA from "react-ga4"
 import { trackEvent } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema, DisciplineName } from "~/data/NameSchemas"
-import {
-    Character,
-    containsBloodSorcery,
-    containsOblivion,
-    getEmptyCharacter,
-    MeritFlaw
-} from "../../data/Character"
+import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import { globals } from "../../globals"
+import { notDefault } from "../utils"
 import {
     generatorScrollableAreaStyle,
     generatorScrollableContentStyle,
@@ -81,16 +76,39 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         event.currentTarget.style.boxShadow = ""
                     }}
                     onClick={() => {
-                        const clanChanged = clan !== character.clan
-                        const newMerits = clanChanged
-                            ? getNewMerits(clan, character)
-                            : character.merits
+                        const newMerits =
+                            clan === character.clan
+                                ? character.merits
+                                : getNewMerits(clan, character)
                         const newFlaws =
                             clan === "Thin-blood"
                                 ? character.flaws
                                 : flawsWithoutThinbloodFlaws(character.flaws)
+                        if (
+                            (notDefault(character, "disciplines") ||
+                                notDefault(character, "predatorType")) &&
+                            clan !== character.clan
+                        ) {
+                            notifications.show({
+                                title: "Reset Disciplines",
+                                message: "Because you changed your clan",
+                                autoClose: 7000,
+                                color: "yellow"
+                            })
 
-                        if (!clanChanged) {
+                            setCharacter({
+                                ...character,
+                                clan,
+                                disciplines: [],
+                                availableDisciplineNames: clans[clan].nativeDisciplines,
+                                predatorType:
+                                    clan === "Thin-blood"
+                                        ? getEmptyCharacter().predatorType
+                                        : character.predatorType,
+                                merits: newMerits,
+                                flaws: newFlaws
+                            })
+                        } else {
                             setCharacter({
                                 ...character,
                                 clan,
@@ -98,56 +116,13 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 merits: newMerits,
                                 flaws: newFlaws
                             })
-                            trackEvent({ action: "clan clicked", category: "clans", label: clan })
-                            nextStep()
-                            return
                         }
 
-                        // Keep the disciplines that are still valid for the new clan (its native
-                        // disciplines plus any predator-type bonus discipline) instead of wiping
-                        // all of them, so reviewing clans doesn't punish exploration.
-                        const newPredatorType =
-                            clan === "Thin-blood"
-                                ? getEmptyCharacter().predatorType
-                                : character.predatorType
-                        const allowedDisciplines = new Set<DisciplineName>([
-                            ...clans[clan].nativeDisciplines,
-                            ...(newPredatorType.pickedDiscipline
-                                ? [newPredatorType.pickedDiscipline]
-                                : [])
-                        ])
-                        const keptDisciplines = character.disciplines.filter((power) =>
-                            allowedDisciplines.has(power.discipline)
-                        )
-                        const removedCount = character.disciplines.length - keptDisciplines.length
-
-                        if (removedCount > 0) {
-                            notifications.show({
-                                title: `Reset ${removedCount} discipline${
-                                    removedCount > 1 ? "s" : ""
-                                }`,
-                                message:
-                                    "Some disciplines aren't available for your new clan — the rest were kept",
-                                autoClose: 7000,
-                                color: "yellow"
-                            })
-                        }
-
-                        setCharacter({
-                            ...character,
-                            clan,
-                            disciplines: keptDisciplines,
-                            rituals: containsBloodSorcery(keptDisciplines) ? character.rituals : [],
-                            ceremonies: containsOblivion(keptDisciplines)
-                                ? character.ceremonies
-                                : [],
-                            availableDisciplineNames: clans[clan].nativeDisciplines,
-                            predatorType: newPredatorType,
-                            merits: newMerits,
-                            flaws: newFlaws
+                        trackEvent({
+                            action: "clan clicked",
+                            category: "clans",
+                            label: clan
                         })
-
-                        trackEvent({ action: "clan clicked", category: "clans", label: clan })
                         nextStep()
                     }}
                 >
