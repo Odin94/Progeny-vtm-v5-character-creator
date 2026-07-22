@@ -49,11 +49,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
         const clanDisciplines = clan === "Caitiff" ? [] : clans[clan].nativeDisciplines
 
         return (
-            <Grid.Col
-                key={clan}
-                span={globals.isPhoneScreen ? 12 : 4}
-                style={{ contentVisibility: "auto", containIntrinsicSize: "330px" }}
-            >
+            <Grid.Col key={clan} span={globals.isPhoneScreen ? 12 : 4}>
                 <Card
                     data-testid={`clan-${clan.toLowerCase().replace(/\s+/g, "-")}-card`}
                     shadow="sm"
@@ -133,7 +129,9 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 src={clans[clan].logo}
                                 height={120}
                                 width={120}
-                                alt="Norway"
+                                loading="eager"
+                                decoding="sync"
+                                alt={`${clan} clan symbol`}
                             />
                         </Center>
                     </Card.Section>
