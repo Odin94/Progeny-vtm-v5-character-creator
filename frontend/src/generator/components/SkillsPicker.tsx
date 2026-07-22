@@ -205,6 +205,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                             width: "88%",
                             marginLeft: "auto",
                             marginRight: "auto",
+                            display: "flex",
                             minHeight: phoneScreen ? 36 : 40
                         }}
                         styles={{
@@ -420,7 +421,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                         description="Balanced is the default choice"
                         marginBottom={32}
                     />
-                    <Grid grow>
+                    <Grid grow m={0}>
                         {(
                             ["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]
                         ).map((distribution) => {
@@ -439,7 +440,13 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                                             p={phoneScreen ? 0 : "default"}
                                             disabled={pickedDistribution !== null}
                                             color="red"
-                                            fullWidth
+                                            fullWidth={false}
+                                            style={{
+                                                width: "88%",
+                                                marginLeft: "auto",
+                                                marginRight: "auto",
+                                                display: "flex"
+                                            }}
                                             onClick={() => {
                                                 setPickedDistribution(distribution)
                                             }}

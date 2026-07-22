@@ -127,6 +127,7 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                             width: "88%",
                             marginLeft: "auto",
                             marginRight: "auto",
+                            display: "flex",
                             minHeight: phoneScreen ? 36 : 40
                         }}
                         styles={{

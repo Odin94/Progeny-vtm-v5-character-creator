@@ -181,6 +181,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                 pb={8}
                 scrollbarSize={nightfallScrollbarSize}
                 type="always"
+                scrollbars="y"
+                offsetScrollbars="present"
                 styles={nightfallScrollAreaStyles}
             >
                 <div style={generatorScrollableContentStyle}>
