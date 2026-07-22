@@ -157,15 +157,28 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     }
 
     return (
-        // position: relative is the anchor for ShellStyle-based steps that use position: absolute
-        <div style={{ height: "100%", width: "100%", position: "relative", flex: 1, minHeight: 0 }}>
+        // position: relative is the anchor for ShellStyle-based steps that use position: absolute.
+        // The padding reserves the space occupied by the desktop sidebars, which are overlaid by
+        // AppShell rather than participating in this component's layout.
+        <div
+            style={{
+                height: "100%",
+                width: "100%",
+                position: "relative",
+                flex: 1,
+                minHeight: 0,
+                boxSizing: "border-box",
+                paddingLeft: "var(--navbar-offset, 0px)",
+                paddingRight: "var(--aside-offset, 0px)"
+            }}
+        >
             {/* 960px centered wrapper for steps that don't use their own full-width shell */}
             <div
                 style={{
                     maxWidth: 960,
                     marginLeft: "auto",
                     marginRight: "auto",
-                    width: "100%",
+                    width: "calc(100% - clamp(1rem, 4vw, 3rem))",
                     height: "100%",
                     display: "flex",
                     alignItems: "center",

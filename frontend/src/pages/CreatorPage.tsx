@@ -475,7 +475,11 @@ export default function CreatorPage() {
                                     flex: 1,
                                     minHeight: 0,
                                     "--aside-offset": showAsideBar ? "200px" : "0px",
-                                    "--navbar-offset": globals.isSmallScreen ? "0px" : "250px"
+                                    "--navbar-offset": globals.isSmallScreen
+                                        ? "0px"
+                                        : viewportWidth >= 1408
+                                          ? "300px"
+                                          : "250px"
                                 } as React.CSSProperties
                             }
                         >

@@ -24,5 +24,5 @@ export const generatorScrollableContentStyle = {
     maxWidth: 960,
     marginLeft: "auto",
     marginRight: "auto",
-    width: "100%"
+    width: "calc(100% - clamp(1rem, 4vw, 3rem))"
 } as const

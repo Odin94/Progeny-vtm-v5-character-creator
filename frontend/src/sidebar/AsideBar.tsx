@@ -8,6 +8,7 @@ import {
 } from "../generator/steps"
 import { isDefault } from "../generator/utils"
 import { globals } from "../globals"
+import { RAW_GRAPE, rgba } from "../theme/colors"
 import { trackEvent } from "../utils/analytics"
 
 export type AsideBarProps = {
@@ -19,6 +20,7 @@ export type AsideBarProps = {
 const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) => {
     const steps = getVisibleGeneratorSteps(character)
     const activeIndex = getGeneratorStepIndex(character, selectedStep)
+    const compact = globals.viewportHeightPx <= 900
 
     const isHigherLevelAccessible = (character: Character, step: (typeof steps)[number]) => {
         if (step.id === "clan") {
@@ -43,18 +45,20 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
     const getStagesList = () => {
         return (
             <Stack gap={0}>
-                <Text
-                    size="sm"
-                    fw={600}
-                    style={{
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        color: "var(--mantine-color-dimmed)",
-                        marginBottom: "1rem"
-                    }}
-                >
-                    Stages
-                </Text>
+                {!compact && (
+                    <Text
+                        size="sm"
+                        fw={600}
+                        style={{
+                            letterSpacing: "0.2em",
+                            textTransform: "uppercase",
+                            color: "var(--mantine-color-dimmed)",
+                            marginBottom: "1rem"
+                        }}
+                    >
+                        Stages
+                    </Text>
+                )}
                 {steps.map((step, index) => {
                     const isCurrent = step.id === selectedStep
                     const isCompleted = index < activeIndex
@@ -83,7 +87,7 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "0.75rem",
-                                    padding: "0.5rem 0.625rem",
+                                    padding: compact ? "0.375rem 0.5rem" : "0.5rem 0.625rem",
                                     borderRadius: "0.5rem",
                                     cursor: isAccessible ? "pointer" : "default",
                                     transition: "background-color 150ms ease",
@@ -165,7 +169,7 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                                     <Box
                                         style={{
                                             width: "1px",
-                                            height: "1.375rem",
+                                            height: compact ? "0.875rem" : "1.375rem",
                                             backgroundColor: isCompleted
                                                 ? "rgba(212, 175, 55, 0.3)"
                                                 : "rgba(255, 255, 255, 0.1)"
@@ -180,16 +184,45 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
         )
     }
 
-    const height = globals.viewportHeightPx
-    const scrollerHeight = 940
     return (
-        <Stack gap="md" style={{ padding: "1rem", zIndex: 0, height: "100%" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", flex: 1 }}>
-                {height <= scrollerHeight ? (
-                    <ScrollArea h={height - 100}>{getStagesList()}</ScrollArea>
-                ) : (
-                    <>{getStagesList()}</>
-                )}
+        <Stack gap="md" style={{ padding: "0.5rem 0", zIndex: 0, height: "100%", minHeight: 0 }}>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    flex: 1,
+                    minHeight: 0,
+                    width: "100%"
+                }}
+            >
+                <ScrollArea
+                    h="100%"
+                    w="100%"
+                    type="auto"
+                    offsetScrollbars
+                    scrollbarSize={8}
+                    styles={{
+                        scrollbar: {
+                            background: "transparent"
+                        },
+                        thumb: {
+                            background: rgba(RAW_GRAPE, 0.38),
+                            borderRadius: "999px",
+                            transition: "background 140ms ease",
+                            "&:hover": {
+                                background: rgba(RAW_GRAPE, 0.62)
+                            },
+                            "&:active": {
+                                background: rgba(RAW_GRAPE, 0.8)
+                            }
+                        },
+                        corner: {
+                            background: "transparent"
+                        }
+                    }}
+                >
+                    {getStagesList()}
+                </ScrollArea>
             </div>
         </Stack>
     )
