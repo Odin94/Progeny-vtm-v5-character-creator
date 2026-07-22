@@ -321,7 +321,7 @@ const PredatorTypeModal = ({
                         >
                             The {character.clan} clan can&apos;t take the {predatorType.name}{" "}
                             predator type. Go back to the clan step and pick a different clan to
-                            unlock it — the disciplines you&apos;ve already chosen stay put.
+                            unlock it. Changing clans may reset your discipline selections.
                         </Text>
                     </div>
                 )}
