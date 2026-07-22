@@ -11,6 +11,7 @@ import {
     Text,
     Tooltip
 } from "@mantine/core"
+import { notifications } from "@mantine/notifications"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import ReactGA from "react-ga4"
@@ -28,6 +29,7 @@ import {
 } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
+import { getDisciplinePowerDisabledReason } from "../disciplinePowerAvailability"
 
 type DisciplinesPickerProps = {
     character: Character
@@ -86,27 +88,6 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         return false
     }
 
-    const missingPrerequisites = (power: Power) => {
-        const powersOfDiscipline = disciplines[power.discipline].powers
-        if (intersection(powersOfDiscipline, allPickedPowers).length < power.level - 1) return true
-        if (missingAmalgamPrereq(power)) return true
-        return false
-    }
-
-    const alreadyPickedTwoPowers = (power: Power) => {
-        const powersOfDiscipline = disciplines[power.discipline].powers
-        return intersection(powersOfDiscipline, pickedPowers).length === 2
-    }
-
-    const alreadyPickedTwoDisciplines = (power: Power) => {
-        const pickedDisciplines = pickedPowers.map((p) => p.discipline)
-        const uniquePickedDisciplines = [...new Set(pickedDisciplines)]
-        return (
-            uniquePickedDisciplines.length >= 2 &&
-            !uniquePickedDisciplines.includes(power.discipline)
-        )
-    }
-
     const allPowersPicked = () => pickedPowers.length >= 3
     const confirmTooltip = (() => {
         if (pickedPowers.length < 2) return "Pick two clan disciplines"
@@ -115,10 +96,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         return undefined
     })()
     const confirmDisabled = Boolean(confirmTooltip)
-    const getPickedPowerCountForDiscipline = (
-        disciplineName: string,
-        isPredatorType: boolean
-    ) => {
+    const getPickedPowerCountForDiscipline = (disciplineName: string, isPredatorType: boolean) => {
         const powersForTab = isPredatorType
             ? pickedPredatorTypePower
                 ? [pickedPredatorTypePower]
@@ -179,16 +157,14 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     }
 
     const renderPowerCard = (power: Power, isForPredatorType = false) => {
-        const disabled =
-            isPicked(power) ||
-            missingPrerequisites(power) ||
-            (!isForPredatorType &&
-                (alreadyPickedTwoPowers(power) ||
-                    alreadyPickedTwoDisciplines(power) ||
-                    allPowersPicked())) ||
-            (isForPredatorType && pickedPredatorTypePower !== undefined)
-
         const picked = isPicked(power)
+        const takeDisabledReason = getDisciplinePowerDisabledReason({
+            power,
+            isForPredatorType,
+            pickedClanPowers: pickedPowers,
+            pickedPredatorTypePower
+        })
+        const takeDisabled = takeDisabledReason !== null
         const isPickedAsPredatorType =
             !isForPredatorType && pickedPredatorTypePower?.name === power.name
         const isPickedAsClan = isForPredatorType && pickedPowers.some((p) => p.name === power.name)
@@ -207,7 +183,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     background: picked
                         ? "linear-gradient(180deg, rgba(52, 18, 22, 0.75) 0%, rgba(34, 10, 13, 0.75) 100%)"
                         : "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)",
-                    opacity: disabled && !picked ? 0.6 : 1,
+                    opacity: takeDisabled && !picked ? 0.6 : 1,
                     transition: "background 180ms ease, border-color 180ms ease",
                     marginBottom: 8
                 }}
@@ -284,56 +260,97 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     </div>
                 )}
 
-                {!picked && (
-                    <Button
-                        data-testid={`take-power-${power.name.toLowerCase().replace(/\s+/g, "-")}-button`}
-                        disabled={disabled}
-                        size="xs"
-                        variant="outline"
-                        color="red"
-                        fullWidth
-                        mt={4}
-                        onMouseEnter={() => setHoveredTakeButton(takeButtonHoverKey)}
-                        onMouseLeave={() => setHoveredTakeButton(null)}
-                        styles={{
-                            root: {
-                                alignSelf: "center",
-                                borderColor: takeButtonHovered
-                                    ? rgba(RAW_RED, 0.85)
-                                    : rgba(RAW_RED, 0.4),
-                                background: takeButtonHovered
-                                    ? rgba(RAW_RED, 0.24)
-                                    : rgba(RAW_RED, 0.08),
-                                boxShadow: takeButtonHovered
-                                    ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`
-                                    : "none",
-                                transform: takeButtonHovered
-                                    ? "translateY(-1px) scale(1.01)"
-                                    : "translateY(0) scale(1)",
-                                transition:
-                                    "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
-                                letterSpacing: "0.14em",
-                                textTransform: "uppercase",
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontSize: "0.72rem"
-                            },
-                            section: {
-                                color: rgba(RAW_RED, 1)
-                            }
-                        }}
-                        onClick={() => {
-                            trackEvent({
-                                action: "power clicked",
-                                category: "disciplines",
-                                label: power.name
-                            })
-                            if (isForPredatorType) setPickedPredatorTypePower(power)
-                            else setPickedPowers([...pickedPowers, power])
-                        }}
-                    >
-                        Take
-                    </Button>
-                )}
+                {!picked &&
+                    (() => {
+                        const takeButton = (
+                            <Button
+                                data-testid={`take-power-${power.name.toLowerCase().replace(/\s+/g, "-")}-button`}
+                                aria-disabled={takeDisabled}
+                                data-disabled={takeDisabled || undefined}
+                                size="xs"
+                                variant="outline"
+                                color="red"
+                                fullWidth
+                                mt={4}
+                                onMouseEnter={() =>
+                                    !takeDisabled && setHoveredTakeButton(takeButtonHoverKey)
+                                }
+                                onMouseLeave={() => setHoveredTakeButton(null)}
+                                styles={{
+                                    root: {
+                                        alignSelf: "center",
+                                        opacity: takeDisabled ? 0.5 : 1,
+                                        cursor: takeDisabled ? "not-allowed" : "pointer",
+                                        borderColor:
+                                            takeButtonHovered && !takeDisabled
+                                                ? rgba(RAW_RED, 0.85)
+                                                : rgba(RAW_RED, 0.4),
+                                        background:
+                                            takeButtonHovered && !takeDisabled
+                                                ? rgba(RAW_RED, 0.24)
+                                                : rgba(RAW_RED, 0.08),
+                                        boxShadow:
+                                            takeButtonHovered && !takeDisabled
+                                                ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`
+                                                : "none",
+                                        transform:
+                                            takeButtonHovered && !takeDisabled
+                                                ? "translateY(-1px) scale(1.01)"
+                                                : "translateY(0) scale(1)",
+                                        transition:
+                                            "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+                                        letterSpacing: "0.14em",
+                                        textTransform: "uppercase",
+                                        fontFamily: "Cinzel, Georgia, serif",
+                                        fontSize: "0.72rem"
+                                    },
+                                    section: {
+                                        color: rgba(RAW_RED, 1)
+                                    }
+                                }}
+                                onClick={(event) => {
+                                    if (takeDisabled) {
+                                        event.preventDefault()
+                                        if (phoneScreen && takeDisabledReason) {
+                                            notifications.show({
+                                                title: "Can't take this power yet",
+                                                message: takeDisabledReason,
+                                                color: "red",
+                                                autoClose: 2500
+                                            })
+                                        }
+                                        return
+                                    }
+
+                                    trackEvent({
+                                        action: "power clicked",
+                                        category: "disciplines",
+                                        label: power.name
+                                    })
+                                    if (isForPredatorType) setPickedPredatorTypePower(power)
+                                    else setPickedPowers([...pickedPowers, power])
+                                }}
+                            >
+                                Take
+                            </Button>
+                        )
+
+                        if (!phoneScreen && takeDisabledReason) {
+                            return (
+                                <Tooltip
+                                    label={takeDisabledReason}
+                                    withArrow
+                                    multiline
+                                    w={220}
+                                    events={{ hover: true, focus: true, touch: false }}
+                                >
+                                    {takeButton}
+                                </Tooltip>
+                            )
+                        }
+
+                        return takeButton
+                    })()}
                 {isPickedAsClan && (
                     <Button
                         size="xs"
@@ -413,10 +430,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         const columnGroups = canReachLvl3 ? [lvl1, lvl2, lvl3] : [lvl1, lvl2]
         const colWidth = phoneScreen ? "100%" : `${Math.floor(100 / columnGroups.length)}%`
-        const pickedPowerCount = getPickedPowerCountForDiscipline(
-            disciplineName,
-            isPredatorType
-        )
+        const pickedPowerCount = getPickedPowerCountForDiscipline(disciplineName, isPredatorType)
 
         return (
             <Accordion.Item
@@ -570,6 +584,22 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             2 powers in one discipline · 1 in another · 1 from your predator type (
                             {upcase(character.predatorType.pickedDiscipline)})
                         </Text>
+                        <Group gap="sm" justify="center" mt={6}>
+                            <Badge
+                                color={pickedPowers.length >= 3 ? "green" : "red"}
+                                variant="light"
+                                size="lg"
+                            >
+                                Clan powers {pickedPowers.length}/3
+                            </Badge>
+                            <Badge
+                                color={pickedPredatorTypePower ? "green" : "red"}
+                                variant="light"
+                                size="lg"
+                            >
+                                Predator power {pickedPredatorTypePower ? 1 : 0}/1
+                            </Badge>
+                        </Group>
                     </Stack>
 
                     <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl" w="100%">
@@ -657,7 +687,9 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                             }
                                         }}
                                         onClick={() => {
-                                            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+                                            updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                                character
+                                            )
                                             const updatedCharacter = {
                                                 ...character,
                                                 disciplines: allPickedPowers,
@@ -668,6 +700,16 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                                     ? character.ceremonies
                                                     : []
                                             }
+                                            trackEvent({
+                                                action: "disciplines confirm clicked",
+                                                category: "disciplines",
+                                                label: allPickedPowers
+                                                    .map(
+                                                        (pickedPower) =>
+                                                            `${pickedPower.discipline}: ${pickedPower.name}`
+                                                    )
+                                                    .join(", ")
+                                            })
                                             setCharacter(updatedCharacter)
                                             nextStep(updatedCharacter)
                                         }}
