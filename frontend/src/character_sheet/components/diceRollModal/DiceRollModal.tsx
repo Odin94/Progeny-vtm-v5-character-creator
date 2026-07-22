@@ -21,6 +21,14 @@ import { getSelectedMeritFlawModifierBonus } from "../../utils/meritFlawMatcher"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
 import { getBloodPotencyDisciplineBonus } from "~/data/BloodPotency"
+import {
+    CHARACTER_SHEET_ROLL_THRESHOLD,
+    feedbackSurveyEvents,
+    feedbackSurveyStorageKeys,
+    getFeedbackSurveyStorageKey,
+    incrementFeedbackSurveyCount,
+    triggerFeedbackSurveyEligibilityOnce
+} from "~/utils/feedbackSurveys"
 
 type DiceRollModalProps = {
     primaryColor: string
@@ -763,6 +771,32 @@ const DiceRollModal = ({
                     }
                 } catch (error) {
                     console.warn("PostHog dice roll tracking failed:", error)
+                }
+
+                try {
+                    const surveyIdentity = posthog.get_distinct_id()
+                    const completedRollCount = incrementFeedbackSurveyCount(
+                        localStorage,
+                        getFeedbackSurveyStorageKey(
+                            feedbackSurveyStorageKeys.characterSheetRollCount,
+                            surveyIdentity
+                        )
+                    )
+                    if (completedRollCount >= CHARACTER_SHEET_ROLL_THRESHOLD) {
+                        triggerFeedbackSurveyEligibilityOnce(
+                            localStorage,
+                            getFeedbackSurveyStorageKey(
+                                feedbackSurveyStorageKeys.characterSheetEligibilitySent,
+                                surveyIdentity
+                            ),
+                            () =>
+                                posthog.capture(feedbackSurveyEvents.characterSheetEligible, {
+                                    completed_roll_count: completedRollCount
+                                })
+                        )
+                    }
+                } catch (error) {
+                    console.warn("PostHog character sheet survey tracking failed:", error)
                 }
 
                 const autoShareDiceRolls = getAutoShareDiceRolls()

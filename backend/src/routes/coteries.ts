@@ -201,6 +201,7 @@ const buildCoterieResponse = async (
     userId: string,
     isOwner: boolean
 ) => {
+    const players = await getPlayerRoster(coterie)
     const characterMembers = await db.query.coterieMembers.findMany({
         where: eq(schema.coterieMembers.coterieId, coterie.id),
         with: {
@@ -243,6 +244,7 @@ const buildCoterieResponse = async (
         canEdit: isOwner,
         canManageInvites: isOwner,
         canManagePlayers: isOwner,
+        playerCount: players.length,
         members: characterMembers
             .filter((member) => member.character)
             .map((member) => ({
@@ -254,7 +256,7 @@ const buildCoterieResponse = async (
                     identityByUserId.get(member.character!.userId)?.showNameTag ?? false,
                 character: parseCharacter(member.character!, userId)
             })),
-        players: isOwner ? await getPlayerRoster(coterie) : undefined
+        players: isOwner ? players : undefined
     }
 }
 

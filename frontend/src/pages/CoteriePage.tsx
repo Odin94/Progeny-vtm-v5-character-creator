@@ -49,6 +49,15 @@ import { type CoterieNoteVersionResponse } from "~/utils/api"
 import { isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
 import { formatPrivateNoteWordCount } from "~/utils/privateNotes"
+import {
+    COTERIE_VISIT_THRESHOLD,
+    feedbackSurveyEvents,
+    feedbackSurveyStorageKeys,
+    getFeedbackSurveyCount,
+    getFeedbackSurveyStorageKey,
+    incrementFeedbackSurveyCount,
+    triggerFeedbackSurveyEligibilityOnce
+} from "~/utils/feedbackSurveys"
 
 type CoteriePageProps = {
     coterieId: string
@@ -74,7 +83,7 @@ const formatDateTime = (value: string) =>
     })
 
 const CoteriePage = ({ coterieId }: CoteriePageProps) => {
-    const { isLoading: authLoading, isAuthenticated, signIn } = useAuth()
+    const { user, isLoading: authLoading, isAuthenticated, signIn } = useAuth()
     const {
         data: coterie,
         isLoading: coterieLoading,
@@ -115,6 +124,7 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
         useState<CoterieNoteVersionResponse | null>(null)
     const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
     const initializedNotesIdRef = useRef<string | null>(null)
+    const feedbackVisitCoterieIdRef = useRef<string | null>(null)
     const { connect, joinSession, sessionId, sessionType, connectionStatus } = useSessionChat()
     const noteBytes = useMemo(() => getUtf8ByteLength(draftNotes), [draftNotes])
     const versions = notes?.versions ?? []
@@ -134,6 +144,39 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
             coterieId
         })
     }, [coterieId])
+
+    useEffect(() => {
+        if (!coterie || !user) {
+            return
+        }
+
+        const visitCountKey = getFeedbackSurveyStorageKey(
+            feedbackSurveyStorageKeys.coterieVisitCount,
+            user.id
+        )
+        const eligibilityMarkerKey = getFeedbackSurveyStorageKey(
+            feedbackSurveyStorageKeys.coterieEligibilitySent,
+            user.id
+        )
+
+        if (feedbackVisitCoterieIdRef.current !== coterie.id) {
+            feedbackVisitCoterieIdRef.current = coterie.id
+            incrementFeedbackSurveyCount(localStorage, visitCountKey)
+        }
+
+        const coterieVisitCount = getFeedbackSurveyCount(localStorage, visitCountKey)
+        if (coterieVisitCount < COTERIE_VISIT_THRESHOLD || coterie.playerCount < 2) {
+            return
+        }
+
+        triggerFeedbackSurveyEligibilityOnce(localStorage, eligibilityMarkerKey, () =>
+            posthog.capture(feedbackSurveyEvents.coterieEligible, {
+                coterie_id: coterie.id,
+                coterie_player_count: coterie.playerCount,
+                coterie_page_visit_count: coterieVisitCount
+            })
+        )
+    }, [coterie, user])
 
     useEffect(() => {
         if (!currentNote && initializedNotesIdRef.current !== "empty") {

@@ -559,6 +559,10 @@ describe("coterie invites and membership permissions", () => {
             payload: { token: noNicknameInvite.token }
         })
         expect(noNicknameAcceptResponse.statusCode).toBe(200)
+        expect(noNicknameAcceptResponse.json().coterie).toMatchObject({
+            playerCount: 3
+        })
+        expect(noNicknameAcceptResponse.json().coterie.players).toBeUndefined()
 
         setWorkosUser(OWNER_ID)
         const ownerCoterieResponse = await app.inject({
@@ -570,9 +574,11 @@ describe("coterie invites and membership permissions", () => {
         const nicknameLessPlayer = (
             ownerCoterieResponse.json() as {
                 players: Array<{ nickname: string }>
+                playerCount: number
             }
         ).players.find((player) => player.nickname === "cot")
         expect(nicknameLessPlayer).toBeDefined()
+        expect(ownerCoterieResponse.json().playerCount).toBe(3)
         expect(JSON.stringify(ownerCoterieResponse.json())).not.toContain(
             `${NO_NICKNAME_ID}@progeny.invalid`
         )

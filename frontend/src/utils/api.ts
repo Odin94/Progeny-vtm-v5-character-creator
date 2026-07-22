@@ -247,6 +247,7 @@ export type CoterieResponse = {
     canEdit?: boolean
     canManageInvites?: boolean
     canManagePlayers?: boolean
+    playerCount: number
     members?: CoterieMemberResponse[]
     players?: CoteriePlayerResponse[]
 }

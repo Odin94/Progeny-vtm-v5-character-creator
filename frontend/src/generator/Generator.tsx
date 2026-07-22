@@ -1,5 +1,6 @@
 import { Text } from "@mantine/core"
 import { useEffect } from "react"
+import posthog from "posthog-js"
 import ErrorBoundary from "../components/ErrorBoundary"
 import { Character } from "../data/Character"
 import { trackEvent } from "../utils/analytics"
@@ -16,6 +17,7 @@ import RitualsPicker from "./components/RitualsPicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
 import { GeneratorStepId, getNextGeneratorStepId } from "./steps"
+import { feedbackSurveyEvents } from "~/utils/feedbackSurveys"
 
 export type GeneratorProps = {
     character: Character
@@ -38,7 +40,17 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     }, [selectedStep])
 
     const nextStep = (characterOverride?: Character) => {
-        setSelectedStep(getNextGeneratorStepId(characterOverride ?? character, selectedStep))
+        const nextStepId = getNextGeneratorStepId(characterOverride ?? character, selectedStep)
+
+        if (nextStepId === "final" && selectedStep !== "final") {
+            try {
+                posthog.capture(feedbackSurveyEvents.characterCreationCompleted)
+            } catch (error) {
+                console.warn("PostHog character completion tracking failed:", error)
+            }
+        }
+
+        setSelectedStep(nextStepId)
     }
 
     const getStepComponent = () => {
