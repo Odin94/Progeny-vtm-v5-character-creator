@@ -60,10 +60,21 @@ test("creates a Brujah character and downloads the PDF sheet", async ({ page }) 
         .fill("A sharp-eyed Brujah courier with a battered leather jacket.")
     await page.getByTestId("basics-confirm-button").click()
 
+    await expect(page.getByText("Clan powers 0/3")).toBeVisible()
+    await expect(page.getByText("Predator power 0/1")).toBeVisible()
+
+    await page.getByTestId("discipline-potence-accordion").click()
+    const unavailableProwess = powerCard(page, "Prowess").getByTestId("take-power-prowess-button")
+    await expect(unavailableProwess).toHaveAttribute("aria-disabled", "true")
+    await unavailableProwess.hover()
+    await expect(page.getByText("Pick 1 lower-level Potence power first")).toBeVisible()
+
     await takePower(page, "POTENCE", "Lethal Body")
     await takePower(page, "POTENCE", "Prowess")
     await takePower(page, "PRESENCE", "Awe")
     await takePower(page, "AUSPEX", "Heightened Senses")
+    await expect(page.getByText("Clan powers 3/3")).toBeVisible()
+    await expect(page.getByText("Predator power 1/1")).toBeVisible()
     await page.getByTestId("disciplines-confirm-button").click()
 
     await page.getByTestId("touchstone-0-name-input").fill("Jonah Reyes")
