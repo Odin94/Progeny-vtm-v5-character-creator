@@ -3,9 +3,10 @@ import posthog from "posthog-js"
 
 const WIDGET_CONTAINER_ID = "ph-conversations-widget-container"
 const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="Open chat ("]'
-const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close chat"]'
+const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
 const OPEN_RETRY_COUNT = 20
 const OPEN_RETRY_DELAY_MS = 100
+const containersWatchingForClose = new WeakSet<HTMLElement>()
 
 export const SUPPORT_CONSENT_REQUEST_EVENT = "progeny:request-posthog-consent"
 
@@ -28,11 +29,32 @@ const wait = (duration: number) =>
         window.setTimeout(resolve, duration)
     })
 
+const hideWidgetAfterConversationCloses = (container: HTMLElement) => {
+    if (containersWatchingForClose.has(container)) {
+        return
+    }
+
+    containersWatchingForClose.add(container)
+    const handleWidgetClick = (event: MouseEvent) => {
+        const target = event.target
+        if (!(target instanceof Element) || !target.closest(CLOSE_CHAT_SELECTOR)) {
+            return
+        }
+
+        container.removeEventListener("click", handleWidgetClick)
+        window.setTimeout(() => posthog.conversations.hide(), 0)
+    }
+
+    container.addEventListener("click", handleWidgetClick)
+}
+
 const expandRenderedWidget = () => {
     const container = document.getElementById(WIDGET_CONTAINER_ID)
     if (!container) {
         return false
     }
+
+    hideWidgetAfterConversationCloses(container)
 
     if (container.querySelector(CLOSE_CHAT_SELECTOR)) {
         return true

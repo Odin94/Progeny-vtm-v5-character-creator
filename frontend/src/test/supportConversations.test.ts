@@ -8,7 +8,8 @@ vi.mock("posthog-js", () => ({
         get_explicit_consent_status: vi.fn(),
         conversations: {
             isAvailable: vi.fn(),
-            show: vi.fn()
+            show: vi.fn(),
+            hide: vi.fn()
         }
     }
 }))
@@ -44,7 +45,7 @@ describe("openSupportConversation", () => {
         const container = document.createElement("div")
         container.id = "ph-conversations-widget-container"
         const closeButton = document.createElement("button")
-        closeButton.setAttribute("aria-label", "Close chat")
+        closeButton.setAttribute("aria-label", "Close")
         const clickSpy = vi.spyOn(closeButton, "click")
         container.append(closeButton)
         document.body.append(container)
@@ -52,6 +53,24 @@ describe("openSupportConversation", () => {
         await expect(openSupportConversation("account-page")).resolves.toBe("opened")
 
         expect(clickSpy).not.toHaveBeenCalled()
+    })
+
+    it("removes the widget entirely when the conversation is closed", async () => {
+        vi.useFakeTimers()
+        vi.mocked(posthog.conversations.isAvailable).mockReturnValue(true)
+        const container = document.createElement("div")
+        container.id = "ph-conversations-widget-container"
+        const closeButton = document.createElement("button")
+        closeButton.setAttribute("aria-label", "Close")
+        container.append(closeButton)
+        document.body.append(container)
+
+        await expect(openSupportConversation("character-sheet-menu")).resolves.toBe("opened")
+        closeButton.click()
+        await vi.runAllTimersAsync()
+
+        expect(posthog.conversations.hide).toHaveBeenCalledOnce()
+        vi.useRealTimers()
     })
 
     it("requests consent instead of trying to load Support when tracking is disabled", async () => {
