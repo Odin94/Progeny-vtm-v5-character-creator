@@ -21,6 +21,7 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
+import SupportConversationButton from "~/components/SupportConversationButton"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
@@ -235,8 +236,15 @@ export default function LandingPage() {
                                 </Button>
                             </Group>
                             <Stack gap={4} mt="lg" align="center">
+                                <SupportConversationButton
+                                    source="landing-page"
+                                    color="red"
+                                    variant="light"
+                                >
+                                    Contact Odin
+                                </SupportConversationButton>
                                 <Text size="sm" className="landing-page__hero-meta">
-                                    Feedback, requests or questions? Reach out to Odin on{" "}
+                                    You can also reach Odin on{" "}
                                     <Anchor
                                         href={CONTACT_LINKS.reddit.href}
                                         target="_blank"

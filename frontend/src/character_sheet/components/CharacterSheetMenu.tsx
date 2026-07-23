@@ -14,7 +14,8 @@ import {
     IconDeviceGamepad2,
     IconBrandDiscord,
     IconExternalLink,
-    IconHelpHexagon
+    IconHelpHexagon,
+    IconMessageCircle
 } from "@tabler/icons-react"
 import { Buffer } from "buffer"
 import { AnimatePresence, motion } from "framer-motion"
@@ -22,6 +23,7 @@ import { useRef, useState } from "react"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import SupportConversationButton from "~/components/SupportConversationButton"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
@@ -357,6 +359,14 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                             >
                                                 Disclaimer
                                             </Button>
+                                            <SupportConversationButton
+                                                source="character-sheet-menu"
+                                                leftSection={<IconMessageCircle size={18} />}
+                                                variant="subtle"
+                                                onClickStart={handleMenuClose}
+                                            >
+                                                Feedback & support
+                                            </SupportConversationButton>
                                         </div>
                                     </Stack>
                                 ) : view === "preferences" ? (

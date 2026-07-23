@@ -29,6 +29,7 @@ import {
     IconEyeOff,
     IconInfoCircle,
     IconLink,
+    IconMessageCircle,
     IconTrash,
     IconUsers
 } from "@tabler/icons-react"
@@ -41,6 +42,7 @@ import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import NameTag from "~/components/NameTag"
+import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
 import { characterSchema, Character as CharacterType, getEmptyCharacter } from "~/data/Character"
@@ -1787,6 +1789,24 @@ const MePage = () => {
                                     handleCancelNickname={handleCancelNickname}
                                     handleNameTagToggle={handleNameTagToggle}
                                 />
+
+                                <Card p="lg" withBorder>
+                                    <Group justify="space-between" align="center" gap="lg">
+                                        <div>
+                                            <Text fw={600}>Feedback & support</Text>
+                                            <Text c="dimmed" size="sm">
+                                                Send a question, complaint, bug report, or idea and
+                                                read replies here.
+                                            </Text>
+                                        </div>
+                                        <SupportConversationButton
+                                            source="account-page"
+                                            color="red"
+                                            variant="light"
+                                            leftSection={<IconMessageCircle size={18} />}
+                                        />
+                                    </Group>
+                                </Card>
 
                                 <CharactersSection
                                     userCharacters={userCharacters}

@@ -10,6 +10,7 @@ import {
     IconFileText,
     IconHeart,
     IconHelpHexagon,
+    IconMessageCircle,
     IconShare,
     IconTrash,
     IconUserPlus,
@@ -24,6 +25,10 @@ import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
+import {
+    openSupportConversation,
+    showSupportUnavailableNotification
+} from "../../utils/supportConversations"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
@@ -103,6 +108,13 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             category: "downloads",
             label: JSON.stringify(character)
         })
+    }
+
+    const handleOpenSupport = async () => {
+        const opened = await openSupportConversation("character-creation-complete")
+        if (!opened) {
+            showSupportUnavailableNotification()
+        }
     }
 
     return (
@@ -457,6 +469,12 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         label="Character Sheet"
                         description="Use this character right away"
                         onClick={handleCharacterSheet}
+                    />
+                    <ActionCard
+                        icon={<IconMessageCircle size={20} />}
+                        label="Feedback & support"
+                        description="Questions, complaints, bugs or ideas"
+                        onClick={handleOpenSupport}
                     />
                 </div>
 
