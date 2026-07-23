@@ -236,15 +236,8 @@ export default function LandingPage() {
                                 </Button>
                             </Group>
                             <Stack gap={4} mt="lg" align="center">
-                                <SupportConversationButton
-                                    source="landing-page"
-                                    color="red"
-                                    variant="light"
-                                >
-                                    Contact Odin
-                                </SupportConversationButton>
                                 <Text size="sm" className="landing-page__hero-meta">
-                                    You can also reach Odin on{" "}
+                                    Feedback, requests or questions? Reach out to Odin on{" "}
                                     <Anchor
                                         href={CONTACT_LINKS.reddit.href}
                                         target="_blank"
@@ -449,6 +442,14 @@ export default function LandingPage() {
                         </Stack>
 
                         <Group gap="lg" className="landing-page__footer-links">
+                            <SupportConversationButton
+                                source="landing-page"
+                                color="gray"
+                                variant="subtle"
+                                className="landing-page__footer-button"
+                            >
+                                Contact Odin
+                            </SupportConversationButton>
                             <Text className="landing-page__link">Contact me:</Text>
                             <Anchor
                                 href={CONTACT_LINKS.reddit.href}
