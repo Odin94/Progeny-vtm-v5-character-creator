@@ -5,11 +5,19 @@ import posthog from "posthog-js"
 import { globals } from "~/globals"
 import { IconCookie } from "@tabler/icons-react"
 import { useAuth } from "~/hooks/useAuth"
+import {
+    openSupportConversation,
+    showSupportUnavailableNotification,
+    SUPPORT_CONSENT_REQUEST_EVENT,
+    type SupportConversationSource
+} from "~/utils/supportConversations"
 
 const LEARN_MORE_HREF = "https://odin-matthias.de/datenschutzerklaerung"
 
 export const CookiesBanner = () => {
     const [showBanner, setShowBanner] = useState(false)
+    const [pendingSupportSource, setPendingSupportSource] =
+        useState<SupportConversationSource | null>(null)
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     const { isAuthenticated, isLoading } = useAuth()
 
@@ -20,20 +28,51 @@ export const CookiesBanner = () => {
         }
 
         const consentStatus = posthog.get_explicit_consent_status()
-        setShowBanner(!isAuthenticated && consentStatus === "pending")
-    }, [isAuthenticated, isLoading])
+        setShowBanner(
+            pendingSupportSource !== null || (!isAuthenticated && consentStatus === "pending")
+        )
+    }, [isAuthenticated, isLoading, pendingSupportSource])
+
+    useEffect(() => {
+        const handleSupportConsentRequest = (event: Event) => {
+            const consentRequest = event as CustomEvent<{ source: SupportConversationSource }>
+            setPendingSupportSource(consentRequest.detail.source)
+            setShowBanner(true)
+        }
+
+        window.addEventListener(SUPPORT_CONSENT_REQUEST_EVENT, handleSupportConsentRequest)
+        return () => {
+            window.removeEventListener(SUPPORT_CONSENT_REQUEST_EVENT, handleSupportConsentRequest)
+        }
+    }, [])
 
     const handleAccept = () => {
+        const supportSource = pendingSupportSource
+        setPendingSupportSource(null)
         setShowBanner(false)
 
         try {
             posthog.opt_in_capturing()
+            posthog.conversations.loadIfEnabled()
         } catch (error) {
             console.warn("Failed to opt in PostHog capturing:", error)
+            if (supportSource) {
+                showSupportUnavailableNotification()
+            }
+            return
+        }
+
+        if (supportSource) {
+            void openSupportConversation(supportSource).then((result) => {
+                if (result === "unavailable") {
+                    showSupportUnavailableNotification()
+                }
+            })
         }
     }
 
     const handleDecline = () => {
+        setPendingSupportSource(null)
         setShowBanner(false)
 
         try {
@@ -44,6 +83,7 @@ export const CookiesBanner = () => {
     }
 
     const handleClose = () => {
+        setPendingSupportSource(null)
         setShowBanner(false)
     }
 

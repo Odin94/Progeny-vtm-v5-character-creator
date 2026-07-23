@@ -111,8 +111,8 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     }
 
     const handleOpenSupport = async () => {
-        const opened = await openSupportConversation("character-creation-complete")
-        if (!opened) {
+        const result = await openSupportConversation("character-creation-complete")
+        if (result === "unavailable") {
             showSupportUnavailableNotification()
         }
     }

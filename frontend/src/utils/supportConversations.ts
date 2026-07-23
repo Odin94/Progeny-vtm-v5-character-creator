@@ -7,6 +7,8 @@ const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close chat"]'
 const OPEN_RETRY_COUNT = 20
 const OPEN_RETRY_DELAY_MS = 100
 
+export const SUPPORT_CONSENT_REQUEST_EVENT = "progeny:request-posthog-consent"
+
 export type SupportConversationSource =
     | "landing-page"
     | "account-page"
@@ -16,8 +18,7 @@ export type SupportConversationSource =
 export const showSupportUnavailableNotification = () => {
     notifications.show({
         title: "Support chat is unavailable",
-        message:
-            "Please accept analytics cookies and try again, or use one of the other contact links.",
+        message: "Please try again later, or use one of the other contact links.",
         color: "orange"
     })
 }
@@ -54,6 +55,15 @@ const expandRenderedWidget = () => {
  * so a single click on our UI always opens the conversation panel.
  */
 export const openSupportConversation = async (source: SupportConversationSource) => {
+    if (posthog.get_explicit_consent_status() !== "granted") {
+        window.dispatchEvent(
+            new CustomEvent<{ source: SupportConversationSource }>(SUPPORT_CONSENT_REQUEST_EVENT, {
+                detail: { source }
+            })
+        )
+        return "consent-required" as const
+    }
+
     try {
         posthog.capture("support-conversation-opened", { source })
     } catch (error) {
@@ -66,16 +76,16 @@ export const openSupportConversation = async (source: SupportConversationSource)
                 posthog.conversations.show()
 
                 if (expandRenderedWidget()) {
-                    return true
+                    return "opened" as const
                 }
             }
         } catch (error) {
             console.warn("PostHog Support failed to open:", error)
-            return false
+            return "unavailable" as const
         }
 
         await wait(OPEN_RETRY_DELAY_MS)
     }
 
-    return false
+    return "unavailable" as const
 }

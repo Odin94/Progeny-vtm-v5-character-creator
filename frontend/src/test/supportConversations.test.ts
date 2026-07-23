@@ -5,6 +5,7 @@ import { openSupportConversation } from "~/utils/supportConversations"
 vi.mock("posthog-js", () => ({
     default: {
         capture: vi.fn(),
+        get_explicit_consent_status: vi.fn(),
         conversations: {
             isAvailable: vi.fn(),
             show: vi.fn()
@@ -16,6 +17,7 @@ describe("openSupportConversation", () => {
     beforeEach(() => {
         document.body.innerHTML = ""
         vi.clearAllMocks()
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
     })
 
     it("shows and expands the PostHog Support widget", async () => {
@@ -28,7 +30,7 @@ describe("openSupportConversation", () => {
         container.append(openButton)
         document.body.append(container)
 
-        await expect(openSupportConversation("landing-page")).resolves.toBe(true)
+        await expect(openSupportConversation("landing-page")).resolves.toBe("opened")
 
         expect(posthog.capture).toHaveBeenCalledWith("support-conversation-opened", {
             source: "landing-page"
@@ -47,8 +49,20 @@ describe("openSupportConversation", () => {
         container.append(closeButton)
         document.body.append(container)
 
-        await expect(openSupportConversation("account-page")).resolves.toBe(true)
+        await expect(openSupportConversation("account-page")).resolves.toBe("opened")
 
         expect(clickSpy).not.toHaveBeenCalled()
+    })
+
+    it("requests consent instead of trying to load Support when tracking is disabled", async () => {
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("denied")
+        const consentRequest = vi.fn()
+        window.addEventListener("progeny:request-posthog-consent", consentRequest)
+
+        await expect(openSupportConversation("landing-page")).resolves.toBe("consent-required")
+
+        expect(consentRequest).toHaveBeenCalledOnce()
+        expect(posthog.conversations.show).not.toHaveBeenCalled()
+        window.removeEventListener("progeny:request-posthog-consent", consentRequest)
     })
 })

@@ -29,8 +29,8 @@ const SupportConversationButton = ({
         onClickStart?.()
         setOpening(true)
 
-        const opened = await openSupportConversation(source)
-        if (!opened) {
+        const result = await openSupportConversation(source)
+        if (result === "unavailable") {
             showSupportUnavailableNotification()
         }
 
