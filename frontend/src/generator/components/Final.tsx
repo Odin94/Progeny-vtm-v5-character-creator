@@ -30,6 +30,7 @@ import {
     showSupportUnavailableNotification
 } from "../../utils/supportConversations"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
+import { createInconnuCommandExport } from "../inconnuCommandCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
@@ -771,6 +772,30 @@ function ExportModal({
         }
     }
 
+    const exportInconnuCommands = () => {
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+        try {
+            const inconnuJson = createInconnuJson(character)
+            const commands = createInconnuCommandExport(inconnuJson)
+            const blob = new Blob([commands], { type: "text/plain" })
+            const link = document.createElement("a")
+            link.href = window.URL.createObjectURL(blob)
+            link.download = `inconnu_${character.name}_discord_commands.txt`
+            link.click()
+            setTimeout(() => window.URL.revokeObjectURL(link.href), 100)
+
+            trackEvent({
+                action: "Commands downloaded (inconnu)",
+                category: "downloads",
+                label: JSON.stringify(character)
+            })
+            onClose()
+        } catch (e) {
+            console.error(e)
+            setDownloadError(e as Error)
+        }
+    }
+
     return (
         <div className="nf-modal-backdrop">
             <div className="nf-modal-overlay" onClick={onClose} />
@@ -908,6 +933,33 @@ function ExportModal({
                                 }}
                             >
                                 Export for use with the Inconnu Discord character manager
+                            </p>
+                        </div>
+                        <span className="nf-export-action">Download →</span>
+                    </button>
+
+                    <button className="nf-export-option" onClick={exportInconnuCommands}>
+                        <div style={{ flex: 1 }}>
+                            <p
+                                style={{
+                                    margin: 0,
+                                    fontFamily: FONT_DISPLAY,
+                                    fontSize: "0.88rem",
+                                    letterSpacing: "0.05em",
+                                    color: COLORS.gold
+                                }}
+                            >
+                                Inconnu Discord Commands
+                            </p>
+                            <p
+                                style={{
+                                    margin: "2px 0 0 0",
+                                    fontFamily: FONT_UI,
+                                    fontSize: 10,
+                                    color: rgba(RAW_GREY, 0.4)
+                                }}
+                            >
+                                Download setup commands to run after /character wizard
                             </p>
                         </div>
                         <span className="nf-export-action">Download →</span>
