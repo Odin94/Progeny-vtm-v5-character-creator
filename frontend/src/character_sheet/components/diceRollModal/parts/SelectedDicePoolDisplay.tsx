@@ -135,12 +135,14 @@ const SelectedDicePoolDisplay = ({
                             multiline
                             w={250}
                             zIndex={3000}
+                            events={{ hover: true, focus: true, touch: true }}
                         >
                             <ActionIcon
                                 variant="subtle"
                                 color={primaryColor}
                                 size="sm"
                                 style={{ cursor: "help" }}
+                                aria-label="How to select a dice pool"
                             >
                                 <IconInfoCircle size={18} />
                             </ActionIcon>

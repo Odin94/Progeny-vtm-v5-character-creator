@@ -54,6 +54,28 @@ describe("SelectedDicePoolDisplay", () => {
         expect(screen.getByLabelText("Blood Surge (+2 dice)")).toBeInTheDocument()
     })
 
+    it("opens the dice-pool guidance tooltip when its info button is tapped", async () => {
+        const user = userEvent.setup()
+
+        render(
+            <MantineProvider>
+                <SelectedDicePoolDisplay
+                    character={getBasicTestCharacter()}
+                    primaryColor="red"
+                    skillSpecialties={[]}
+                />
+            </MantineProvider>
+        )
+
+        await user.click(screen.getByRole("button", { name: "How to select a dice pool" }))
+
+        expect(
+            await screen.findByText(
+                "You can click Attributes, Skills, or Disciplines on the character sheet to determine your dice pool"
+            )
+        ).toBeInTheDocument()
+    })
+
     it("shows blood potency discipline bonus on selected discipline badges", async () => {
         const character = {
             ...getBasicTestCharacter(),
