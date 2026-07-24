@@ -780,7 +780,7 @@ function ExportModal({
             const blob = new Blob([commands], { type: "text/plain" })
             const link = document.createElement("a")
             link.href = window.URL.createObjectURL(blob)
-            link.download = `inconnu_${character.name}_discord_commands.txt`
+            link.download = `inconnu_${character.name}_discord_commands_progeny.txt`
             link.click()
             setTimeout(() => window.URL.revokeObjectURL(link.href), 100)
 

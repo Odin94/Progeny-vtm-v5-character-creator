@@ -25,6 +25,9 @@ const traitRatings = (traits: InconnuTrait[]) => traits.map((trait) => `${trait.
 const traitSubtraits = (traits: InconnuTrait[]) =>
     traits.filter((trait) => trait.subtraits.length > 0).map((trait) => `${trait.name}=${trait.subtraits.join(",")}`)
 
+const formatSplat = (splat: InconnuCreationBody["splat"]): string =>
+    splat === "thin-blood" ? "Thin-Blood" : `${splat.charAt(0).toUpperCase()}${splat.slice(1)}`
+
 /**
  * Creates individually pasteable Discord slash commands for an Inconnu character.
  * Inconnu does not support batch execution of slash commands, so users must run
@@ -62,13 +65,28 @@ export const createInconnuCommandExport = (character: InconnuCreationBody): stri
     ]
 
     return [
-        "INCONNU DISCORD COMMAND EXPORT",
+        "INCONNU DISCORD COMMAND EXPORT source: https://progeny.odin-matthias.de",
         "",
-        "1. In the target Discord server, run /character wizard. /character create has been removed by Inconnu.",
-        "2. Complete the wizard with any valid values, using this character's name.",
+        "1. In the target Discord server, run /character wizard.",
+        `2. Enter the character name "${character.name}" and only fill the dropdowns: Health ${character.health}, Willpower ${character.willpower}, Template ${formatSplat(character.splat)}.`,
         "3. Run each command below individually. Discord cannot execute a pasted group of slash commands at once.",
-        "4. To add profile text and convictions, run /character profile edit:<character> and /character convictions edit:<character> after these commands.",
+        "4. The profile and convictions commands at the end open Inconnu modals. Copy the supplied text into those modals to finish the import.",
         "",
         ...commands
+            .concat([
+                "",
+                `/character profile edit:${character.name}`,
+                "Description:",
+                character.description || "(leave blank)",
+                "",
+                "History:",
+                character.biography || "(leave blank)",
+                "",
+                `/character convictions edit:${character.name}`,
+                "Convictions:",
+                ...(character.convictions.length > 0
+                    ? character.convictions.map((conviction, index) => `${index + 1}. ${conviction}`)
+                    : ["(leave blank)"])
+            ])
     ].join("\n")
 }
