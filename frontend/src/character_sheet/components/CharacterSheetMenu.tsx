@@ -27,6 +27,7 @@ import SupportConversationButton from "~/components/SupportConversationButton"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
+import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import {
@@ -143,6 +144,27 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             const link = document.createElement("a")
             link.href = window.URL.createObjectURL(blob)
             link.download = `inconnu_${character.name}.json`
+            link.click()
+
+            setTimeout(() => {
+                window.URL.revokeObjectURL(link.href)
+            }, 100)
+
+            handleMenuClose()
+        } catch (e) {
+            console.error(e)
+            setDownloadError(e as Error)
+        }
+    }
+
+    const handleExportInconnuCommands = () => {
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+        try {
+            const commands = createInconnuCommandExport(createInconnuJson(character))
+            const blob = new Blob([commands], { type: "text/plain" })
+            const link = document.createElement("a")
+            link.href = window.URL.createObjectURL(blob)
+            link.download = `inconnu_${character.name}_discord_commands.txt`
             link.click()
 
             setTimeout(() => {
@@ -469,12 +491,20 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                         manager.
                                                     </Text>
                                                 </div>
-                                                <Button
-                                                    leftSection={<IconDownload size={17} />}
-                                                    onClick={handleExportToInconnu}
-                                                >
-                                                    Export JSON
-                                                </Button>
+                                                <div className="sheet-menu__export-actions">
+                                                    <Button
+                                                        leftSection={<IconDownload size={17} />}
+                                                        onClick={handleExportToInconnu}
+                                                    >
+                                                        Export JSON
+                                                    </Button>
+                                                    <Button
+                                                        leftSection={<IconDownload size={17} />}
+                                                        onClick={handleExportInconnuCommands}
+                                                    >
+                                                        Discord commands
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     </Stack>
