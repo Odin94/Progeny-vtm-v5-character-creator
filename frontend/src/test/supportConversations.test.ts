@@ -37,7 +37,7 @@ describe("openSupportConversation", () => {
         expect(posthog.capture).toHaveBeenCalledWith("support-conversation-opened", {
             source: "landing-page"
         })
-        expect(posthog.conversations.show).toHaveBeenCalledOnce()
+        expect(posthog.conversations.show).toHaveBeenCalled()
         expect(posthog.conversations.loadIfEnabled).toHaveBeenCalledOnce()
         expect(clickSpy).toHaveBeenCalledOnce()
     })
@@ -57,7 +57,7 @@ describe("openSupportConversation", () => {
         expect(clickSpy).not.toHaveBeenCalled()
     })
 
-    it("removes the widget entirely when the conversation is closed", async () => {
+    it("hides the closed launcher while keeping the widget preloaded", async () => {
         vi.useFakeTimers()
         vi.mocked(posthog.conversations.isAvailable).mockReturnValue(true)
         const container = document.createElement("div")
@@ -71,7 +71,8 @@ describe("openSupportConversation", () => {
         closeButton.click()
         await vi.runAllTimersAsync()
 
-        expect(posthog.conversations.hide).toHaveBeenCalledOnce()
+        expect(container).not.toHaveAttribute("data-progeny-support-open")
+        expect(posthog.conversations.hide).not.toHaveBeenCalled()
         vi.useRealTimers()
     })
 

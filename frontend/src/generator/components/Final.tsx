@@ -1,5 +1,4 @@
 import { notifications } from "@mantine/notifications"
-import posthog from "posthog-js"
 import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import {
@@ -35,10 +34,8 @@ import { createInconnuCommandExport } from "../inconnuCommandCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
-import {
-    COOKIE_PREFERENCES_CHANGED_EVENT,
-    openCookiePreferences
-} from "~/utils/cookiePreferences"
+import { openCookiePreferences } from "~/utils/cookiePreferences"
+import { useAnalyticsConsent } from "~/hooks/useAnalyticsConsent"
 
 type FinalProps = {
     character: Character
@@ -74,19 +71,8 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
         useDisclosure(false)
-    const [hasAnalyticsConsent, setHasAnalyticsConsent] = useState(
-        () => posthog.get_explicit_consent_status() === "granted"
-    )
+    const hasAnalyticsConsent = useAnalyticsConsent()
     const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
-
-    useEffect(() => {
-        const updateConsent = () => {
-            setHasAnalyticsConsent(posthog.get_explicit_consent_status() === "granted")
-        }
-
-        window.addEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, updateConsent)
-        return () => window.removeEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, updateConsent)
-    }, [])
 
     const charName = character.name?.trim() || ""
     const displayTitle = charName || "Your Kindred Awaits"

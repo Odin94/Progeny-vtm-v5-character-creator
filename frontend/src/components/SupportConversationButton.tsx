@@ -1,11 +1,13 @@
 import { Button, type ButtonProps } from "@mantine/core"
-import { IconMessageCircle } from "@tabler/icons-react"
+import { IconCookie, IconMessageCircle } from "@tabler/icons-react"
 import { useState, type ComponentPropsWithoutRef, type ReactNode } from "react"
 import {
     openSupportConversation,
     showSupportUnavailableNotification,
     type SupportConversationSource
 } from "~/utils/supportConversations"
+import { useAnalyticsConsent } from "~/hooks/useAnalyticsConsent"
+import { openCookiePreferences } from "~/utils/cookiePreferences"
 
 type SupportConversationButtonProps = Omit<
     ComponentPropsWithoutRef<typeof Button>,
@@ -24,6 +26,22 @@ const SupportConversationButton = ({
     ...buttonProps
 }: SupportConversationButtonProps & ButtonProps) => {
     const [opening, setOpening] = useState(false)
+    const hasAnalyticsConsent = useAnalyticsConsent()
+
+    if (!hasAnalyticsConsent) {
+        return (
+            <Button
+                {...buttonProps}
+                leftSection={<IconCookie size={18} />}
+                onClick={() => {
+                    onClickStart?.()
+                    openCookiePreferences()
+                }}
+            >
+                Cookie preferences
+            </Button>
+        )
+    }
 
     const handleClick = async () => {
         onClickStart?.()

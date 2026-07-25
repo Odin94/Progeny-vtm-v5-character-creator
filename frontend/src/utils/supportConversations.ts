@@ -2,11 +2,14 @@ import { notifications } from "@mantine/notifications"
 import posthog from "posthog-js"
 
 const WIDGET_CONTAINER_ID = "ph-conversations-widget-container"
+const WIDGET_OPEN_ATTRIBUTE = "data-progeny-support-open"
 const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="Open chat ("]'
 const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
 const OPEN_RETRY_COUNT = 100
 const OPEN_RETRY_DELAY_MS = 100
 const containersWatchingForClose = new WeakSet<HTMLElement>()
+let warmupRetryId: number | null = null
+let warmupAttempt = 0
 
 export const SUPPORT_CONSENT_REQUEST_EVENT = "progeny:request-posthog-consent"
 
@@ -41,8 +44,7 @@ const hideWidgetAfterConversationCloses = (container: HTMLElement) => {
             return
         }
 
-        container.removeEventListener("click", handleWidgetClick)
-        window.setTimeout(() => posthog.conversations.hide(), 0)
+        window.setTimeout(() => container.removeAttribute(WIDGET_OPEN_ATTRIBUTE), 0)
     }
 
     container.addEventListener("click", handleWidgetClick)
@@ -59,6 +61,25 @@ export const warmSupportConversation = () => {
 
     try {
         posthog.conversations.loadIfEnabled()
+
+        if (posthog.conversations.isAvailable()) {
+            posthog.conversations.show()
+            warmupAttempt = 0
+            if (warmupRetryId !== null) {
+                window.clearTimeout(warmupRetryId)
+                warmupRetryId = null
+            }
+            return true
+        }
+
+        if (warmupRetryId === null && warmupAttempt < OPEN_RETRY_COUNT) {
+            warmupAttempt += 1
+            warmupRetryId = window.setTimeout(() => {
+                warmupRetryId = null
+                warmSupportConversation()
+            }, OPEN_RETRY_DELAY_MS)
+        }
+
         return true
     } catch (error) {
         console.warn("PostHog Support failed to start loading:", error)
@@ -73,6 +94,7 @@ const expandRenderedWidget = () => {
     }
 
     hideWidgetAfterConversationCloses(container)
+    container.setAttribute(WIDGET_OPEN_ATTRIBUTE, "true")
 
     if (container.querySelector(CLOSE_CHAT_SELECTOR)) {
         return true
@@ -80,6 +102,7 @@ const expandRenderedWidget = () => {
 
     const openButton = container.querySelector<HTMLButtonElement>(OPEN_CHAT_SELECTOR)
     if (!openButton) {
+        container.removeAttribute(WIDGET_OPEN_ATTRIBUTE)
         return false
     }
 

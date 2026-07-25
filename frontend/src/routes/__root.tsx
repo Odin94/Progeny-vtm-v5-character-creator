@@ -130,16 +130,21 @@ warmSupportConversation()
 const AuthUnauthorizedHandler = () => {
     useEffect(() => {
         const handleUnauthorized = () => {
+            const wasAuthenticated = Boolean(queryClient.getQueryData(["auth", "me"]))
             queryClient.setQueryData(["auth", "me"], null)
             queryClient.removeQueries({ queryKey: ["characters"] })
             queryClient.removeQueries({ queryKey: ["coteries"] })
             queryClient.removeQueries({ queryKey: ["shares"] })
             queryClient.removeQueries({ queryKey: ["user", "preferences"] })
 
-            try {
-                resetPostHogIdentity()
-            } catch (error) {
-                console.warn("PostHog reset failed:", error)
+            // Anonymous /auth/me requests normally return 401. Resetting PostHog for those
+            // destroys the loaded Support config and stops its remote-config loader.
+            if (wasAuthenticated) {
+                try {
+                    resetPostHogIdentity()
+                } catch (error) {
+                    console.warn("PostHog reset failed:", error)
+                }
             }
         }
 

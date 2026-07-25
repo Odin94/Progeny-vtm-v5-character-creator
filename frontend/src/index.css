@@ -1,3 +1,7 @@
+#ph-conversations-widget-container:not([data-progeny-support-open="true"]) {
+    display: none !important;
+}
+
 html,
 body,
 #root {
