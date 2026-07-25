@@ -1772,6 +1772,14 @@ const MePage = () => {
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
                             <Group mb="xl" justify="flex-end">
+                                <SupportConversationButton
+                                    source="account-page"
+                                    color="red"
+                                    variant="outline"
+                                    leftSection={<IconMessageCircle size={18} />}
+                                >
+                                    Feedback & Support
+                                </SupportConversationButton>
                                 <Button onClick={signOut} color="red" variant="outline">
                                     Sign Out
                                 </Button>
@@ -1789,24 +1797,6 @@ const MePage = () => {
                                     handleCancelNickname={handleCancelNickname}
                                     handleNameTagToggle={handleNameTagToggle}
                                 />
-
-                                <Card p="lg" withBorder>
-                                    <Group justify="space-between" align="center" gap="lg">
-                                        <div>
-                                            <Text fw={600}>Feedback & support</Text>
-                                            <Text c="dimmed" size="sm">
-                                                Send a question, complaint, bug report, or idea and
-                                                read replies here.
-                                            </Text>
-                                        </div>
-                                        <SupportConversationButton
-                                            source="account-page"
-                                            color="red"
-                                            variant="light"
-                                            leftSection={<IconMessageCircle size={18} />}
-                                        />
-                                    </Group>
-                                </Card>
 
                                 <CharactersSection
                                     userCharacters={userCharacters}
