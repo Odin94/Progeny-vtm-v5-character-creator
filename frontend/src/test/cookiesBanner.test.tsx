@@ -3,7 +3,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import { CookiesBanner } from "~/components/CookiesBanner"
-import { openCookiePreferences } from "~/utils/cookiePreferences"
+import {
+    COOKIE_PREFERENCES_CHANGED_EVENT,
+    openCookiePreferences
+} from "~/utils/cookiePreferences"
 
 const mockUseAuth = vi.fn(() => ({ isAuthenticated: false, isLoading: false }))
 const mockOpenSupportConversation = vi.fn()
@@ -131,5 +134,16 @@ describe("CookiesBanner", () => {
         openCookiePreferences()
 
         expect(await screen.findByText("Sink your fangs into some cookies!")).toBeInTheDocument()
+    })
+
+    it("notifies the app after a cookie choice changes", async () => {
+        const changed = vi.fn()
+        window.addEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, changed)
+        renderBanner()
+
+        fireEvent.click(await screen.findByRole("button", { name: "Accept" }))
+
+        expect(changed).toHaveBeenCalledOnce()
+        window.removeEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, changed)
     })
 })

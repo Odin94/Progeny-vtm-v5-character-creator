@@ -5,7 +5,10 @@ import posthog from "posthog-js"
 import { globals } from "~/globals"
 import { IconCookie } from "@tabler/icons-react"
 import { useAuth } from "~/hooks/useAuth"
-import { COOKIE_PREFERENCES_REQUEST_EVENT } from "~/utils/cookiePreferences"
+import {
+    COOKIE_PREFERENCES_REQUEST_EVENT,
+    notifyCookiePreferencesChanged
+} from "~/utils/cookiePreferences"
 import {
     openSupportConversation,
     showSupportUnavailableNotification,
@@ -63,6 +66,7 @@ export const CookiesBanner = () => {
         try {
             posthog.opt_in_capturing()
             warmSupportConversation()
+            notifyCookiePreferencesChanged()
         } catch (error) {
             console.warn("Failed to opt in PostHog capturing:", error)
             if (supportSource) {
@@ -86,6 +90,7 @@ export const CookiesBanner = () => {
 
         try {
             posthog.opt_out_capturing()
+            notifyCookiePreferencesChanged()
         } catch (error) {
             console.warn("Failed to opt out PostHog capturing:", error)
         }

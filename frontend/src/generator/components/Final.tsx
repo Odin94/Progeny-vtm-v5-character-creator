@@ -1,4 +1,5 @@
 import { notifications } from "@mantine/notifications"
+import posthog from "posthog-js"
 import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import {
@@ -11,6 +12,7 @@ import {
     IconFileText,
     IconHeart,
     IconHelpHexagon,
+    IconMessageCircle,
     IconShare,
     IconTrash,
     IconUserPlus,
@@ -24,12 +26,19 @@ import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { trackEvent, trackPageView } from "../../utils/analytics"
+import {
+    openSupportConversation,
+    showSupportUnavailableNotification
+} from "../../utils/supportConversations"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "../inconnuCommandCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
-import { openCookiePreferences } from "~/utils/cookiePreferences"
+import {
+    COOKIE_PREFERENCES_CHANGED_EVENT,
+    openCookiePreferences
+} from "~/utils/cookiePreferences"
 
 type FinalProps = {
     character: Character
@@ -69,7 +78,19 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         useDisclosure(false)
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
         useDisclosure(false)
+    const [hasAnalyticsConsent, setHasAnalyticsConsent] = useState(
+        () => posthog.get_explicit_consent_status() === "granted"
+    )
     const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
+
+    useEffect(() => {
+        const updateConsent = () => {
+            setHasAnalyticsConsent(posthog.get_explicit_consent_status() === "granted")
+        }
+
+        window.addEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, updateConsent)
+        return () => window.removeEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, updateConsent)
+    }, [])
 
     const charName = character.name?.trim() || ""
     const displayTitle = charName || "Your Kindred Awaits"
@@ -105,6 +126,13 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             category: "downloads",
             label: JSON.stringify(character)
         })
+    }
+
+    const handleOpenSupport = async () => {
+        const result = await openSupportConversation("character-creation-complete")
+        if (result === "unavailable") {
+            showSupportUnavailableNotification()
+        }
     }
 
     return (
@@ -460,12 +488,21 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         description="Use this character right away"
                         onClick={handleCharacterSheet}
                     />
-                    <ActionCard
-                        icon={<IconCookie size={20} />}
-                        label="Cookie preferences"
-                        description="Change your analytics cookie choice"
-                        onClick={openCookiePreferences}
-                    />
+                    {hasAnalyticsConsent ? (
+                        <ActionCard
+                            icon={<IconMessageCircle size={20} />}
+                            label="Feedback & support"
+                            description="Questions, complaints, bugs or ideas"
+                            onClick={handleOpenSupport}
+                        />
+                    ) : (
+                        <ActionCard
+                            icon={<IconCookie size={20} />}
+                            label="Cookie preferences"
+                            description="Enable analytics to use support chat"
+                            onClick={openCookiePreferences}
+                        />
+                    )}
                 </div>
 
                 {/* Reset */}
