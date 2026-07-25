@@ -125,25 +125,6 @@ const posthogOptions: Partial<PostHogConfig> = {
 // Restore persisted consent before children such as CookiesBanner read the PostHog client.
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, posthogOptions)
 
-if (
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("posthog-survey-debug") === "character-creation"
-) {
-    posthog.capture("character creation completed")
-
-    window.setTimeout(() => {
-        posthog.getActiveMatchingSurveys((surveys) => {
-            const matchingSurveyIds = surveys.map((survey) => survey.id)
-
-            document.documentElement.dataset.posthogSurveyDebug = JSON.stringify(matchingSurveyIds)
-            posthog.capture("feedback-survey-debug-result", {
-                trigger_event: "character creation completed",
-                matching_survey_ids: matchingSurveyIds
-            })
-        }, true)
-    }, 2_000)
-}
-
 const AuthUnauthorizedHandler = () => {
     useEffect(() => {
         const handleUnauthorized = () => {
