@@ -1,0 +1,194 @@
+# Product analytics best practices - Docs
+
+## 1\. Start with growth events
+
+Before optimizing your analytics setup, make sure you're tracking the events that matter most for your business – your growth events. These are actions like user signups, subscriptions, and purchases that directly indicate whether your product is succeeding.
+
+Many teams – even at large companies – rely on autocapture and miss instrumenting a proper `user_signed_up` event. This makes it difficult to measure [activation](/docs/new-to-posthog/activation.md), build accurate retention cohorts, and calculate metrics like customer lifetime value.
+
+Track your signup event explicitly from both frontend and backend:
+
+JavaScript
+
+PostHog AI
+
+```javascript
+posthog.capture('user_signed_up', {
+    signup_method: 'email',
+    referral_source: 'google',
+    plan: 'free'
+})
+```
+
+Once you have signup tracking in place, you can build reliable funnels and cohorts for everything else.
+
+## 2\. Set up a reverse proxy
+
+Tracking and ad blockers can prevent your events from being sent to PostHog. By setting up a reverse proxy, you can send events to PostHog using your own domain. This means that events are less likely to be blocked and you'll capture more data.
+
+See our docs on [how to set up a reverse proxy](/docs/advanced/proxy.md) for more details on how to do this.
+
+## 3\. Implement a naming convention
+
+As your product grows, the amount of analytics data grows with it. Without naming conventions, your data quickly becomes difficult to work with.
+
+For example, let's say you're capturing signup metrics. Your team might capture events differently and with multiple names:
+
+-   Web developer: Captures `Create Account` when a user clicks a button to begin signing up.
+-   iOS developer: Captures the same event but names it `user_sign_up`.
+-   Android developer: Calls it `create-account` but only captures it when they have finished signing up.
+
+All these differences make it more likely that you'll misinterpret your data. Implementing a naming convention prevents these problems.
+
+### Suggested naming guide
+
+-   Only use lowercase letters.
+-   Use present-tense verbs, e.g., "submit" and "create" instead of "submitted" and "created".
+-   Use snake case, i.e., `signup_button_click`.
+-   Create a dedicated list of allowed verbs, and don't deviate from it. Here's a list of the most common ones you're likely to use:
+
+PostHog AI
+
+```
+- click
+- submit
+- create
+- view
+- add
+- invite
+- update
+- delete
+- remove
+- start
+- end
+- cancel
+- fail
+- generate
+- send
+```
+
+-   For event names, use the **category:object\_action** framework to make it easier to find a specific event within a long list:
+
+    -   **category** describes the context the event took place in – e.g., `account_settings` or `signup_flow`.
+
+    -   **object** is a noun that refers to the component or location the event took place in – e.g., `forgot_password_button` or `pricing_page`.
+
+    -   **action** is a verb that describes what happened – e.g., `click`, `submit`, or `create`.
+
+    -   Putting all of these together, you get `account_settings:forgot_password_button_click` or `signup_flow:pricing_page_view`.
+
+-   For property names:
+
+    -   Use the **object\_adjective** pattern – e.g., `user_id`, `item_price`, or `member_count`.
+
+    -   Use **is/has** prefixes for boolean properties – e.g., `is_subscribed`, `has_seen_upsell`.
+
+    -   If the property's value is a date or timestamp, include **\_date** or **\_timestamp** at the end – e.g., `user_creation_date`, `last_login_timestamp`.
+
+## 4\. Design your distinct IDs carefully
+
+Your `distinct_id` is how PostHog links events to a person. If you get it wrong, you'll either fragment a single user across multiple person profiles or funnel unrelated events into the same one – both of which lead to inaccurate analytics, broken funnels, potentially increased costs, and rate limiting.
+
+The most common mistakes:
+
+-   **Using a catch-all ID like `"system"` or `"backend"`** for server-side events that aren't tied to a specific user. This funnels all events into a single person profile, triggering rate limiting and unnecessary costs. Send these events with [person processing disabled](/docs/product-analytics/capture-events.md#how-to-capture-anonymous-events) instead.
+-   **Using different ID formats across platforms** – e.g., `"user-456"` on the web and `"USER-456"` on mobile. PostHog treats these as two separate people.
+-   **Not linking anonymous and identified IDs** – if you don't call `identify()` at the right time, pre-login events won't be connected to the logged-in user.
+
+For a full guide on choosing and coordinating distinct IDs across environments, see [identity resolution](/docs/product-analytics/identity-resolution.md).
+
+## 5\. Version your events
+
+As your app evolves, so do the events you track. Implementing a versioning system for events ensures you can easily distinguish between older and newer events, especially when significant changes occur.
+
+For example, if you initially tracked an event as `registration:sign_up_button_click` and later revamped your registration flow, you can introduce a new version of this event `registration_v2:sign_up_button_click`. This way, you preserve historical data on the old event while making it easy to compare the impact of your new changes.
+
+## 6\. Keep event and property names static
+
+Event names and property names should be defined as fixed strings in your code, never generated dynamically. If you interpolate values into event or property names – e.g., `page_viewed_${pageName}` or `button_clicked_${buttonId}` – you'll end up with thousands of unique event definitions that are impossible to filter, group, or analyze.
+
+Instead, use a fixed event name and pass the variable as a property value:
+
+JavaScript
+
+PostHog AI
+
+```javascript
+// Bad – creates a new event definition for every page
+posthog.capture(`page_viewed_${pageName}`)
+// Good – one event, filterable by page name
+posthog.capture('page_viewed', { page_name: pageName })
+```
+
+The same applies to property names. A property like `feature_${featureName}_used` creates unbounded property definitions. Use a static name like `feature_name` and set the value to the feature. Projects with too many unique property names can also have new property definitions rate limited, meaning new properties stop appearing in filters and breakdowns.
+
+## 7\. Prefer backend to frontend tracking
+
+Backend analytics are more reliable than frontend analytics. There are 3 reasons for this:
+
+1.  Many users have tracking disabled or blocked on their browsers, which can prevents events from being sent.
+2.  Frontend analytics often rely on JavaScript execution, which can be interrupted by various factors – such as network issues, CORS, browser settings, and more.
+3.  You have complete control of your backend implementation and execution.
+
+Where possible, it's a good idea to log events on your server instead of your client. Here's a guide to help you decide when to rely on frontend or backend analytics:
+
+-   Use frontend analytics where getting partial data is acceptable, for example:
+
+    -   Understanding user journeys, such as the sequence of pages a user visits.
+    -   Tracking user interactions like clicks, scrolls, or form submissions.
+    -   Gathering data on client-side performance, like page load times and responsiveness.
+-   Use backend analytics (or query your database) if:
+
+    -   You need accurate data – e.g., the number of users that signed up in the last week.
+    -   You want to analyze data alongside other business metrics.
+
+## 8\. Be aware of client-side event buffering
+
+PostHog guarantees event ordering in these cases:
+
+-   Events with the same `distinct_id` within a single API call are processed in order.
+-   Events with the same `distinct_id` across sequential API calls are processed in order, as long as you wait for each response before sending the next call.
+
+PostHog's SDKs handle batching and sequencing internally, so for a single client instance using an official SDK, ordering is not a concern.
+
+Beyond that, events are not guaranteed to arrive in the order they occurred. Most web and server-side events are ingested within 60 seconds of capture, but mobile clients can delay events by hours or even days – for example, when the app is in the background, the device is offline, or the OS defers network activity to save battery. Events for the same user sent from different clients (e.g., a mobile app and a backend server) can also arrive out of order since there's no coordination between API calls from different clients.
+
+PostHog's SDKs flush events as quickly as possible, but delivery timing is ultimately constrained by the device and network. PostHog ingests events in roughly the order they arrive at the API – it does not buffer or reorder events to account for late-arriving mobile data. This means:
+
+-   Events from the same user can arrive out of chronological order.
+-   An event that happened first might be ingested after one that happened later.
+-   Person properties set with `$set` reflect the last *ingested* value, not the last value by timestamp. Similarly, `$set_once` is claimed by the first *ingested* event, not the earliest by timestamp.
+
+Design your analytics with this in mind. Use event timestamps for time-based analysis rather than relying on ingestion order. Avoid building logic that assumes one event will always be processed before another – if ordering matters, build that logic into your application rather than depending on ingestion sequence.
+
+## 9\. Filter out internal users
+
+Apps with few users can inadvertently inflate their own metrics by not filtering out their own usage. This leads to a bias in their data. For this reason, it's important to filter out events sent by your own team.
+
+There are a few ways to do this:
+
+-   Filter out events from users with internal emails.
+-   Add a property on your events `is_employee` or `is_test_user` and filter events where these are `true`.
+-   Exclude internal IPs from your analytics tracking.
+-   Filter events by domain host e.g., exclude `localhost:3000`, `staging.yourapp.com`.
+-   Turn off tracking in development using a `localhost`, `dev`, or config check.
+
+See our guide on [how to filter out internal users](/tutorials/filter-internal-users.md) for more details on how to do this in PostHog.
+
+## 10\. Use the same project for your website and app
+
+We recommend to track both your marketing site and app in the same [project](/docs/settings/projects.md). This enables you to do the following:
+
+1.  Track complete user journeys from first website visit through to product usage
+2.  Understand which marketing channels and content lead to the most engaged product users
+3.  Calculate accurate customer acquisition costs (CAC) and lifetime value (LTV)
+4.  Analyze how marketing activities impact product metrics like retention and churn
+5.  Create cross-platform funnels (e.g., from blog post → signup → feature usage)
+
+### Community questions
+
+Ask a question
+
+### Was this page useful?
+
+HelpfulCould be better

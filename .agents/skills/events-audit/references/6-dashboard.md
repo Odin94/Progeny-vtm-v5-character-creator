@@ -1,0 +1,435 @@
+# Step 6 – Live dashboard + notebook upload
+
+The static report shows what your code captures. This step creates a live PostHog dashboard pinned to the same code-confirmed event list, so you can watch volume over time and catch phantoms as they appear, then mirrors the finished markdown report into a PostHog notebook so it's shareable from inside PostHog. Both are part of the standard audit deliverable — don't ask the user whether to create them. If the MCP project isn't writable, the dashboard creation fails soft (log the reason, resolve the `{{dashboard_callout}}` placeholder to empty string), the notebook upload still attempts (it doesn't depend on the dashboard MCP being writable), and cleanup runs as normal.
+
+**Pre-check:** `Read` `.posthog-events-inventory.json` and check the top-level `mcp_available` flag set by step 4. If `mcp_available: false`, skip directly to step (c) — there's no point attempting `dashboard-create` against an unavailable MCP. Step (c) resolves the placeholder to empty string (the failure path), step (e) still tries the notebook upload (with the local markdown report as the source), and step (f) cleans up.
+
+## Status
+
+Emit, in order:
+
+```
+[STATUS] Creating dashboard
+[STATUS] Creating insights
+[STATUS] Linking dashboard in report
+[STATUS] Uploading report to notebook
+[STATUS] Cleaning up
+```
+
+## MCP tools
+
+## How to call PostHog MCP tools
+
+The PostHog MCP server exposes a single `exec` tool. Every PostHog operation is driven by a CLI-style command string passed in its `command` parameter — the tool may be namespaced by the host (`mcp__posthog__exec`, `mcp__posthog-wizard__exec`), but the command grammar is the same. Tool names and schemas are not predictable, so discover and inspect before you call.
+
+**Grammar** — run in this order:
+
+```text
+exec({ "command": "search <regex>" })      # find tools by name/title/description; `tools` lists them all
+exec({ "command": "info <tool_name>" })     # REQUIRED before every call — description + input schema
+exec({ "command": "schema <tool_name> <field_path>" })  # drill into a field the schema flags with a `hint`
+exec({ "command": "call <tool_name> <json_input>" })    # run the tool
+```
+
+Running `info <tool_name>` before `call <tool_name>` is mandatory, the same way you read a file before editing it. `info` returns the full schema for simple tools; for large ones it summarizes and attaches `hint` entries pointing at fields to drill into with `schema`. Dot-notation descends objects (`query.source`), array items (`series.0.properties`), and unions. Never guess the structure of a field that carries a hint — drill first.
+
+Every PostHog tool goes through `exec` this way — there is no separate named tool to call directly. The inner tool names and JSON payloads below are what you pass to `call`.
+
+**Errors** carry a suggestion and similar tool names — read it before retrying. If a name isn't found it may have been renamed; run `search <pattern>` or `tools` again to find the current one.
+
+| MCP tool | When | Use |
+|----------|------|-----|
+| `dashboard-create` | (b) below | Create the parent dashboard. Returns a dashboard with `id` and a PostHog URL. |
+| `insight-create` | (c) below | Create each insight, attached to the dashboard via `dashboards: [<id>]`. |
+| `notebooks-create` | (e.1) below | Create the notebook with a small skeleton (title + section headings + placeholder paragraphs). One call. |
+| `notebook-edit` | (e.2) below | Replace one placeholder paragraph in the cloud notebook with a real ProseMirror node. **Called many times** (~50–80×, one per placeholder). Required because `notebooks-create` cannot accept the full assembled tree in one tool_use input — the model self-truncates. |
+| `notebooks-retrieve` | (e.3) below | Read the cloud notebook back to verify every placeholder has been replaced. |
+
+Run `info <tool>` on each of these before its first `call` at the start of (a). They're write tools (except `notebooks-retrieve`) — every call mutates the user's PostHog project. `mcp__wizard-tools__audit_resolve_checks` is already loaded from step 1 — you'll use it again in (d) and (e).
+
+If `info notebook-edit` returns a not-found error, the project's `notebooks-collaboration` feature flag isn't enabled. Skip the notebook-upload sub-step entirely; emit `Notebook upload skipped: notebook-edit unavailable. The local report at posthog-events-audit-report.md is still the source of truth.` and resolve `upload-notebook` to `suggestion` with that reason.
+
+## Action
+
+### a. Create the dashboard
+
+`Read` `.posthog-events-inventory.json` once and rebuild the IN-list — same rule as step 4 (b): every distinct `event_name` from `rows[]` where `call_kind == "capture"` and `is_dynamic == false` and `event_name != null`. Hold it as `IN_LIST` in memory; you'll embed it into each insight's HogQL `source`.
+
+Call `dashboard-create` with:
+
+```json
+{
+  "name": "PostHog events audit (wizard) – <repo_name>",
+  "description": "Live volume view of events captured in the <repo_name> codebase. Generated by the PostHog events-audit skill on <timestamp>. The static report at posthog-events-audit-report.md has the code-side findings.",
+  "tags": ["events-audit", "wizard"]
+}
+```
+
+The `(wizard)` tag in the name is intentional — it tells anyone browsing PostHog dashboards that this one was auto-created by the wizard, not hand-built. Keep the exact casing and parenthetical so future audits collide on the same name and the user can `dashboard-list | grep "(wizard)"` to find every wizard artifact at once.
+
+Capture the returned `id` as `DASHBOARD_ID` and the returned PostHog URL.
+
+**Emit the URL immediately for the wizard.** As soon as `dashboard-create` succeeds, write a single line on its own (no quotes, no surrounding code fence — just plain text in your assistant message):
+
+```
+[DASHBOARD_URL] <full PostHog URL from dashboard-create>
+```
+
+The wizard scans for the literal marker `[DASHBOARD_URL]` and stores the URL that follows. The marker can sit anywhere in a line, but a dedicated line is cleanest. **Emit this before attempting insight creation** — if insight creation fails afterwards, the wizard already has the dashboard URL and can surface it.
+
+If the call errors (permission denied, project misconfigured, network), emit one line — `Dashboard creation failed: <short reason>. Skipping insights.` — and skip to (c). Don't retry. Don't fall back to a different approach. Do not emit `[DASHBOARD_URL]` on failure — there's no URL to surface.
+
+### b. Create the three insights
+
+For each insight, call `insight-create` with `dashboards: [DASHBOARD_ID]` so it's attached on creation. The `query` field is a `DataVisualizationNode` wrapping a HogQL query — that's the simplest shape for these three views.
+
+Embed `IN_LIST` directly in each SQL statement as a comma-separated list of single-quoted event names. Do not use parameter placeholders — the MCP `insight-create` tool persists the query verbatim, so the IN-list has to be inlined.
+
+#### Insight 1 — Daily volume trend
+
+```json
+{
+  "name": "Events audit · Daily volume (30d)",
+  "description": "Total daily count of code-confirmed events over the last 30 days.",
+  "dashboards": [<DASHBOARD_ID>],
+  "query": {
+    "kind": "DataVisualizationNode",
+    "display": "ActionsLineGraph",
+    "source": {
+      "kind": "HogQLQuery",
+      "query": "SELECT toDate(timestamp) AS day, count() AS volume FROM events WHERE timestamp > now() - INTERVAL 30 DAY AND event IN (<IN_LIST>) GROUP BY day ORDER BY day"
+    },
+    "chartSettings": {
+      "xAxis": { "column": "day" },
+      "yAxis": [{ "column": "volume" }],
+      "showLegend": false
+    }
+  }
+}
+```
+
+#### Insight 2 — Top events by volume
+
+```json
+{
+  "name": "Events audit · Top events by volume (30d)",
+  "description": "Code-confirmed events ranked by 30-day count.",
+  "dashboards": [<DASHBOARD_ID>],
+  "query": {
+    "kind": "DataVisualizationNode",
+    "display": "ActionsTable",
+    "source": {
+      "kind": "HogQLQuery",
+      "query": "SELECT event, count() AS volume_30d, max(timestamp) AS last_seen FROM events WHERE timestamp > now() - INTERVAL 30 DAY AND event IN (<IN_LIST>) GROUP BY event ORDER BY volume_30d DESC LIMIT 25"
+    }
+  }
+}
+```
+
+#### Insight 3 — Phantom watch
+
+This insight surfaces events the code references but PostHog hasn't seen recently. Build the query with the IN-list as an inline `VALUES`-style CTE:
+
+```json
+{
+  "name": "Events audit · Phantom events",
+  "description": "Events captured in code but with zero or near-zero volume in the last 30 days. A growing list here usually means dead instrumentation, a typo, or a code path that no longer fires.",
+  "dashboards": [<DASHBOARD_ID>],
+  "query": {
+    "kind": "DataVisualizationNode",
+    "display": "ActionsTable",
+    "source": {
+      "kind": "HogQLQuery",
+      "query": "WITH code_events AS (SELECT 'event_a' AS name UNION ALL SELECT 'event_b' UNION ALL SELECT 'event_c') SELECT ce.name AS event, coalesce(p.volume, 0) AS volume_30d FROM code_events ce LEFT JOIN (SELECT event, count() AS volume FROM events WHERE timestamp > now() - INTERVAL 30 DAY GROUP BY event) p ON p.event = ce.name ORDER BY volume_30d ASC, event ASC"
+    }
+  }
+}
+```
+
+In the actual call, replace the `code_events` CTE's `SELECT 'event_a' ... UNION ALL ...` with one `SELECT '<name>'` per IN-list entry, joined by `UNION ALL`. Keep it on one line (HogQL accepts it).
+
+If any single `insight-create` call errors, log the failure inline (`Insight "<name>" failed: <reason>`) and continue with the rest. A partial dashboard is more useful than no dashboard.
+
+### c. Resolve the dashboard placeholder in the report
+
+Step 5 writes the report with a `{{dashboard_callout}}` placeholder still in it — step 5 intentionally leaves it for step 6 to fill. The placeholder lives inside the Overview section, immediately after the metric table.
+
+Step 6 always `Edit`s the placeholder; the substitution depends on outcome.
+
+**On success (at least one insight created):** swap the placeholder for a live blockquote link.
+
+- `old_string`: `{{dashboard_callout}}`
+- `new_string`: a single blockquote line of the form:
+  ```
+  > **Events audit dashboard:** [<dashboard name>](<dashboard URL>) — daily volume trend, top events, and phantom watch. Auto-created by the wizard.
+  ```
+
+Substitute `<dashboard name>` and `<dashboard URL>` from the `dashboard-create` response. If one or two insights failed and the rest succeeded, trim the trailing list to mention only the insights that exist (e.g. "daily volume trend and top events" if phantom watch failed).
+
+**On failure (dashboard creation errored, or every `insight-create` call failed):** swap the placeholder for empty string.
+
+- `old_string`: `{{dashboard_callout}}`
+- `new_string`: (empty)
+
+The report ends up with no dashboard line at all — that's the right UX for "no dashboard available." Don't try to surface the failure reason inside the report; the wizard already shows the failure in the run output. **Always perform this Edit** even on failure — leaving an unresolved `{{dashboard_callout}}` in the report would leak templating internals to the reader.
+
+If every `insight-create` call failed but the dashboard itself was created, also try to delete the empty dashboard via `dashboard-delete` if that tool is available; otherwise note "Dashboard created but all insights failed; remove it manually at <URL>" in the run output and move on.
+
+### d. Resolve the dashboard phase
+
+Flip the `create-dashboard` row based on outcome:
+
+- Dashboard + at least one insight created → status `pass`.
+- Dashboard created, every `insight-create` failed → status `warning`, `details: "Dashboard created but every insight failed to attach"`.
+- Dashboard creation skipped (because `mcp_available: false` from step 4) or errored → status `suggestion`, `details: "Skipped — PostHog MCP unavailable"` (or the short failure reason).
+
+```json
+{
+  "updates": [
+    { "id": "create-dashboard", "status": "pass" }
+  ]
+}
+```
+
+### e. Upload the report to a PostHog notebook
+
+The markdown report on disk (`posthog-events-audit-report.md`) is the source of truth. The notebook is a shareable, in-PostHog mirror so the reader can comment, link to it from insights, and discuss it without leaving the product. Run this even when the dashboard step failed — the notebook upload is independent of `dashboard-create`.
+
+#### Why this is split into `notebooks-create` + nine `notebook-edit` calls
+
+`notebooks-create` is the only tool that can create a fresh notebook, but its `content` argument has to be emitted by the model as output tokens of a single tool_use. A full events-audit tree with tables, marks, and nested lists is too large to compose in one assistant turn — the model self-truncates and the notebook ships with sections missing.
+
+`notebook-edit` replaces one node with one node by deep-equality match against the current notebook. Each call's tool_use input is bounded (one section's content). The trade-off was historically a long edit loop: early iterations had 48+ placeholders (one per heading, one per list, one per event) and the upload took 30+ minutes before running out of context or hitting timeouts.
+
+The collapsed shape this skill now uses — nine placeholders matching the flat markdown report — keeps each `new_value` small enough to emit cleanly **and** keeps the total edit count low. ~30 seconds of upload wall time.
+
+There's no local notebook payload scratch file. Section content is computed on demand from the inventory (or memory of step 5's calculations) and sent straight as the `new_value` of each `notebook-edit`.
+
+#### Re-read the report (orientation only)
+
+`Read` `posthog-events-audit-report.md` once. You'll use it as a reference for what content to send in each edit. You don't need to translate the whole thing up front — translate per placeholder, as you fill each one.
+
+#### Node mapping (apply per placeholder as you Edit)
+
+| Markdown | ProseMirror node |
+|---|---|
+| `# / ## / ### heading` | `{"type":"heading","attrs":{"level":<N>},"content":[{"type":"text","text":"<heading text>"}]}` |
+| paragraph | `{"type":"paragraph","content":[{"type":"text","text":"<...>"}]}` |
+| bulleted list | `{"type":"bulletList","content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"<item>"}]}]}, ...]}` |
+| numbered list | `{"type":"orderedList","content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"<item>"}]}]}, ...]}` |
+| inline `code` | text node with a `code` mark: `{"type":"text","marks":[{"type":"code"}],"text":"<code>"}` |
+| `**bold**` | text node with a `bold` mark |
+| `[label](url)` | text node with a `link` mark: `{"type":"text","marks":[{"type":"link","attrs":{"href":"<url>"}}],"text":"<label>"}` |
+| pipe table | `{"type":"table","content":[ <tableRow>, ... ]}` — every cell wraps text in a paragraph. First row uses `tableHeader`; remaining rows use `tableCell`. |
+
+Table example (mirrors the report's Volume Map header rows):
+
+```json
+{"type":"table","content":[
+  {"type":"tableRow","content":[
+    {"type":"tableHeader","content":[{"type":"paragraph","content":[{"type":"text","text":"#"}]}]},
+    {"type":"tableHeader","content":[{"type":"paragraph","content":[{"type":"text","text":"Event"}]}]},
+    {"type":"tableHeader","content":[{"type":"paragraph","content":[{"type":"text","text":"Volume (30d)"}]}]}
+  ]},
+  {"type":"tableRow","content":[
+    {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"1"}]}]},
+    {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","marks":[{"type":"code"}],"text":"purchase_completed"}]}]},
+    {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"1,400"}]}]}
+  ]}
+]}
+```
+
+#### e.1. Create the notebook with a placeholder skeleton
+
+**One** `notebooks-create` call. The `content` carries the title, intro, dashboard callout, all the section headings, the KPI table (with its values baked in inline — those are already computed in step 5 (d) and don't need a placeholder), and exactly **nine** unique placeholder paragraphs — one per dense body block. The collapsed shape mirrors the flat markdown report (no `###` per panel, no `####` per event, no per-area heading); section bodies are dense nested bullet lists.
+
+| Placeholder | What it'll be filled with in (e.2) |
+|---|---|
+| `__OVERVIEW_PANELS_LIST__` | One `bulletList`. Every Overview panel is a top-level `listItem` with a bold lead (the panel title) + intro framing + nested sub-bullets for each row. |
+| `__VOLUME_MAP_TABLE__` | One `table` — header row + one row per Volume-Map event (#, name, volume, share, bar). |
+| `__VOLUME_MAP_FOOTNOTE__` | One `paragraph` — "Showing top X of Y distinct events; the long tail appears under Area topology." |
+| `__CAPTURE_SITES_LIST__` | One `bulletList`. **Every event that appears as a top-level bullet in the local markdown's `### Capture sites` section** is a top-level `listItem` with a bold lead (`` `event` — N events / M sites ``) + nested sub-bullets for each capture site + a final `_Properties: …_` sub-bullet. **Mirror 1:1 — do not subset.** |
+| `__AREA_TOPOLOGY_LIST__` | One `bulletList`. Every area is a top-level `listItem` with a bold lead (`**Area — Xk · N events**`) + nested sub-bullets for events. Multi-package mode adds one more level of nesting (package → area → events). |
+| `__AREA_TOPOLOGY_COMMENTARY__` | One short `paragraph` or empty paragraph if there's nothing notable. |
+| `__IDENTITY_LEAD__` | One `paragraph` — the bold one-sentence dominant finding from step 5 (e). |
+| `__IDENTITY_BULLETS__` | One `bulletList` — one item per identity capability (cross-session client / server, plan, org, cross-device). |
+| `__APPENDICES_LIST__` | One `bulletList`. Each appendix (Dynamic event names, Person properties, Groups, Exception sites) is a top-level `listItem` with a bold lead + framing + nested sub-bullets for entries. Skip empty appendices entirely; if every appendix is empty, replace this placeholder with the paragraph `{"type":"paragraph","content":[{"type":"text","text":"_No appendix content for this audit._"}]}`. |
+
+That's it — **9 placeholders, 9 `notebook-edit` calls**, plus the one `notebooks-create` + one `notebooks-retrieve` for verify = 11 total MCP calls. Wall time ~30 seconds. Earlier per-section variants (one placeholder per heading, one per list) ballooned the edit count to 48+ which made the upload take 30+ minutes; the collapsed shape matches the flat markdown report and brings the cost back to something usable.
+
+Build the skeleton and call `notebooks-create`:
+
+```json
+{
+  "title": "PostHog events audit (wizard) – <repo_name> – <timestamp>",
+  "text_content": "<plain-text summary, ~1 paragraph, used for PostHog search>",
+  "content": {
+    "type": "doc",
+    "content": [
+      {"type":"heading","attrs":{"level":1},"content":[{"type":"text","text":"PostHog events audit (wizard) – <repo_name>"}]},
+      {"type":"paragraph","content":[
+        {"type":"text","text":"Mirror of "},
+        {"type":"text","marks":[{"type":"code"}],"text":"posthog-events-audit-report.md"},
+        {"type":"text","text":" generated by the events-audit skill on <timestamp>."}
+      ]},
+      {"type":"blockquote","content":[{"type":"paragraph","content":[
+        {"type":"text","marks":[{"type":"bold"}],"text":"Events audit dashboard: "},
+        {"type":"text","marks":[{"type":"link","attrs":{"href":"<dashboard URL>"}}],"text":"<dashboard name>"},
+        {"type":"text","text":" — daily volume trend, top events, and phantom watch."}
+      ]}]},
+
+      {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"1. Overview"}]},
+      {"type":"table","content":[
+        {"type":"tableRow","content":[
+          {"type":"tableHeader","content":[{"type":"paragraph","content":[{"type":"text","text":"Metric"}]}]},
+          {"type":"tableHeader","content":[{"type":"paragraph","content":[{"type":"text","text":"Value"}]}]}
+        ]},
+        {"type":"tableRow","content":[
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"Total events volume (30d)"}]}]},
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"<total_volume>"}]}]}
+        ]},
+        {"type":"tableRow","content":[
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"Distinct events"}]}]},
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"<distinct_count>"}]}]}
+        ]},
+        {"type":"tableRow","content":[
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"Phantom events (no volume)"}]}]},
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"<phantom_count>"}]}]}
+        ]},
+        {"type":"tableRow","content":[
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"Top 10 events = % of total volume"}]}]},
+          {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"<top_10_share>"}]}]}
+        ]}
+      ]},
+      {"type":"paragraph","content":[{"type":"text","text":"__OVERVIEW_PANELS_LIST__"}]},
+
+      {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"2. Volume map"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__VOLUME_MAP_TABLE__"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__VOLUME_MAP_FOOTNOTE__"}]},
+
+      {"type":"heading","attrs":{"level":3},"content":[{"type":"text","text":"Capture sites"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__CAPTURE_SITES_LIST__"}]},
+
+      {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"3. Area topology"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__AREA_TOPOLOGY_LIST__"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__AREA_TOPOLOGY_COMMENTARY__"}]},
+
+      {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"4. Identity & segmentation"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__IDENTITY_LEAD__"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__IDENTITY_BULLETS__"}]},
+
+      {"type":"heading","attrs":{"level":2},"content":[{"type":"text","text":"Appendices"}]},
+      {"type":"paragraph","content":[{"type":"text","text":"__APPENDICES_LIST__"}]}
+    ]
+  }
+}
+```
+
+Substitute `<repo_name>`, `<timestamp>`, `<dashboard URL>`, `<dashboard name>`, and the four KPI values literally before sending. If the dashboard callout from step (c) resolved to empty string (dashboard creation failed), omit the entire `blockquote` node.
+
+Capture the returned `short_id` and `url`. **Hold them; do not emit `[NOTEBOOK_URL]` yet.** The notebook exists in PostHog Cloud at this point but the nine placeholder paragraphs are still visible. The marker fires only after every edit in (e.2) succeeds and (e.3) verifies the cloud notebook is clean.
+
+If `notebooks-create` errors (permission denied, project misconfigured, network, MCP unavailable), emit one line — `Notebook upload failed at notebooks-create: <short reason>. The local report at posthog-events-audit-report.md is still the source of truth.` — and skip to (f) with `upload-notebook` resolved to `warning` / `suggestion` per the matrix at the end of this step. Don't retry. Don't emit `[NOTEBOOK_URL]`.
+
+#### e.2. Fill each placeholder via `notebook-edit`
+
+For every placeholder in the skeleton (nine total), call `notebook-edit` once with:
+
+- `short_id`: the value returned from (e.1)
+- `old_value`: the placeholder paragraph node, exactly as it appears in the skeleton, e.g. `{"type":"paragraph","content":[{"type":"text","text":"__OVERVIEW_PANELS_LIST__"}]}`
+- `new_value`: the real ProseMirror node for that block (a single `bulletList`, `table`, or `paragraph`)
+
+The matcher compares `old_value` to subtrees in the notebook by deep equality. Every key matters — `attrs`, `marks`, `content`. Copy the placeholder shape exactly; don't add a `marks` field that wasn't there.
+
+Each `new_value` is a **single ProseMirror node**. For the dense list placeholders, that single node is one `bulletList` that internally nests as deep as you need (top-level items + sub-bullets + sub-sub-bullets for multi-package area topology). The largest list — Capture sites for a 15-event Volume Map — fits in a few KB; well under the per-tool-call budget the model can emit cleanly.
+
+Detailed shapes for each placeholder:
+
+- **`__OVERVIEW_PANELS_LIST__`** → one `bulletList`. One top-level `listItem` per non-empty panel. Each item's contents:
+  - One `paragraph` mixing a bold-marked text run for the panel title and a plain-text run for the framing — e.g. `**Volume concentration** — Top 10 events account for 100% of 30-day volume…`.
+  - One nested `bulletList` with the panel's row items as sub-bullets.
+
+  Skip panels with no content. If all panels are empty, fill this placeholder with `{"type":"paragraph","content":[{"type":"text","text":"_No issues detected. Naming, types, and capture sites all look consistent._"}]}` instead of an empty bulletList.
+
+- **`__VOLUME_MAP_TABLE__`** → one `table`. Header row: `#`, `Event`, `Volume (30d)`, `Share`, `Bar`. One data row per top-10 event. Event-name cells wrap a `code`-marked text node; numbers are plain text; the bar column is the 12-char Unicode bar from the markdown report.
+
+- **`__VOLUME_MAP_FOOTNOTE__`** → one `paragraph` like `Showing top 12 of 51 distinct events; the remaining events appear in the Area topology section below.`
+
+- **`__CAPTURE_SITES_LIST__`** → one `bulletList`. **One top-level `listItem` per event that appears as a top-level bullet in the local markdown report's `### Capture sites` section**, in the same order. Open `posthog-events-audit-report.md` first (it's the source of truth from step 5); the count of top-level `listItem`s in this bulletList MUST equal the count of `` - **`event`… `` top-level bullets in that markdown section. Do not subset. Do not omit "less interesting" events. Do not editorialize. Each item:
+  - One `paragraph` mixing a bold-marked + code-marked event name with plain-text suffix — e.g. `` **`squeak error` — 92,165 events / 13 sites** ``.
+  - One nested `bulletList`. Each sub-item is one capture site: a `paragraph` with a code-marked file:line, then plain text describing area / route / enclosing / `via_wrapper` (if non-null).
+  - A final sub-item for properties: a `paragraph` with italic-marked text — `_Properties: \`a\`, \`b\`, …_` or `_Properties: none_` if empty.
+
+- **`__AREA_TOPOLOGY_LIST__`** → one `bulletList`. Single-package mode: one top-level `listItem` per area, each with a bold-led `**Area — Xk · N events**` paragraph + nested `bulletList` of `event — Xk` rows. Multi-package mode: top-level `listItem` per package (`**package — Xk · M areas**`) → nested `bulletList` of areas (each its own bold-led item) → nested `bulletList` of events.
+
+- **`__AREA_TOPOLOGY_COMMENTARY__`** → one `paragraph` with one or two sentences if the topology has a notable shape, OR `{"type":"paragraph","content":[]}` (empty paragraph) when nothing notable applies. Don't skip the edit; fill the placeholder with an empty paragraph so verification doesn't see a leftover marker.
+
+- **`__IDENTITY_LEAD__`** → one `paragraph` containing the one-sentence dominant finding from step 5 (e), wrapped in a `bold` mark.
+
+- **`__IDENTITY_BULLETS__`** → one `bulletList` with one item per identity capability (cross-session client, cross-session server, plan/tier breakdown, org/workspace breakdown, cross-device hygiene). Each item is a paragraph with a bold-led capability name + the pass/blocked verdict + one-line evidence.
+
+- **`__APPENDICES_LIST__`** → one `bulletList`. Per the substitution conventions, one top-level `listItem` per non-empty appendix (Dynamic event names, Person properties, Groups, Exception capture sites). Each item:
+  - One `paragraph` with bold appendix name + ` — ` + framing text.
+  - One nested `bulletList` of entries.
+
+  Skip appendices whose entry list is empty. If all four appendices are empty, fill with `{"type":"paragraph","content":[{"type":"text","text":"_No appendix content for this audit._"}]}`.
+
+Pace your edits one per turn. Don't bundle multiple `notebook-edit` calls in a single assistant message — each MCP call carries a `version` for optimistic concurrency, and parallel calls will 409 each other. Sequential is correct.
+
+**Error handling per edit:**
+- `409 Conflict` or `410 Gone`: the version moved under you. Run `notebooks-retrieve` to refresh, then re-apply the same edit. The server tells you the latest version in the 409 body.
+- `0 matches`: `old_value` didn't match exactly. Run `notebooks-retrieve` to dump the current notebook content and compare; the most common cause is a typo in the placeholder text. Fix the `old_value` and retry.
+- `Multiple matches`: not expected with unique placeholder strings. If it happens, include more surrounding structure or set `replace_all: true`.
+
+#### e.3. Verify the notebook is clean
+
+**Required step. Do not skip.** After the last `notebook-edit`, call `notebooks-retrieve` with the `short_id`. Run two checks against the returned `content`:
+
+1. **No leftover placeholders.** Search the text nodes for any remaining `__` markers. Expected: **zero `__` markers**. If any remain, the agent skipped at least one `notebook-edit` — identify which placeholder(s) survive, run the missing edit(s), then re-retrieve and re-verify until clean.
+
+2. **Capture sites mirrors the markdown 1:1.** Locate the `__CAPTURE_SITES_LIST__` bulletList in the retrieved notebook content and count its top-level `listItem`s. Open `posthog-events-audit-report.md` and count its top-level `` - **`event`… `` bullets under `### Capture sites`. The two counts MUST match. If the notebook count is short, re-issue `notebook-edit` on the Capture sites bulletList with the full set of events (append the missing top-level items in volume-sorted order). Then re-retrieve and re-verify until they match. The bulletList is the dense one; the agent's instinct will be to subset it on first emission, so a single re-edit pass is normal.
+
+A leftover placeholder renders as the literal string `__CAPTURE_SITES_LIST__` (or whichever one was skipped) in the notebook UI. A short Capture sites list silently misleads the user into thinking the audit found fewer events than it actually did. Both checks are cheap; skipping either is the failure mode we've observed.
+
+#### e.4. Surface the notebook URL
+
+**Only emit `[NOTEBOOK_URL]` after (e.3) verifies the notebook has zero remaining placeholders.** Until then the notebook still has placeholder strings showing in PostHog Cloud — exactly the half-baked state we don't want the user to see.
+
+Emit a single line on its own (no quotes, no code fence):
+
+```
+[NOTEBOOK_URL] <url captured in e.1>
+```
+
+The wizard scans for the literal marker `[NOTEBOOK_URL]` and stores the URL that follows, the same way it handles `[DASHBOARD_URL]`. It only consumes the URL once, the first time it sees the marker.
+
+#### e.5. Resolve the phase
+
+Flip the `upload-notebook` row based on outcome:
+
+- Notebook created and fully filled (every `notebook-edit` succeeded, (e.3) verified clean) → status `pass`, `file` set to the notebook URL.
+- `notebooks-create` errored → status `warning`, `details: "Notebook upload failed at notebooks-create: <short reason>"`. URL marker not emitted.
+- Some `notebook-edit` calls failed, leaving placeholders in the cloud notebook → status `warning`, `details: "Notebook partially uploaded: <N> of <total> sections filled; remaining placeholders visible in the notebook"`. URL marker not emitted (the notebook is half-baked).
+- `notebook-edit` unavailable (no `notebooks-collaboration` feature flag) or `mcp_available: false` from step 4 → status `suggestion`, `details: "Skipped — <short reason>"`. URL marker not emitted.
+
+```json
+{
+  "updates": [
+    { "id": "upload-notebook", "status": "pass", "file": "<full notebook URL>" }
+  ]
+}
+```
+
+### f. Clean up transient files
+
+Whether creation succeeded, partially succeeded, or failed — delete the inventory and the audit-checks ledger now. They're transient scratch state. There's no local notebook payload file in this flow (the cloud notebook is built directly via `notebook-edit` calls), so nothing else to remove.
+
+```
+Bash: rm -f .posthog-events-inventory.json .posthog-audit-checks.json
+```
+
+The wizard reads the on-disk ledger via a file watcher; the final phase resolutions you streamed in (a)–(e) are already in the wizard's in-memory mirror, so removing the file after the run is the correct cleanup.
+
+## Resolve
+
+`next_step: null` – the chain ends here. By the end of this step all seven phase rows must be resolved via `audit_resolve_checks`.
