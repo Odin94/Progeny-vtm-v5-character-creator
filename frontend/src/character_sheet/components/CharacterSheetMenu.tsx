@@ -386,6 +386,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                 source="character-sheet-menu"
                                                 leftSection={<IconMessageCircle size={18} />}
                                                 variant="subtle"
+                                                className="sheet-menu__feedback-support"
                                                 onClickStart={handleMenuClose}
                                             >
                                                 Feedback & support
