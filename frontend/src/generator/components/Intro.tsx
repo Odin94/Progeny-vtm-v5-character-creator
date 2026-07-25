@@ -5,7 +5,7 @@ import { Box, Button, FileButton, ScrollArea, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { IconBrandGithub } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
-import ReactGA from "react-ga4"
+import { trackPageView } from "../../utils/analytics"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import LoadModal from "../../components/LoadModal"
 import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
@@ -28,7 +28,7 @@ type IntroProps = {
 
 const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Intro" })
+        trackPageView({ page: window.location.pathname, title: "Intro" })
     }, [])
 
     const [loadedFile, setLoadedFile] = useState<File | null>(null)

@@ -2,7 +2,7 @@ import { Button, ScrollArea, Stack, Text, Textarea, TextInput } from "@mantine/c
 import { RAW_RED, RAW_GOLD, RAW_GRAPE, RAW_GREY, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
 import { Character } from "../../data/Character"
-import ReactGA from "react-ga4"
+import { trackPageView } from "../../utils/analytics"
 import { globals } from "../../globals"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
@@ -45,7 +45,7 @@ const inputStyles = {
 
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Basics Picker" })
+        trackPageView({ page: window.location.pathname, title: "Basics Picker" })
     }, [])
 
     const phoneScreen = globals.isPhoneScreen

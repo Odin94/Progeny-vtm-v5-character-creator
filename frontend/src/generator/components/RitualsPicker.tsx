@@ -1,8 +1,7 @@
 import { Badge, Box, Button, Group, ScrollArea, Stack, Text } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
 import { Ritual } from "../../data/Disciplines"
 import { Rituals } from "../../data/Rituals"
@@ -154,7 +153,7 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
 
 const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps) => {
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Rituals Picker" })
+        trackPageView({ page: window.location.pathname, title: "Rituals Picker" })
     }, [])
 
     if (!containsBloodSorcery(character.disciplines)) {

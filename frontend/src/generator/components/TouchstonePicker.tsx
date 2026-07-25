@@ -14,8 +14,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -76,7 +75,7 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
     const phoneScreen = globals.isPhoneScreen
     const smallScreen = globals.isSmallScreen
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Touchstone Picker" })
+        trackPageView({ page: window.location.pathname, title: "Touchstone Picker" })
     }, [])
     const initial =
         character.touchstones.length > 0

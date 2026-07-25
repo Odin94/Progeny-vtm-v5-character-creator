@@ -19,12 +19,11 @@ import {
 import { useAuth } from "../../hooks/useAuth"
 import { Alert } from "@mantine/core"
 import { useEffect, useState } from "react"
-import ReactGA from "react-ga4"
 import ErrorDetails from "~/components/ErrorDetails"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "../inconnuCommandCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
@@ -62,7 +61,7 @@ const FONT_UI = "Inter, Segoe UI, sans-serif"
 
 const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Final" })
+        trackPageView({ page: window.location.pathname, title: "Final" })
     }, [])
 
     const [downloadError, setDownloadError] = useState<Error | undefined>()

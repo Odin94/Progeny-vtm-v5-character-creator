@@ -2,8 +2,7 @@ import { Box, Button, ScrollArea, Select, Stack, Text } from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useMemo, useState } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { calculateBloodPotency } from "../../data/BloodPotency"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { globals } from "../../globals"
@@ -74,7 +73,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
     const phoneScreen = globals.isPhoneScreen
 
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Generation Picker" })
+        trackPageView({ page: window.location.pathname, title: "Generation Picker" })
     }, [])
 
     const isThinBlood = character.clan === "Thin-blood"

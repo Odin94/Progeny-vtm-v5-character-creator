@@ -14,8 +14,7 @@ import {
 import { notifications } from "@mantine/notifications"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useEffect, useState } from "react"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { Character, containsBloodSorcery, containsOblivion } from "../../data/Character"
 import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
@@ -61,7 +60,7 @@ const DisciplineDots = ({ count }: { count: number }) => {
 
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Disciplines Picker" })
+        trackPageView({ page: window.location.pathname, title: "Disciplines Picker" })
     }, [])
 
     const phoneScreen = globals.isPhoneScreen

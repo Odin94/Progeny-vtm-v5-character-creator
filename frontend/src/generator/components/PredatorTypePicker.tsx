@@ -2,8 +2,7 @@ import { Box, Button, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
 import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
@@ -90,7 +89,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const phoneScreen = globals.isPhoneScreen
 
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Predator-Type Picker" })
+        trackPageView({ page: window.location.pathname, title: "Predator-Type Picker" })
     }, [])
 
     const isThinBlood = character.clan === "Thin-blood"

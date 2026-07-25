@@ -14,8 +14,7 @@ import {
 import { RAW_RED, rgba } from "~/theme/colors"
 import { notifications } from "@mantine/notifications"
 import { useEffect } from "react"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema, DisciplineName } from "~/data/NameSchemas"
 import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
@@ -37,7 +36,7 @@ type ClanPickerProps = {
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Clan Picker" })
+        trackPageView({ page: window.location.pathname, title: "Clan Picker" })
     }, [])
 
     const theme = useMantineTheme()

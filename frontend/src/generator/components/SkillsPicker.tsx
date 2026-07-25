@@ -2,8 +2,7 @@ import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useEffect, useState } from "react"
-import ReactGA from "react-ga4"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPageView } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import {
     Skills,
@@ -73,7 +72,7 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const phoneScreen = globals.isPhoneScreen
 
     useEffect(() => {
-        ReactGA.send({ hitType: "pageview", title: "Skills Picker" })
+        trackPageView({ page: window.location.pathname, title: "Skills Picker" })
     }, [])
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)

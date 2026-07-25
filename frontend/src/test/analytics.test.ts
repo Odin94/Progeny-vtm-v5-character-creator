@@ -2,13 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import { resetPostHogIdentity } from "~/utils/analytics"
 
-vi.mock("react-ga4", () => ({
-    default: {
-        event: vi.fn(),
-        send: vi.fn()
-    }
-}))
-
 vi.mock("posthog-js", () => ({
     default: {
         capture: vi.fn(),
