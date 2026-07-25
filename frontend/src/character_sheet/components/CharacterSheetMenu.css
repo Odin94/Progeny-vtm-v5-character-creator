@@ -77,6 +77,7 @@
 .sheet-menu__utility-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; padding-top: 16px; border-top: 1px solid rgba(212, 175, 100, 0.13); }
 .sheet-menu__utility-row .mantine-Button-root,
 .sheet-menu__back { color: rgba(214, 204, 198, 0.68); font: 500 0.72rem Inter, "Segoe UI", sans-serif; }
+.sheet-menu__utility-row .sheet-menu__support-project { color: #e03131; }
 .sheet-menu__utility-row .mantine-Button-root:hover,
 .sheet-menu__back:hover { background: rgba(212, 175, 100, 0.08); color: #d4af64; }
 .sheet-menu__back { align-self: flex-start; }

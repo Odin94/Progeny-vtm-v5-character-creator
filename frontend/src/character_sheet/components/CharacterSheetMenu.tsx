@@ -371,6 +371,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                 rel="noreferrer"
                                                 leftSection={<IconHeart size={18} />}
                                                 variant="subtle"
+                                                className="sheet-menu__support-project"
                                             >
                                                 Support the project
                                             </Button>
