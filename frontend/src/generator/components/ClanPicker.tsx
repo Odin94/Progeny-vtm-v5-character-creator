@@ -13,8 +13,7 @@ import {
 } from "@mantine/core"
 import { RAW_RED, rgba } from "~/theme/colors"
 import { notifications } from "@mantine/notifications"
-import { useEffect } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { trackEvent } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema, DisciplineName } from "~/data/NameSchemas"
 import { Character, getEmptyCharacter, MeritFlaw } from "../../data/Character"
@@ -35,10 +34,6 @@ type ClanPickerProps = {
 }
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Clan Picker" })
-    }, [])
-
     const theme = useMantineTheme()
 
     const c1 = "rgba(26, 27, 30, 0.90)"

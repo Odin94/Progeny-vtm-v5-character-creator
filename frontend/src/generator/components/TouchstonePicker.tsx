@@ -11,10 +11,10 @@ import {
 } from "@mantine/core"
 import { RAW_GOLD, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { trackEvent } from "../../utils/analytics"
 import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { globals } from "../../globals"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -74,9 +74,6 @@ const getRandomTouchstonePlaceholder = (): TouchstonePlaceholder =>
 const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
     const smallScreen = globals.isSmallScreen
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Touchstone Picker" })
-    }, [])
     const initial =
         character.touchstones.length > 0
             ? character.touchstones

@@ -4,8 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Box, Button, FileButton, ScrollArea, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { IconBrandGithub } from "@tabler/icons-react"
-import { useEffect, useState } from "react"
-import { trackPageView } from "../../utils/analytics"
+import { useState } from "react"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import LoadModal from "../../components/LoadModal"
 import CharacterSheetLinkButton from "../../components/CharacterSheetLinkButton"
@@ -27,10 +26,6 @@ type IntroProps = {
 }
 
 const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Intro" })
-    }, [])
-
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
 

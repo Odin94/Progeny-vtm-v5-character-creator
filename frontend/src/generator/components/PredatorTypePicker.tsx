@@ -1,8 +1,8 @@
 import { Box, Button, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
 import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { useEffect, useState } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
@@ -87,10 +87,6 @@ const titleCase = (str: string) => str.replace(/\b\w/g, (c) => c.toUpperCase())
 
 const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Predator-Type Picker" })
-    }, [])
 
     const isThinBlood = character.clan === "Thin-blood"
 

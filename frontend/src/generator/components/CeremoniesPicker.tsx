@@ -1,7 +1,7 @@
 import { Badge, Box, Button, Group, ScrollArea, Text } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { useEffect, useState } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character, containsOblivion } from "../../data/Character"
 import {
     Ceremony,
@@ -174,10 +174,6 @@ const CeremonyCard = ({
 }
 
 const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPickerProps) => {
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Ceremonies Picker" })
-    }, [])
-
     if (!containsOblivion(character.disciplines)) {
         return <></>
     }

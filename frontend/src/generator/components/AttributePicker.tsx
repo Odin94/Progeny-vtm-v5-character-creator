@@ -1,7 +1,7 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
-import { useEffect, useState } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
 import { globals } from "../../globals"
@@ -22,10 +22,6 @@ type AttributeSetting = {
 
 const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Attribute Picker" })
-    }, [])
-
     const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({
         strongest: null,
         weakest: null,

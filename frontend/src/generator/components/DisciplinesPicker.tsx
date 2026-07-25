@@ -13,8 +13,8 @@ import {
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { useEffect, useState } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery, containsOblivion } from "../../data/Character"
 import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
@@ -59,10 +59,6 @@ const DisciplineDots = ({ count }: { count: number }) => {
 }
 
 const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Disciplines Picker" })
-    }, [])
-
     const phoneScreen = globals.isPhoneScreen
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()

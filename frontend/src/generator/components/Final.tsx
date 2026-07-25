@@ -25,7 +25,7 @@ import ErrorDetails from "~/components/ErrorDetails"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { trackEvent } from "../../utils/analytics"
 import {
     openSupportConversation,
     showSupportUnavailableNotification
@@ -69,10 +69,6 @@ const FONT_BODY = "Crimson Text, Georgia, serif"
 const FONT_UI = "Inter, Segoe UI, sans-serif"
 
 const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Final" })
-    }, [])
-
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] =
         useDisclosure(false)

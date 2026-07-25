@@ -1,8 +1,8 @@
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { useEffect, useState } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import {
     Skills,
@@ -70,10 +70,6 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
 
 const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Skills Picker" })
-    }, [])
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
     const [skills, setSkills] = useState(emptySkills)

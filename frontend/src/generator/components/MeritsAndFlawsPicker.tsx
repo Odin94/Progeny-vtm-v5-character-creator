@@ -15,8 +15,8 @@ import {
     useMantineTheme
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { Dispatch, memo, SetStateAction, useEffect, useMemo, useState } from "react"
-import { trackEvent, trackPageView } from "../../utils/analytics"
+import { Dispatch, memo, SetStateAction, useMemo, useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character, MeritFlaw } from "../../data/Character"
 import { clans } from "../../data/Clans"
 import {
@@ -304,9 +304,6 @@ const MeritOrFlawCard = memo(
 )
 
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
-    useEffect(() => {
-        trackPageView({ page: window.location.pathname, title: "Merits-and-flaws Picker" })
-    }, [])
     const theme = useMantineTheme()
     const phoneScreen = globals.isPhoneScreen
 
