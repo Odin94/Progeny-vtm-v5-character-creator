@@ -14,6 +14,7 @@ import { inputFocusTheme } from "~/theme/inputFocus"
 import { resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import { isFramelessSyntheticNoise, type ExceptionListEntry } from "~/utils/exceptionFilter"
+import { warmSupportConversation } from "~/utils/supportConversations"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -124,6 +125,7 @@ const posthogOptions: Partial<PostHogConfig> = {
 
 // Restore persisted consent before children such as CookiesBanner read the PostHog client.
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, posthogOptions)
+warmSupportConversation()
 
 const AuthUnauthorizedHandler = () => {
     useEffect(() => {

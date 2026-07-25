@@ -6,11 +6,11 @@ import {
     IconBook,
     IconCloud,
     IconCoffee,
+    IconCookie,
     IconDownload,
     IconFileText,
     IconHeart,
     IconHelpHexagon,
-    IconMessageCircle,
     IconShare,
     IconTrash,
     IconUserPlus,
@@ -25,15 +25,12 @@ import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
-import {
-    openSupportConversation,
-    showSupportUnavailableNotification
-} from "../../utils/supportConversations"
 import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "../inconnuCommandCreator"
 import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { openCookiePreferences } from "~/utils/cookiePreferences"
 
 type FinalProps = {
     character: Character
@@ -109,13 +106,6 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             category: "downloads",
             label: JSON.stringify(character)
         })
-    }
-
-    const handleOpenSupport = async () => {
-        const result = await openSupportConversation("character-creation-complete")
-        if (result === "unavailable") {
-            showSupportUnavailableNotification()
-        }
     }
 
     return (
@@ -472,10 +462,10 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         onClick={handleCharacterSheet}
                     />
                     <ActionCard
-                        icon={<IconMessageCircle size={20} />}
-                        label="Feedback & support"
-                        description="Questions, complaints, bugs or ideas"
-                        onClick={handleOpenSupport}
+                        icon={<IconCookie size={20} />}
+                        label="Cookie preferences"
+                        description="Change your analytics cookie choice"
+                        onClick={openCookiePreferences}
                     />
                 </div>
 

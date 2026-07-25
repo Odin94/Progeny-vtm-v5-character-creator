@@ -5,10 +5,12 @@ import posthog from "posthog-js"
 import { globals } from "~/globals"
 import { IconCookie } from "@tabler/icons-react"
 import { useAuth } from "~/hooks/useAuth"
+import { COOKIE_PREFERENCES_REQUEST_EVENT } from "~/utils/cookiePreferences"
 import {
     openSupportConversation,
     showSupportUnavailableNotification,
     SUPPORT_CONSENT_REQUEST_EVENT,
+    warmSupportConversation,
     type SupportConversationSource
 } from "~/utils/supportConversations"
 
@@ -40,9 +42,16 @@ export const CookiesBanner = () => {
             setShowBanner(true)
         }
 
+        const handleCookiePreferencesRequest = () => {
+            setPendingSupportSource(null)
+            setShowBanner(true)
+        }
+
         window.addEventListener(SUPPORT_CONSENT_REQUEST_EVENT, handleSupportConsentRequest)
+        window.addEventListener(COOKIE_PREFERENCES_REQUEST_EVENT, handleCookiePreferencesRequest)
         return () => {
             window.removeEventListener(SUPPORT_CONSENT_REQUEST_EVENT, handleSupportConsentRequest)
+            window.removeEventListener(COOKIE_PREFERENCES_REQUEST_EVENT, handleCookiePreferencesRequest)
         }
     }, [])
 
@@ -53,7 +62,7 @@ export const CookiesBanner = () => {
 
         try {
             posthog.opt_in_capturing()
-            posthog.conversations.loadIfEnabled()
+            warmSupportConversation()
         } catch (error) {
             console.warn("Failed to opt in PostHog capturing:", error)
             if (supportSource) {

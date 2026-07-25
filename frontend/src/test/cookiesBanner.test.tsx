@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import { CookiesBanner } from "~/components/CookiesBanner"
+import { openCookiePreferences } from "~/utils/cookiePreferences"
 
 const mockUseAuth = vi.fn(() => ({ isAuthenticated: false, isLoading: false }))
 const mockOpenSupportConversation = vi.fn()
@@ -16,16 +17,14 @@ vi.mock("posthog-js", () => ({
         get_explicit_consent_status: vi.fn(),
         opt_in_capturing: vi.fn(),
         opt_out_capturing: vi.fn(),
-        conversations: {
-            loadIfEnabled: vi.fn()
-        }
     }
 }))
 
 vi.mock("~/utils/supportConversations", () => ({
     SUPPORT_CONSENT_REQUEST_EVENT: "progeny:request-posthog-consent",
     openSupportConversation: (...args: unknown[]) => mockOpenSupportConversation(...args),
-    showSupportUnavailableNotification: vi.fn()
+    showSupportUnavailableNotification: vi.fn(),
+    warmSupportConversation: vi.fn()
 }))
 
 Object.defineProperty(window, "matchMedia", {
@@ -119,9 +118,18 @@ describe("CookiesBanner", () => {
         fireEvent.click(await screen.findByRole("button", { name: "Accept" }))
 
         expect(posthog.opt_in_capturing).toHaveBeenCalledOnce()
-        expect(posthog.conversations.loadIfEnabled).toHaveBeenCalledOnce()
         await waitFor(() => {
             expect(mockOpenSupportConversation).toHaveBeenCalledWith("account-page")
         })
+    })
+
+    it("opens on demand so people can change a previous cookie choice", async () => {
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("denied")
+        mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false })
+        renderBanner()
+
+        openCookiePreferences()
+
+        expect(await screen.findByText("Sink your fangs into some cookies!")).toBeInTheDocument()
     })
 })

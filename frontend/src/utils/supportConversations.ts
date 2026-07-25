@@ -4,7 +4,7 @@ import posthog from "posthog-js"
 const WIDGET_CONTAINER_ID = "ph-conversations-widget-container"
 const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="Open chat ("]'
 const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
-const OPEN_RETRY_COUNT = 20
+const OPEN_RETRY_COUNT = 100
 const OPEN_RETRY_DELAY_MS = 100
 const containersWatchingForClose = new WeakSet<HTMLElement>()
 
@@ -48,6 +48,24 @@ const hideWidgetAfterConversationCloses = (container: HTMLElement) => {
     container.addEventListener("click", handleWidgetClick)
 }
 
+/**
+ * Starts loading the Support module ahead of a user opening the chat. The default
+ * launcher remains hidden because PostHog's widget setting is disabled.
+ */
+export const warmSupportConversation = () => {
+    if (posthog.get_explicit_consent_status() !== "granted") {
+        return false
+    }
+
+    try {
+        posthog.conversations.loadIfEnabled()
+        return true
+    } catch (error) {
+        console.warn("PostHog Support failed to start loading:", error)
+        return false
+    }
+}
+
 const expandRenderedWidget = () => {
     const container = document.getElementById(WIDGET_CONTAINER_ID)
     if (!container) {
@@ -85,6 +103,8 @@ export const openSupportConversation = async (source: SupportConversationSource)
         )
         return "consent-required" as const
     }
+
+    warmSupportConversation()
 
     try {
         posthog.capture("support-conversation-opened", { source })

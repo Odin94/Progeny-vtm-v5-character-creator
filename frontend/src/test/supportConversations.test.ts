@@ -8,6 +8,7 @@ vi.mock("posthog-js", () => ({
         get_explicit_consent_status: vi.fn(),
         conversations: {
             isAvailable: vi.fn(),
+            loadIfEnabled: vi.fn(),
             show: vi.fn(),
             hide: vi.fn()
         }
@@ -37,6 +38,7 @@ describe("openSupportConversation", () => {
             source: "landing-page"
         })
         expect(posthog.conversations.show).toHaveBeenCalledOnce()
+        expect(posthog.conversations.loadIfEnabled).toHaveBeenCalledOnce()
         expect(clickSpy).toHaveBeenCalledOnce()
     })
 
