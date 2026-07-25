@@ -33,6 +33,11 @@ const queryClient = new QueryClient({
 })
 
 const POSTHOG_CONSENT_RETENTION_DAYS = 180
+
+const posthogTracingHeaders =
+    typeof window === "undefined"
+        ? []
+        : [new URL(import.meta.env.VITE_API_URL?.trim() || "/api", window.location.origin).hostname]
 const INVITE_QUERY_PARAM = "coterieInvite"
 
 const stripInviteToken = (value: unknown) => {
@@ -67,6 +72,7 @@ const posthogOptions: Partial<PostHogConfig> = {
     cookieless_mode: "on_reject",
     cookie_expiration: POSTHOG_CONSENT_RETENTION_DAYS,
     opt_out_capturing_persistence_type: "cookie",
+    tracing_headers: posthogTracingHeaders,
     before_send: (event) => {
         scrubInviteTokensFromProperties(event?.properties)
 

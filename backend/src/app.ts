@@ -87,7 +87,10 @@ export async function buildApp() {
             "Authorization",
             "X-CSRF-Token",
             CSRF_TOKEN_HEADER_NAME,
-            "X-Request-Id"
+            "X-Request-Id",
+            "X-PostHog-Session-Id",
+            "X-PostHog-Distinct-Id",
+            "X-PostHog-Window-Id"
         ],
         exposedHeaders: ["X-Request-Id", "X-CSRF-Token", CSRF_TOKEN_HEADER_NAME]
     })

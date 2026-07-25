@@ -11,6 +11,26 @@ type EventProperties = Record<
 
 let posthogClient: PostHog | null = null
 
+const POSTHOG_SESSION_ID_HEADER = "x-posthog-session-id"
+const POSTHOG_TRACING_HEADER_MAX_LENGTH = 1_000
+const CONTROL_CHARACTERS = /[\x00-\x1f\x7f-\x9f]/g
+
+const getPostHogSessionId = (request: FastifyRequest): string | undefined => {
+    const header = request.headers[POSTHOG_SESSION_ID_HEADER]
+    const value = Array.isArray(header) ? header[0] : header
+
+    if (typeof value !== "string") {
+        return undefined
+    }
+
+    const sessionId = value.replace(CONTROL_CHARACTERS, "").trim()
+    if (!sessionId) {
+        return undefined
+    }
+
+    return sessionId.slice(0, POSTHOG_TRACING_HEADER_MAX_LENGTH)
+}
+
 const getPostHogClient = (): PostHog | null => {
     if (!env.PUBLIC_POSTHOG_KEY || !env.PUBLIC_POSTHOG_HOST) {
         return null
@@ -52,13 +72,15 @@ export const trackEvent = async (
 
     try {
         const requestId = request ? getRequestId(request) : undefined
+        const sessionId = request ? getPostHogSessionId(request) : undefined
         client.capture({
             distinctId,
             event: eventName,
             properties: {
                 ...properties,
                 environment: env.NODE_ENV,
-                ...(requestId ? { requestId } : {})
+                ...(requestId ? { requestId } : {}),
+                ...(sessionId ? { $session_id: sessionId } : {})
             }
         })
     } catch (error) {
