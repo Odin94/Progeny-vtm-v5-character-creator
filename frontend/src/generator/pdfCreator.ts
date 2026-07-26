@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
-import { PDFBool, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
+import { PDFBool, PDFDict, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
 import { clans } from "../data/Clans"
 import { SkillsKey, skillsKeySchema } from "../data/Skills"
@@ -18,6 +18,37 @@ import { getClanBaneText } from "~/data/VariantClanBanes"
 
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
+
+/**
+ * Register an embedded font in the AcroForm's default resources (DR) under the
+ * same name pdf-lib writes into each field's default-appearance (DA) string.
+ *
+ * `NeedAppearances = True` asks the viewer to regenerate every field's
+ * appearance at open time. To do that the viewer resolves the font named in the
+ * field's DA (e.g. "/Roboto-Regular 9 Tf") through the AcroForm DR. pdf-lib only
+ * puts the embedded font inside each widget's appearance-stream resources, not in
+ * the DR, so without this the viewer can't find "Roboto-Regular" and falls back to
+ * prompting the user to install/download the font. Adding it here points the DA at
+ * the already-embedded face so nothing external is ever required.
+ */
+const registerFontInDefaultResources = (form: PDFForm, font: PDFFont) => {
+    const acroFormDict = form.acroForm.dict
+    const context = acroFormDict.context
+
+    let defaultResources = acroFormDict.lookupMaybe(PDFName.of("DR"), PDFDict)
+    if (!defaultResources) {
+        defaultResources = context.obj({})
+        acroFormDict.set(PDFName.of("DR"), defaultResources)
+    }
+
+    let fontResources = defaultResources.lookupMaybe(PDFName.of("Font"), PDFDict)
+    if (!fontResources) {
+        fontResources = context.obj({})
+        defaultResources.set(PDFName.of("Font"), fontResources)
+    }
+
+    fontResources.set(PDFName.of(font.name), font.ref)
+}
 
 const PDF_DISCIPLINE_BLOCK_COUNT = 6
 const PDF_DISCIPLINE_ABILITIES_PER_BLOCK = 5
@@ -516,6 +547,10 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     // Fixes embedded font not being applied on form fields
     if (customFont) {
         form.updateFieldAppearances(customFont)
+        // Expose the embedded font in the AcroForm default resources so viewers
+        // honoring NeedAppearances can resolve the DA font without asking the user
+        // to install it (see registerFontInDefaultResources).
+        registerFontInDefaultResources(form, customFont)
     }
 
     return await pdfDoc.save({ updateFieldAppearances: true })

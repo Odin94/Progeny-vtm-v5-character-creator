@@ -8,7 +8,7 @@ import { getBasicTestCharacter } from "./testUtils"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 import { fileURLToPath } from "url"
-import { PDFDocument, PDFTextField } from "pdf-lib"
+import { PDFArray, PDFDict, PDFDocument, PDFName, PDFTextField } from "pdf-lib"
 import type { Power } from "~/data/Disciplines"
 import type { DisciplineName } from "~/data/NameSchemas"
 
@@ -190,6 +190,47 @@ describe("createPdf_nerdbert", () => {
         const meritTexts = allMeritFields.map((field) => field.getText()).join(" ")
         expect(meritTexts).toContain(character.merits[0].name)
         expect(meritTexts).toContain(character.flaws[0].name)
+    })
+
+    it("registers the embedded font in the AcroForm default resources so viewers don't prompt to install fonts", async () => {
+        // With NeedAppearances set, viewers regenerate each field's appearance using the
+        // font named in its DA string, resolved through the AcroForm's default resources (DR).
+        // The embedded font must live in the DR or the viewer falls back to asking the user
+        // to install it. See registerFontInDefaultResources in pdfCreator.ts.
+        const character = getBasicTestCharacter()
+        const pdfBytes = await createPdf_nerdbert(character)
+        const pdfDoc = await PDFDocument.load(pdfBytes)
+        const form = pdfDoc.getForm()
+
+        // The default appearance of a filled field references the embedded font by name.
+        const nameField = form.getTextField("Name")
+        const da = nameField.acroField.getDefaultAppearance() ?? ""
+        const fontNameMatch = da.match(/\/([^\s]+)\s+[\d.]+\s+Tf/)
+        expect(fontNameMatch).not.toBeNull()
+        const daFontName = fontNameMatch![1]
+
+        // That font name must be resolvable via the AcroForm's default resources (DR),
+        // and the resolved font must carry an embedded font file.
+        const defaultResources = form.acroForm.dict.lookup(PDFName.of("DR"), PDFDict)
+        const fontResources = defaultResources.lookup(PDFName.of("Font"), PDFDict)
+        const fontDict = fontResources.lookup(PDFName.of(daFontName), PDFDict)
+        expect(fontDict).toBeInstanceOf(PDFDict)
+
+        const hasEmbeddedFontFile = (dict: PDFDict): boolean => {
+            const fontFileKeys = ["FontFile", "FontFile2", "FontFile3"]
+            // Composite (Type0) fonts carry the descriptor on their descendant font.
+            const descendantFonts = dict.lookupMaybe(PDFName.of("DescendantFonts"), PDFArray)
+            const fontWithDescriptor = descendantFonts
+                ? descendantFonts.lookup(0, PDFDict)
+                : dict
+            const descriptor = fontWithDescriptor.lookupMaybe(PDFName.of("FontDescriptor"), PDFDict)
+            return (
+                !!descriptor &&
+                fontFileKeys.some((key) => descriptor.get(PDFName.of(key)) !== undefined)
+            )
+        }
+
+        expect(hasEmbeddedFontFile(fontDict)).toBe(true)
     })
 
     it("writes discipline abilities that overflow a full block into an unclaimed block", async () => {
