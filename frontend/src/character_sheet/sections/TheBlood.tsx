@@ -121,8 +121,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                 {isExperienceSpentEditable ? (
                                     <>
                                         <NumberInput
-                                            key={experienceSpentField.key}
-                                            defaultValue={experienceSpentField.defaultValue}
+                                            value={experienceSpentField.value}
                                             onChange={experienceSpentField.onChange}
                                             min={0}
                                             size="sm"
@@ -152,8 +151,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                 )}
                                 {isExperienceEditable ? (
                                     <NumberInput
-                                        key={experienceField.key}
-                                        defaultValue={experienceField.defaultValue}
+                                        value={experienceField.value}
                                         onChange={experienceField.onChange}
                                         min={0}
                                         size="sm"
