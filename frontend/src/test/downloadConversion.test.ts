@@ -19,6 +19,7 @@ vi.mock("pdf-lib", () => ({
     PDFBool: {
         True: true
     },
+    PDFDict: class PDFDict {},
     PDFFont: {},
     PDFForm: {},
     PDFName: {
@@ -46,11 +47,16 @@ const mockAnchor = {
     click: vi.fn()
 }
 
+const createMockPdfDict = (): any => ({
+    set: vi.fn(),
+    get: vi.fn().mockReturnValue(undefined),
+    lookupMaybe: vi.fn().mockReturnValue(undefined),
+    context: { obj: vi.fn(() => createMockPdfDict()) }
+})
+
 const createMockPdfForm = () => ({
     acroForm: {
-        dict: {
-            set: vi.fn()
-        }
+        dict: createMockPdfDict()
     },
     getButton: vi.fn().mockReturnValue({
         acroField: {
