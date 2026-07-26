@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useMemo } from "react"
+import { useRef, useCallback, useEffect, useMemo, useState } from "react"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
@@ -18,7 +18,12 @@ type UseDebouncedUncontrolledNumberFieldOptions = {
     updateFn?: (character: Character, value: number) => Character
 }
 
-// TODOdin: Replace this debounce solution with Zustand + selectors to get smooth performance
+// These fields are controlled: `value` is driven by local state so the input never
+// remounts. Writes to the shared character are still debounced to keep typing smooth
+// and avoid re-rendering the whole sheet on every keystroke. External changes to the
+// field (e.g. bumping an attribute, switching sheet mode) sync back into local state
+// without remounting, so the value no longer flashes its placeholder for a frame.
+// TODOdin: Consider moving these fields to Zustand + selectors for even smoother perf.
 export const useDebouncedUncontrolledStringField = ({
     character,
     setCharacter,
@@ -26,44 +31,38 @@ export const useDebouncedUncontrolledStringField = ({
     delay = 150
 }: UseDebouncedUncontrolledStringFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const characterRef = useRef<Character | null>(null)
-    const keyRef = useRef(0)
-    const pendingValueRef = useRef<string | null>(null)
+    const isPendingRef = useRef(false)
 
+    const rawValue = character[field]
+    const externalValue = rawValue !== undefined && rawValue !== null ? String(rawValue) : ""
+
+    const [value, setValue] = useState(externalValue)
+
+    // Sync external changes into local state, but never clobber an in-progress edit
+    // whose debounced write hasn't landed yet.
     useEffect(() => {
-        const currentValue = character[field] ?? ""
-        if (characterRef.current === null) {
-            characterRef.current = character
-            keyRef.current += 1
-        } else {
-            const prevValue = characterRef.current[field] ?? ""
-            if (currentValue !== prevValue) {
-                if (pendingValueRef.current !== null && currentValue === pendingValueRef.current) {
-                    pendingValueRef.current = null
-                } else {
-                    keyRef.current += 1
-                }
-            }
-            characterRef.current = character
-        }
-    }, [character, field])
+        if (isPendingRef.current) return
+        setValue(externalValue)
+    }, [externalValue])
 
     const handleChange = useCallback(
-        (value: string) => {
+        (nextValue: string) => {
+            setValue(nextValue)
+            isPendingRef.current = true
+
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
             }
 
-            pendingValueRef.current = value
-
             timeoutRef.current = setTimeout(() => {
+                isPendingRef.current = false
                 // Use the functional updater so the write merges into the freshest
                 // character rather than a possibly-stale closure/ref. This keeps the
                 // debounced edit safe even when this field's component is memoized and
                 // has not re-rendered since another field changed elsewhere.
                 setCharacter((currentCharacter) => ({
                     ...currentCharacter,
-                    [field]: value
+                    [field]: nextValue
                 }))
                 timeoutRef.current = null
             }, delay)
@@ -79,13 +78,9 @@ export const useDebouncedUncontrolledStringField = ({
         }
     }, [])
 
-    const rawValue = character[field]
-    const defaultValue = rawValue !== undefined && rawValue !== null ? String(rawValue) : ""
-
     return {
-        defaultValue,
-        onChange: handleChange,
-        key: `${field}-${keyRef.current}`
+        value,
+        onChange: handleChange
     }
 }
 
@@ -98,45 +93,40 @@ export const useDebouncedUncontrolledNumberField = ({
     updateFn
 }: UseDebouncedUncontrolledNumberFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const characterRef = useRef<Character | null>(null)
-    const keyRef = useRef(0)
-    const pendingValueRef = useRef<number | null>(null)
+    const isPendingRef = useRef(false)
 
     const getValueFn = useMemo(
         () => getValue || ((char: Character) => char[field as keyof Character] as number),
         [getValue, field]
     )
 
+    const rawValue = getValueFn(character)
+    const numValue = typeof rawValue === "number" ? rawValue : parseInt(String(rawValue ?? ""), 10)
+    const externalValue = isNaN(numValue) ? 0 : numValue
+
+    const [value, setValue] = useState(externalValue)
+
+    // Sync external changes into local state, but never clobber an in-progress edit
+    // whose debounced write hasn't landed yet.
     useEffect(() => {
-        const currentValue = getValueFn(character)
-        if (characterRef.current === null) {
-            characterRef.current = character
-            keyRef.current += 1
-        } else {
-            const prevValue = getValueFn(characterRef.current)
-            if (currentValue !== prevValue) {
-                if (pendingValueRef.current !== null && currentValue === pendingValueRef.current) {
-                    pendingValueRef.current = null
-                } else {
-                    keyRef.current += 1
-                }
-            }
-            characterRef.current = character
-        }
-    }, [character, getValueFn])
+        if (isPendingRef.current) return
+        setValue(externalValue)
+    }, [externalValue])
 
     const handleChange = useCallback(
-        (value: string | number) => {
+        (nextValue: string | number) => {
+            const parsed = typeof nextValue === "string" ? parseInt(nextValue, 10) : nextValue
+            const transformedValue = Math.max(0, isNaN(parsed) ? 0 : parsed)
+
+            setValue(transformedValue)
+            isPendingRef.current = true
+
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
             }
 
-            const numValue = typeof value === "string" ? parseInt(value, 10) : value
-            const transformedValue = Math.max(0, isNaN(numValue) ? 0 : numValue)
-
-            pendingValueRef.current = transformedValue
-
             timeoutRef.current = setTimeout(() => {
+                isPendingRef.current = false
                 // Use the functional updater so the write merges into the freshest
                 // character rather than a possibly-stale closure/ref. This keeps the
                 // debounced edit safe even when this field's component is memoized and
@@ -163,13 +153,8 @@ export const useDebouncedUncontrolledNumberField = ({
         }
     }, [])
 
-    const rawValue = getValueFn(character)
-    const numValue = typeof rawValue === "number" ? rawValue : parseInt(String(rawValue ?? ""), 10)
-    const defaultValue = isNaN(numValue) ? 0 : numValue
-
     return {
-        defaultValue,
-        onChange: handleChange,
-        key: `${field}-${keyRef.current}`
+        value,
+        onChange: handleChange
     }
 }

@@ -76,8 +76,7 @@ const TopData = ({ options }: TopDataProps) => {
                 <Group gap="md" justify="center" align="center" mb="md">
                     {isFreeMode ? (
                         <TextInput
-                            key={nameField.key}
-                            defaultValue={nameField.defaultValue}
+                            value={nameField.value}
                             onChange={(e) => nameField.onChange(e.target.value)}
                             placeholder="Unnamed Character"
                             color={primaryColor}
@@ -121,8 +120,7 @@ const TopData = ({ options }: TopDataProps) => {
                 </Group>
                 {isFreeMode ? (
                     <Textarea
-                        key={descriptionField.key}
-                        defaultValue={descriptionField.defaultValue}
+                        value={descriptionField.value}
                         onChange={(e) => descriptionField.onChange(e.target.value)}
                         placeholder="Character description..."
                         minRows={2}
@@ -247,8 +245,7 @@ const TopData = ({ options }: TopDataProps) => {
                             <Text fw={700}>Ambition:</Text>
                             {isFreeMode ? (
                                 <TextInput
-                                    key={ambitionField.key}
-                                    defaultValue={ambitionField.defaultValue}
+                                    value={ambitionField.value}
                                     onChange={(e) => ambitionField.onChange(e.target.value)}
                                     placeholder="—"
                                     size="sm"
@@ -271,8 +268,7 @@ const TopData = ({ options }: TopDataProps) => {
                             <Text fw={700}>Desire:</Text>
                             {isFreeMode ? (
                                 <TextInput
-                                    key={desireField.key}
-                                    defaultValue={desireField.defaultValue}
+                                    value={desireField.value}
                                     onChange={(e) => desireField.onChange(e.target.value)}
                                     placeholder="—"
                                     size="sm"
@@ -295,8 +291,7 @@ const TopData = ({ options }: TopDataProps) => {
                             <Text fw={700}>Player:</Text>
                             {isFreeMode ? (
                                 <TextInput
-                                    key={playerField.key}
-                                    defaultValue={playerField.defaultValue}
+                                    value={playerField.value}
                                     onChange={(e) => playerField.onChange(e.target.value)}
                                     placeholder="—"
                                     size="sm"
@@ -323,8 +318,7 @@ const TopData = ({ options }: TopDataProps) => {
                             <Text fw={700}>Generation:</Text>
                             {isFreeMode ? (
                                 <NumberInput
-                                    key={generationField.key}
-                                    defaultValue={generationField.defaultValue}
+                                    value={generationField.value}
                                     onChange={(value) => {
                                         const numValue =
                                             typeof value === "string"
@@ -353,8 +347,7 @@ const TopData = ({ options }: TopDataProps) => {
                             <Text fw={700}>Sire:</Text>
                             {isFreeMode ? (
                                 <TextInput
-                                    key={sireField.key}
-                                    defaultValue={sireField.defaultValue}
+                                    value={sireField.value}
                                     onChange={(e) => sireField.onChange(e.target.value)}
                                     placeholder="—"
                                     size="sm"
