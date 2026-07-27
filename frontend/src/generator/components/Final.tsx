@@ -118,7 +118,16 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     }
 
     return (
+        // translate="no" / notranslate: the final step keeps re-rendering after mount — the
+        // character-name header, the async auth-gated account card (it fades in once auth
+        // resolves), the analytics-consent action card, and the download-error alert all update
+        // in place, and its Mantine chrome animates. Browser page-translation (Chrome, Safari,
+        // Edge) rewrites text nodes out from under React/those animations, so those updates would
+        // otherwise crash with a DOMException (InvalidStateError / insertBefore-removeChild
+        // NotFoundError) — the same class fixed for the generator prompt in 876b86f.
         <div
+            className="notranslate"
+            translate="no"
             style={{
                 height: "100%",
                 width: "100%",
