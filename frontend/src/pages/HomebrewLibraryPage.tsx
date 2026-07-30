@@ -25,6 +25,7 @@ import {
     IconArrowLeft,
     IconCopy,
     IconDropletFilled,
+    IconEdit,
     IconMessageCircle,
     IconSend,
     IconTrash,
@@ -78,6 +79,7 @@ const HomebrewLibraryPage = () => {
     const [publishCollectionId, setPublishCollectionId] = useState<string | null>(null)
     const [acknowledged, setAcknowledged] = useState(false)
     const [comment, setComment] = useState("")
+    const [editingComment, setEditingComment] = useState<{ id: string; body: string } | null>(null)
 
     const libraryQuery = useQuery({
         queryKey: ["homebrew", "library", query, kind, sort],
@@ -152,6 +154,16 @@ const HomebrewLibraryPage = () => {
                 queryKey: ["homebrew", "library", "detail", selected?.id]
             })
             refreshLibrary()
+        }
+    })
+    const updateCommentMutation = useMutation({
+        mutationFn: ({ id, commentId, body }: { id: string; commentId: string; body: string }) =>
+            api.updateHomebrewLibraryComment(id, commentId, body),
+        onSuccess: () => {
+            setEditingComment(null)
+            client.invalidateQueries({
+                queryKey: ["homebrew", "library", "detail", selected?.id]
+            })
         }
     })
     const unpublishMutation = useMutation({
@@ -422,6 +434,7 @@ const HomebrewLibraryPage = () => {
                 onClose={() => setSelected(null)}
                 isAuthenticated={isAuthenticated}
                 currentUserId={user?.id}
+                isSuperadmin={user?.actorIsSuperadmin ?? false}
                 signIn={signIn}
                 comment={comment}
                 setComment={setComment}
@@ -436,6 +449,22 @@ const HomebrewLibraryPage = () => {
                 onDeleteComment={(commentId) =>
                     selected && deleteCommentMutation.mutate({ id: selected.id, commentId })
                 }
+                editingComment={editingComment}
+                onStartEditingComment={(id, body) => setEditingComment({ id, body })}
+                onChangeEditingComment={(body) =>
+                    setEditingComment((current) => (current ? { ...current, body } : null))
+                }
+                onCancelEditingComment={() => setEditingComment(null)}
+                onSaveEditingComment={() =>
+                    selected &&
+                    editingComment?.body.trim() &&
+                    updateCommentMutation.mutate({
+                        id: selected.id,
+                        commentId: editingComment.id,
+                        body: editingComment.body
+                    })
+                }
+                updateCommentPending={updateCommentMutation.isPending}
                 onUnpublish={() => selected && unpublishMutation.mutate(selected.id)}
                 unpublishPending={unpublishMutation.isPending}
             />
@@ -450,6 +479,7 @@ const LibraryDetailModal = ({
     onClose,
     isAuthenticated,
     currentUserId,
+    isSuperadmin,
     signIn,
     comment,
     setComment,
@@ -458,6 +488,12 @@ const LibraryDetailModal = ({
     onRate,
     onComment,
     onDeleteComment,
+    editingComment,
+    onStartEditingComment,
+    onChangeEditingComment,
+    onCancelEditingComment,
+    onSaveEditingComment,
+    updateCommentPending,
     onUnpublish,
     unpublishPending
 }: {
@@ -467,6 +503,7 @@ const LibraryDetailModal = ({
     onClose: () => void
     isAuthenticated: boolean
     currentUserId?: string
+    isSuperadmin: boolean
     signIn: () => void
     comment: string
     setComment: (value: string) => void
@@ -475,6 +512,12 @@ const LibraryDetailModal = ({
     onRate: (rating: number) => void
     onComment: () => void
     onDeleteComment: (commentId: string) => void
+    editingComment: { id: string; body: string } | null
+    onStartEditingComment: (id: string, body: string) => void
+    onChangeEditingComment: (body: string) => void
+    onCancelEditingComment: () => void
+    onSaveEditingComment: () => void
+    updateCommentPending: boolean
     onUnpublish: () => void
     unpublishPending: boolean
 }) => (
@@ -587,21 +630,72 @@ const LibraryDetailModal = ({
                         detail.comments.map((entryComment) => (
                             <Paper key={entryComment.id} withBorder p="sm">
                                 <Group justify="space-between" align="flex-start">
-                                    <div>
+                                    <div style={{ flex: 1 }}>
                                         <Text size="sm" fw={600}>
                                             {entryComment.authorNickname}
                                         </Text>
-                                        <Text>{entryComment.body}</Text>
+                                        {editingComment?.id === entryComment.id ? (
+                                            <Stack gap="xs" mt="xs">
+                                                <Textarea
+                                                    value={editingComment.body}
+                                                    onChange={(event) =>
+                                                        onChangeEditingComment(
+                                                            event.currentTarget.value
+                                                        )
+                                                    }
+                                                    autosize
+                                                    minRows={2}
+                                                />
+                                                <Group justify="flex-end" gap="xs">
+                                                    <Button
+                                                        size="compact-xs"
+                                                        variant="subtle"
+                                                        onClick={onCancelEditingComment}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        size="compact-xs"
+                                                        color="grape"
+                                                        disabled={!editingComment.body.trim()}
+                                                        loading={updateCommentPending}
+                                                        onClick={onSaveEditingComment}
+                                                    >
+                                                        Save
+                                                    </Button>
+                                                </Group>
+                                            </Stack>
+                                        ) : (
+                                            <Text>{entryComment.body}</Text>
+                                        )}
                                     </div>
-                                    {entryComment.userId === currentUserId ? (
-                                        <ActionIcon
-                                            color="red"
-                                            variant="subtle"
-                                            onClick={() => onDeleteComment(entryComment.id)}
-                                        >
-                                            <IconTrash size={15} />
-                                        </ActionIcon>
-                                    ) : null}
+                                    <Group gap={2}>
+                                        {entryComment.userId === currentUserId ? (
+                                            <ActionIcon
+                                                color="grape"
+                                                variant="subtle"
+                                                aria-label="Edit comment"
+                                                onClick={() =>
+                                                    onStartEditingComment(
+                                                        entryComment.id,
+                                                        entryComment.body
+                                                    )
+                                                }
+                                            >
+                                                <IconEdit size={15} />
+                                            </ActionIcon>
+                                        ) : null}
+                                        {entryComment.userId === currentUserId || isSuperadmin ? (
+                                            <ActionIcon
+                                                color="red"
+                                                variant="subtle"
+                                                aria-label="Delete comment"
+                                                onClick={() => onDeleteComment(entryComment.id)}
+                                            >
+                                                <IconTrash size={15} />
+                                            </ActionIcon>
+                                        ) : null}
+                                    </Group>
                                 </Group>
                             </Paper>
                         ))
