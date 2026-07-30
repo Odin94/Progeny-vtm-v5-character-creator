@@ -55,8 +55,9 @@ const inviteUnavailableReply = { error: "Invite link is invalid or expired" }
 const getCoterieNickname = (
     user:
         | {
-              email: string
               nickname: string | null
+              firstName: string | null
+              lastName: string | null
           }
         | null
         | undefined
@@ -66,8 +67,12 @@ const getCoterieNickname = (
         return nickname
     }
 
-    const emailLocalPart = user?.email.split("@", 1)[0] ?? ""
-    return Array.from(emailLocalPart).slice(0, 3).join("") || "Player"
+    const fullName = [user?.firstName, user?.lastName]
+        .map((part) => part?.trim())
+        .filter(Boolean)
+        .join(" ")
+
+    return fullName || null
 }
 
 const shouldShowNameTag = (user: { nameTagEnabled: boolean; nameTagVisible: boolean }) =>
@@ -141,7 +146,7 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
 
     const roster: Array<{
         membershipId: string | null
-        nickname: string
+        nickname: string | null
         showNameTag: boolean
         isOwner: boolean
         joinedAt: Date
@@ -220,8 +225,9 @@ const buildCoterieResponse = async (
             ? await db
                   .select({
                       id: schema.users.id,
-                      email: schema.users.email,
                       nickname: schema.users.nickname,
+                      firstName: schema.users.firstName,
+                      lastName: schema.users.lastName,
                       nameTagEnabled: schema.users.nameTagEnabled,
                       nameTagVisible: schema.users.nameTagVisible
                   })
