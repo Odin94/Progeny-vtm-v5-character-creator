@@ -13,6 +13,7 @@ import { specialtySchema } from "./Specialties.js"
 import { clans } from "./Clans"
 import { getAllKnownMeritsAndFlaws } from "./MeritsAndFlaws"
 import type { Power } from "./Disciplines.js"
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
@@ -230,10 +231,10 @@ export const getEmptyCharacter = (): Character => {
 }
 
 export const containsBloodSorcery = (powers: Power[]) =>
-    powers.filter((power) => power.discipline === "blood sorcery").length > 0
+    powers.some((power) => getPowerDisciplineIdentity(power) === "official:blood sorcery")
 
 export const containsOblivion = (powers: Power[]) =>
-    powers.filter((power) => power.discipline === "oblivion").length > 0
+    powers.some((power) => getPowerDisciplineIdentity(power) === "official:oblivion")
 
 export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
     if (!parsed["rituals"]) parsed["rituals"] = []

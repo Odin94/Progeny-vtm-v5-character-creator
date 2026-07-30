@@ -16,7 +16,7 @@ import {
     useMantineTheme
 } from "@mantine/core"
 import { memo, useState } from "react"
-import { DisciplineName, KnownDisciplineName, knownDisciplineNameSchema } from "~/data/NameSchemas"
+import { DisciplineName } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
@@ -37,13 +37,15 @@ import { bgAlpha, hexToRgba } from "../utils/style"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import type { HomebrewSource } from "~/data/Homebrew"
+import {
+    getDisciplineDefinitionIdentity,
+    getPowerDisciplineIdentity,
+    getPowerIdentity
+} from "~/utils/homebrewOptions"
 
 type DisciplinesProps = {
     options: SheetOptions
-}
-
-const isKnownDiscipline = (name: DisciplineName): name is KnownDisciplineName => {
-    return knownDisciplineNameSchema.safeParse(name).success
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
@@ -64,23 +66,30 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [customCeremonyModalOpened, setCustomCeremonyModalOpened] = useState(false)
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
+    const [editingDisciplineSource, setEditingDisciplineSource] = useState<
+        HomebrewSource | undefined
+    >()
     const [editingRitual, setEditingRitual] = useState<Ritual | null>(null)
     const [editingCeremony, setEditingCeremony] = useState<Ceremony | null>(null)
     const [itemToDelete, setItemToDelete] = useState<
         | { type: "power"; power: Power }
         | { type: "ritual"; ritual: Ritual }
         | { type: "ceremony"; ceremony: Ceremony }
-        | { type: "discipline"; disciplineName: DisciplineName }
+        | {
+              type: "discipline"
+              disciplineName: DisciplineName
+              disciplineIdentity: string
+          }
         | null
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const bloodSorceryLevel = character.disciplines.filter(
-        (power) => power.discipline === "blood sorcery"
+        (power) => getPowerDisciplineIdentity(power) === "official:blood sorcery"
     ).length
     const oblivionLevel = character.disciplines.filter(
-        (power) => power.discipline === "oblivion"
+        (power) => getPowerDisciplineIdentity(power) === "official:oblivion"
     ).length
     const canAddRituals = isEditable && bloodSorceryLevel > 0
     const canAddCeremonies = isEditable && oblivionLevel > 0
@@ -108,23 +117,36 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         return null
     }
 
-    const powersByDiscipline = new Map<DisciplineName, typeof character.disciplines>()
-    character.disciplines.forEach((power) => {
-        if (!powersByDiscipline.has(power.discipline)) {
-            powersByDiscipline.set(power.discipline, [power])
-        } else {
-            powersByDiscipline.set(power.discipline, [
-                ...powersByDiscipline.get(power.discipline)!,
-                power
-            ])
+    const disciplineGroups = new Map<
+        string,
+        {
+            identity: string
+            disciplineName: DisciplineName
+            powers: typeof character.disciplines
+            customDiscipline?: (typeof character.customDisciplines)[string]
         }
+    >()
+    character.disciplines.forEach((power) => {
+        const identity = getPowerDisciplineIdentity(power)
+        const group = disciplineGroups.get(identity)
+        disciplineGroups.set(identity, {
+            identity,
+            disciplineName: power.discipline,
+            powers: [...(group?.powers ?? []), power],
+            customDiscipline: group?.customDiscipline
+        })
     })
 
     if (isEditable && character.customDisciplines) {
-        Object.keys(character.customDisciplines).forEach((disciplineName) => {
-            if (!powersByDiscipline.has(disciplineName)) {
-                powersByDiscipline.set(disciplineName, [])
-            }
+        Object.values(character.customDisciplines).forEach((customDiscipline) => {
+            const identity = getDisciplineDefinitionIdentity(customDiscipline)
+            const group = disciplineGroups.get(identity)
+            disciplineGroups.set(identity, {
+                identity,
+                disciplineName: customDiscipline.name,
+                powers: group?.powers ?? [],
+                customDiscipline
+            })
         })
     }
 
@@ -140,8 +162,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         setItemToDelete({ type: "ceremony", ceremony })
     }
 
-    const handleDeleteDiscipline = (disciplineName: DisciplineName) => {
-        setItemToDelete({ type: "discipline", disciplineName })
+    const handleDeleteDiscipline = (disciplineIdentity: string, disciplineName: DisciplineName) => {
+        setItemToDelete({ type: "discipline", disciplineIdentity, disciplineName })
     }
 
     const confirmDelete = () => {
@@ -168,19 +190,34 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 }
             } else {
                 const updatedCustomDisciplines = { ...current.customDisciplines }
-                delete updatedCustomDisciplines[itemToDelete.disciplineName]
+                Object.entries(updatedCustomDisciplines).forEach(([key, definition]) => {
+                    if (
+                        getDisciplineDefinitionIdentity(definition) ===
+                        itemToDelete.disciplineIdentity
+                    )
+                        delete updatedCustomDisciplines[key]
+                })
 
                 updatedCharacter = {
                     ...current,
                     customDisciplines: updatedCustomDisciplines,
                     availableDisciplineNames: current.availableDisciplineNames.filter(
-                        (disciplineName) => disciplineName !== itemToDelete.disciplineName
+                        (disciplineName) =>
+                            itemToDelete.disciplineIdentity.startsWith("homebrew:") ||
+                            disciplineName !== itemToDelete.disciplineName
                     ),
                     disciplines: current.disciplines.filter(
-                        (p) => p.discipline !== itemToDelete.disciplineName
+                        (power) =>
+                            getPowerDisciplineIdentity(power) !== itemToDelete.disciplineIdentity
                     ),
-                    rituals: itemToDelete.disciplineName === "blood sorcery" ? [] : current.rituals,
-                    ceremonies: itemToDelete.disciplineName === "oblivion" ? [] : current.ceremonies
+                    rituals:
+                        itemToDelete.disciplineIdentity === "official:blood sorcery"
+                            ? []
+                            : current.rituals,
+                    ceremonies:
+                        itemToDelete.disciplineIdentity === "official:oblivion"
+                            ? []
+                            : current.ceremonies
                 }
             }
 
@@ -198,21 +235,20 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                         Disciplines
                     </Title>
                     <Grid gutter="md">
-                        {Array.from(powersByDiscipline.entries()).map(
-                            ([disciplineName, powers]) => {
-                                const isCustom = !isKnownDiscipline(disciplineName)
-                                const discipline = disciplines[disciplineName]
-                                const customDiscipline =
-                                    character.customDisciplines?.[disciplineName]
+                        {Array.from(disciplineGroups.values()).map(
+                            ({ identity, disciplineName, powers, customDiscipline }) => {
+                                const isOfficial = identity === `official:${disciplineName}`
+                                const isCustom = !isOfficial
+                                const catalogKey = isOfficial ? disciplineName : identity
+                                const discipline = isOfficial
+                                    ? disciplines[disciplineName]
+                                    : undefined
                                 const logo =
                                     discipline?.logo ||
                                     sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
 
                                 return (
-                                    <Grid.Col
-                                        key={disciplineName}
-                                        span={{ base: 12, md: 6, lg: 4 }}
-                                    >
+                                    <Grid.Col key={identity} span={{ base: 12, md: 6, lg: 4 }}>
                                         <Paper
                                             p="md"
                                             withBorder
@@ -308,6 +344,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
                                                                     handleDeleteDiscipline(
+                                                                        identity,
                                                                         disciplineName
                                                                     )
                                                                 }}
@@ -331,7 +368,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     .sort((a, b) => a.level - b.level)
                                                     .map((power) => (
                                                         <DisciplinePowerCard
-                                                            key={power.name}
+                                                            key={getPowerIdentity(power)}
                                                             power={power}
                                                             primaryColor={primaryColor}
                                                             inModal={false}
@@ -353,6 +390,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                                           e.stopPropagation()
                                                                                           setEditingDisciplineName(
                                                                                               disciplineName
+                                                                                          )
+                                                                                          setEditingDisciplineSource(
+                                                                                              customDiscipline?.homebrewSource
                                                                                           )
                                                                                           setEditingPower(
                                                                                               power
@@ -411,6 +451,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                     setEditingDisciplineName(
                                                                         disciplineName
                                                                     )
+                                                                    setEditingDisciplineSource(
+                                                                        customDiscipline?.homebrewSource
+                                                                    )
                                                                     setEditingPower(null)
                                                                     setCustomPowerModalOpened(true)
                                                                 }}
@@ -421,7 +464,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             (() => {
                                                                 const cost = getDisciplineCost(
                                                                     character,
-                                                                    disciplineName
+                                                                    disciplineName,
+                                                                    identity
                                                                 )
                                                                 const availableXP =
                                                                     getAvailableXP(character)
@@ -452,7 +496,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation()
                                                                                     setInitialDiscipline(
-                                                                                        disciplineName
+                                                                                        catalogKey
                                                                                     )
                                                                                     setModalOpened(
                                                                                         true
@@ -480,9 +524,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                 color={primaryColor}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
-                                                                    setInitialDiscipline(
-                                                                        disciplineName
-                                                                    )
+                                                                    setInitialDiscipline(catalogKey)
                                                                     setModalOpened(true)
                                                                 }}
                                                             >
@@ -904,10 +946,12 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     onClose={() => {
                         setCustomPowerModalOpened(false)
                         setEditingDisciplineName(null)
+                        setEditingDisciplineSource(undefined)
                         setEditingPower(null)
                     }}
                     options={options}
                     disciplineName={editingDisciplineName || ""}
+                    disciplineHomebrewSource={editingDisciplineSource}
                     editingPower={editingPower}
                 />
             ) : null}

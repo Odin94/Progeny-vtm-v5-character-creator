@@ -30,13 +30,12 @@ import {
     MeritOrFlaw
 } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
-import { intersection } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
 import PipButton from "./PipButton"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewLoresheet, HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
-import { getHomebrewSource } from "~/utils/homebrewOptions"
+import { getHomebrewSource, getMeritFlawIdentity } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisplayMeritFlaw = MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
@@ -129,8 +128,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             : essentialMeritsAndFlaws),
         ...(homebrewMeritsAndFlaws.length ? [homebrewCategory] : [])
     ]
-    const characterMeritFlawNames = new Set(
-        type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name)
+    const characterMeritFlawIdentities = new Set(
+        (type === "merit" ? character.merits : character.flaws).map((item) =>
+            getMeritFlawIdentity(item, type)
+        )
     )
 
     const exclusionMap = useMemo(() => {
@@ -202,7 +203,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         allMeritsAndFlaws.forEach((category) => {
             const items = type === "merit" ? category.merits : category.flaws
             items.forEach((item) => {
-                if (!characterMeritFlawNames.has(item.name)) {
+                if (!characterMeritFlawIdentities.has(getMeritFlawIdentity(item, type))) {
                     all.push(item)
                 }
             })
@@ -213,6 +214,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const availableItems = getAvailableMeritsOrFlaws()
 
     const addMeritFlaw = (meritFlaw: DisplayMeritFlaw, level: number) => {
+        const meritFlawIdentity = getMeritFlawIdentity(meritFlaw, type)
         const newMeritFlaw: MeritFlaw = {
             name: meritFlaw.name,
             level: level,
@@ -224,7 +226,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         }
 
         if (mode === "xp" && type === "merit") {
-            const existingMerit = character.merits.find((m) => m.name === meritFlaw.name)
+            const existingMerit = character.merits.find(
+                (item) => getMeritFlawIdentity(item, "merit") === meritFlawIdentity
+            )
             const previousLevel = existingMerit ? existingMerit.level : 0
             const cost = getMeritCost(level, previousLevel)
             const availableXP = getAvailableXP(character)
@@ -252,7 +256,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             }
         } else {
             if (type === "merit") {
-                const existingMerit = character.merits.find((m) => m.name === meritFlaw.name)
+                const existingMerit = character.merits.find(
+                    (item) => getMeritFlawIdentity(item, "merit") === meritFlawIdentity
+                )
                 if (existingMerit) {
                     setCharacter((current) => ({
                         ...current,
@@ -265,7 +271,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     }))
                 }
             } else {
-                const existingFlaw = character.flaws.find((f) => f.name === meritFlaw.name)
+                const existingFlaw = character.flaws.find(
+                    (item) => getMeritFlawIdentity(item, "flaw") === meritFlawIdentity
+                )
                 if (existingFlaw) {
                     setCharacter((current) => ({
                         ...current,
@@ -397,7 +405,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
     const getCostForItem = (item: DisplayMeritFlaw, level: number): number => {
         if (type === "flaw" || mode !== "xp") return 0
-        const existingMerit = character.merits.find((m) => m.name === item.name)
+        const identity = getMeritFlawIdentity(item, "merit")
+        const existingMerit = character.merits.find(
+            (merit) => getMeritFlawIdentity(merit, "merit") === identity
+        )
         const previousLevel = existingMerit ? existingMerit.level : 0
         return getMeritCost(level, previousLevel)
     }
@@ -423,7 +434,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
     const getCostForLevel = (level: number): number => {
         if (type === "flaw" || mode !== "xp") return 0
-        const existingMerit = character.merits.find((m) => m.name === selectedMeritFlaw?.name)
+        const selectedIdentity = selectedMeritFlaw
+            ? getMeritFlawIdentity(selectedMeritFlaw, "merit")
+            : ""
+        const existingMerit = character.merits.find(
+            (merit) => getMeritFlawIdentity(merit, "merit") === selectedIdentity
+        )
         const previousLevel = existingMerit ? existingMerit.level : 0
         return getMeritCost(level, previousLevel)
     }
@@ -457,7 +473,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const renderLoresheetsContent = () => {
         if (openLoresheet) {
             const availableMerits = openLoresheet.merits.filter(
-                (merit) => !characterMeritFlawNames.has(merit.name)
+                (merit) => !characterMeritFlawIdentities.has(getMeritFlawIdentity(merit, "merit"))
             )
 
             return (
@@ -552,7 +568,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
                                 if (tooltipLabel) {
                                     return (
-                                        <Grid.Col key={merit.name} span={{ base: 12, sm: 6 }}>
+                                        <Grid.Col
+                                            key={getMeritFlawIdentity(merit, "merit")}
+                                            span={{ base: 12, sm: 6 }}
+                                        >
                                             <Tooltip label={tooltipLabel} withArrow>
                                                 {boxContent}
                                             </Tooltip>
@@ -561,7 +580,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                 }
 
                                 return (
-                                    <Grid.Col key={merit.name} span={{ base: 12, sm: 6 }}>
+                                    <Grid.Col
+                                        key={getMeritFlawIdentity(merit, "merit")}
+                                        span={{ base: 12, sm: 6 }}
+                                    >
                                         {boxContent}
                                     </Grid.Col>
                                 )
@@ -580,13 +602,14 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 normalizedLoresheetQuery.length === 0 ||
                 loresheet.title.toLocaleLowerCase().includes(normalizedLoresheetQuery)
             if (!titleMatches) return false
-            const sheetPicked =
-                intersection(
-                    pickedMeritsAndFlaws.map((m) => m.name),
-                    loresheet.merits.map((m) => m.name)
-                ).length > 0
+            const pickedIdentities = new Set(
+                pickedMeritsAndFlaws.map((item) => getMeritFlawIdentity(item, item.type))
+            )
+            const sheetPicked = loresheet.merits.some((merit) =>
+                pickedIdentities.has(getMeritFlawIdentity(merit, "merit"))
+            )
             const hasAvailableMerits = loresheet.merits.some(
-                (merit) => !characterMeritFlawNames.has(merit.name)
+                (merit) => !characterMeritFlawIdentities.has(getMeritFlawIdentity(merit, "merit"))
             )
             return hasAvailableMerits || sheetPicked
         })
@@ -622,11 +645,14 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 <ScrollArea h={400}>
                     <Grid gutter="md">
                         {availableLoresheets.map((loresheet) => {
-                            const sheetPicked =
-                                intersection(
-                                    pickedMeritsAndFlaws.map((m) => m.name),
-                                    loresheet.merits.map((m) => m.name)
-                                ).length > 0
+                            const pickedIdentities = new Set(
+                                pickedMeritsAndFlaws.map((item) =>
+                                    getMeritFlawIdentity(item, item.type)
+                                )
+                            )
+                            const sheetPicked = loresheet.merits.some((merit) =>
+                                pickedIdentities.has(getMeritFlawIdentity(merit, "merit"))
+                            )
 
                             return (
                                 <Grid.Col key={loresheet.title} span={{ base: 12, sm: 6, md: 4 }}>
@@ -804,8 +830,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                             : category.flaws
                                                     const availableCategoryItems = items.filter(
                                                         (item) =>
-                                                            !characterMeritFlawNames.has(
-                                                                item.name
+                                                            !characterMeritFlawIdentities.has(
+                                                                getMeritFlawIdentity(item, type)
                                                             ) && matchesQuery(item.name)
                                                     )
                                                     return { category, availableCategoryItems }
@@ -980,9 +1006,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                                             if (tooltipLabel) {
                                                                                 return (
                                                                                     <Grid.Col
-                                                                                        key={
-                                                                                            item.name
-                                                                                        }
+                                                                                        key={getMeritFlawIdentity(
+                                                                                            item,
+                                                                                            type
+                                                                                        )}
                                                                                         span={{
                                                                                             base: 12,
                                                                                             sm: 6
@@ -1004,7 +1031,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
                                                                             return (
                                                                                 <Grid.Col
-                                                                                    key={item.name}
+                                                                                    key={getMeritFlawIdentity(
+                                                                                        item,
+                                                                                        type
+                                                                                    )}
                                                                                     span={{
                                                                                         base: 12,
                                                                                         sm: 6

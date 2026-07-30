@@ -14,6 +14,11 @@ import NameTag from "~/components/NameTag"
 import { getCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
 import type { ReactNode } from "react"
+import {
+    getDisciplineDefinitionIdentity,
+    getPowerDisciplineIdentity,
+    getPowerIdentity
+} from "~/utils/homebrewOptions"
 
 type CoterieCharacterSummaryGridProps = {
     members: CoterieMemberResponse[]
@@ -238,19 +243,32 @@ const getTouchstoneText = (touchstone: Character["touchstones"][number]) => {
 const getDisciplineGroups = (character: Character) =>
     character.disciplines.reduce(
         (groups, power) => {
-            if (!groups[power.discipline]) {
-                groups[power.discipline] = []
+            const identity = getPowerDisciplineIdentity(power)
+            if (!groups[identity]) {
+                groups[identity] = { disciplineName: power.discipline, powers: [] }
             }
-            groups[power.discipline].push(power)
+            groups[identity].powers.push(power)
             return groups
         },
-        {} as Record<DisciplineName, Character["disciplines"]>
+        {} as Record<string, { disciplineName: DisciplineName; powers: Character["disciplines"] }>
     )
 
-const getDisciplineLogo = (character: Character, disciplineName: DisciplineName) =>
-    character.customDisciplines?.[disciplineName]?.logo ||
-    disciplines[disciplineName as keyof typeof disciplines]?.logo ||
-    ""
+const getDisciplineLogo = (
+    character: Character,
+    disciplineIdentity: string,
+    disciplineName: DisciplineName
+) => {
+    const customDiscipline = Object.values(character.customDisciplines).find(
+        (definition) => getDisciplineDefinitionIdentity(definition) === disciplineIdentity
+    )
+    return (
+        customDiscipline?.logo ||
+        (disciplineIdentity === `official:${disciplineName}`
+            ? disciplines[disciplineName as keyof typeof disciplines]?.logo
+            : "") ||
+        ""
+    )
+}
 
 const CoterieCharacterSummaryGrid = ({
     members,
@@ -567,17 +585,18 @@ const CoterieCharacterSummaryGrid = ({
                                 {Object.entries(disciplineGroups).length > 0 ? (
                                     <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
                                         {Object.entries(disciplineGroups).map(
-                                            ([disciplineName, powers]) => {
+                                            ([identity, { disciplineName, powers }]) => {
                                                 const sortedPowers = [...powers].sort(
                                                     (a, b) => a.level - b.level
                                                 )
                                                 const logo = getDisciplineLogo(
                                                     character,
+                                                    identity,
                                                     disciplineName
                                                 )
 
                                                 return (
-                                                    <Box key={disciplineName}>
+                                                    <Box key={identity}>
                                                         <Group gap="xs" mb={4}>
                                                             {logo ? (
                                                                 <Box
@@ -598,7 +617,7 @@ const CoterieCharacterSummaryGrid = ({
                                                         </Group>
                                                         <Stack gap={5}>
                                                             {sortedPowers.map((power) => (
-                                                                <Box key={power.name}>
+                                                                <Box key={getPowerIdentity(power)}>
                                                                     <Group
                                                                         justify="space-between"
                                                                         gap="xs"

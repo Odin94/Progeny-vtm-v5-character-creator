@@ -1,6 +1,6 @@
 import type { MeritFlaw } from "~/data/Character"
 import type { Ceremony } from "~/data/Ceremonies"
-import type { Discipline, Power, Ritual } from "~/data/Disciplines"
+import type { CustomDiscipline, Discipline, Power, Ritual } from "~/data/Disciplines"
 import { disciplines } from "~/data/Disciplines"
 import type {
     HomebrewCollection,
@@ -87,11 +87,28 @@ export const getRitualIdentity = (ritual: Pick<Ritual, "name" | "discipline" | "
         : `official:${ritual.discipline ?? ""}:${ritual.name}`
 
 export const getPowerDisciplineIdentity = (
-    power: Pick<Power, "discipline" | "disciplineHomebrewSource">
+    power: Pick<Power, "discipline" | "disciplineHomebrewSource" | "isCustom">
 ) =>
     power.disciplineHomebrewSource
         ? `homebrew:${power.disciplineHomebrewSource.collectionId}:${power.disciplineHomebrewSource.itemId}`
-        : `official:${power.discipline}`
+        : power.isCustom && !disciplines[power.discipline]
+          ? `custom:${power.discipline}`
+          : `official:${power.discipline}`
+
+export const getDisciplineDefinitionIdentity = (
+    discipline: Pick<CustomDiscipline, "name" | "homebrewSource">
+) =>
+    discipline.homebrewSource
+        ? `homebrew:${discipline.homebrewSource.collectionId}:${discipline.homebrewSource.itemId}`
+        : `custom:${discipline.name}`
+
+export const getMeritFlawIdentity = (
+    meritFlaw: Pick<MeritFlaw, "name" | "homebrewSource">,
+    type: "merit" | "flaw"
+) =>
+    meritFlaw.homebrewSource
+        ? `homebrew:${type}:${meritFlaw.homebrewSource.collectionId}:${meritFlaw.homebrewSource.itemId}:${meritFlaw.name}`
+        : `official:${type}:${meritFlaw.name}`
 
 export type HomebrewDisciplineOption = Discipline & {
     optionKey: string

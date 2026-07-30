@@ -3,6 +3,7 @@ import { Power, Ritual } from "../../data/Disciplines"
 import { Ceremony } from "../../data/Ceremonies"
 import { upcase } from "../../generator/utils"
 import { DisciplineName } from "~/data/NameSchemas"
+import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
 
 export type DisciplinesProps = {
     powers: Power[]
@@ -11,51 +12,66 @@ export type DisciplinesProps = {
 }
 
 const DisciplineDisplay = ({ powers, rituals, ceremonies = [] }: DisciplinesProps) => {
-    const powersByDisciplines = new Map<DisciplineName, Power[]>()
+    const powersByDisciplines = new Map<
+        string,
+        { disciplineName: DisciplineName; powers: Power[] }
+    >()
     powers.forEach((power) => {
-        if (!powersByDisciplines.has(power.discipline)) {
-            powersByDisciplines.set(power.discipline, [power])
-        } else {
-            powersByDisciplines.set(power.discipline, [
-                ...powersByDisciplines.get(power.discipline)!,
-                power
-            ])
-        }
+        const identity = getPowerDisciplineIdentity(power)
+        const group = powersByDisciplines.get(identity)
+        powersByDisciplines.set(identity, {
+            disciplineName: power.discipline,
+            powers: [...(group?.powers ?? []), power]
+        })
     })
 
     return (
         <Stack>
             <Grid>
-                {Array.from(powersByDisciplines.entries()).map(([disciplineName, powers]) => {
-                    return (
-                        <Grid.Col span={6} key={disciplineName}>
-                            <Title order={4}>{upcase(disciplineName)}</Title>
-                            <List>
-                                {powers.map((power) => {
-                                    return <List.Item key={power.name}>{power.name}</List.Item>
-                                })}
-                                {disciplineName === "blood sorcery"
-                                    ? rituals.map((ritual) => {
-                                          return (
-                                              <List.Item ml={"-3px"} icon={"⛤"} key={ritual.name}>
-                                                  {ritual.name}
-                                              </List.Item>
-                                          )
-                                      })
-                                    : null}
-                                {disciplineName === "oblivion"
-                                    ? ceremonies.map((ceremony) => {
-                                          return (
-                                              <List.Item ml={"-3px"} icon={"⛤"} key={ceremony.name}>
-                                                  {ceremony.name}
-                                              </List.Item>
-                                          )
-                                      })
-                                    : null}
-                            </List>
-                        </Grid.Col>
-                    )
-                })}
+                {Array.from(powersByDisciplines.entries()).map(
+                    ([identity, { disciplineName, powers }]) => {
+                        return (
+                            <Grid.Col span={6} key={identity}>
+                                <Title order={4}>{upcase(disciplineName)}</Title>
+                                <List>
+                                    {powers.map((power) => {
+                                        return (
+                                            <List.Item key={getPowerIdentity(power)}>
+                                                {power.name}
+                                            </List.Item>
+                                        )
+                                    })}
+                                    {identity === "official:blood sorcery"
+                                        ? rituals.map((ritual) => {
+                                              return (
+                                                  <List.Item
+                                                      ml={"-3px"}
+                                                      icon={"⛤"}
+                                                      key={ritual.name}
+                                                  >
+                                                      {ritual.name}
+                                                  </List.Item>
+                                              )
+                                          })
+                                        : null}
+                                    {identity === "official:oblivion"
+                                        ? ceremonies.map((ceremony) => {
+                                              return (
+                                                  <List.Item
+                                                      ml={"-3px"}
+                                                      icon={"⛤"}
+                                                      key={ceremony.name}
+                                                  >
+                                                      {ceremony.name}
+                                                  </List.Item>
+                                              )
+                                          })
+                                        : null}
+                                </List>
+                            </Grid.Col>
+                        )
+                    }
+                )}
             </Grid>
         </Stack>
     )

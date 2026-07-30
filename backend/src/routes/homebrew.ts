@@ -85,52 +85,78 @@ const approveRequest = async (requestId: string, reviewerId: string) => {
         where: eq(schema.homebrewPublishRequests.id, requestId),
         with: { requester: true }
     })
-    if (!request || request.status !== "pending") return null
-
-    let entry = request.libraryEntryId
-        ? await db.query.homebrewLibraryEntries.findFirst({
-              where: eq(schema.homebrewLibraryEntries.id, request.libraryEntryId)
-          })
-        : null
-
-    if (!entry && request.collectionId) {
-        entry = await db.query.homebrewLibraryEntries.findFirst({
-            where: and(
-                eq(schema.homebrewLibraryEntries.originalCollectionId, request.collectionId),
-                eq(schema.homebrewLibraryEntries.authorId, request.requesterId)
-            )
-        })
-    }
-
-    const existingEntryId = entry?.id
-    const entryId = existingEntryId ?? nanoid()
-    const versions = await db
-        .select({ version: schema.homebrewPublications.version })
-        .from(schema.homebrewPublications)
-        .where(eq(schema.homebrewPublications.libraryEntryId, entryId))
-        .orderBy(desc(schema.homebrewPublications.version))
-        .limit(1)
-    const publicationId = nanoid()
-    const version = (versions[0]?.version ?? 0) + 1
+    if (!request) return null
 
     return db.transaction((tx) => {
+        const claimedRequest = tx
+            .update(schema.homebrewPublishRequests)
+            .set({
+                status: "approved",
+                reviewedById: reviewerId,
+                reviewedAt: new Date(),
+                denialMessage: null
+            })
+            .where(
+                and(
+                    eq(schema.homebrewPublishRequests.id, request.id),
+                    eq(schema.homebrewPublishRequests.status, "pending")
+                )
+            )
+            .returning()
+            .get()
+        if (!claimedRequest) return null
+
+        let entry = claimedRequest.libraryEntryId
+            ? tx
+                  .select()
+                  .from(schema.homebrewLibraryEntries)
+                  .where(eq(schema.homebrewLibraryEntries.id, claimedRequest.libraryEntryId))
+                  .get()
+            : null
+        if (!entry && claimedRequest.collectionId) {
+            entry = tx
+                .select()
+                .from(schema.homebrewLibraryEntries)
+                .where(
+                    and(
+                        eq(
+                            schema.homebrewLibraryEntries.originalCollectionId,
+                            claimedRequest.collectionId
+                        ),
+                        eq(schema.homebrewLibraryEntries.authorId, claimedRequest.requesterId)
+                    )
+                )
+                .get()
+        }
+
+        const existingEntryId = entry?.id
+        const entryId = existingEntryId ?? nanoid()
         if (!existingEntryId) {
             tx.insert(schema.homebrewLibraryEntries)
                 .values({
                     id: entryId,
-                    originalCollectionId: request.collectionId,
-                    authorId: request.requesterId,
+                    originalCollectionId: claimedRequest.collectionId,
+                    authorId: claimedRequest.requesterId,
                     authorNickname: request.requester.nickname ?? "Former user"
                 })
                 .run()
         }
 
+        const latestVersion = tx
+            .select({ version: schema.homebrewPublications.version })
+            .from(schema.homebrewPublications)
+            .where(eq(schema.homebrewPublications.libraryEntryId, entryId))
+            .orderBy(desc(schema.homebrewPublications.version))
+            .limit(1)
+            .get()
+        const publicationId = nanoid()
+        const version = (latestVersion?.version ?? 0) + 1
         tx.insert(schema.homebrewPublications)
             .values({
                 id: publicationId,
                 libraryEntryId: entryId,
                 version,
-                snapshot: request.snapshot,
+                snapshot: claimedRequest.snapshot,
                 approvedById: reviewerId
             })
             .run()
@@ -140,14 +166,8 @@ const approveRequest = async (requestId: string, reviewerId: string) => {
             .run()
         const updatedRequest = tx
             .update(schema.homebrewPublishRequests)
-            .set({
-                libraryEntryId: entryId,
-                status: "approved",
-                reviewedById: reviewerId,
-                reviewedAt: new Date(),
-                denialMessage: null
-            })
-            .where(eq(schema.homebrewPublishRequests.id, request.id))
+            .set({ libraryEntryId: entryId })
+            .where(eq(schema.homebrewPublishRequests.id, claimedRequest.id))
             .returning()
             .get()
 
@@ -683,10 +703,18 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 return reply.code(404).send({ error: "Request not found" })
             if (item.status !== "pending")
                 return reply.code(409).send({ error: "Only pending requests can be withdrawn" })
-            await db
+            const withdrawn = await db
                 .update(schema.homebrewPublishRequests)
                 .set({ status: "withdrawn", reviewedAt: new Date() })
-                .where(eq(schema.homebrewPublishRequests.id, item.id))
+                .where(
+                    and(
+                        eq(schema.homebrewPublishRequests.id, item.id),
+                        eq(schema.homebrewPublishRequests.status, "pending")
+                    )
+                )
+                .returning()
+            if (withdrawn.length === 0)
+                return reply.code(409).send({ error: "Only pending requests can be withdrawn" })
             reply.send({ status: "withdrawn" })
         }
     )
@@ -734,11 +762,6 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 return reply.code(400).send({ error: "A denial message is required" })
             }
 
-            const item = await db.query.homebrewPublishRequests.findFirst({
-                where: eq(schema.homebrewPublishRequests.id, request.params.id)
-            })
-            if (!item || item.status !== "pending")
-                return reply.code(404).send({ error: "Pending request not found" })
             const [denied] = await db
                 .update(schema.homebrewPublishRequests)
                 .set({
@@ -747,8 +770,14 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                     reviewedById: request.actorUser!.id,
                     reviewedAt: new Date()
                 })
-                .where(eq(schema.homebrewPublishRequests.id, item.id))
+                .where(
+                    and(
+                        eq(schema.homebrewPublishRequests.id, request.params.id),
+                        eq(schema.homebrewPublishRequests.status, "pending")
+                    )
+                )
                 .returning()
+            if (!denied) return reply.code(404).send({ error: "Pending request not found" })
             reply.send(denied)
         }
     )

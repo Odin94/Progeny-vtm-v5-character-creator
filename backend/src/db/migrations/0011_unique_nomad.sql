@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `homebrew_library_entries_original_collection_author_idx` ON `homebrew_library_entries` (`original_collection_id`,`author_id`);

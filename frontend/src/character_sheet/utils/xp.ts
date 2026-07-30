@@ -1,5 +1,6 @@
 import { Character } from "~/data/Character"
 import { DisciplineName } from "~/data/NameSchemas"
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 export const getAvailableXP = (character: Character): number => {
     return character.experience - character.ephemeral.experienceSpent
@@ -21,8 +22,15 @@ export const getBloodPotencyCost = (newLevel: number): number => {
     return newLevel * 10
 }
 
-export const getDisciplineCost = (character: Character, disciplineName: DisciplineName): number => {
-    const newLevel = character.disciplines.filter((p) => p.discipline === disciplineName).length + 1
+export const getDisciplineCost = (
+    character: Character,
+    disciplineName: DisciplineName,
+    disciplineIdentity = `official:${disciplineName}`
+): number => {
+    const newLevel =
+        character.disciplines.filter(
+            (power) => getPowerDisciplineIdentity(power) === disciplineIdentity
+        ).length + 1
 
     if (character.clan === "Caitiff") {
         return newLevel * 6
@@ -30,6 +38,12 @@ export const getDisciplineCost = (character: Character, disciplineName: Discipli
 
     if (
         character.availableDisciplineNames.includes(disciplineName) ||
+        character.homebrewClan?.nativeDisciplineRefs?.some((reference) =>
+            reference.type === "homebrew"
+                ? `homebrew:${character.homebrewClan?.homebrewSource.collectionId}:${reference.itemId}` ===
+                  disciplineIdentity
+                : `official:${reference.name}` === disciplineIdentity
+        ) ||
         character.predatorType.pickedDiscipline === disciplineName
     ) {
         return newLevel * 5

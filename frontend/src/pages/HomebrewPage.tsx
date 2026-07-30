@@ -58,6 +58,53 @@ const toInput = (collection: HomebrewCollection): HomebrewCollectionInput => ({
     items: collection.items
 })
 
+const replaceItemAndReferences = (
+    items: HomebrewItem[],
+    index: number,
+    replacement: HomebrewItem
+): HomebrewItem[] => {
+    const previous = items[index]
+    const nextItems = items.map((item, itemIndex) => (itemIndex === index ? replacement : item))
+    if (
+        previous?.kind !== "discipline" ||
+        replacement.kind !== "discipline" ||
+        !previous.id ||
+        previous.name === replacement.name
+    ) {
+        return nextItems
+    }
+
+    return nextItems.map((item) => {
+        if (
+            (item.kind === "power" ||
+                item.kind === "ritual" ||
+                item.kind === "ceremony" ||
+                item.kind === "formula") &&
+            item.disciplineRef?.type === "homebrew" &&
+            item.disciplineRef.itemId === previous.id
+        ) {
+            return {
+                ...item,
+                discipline: replacement.name,
+                disciplineRef: { ...item.disciplineRef, name: replacement.name }
+            }
+        }
+        if (item.kind === "clan" && item.nativeDisciplineRefs) {
+            const nativeDisciplineRefs = item.nativeDisciplineRefs.map((reference) =>
+                reference.type === "homebrew" && reference.itemId === previous.id
+                    ? { ...reference, name: replacement.name }
+                    : reference
+            )
+            return {
+                ...item,
+                nativeDisciplineRefs,
+                nativeDisciplines: nativeDisciplineRefs.map((reference) => reference.name)
+            }
+        }
+        return item
+    })
+}
+
 const HomebrewPage = () => {
     const { isAuthenticated, isLoading, signIn } = useAuth()
     const { data: collections = [], isLoading: collectionsLoading } =
@@ -408,9 +455,10 @@ const HomebrewPage = () => {
                     collectionItems={draft.items}
                     onClose={() => setItemEditor(null)}
                     onSave={(item) => {
-                        const items = [...draft.items]
-                        if (itemEditor.index === null) items.push(item)
-                        else items[itemEditor.index] = item
+                        const items =
+                            itemEditor.index === null
+                                ? [...draft.items, item]
+                                : replaceItemAndReferences(draft.items, itemEditor.index, item)
                         setDraft({ ...draft, items })
                         setItemEditor(null)
                     }}

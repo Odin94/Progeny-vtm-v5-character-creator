@@ -49,6 +49,7 @@ import { attributesKeySchema } from "~/data/Attributes"
 import { characterSchema, Character as CharacterType, getEmptyCharacter } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import type { DisciplineName } from "~/data/NameSchemas"
+import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
 import { skillsKeySchema } from "~/data/Skills"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import {
@@ -2767,13 +2768,17 @@ const CharacterSummaryContent = ({
 
     const disciplineGroups = character.disciplines.reduce(
         (acc, power) => {
-            if (!acc[power.discipline]) {
-                acc[power.discipline] = []
+            const identity = getPowerDisciplineIdentity(power)
+            if (!acc[identity]) {
+                acc[identity] = { disciplineName: power.discipline, powers: [] }
             }
-            acc[power.discipline].push(power)
+            acc[identity].powers.push(power)
             return acc
         },
-        {} as Record<DisciplineName, typeof character.disciplines>
+        {} as Record<
+            string,
+            { disciplineName: DisciplineName; powers: typeof character.disciplines }
+        >
     )
 
     const clan = character.clan ? clans[character.clan] : null
@@ -3097,38 +3102,45 @@ const CharacterSummaryContent = ({
                 </Accordion.Control>
                 <Accordion.Panel>
                     <Stack gap="md">
-                        {Object.entries(disciplineGroups).map(([disciplineName, powers]) => {
-                            const sortedPowers = [...powers].sort((a, b) => a.level - b.level)
-                            return (
-                                <Paper key={disciplineName} p="md" withBorder radius="md">
-                                    <Group gap="xs" mb="sm">
-                                        <Text fw={600} size="md">
-                                            {upcase(disciplineName)}
-                                        </Text>
-                                        <Badge size="sm" color="red" variant="light">
-                                            Level {Math.max(...sortedPowers.map((p) => p.level))}
-                                        </Badge>
-                                    </Group>
-                                    <Stack gap="xs">
-                                        {sortedPowers.map((power) => (
-                                            <div key={power.name}>
-                                                <Group justify="space-between" mb={2}>
-                                                    <Text fw={500} size="sm">
-                                                        {power.name}
+                        {Object.entries(disciplineGroups).map(
+                            ([identity, { disciplineName, powers }]) => {
+                                const sortedPowers = [...powers].sort((a, b) => a.level - b.level)
+                                return (
+                                    <Paper key={identity} p="md" withBorder radius="md">
+                                        <Group gap="xs" mb="sm">
+                                            <Text fw={600} size="md">
+                                                {upcase(disciplineName)}
+                                            </Text>
+                                            <Badge size="sm" color="red" variant="light">
+                                                Level{" "}
+                                                {Math.max(...sortedPowers.map((p) => p.level))}
+                                            </Badge>
+                                        </Group>
+                                        <Stack gap="xs">
+                                            {sortedPowers.map((power) => (
+                                                <div key={getPowerIdentity(power)}>
+                                                    <Group justify="space-between" mb={2}>
+                                                        <Text fw={500} size="sm">
+                                                            {power.name}
+                                                        </Text>
+                                                        <Badge
+                                                            size="xs"
+                                                            color="red"
+                                                            variant="outline"
+                                                        >
+                                                            Level {power.level}
+                                                        </Badge>
+                                                    </Group>
+                                                    <Text size="xs" c="dimmed" ml="md">
+                                                        {power.summary}
                                                     </Text>
-                                                    <Badge size="xs" color="red" variant="outline">
-                                                        Level {power.level}
-                                                    </Badge>
-                                                </Group>
-                                                <Text size="xs" c="dimmed" ml="md">
-                                                    {power.summary}
-                                                </Text>
-                                            </div>
-                                        ))}
-                                    </Stack>
-                                </Paper>
-                            )
-                        })}
+                                                </div>
+                                            ))}
+                                        </Stack>
+                                    </Paper>
+                                )
+                            }
+                        )}
                         {character.rituals.length > 0 ? (
                             <Paper p="md" withBorder radius="md">
                                 <Text fw={600} size="md" mb="sm">

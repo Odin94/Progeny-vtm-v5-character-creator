@@ -40,6 +40,7 @@ import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { useHomebrewCollections } from "~/hooks/useHomebrew"
 import { api } from "~/utils/api"
+import HomebrewRuleDetails from "~/components/HomebrewRuleDetails"
 
 const BloodRating = ({
     value,
@@ -70,6 +71,8 @@ const BloodRating = ({
 const HomebrewLibraryPage = () => {
     const client = useQueryClient()
     const { user, isAuthenticated, signIn } = useAuth()
+    const hasSuperadminPrivileges =
+        (user?.actorIsSuperadmin ?? false) && !user?.impersonation.active
     const { data: collections = [] } = useHomebrewCollections(isAuthenticated)
     const [query, setQuery] = useState("")
     const [kind, setKind] = useState<string | null>(null)
@@ -107,7 +110,7 @@ const HomebrewLibraryPage = () => {
             refreshLibrary()
             notifications.show({
                 title: "Snapshot submitted",
-                message: user?.actorIsSuperadmin
+                message: hasSuperadminPrivileges
                     ? "The collection was published immediately."
                     : "A superadmin will review this version.",
                 color: "grape"
@@ -434,7 +437,7 @@ const HomebrewLibraryPage = () => {
                 onClose={() => setSelected(null)}
                 isAuthenticated={isAuthenticated}
                 currentUserId={user?.id}
-                isSuperadmin={user?.actorIsSuperadmin ?? false}
+                isSuperadmin={hasSuperadminPrivileges}
                 signIn={signIn}
                 comment={comment}
                 setComment={setComment}
@@ -596,11 +599,7 @@ const LibraryDetailModal = ({
                                     {homebrewKindLabel(item.kind)}
                                 </Badge>
                             </Group>
-                            {"summary" in item && item.summary ? (
-                                <Text size="sm" c="dimmed" mt={4}>
-                                    {item.summary}
-                                </Text>
-                            ) : null}
+                            <HomebrewRuleDetails item={item} />
                         </Paper>
                     ))}
                 </Stack>

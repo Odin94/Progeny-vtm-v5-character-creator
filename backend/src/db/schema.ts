@@ -327,7 +327,10 @@ export const homebrewLibraryEntries = sqliteTable(
         unpublishedAt: integer("unpublished_at", { mode: "timestamp" })
     },
     (table) => ({
-        authorIdIdx: index("homebrew_library_entries_author_id_idx").on(table.authorId)
+        authorIdIdx: index("homebrew_library_entries_author_id_idx").on(table.authorId),
+        uniqueOriginalCollectionAuthor: uniqueIndex(
+            "homebrew_library_entries_original_collection_author_idx"
+        ).on(table.originalCollectionId, table.authorId)
     })
 )
 

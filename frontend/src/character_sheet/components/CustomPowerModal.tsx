@@ -12,6 +12,8 @@ import { AttributesKey } from "~/data/Attributes"
 import { SkillsKey } from "~/data/Skills"
 import { SheetOptions } from "../CharacterSheet"
 import { getDisciplineCost } from "../utils/xp"
+import type { HomebrewSource } from "~/data/Homebrew"
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 type CustomPowerModalProps = {
     opened: boolean
@@ -19,6 +21,7 @@ type CustomPowerModalProps = {
     onSave?: () => void
     options: SheetOptions
     disciplineName: DisciplineName
+    disciplineHomebrewSource?: HomebrewSource
     editingPower?: Power | null
 }
 
@@ -28,6 +31,7 @@ const CustomPowerModal = ({
     onSave,
     options,
     disciplineName,
+    disciplineHomebrewSource,
     editingPower
 }: CustomPowerModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
@@ -54,7 +58,7 @@ const CustomPowerModal = ({
         }
 
         const customDisciplineNames = character.customDisciplines
-            ? Object.keys(character.customDisciplines).map((name) => name.toLowerCase())
+            ? Object.values(character.customDisciplines).map((item) => item.name.toLowerCase())
             : []
 
         const invalidKeys: string[] = []
@@ -107,7 +111,13 @@ const CustomPowerModal = ({
                 setDicePoolWarning(validateDicePool(editingPower.dicePool))
             } else {
                 const currentLevel = character.disciplines.filter(
-                    (p) => p.discipline === disciplineName
+                    (power) =>
+                        getPowerDisciplineIdentity(power) ===
+                        getPowerDisciplineIdentity({
+                            discipline: disciplineName,
+                            isCustom: true,
+                            disciplineHomebrewSource
+                        })
                 ).length
                 setName("")
                 setSummary("")
@@ -118,7 +128,7 @@ const CustomPowerModal = ({
                 setDicePoolWarning(null)
             }
         }
-    }, [opened, editingPower, disciplineName, character.disciplines])
+    }, [opened, editingPower, disciplineName, disciplineHomebrewSource, character.disciplines])
 
     const handleSave = () => {
         if (!name.trim()) {
@@ -149,7 +159,9 @@ const CustomPowerModal = ({
             discipline: disciplineName,
             rouseChecks: rouseChecksNum,
             amalgamPrerequisites: [],
-            isCustom: true
+            isCustom: true,
+            disciplineHomebrewSource:
+                disciplineHomebrewSource ?? editingPower?.disciplineHomebrewSource
         }
 
         setCharacter((current) => {
@@ -166,7 +178,11 @@ const CustomPowerModal = ({
                 }
 
                 if (mode === "xp") {
-                    const cost = getDisciplineCost(current, disciplineName)
+                    const cost = getDisciplineCost(
+                        current,
+                        disciplineName,
+                        getPowerDisciplineIdentity(power)
+                    )
                     updatedCharacter.ephemeral = {
                         ...updatedCharacter.ephemeral,
                         experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost

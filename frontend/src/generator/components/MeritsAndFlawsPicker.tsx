@@ -45,7 +45,7 @@ import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { useProgressiveRendering } from "./useProgressiveRendering"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
-import { getHomebrewSource } from "~/utils/homebrewOptions"
+import { getHomebrewSource, getMeritFlawIdentity } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type MeritsAndFlawsPickerProps = {
@@ -66,7 +66,7 @@ const meritIcon = () => {
 type MeritOrFlawCardProps = {
     meritOrFlaw: MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
     type: "flaw" | "merit"
-    pickedByName: Map<string, MeritFlaw>
+    pickedByIdentity: Map<string, MeritFlaw>
     exclusionMap: Map<string, string[]>
     predatorTypeMeritsByName: Map<string, MeritFlaw>
     remainingMerits: number
@@ -83,7 +83,7 @@ const MeritOrFlawCard = memo(
     ({
         meritOrFlaw,
         type,
-        pickedByName,
+        pickedByIdentity,
         exclusionMap,
         predatorTypeMeritsByName,
         remainingMerits,
@@ -97,19 +97,22 @@ const MeritOrFlawCard = memo(
     }: MeritOrFlawCardProps) => {
         const buttonColor = type === "flaw" ? "red" : "teal"
         const icon = type === "flaw" ? flawIcon() : meritIcon()
-        const lineKey = `${type}-${meritOrFlaw.name}`
+        const meritFlawIdentity = getMeritFlawIdentity(meritOrFlaw, type)
+        const lineKey = meritFlawIdentity
         const accentColor = type === "flaw" ? rgba(RAW_RED, 0.92) : "rgba(63, 192, 120, 0.92)"
         const selectedBg = type === "flaw" ? rgba(RAW_RED, 0.18) : "rgba(46, 160, 67, 0.16)"
         const selectedBorder = type === "flaw" ? rgba(RAW_RED, 0.38) : "rgba(63, 192, 120, 0.32)"
         const baseBg = "rgba(255, 255, 255, 0.03)"
         const baseBorder = "rgba(255, 255, 255, 0.06)"
 
-        const alreadyPickedItem = pickedByName.get(meritOrFlaw.name)
+        const alreadyPickedItem = pickedByIdentity.get(meritFlawIdentity)
         const wasPickedLevel = alreadyPickedItem?.level ?? 0
         const excludingItems = exclusionMap.get(meritOrFlaw.name) ?? []
         const isExcluded = excludingItems.length > 0
 
-        const meritInPredatorType = predatorTypeMeritsByName.get(meritOrFlaw.name)
+        const meritInPredatorType = meritOrFlaw.homebrewSource
+            ? undefined
+            : predatorTypeMeritsByName.get(meritOrFlaw.name)
         const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
         const isPicked = Boolean(alreadyPickedItem ?? meritInPredatorType)
 
@@ -160,7 +163,10 @@ const MeritOrFlawCard = memo(
                             setRemainingMerits((prev) => prev + previousCost - nextCost)
                         }
                         setPickedMeritsAndFlaws((prev) => [
-                            ...prev.filter((m) => m.name !== meritOrFlaw.name),
+                            ...prev.filter(
+                                (item) =>
+                                    getMeritFlawIdentity(item, item.type) !== meritFlawIdentity
+                            ),
                             {
                                 name: meritOrFlaw.name,
                                 level,
@@ -271,7 +277,11 @@ const MeritOrFlawCard = memo(
                         <Button
                             onClick={() => {
                                 setPickedMeritsAndFlaws((prev) =>
-                                    prev.filter((m) => m.name !== meritOrFlaw.name)
+                                    prev.filter(
+                                        (item) =>
+                                            getMeritFlawIdentity(item, item.type) !==
+                                            meritFlawIdentity
+                                    )
                                 )
                                 if (isThinbloodFlaw(meritOrFlaw.name)) {
                                     setRemainingThinbloodMeritPoints((prev) => prev - 1)
@@ -388,8 +398,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         tbFlawCount - tbMeritCount
     )
 
-    const pickedByName = useMemo(
-        () => new Map(pickedMeritsAndFlaws.map((item) => [item.name, item])),
+    const pickedByIdentity = useMemo(
+        () =>
+            new Map(
+                pickedMeritsAndFlaws.map((item) => [getMeritFlawIdentity(item, item.type), item])
+            ),
         [pickedMeritsAndFlaws]
     )
 
@@ -437,7 +450,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     ])
 
     const cardProps: Omit<MeritOrFlawCardProps, "meritOrFlaw" | "type"> = {
-        pickedByName,
+        pickedByIdentity,
         exclusionMap,
         predatorTypeMeritsByName,
         remainingMerits,
@@ -455,7 +468,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         type: "flaw" | "merit"
     ): JSX.Element => (
         <MeritOrFlawCard
-            key={`${type}-${meritOrFlaw.name}`}
+            key={getMeritFlawIdentity(meritOrFlaw, type)}
             meritOrFlaw={meritOrFlaw}
             type={type}
             {...cardProps}

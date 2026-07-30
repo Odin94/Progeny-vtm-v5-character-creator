@@ -10,11 +10,11 @@ import { attributesKeySchema } from "../data/Attributes"
 import { Power, Ritual, powerIsRitual } from "../data/Disciplines"
 import { Ceremony } from "../data/Ceremonies"
 import { upcase } from "./utils"
-import { DisciplineName } from "~/data/NameSchemas"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import { getClanBaneText } from "~/data/VariantClanBanes"
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
@@ -362,17 +362,18 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     const powersByDiscipline = character.disciplines.reduce(
         (acc, p) => {
-            if (!acc[p.discipline]) acc[p.discipline] = []
-            acc[p.discipline].push(p)
+            const identity = getPowerDisciplineIdentity(p)
+            if (!acc[identity]) acc[identity] = []
+            acc[identity].push(p)
             return acc
         },
-        {} as Record<DisciplineName, Power[]>
+        {} as Record<string, Power[]>
     )
-    const disciplineSections: PdfDisciplineSection[] = Object.values(powersByDiscipline).map(
-        (powers) => ({
+    const disciplineSections: PdfDisciplineSection[] = Object.entries(powersByDiscipline).map(
+        ([identity, powers]) => ({
             title: upcase(powers[0].discipline),
             powers,
-            extras: powers[0].discipline === "blood sorcery" ? character.rituals : []
+            extras: identity === "official:blood sorcery" ? character.rituals : []
         })
     )
 
@@ -383,7 +384,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
             extras: character.ceremonies
         }
         const oblivionIndex = disciplineSections.findIndex((section) =>
-            section.powers.some((power) => power.discipline === "oblivion")
+            section.powers.some(
+                (power) => getPowerDisciplineIdentity(power) === "official:oblivion"
+            )
         )
 
         if (oblivionIndex >= 0 && oblivionIndex < 3) {

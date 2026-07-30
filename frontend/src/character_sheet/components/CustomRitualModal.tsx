@@ -49,7 +49,7 @@ const CustomRitualModal = ({
             .filter((comp) => comp !== "")
 
         const customDisciplineNames = character.customDisciplines
-            ? Object.keys(character.customDisciplines).map((name) => name.toLowerCase())
+            ? Object.values(character.customDisciplines).map((item) => item.name.toLowerCase())
             : []
         const invalidKeys: string[] = []
 

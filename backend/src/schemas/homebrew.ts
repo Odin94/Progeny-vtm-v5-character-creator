@@ -150,7 +150,7 @@ export const homebrewCollectionInputSchema = z
             path: Array<string | number>
         ) => {
             if (!reference || reference.type === "official") return
-            if (!reference.itemId || disciplinesById.get(reference.itemId) !== reference.name) {
+            if (!reference.itemId || !disciplinesById.has(reference.itemId)) {
                 context.addIssue({
                     code: "custom",
                     path,

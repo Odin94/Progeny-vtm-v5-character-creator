@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { ritualSchema } from "./Disciplines.js"
 import type { Character } from "./Character.js"
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 export const ceremonySchema = ritualSchema.extend({
     prerequisitePowers: z.string().array()
@@ -301,7 +302,7 @@ export const Ceremonies: Ceremony[] = [
 ]
 
 export const containsOblivion = (character: Pick<Character, "disciplines">): boolean =>
-    character.disciplines.some((power) => power.discipline === "oblivion")
+    character.disciplines.some((power) => getPowerDisciplineIdentity(power) === "official:oblivion")
 
 export const characterHasCeremonyPrerequisite = (
     character: Pick<Character, "disciplines">,
@@ -310,7 +311,8 @@ export const characterHasCeremonyPrerequisite = (
     ceremony.prerequisitePowers.length === 0 ||
     character.disciplines.some(
         (power) =>
-            power.discipline === "oblivion" && ceremony.prerequisitePowers.includes(power.name)
+            getPowerDisciplineIdentity(power) === "official:oblivion" &&
+            ceremony.prerequisitePowers.includes(power.name)
     )
 
 export const getCeremonyPrerequisiteLabel = (ceremony: Pick<Ceremony, "prerequisitePowers">) =>

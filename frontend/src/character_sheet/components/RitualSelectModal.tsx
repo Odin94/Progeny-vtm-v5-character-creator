@@ -9,7 +9,11 @@ import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomRitualModal from "./CustomRitualModal"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import {
+    getPowerDisciplineIdentity,
+    getRitualIdentity,
+    homebrewPowerToRitual
+} from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type RitualSelectModalProps = {
@@ -19,7 +23,9 @@ type RitualSelectModalProps = {
 }
 
 const getBloodSorceryLevel = (character: Character): number =>
-    character.disciplines.filter((power) => power.discipline === "blood sorcery").length
+    character.disciplines.filter(
+        (power) => getPowerDisciplineIdentity(power) === "official:blood sorcery"
+    ).length
 
 const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options

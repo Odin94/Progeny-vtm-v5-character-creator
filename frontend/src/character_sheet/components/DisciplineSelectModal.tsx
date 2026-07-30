@@ -181,13 +181,18 @@ const DisciplineSelectModal = ({
                 ? disciplineCatalog[selectedDiscipline]
                 : undefined
             const sourceDiscipline = selectedOption?.homebrewSource
+            const selectedDisciplineIdentity = selectedOption
+                ? selectedOption.homebrewSource
+                    ? `homebrew:${selectedOption.homebrewSource.collectionId}:${selectedOption.homebrewSource.itemId}`
+                    : `official:${selectedOption.name}`
+                : getPowerDisciplineIdentity(power)
             const updatedCharacter = {
                 ...current,
                 disciplines: [...current.disciplines, power],
                 customDisciplines: sourceDiscipline
                     ? {
                           ...current.customDisciplines,
-                          [selectedOption.name]: {
+                          [selectedDisciplineIdentity]: {
                               name: selectedOption.name,
                               summary: selectedOption.summary,
                               logo: selectedOption.logo,
@@ -199,7 +204,11 @@ const DisciplineSelectModal = ({
             updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
 
             if (options.mode === "xp") {
-                const cost = getDisciplineCost(current, power.discipline)
+                const cost = getDisciplineCost(
+                    current,
+                    power.discipline,
+                    getPowerDisciplineIdentity(power)
+                )
                 updatedCharacter.ephemeral = {
                     ...updatedCharacter.ephemeral,
                     experienceSpent: updatedCharacter.ephemeral.experienceSpent + cost

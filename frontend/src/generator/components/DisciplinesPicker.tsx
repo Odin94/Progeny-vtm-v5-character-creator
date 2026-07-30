@@ -736,32 +736,41 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                             updateHealthAndWillpowerAndBloodPotencyAndHumanity(
                                                 character
                                             )
+                                            const pickedDisciplineIdentities = new Set(
+                                                allPickedPowers.map(getPowerDisciplineIdentity)
+                                            )
+                                            const retainedCustomDisciplines = Object.entries(
+                                                character.customDisciplines
+                                            ).filter(([, definition]) => !definition.homebrewSource)
+                                            const pickedHomebrewDisciplines =
+                                                homebrewDisciplineItems
+                                                    .map(({ item, collection }) => {
+                                                        const homebrewSource = getHomebrewSource(
+                                                            item,
+                                                            collection
+                                                        )
+                                                        const identity = `homebrew:${homebrewSource.collectionId}:${homebrewSource.itemId}`
+                                                        return [
+                                                            identity,
+                                                            {
+                                                                name: item.name,
+                                                                summary: item.summary,
+                                                                logo: item.logo,
+                                                                homebrewSource
+                                                            }
+                                                        ] as const
+                                                    })
+                                                    .filter(([identity]) =>
+                                                        pickedDisciplineIdentities.has(identity)
+                                                    )
                                             const updatedCharacter = {
                                                 ...character,
                                                 disciplines: allPickedPowers,
                                                 customDisciplines: {
-                                                    ...character.customDisciplines,
                                                     ...Object.fromEntries(
-                                                        homebrewDisciplineItems
-                                                            .filter(({ item }) =>
-                                                                character.availableDisciplineNames.includes(
-                                                                    item.name
-                                                                )
-                                                            )
-                                                            .map(({ item, collection }) => [
-                                                                item.name,
-                                                                {
-                                                                    name: item.name,
-                                                                    summary: item.summary,
-                                                                    logo: item.logo,
-                                                                    homebrewSource:
-                                                                        getHomebrewSource(
-                                                                            item,
-                                                                            collection
-                                                                        )
-                                                                }
-                                                            ])
-                                                    )
+                                                        retainedCustomDisciplines
+                                                    ),
+                                                    ...Object.fromEntries(pickedHomebrewDisciplines)
                                                 },
                                                 rituals: containsBloodSorcery(allPickedPowers)
                                                     ? character.rituals

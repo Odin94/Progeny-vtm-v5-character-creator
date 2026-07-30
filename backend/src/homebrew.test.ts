@@ -53,6 +53,7 @@ const createTables = async () => {
         `CREATE TABLE IF NOT EXISTS coterie_homebrew_collections (id text PRIMARY KEY NOT NULL, coterie_id text NOT NULL REFERENCES coteries(id) ON DELETE cascade, collection_id text NOT NULL REFERENCES homebrew_collections(id) ON DELETE cascade, created_at integer DEFAULT (unixepoch()) NOT NULL)`,
         `CREATE UNIQUE INDEX IF NOT EXISTS coterie_homebrew_collections_unique_idx ON coterie_homebrew_collections (coterie_id, collection_id)`,
         `CREATE TABLE IF NOT EXISTS homebrew_library_entries (id text PRIMARY KEY NOT NULL, original_collection_id text, author_id text REFERENCES users(id) ON DELETE set null, author_nickname text NOT NULL, active_publication_id text, created_at integer DEFAULT (unixepoch()) NOT NULL, unpublished_at integer)`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS homebrew_library_entries_original_collection_author_idx ON homebrew_library_entries (original_collection_id, author_id)`,
         `CREATE TABLE IF NOT EXISTS homebrew_publications (id text PRIMARY KEY NOT NULL, library_entry_id text NOT NULL REFERENCES homebrew_library_entries(id) ON DELETE cascade, version integer NOT NULL, snapshot text NOT NULL, approved_by_id text REFERENCES users(id) ON DELETE set null, approved_at integer DEFAULT (unixepoch()) NOT NULL)`,
         `CREATE TABLE IF NOT EXISTS homebrew_publish_requests (id text PRIMARY KEY NOT NULL, collection_id text REFERENCES homebrew_collections(id) ON DELETE set null, requester_id text NOT NULL REFERENCES users(id) ON DELETE cascade, library_entry_id text REFERENCES homebrew_library_entries(id) ON DELETE set null, snapshot text NOT NULL, status text DEFAULT 'pending' NOT NULL, denial_message text, reviewed_by_id text REFERENCES users(id) ON DELETE set null, created_at integer DEFAULT (unixepoch()) NOT NULL, reviewed_at integer)`,
         `CREATE TABLE IF NOT EXISTS homebrew_ratings (id text PRIMARY KEY NOT NULL, library_entry_id text NOT NULL REFERENCES homebrew_library_entries(id) ON DELETE cascade, user_id text NOT NULL REFERENCES users(id) ON DELETE cascade, rating integer NOT NULL, created_at integer DEFAULT (unixepoch()) NOT NULL, updated_at integer DEFAULT (unixepoch()) NOT NULL)`,
@@ -350,6 +351,39 @@ describe("Homebrew collections and library", () => {
         })
     })
 
+    it("claims a pending publish request only once", async () => {
+        const collection = await createCollection()
+        const submitted = await app.inject({
+            method: "POST",
+            url: "/homebrew/publish-requests",
+            headers: csrfHeaders,
+            payload: { collectionId: collection.id, shareAcknowledged: true }
+        })
+        const requestId = submitted.json().id as string
+
+        setUser(ADMIN_ID)
+        const approvals = await Promise.all([
+            app.inject({
+                method: "POST",
+                url: `/admin/homebrew/publish-requests/${requestId}`,
+                headers: csrfHeaders,
+                payload: { decision: "approve" }
+            }),
+            app.inject({
+                method: "POST",
+                url: `/admin/homebrew/publish-requests/${requestId}`,
+                headers: csrfHeaders,
+                payload: { decision: "approve" }
+            })
+        ])
+
+        expect(approvals.map(({ statusCode }) => statusCode).sort()).toEqual([200, 404])
+        const publications = await db.select().from(schema.homebrewPublications)
+        const entries = await db.select().from(schema.homebrewLibraryEntries)
+        expect(publications).toHaveLength(1)
+        expect(entries).toHaveLength(1)
+    })
+
     it("rejects library mutations after a collection is unpublished", async () => {
         const libraryEntryId = await publishCollection()
         setUser(AUTHOR_ID)
@@ -481,16 +515,35 @@ describe("Homebrew collections and library", () => {
         })
         expect(response.json().items[2].prerequisitePowers).toEqual(["Ashes to Ashes"])
 
-        const invalid = await app.inject({
+        const renamed = await app.inject({
             method: "PUT",
             url: `/homebrew/collections/${response.json().id as string}`,
             headers: csrfHeaders,
             payload: {
                 ...response.json(),
+                items: response
+                    .json()
+                    .items.map((item: Record<string, unknown>, index: number) =>
+                        index === 0 ? { ...item, name: "Umbra" } : item
+                    )
+            }
+        })
+        expect(renamed.statusCode, renamed.body).toBe(200)
+        expect(renamed.json().items[1]).toMatchObject({
+            discipline: "Umbra",
+            disciplineRef: { name: "Umbra", itemId: renamed.json().items[0].id }
+        })
+
+        const invalid = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${response.json().id as string}`,
+            headers: csrfHeaders,
+            payload: {
+                ...renamed.json(),
                 items: [
-                    response.json().items[0],
+                    renamed.json().items[0],
                     {
-                        ...response.json().items[1],
+                        ...renamed.json().items[1],
                         disciplineRef: {
                             type: "homebrew",
                             name: "Noctis",
@@ -507,8 +560,8 @@ describe("Homebrew collections and library", () => {
             url: `/homebrew/collections/${response.json().id as string}`,
             headers: csrfHeaders,
             payload: {
-                ...response.json(),
-                items: response.json().items.map((item: Record<string, unknown>) => ({
+                ...renamed.json(),
+                items: renamed.json().items.map((item: Record<string, unknown>) => ({
                     ...item,
                     id: "duplicate-item"
                 }))

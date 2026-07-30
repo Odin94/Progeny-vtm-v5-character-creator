@@ -37,6 +37,49 @@ const parseItem = (row: typeof schema.homebrewItems.$inferSelect) => {
     return { ...parsed, id: row.id }
 }
 
+type HomebrewItemWithId = HomebrewItemInput & { id: string }
+
+const canonicalizeDisciplineReferences = (items: HomebrewItemWithId[]): HomebrewItemWithId[] => {
+    const disciplineNamesById = new Map(
+        items.filter((item) => item.kind === "discipline").map((item) => [item.id, item.name])
+    )
+    const canonicalizeReference = <T extends { type: string; name: string; itemId?: string }>(
+        reference: T
+    ): T =>
+        reference.type === "homebrew" && reference.itemId
+            ? {
+                  ...reference,
+                  name: disciplineNamesById.get(reference.itemId) ?? reference.name
+              }
+            : reference
+
+    return items.map((item): HomebrewItemWithId => {
+        if (
+            item.kind === "power" ||
+            item.kind === "ritual" ||
+            item.kind === "ceremony" ||
+            item.kind === "formula"
+        ) {
+            if (item.disciplineRef?.type !== "homebrew") return item
+            const disciplineRef = canonicalizeReference(item.disciplineRef)
+            return {
+                ...item,
+                disciplineRef,
+                discipline: disciplineRef.name
+            } as HomebrewItemWithId
+        }
+        if (item.kind === "clan" && item.nativeDisciplineRefs) {
+            const nativeDisciplineRefs = item.nativeDisciplineRefs.map(canonicalizeReference)
+            return {
+                ...item,
+                nativeDisciplineRefs,
+                nativeDisciplines: nativeDisciplineRefs.map((reference) => reference.name)
+            }
+        }
+        return item
+    })
+}
+
 export const serializeHomebrewCollection = (
     collection: typeof schema.homebrewCollections.$inferSelect,
     items: Array<typeof schema.homebrewItems.$inferSelect>
@@ -106,7 +149,7 @@ const normalizeItemIds = async (collectionId: string, items: HomebrewItemInput[]
         return { ...item, id }
     })
 
-    return normalized.map((item) => {
+    const remapped = normalized.map((item) => {
         const remapReference = <T extends { type: string; itemId?: string }>(reference: T): T =>
             reference.type === "homebrew" && reference.itemId
                 ? { ...reference, itemId: idMap.get(reference.itemId) ?? reference.itemId }
@@ -135,6 +178,7 @@ const normalizeItemIds = async (collectionId: string, items: HomebrewItemInput[]
         }
         return item
     })
+    return canonicalizeDisciplineReferences(remapped)
 }
 
 export const replaceHomebrewCollection = async (
@@ -206,6 +250,35 @@ export const insertSnapshotAsCollection = async ({
         reference.type === "homebrew" && reference.itemId
             ? { ...reference, itemId: copiedItemIds.get(reference.itemId) ?? reference.itemId }
             : reference
+    const copiedItems = canonicalizeDisciplineReferences(
+        parsed.items.map((item): HomebrewItemWithId => {
+            const id = (item.id && copiedItemIds.get(item.id)) || nanoid()
+            if (
+                item.kind === "power" ||
+                item.kind === "ritual" ||
+                item.kind === "ceremony" ||
+                item.kind === "formula"
+            ) {
+                return {
+                    ...item,
+                    id,
+                    ...(item.disciplineRef && {
+                        disciplineRef: remapReference(item.disciplineRef)
+                    })
+                }
+            }
+            if (item.kind === "clan") {
+                return {
+                    ...item,
+                    id,
+                    ...(item.nativeDisciplineRefs && {
+                        nativeDisciplineRefs: item.nativeDisciplineRefs.map(remapReference)
+                    })
+                }
+            }
+            return { ...item, id }
+        })
+    )
 
     db.transaction((tx) => {
         tx.insert(schema.homebrewCollections)
@@ -223,36 +296,15 @@ export const insertSnapshotAsCollection = async ({
             })
             .run()
 
-        if (parsed.items.length > 0) {
+        if (copiedItems.length > 0) {
             tx.insert(schema.homebrewItems)
                 .values(
-                    parsed.items.map((item, sortOrder) => {
-                        const id = (item.id && copiedItemIds.get(item.id)) || nanoid()
-                        const copiedItem =
-                            item.kind === "power" ||
-                            item.kind === "ritual" ||
-                            item.kind === "ceremony" ||
-                            item.kind === "formula"
-                                ? {
-                                      ...item,
-                                      ...(item.disciplineRef && {
-                                          disciplineRef: remapReference(item.disciplineRef)
-                                      })
-                                  }
-                                : item.kind === "clan"
-                                  ? {
-                                        ...item,
-                                        ...(item.nativeDisciplineRefs && {
-                                            nativeDisciplineRefs:
-                                                item.nativeDisciplineRefs.map(remapReference)
-                                        })
-                                    }
-                                  : item
+                    copiedItems.map((item, sortOrder) => {
                         return {
-                            id,
+                            id: item.id,
                             collectionId,
                             kind: item.kind,
-                            data: JSON.stringify({ ...copiedItem, id }),
+                            data: JSON.stringify(item),
                             sortOrder
                         }
                     })

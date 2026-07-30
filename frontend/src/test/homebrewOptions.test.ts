@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest"
 import type { HomebrewCollection } from "~/data/Homebrew"
+import { containsBloodSorcery, containsOblivion } from "~/data/Character"
+import { characterHasCeremonyPrerequisite } from "~/data/Ceremonies"
 import {
+    getDisciplineDefinitionIdentity,
     getHomebrewDisciplineOptions,
+    getMeritFlawIdentity,
+    getPowerDisciplineIdentity,
     getPowerIdentity,
     homebrewMeritFlawToCharacter,
     homebrewPowerToCeremony,
@@ -217,5 +222,77 @@ describe("Homebrew character options", () => {
         expect(options.auspex).toBeUndefined()
         expect(Object.values(options)).toHaveLength(1)
         expect(Object.values(options)[0].homebrewSource?.itemId).toBe("homebrew-auspex")
+    })
+
+    it("keeps Discipline and Merit identities distinct by provenance", () => {
+        const source = {
+            itemId: "discipline-1",
+            collectionId: "collection-1",
+            collectionName: "Night Arts"
+        }
+        expect(
+            getDisciplineDefinitionIdentity({
+                name: "auspex",
+                summary: "",
+                logo: "",
+                homebrewSource: source
+            })
+        ).toBe("homebrew:collection-1:discipline-1")
+        expect(getMeritFlawIdentity({ name: "Beautiful" }, "merit")).toBe(
+            "official:merit:Beautiful"
+        )
+        expect(getMeritFlawIdentity({ name: "Beautiful", homebrewSource: source }, "merit")).toBe(
+            "homebrew:merit:collection-1:discipline-1:Beautiful"
+        )
+    })
+
+    it("does not unlock official rituals or ceremonies with same-named Homebrew Disciplines", () => {
+        const source = {
+            itemId: "homebrew-oblivion",
+            collectionId: "collection-1",
+            collectionName: "Night Arts"
+        }
+        const homebrewOblivion = {
+            name: "Ashes to Ashes",
+            summary: "",
+            description: "",
+            discipline: "oblivion",
+            level: 1,
+            dicePool: "",
+            rouseChecks: 0,
+            amalgamPrerequisites: [],
+            disciplineHomebrewSource: source
+        }
+        const homebrewBloodSorcery = {
+            ...homebrewOblivion,
+            name: "Corrosive Vitae",
+            discipline: "blood sorcery"
+        }
+
+        expect(getPowerDisciplineIdentity(homebrewOblivion)).toBe(
+            "homebrew:collection-1:homebrew-oblivion"
+        )
+        expect(containsOblivion([homebrewOblivion])).toBe(false)
+        expect(containsBloodSorcery([homebrewBloodSorcery])).toBe(false)
+        expect(
+            characterHasCeremonyPrerequisite(
+                { disciplines: [homebrewOblivion] },
+                {
+                    name: "A Ceremony",
+                    summary: "",
+                    discipline: "oblivion",
+                    level: 1,
+                    dicePool: "",
+                    rouseChecks: 1,
+                    requiredTime: "",
+                    ingredients: "",
+                    prerequisitePowers: ["Ashes to Ashes"]
+                }
+            )
+        ).toBe(false)
+
+        expect(
+            containsOblivion([{ ...homebrewOblivion, disciplineHomebrewSource: undefined }])
+        ).toBe(true)
     })
 })
