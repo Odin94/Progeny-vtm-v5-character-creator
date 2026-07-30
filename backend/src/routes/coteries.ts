@@ -52,12 +52,17 @@ const hashInviteToken = (token: string) => createHash("sha256").update(token).di
 
 const inviteUnavailableReply = { error: "Invite link is invalid or expired" }
 
+const shouldShowNameTag = (user: { nameTagEnabled: boolean; nameTagVisible: boolean }) =>
+    user.nameTagEnabled && user.nameTagVisible
+
 const getCoterieNickname = (
     user:
         | {
               nickname: string | null
               firstName: string | null
               lastName: string | null
+              nameTagEnabled: boolean
+              nameTagVisible: boolean
           }
         | null
         | undefined
@@ -67,6 +72,13 @@ const getCoterieNickname = (
         return nickname
     }
 
+    // A WorkOS first/last name is private profile data unless the user explicitly
+    // opted into showing their name tag. Without that opt-in, let the frontend
+    // render its existing "No nickname set" state.
+    if (!user || !shouldShowNameTag(user)) {
+        return null
+    }
+
     const fullName = [user?.firstName, user?.lastName]
         .map((part) => part?.trim())
         .filter(Boolean)
@@ -74,9 +86,6 @@ const getCoterieNickname = (
 
     return fullName || null
 }
-
-const shouldShowNameTag = (user: { nameTagEnabled: boolean; nameTagVisible: boolean }) =>
-    user.nameTagEnabled && user.nameTagVisible
 
 const serializeNoteVersion = (version: typeof schema.coterieNoteVersions.$inferSelect) => ({
     id: version.id,

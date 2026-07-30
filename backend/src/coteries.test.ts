@@ -582,6 +582,29 @@ describe("coterie invites and membership permissions", () => {
         expect(JSON.stringify(ownerCoterieResponse.json())).not.toContain(
             `${NO_NICKNAME_ID}@progeny.invalid`
         )
+
+        await db
+            .update(schema.users)
+            .set({
+                firstName: "Visible",
+                lastName: "Player",
+                nameTagEnabled: true,
+                nameTagVisible: true
+            })
+            .where(eq(schema.users.id, NO_NICKNAME_ID))
+
+        const optedInNameTagResponse = await app.inject({
+            method: "GET",
+            url: `/coteries/${COTERIE_ID}`,
+            headers: csrfHeaders
+        })
+        expect(optedInNameTagResponse.statusCode).toBe(200)
+        expect(optedInNameTagResponse.json().players).toContainEqual(
+            expect.objectContaining({
+                nickname: "Visible Player",
+                showNameTag: true
+            })
+        )
     })
 
     it("enforces character add and remove permissions for players and owners", async () => {
