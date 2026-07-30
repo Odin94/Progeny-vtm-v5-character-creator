@@ -66,17 +66,6 @@ const Die = ({
         perspective: "1500px"
     }
 
-    const buttonStyle = {
-        ...contentStyle,
-        appearance: "none",
-        background: "none",
-        border: 0,
-        padding: 0,
-        color: "inherit",
-        cursor: isSelectable ? "pointer" : "default",
-        opacity: 1
-    }
-
     const dieStyle = {
         position: "absolute" as const,
         width: "100%",
@@ -254,16 +243,23 @@ const Die = ({
     )
 
     return (
-        <motion.button
-            type="button"
+        <div
             onClick={isSelectable ? onClick : undefined}
-            disabled={!isSelectable}
             aria-label={ariaLabel ?? `Die showing ${value === 10 ? "0" : value}`}
             aria-pressed={isSelectable ? isSelected : undefined}
-            whileTap={
-                isSelectable && !shouldReduceMotion ? { transform: "scale(0.9)" } : undefined
+            role={isSelectable ? "button" : undefined}
+            tabIndex={isSelectable ? 0 : undefined}
+            onKeyDown={
+                isSelectable
+                    ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault()
+                              onClick?.()
+                          }
+                      }
+                    : undefined
             }
-            style={buttonStyle}
+            style={contentStyle}
         >
             <motion.div
                 initial={{ opacity: 0, transform: settledInitialTransform }}
@@ -304,7 +300,7 @@ const Die = ({
                     )
                 })}
             </motion.div>
-        </motion.button>
+        </div>
     )
 }
 
