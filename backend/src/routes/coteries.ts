@@ -60,7 +60,6 @@ const getCoterieNickname = (
         | {
               nickname: string | null
               firstName: string | null
-              lastName: string | null
               nameTagEnabled: boolean
               nameTagVisible: boolean
           }
@@ -72,19 +71,14 @@ const getCoterieNickname = (
         return nickname
     }
 
-    // A WorkOS first/last name is private profile data unless the user explicitly
-    // opted into showing their name tag. Without that opt-in, let the frontend
-    // render its existing "No nickname set" state.
+    // A WorkOS first name is private profile data unless the user explicitly opted
+    // into showing their name tag. Without that opt-in, let the frontend render its
+    // existing "No nickname set" state.
     if (!user || !shouldShowNameTag(user)) {
         return null
     }
 
-    const fullName = [user?.firstName, user?.lastName]
-        .map((part) => part?.trim())
-        .filter(Boolean)
-        .join(" ")
-
-    return fullName || null
+    return user.firstName?.trim() || null
 }
 
 const serializeNoteVersion = (version: typeof schema.coterieNoteVersions.$inferSelect) => ({
@@ -236,7 +230,6 @@ const buildCoterieResponse = async (
                       id: schema.users.id,
                       nickname: schema.users.nickname,
                       firstName: schema.users.firstName,
-                      lastName: schema.users.lastName,
                       nameTagEnabled: schema.users.nameTagEnabled,
                       nameTagVisible: schema.users.nameTagVisible
                   })
