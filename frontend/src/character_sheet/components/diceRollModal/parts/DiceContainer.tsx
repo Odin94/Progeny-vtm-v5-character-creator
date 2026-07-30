@@ -42,7 +42,7 @@ const DiceContainer = ({
                 wrap="wrap"
                 style={{ minHeight: dice.length > 0 ? "50px" : 0, flexShrink: 0 }}
             >
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                     {dice.map((die, index) => (
                         <Die
                             key={die.id}
@@ -76,7 +76,7 @@ const DiceContainer = ({
                 alignItems: "center"
             }}
         >
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
                 {dice.map((die, index) => {
                     const seed = die.id % 1000
                     const random = () => {
