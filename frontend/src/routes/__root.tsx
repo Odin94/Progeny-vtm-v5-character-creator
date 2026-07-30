@@ -8,6 +8,7 @@ import posthog, { type PostHogConfig } from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
+import CharacterAutosave from "~/components/CharacterAutosave"
 import { CookiesBanner } from "~/components/CookiesBanner"
 import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
@@ -179,6 +180,7 @@ export const Route = createRootRoute({
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
                     <AuthUnauthorizedHandler />
+                    <CharacterAutosave />
                     <BrokenSaveModal />
                     <CookiesBanner />
                     <RenderProfiler id="RouteOutlet">
