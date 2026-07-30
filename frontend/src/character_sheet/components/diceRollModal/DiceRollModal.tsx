@@ -308,6 +308,7 @@ const DiceRollModal = ({
     const rollDice = () => {
         const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
         const bloodDiceCount = Math.min(hunger, countToUse)
+        setSelectedDiceIds(new Set())
 
         if (isMobile) {
             startRoll()
@@ -368,21 +369,47 @@ const DiceRollModal = ({
         return dice.filter((d) => !d.isBloodDie && !d.isRolling)
     }, [dice])
 
-    const rerollableDice = useMemo(() => {
-        return dice.filter((d) => !d.isBloodDie && !d.isRolling && d.value < 6)
-    }, [dice])
+    const selectedRerollDiceIds = useMemo(
+        () =>
+            new Set(nonBloodDice.filter((die) => selectedDiceIds.has(die.id)).map((die) => die.id)),
+        [nonBloodDice, selectedDiceIds]
+    )
 
-    const canReroll = useMemo(() => {
-        if (!character || !setCharacter || editDisabledReason) return false
+    const availableWillpower = useMemo(() => {
+        if (!character) return 0
         const totalWillpowerDamage =
             (character.ephemeral?.superficialWillpowerDamage ?? 0) +
             (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
-        const availableWillpower = character.willpower - totalWillpowerDamage
-        if (isMobile) {
-            return availableWillpower > 0 && rerollableDice.length > 0
+        return character.willpower - totalWillpowerDamage
+    }, [character])
+
+    const rerollDisabledReason = useMemo(() => {
+        if (editDisabledReason) return editDisabledReason
+        if (!character || !setCharacter) return undefined
+        if (availableWillpower <= 0) return "No willpower left to reroll"
+        if (nonBloodDice.length === 0) return "No regular dice available to reroll"
+        if (selectedRerollDiceIds.size === 0) {
+            return "Select up to 3 regular dice to reroll"
         }
-        return availableWillpower > 0 && selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
-    }, [character, editDisabledReason, selectedDiceIds, isMobile, rerollableDice.length])
+        return undefined
+    }, [
+        editDisabledReason,
+        character,
+        setCharacter,
+        availableWillpower,
+        nonBloodDice.length,
+        selectedRerollDiceIds.size
+    ])
+
+    const canReroll = useMemo(() => {
+        return (
+            !!character &&
+            !!setCharacter &&
+            !rerollDisabledReason &&
+            selectedRerollDiceIds.size > 0 &&
+            selectedRerollDiceIds.size <= 3
+        )
+    }, [character, setCharacter, rerollDisabledReason, selectedRerollDiceIds.size])
 
     const handleDieClick = useCallback(
         (dieId: number, isBloodDie: boolean) => {
@@ -404,19 +431,10 @@ const DiceRollModal = ({
     const handleReroll = () => {
         if (!character || !setCharacter || editDisabledReason || !canReroll) return
 
-        const totalWillpowerDamage =
-            (character.ephemeral?.superficialWillpowerDamage ?? 0) +
-            (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
-        const availableWillpower = character.willpower - totalWillpowerDamage
         if (availableWillpower <= 0) return
 
-        let diceIdsToReroll: Set<number>
-        if (isMobile) {
-            diceIdsToReroll = new Set(rerollableDice.map((d) => d.id))
-        } else {
-            diceIdsToReroll = selectedDiceIds
-            if (diceIdsToReroll.size === 0) return
-        }
+        const diceIdsToReroll = selectedRerollDiceIds
+        if (diceIdsToReroll.size === 0 || diceIdsToReroll.size > 3) return
 
         setCharacter({
             ...character,
@@ -426,6 +444,17 @@ const DiceRollModal = ({
                     (character.ephemeral?.superficialWillpowerDamage ?? 0) + 1
             }
         })
+
+        try {
+            posthog.capture("dice-roll-reroll", {
+                mode: activeTab === "selected" ? "selected-pool" : "custom",
+                is_mobile: isMobile,
+                reroll_dice_count: diceIdsToReroll.size,
+                available_willpower_before: availableWillpower
+            })
+        } catch (error) {
+            console.warn("PostHog dice reroll tracking failed:", error)
+        }
 
         if (isMobile) {
             const rerolledDice = dice.filter((d) => diceIdsToReroll.has(d.id))
@@ -464,6 +493,7 @@ const DiceRollModal = ({
                     : ""
 
             setDice(newDice)
+            setSelectedDiceIds(new Set())
 
             const autoShareDiceRolls = getAutoShareDiceRolls()
             if (
@@ -897,14 +927,12 @@ const DiceRollModal = ({
                     )}
                 </Group>
 
-                {isMobile ? null : (
-                    <DiceContainer
-                        primaryColor={primaryColor}
-                        onDieClick={handleDieClick}
-                        selectedDiceIds={selectedDiceIds}
-                        isMobile={isMobile}
-                    />
-                )}
+                <DiceContainer
+                    primaryColor={primaryColor}
+                    onDieClick={handleDieClick}
+                    selectedDiceIds={selectedDiceIds}
+                    isMobile={isMobile}
+                />
 
                 <AnimatePresence>
                     {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
@@ -913,16 +941,10 @@ const DiceRollModal = ({
                             results={calculateSuccesses.results}
                             totalSuccesses={calculateSuccesses.totalSuccesses}
                             primaryColor={primaryColor}
-                            onReroll={
-                                nonBloodDice.length > 0 && character && setCharacter
-                                    ? handleReroll
-                                    : undefined
-                            }
+                            onReroll={character && setCharacter ? handleReroll : undefined}
                             canReroll={canReroll}
-                            rerollDisabledReason={editDisabledReason}
-                            selectedDiceCount={selectedDiceIds.size}
-                            rerollableDiceCount={rerollableDice.length}
-                            isMobile={isMobile}
+                            rerollDisabledReason={rerollDisabledReason}
+                            selectedDiceCount={selectedRerollDiceIds.size}
                         />
                     ) : null}
                 </AnimatePresence>
