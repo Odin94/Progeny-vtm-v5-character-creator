@@ -1,3 +1,10 @@
+import {
+    characterApiResponseListSchema,
+    characterApiResponseSchema,
+    type CreateCharacterPayload,
+    type UpdateCharacterPayload
+} from "~/utils/characterApi"
+
 // Use the Vite proxy for local dev so browser navigation, cookies, and IPv4/IPv6
 // localhost resolution all stay on the same origin. Production still honors the
 // configured API endpoint.
@@ -377,13 +384,22 @@ export const api = {
         apiRequest<{ stopped: boolean }>("/admin/impersonation/stop", { method: "POST" }),
 
     // Characters
-    // TODOdin: type these APIs and validate in fetch
-    getCharacters: () => apiRequest<Array<unknown>>("/characters"),
-    getCharacter: (id: string) => apiRequest<unknown>(`/characters/${id}`),
-    createCharacter: (data: { name: string; data?: unknown; version?: number }) =>
-        apiRequest<unknown>("/characters", { method: "POST", body: data }),
-    updateCharacter: (id: string, data: { name?: string; data?: unknown; version?: number }) =>
-        apiRequest<unknown>(`/characters/${id}`, { method: "PUT", body: data }),
+    getCharacters: () =>
+        apiRequest<unknown>("/characters").then((response) =>
+            characterApiResponseListSchema.parse(response)
+        ),
+    getCharacter: (id: string) =>
+        apiRequest<unknown>(`/characters/${id}`).then((response) =>
+            characterApiResponseSchema.parse(response)
+        ),
+    createCharacter: (data: CreateCharacterPayload) =>
+        apiRequest<unknown>("/characters", { method: "POST", body: data }).then((response) =>
+            characterApiResponseSchema.parse(response)
+        ),
+    updateCharacter: (id: string, data: UpdateCharacterPayload) =>
+        apiRequest<unknown>(`/characters/${id}`, { method: "PUT", body: data }).then((response) =>
+            characterApiResponseSchema.parse(response)
+        ),
     updateCharacterVitals: (id: string, data: UpdateCharacterVitalsPayload) =>
         apiRequest<UpdateCharacterVitalsResponse>(`/characters/${id}/vitals`, {
             method: "PATCH",

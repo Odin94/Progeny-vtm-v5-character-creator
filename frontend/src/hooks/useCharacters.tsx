@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "../utils/api"
+import type { CreateCharacterPayload, UpdateCharacterPayload } from "../utils/characterApi"
 
 export const useCharacters = (enabled = true) => {
     return useQuery({
@@ -28,8 +29,7 @@ export const useCreateCharacter = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: { name: string; data?: unknown; version?: number }) =>
-            api.createCharacter(data),
+        mutationFn: (data: CreateCharacterPayload) => api.createCharacter(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
@@ -47,7 +47,7 @@ export const useUpdateCharacter = () => {
             data
         }: {
             id: string
-            data: { name?: string; data?: unknown; version?: number }
+            data: UpdateCharacterPayload
         }) => api.updateCharacter(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
