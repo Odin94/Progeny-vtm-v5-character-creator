@@ -54,8 +54,6 @@ const DiceContainer = ({
                             isSelectable={
                                 !die.isBloodDie && !die.isRolling && onDieClick !== undefined
                             }
-                            isMobile
-                            isBloodDie={die.isBloodDie}
                             ariaLabel={`${die.isBloodDie ? "Hunger" : "Regular"} die ${index + 1} showing ${die.value === 10 ? "0" : die.value}`}
                         />
                     ))}
@@ -169,8 +167,7 @@ const DiceContainer = ({
                                 isSelectable={
                                     !die.isBloodDie && !die.isRolling && onDieClick !== undefined
                                 }
-                                isMobile={isMobile}
-                                isBloodDie={die.isBloodDie}
+                                ariaLabel={`${die.isBloodDie ? "Hunger" : "Regular"} die ${index + 1} showing ${die.value === 10 ? "0" : die.value}`}
                             />
                         </motion.div>
                     )

@@ -1,7 +1,5 @@
-import { Badge } from "@mantine/core"
 import { motion, useReducedMotion } from "framer-motion"
 import { useMantineTheme } from "@mantine/core"
-import { vtmRed } from "~/character_sheet/utils/style"
 
 type DieProps = {
     value: number
@@ -12,8 +10,6 @@ type DieProps = {
     onClick?: () => void
     isSelected?: boolean
     isSelectable?: boolean
-    isMobile?: boolean
-    isBloodDie?: boolean
     ariaLabel?: string
 }
 
@@ -26,8 +22,6 @@ const Die = ({
     onClick,
     isSelected = false,
     isSelectable = false,
-    isMobile = false,
-    isBloodDie = false,
     ariaLabel
 }: DieProps) => {
     const theme = useMantineTheme()
@@ -36,70 +30,6 @@ const Die = ({
         ? primaryColor
         : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
 
-    if (isMobile) {
-        const displayValue = value === 10 ? "0" : value.toString()
-        const dieColor = isBloodDie ? vtmRed : colorValue
-
-        return (
-            <motion.button
-                type="button"
-                initial={{
-                    transform: `scale(${shouldReduceMotion ? 1 : 0.95})`,
-                    opacity: 0
-                }}
-                animate={{ transform: "scale(1)", opacity: 1 }}
-                exit={{
-                    transform: `scale(${shouldReduceMotion ? 1 : 0.95})`,
-                    opacity: 0
-                }}
-                transition={
-                    shouldReduceMotion
-                        ? { duration: 0.12 }
-                        : { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
-                }
-                whileTap={
-                    isSelectable && !shouldReduceMotion ? { transform: "scale(0.9)" } : undefined
-                }
-                onClick={isSelectable ? onClick : undefined}
-                disabled={!isSelectable}
-                aria-label={
-                    ariaLabel ?? `${isBloodDie ? "Hunger" : "Regular"} die showing ${displayValue}`
-                }
-                aria-pressed={isSelectable ? isSelected : undefined}
-                style={{
-                    cursor: isSelectable ? "pointer" : "default",
-                    appearance: "none",
-                    background: "none",
-                    border: 0,
-                    padding: 0
-                }}
-            >
-                <Badge
-                    size="xl"
-                    radius="xl"
-                    variant="filled"
-                    color={dieColor}
-                    style={{
-                        width: "50px",
-                        height: "50px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "20px",
-                        fontWeight: 700,
-                        border: isSelected
-                            ? "3px solid #ffd700"
-                            : "2px solid rgba(255, 255, 255, 0.3)",
-                        boxShadow: isSelected
-                            ? "0 0 12px rgba(255, 215, 0, 0.8)"
-                            : "0 2px 8px rgba(0, 0, 0, 0.3)"
-                    }}
-                >
-                    {displayValue}
-                </Badge>
-            </motion.button>
-        )
-    }
     const seededRandom = (offset: number = 0) => {
         const x = Math.sin(seed + offset) * 10000
         return x - Math.floor(x)
@@ -134,6 +64,17 @@ const Die = ({
         width: `${containerWidth}px`,
         height: `${containerHeight}px`,
         perspective: "1500px"
+    }
+
+    const buttonStyle = {
+        ...contentStyle,
+        appearance: "none",
+        background: "none",
+        border: 0,
+        padding: 0,
+        color: "inherit",
+        cursor: isSelectable ? "pointer" : "default",
+        opacity: 1
     }
 
     const dieStyle = {
@@ -313,7 +254,17 @@ const Die = ({
     )
 
     return (
-        <div style={contentStyle}>
+        <motion.button
+            type="button"
+            onClick={isSelectable ? onClick : undefined}
+            disabled={!isSelectable}
+            aria-label={ariaLabel ?? `Die showing ${value === 10 ? "0" : value}`}
+            aria-pressed={isSelectable ? isSelected : undefined}
+            whileTap={
+                isSelectable && !shouldReduceMotion ? { transform: "scale(0.9)" } : undefined
+            }
+            style={buttonStyle}
+        >
             <motion.div
                 initial={{ opacity: 0, transform: settledInitialTransform }}
                 animate={{
@@ -333,7 +284,6 @@ const Die = ({
                           }
                 }
                 whileHover={shouldReduceMotion ? undefined : { transform: hoverTransform }}
-                onClick={isSelectable ? onClick : undefined}
                 style={dieStyle}
             >
                 {Array.from({ length: 10 }, (_, i) => {
@@ -354,7 +304,7 @@ const Die = ({
                     )
                 })}
             </motion.div>
-        </div>
+        </motion.button>
     )
 }
 
