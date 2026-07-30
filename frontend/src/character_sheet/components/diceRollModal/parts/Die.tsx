@@ -1,5 +1,5 @@
 import { Badge } from "@mantine/core"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { useMantineTheme } from "@mantine/core"
 import { vtmRed } from "~/character_sheet/utils/style"
 
@@ -31,6 +31,7 @@ const Die = ({
     ariaLabel
 }: DieProps) => {
     const theme = useMantineTheme()
+    const shouldReduceMotion = useReducedMotion()
     const colorValue = primaryColor.startsWith("#")
         ? primaryColor
         : theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
@@ -42,11 +43,23 @@ const Die = ({
         return (
             <motion.button
                 type="button"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                whileTap={isSelectable ? { scale: 0.9 } : undefined}
+                initial={{
+                    transform: `scale(${shouldReduceMotion ? 1 : 0.95})`,
+                    opacity: 0
+                }}
+                animate={{ transform: "scale(1)", opacity: 1 }}
+                exit={{
+                    transform: `scale(${shouldReduceMotion ? 1 : 0.95})`,
+                    opacity: 0
+                }}
+                transition={
+                    shouldReduceMotion
+                        ? { duration: 0.12 }
+                        : { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
+                }
+                whileTap={
+                    isSelectable && !shouldReduceMotion ? { transform: "scale(0.9)" } : undefined
+                }
                 onClick={isSelectable ? onClick : undefined}
                 disabled={!isSelectable}
                 aria-label={
@@ -199,6 +212,15 @@ const Die = ({
         if (normalized < 0) normalized += 360
         return normalized
     }
+    const getDieTransform = (
+        x: number,
+        y: number,
+        scale: number,
+        rotateX: number,
+        rotateY: number,
+        rotateZ: number = 0
+    ) =>
+        `translate3d(${x}px, ${y}px, 0) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`
 
     if (isRolling) {
         const rollDuration = 1.5
@@ -209,27 +231,40 @@ const Die = ({
         const startRotateY = seededRandom(2) * 360
         const finalRotateX = endRotateX + 1080 + seededRandom(3) * 360
         const finalRotateY = endRotateY + 2160 + seededRandom(4) * 720
+        const reducedMotionTransform = getDieTransform(0, 0, 1, endRotateX, endRotateY)
+        const rollingStartTransform = getDieTransform(
+            (seededRandom(5) - 0.5) * 100,
+            (seededRandom(6) - 0.5) * 100,
+            1,
+            startRotateX,
+            startRotateY
+        )
+        const rollingEndTransform = getDieTransform(0, 0, 1, finalRotateX, finalRotateY)
 
         return (
             <div style={contentStyle}>
                 <motion.div
                     initial={{
-                        rotateX: startRotateX,
-                        rotateY: startRotateY,
-                        x: (seededRandom(5) - 0.5) * 100,
-                        y: (seededRandom(6) - 0.5) * 100
+                        transform: shouldReduceMotion
+                            ? reducedMotionTransform
+                            : rollingStartTransform,
+                        opacity: shouldReduceMotion ? 0 : 1
                     }}
                     animate={{
-                        rotateX: finalRotateX,
-                        rotateY: finalRotateY,
-                        x: 0,
-                        y: 0
+                        transform: shouldReduceMotion
+                            ? reducedMotionTransform
+                            : rollingEndTransform,
+                        opacity: 1
                     }}
-                    transition={{
-                        duration: rollDuration,
-                        ease: [0.43, 0.13, 0.23, 0.96],
-                        delay: animationDelay
-                    }}
+                    transition={
+                        shouldReduceMotion
+                            ? { duration: 0.12 }
+                            : {
+                                  duration: rollDuration,
+                                  ease: [0.43, 0.13, 0.23, 0.96],
+                                  delay: animationDelay
+                              }
+                    }
                     style={dieStyle}
                 >
                     {Array.from({ length: 10 }, (_, i) => {
@@ -254,28 +289,50 @@ const Die = ({
         )
     }
 
+    const endRotateX = normalizeAngle(finalRotation.rotateX)
+    const endRotateY = normalizeAngle(finalRotation.rotateY)
+    const settledEndRotateX = endRotateX + (shouldReduceMotion ? 0 : 1080)
+    const settledEndRotateY = endRotateY + (shouldReduceMotion ? 0 : 2160)
+    const settledInitialTransform = shouldReduceMotion
+        ? getDieTransform(0, 0, 1, endRotateX, endRotateY)
+        : getDieTransform(0, 0, 0.9, finalRotation.rotateX - 180, finalRotation.rotateY - 180)
+    const settledTransform = getDieTransform(0, 0, 1, settledEndRotateX, settledEndRotateY)
+    const settledExitTransform = getDieTransform(
+        0,
+        0,
+        shouldReduceMotion ? 1 : 0.9,
+        settledEndRotateX,
+        settledEndRotateY
+    )
+    const hoverTransform = getDieTransform(
+        0,
+        0,
+        isSelectable ? 1.1 : 1.05,
+        settledEndRotateX,
+        settledEndRotateY
+    )
+
     return (
         <div style={contentStyle}>
             <motion.div
-                initial={{
-                    scale: 0,
-                    rotateX: finalRotation.rotateX - 180,
-                    rotateY: finalRotation.rotateY - 180
-                }}
+                initial={{ opacity: 0, transform: settledInitialTransform }}
                 animate={{
-                    scale: 1,
-                    rotateX: normalizeAngle(finalRotation.rotateX) + 1080,
-                    rotateY: normalizeAngle(finalRotation.rotateY) + 2160,
-                    rotateZ: 0
+                    opacity: 1,
+                    transform: settledTransform
                 }}
-                transition={{
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 15,
-                    duration: 0.5,
-                    ease: "easeOut"
-                }}
-                whileHover={isSelectable ? { scale: 1.1 } : { scale: 1.05 }}
+                exit={{ opacity: 0, transform: settledExitTransform }}
+                transition={
+                    shouldReduceMotion
+                        ? { duration: 0.12 }
+                        : {
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 15,
+                              duration: 0.5,
+                              ease: "easeOut"
+                          }
+                }
+                whileHover={shouldReduceMotion ? undefined : { transform: hoverTransform }}
                 onClick={isSelectable ? onClick : undefined}
                 style={dieStyle}
             >

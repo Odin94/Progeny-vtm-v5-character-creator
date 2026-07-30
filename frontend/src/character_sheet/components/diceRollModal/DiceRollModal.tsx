@@ -1,7 +1,7 @@
 import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { AnimatePresence, motion, useMotionValue } from "framer-motion"
+import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
@@ -69,6 +69,7 @@ const DiceRollModal = ({
     editDisabledReason
 }: DiceRollModalProps) => {
     const theme = useMantineTheme()
+    const shouldReduceMotion = useReducedMotion()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     const { selectedDicePool, resetSelectedDicePool } = useCharacterSheetStore(
@@ -959,7 +960,7 @@ const DiceRollModal = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: shouldReduceMotion ? 0.12 : 0.2 }}
                     style={{
                         position: "fixed",
                         top: 0,
@@ -972,10 +973,20 @@ const DiceRollModal = ({
                     }}
                 />
                 <motion.div
-                    initial={{ y: "100%" }}
-                    animate={{ y: 0 }}
-                    exit={{ y: "100%" }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    initial={{
+                        y: shouldReduceMotion ? 0 : "100%",
+                        opacity: shouldReduceMotion ? 0 : 1
+                    }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{
+                        y: shouldReduceMotion ? 0 : "100%",
+                        opacity: shouldReduceMotion ? 0 : 1
+                    }}
+                    transition={
+                        shouldReduceMotion
+                            ? { duration: 0.12 }
+                            : { type: "spring", damping: 25, stiffness: 200 }
+                    }
                     onClick={(e) => e.stopPropagation()}
                     style={{
                         position: "fixed",
@@ -1054,10 +1065,10 @@ const DiceRollModal = ({
                     display: "flex",
                     flexDirection: "column"
                 }}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.8 }}
+                transition={{ duration: shouldReduceMotion ? 0.12 : 0.2 }}
             >
                 {modalContent}
             </motion.div>

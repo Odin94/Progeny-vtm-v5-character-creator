@@ -1,5 +1,5 @@
 import { Box, Group, Stack, Text, useMantineTheme, ActionIcon, Tooltip, Badge } from "@mantine/core"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import { IconRefresh } from "@tabler/icons-react"
 import successIcon from "~/resources/diceResults/success.svg"
@@ -34,6 +34,7 @@ const SuccessResults = ({
     rerollDisabledReason
 }: SuccessResultsProps) => {
     const theme = useMantineTheme()
+    const shouldReduceMotion = useReducedMotion()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const totalSuccessesRef = useRef<HTMLDivElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -78,15 +79,27 @@ const SuccessResults = ({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 25,
-                duration: 0.5
+            initial={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 20,
+                scale: shouldReduceMotion ? 1 : 0.95
             }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : -20,
+                scale: shouldReduceMotion ? 1 : 0.95
+            }}
+            transition={
+                shouldReduceMotion
+                    ? { duration: 0.12 }
+                    : {
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 25,
+                          duration: 0.5
+                      }
+            }
             style={{ flexShrink: 0, marginTop: "auto" }}
         >
             <Box
@@ -182,14 +195,22 @@ const SuccessResults = ({
                                             src={iconSrc}
                                             alt={result.type}
                                             style={{ width: "40px", height: "40px" }}
-                                            initial={{ opacity: 0, scale: 0, rotate: -180 }}
-                                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                                            transition={{
-                                                type: "spring",
-                                                stiffness: 400,
-                                                damping: 20,
-                                                delay: index * 0.05
+                                            initial={{
+                                                opacity: 0,
+                                                scale: shouldReduceMotion ? 1 : 0.95,
+                                                rotate: shouldReduceMotion ? 0 : -180
                                             }}
+                                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                            transition={
+                                                shouldReduceMotion
+                                                    ? { duration: 0.12 }
+                                                    : {
+                                                          type: "spring",
+                                                          stiffness: 400,
+                                                          damping: 20,
+                                                          delay: index * 0.05
+                                                      }
+                                            }
                                         />
                                     )
                                 })}

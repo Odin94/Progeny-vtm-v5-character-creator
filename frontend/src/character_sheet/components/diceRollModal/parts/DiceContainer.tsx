@@ -1,5 +1,5 @@
 import { Group } from "@mantine/core"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { memo } from "react"
 import Die from "./Die"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
@@ -26,6 +26,7 @@ const DiceContainer = ({
     selectedDiceIds = new Set(),
     isMobile = false
 }: DiceContainerProps) => {
+    const shouldReduceMotion = useReducedMotion()
     const { dice, activeTab } = useDiceRollModalStore(
         useShallow((state) => ({
             dice: state.dice,
@@ -116,43 +117,40 @@ const DiceContainer = ({
                     const randomStiffness = 100 + random() * 50
                     const randomDamping = 15 + random() * 10
                     const randomDuration = 0.8 + random() * 0.4
+                    const finalTransform = `translate3d(${finalX}px, ${finalY}px, 0) rotateZ(0deg) scale(1)`
+                    const offsetTransform = `translate3d(${finalX + randomOffsetX}px, ${finalY + randomOffsetY}px, 0) rotateZ(${randomRotationZ}deg) scale(0.9)`
+                    const exitTransform = `translate3d(${finalX + randomOffsetX}px, ${finalY + randomOffsetY}px, 0) rotateZ(${randomRotationZ}deg) scale(0.95)`
 
                     return (
                         <motion.div
                             key={die.id}
                             initial={{
-                                x: finalX + randomOffsetX,
-                                y: finalY + randomOffsetY,
                                 opacity: 0,
-                                scale: 0.3,
-                                rotateZ: randomRotationZ
+                                transform: shouldReduceMotion ? finalTransform : offsetTransform
                             }}
                             animate={{
-                                x: finalX,
-                                y: finalY,
                                 opacity: 1,
-                                scale: 1,
-                                rotateZ: 0
+                                transform: finalTransform
                             }}
                             exit={{
                                 opacity: 0,
-                                scale: 0.3,
-                                x: finalX + randomOffsetX,
-                                y: finalY + randomOffsetY,
-                                rotateZ: randomRotationZ,
+                                transform: shouldReduceMotion ? finalTransform : exitTransform,
                                 transition: {
-                                    duration: 0.4,
-                                    ease: "easeIn",
-                                    delay: index * 0.05
+                                    duration: shouldReduceMotion ? 0.12 : 0.2,
+                                    ease: [0.23, 1, 0.32, 1]
                                 }
                             }}
-                            transition={{
-                                type: "spring",
-                                stiffness: randomStiffness,
-                                damping: randomDamping,
-                                delay: randomDelay,
-                                duration: randomDuration
-                            }}
+                            transition={
+                                shouldReduceMotion
+                                    ? { duration: 0.12 }
+                                    : {
+                                          type: "spring",
+                                          stiffness: randomStiffness,
+                                          damping: randomDamping,
+                                          delay: randomDelay,
+                                          duration: randomDuration
+                                      }
+                            }
                             style={{
                                 display: "inline-block",
                                 position: "absolute",
