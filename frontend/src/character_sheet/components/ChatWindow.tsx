@@ -17,6 +17,7 @@ import { useDisclosure } from "@mantine/hooks"
 import {
     IconAlertCircle,
     IconChevronDown,
+    IconCheck,
     IconCopy,
     IconDice,
     IconDroplet,
@@ -29,6 +30,7 @@ import {
     IconArrowLeft
 } from "@tabler/icons-react"
 import { memo, type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettings"
 import { SheetOptions } from "../CharacterSheet"
@@ -100,10 +102,12 @@ const ChatWindow = ({
     const [autoShare, setAutoShare] = useState(getAutoShareDiceRolls())
     const [messageInput, setMessageInput] = useState("")
     const [joinError, setJoinError] = useState<string | null>(null)
+    const setupDirectionRef = useRef<1 | -1>(1)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const restoredSessionForUserRef = useRef<string | null>(null)
     const loadedOpenPanelDataRef = useRef(false)
     const { user, isAuthenticated, signIn } = useAuth()
+    const shouldReduceMotion = useReducedMotion()
 
     const {
         connectionStatus,
@@ -202,6 +206,7 @@ const ChatWindow = ({
     }, [messages, connectionStatus, sessionId, view])
 
     const handleCreateSession = () => {
+        setupDirectionRef.current = 1
         setSessionType("temporary")
         setSessionInput("")
         setView("creating")
@@ -209,6 +214,7 @@ const ChatWindow = ({
     }
 
     const handleJoinSession = () => {
+        setupDirectionRef.current = 1
         setSessionType("temporary")
         setSessionInput("")
         setView("joining")
@@ -216,6 +222,7 @@ const ChatWindow = ({
     }
 
     const handleJoinCoterie = () => {
+        setupDirectionRef.current = 1
         setSessionType("coterie")
         setView("joiningCoterie")
     }
@@ -242,6 +249,7 @@ const ChatWindow = ({
     }
 
     const handleBack = () => {
+        setupDirectionRef.current = -1
         setView("disconnected")
         setSessionInput("")
         setSessionType(null)
@@ -284,6 +292,7 @@ const ChatWindow = ({
     }
 
     const handleGoToChat = () => {
+        setupDirectionRef.current = -1
         setView("disconnected")
     }
 
@@ -509,8 +518,29 @@ const ChatWindow = ({
                     </Group>
                 </Group>
 
-                {view === "creating" || view === "joining" || view === "joiningCoterie" ? (
-                    <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                <AnimatePresence initial={false} mode="popLayout">
+                    {view === "creating" || view === "joining" || view === "joiningCoterie" ? (
+                        <motion.div
+                            key={view}
+                            initial={{
+                                opacity: 0,
+                                transform: shouldReduceMotion
+                                    ? "none"
+                                    : `translateX(${setupDirectionRef.current * 8}px)`
+                            }}
+                            animate={{ opacity: 1, transform: "none" }}
+                            exit={{
+                                opacity: 0,
+                                transform: shouldReduceMotion
+                                    ? "none"
+                                    : `translateX(${setupDirectionRef.current * -8}px)`
+                            }}
+                            transition={{
+                                duration: shouldReduceMotion ? 0.12 : 0.16,
+                                ease: [0.77, 0, 0.175, 1]
+                            }}
+                            style={{ flex: 1, minHeight: 0, display: "flex" }}
+                        >
                         {view === "creating" ? (
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                                 <Group gap="xs">
@@ -557,7 +587,59 @@ const ChatWindow = ({
                                                     variant="filled"
                                                     onClick={handleCopySessionId}
                                                 >
-                                                    <IconCopy size={16} />
+                                                    <span
+                                                        style={{
+                                                            position: "relative",
+                                                            display: "block",
+                                                            width: 16,
+                                                            height: 16
+                                                        }}
+                                                    >
+                                                        <AnimatePresence initial={false}>
+                                                            <motion.span
+                                                                key={
+                                                                    copiedSessionId
+                                                                        ? "copied"
+                                                                        : "copy"
+                                                                }
+                                                                initial={{
+                                                                    opacity: 0,
+                                                                    transform: shouldReduceMotion
+                                                                        ? "none"
+                                                                        : "scale(0.97)"
+                                                                }}
+                                                                animate={{
+                                                                    opacity: 1,
+                                                                    transform: "none"
+                                                                }}
+                                                                exit={{
+                                                                    opacity: 0,
+                                                                    transform: shouldReduceMotion
+                                                                        ? "none"
+                                                                        : "scale(0.97)"
+                                                                }}
+                                                                transition={{
+                                                                    duration: shouldReduceMotion
+                                                                        ? 0.12
+                                                                        : 0.14,
+                                                                    ease: [0.23, 1, 0.32, 1]
+                                                                }}
+                                                                style={{
+                                                                    position: "absolute",
+                                                                    inset: 0,
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center"
+                                                                }}
+                                                            >
+                                                                {copiedSessionId ? (
+                                                                    <IconCheck size={16} />
+                                                                ) : (
+                                                                    <IconCopy size={16} />
+                                                                )}
+                                                            </motion.span>
+                                                        </AnimatePresence>
+                                                    </span>
                                                 </ActionIcon>
                                             </Tooltip>
                                         </Group>
@@ -687,26 +769,47 @@ const ChatWindow = ({
                                 </ScrollArea>
                             </Stack>
                         ) : null}
-                    </Stack>
+                        </motion.div>
                 ) : connectionStatus === "disconnected" ||
                   (view === "disconnected" && !sessionId) ? (
-                    <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                        <Text
-                            ta="center"
-                            c="dimmed"
-                            size="sm"
-                            style={{ marginTop: "auto", marginBottom: "auto" }}
-                        >
+                    <motion.div
+                        key="disconnected"
+                        initial={{
+                            opacity: 0,
+                            transform: shouldReduceMotion
+                                ? "none"
+                                : `translateX(${setupDirectionRef.current * 8}px)`
+                        }}
+                        animate={{ opacity: 1, transform: "none" }}
+                        exit={{
+                            opacity: 0,
+                            transform: shouldReduceMotion
+                                ? "none"
+                                : `translateX(${setupDirectionRef.current * -8}px)`
+                        }}
+                        transition={{
+                            duration: shouldReduceMotion ? 0.12 : 0.16,
+                            ease: [0.77, 0, 0.175, 1]
+                        }}
+                        style={{ flex: 1, minHeight: 0, display: "flex" }}
+                    >
+                        <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                            <Text
+                                ta="center"
+                                c="dimmed"
+                                size="sm"
+                                style={{ marginTop: "auto", marginBottom: "auto" }}
+                            >
+                                {isAuthenticated ? (
+                                    "Join or create a session to start chatting"
+                                ) : (
+                                    <Text style={{ cursor: "pointer" }} onClick={() => signIn()}>
+                                        Sign in to use chat
+                                    </Text>
+                                )}
+                            </Text>
                             {isAuthenticated ? (
-                                "Join or create a session to start chatting"
-                            ) : (
-                                <Text style={{ cursor: "pointer" }} onClick={() => signIn()}>
-                                    Sign in to use chat
-                                </Text>
-                            )}
-                        </Text>
-                        {isAuthenticated ? (
-                            <Stack gap="xs" style={{ marginTop: "auto" }}>
+                                <Stack gap="xs" style={{ marginTop: "auto" }}>
                                 <Button
                                     fullWidth
                                     color={primaryColor}
@@ -748,17 +851,22 @@ const ChatWindow = ({
                                         Join Coterie
                                     </Button>
                                 ) : null} */}
-                            </Stack>
-                        ) : null}
-                    </Stack>
+                                </Stack>
+                            ) : null}
+                        </Stack>
+                    </motion.div>
                 ) : connectionStatus === "connecting" ? (
-                    <Stack gap="md" style={{ flex: 1, justifyContent: "center" }}>
+                    <Stack
+                        key="connecting"
+                        gap="md"
+                        style={{ flex: 1, justifyContent: "center" }}
+                    >
                         <Text ta="center" c="dimmed">
                             Connecting...
                         </Text>
                     </Stack>
                 ) : (
-                    <>
+                    <div key="connected" style={{ display: "contents" }}>
                         {participants.length > 0 ? (
                             <Group
                                 gap="xs"
@@ -1068,8 +1176,9 @@ const ChatWindow = ({
                                 {autoShare ? "On" : "Off"}
                             </Button>
                         </Group>
-                    </>
+                    </div>
                 )}
+                </AnimatePresence>
             </Paper>
         </>
     )

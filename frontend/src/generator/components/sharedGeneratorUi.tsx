@@ -1,5 +1,5 @@
 import { Box, Stack, Text } from "@mantine/core"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { ReactNode } from "react"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 
@@ -189,128 +189,132 @@ export const GeneratorPhasePrompt = ({
     footerText,
     caption,
     marginBottom = "md"
-}: GeneratorPhasePromptProps) => (
-    // translate="no" / notranslate: this subtree re-renders its text on every pick (the
-    // "Pick N" counter and active-line switch). Browser page-translation (Chrome, Safari,
-    // Edge) rewrites text nodes out from under React, so those re-renders would otherwise
-    // crash the reconciler with a DOMException (insertBefore/removeChild NotFoundError).
-    <Stack gap={6} align="center" mb={marginBottom} className="notranslate" translate="no">
-        {caption ? (
-            <Text
-                ta="center"
-                style={{
-                    fontFamily: "Inter, Segoe UI, sans-serif",
-                    fontSize: "0.78rem",
-                    letterSpacing: "0.06em",
-                    color: rgba(RAW_GREY, 0.42)
-                }}
-            >
-                {caption}
-            </Text>
-        ) : null}
-        {lines.map((line) => {
-            const isActive = activeKey === line.key
-            const isPast = line.done && !isActive
+}: GeneratorPhasePromptProps) => {
+    const shouldReduceMotion = useReducedMotion()
 
-            return (
-                <Box
-                    key={line.key}
+    return (
+        // translate="no" / notranslate: this subtree re-renders its text on every pick (the
+        // "Pick N" counter and active-line switch). Browser page-translation (Chrome, Safari,
+        // Edge) rewrites text nodes out from under React, so those re-renders would otherwise
+        // crash the reconciler with a DOMException (insertBefore/removeChild NotFoundError).
+        <Stack gap={6} align="center" mb={marginBottom} className="notranslate" translate="no">
+            {caption ? (
+                <Text
+                    ta="center"
                     style={{
-                        position: "relative",
-                        height: phoneScreen ? "1.9rem" : "2.35rem",
-                        width: "100%"
+                        fontFamily: "Inter, Segoe UI, sans-serif",
+                        fontSize: "0.78rem",
+                        letterSpacing: "0.06em",
+                        color: rgba(RAW_GREY, 0.42)
                     }}
                 >
-                    <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: isPast ? 0.28 : isActive ? 1 : 0.5, y: 0 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
+                    {caption}
+                </Text>
+            ) : null}
+            {lines.map((line) => {
+                const isActive = activeKey === line.key
+                const isPast = line.done && !isActive
+
+                return (
+                    <Box
+                        key={line.key}
                         style={{
-                            position: "absolute",
-                            inset: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
+                            position: "relative",
+                            height: phoneScreen ? "1.9rem" : "2.35rem",
+                            width: "100%"
                         }}
                     >
-                        <Text
-                            ta="center"
+                        <motion.div
+                            initial={{
+                                opacity: 0,
+                                transform: shouldReduceMotion ? "none" : "translateY(4px)"
+                            }}
+                            animate={{
+                                opacity: isPast ? 0.28 : isActive ? 1 : 0.5,
+                                transform: "none"
+                            }}
+                            transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
                             style={{
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: isActive
-                                    ? phoneScreen
-                                        ? "1.15rem"
-                                        : "1.45rem"
-                                    : phoneScreen
-                                      ? "0.95rem"
-                                      : "1rem",
-                                lineHeight: 1.1,
-                                color: isActive
-                                    ? "rgba(244, 236, 232, 0.95)"
-                                    : rgba(RAW_GREY, 0.56),
-                                transition: "all 220ms ease"
+                                position: "absolute",
+                                inset: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
                             }}
                         >
-                            {isActive && showChevron ? (
-                                <motion.span
-                                    animate={{ opacity: [0.65, 1, 0.65] }}
-                                    transition={{
-                                        duration: 1.8,
-                                        repeat: Infinity,
-                                        ease: "easeInOut"
-                                    }}
-                                    style={{
-                                        fontFamily: "Cinzel, Georgia, serif",
-                                        color: rgba(RAW_RED, 1),
-                                        marginRight: "0.4rem"
-                                    }}
-                                >
-                                    {"›"}
-                                </motion.span>
-                            ) : null}
-                            {line.prompt}{" "}
-                            <span
+                            <Text
+                                ta="center"
                                 style={{
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    letterSpacing: "0.05em",
-                                    color: isActive ? rgba(RAW_RED, 1) : "inherit",
-                                    textDecoration: isPast ? "line-through" : "none"
+                                    fontFamily: "Crimson Text, Georgia, serif",
+                                    fontSize: isActive
+                                        ? phoneScreen
+                                            ? "1.15rem"
+                                            : "1.45rem"
+                                        : phoneScreen
+                                          ? "0.95rem"
+                                          : "1rem",
+                                    lineHeight: 1.1,
+                                    color: isActive
+                                        ? "rgba(244, 236, 232, 0.95)"
+                                        : rgba(RAW_GREY, 0.56),
+                                    transition: "color 160ms cubic-bezier(0.23, 1, 0.32, 1)"
                                 }}
                             >
-                                {line.bold}
-                            </span>{" "}
-                            {line.suffix}
-                            {line.level ? (
+                                {isActive && showChevron ? (
+                                    <span
+                                        style={{
+                                            fontFamily: "Cinzel, Georgia, serif",
+                                            color: rgba(RAW_RED, 1),
+                                            marginRight: "0.4rem"
+                                        }}
+                                    >
+                                        {"›"}
+                                    </span>
+                                ) : null}
+                                {line.prompt}{" "}
                                 <span
                                     style={{
-                                        marginLeft: "0.45rem",
-                                        fontFamily: "Inter, Segoe UI, sans-serif",
-                                        fontSize: phoneScreen ? "0.68rem" : "0.72rem",
-                                        letterSpacing: "0.11em",
-                                        textTransform: "uppercase",
-                                        opacity: isActive ? 0.72 : 0.5
+                                        fontFamily: "Cinzel, Georgia, serif",
+                                        letterSpacing: "0.05em",
+                                        color: isActive ? rgba(RAW_RED, 1) : "inherit",
+                                        textDecoration: isPast ? "line-through" : "none"
                                     }}
                                 >
-                                    lvl {line.level}
-                                </span>
-                            ) : null}
-                        </Text>
-                    </motion.div>
-                </Box>
-            )
-        })}
-        {footerText ? (
-            <Text
-                ta="center"
-                style={{
-                    fontFamily: "Inter, Segoe UI, sans-serif",
-                    fontSize: "0.78rem",
-                    letterSpacing: "0.06em",
-                    color: rgba(RAW_GREY, 0.42)
-                }}
-            >
-                {footerText}
-            </Text>
-        ) : null}
-    </Stack>
-)
+                                    {line.bold}
+                                </span>{" "}
+                                {line.suffix}
+                                {line.level ? (
+                                    <span
+                                        style={{
+                                            marginLeft: "0.45rem",
+                                            fontFamily: "Inter, Segoe UI, sans-serif",
+                                            fontSize: phoneScreen ? "0.68rem" : "0.72rem",
+                                            letterSpacing: "0.11em",
+                                            textTransform: "uppercase",
+                                            opacity: isActive ? 0.72 : 0.5
+                                        }}
+                                    >
+                                        lvl {line.level}
+                                    </span>
+                                ) : null}
+                            </Text>
+                        </motion.div>
+                    </Box>
+                )
+            })}
+            {footerText ? (
+                <Text
+                    ta="center"
+                    style={{
+                        fontFamily: "Inter, Segoe UI, sans-serif",
+                        fontSize: "0.78rem",
+                        letterSpacing: "0.06em",
+                        color: rgba(RAW_GREY, 0.42)
+                    }}
+                >
+                    {footerText}
+                </Text>
+            ) : null}
+        </Stack>
+    )
+}

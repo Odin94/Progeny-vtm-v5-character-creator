@@ -102,7 +102,11 @@ describe("CookiesBanner", () => {
             fireEvent.click(await screen.findByRole("button", { name: buttonLabel }))
 
             expect(posthogMethod).toHaveBeenCalledOnce()
-            expect(screen.queryByText("Sink your fangs into some cookies!")).not.toBeInTheDocument()
+            await waitFor(() => {
+                expect(
+                    screen.queryByText("Sink your fangs into some cookies!")
+                ).not.toBeInTheDocument()
+            })
         }
     )
 

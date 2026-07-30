@@ -36,6 +36,7 @@ import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { openCookiePreferences } from "~/utils/cookiePreferences"
 import { useAnalyticsConsent } from "~/hooks/useAnalyticsConsent"
+import { motion, useReducedMotion } from "framer-motion"
 
 type FinalProps = {
     character: Character
@@ -73,6 +74,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         useDisclosure(false)
     const hasAnalyticsConsent = useAnalyticsConsent()
     const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
+    const shouldReduceMotion = useReducedMotion()
 
     const charName = character.name?.trim() || ""
     const displayTitle = charName || "Your Kindred Awaits"
@@ -141,13 +143,16 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     background: ${COLORS.cardBg};
                     cursor: pointer;
                     text-align: left;
-                    transition: border-color 250ms ease, background 250ms ease;
+                    transition: border-color 250ms ease, background 250ms ease, transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
                     width: 100%;
                     font-family: inherit;
                 }
                 .nf-action-card:hover {
                     border-color: ${COLORS.primarySoft};
                     background: ${COLORS.cardBgHover};
+                }
+                .nf-action-card:active {
+                    transform: scale(0.98);
                 }
                 .nf-action-card .nf-icon-wrap {
                     flex-shrink: 0;
@@ -386,6 +391,11 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     align-items: center;
                     margin-left: 6px;
                 }
+                @media (prefers-reduced-motion: reduce) {
+                    .nf-action-card:active {
+                        transform: none;
+                    }
+                }
             `}</style>
 
             <div
@@ -398,7 +408,16 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                 }}
             >
                 {/* Header */}
-                <div
+                <motion.div
+                    initial={{
+                        opacity: 0,
+                        transform: shouldReduceMotion ? "none" : "translateY(8px)"
+                    }}
+                    animate={{ opacity: 1, transform: "none" }}
+                    transition={{
+                        duration: shouldReduceMotion ? 0.12 : 0.22,
+                        ease: [0.23, 1, 0.32, 1]
+                    }}
                     style={{
                         textAlign: "center",
                         display: "flex",
@@ -435,7 +454,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         Character creation complete. Your character is saved in the browser. Export
                         for your favourite tools, or jump straight into play.
                     </p>
-                </div>
+                </motion.div>
 
                 {/* Action cards grid */}
                 <div
@@ -446,6 +465,8 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     }}
                 >
                     <ActionCard
+                        animationIndex={0}
+                        shouldReduceMotion={shouldReduceMotion}
                         testId="final-download-pdf-button"
                         icon={<IconFileText size={20} />}
                         label="Download PDF"
@@ -453,18 +474,24 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         onClick={handleDownloadPDF}
                     />
                     <ActionCard
+                        animationIndex={1}
+                        shouldReduceMotion={shouldReduceMotion}
                         icon={<IconDownload size={20} />}
                         label="Save File"
                         description="JSON save file to load later"
                         onClick={handleDownloadJSON}
                     />
                     <ActionCard
+                        animationIndex={2}
+                        shouldReduceMotion={shouldReduceMotion}
                         icon={<IconShare size={20} />}
                         label="Export"
                         description="Foundry VTT, Inconnu & more"
                         onClick={openExportModal}
                     />
                     <ActionCard
+                        animationIndex={3}
+                        shouldReduceMotion={shouldReduceMotion}
                         icon={<IconBook size={20} />}
                         label="Character Sheet"
                         description="Use this character right away"
@@ -472,6 +499,8 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     />
                     {hasAnalyticsConsent ? (
                         <ActionCard
+                            animationIndex={4}
+                            shouldReduceMotion={shouldReduceMotion}
                             icon={<IconMessageCircle size={20} />}
                             label="Feedback & support"
                             description="Questions, complaints, bugs or ideas"
@@ -479,6 +508,8 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         />
                     ) : (
                         <ActionCard
+                            animationIndex={4}
+                            shouldReduceMotion={shouldReduceMotion}
                             icon={<IconCookie size={20} />}
                             label="Cookie preferences"
                             description="Enable analytics to use support chat"
@@ -487,39 +518,42 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     )}
                 </div>
 
-                {/* Reset */}
-                <div
-                    style={{
-                        transition: "opacity 400ms ease, max-height 400ms ease",
-                        opacity: !authLoading && !isAuthenticated ? 1 : 0,
-                        maxHeight: !authLoading && !isAuthenticated ? 400 : 0,
-                        overflow: "hidden",
-                        pointerEvents: !authLoading && !isAuthenticated ? "auto" : "none"
-                    }}
-                >
-                    <div className="nf-account-card">
-                        <div className="nf-account-header">
-                            <div className="nf-account-icon">
-                                <IconCloud size={22} />
+                {!authLoading && !isAuthenticated ? (
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            transform: shouldReduceMotion ? "none" : "translateY(8px)"
+                        }}
+                        animate={{ opacity: 1, transform: "none" }}
+                        transition={{
+                            duration: shouldReduceMotion ? 0.12 : 0.2,
+                            ease: [0.23, 1, 0.32, 1]
+                        }}
+                    >
+                        <div className="nf-account-card">
+                            <div className="nf-account-header">
+                                <div className="nf-account-icon">
+                                    <IconCloud size={22} />
+                                </div>
+                                <div>
+                                    <p className="nf-account-title">Create a free account</p>
+                                    <p className="nf-account-subtitle">
+                                        Unlock the full companion experience
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="nf-account-title">Create a free account</p>
-                                <p className="nf-account-subtitle">
-                                    Unlock the full companion experience
-                                </p>
-                            </div>
+                            <ul className="nf-account-list">
+                                <li>Manage multiple characters in the cloud</li>
+                                <li>Run play sessions online</li>
+                                <li>Share your characters with your friends</li>
+                            </ul>
+                            <button className="nf-account-btn" onClick={signIn}>
+                                <IconUserPlus size={16} />
+                                Create Account
+                            </button>
                         </div>
-                        <ul className="nf-account-list">
-                            <li>Manage multiple characters in the cloud</li>
-                            <li>Run play sessions online</li>
-                            <li>Share your characters with your friends</li>
-                        </ul>
-                        <button className="nf-account-btn" onClick={signIn}>
-                            <IconUserPlus size={16} />
-                            Create Account
-                        </button>
-                    </div>
-                </div>
+                    </motion.div>
+                ) : null}
 
                 <div style={{ display: "flex", justifyContent: "center" }}>
                     <button className="nf-reset-btn" onClick={openResetModal}>
@@ -668,41 +702,59 @@ function ActionCard({
     label,
     description,
     onClick,
-    testId
+    testId,
+    animationIndex,
+    shouldReduceMotion
 }: {
     icon: React.ReactNode
     label: string
     description: string
     onClick?: () => void
     testId?: string
+    animationIndex: number
+    shouldReduceMotion: boolean | null
 }) {
     return (
-        <button className="nf-action-card" data-testid={testId} onClick={onClick}>
-            <div className="nf-icon-wrap">{icon}</div>
-            <div>
-                <p
-                    style={{
-                        margin: 0,
-                        fontFamily: FONT_DISPLAY,
-                        fontSize: "0.88rem",
-                        letterSpacing: "0.06em",
-                        color: COLORS.foreground
-                    }}
-                >
-                    {label}
-                </p>
-                <p
-                    style={{
-                        margin: "2px 0 0 0",
-                        fontFamily: FONT_UI,
-                        fontSize: 11,
-                        color: rgba(RAW_GREY, 0.55)
-                    }}
-                >
-                    {description}
-                </p>
-            </div>
-        </button>
+        <motion.div
+            initial={{
+                opacity: 0,
+                transform: shouldReduceMotion ? "none" : "translateY(8px)"
+            }}
+            animate={{ opacity: 1, transform: "none" }}
+            transition={{
+                duration: shouldReduceMotion ? 0.12 : 0.2,
+                delay: shouldReduceMotion ? 0 : animationIndex * 0.04,
+                ease: [0.23, 1, 0.32, 1]
+            }}
+            style={{ display: "flex" }}
+        >
+            <button className="nf-action-card" data-testid={testId} onClick={onClick}>
+                <div className="nf-icon-wrap">{icon}</div>
+                <div>
+                    <p
+                        style={{
+                            margin: 0,
+                            fontFamily: FONT_DISPLAY,
+                            fontSize: "0.88rem",
+                            letterSpacing: "0.06em",
+                            color: COLORS.foreground
+                        }}
+                    >
+                        {label}
+                    </p>
+                    <p
+                        style={{
+                            margin: "2px 0 0 0",
+                            fontFamily: FONT_UI,
+                            fontSize: 11,
+                            color: rgba(RAW_GREY, 0.55)
+                        }}
+                    >
+                        {description}
+                    </p>
+                </div>
+            </button>
+        </motion.div>
     )
 }
 

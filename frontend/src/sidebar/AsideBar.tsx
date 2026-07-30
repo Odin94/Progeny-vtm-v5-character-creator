@@ -122,7 +122,8 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                                         fontSize: "0.75rem",
                                         fontWeight: 600,
                                         flexShrink: 0,
-                                        transition: "all 200ms ease",
+                                        transition:
+                                            "background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease",
                                         ...(isCurrent
                                             ? {
                                                   backgroundColor: "var(--mantine-color-grape-6)",

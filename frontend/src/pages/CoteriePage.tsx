@@ -564,8 +564,7 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
 
                                 <Box
                                     style={{
-                                        paddingRight: desktopChatDocked ? 460 : 0,
-                                        transition: "padding-right 160ms ease"
+                                        paddingRight: desktopChatDocked ? 460 : 0
                                     }}
                                 >
                                     <CoterieCharacterSummaryGrid

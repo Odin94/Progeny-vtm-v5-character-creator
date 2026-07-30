@@ -1,59 +1,63 @@
 import { faMagicWandSparkles } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button } from "@mantine/core"
-import { motion } from "framer-motion"
-import { useMemo, useState } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 const CharacterSheetLinkButton = () => {
-    const [isHovered, setIsHovered] = useState(false)
+    const shouldReduceMotion = useReducedMotion()
 
     const handleClick = () => {
         window.history.pushState({}, "", "/sheet")
         window.location.reload()
     }
 
-    // Generate random particle positions and delays
-    const particles = useMemo(() => {
-        return Array.from({ length: 12 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100 - 10, // -10% to 110% to extend beyond button
-            y: Math.random() * 100 - 10,
-            delay: Math.random() * 2,
-            duration: 1.5 + Math.random() * 1
-        }))
-    }, [])
-
     return (
         <motion.div
-            style={{ position: "relative", display: "inline-block" }}
-            animate={{
-                scale: [1, 1.05, 1]
+            initial={{
+                opacity: 0,
+                transform: shouldReduceMotion ? "none" : "scale(0.97)"
             }}
+            animate={{ opacity: 1, transform: "none" }}
             transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
+                duration: shouldReduceMotion ? 0.12 : 0.24,
+                ease: [0.23, 1, 0.32, 1]
             }}
+            style={{ position: "relative", display: "inline-block" }}
         >
-            {/* Animated rainbow border */}
-            <motion.div
+            <style>{`
+                .character-sheet-link-button {
+                    position: relative;
+                    z-index: 1;
+                    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+                }
+
+                @media (hover: hover) and (pointer: fine) {
+                    .character-sheet-link-button:hover {
+                        transform: scale(1.02);
+                        box-shadow: 0 0 30px 8px rgba(200, 50, 150, 0.3), 0 0 60px 15px rgba(200, 50, 150, 0.2);
+                    }
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .character-sheet-link-button {
+                        transition: box-shadow 120ms cubic-bezier(0.23, 1, 0.32, 1);
+                    }
+
+                    .character-sheet-link-button:hover {
+                        transform: none;
+                    }
+                }
+            `}</style>
+            <div
+                aria-hidden="true"
                 style={{
                     position: "absolute",
                     inset: "-3px",
                     borderRadius: "var(--mantine-radius-md)",
                     zIndex: 0,
-                    padding: "3px"
-                }}
-                animate={{
-                    background: [
-                        "conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000)",
-                        "conic-gradient(from 360deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000)"
-                    ]
-                }}
-                transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "linear"
+                    padding: "3px",
+                    background:
+                        "conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000)"
                 }}
             >
                 <div
@@ -64,84 +68,20 @@ const CharacterSheetLinkButton = () => {
                         borderRadius: "calc(var(--mantine-radius-md) - 3px)"
                     }}
                 />
-            </motion.div>
-            <motion.div
-                style={{
-                    position: "relative",
-                    zIndex: 1
-                }}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                whileHover={{
-                    boxShadow:
-                        "0 0 30px 8px rgba(200, 50, 150, 0.3), 0 0 60px 15px rgba(200, 50, 150, 0.2)"
-                }}
-                transition={{
-                    duration: 0.3,
-                    ease: "easeInOut"
-                }}
-            >
+            </div>
+            <div className="character-sheet-link-button">
                 <Button
-                    leftSection={
-                        <motion.div
-                            animate={{
-                                rotate: isHovered ? [0, -12, 12, 0] : 0
-                            }}
-                            transition={{
-                                duration: 3,
-                                ease: "easeInOut",
-                                repeat: isHovered ? Infinity : 0,
-                                repeatType: "reverse"
-                            }}
-                        >
-                            <FontAwesomeIcon icon={faMagicWandSparkles} />
-                        </motion.div>
-                    }
+                    leftSection={<FontAwesomeIcon icon={faMagicWandSparkles} />}
                     size="xl"
                     color="grape"
                     variant="gradient"
                     gradient={{ from: "red", to: "grape", deg: 90 }}
                     onClick={handleClick}
-                    style={{
-                        position: "relative",
-                        overflow: "visible",
-                        transform: "scale(1)"
-                    }}
+                    style={{ position: "relative", overflow: "visible" }}
                 >
                     Online Character Sheet
                 </Button>
-            </motion.div>
-            {/* Sparkly particles */}
-            {particles.map((particle) => (
-                <motion.div
-                    key={particle.id}
-                    style={{
-                        position: "absolute",
-                        left: `${particle.x}%`,
-                        top: `${particle.y}%`,
-                        width: "4px",
-                        height: "4px",
-                        borderRadius: "50%",
-                        backgroundColor: "#fff",
-                        boxShadow:
-                            "0 0 6px 2px rgba(255, 255, 255, 0.8), 0 0 12px 4px rgba(255, 215, 0, 0.6)",
-                        zIndex: 2,
-                        pointerEvents: "none"
-                    }}
-                    animate={{
-                        scale: [0, 1.5, 0],
-                        opacity: [0, 1, 0],
-                        rotate: [0, 180, 360]
-                    }}
-                    transition={{
-                        duration: particle.duration,
-                        repeat: Infinity,
-                        delay: particle.delay,
-                        ease: "easeInOut"
-                    }}
-                />
-            ))}
-            {/* Diagonal NEW ribbon */}
+            </div>
             <div
                 style={{
                     position: "absolute",
