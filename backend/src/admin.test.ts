@@ -245,7 +245,7 @@ describe("superadmin impersonation", () => {
         expect(response.statusCode).toBe(403)
     })
 
-    it("searches users in SQL before applying the list limit", async () => {
+    it("searches users in SQL before applying pagination", async () => {
         await db.insert(schema.users).values(
             Array.from({ length: 220 }, (_, index) => ({
                 id: `bulk-user-${index}`,
@@ -270,6 +270,34 @@ describe("superadmin impersonation", () => {
         expect(response.statusCode).toBe(200)
         expect(response.json().users).toHaveLength(1)
         expect(response.json().users[0].id).toBe("bulk-user-late-match")
+    })
+
+    it("returns a page of matching users with pagination metadata", async () => {
+        await db.insert(schema.users).values(
+            Array.from({ length: 30 }, (_, index) => ({
+                id: `paginated-user-${index}`,
+                email: `paginated-user-${String(index).padStart(2, "0")}@${BULK_EMAIL_DOMAIN}`,
+                firstName: "Paginated",
+                lastName: "User"
+            }))
+        )
+
+        const response = await app.inject({
+            method: "GET",
+            url: "/admin/users?query=paginated&page=2&pageSize=25",
+            headers: csrfHeaders
+        })
+
+        expect(response.statusCode).toBe(200)
+        expect(response.json()).toMatchObject({
+            page: 2,
+            pageSize: 25,
+            total: 30,
+            totalPages: 2
+        })
+        expect(response.json().users).toHaveLength(5)
+        expect(response.json().users[0].id).toBe("paginated-user-25")
+        expect(response.json().users[4].id).toBe("paginated-user-29")
     })
 
     it("shows users active after recent authenticated activity", async () => {

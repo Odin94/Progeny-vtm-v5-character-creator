@@ -177,6 +177,14 @@ export type AdminUser = {
     lastActiveAt?: string | null
 }
 
+export type AdminUsersResponse = {
+    users: AdminUser[]
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+}
+
 export type StartImpersonationResponse = {
     sessionId: string
     expiresAt: string
@@ -368,10 +376,23 @@ export const api = {
     getRecentChatSession: () => apiRequest<RecentChatSessionResponse>("/chat/recent-session"),
 
     // Admin
-    getAdminUsers: (query?: string) =>
-        apiRequest<{ users: AdminUser[] }>(
-            `/admin/users${query ? `?query=${encodeURIComponent(query)}` : ""}`
-        ),
+    getAdminUsers: ({
+        query,
+        page = 1,
+        pageSize = 25
+    }: {
+        query?: string
+        page?: number
+        pageSize?: number
+    } = {}) => {
+        const searchParams = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize)
+        })
+        if (query) searchParams.set("query", query)
+
+        return apiRequest<AdminUsersResponse>(`/admin/users?${searchParams}`)
+    },
     updateSuperadmin: (id: string, data: { isSuperadmin: boolean }) =>
         apiRequest<AdminUser>(`/admin/users/${id}/superadmin`, {
             method: "PATCH",

@@ -8,6 +8,7 @@ import {
     Group,
     Loader,
     Modal,
+    Pagination,
     Paper,
     Stack,
     Switch,
@@ -36,12 +37,13 @@ const AdminImpersonationPage = () => {
     const { user, isLoading, isAuthenticated, signIn } = useAuth()
     const queryClient = useQueryClient()
     const [query, setQuery] = useState("")
+    const [page, setPage] = useState(1)
     const [superadminCandidate, setSuperadminCandidate] = useState<AdminUser | null>(null)
     const canUseAdminTools = user?.actorIsSuperadmin && !user.impersonation?.active
 
     const usersQuery = useQuery({
-        queryKey: ["admin", "users", query],
-        queryFn: () => api.getAdminUsers(query),
+        queryKey: ["admin", "users", query, page],
+        queryFn: () => api.getAdminUsers({ query, page }),
         enabled: !!canUseAdminTools
     })
 
@@ -283,7 +285,10 @@ const AdminImpersonationPage = () => {
                                         leftSection={<IconSearch size={16} />}
                                         placeholder="Search users"
                                         value={query}
-                                        onChange={(event) => setQuery(event.currentTarget.value)}
+                                        onChange={(event) => {
+                                            setQuery(event.currentTarget.value)
+                                            setPage(1)
+                                        }}
                                     />
                                 </Group>
 
@@ -310,19 +315,44 @@ const AdminImpersonationPage = () => {
                                             </Stack>
                                         </Center>
                                     ) : (
-                                        <Table.ScrollContainer minWidth={720}>
-                                            <Table verticalSpacing="sm">
-                                                <Table.Thead>
-                                                    <Table.Tr>
-                                                        <Table.Th>User</Table.Th>
-                                                        <Table.Th>Superadmin</Table.Th>
-                                                        <Table.Th>Name tag</Table.Th>
-                                                        <Table.Th>Impersonation</Table.Th>
-                                                    </Table.Tr>
-                                                </Table.Thead>
-                                                <Table.Tbody>{rows}</Table.Tbody>
-                                            </Table>
-                                        </Table.ScrollContainer>
+                                        <Stack gap="md">
+                                            <Table.ScrollContainer minWidth={720}>
+                                                <Table verticalSpacing="sm">
+                                                    <Table.Thead>
+                                                        <Table.Tr>
+                                                            <Table.Th>User</Table.Th>
+                                                            <Table.Th>Superadmin</Table.Th>
+                                                            <Table.Th>Name tag</Table.Th>
+                                                            <Table.Th>Impersonation</Table.Th>
+                                                        </Table.Tr>
+                                                    </Table.Thead>
+                                                    <Table.Tbody>{rows}</Table.Tbody>
+                                                </Table>
+                                            </Table.ScrollContainer>
+                                            {usersQuery.data.total === 0 ? (
+                                                <Text c="dimmed" ta="center">
+                                                    No users found.
+                                                </Text>
+                                            ) : (
+                                                <Group justify="space-between">
+                                                    <Text size="sm" c="dimmed">
+                                                        Showing{" "}
+                                                        {(page - 1) * usersQuery.data.pageSize + 1}–
+                                                        {Math.min(
+                                                            page * usersQuery.data.pageSize,
+                                                            usersQuery.data.total
+                                                        )}{" "}
+                                                        of {usersQuery.data.total} users
+                                                    </Text>
+                                                    <Pagination
+                                                        total={usersQuery.data.totalPages}
+                                                        value={page}
+                                                        onChange={setPage}
+                                                        color="yellow"
+                                                    />
+                                                </Group>
+                                            )}
+                                        </Stack>
                                     )}
                                 </Paper>
                                 <HomebrewModerationPanel />

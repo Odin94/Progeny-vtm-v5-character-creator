@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { eq, or, sql } from "drizzle-orm"
+import { asc, count, eq, or, sql } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import {
     authenticateUser,
@@ -74,6 +74,8 @@ export async function adminRoutes(fastify: FastifyInstance) {
         },
         async (request, reply) => {
             const query = (request.query.query ?? "").trim().toLowerCase()
+            const page = request.query.page ?? 1
+            const pageSize = request.query.pageSize ?? 25
             const pattern = `%${escapeLikePattern(query)}%`
             const where = query
                 ? or(
@@ -84,13 +86,20 @@ export async function adminRoutes(fastify: FastifyInstance) {
                   )
                 : undefined
 
+            const [{ total }] = await db.select({ total: count() }).from(schema.users).where(where)
             const users = await db.query.users.findMany({
                 where,
-                limit: 200
+                orderBy: [asc(schema.users.email), asc(schema.users.id)],
+                limit: pageSize,
+                offset: (page - 1) * pageSize
             })
 
             reply.send({
-                users: users.map(serializeAdminUser)
+                users: users.map(serializeAdminUser),
+                page,
+                pageSize,
+                total,
+                totalPages: Math.max(1, Math.ceil(total / pageSize))
             })
         }
     )
