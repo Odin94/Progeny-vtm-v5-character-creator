@@ -22,18 +22,28 @@ export const getHomebrewSource = (
 export const homebrewPowerToCharacterPower = (
     item: HomebrewPower & { id: string },
     collection: HomebrewCollection
-): Power => ({
-    name: item.name,
-    summary: item.summary,
-    description: item.description,
-    discipline: item.discipline,
-    level: item.level,
-    dicePool: item.dicePool,
-    rouseChecks: item.rouseChecks,
-    amalgamPrerequisites: item.amalgamPrerequisites,
-    isCustom: false,
-    homebrewSource: getHomebrewSource(item, collection)
-})
+): Power => {
+    const disciplineItem = collection.items.find(
+        (candidate): candidate is HomebrewDiscipline & { id: string } =>
+            candidate.kind === "discipline" &&
+            candidate.name.toLowerCase() === item.discipline.toLowerCase()
+    )
+    return {
+        name: item.name,
+        summary: item.summary,
+        description: item.description,
+        discipline: item.discipline,
+        level: item.level,
+        dicePool: item.dicePool,
+        rouseChecks: item.rouseChecks,
+        amalgamPrerequisites: item.amalgamPrerequisites,
+        isCustom: false,
+        homebrewSource: getHomebrewSource(item, collection),
+        ...(disciplineItem && {
+            disciplineHomebrewSource: getHomebrewSource(disciplineItem, collection)
+        })
+    }
+}
 
 export const homebrewPowerToRitual = (
     item: HomebrewPower & { id: string },
@@ -50,6 +60,30 @@ export const homebrewPowerToRitual = (
     isCustom: false,
     homebrewSource: getHomebrewSource(item, collection)
 })
+
+export const getPowerIdentity = (power: Pick<Power, "name" | "discipline" | "homebrewSource">) =>
+    power.homebrewSource
+        ? `homebrew:${power.homebrewSource.collectionId}:${power.homebrewSource.itemId}`
+        : `official:${power.discipline}:${power.name}`
+
+export const getRitualIdentity = (ritual: Pick<Ritual, "name" | "discipline" | "homebrewSource">) =>
+    ritual.homebrewSource
+        ? `homebrew:${ritual.homebrewSource.collectionId}:${ritual.homebrewSource.itemId}`
+        : `official:${ritual.discipline ?? ""}:${ritual.name}`
+
+export const getPowerDisciplineIdentity = (
+    power: Pick<Power, "discipline" | "disciplineHomebrewSource">
+) =>
+    power.disciplineHomebrewSource
+        ? `homebrew:${power.disciplineHomebrewSource.collectionId}:${power.disciplineHomebrewSource.itemId}`
+        : `official:${power.discipline}`
+
+export type HomebrewDisciplineOption = Discipline & {
+    optionKey: string
+    name: string
+    label: string
+    homebrewSource?: HomebrewSource
+}
 
 export const homebrewMeritFlawToCharacter = (
     item: HomebrewMeritFlaw & { id: string },
@@ -68,8 +102,8 @@ export const homebrewMeritFlawToCharacter = (
 export const getHomebrewDisciplineOptions = (
     collections: HomebrewCollection[],
     availableNames: string[]
-): Record<string, Discipline> => {
-    const result: Record<string, Discipline> = {}
+): Record<string, HomebrewDisciplineOption> => {
+    const result: Record<string, HomebrewDisciplineOption> = {}
     const disciplineItems = collections.flatMap((collection) =>
         collection.items
             .filter(
@@ -86,24 +120,55 @@ export const getHomebrewDisciplineOptions = (
             .map((item) => ({ item, collection }))
     )
 
-    for (const name of availableNames) {
+    for (const name of new Set(availableNames)) {
         const official = disciplines[name]
-        const homebrew = disciplineItems.find(({ item }) => item.name === name)
-        if (!official && !homebrew) continue
-        const source = homebrew ? getHomebrewSource(homebrew.item, homebrew.collection) : undefined
-        result[name] = {
-            clans: official?.clans ?? [],
-            summary: homebrew?.item.summary ?? official?.summary ?? "",
-            logo: homebrew?.item.logo ?? official?.logo ?? "",
-            powers: [
-                ...(official?.powers ?? []),
-                ...powerItems
-                    .filter(({ item }) => item.discipline.toLowerCase() === name.toLowerCase())
-                    .map(({ item, collection }) => homebrewPowerToCharacterPower(item, collection))
-            ],
-            isCustom: !!homebrew,
-            ...(source && { homebrewSource: source })
-        } as Discipline & { homebrewSource?: HomebrewSource }
+        if (official) {
+            result[name] = {
+                ...official,
+                optionKey: name,
+                name,
+                label: name,
+                powers: [
+                    ...official.powers,
+                    ...powerItems
+                        .filter(({ item, collection }) => {
+                            if (item.discipline.toLowerCase() !== name.toLowerCase()) return false
+                            return !collection.items.some(
+                                (candidate) =>
+                                    candidate.kind === "discipline" &&
+                                    candidate.name.toLowerCase() === name.toLowerCase()
+                            )
+                        })
+                        .map(({ item, collection }) =>
+                            homebrewPowerToCharacterPower(item, collection)
+                        )
+                ]
+            }
+        }
+
+        for (const homebrew of disciplineItems.filter(
+            ({ item }) => item.name.toLowerCase() === name.toLowerCase()
+        )) {
+            const source = getHomebrewSource(homebrew.item, homebrew.collection)
+            const optionKey = `homebrew:${source.collectionId}:${source.itemId}`
+            result[optionKey] = {
+                clans: [],
+                summary: homebrew.item.summary,
+                logo: homebrew.item.logo,
+                powers: powerItems
+                    .filter(
+                        ({ item, collection }) =>
+                            collection.id === homebrew.collection.id &&
+                            item.discipline.toLowerCase() === name.toLowerCase()
+                    )
+                    .map(({ item, collection }) => homebrewPowerToCharacterPower(item, collection)),
+                isCustom: true,
+                optionKey,
+                name: homebrew.item.name,
+                label: `${homebrew.item.name} — ${homebrew.collection.name}`,
+                homebrewSource: source
+            }
+        }
     }
 
     return result

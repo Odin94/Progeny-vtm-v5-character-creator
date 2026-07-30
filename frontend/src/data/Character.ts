@@ -114,6 +114,11 @@ export const characterSchema = z.object({
 
 export type Character = z.infer<typeof characterSchema>
 
+export const getCharacterExcludedPredatorTypes = (character: Character): string[] =>
+    character.homebrewClan?.excludedPredatorTypes ??
+    clans[character.clan]?.excludedPredatorTypes ??
+    []
+
 export const getEmptyCharacter = (): Character => {
     return {
         id: "",

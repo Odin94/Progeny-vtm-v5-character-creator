@@ -62,7 +62,13 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
                 return
             }
         }
-        onSave(draft)
+        onSave(
+            draft.kind === "ritual"
+                ? { ...draft, discipline: "blood sorcery" }
+                : draft.kind === "ceremony"
+                  ? { ...draft, discipline: "oblivion" }
+                  : draft
+        )
     }
 
     const commonFields = (
@@ -104,8 +110,15 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
                       <SimpleGrid cols={{ base: 1, sm: 2 }}>
                           <TextInput
                               label="Discipline"
-                              description="Official or Homebrew Discipline name."
+                              description={
+                                  power.kind === "ritual"
+                                      ? "Rituals belong to Blood Sorcery."
+                                      : power.kind === "ceremony"
+                                        ? "Ceremonies belong to Oblivion."
+                                        : "Official or Homebrew Discipline name."
+                              }
                               value={power.discipline}
+                              disabled={power.kind === "ritual" || power.kind === "ceremony"}
                               onChange={(event) =>
                                   update({ discipline: event.currentTarget.value })
                               }

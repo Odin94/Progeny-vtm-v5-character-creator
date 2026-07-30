@@ -162,12 +162,14 @@ export const createEmptyHomebrewItem = (kind: HomebrewItemKind): HomebrewItem =>
         return { kind, name: "", summary: "", description: "", logo: "" }
     }
     if (["power", "ritual", "ceremony", "formula"].includes(kind)) {
+        const discipline =
+            kind === "ritual" ? "blood sorcery" : kind === "ceremony" ? "oblivion" : ""
         return {
             kind: kind as HomebrewPower["kind"],
             name: "",
             summary: "",
             description: "",
-            discipline: "",
+            discipline,
             level: 1,
             dicePool: "",
             rouseChecks: 0,

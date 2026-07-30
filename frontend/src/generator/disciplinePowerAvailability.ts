@@ -1,5 +1,6 @@
-import { disciplines, type Power } from "~/data/Disciplines"
-import { intersection, upcase } from "./utils"
+import type { Power } from "~/data/Disciplines"
+import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
+import { upcase } from "./utils"
 
 type DisciplinePowerAvailability = {
     power: Power
@@ -18,12 +19,19 @@ export const getDisciplinePowerDisabledReason = ({
         ? [...pickedClanPowers, pickedPredatorTypePower]
         : pickedClanPowers
 
-    if (allPickedPowers.some((pickedPower) => pickedPower.name === power.name)) {
+    if (
+        allPickedPowers.some(
+            (pickedPower) => getPowerIdentity(pickedPower) === getPowerIdentity(power)
+        )
+    ) {
         return null
     }
 
-    const powersOfDiscipline = disciplines[power.discipline].powers
-    const missingLevels = power.level - 1 - intersection(powersOfDiscipline, allPickedPowers).length
+    const disciplineIdentity = getPowerDisciplineIdentity(power)
+    const pickedFromDiscipline = allPickedPowers.filter(
+        (pickedPower) => getPowerDisciplineIdentity(pickedPower) === disciplineIdentity
+    )
+    const missingLevels = power.level - 1 - pickedFromDiscipline.length
     if (missingLevels > 0) {
         return `Pick ${missingLevels} lower-level ${upcase(power.discipline)} power${
             missingLevels > 1 ? "s" : ""
@@ -49,12 +57,16 @@ export const getDisciplinePowerDisabledReason = ({
         return "You've already chosen all 3 clan powers"
     }
 
-    const pickedDisciplines = new Set(pickedClanPowers.map(({ discipline }) => discipline))
-    if (pickedDisciplines.size >= 2 && !pickedDisciplines.has(power.discipline)) {
+    const pickedDisciplines = new Set(pickedClanPowers.map(getPowerDisciplineIdentity))
+    if (pickedDisciplines.size >= 2 && !pickedDisciplines.has(disciplineIdentity)) {
         return "Clan powers may only come from 2 disciplines"
     }
 
-    if (intersection(powersOfDiscipline, pickedClanPowers).length >= 2) {
+    if (
+        pickedClanPowers.filter(
+            (pickedPower) => getPowerDisciplineIdentity(pickedPower) === disciplineIdentity
+        ).length >= 2
+    ) {
         return `You've already taken 2 powers from ${upcase(power.discipline)}`
     }
 

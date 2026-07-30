@@ -36,11 +36,13 @@ const powerBaseSchema = itemBaseSchema.extend({
 export const homebrewPowerSchema = powerBaseSchema.extend({ kind: z.literal("power") })
 export const homebrewRitualSchema = powerBaseSchema.extend({
     kind: z.literal("ritual"),
+    discipline: z.literal("blood sorcery"),
     requiredTime: z.string().trim().max(500),
     ingredients: z.string().trim().max(2_000)
 })
 export const homebrewCeremonySchema = powerBaseSchema.extend({
     kind: z.literal("ceremony"),
+    discipline: z.literal("oblivion"),
     requiredTime: z.string().trim().max(500),
     ingredients: z.string().trim().max(2_000)
 })

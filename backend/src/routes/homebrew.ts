@@ -47,6 +47,14 @@ const getOwnedCollection = async (collectionId: string, userId: string) => {
     return collection?.ownerId === userId ? collection : null
 }
 
+const getPublishedLibraryEntry = (entryId: string) =>
+    db.query.homebrewLibraryEntries.findFirst({
+        where: and(
+            eq(schema.homebrewLibraryEntries.id, entryId),
+            isNull(schema.homebrewLibraryEntries.unpublishedAt)
+        )
+    })
+
 const getAccessibleCoterie = async (coterieId: string, userId: string) => {
     const coterie = await db.query.coteries.findFirst({
         where: eq(schema.coteries.id, coterieId)
@@ -745,9 +753,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             }
         },
         async (request, reply) => {
-            const entry = await db.query.homebrewLibraryEntries.findFirst({
-                where: eq(schema.homebrewLibraryEntries.id, request.params.id)
-            })
+            const entry = await getPublishedLibraryEntry(request.params.id)
             if (!entry?.activePublicationId)
                 return reply.code(404).send({ error: "Library collection not found" })
             if (entry.authorId === request.user!.id)
@@ -776,6 +782,9 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
         },
         async (request, reply) => {
+            const entry = await getPublishedLibraryEntry(request.params.id)
+            if (!entry?.activePublicationId)
+                return reply.code(404).send({ error: "Library collection not found" })
             await db
                 .delete(schema.homebrewRatings)
                 .where(
@@ -798,9 +807,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             }
         },
         async (request, reply) => {
-            const entry = await db.query.homebrewLibraryEntries.findFirst({
-                where: eq(schema.homebrewLibraryEntries.id, request.params.id)
-            })
+            const entry = await getPublishedLibraryEntry(request.params.id)
             if (!entry?.activePublicationId)
                 return reply.code(404).send({ error: "Library collection not found" })
             const [comment] = await db
@@ -826,6 +833,9 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             }
         },
         async (request, reply) => {
+            const entry = await getPublishedLibraryEntry(request.params.id)
+            if (!entry?.activePublicationId)
+                return reply.code(404).send({ error: "Library collection not found" })
             const comment = await db.query.homebrewComments.findFirst({
                 where: and(
                     eq(schema.homebrewComments.id, request.params.commentId),
@@ -850,6 +860,9 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { params: zodToFastifySchema(homebrewCommentParamsSchema) }
         },
         async (request, reply) => {
+            const entry = await getPublishedLibraryEntry(request.params.id)
+            if (!entry?.activePublicationId)
+                return reply.code(404).send({ error: "Library collection not found" })
             const comment = await db.query.homebrewComments.findFirst({
                 where: and(
                     eq(schema.homebrewComments.id, request.params.commentId),
@@ -857,7 +870,9 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 )
             })
             const canDelete =
-                comment && (comment.userId === request.user!.id || request.actorUser?.isSuperadmin)
+                comment &&
+                (comment.userId === request.user!.id ||
+                    (request.actorUser?.isSuperadmin && !request.impersonation?.active))
             if (!canDelete) return reply.code(404).send({ error: "Comment not found" })
             await db
                 .delete(schema.homebrewComments)
@@ -878,7 +893,8 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             })
             if (
                 !entry ||
-                (entry.authorId !== request.user!.id && !request.actorUser?.isSuperadmin)
+                (entry.authorId !== request.user!.id &&
+                    !(request.actorUser?.isSuperadmin && !request.impersonation?.active))
             ) {
                 return reply.code(404).send({ error: "Library collection not found" })
             }

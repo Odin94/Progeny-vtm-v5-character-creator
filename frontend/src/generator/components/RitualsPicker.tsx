@@ -16,7 +16,7 @@ import { globals } from "../../globals"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type RitualsPickerProps = {
@@ -221,7 +221,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                         >
                             {availableRituals.map((ritual) => (
                                 <RitualCard
-                                    key={ritual.name}
+                                    key={getRitualIdentity(ritual)}
                                     ritual={ritual}
                                     onTake={() => handleTake(ritual)}
                                 />

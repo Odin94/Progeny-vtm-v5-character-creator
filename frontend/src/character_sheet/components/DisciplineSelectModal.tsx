@@ -27,7 +27,11 @@ import posthog from "posthog-js"
 import { IconPlus } from "@tabler/icons-react"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewDiscipline } from "~/data/Homebrew"
-import { getHomebrewDisciplineOptions, getHomebrewSource } from "~/utils/homebrewOptions"
+import {
+    getHomebrewDisciplineOptions,
+    getPowerDisciplineIdentity,
+    getPowerIdentity
+} from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisciplineSelectModalProps = {
@@ -94,9 +98,14 @@ const DisciplineSelectModal = ({
         }
     }, [opened])
 
-    const getCurrentDisciplineLevel = (disciplineName: DisciplineName): number => {
+    const getCurrentDisciplineLevel = (disciplineKey: DisciplineName): number => {
+        const discipline = disciplineCatalog[disciplineKey]
+        if (!discipline) return 0
+        const identity = discipline.homebrewSource
+            ? `homebrew:${discipline.homebrewSource.collectionId}:${discipline.homebrewSource.itemId}`
+            : `official:${discipline.name}`
         const disciplinePowers = character.disciplines.filter(
-            (p) => p.discipline === disciplineName
+            (power) => getPowerDisciplineIdentity(power) === identity
         )
         return disciplinePowers.length
     }
@@ -107,10 +116,10 @@ const DisciplineSelectModal = ({
 
         const currentLevel = getCurrentDisciplineLevel(disciplineName)
         const maxLevel = currentLevel === 0 ? 1 : currentLevel + 1
-        const characterPowerNames = new Set(character.disciplines.map((p) => p.name))
+        const characterPowerIds = new Set(character.disciplines.map(getPowerIdentity))
 
         return discipline.powers.filter(
-            (power) => !characterPowerNames.has(power.name) && power.level <= maxLevel
+            (power) => !characterPowerIds.has(getPowerIdentity(power)) && power.level <= maxLevel
         )
     }
 
@@ -155,8 +164,8 @@ const DisciplineSelectModal = ({
             return hasAvailablePowers
         })
         .sort((a, b) => {
-            const aIsClan = clanDisciplines.has(a)
-            const bIsClan = clanDisciplines.has(b)
+            const aIsClan = clanDisciplines.has(disciplineCatalog[a]?.name ?? a)
+            const bIsClan = clanDisciplines.has(disciplineCatalog[b]?.name ?? b)
             if (aIsClan && !bIsClan) return -1
             if (!aIsClan && bIsClan) return 1
             return a.localeCompare(b)
@@ -168,23 +177,21 @@ const DisciplineSelectModal = ({
 
     const handleSelectPower = (power: Power) => {
         setCharacter((current) => {
-            const sourceDiscipline = homebrewDisciplineItems.find(
-                ({ item }) => item.name.toLowerCase() === power.discipline.toLowerCase()
-            )
+            const selectedOption = selectedDiscipline
+                ? disciplineCatalog[selectedDiscipline]
+                : undefined
+            const sourceDiscipline = selectedOption?.homebrewSource
             const updatedCharacter = {
                 ...current,
                 disciplines: [...current.disciplines, power],
                 customDisciplines: sourceDiscipline
                     ? {
                           ...current.customDisciplines,
-                          [sourceDiscipline.item.name]: {
-                              name: sourceDiscipline.item.name,
-                              summary: sourceDiscipline.item.summary,
-                              logo: sourceDiscipline.item.logo,
-                              homebrewSource: getHomebrewSource(
-                                  sourceDiscipline.item,
-                                  sourceDiscipline.collection
-                              )
+                          [selectedOption.name]: {
+                              name: selectedOption.name,
+                              summary: selectedOption.summary,
+                              logo: selectedOption.logo,
+                              homebrewSource: sourceDiscipline
                           }
                       }
                     : current.customDisciplines
@@ -320,7 +327,7 @@ const DisciplineSelectModal = ({
                                                                 ) : null}
                                                             </Box>
                                                             <Title order={4} style={{ margin: 0 }}>
-                                                                {upcase(disciplineName)}
+                                                                {upcase(discipline.label)}
                                                             </Title>
                                                             <Box
                                                                 style={{
@@ -343,7 +350,7 @@ const DisciplineSelectModal = ({
                                                             </Box>
                                                         </Stack>
                                                     </Button>
-                                                    {clanDisciplines.has(disciplineName) ? (
+                                                    {clanDisciplines.has(discipline.name) ? (
                                                         <Badge
                                                             size="sm"
                                                             variant="light"
@@ -357,10 +364,10 @@ const DisciplineSelectModal = ({
                                                             Clan
                                                         </Badge>
                                                     ) : null}
-                                                    {homebrewDisciplineItems.some(
-                                                        ({ item }) => item.name === disciplineName
-                                                    ) ? (
-                                                        <HomebrewBadge />
+                                                    {discipline.homebrewSource ? (
+                                                        <HomebrewBadge
+                                                            source={discipline.homebrewSource}
+                                                        />
                                                     ) : null}
                                                 </Box>
                                             </Grid.Col>
@@ -404,7 +411,11 @@ const DisciplineSelectModal = ({
                 onClose={() => setCustomPowerModalOpened(false)}
                 onSave={handleCustomPowerSaved}
                 options={options}
-                disciplineName={selectedDiscipline || ""}
+                disciplineName={
+                    selectedDiscipline
+                        ? (disciplineCatalog[selectedDiscipline]?.name ?? selectedDiscipline)
+                        : ""
+                }
             />
         </Modal>
     )
@@ -481,7 +492,10 @@ const PowerPicker = ({
                                         const hasAmalgams = hasAmalgamPrerequisites(power)
                                         const amalgamTooltip = getAmalgamTooltip(power)
                                         return (
-                                            <Grid.Col key={power.name} span={{ base: 12, sm: 6 }}>
+                                            <Grid.Col
+                                                key={getPowerIdentity(power)}
+                                                span={{ base: 12, sm: 6 }}
+                                            >
                                                 <DisciplinePowerCard
                                                     power={power}
                                                     primaryColor={primaryColor}

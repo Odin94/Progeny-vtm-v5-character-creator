@@ -13,10 +13,9 @@ import {
     Tooltip
 } from "@mantine/core"
 import { trackEvent } from "../utils/analytics"
-import { Character, meritFlawSchema } from "../data/Character"
+import { Character, getCharacterExcludedPredatorTypes, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
 import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "../data/meritsAndFlawsResolution"
-import { clans } from "../data/Clans"
 import { PredatorTypes } from "../data/PredatorType"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../generator/utils"
 import { globals } from "../globals"
@@ -210,8 +209,8 @@ const PredatorTypeModal = ({
         return subPointStates.some((s) => s.selectedPoints > 0)
     })
 
-    const clanExcluded =
-        clans[character.clan]?.excludedPredatorTypes?.includes(pickedPredatorType) ?? false
+    const clanExcluded = getCharacterExcludedPredatorTypes(character).includes(pickedPredatorType)
+    const activeClanName = character.homebrewClan?.name ?? character.clan
 
     const canConfirm = exclusiveGroupsFilled && !clanExcluded
 
@@ -309,7 +308,7 @@ const PredatorTypeModal = ({
                                 marginBottom: 4
                             }}
                         >
-                            Locked for {character.clan}
+                            Locked for {activeClanName}
                         </Text>
                         <Text
                             style={{
@@ -319,7 +318,7 @@ const PredatorTypeModal = ({
                                 lineHeight: 1.35
                             }}
                         >
-                            The {character.clan} clan can&apos;t take the {predatorType.name}{" "}
+                            The {activeClanName} clan can&apos;t take the {predatorType.name}{" "}
                             predator type. Go back to the clan step and pick a different clan to
                             unlock it. Changing clans may reset your discipline selections.
                         </Text>

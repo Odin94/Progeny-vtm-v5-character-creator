@@ -3,12 +3,11 @@ import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
-import { Character } from "../../data/Character"
+import { Character, getCharacterExcludedPredatorTypes } from "../../data/Character"
 import { PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
-import { clans } from "~/data/Clans"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
     generatorScrollableAreaStyle,
@@ -96,8 +95,7 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
     const [discipline, setDiscipline] = useState("")
 
     const createCard = (predatorTypeName: PredatorTypeName, meta: CategoryMeta) => {
-        const clanDisabled =
-            clans[character.clan]?.excludedPredatorTypes?.includes(predatorTypeName) ?? false
+        const clanDisabled = getCharacterExcludedPredatorTypes(character).includes(predatorTypeName)
         const isSelected = character.predatorType.name === predatorTypeName
         const predatorType = PredatorTypes[predatorTypeName]
 
@@ -201,7 +199,8 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                             lineHeight: 1.35
                         }}
                     >
-                        Not available to the {character.clan} clan — switch clans to unlock it.
+                        Not available to the {character.homebrewClan?.name ?? character.clan} clan —
+                        switch clans to unlock it.
                     </Text>
                 )}
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { HomebrewCollection } from "~/data/Homebrew"
 import {
     getHomebrewDisciplineOptions,
+    getPowerIdentity,
     homebrewMeritFlawToCharacter,
     homebrewPowerToCharacterPower
 } from "~/utils/homebrewOptions"
@@ -66,8 +67,12 @@ const collection: HomebrewCollection = {
 describe("Homebrew character options", () => {
     it("combines Homebrew Disciplines and Powers with official Disciplines", () => {
         const options = getHomebrewDisciplineOptions([collection], ["Noctis", "auspex"])
+        const noctis = Object.values(options).find(
+            (option) => option.homebrewSource?.itemId === "discipline-1"
+        )
 
-        expect(options.Noctis.powers.map((power) => power.name)).toContain("Drink the Moon")
+        expect(noctis?.label).toBe("Noctis — Night Arts")
+        expect(noctis?.powers.map((power) => power.name)).toContain("Drink the Moon")
         expect(options.auspex.powers.map((power) => power.name)).toContain("Read the Ashes")
         expect(options.auspex.powers.map((power) => power.name)).toContain("Heightened Senses")
     })
@@ -87,11 +92,35 @@ describe("Homebrew character options", () => {
             collectionId: "collection-1",
             collectionName: "Night Arts"
         })
+        expect(power.disciplineHomebrewSource).toMatchObject({ itemId: "discipline-1" })
         expect(merit).toMatchObject({
             name: "Moon-Kissed",
             level: 2,
             text: "Full text.",
             homebrewSource: { collectionName: "Night Arts" }
         })
+    })
+
+    it("keeps same-named Homebrew Disciplines and Powers distinct by provenance", () => {
+        const secondCollection: HomebrewCollection = {
+            ...collection,
+            id: "collection-2",
+            name: "Other Night Arts",
+            items: collection.items.map((item) => ({
+                ...item,
+                id: `${item.id}-other`
+            }))
+        }
+        const options = getHomebrewDisciplineOptions([collection, secondCollection], ["Noctis"])
+        const noctisOptions = Object.values(options).filter((option) => option.name === "Noctis")
+
+        expect(noctisOptions.map((option) => option.label)).toEqual([
+            "Noctis — Night Arts",
+            "Noctis — Other Night Arts"
+        ])
+        expect(noctisOptions.map((option) => getPowerIdentity(option.powers[0]))).toEqual([
+            "homebrew:collection-1:power-1",
+            "homebrew:collection-2:power-1-other"
+        ])
     })
 })

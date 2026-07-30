@@ -33,6 +33,14 @@ const setUser = (id: string) => {
     workosMock.user = { id, email: `${id}@progeny.invalid` }
 }
 
+const cookieHeaderWith = (setCookieHeader: string | string[] | undefined) => {
+    const headers = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader ?? ""]
+    const impersonationCookie = headers
+        .find((header) => header.startsWith("impersonation-session="))
+        ?.split(";")[0]
+    return `${csrfHeaders.cookie}; ${impersonationCookie}`
+}
+
 const createTables = async () => {
     const statements = [
         `CREATE TABLE IF NOT EXISTS users (id text PRIMARY KEY NOT NULL, email text NOT NULL UNIQUE, first_name text, last_name text, nickname text UNIQUE, preferences text, is_superadmin integer DEFAULT false NOT NULL, name_tag_enabled integer DEFAULT false NOT NULL, name_tag_visible integer DEFAULT false NOT NULL, created_at integer DEFAULT (unixepoch()) NOT NULL, updated_at integer DEFAULT (unixepoch()) NOT NULL)`,
@@ -49,7 +57,8 @@ const createTables = async () => {
         `CREATE TABLE IF NOT EXISTS homebrew_publish_requests (id text PRIMARY KEY NOT NULL, collection_id text REFERENCES homebrew_collections(id) ON DELETE set null, requester_id text NOT NULL REFERENCES users(id) ON DELETE cascade, library_entry_id text REFERENCES homebrew_library_entries(id) ON DELETE set null, snapshot text NOT NULL, status text DEFAULT 'pending' NOT NULL, denial_message text, reviewed_by_id text REFERENCES users(id) ON DELETE set null, created_at integer DEFAULT (unixepoch()) NOT NULL, reviewed_at integer)`,
         `CREATE TABLE IF NOT EXISTS homebrew_ratings (id text PRIMARY KEY NOT NULL, library_entry_id text NOT NULL REFERENCES homebrew_library_entries(id) ON DELETE cascade, user_id text NOT NULL REFERENCES users(id) ON DELETE cascade, rating integer NOT NULL, created_at integer DEFAULT (unixepoch()) NOT NULL, updated_at integer DEFAULT (unixepoch()) NOT NULL)`,
         `CREATE UNIQUE INDEX IF NOT EXISTS homebrew_ratings_unique_idx ON homebrew_ratings (library_entry_id, user_id)`,
-        `CREATE TABLE IF NOT EXISTS homebrew_comments (id text PRIMARY KEY NOT NULL, library_entry_id text NOT NULL REFERENCES homebrew_library_entries(id) ON DELETE cascade, user_id text NOT NULL REFERENCES users(id) ON DELETE cascade, body text NOT NULL, created_at integer DEFAULT (unixepoch()) NOT NULL, updated_at integer DEFAULT (unixepoch()) NOT NULL)`
+        `CREATE TABLE IF NOT EXISTS homebrew_comments (id text PRIMARY KEY NOT NULL, library_entry_id text NOT NULL REFERENCES homebrew_library_entries(id) ON DELETE cascade, user_id text NOT NULL REFERENCES users(id) ON DELETE cascade, body text NOT NULL, created_at integer DEFAULT (unixepoch()) NOT NULL, updated_at integer DEFAULT (unixepoch()) NOT NULL)`,
+        `CREATE TABLE IF NOT EXISTS impersonation_sessions (id text PRIMARY KEY NOT NULL, superadmin_user_id text NOT NULL REFERENCES users(id), impersonated_user_id text NOT NULL REFERENCES users(id), started_at integer NOT NULL DEFAULT (unixepoch()), expires_at integer NOT NULL, ended_at integer, ended_reason text, audit_log text NOT NULL DEFAULT '[]')`
     ]
     for (const statement of statements) await db.run(sql.raw(statement))
 }
@@ -65,6 +74,7 @@ describe("Homebrew collections and library", () => {
 
     beforeEach(async () => {
         for (const table of [
+            schema.impersonationSessions,
             schema.homebrewComments,
             schema.homebrewRatings,
             schema.homebrewPublishRequests,
@@ -147,6 +157,25 @@ describe("Homebrew collections and library", () => {
         })
         expect(response.statusCode, response.body).toBe(201)
         return response.json() as { id: string; items: Array<{ id: string }> }
+    }
+
+    const publishCollection = async () => {
+        const collection = await createCollection()
+        const submitted = await app.inject({
+            method: "POST",
+            url: "/homebrew/publish-requests",
+            headers: csrfHeaders,
+            payload: { collectionId: collection.id, shareAcknowledged: true }
+        })
+        setUser(ADMIN_ID)
+        const approved = await app.inject({
+            method: "POST",
+            url: `/admin/homebrew/publish-requests/${submitted.json().id as string}`,
+            headers: csrfHeaders,
+            payload: { decision: "approve" }
+        })
+        expect(approved.statusCode, approved.body).toBe(200)
+        return approved.json().libraryEntryId as string
     }
 
     it("scopes an owner's live collection to characters in an enabled coterie", async () => {
@@ -319,5 +348,72 @@ describe("Homebrew collections and library", () => {
             status: "denied",
             denialMessage: "Please replace the copied sourcebook text."
         })
+    })
+
+    it("rejects library mutations after a collection is unpublished", async () => {
+        const libraryEntryId = await publishCollection()
+        setUser(AUTHOR_ID)
+        const unpublished = await app.inject({
+            method: "POST",
+            url: `/homebrew/library/${libraryEntryId}/unpublish`,
+            headers: csrfHeaders
+        })
+        expect(unpublished.statusCode).toBe(200)
+
+        setUser(RATER_ID)
+        const attempts = await Promise.all([
+            app.inject({
+                method: "POST",
+                url: `/homebrew/library/${libraryEntryId}/rating`,
+                headers: csrfHeaders,
+                payload: { rating: 5 }
+            }),
+            app.inject({
+                method: "POST",
+                url: `/homebrew/library/${libraryEntryId}/comments`,
+                headers: csrfHeaders,
+                payload: { body: "A late comment" }
+            })
+        ])
+        expect(attempts.map(({ statusCode }) => statusCode)).toEqual([404, 404])
+    })
+
+    it("does not grant superadmin library actions while impersonating", async () => {
+        const libraryEntryId = await publishCollection()
+        setUser(AUTHOR_ID)
+        const comment = await app.inject({
+            method: "POST",
+            url: `/homebrew/library/${libraryEntryId}/comments`,
+            headers: csrfHeaders,
+            payload: { body: "Author comment" }
+        })
+        expect(comment.statusCode).toBe(201)
+
+        setUser(ADMIN_ID)
+        const start = await app.inject({
+            method: "POST",
+            url: "/admin/impersonation",
+            headers: csrfHeaders,
+            payload: { userId: RATER_ID }
+        })
+        expect(start.statusCode, start.body).toBe(201)
+        const impersonatingHeaders = {
+            cookie: cookieHeaderWith(start.headers["set-cookie"]),
+            "x-csrf-token": "test-csrf"
+        }
+
+        const attempts = await Promise.all([
+            app.inject({
+                method: "DELETE",
+                url: `/homebrew/library/${libraryEntryId}/comments/${comment.json().id as string}`,
+                headers: impersonatingHeaders
+            }),
+            app.inject({
+                method: "POST",
+                url: `/homebrew/library/${libraryEntryId}/unpublish`,
+                headers: impersonatingHeaders
+            })
+        ])
+        expect(attempts.map(({ statusCode }) => statusCode)).toEqual([404, 404])
     })
 })

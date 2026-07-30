@@ -20,7 +20,7 @@ import { globals } from "../../globals"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremoniesPickerProps = {
@@ -271,7 +271,7 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
 
                                 return (
                                     <CeremonyCard
-                                        key={ceremony.name}
+                                        key={getRitualIdentity(ceremony)}
                                         ceremony={ceremony}
                                         canTake={canTake}
                                         onTake={() => handleTake(ceremony)}

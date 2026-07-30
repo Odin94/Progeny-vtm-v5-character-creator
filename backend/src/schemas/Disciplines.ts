@@ -24,7 +24,8 @@ export const powerSchema = z.object({
     rouseChecks: z.number().min(0).int(),
     amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
     isCustom: z.boolean().optional().default(false),
-    homebrewSource: homebrewSourceSchema.optional()
+    homebrewSource: homebrewSourceSchema.optional(),
+    disciplineHomebrewSource: homebrewSourceSchema.optional()
 })
 
 export type Power = z.infer<typeof powerSchema>
@@ -66,7 +67,8 @@ export const ritualSchema = z.object({
     level: z.number().min(1).int(),
     discipline: disciplineNameSchema.optional(),
     isCustom: z.boolean().optional().default(false),
-    homebrewSource: homebrewSourceSchema.optional()
+    homebrewSource: homebrewSourceSchema.optional(),
+    disciplineHomebrewSource: homebrewSourceSchema.optional()
 })
 
 export type Ritual = z.infer<typeof ritualSchema>

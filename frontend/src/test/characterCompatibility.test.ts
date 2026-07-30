@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { applyCharacterCompatibilityPatches, schemaVersion } from "~/data/Character"
+import {
+    applyCharacterCompatibilityPatches,
+    getCharacterExcludedPredatorTypes,
+    getEmptyCharacter,
+    schemaVersion
+} from "~/data/Character"
 
 describe("character compatibility patches", () => {
     it("adds ceremonies to pre-v6 characters", () => {
@@ -48,5 +53,27 @@ describe("character compatibility patches", () => {
 
         expect(parsed.homebrewClan).toBeUndefined()
         expect(parsed.version).toBe(schemaVersion)
+    })
+
+    it("uses Homebrew clan predator-type exclusions", () => {
+        const character = getEmptyCharacter()
+        character.homebrewClan = {
+            name: "Moonborn",
+            summary: "",
+            description: "",
+            logo: "",
+            bane: "Moonlight",
+            compulsion: "Wander",
+            nativeDisciplines: ["auspex"],
+            excludedPredatorTypes: ["Alleycat"],
+            excludedMeritsAndFlaws: [],
+            homebrewSource: {
+                itemId: "clan-1",
+                collectionId: "collection-1",
+                collectionName: "Night Arts"
+            }
+        }
+
+        expect(getCharacterExcludedPredatorTypes(character)).toEqual(["Alleycat"])
     })
 })

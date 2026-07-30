@@ -13,7 +13,7 @@ import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomCeremonyModal from "./CustomCeremonyModal"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremonySelectModalProps = {
@@ -29,8 +29,8 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
     const { character, mode, primaryColor, setCharacter } = options
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
-    const knownCeremonyNames = useMemo(
-        () => new Set(character.ceremonies.map((ceremony) => ceremony.name)),
+    const knownCeremonyIds = useMemo(
+        () => new Set(character.ceremonies.map(getRitualIdentity)),
         [character.ceremonies]
     )
     const oblivionLevel = getOblivionLevel(character)
@@ -48,7 +48,7 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
     const availableCeremonies = ceremonyCatalog.filter(
         (ceremony) =>
             ceremony.level <= oblivionLevel &&
-            !knownCeremonyNames.has(ceremony.name) &&
+            !knownCeremonyIds.has(getRitualIdentity(ceremony)) &&
             characterHasCeremonyPrerequisite(character, ceremony)
     )
     const ceremoniesByLevel = new Map<number, Ceremony[]>()
@@ -189,7 +189,10 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
                                     )
 
                                     return (
-                                        <Grid.Col key={ceremony.name} span={{ base: 12, sm: 6 }}>
+                                        <Grid.Col
+                                            key={getRitualIdentity(ceremony)}
+                                            span={{ base: 12, sm: 6 }}
+                                        >
                                             {tooltipLabel ? (
                                                 <Tooltip label={tooltipLabel}>
                                                     <div>{card}</div>

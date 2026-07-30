@@ -9,7 +9,7 @@ import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomRitualModal from "./CustomRitualModal"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type RitualSelectModalProps = {
@@ -25,8 +25,8 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
     const { character, mode, primaryColor, setCharacter } = options
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
-    const knownRitualNames = useMemo(
-        () => new Set(character.rituals.map((ritual) => ritual.name)),
+    const knownRitualIds = useMemo(
+        () => new Set(character.rituals.map(getRitualIdentity)),
         [character.rituals]
     )
     const bloodSorceryLevel = getBloodSorceryLevel(character)
@@ -39,7 +39,8 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
         )
     ]
     const availableRituals = ritualCatalog.filter(
-        (ritual) => ritual.level <= bloodSorceryLevel && !knownRitualNames.has(ritual.name)
+        (ritual) =>
+            ritual.level <= bloodSorceryLevel && !knownRitualIds.has(getRitualIdentity(ritual))
     )
     const ritualsByLevel = new Map<number, Ritual[]>()
 
@@ -170,7 +171,10 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
                                         )
 
                                         return (
-                                            <Grid.Col key={ritual.name} span={{ base: 12, sm: 6 }}>
+                                            <Grid.Col
+                                                key={getRitualIdentity(ritual)}
+                                                span={{ base: 12, sm: 6 }}
+                                            >
                                                 {tooltipLabel ? (
                                                     <Tooltip label={tooltipLabel}>
                                                         <div>{card}</div>

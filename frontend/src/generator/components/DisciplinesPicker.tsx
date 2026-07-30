@@ -16,9 +16,9 @@ import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery, containsOblivion } from "../../data/Character"
-import { Discipline, Power, disciplines, getAvailableDisciplines } from "../../data/Disciplines"
+import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
-import { intersection, upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
@@ -30,7 +30,13 @@ import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrol
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { getDisciplinePowerDisabledReason } from "../disciplinePowerAvailability"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
-import { getHomebrewDisciplineOptions, getHomebrewSource } from "~/utils/homebrewOptions"
+import {
+    getHomebrewDisciplineOptions,
+    getHomebrewSource,
+    getPowerDisciplineIdentity,
+    getPowerIdentity,
+    type HomebrewDisciplineOption
+} from "~/utils/homebrewOptions"
 import type { HomebrewDiscipline } from "~/data/Homebrew"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
@@ -73,10 +79,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         ? [...pickedPowers, pickedPredatorTypePower]
         : pickedPowers
 
-    const disciplinesForClan = {
-        ...getAvailableDisciplines(character),
-        ...getHomebrewDisciplineOptions(homebrewCollections, character.availableDisciplineNames)
-    }
+    const disciplinesForClan = getHomebrewDisciplineOptions(
+        homebrewCollections,
+        character.availableDisciplineNames
+    )
     const homebrewDisciplineItems = homebrewCollections.flatMap((collection) =>
         collection.items
             .filter(
@@ -86,7 +92,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     )
     const predatorTypeDiscipline = disciplines[character.predatorType.pickedDiscipline]
 
-    const isPicked = (power: Power) => allPickedPowers.map((p) => p.name).includes(power.name)
+    const isPicked = (power: Power) =>
+        allPickedPowers.some(
+            (pickedPower) => getPowerIdentity(pickedPower) === getPowerIdentity(power)
+        )
 
     const missingAmalgamPrereq = (power: Power) => {
         for (const { discipline, level } of power.amalgamPrerequisites) {
@@ -106,13 +115,23 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         return undefined
     })()
     const confirmDisabled = Boolean(confirmTooltip)
-    const getPickedPowerCountForDiscipline = (disciplineName: string, isPredatorType: boolean) => {
+    const getPickedPowerCountForDiscipline = (
+        disciplineName: string,
+        discipline: Discipline | HomebrewDisciplineOption,
+        isPredatorType: boolean
+    ) => {
         const powersForTab = isPredatorType
             ? pickedPredatorTypePower
                 ? [pickedPredatorTypePower]
                 : []
             : pickedPowers
-        return powersForTab.filter((power) => power.discipline === disciplineName).length
+        const disciplineIdentity =
+            "homebrewSource" in discipline && discipline.homebrewSource
+                ? `homebrew:${discipline.homebrewSource.collectionId}:${discipline.homebrewSource.itemId}`
+                : `official:${"name" in discipline ? discipline.name : disciplineName}`
+        return powersForTab.filter(
+            (power) => getPowerDisciplineIdentity(power) === disciplineIdentity
+        ).length
     }
 
     // Check prerequisites using an explicit set of picked powers (not the closure variable)
@@ -122,8 +141,11 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         predPower: Power | undefined
     ): boolean => {
         const all = predPower ? [...clanPowers, predPower] : clanPowers
-        const powersOfDiscipline = disciplines[power.discipline]?.powers ?? []
-        if (intersection(powersOfDiscipline, all).length < power.level - 1) return true
+        const sameDisciplinePowers = all.filter(
+            (candidate) =>
+                getPowerDisciplineIdentity(candidate) === getPowerDisciplineIdentity(power)
+        )
+        if (sameDisciplinePowers.length < power.level - 1) return true
         for (const { discipline, level } of power.amalgamPrerequisites) {
             if (all.filter((p) => p.discipline === discipline).length < level) return true
         }
@@ -134,7 +156,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const cascadeRemove = (toRemove: Power, isForPredatorType: boolean) => {
         let clanPowers = isForPredatorType
             ? pickedPowers
-            : pickedPowers.filter((p) => p.name !== toRemove.name)
+            : pickedPowers.filter((p) => getPowerIdentity(p) !== getPowerIdentity(toRemove))
         let predPower: Power | undefined = isForPredatorType ? undefined : pickedPredatorTypePower
 
         // Fixpoint: keep removing invalidated powers until stable
@@ -150,7 +172,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
             const next = clanPowers.filter((p) =>
                 !hasMissingPrerequisites(
                     p,
-                    clanPowers.filter((q) => q.name !== p.name),
+                    clanPowers.filter((q) => getPowerIdentity(q) !== getPowerIdentity(p)),
                     predPower
                 )
                     ? true
@@ -176,16 +198,20 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         })
         const takeDisabled = takeDisabledReason !== null
         const isPickedAsPredatorType =
-            !isForPredatorType && pickedPredatorTypePower?.name === power.name
-        const isPickedAsClan = isForPredatorType && pickedPowers.some((p) => p.name === power.name)
+            !isForPredatorType &&
+            pickedPredatorTypePower !== undefined &&
+            getPowerIdentity(pickedPredatorTypePower) === getPowerIdentity(power)
+        const isPickedAsClan =
+            isForPredatorType &&
+            pickedPowers.some((p) => getPowerIdentity(p) === getPowerIdentity(power))
         const showUndo = picked && !isPickedAsPredatorType && !isPickedAsClan
-        const takeButtonHoverKey = `${isForPredatorType ? "predator" : "clan"}-${power.name}`
+        const takeButtonHoverKey = `${isForPredatorType ? "predator" : "clan"}-${getPowerIdentity(power)}`
         const takeButtonHovered = hoveredTakeButton === takeButtonHoverKey
 
         return (
             <div
                 data-testid={`power-card-${power.name.toLowerCase().replace(/\s+/g, "-")}`}
-                key={power.name}
+                key={getPowerIdentity(power)}
                 style={{
                     padding: "12px 14px",
                     borderRadius: 10,
@@ -422,13 +448,18 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         discipline: Discipline,
         isPredatorType = false
     ) => {
+        const option = discipline as Partial<HomebrewDisciplineOption>
+        const actualDisciplineName = option.name ?? disciplineName
+        const disciplineLabel = option.label ?? actualDisciplineName
         const clanHasPrereqDisciplines = (power: Power) => {
             for (const disc of power.amalgamPrerequisites.map((p) => p.discipline)) {
-                if (disciplinesForClan[disc] === undefined) return false
+                if (!Object.values(disciplinesForClan).some((candidate) => candidate.name === disc))
+                    return false
             }
             return true
         }
-        const clanHasDiscipline = (name: DisciplineName) => disciplinesForClan[name] !== undefined
+        const clanHasDiscipline = (name: DisciplineName) =>
+            Object.values(disciplinesForClan).some((candidate) => candidate.name === name)
 
         const eligiblePowers = discipline.powers.filter(clanHasPrereqDisciplines)
         const lvl1 = eligiblePowers.filter((p) => p.level === 1)
@@ -436,12 +467,16 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         const lvl3 = eligiblePowers.filter((p) => p.level === 3)
 
         const canReachLvl3 =
-            disciplineName === character.predatorType.pickedDiscipline &&
-            !(isPredatorType && !clanHasDiscipline(disciplineName))
+            actualDisciplineName === character.predatorType.pickedDiscipline &&
+            !(isPredatorType && !clanHasDiscipline(actualDisciplineName))
 
         const columnGroups = canReachLvl3 ? [lvl1, lvl2, lvl3] : [lvl1, lvl2]
         const colWidth = phoneScreen ? "100%" : `${Math.floor(100 / columnGroups.length)}%`
-        const pickedPowerCount = getPickedPowerCountForDiscipline(disciplineName, isPredatorType)
+        const pickedPowerCount = getPickedPowerCountForDiscipline(
+            disciplineName,
+            discipline,
+            isPredatorType
+        )
 
         return (
             <Accordion.Item
@@ -476,7 +511,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 color: "rgb(244, 236, 232)"
                             }}
                         >
-                            {upcase(disciplineName)}
+                            {upcase(disciplineLabel)}
                         </Text>
                         <DisciplineDots count={pickedPowerCount} />
                     </Group>
