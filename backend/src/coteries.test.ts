@@ -573,10 +573,10 @@ describe("coterie invites and membership permissions", () => {
         expect(ownerCoterieResponse.statusCode).toBe(200)
         const nicknameLessPlayer = (
             ownerCoterieResponse.json() as {
-                players: Array<{ nickname: string }>
+                players: Array<{ nickname: string | null }>
                 playerCount: number
             }
-        ).players.find((player) => player.nickname === "cot")
+        ).players.find((player) => player.nickname === null)
         expect(nicknameLessPlayer).toBeDefined()
         expect(ownerCoterieResponse.json().playerCount).toBe(3)
         expect(JSON.stringify(ownerCoterieResponse.json())).not.toContain(
