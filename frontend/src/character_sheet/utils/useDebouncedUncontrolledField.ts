@@ -31,31 +31,43 @@ export const useDebouncedUncontrolledStringField = ({
     delay = 150
 }: UseDebouncedUncontrolledStringFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const isPendingRef = useRef(false)
+    const pendingValueRef = useRef<string | undefined>(undefined)
 
     const rawValue = character[field]
     const externalValue = rawValue !== undefined && rawValue !== null ? String(rawValue) : ""
 
     const [value, setValue] = useState(externalValue)
 
-    // Sync external changes into local state, but never clobber an in-progress edit
-    // whose debounced write hasn't landed yet.
+    // A matching external value acknowledges our debounced write. A different value
+    // is a genuine external update (for example, loading another character), so it
+    // cancels the queued edit instead of being overwritten when the timer fires.
     useEffect(() => {
-        if (isPendingRef.current) return
+        if (pendingValueRef.current === externalValue) {
+            pendingValueRef.current = undefined
+            return
+        }
+
+        if (pendingValueRef.current !== undefined) {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+                timeoutRef.current = null
+            }
+            pendingValueRef.current = undefined
+        }
+
         setValue(externalValue)
     }, [externalValue])
 
     const handleChange = useCallback(
         (nextValue: string) => {
             setValue(nextValue)
-            isPendingRef.current = true
+            pendingValueRef.current = nextValue
 
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
             }
 
             timeoutRef.current = setTimeout(() => {
-                isPendingRef.current = false
                 // Use the functional updater so the write merges into the freshest
                 // character rather than a possibly-stale closure/ref. This keeps the
                 // debounced edit safe even when this field's component is memoized and
@@ -93,7 +105,7 @@ export const useDebouncedUncontrolledNumberField = ({
     updateFn
 }: UseDebouncedUncontrolledNumberFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const isPendingRef = useRef(false)
+    const pendingValueRef = useRef<number | undefined>(undefined)
 
     const getValueFn = useMemo(
         () => getValue || ((char: Character) => char[field as keyof Character] as number),
@@ -106,10 +118,22 @@ export const useDebouncedUncontrolledNumberField = ({
 
     const [value, setValue] = useState(externalValue)
 
-    // Sync external changes into local state, but never clobber an in-progress edit
-    // whose debounced write hasn't landed yet.
+    // See the string variant above: matching values acknowledge our write, while a
+    // different external value cancels the queued edit and becomes authoritative.
     useEffect(() => {
-        if (isPendingRef.current) return
+        if (pendingValueRef.current === externalValue) {
+            pendingValueRef.current = undefined
+            return
+        }
+
+        if (pendingValueRef.current !== undefined) {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+                timeoutRef.current = null
+            }
+            pendingValueRef.current = undefined
+        }
+
         setValue(externalValue)
     }, [externalValue])
 
@@ -119,14 +143,13 @@ export const useDebouncedUncontrolledNumberField = ({
             const transformedValue = Math.max(0, isNaN(parsed) ? 0 : parsed)
 
             setValue(transformedValue)
-            isPendingRef.current = true
+            pendingValueRef.current = transformedValue
 
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
             }
 
             timeoutRef.current = setTimeout(() => {
-                isPendingRef.current = false
                 // Use the functional updater so the write merges into the freshest
                 // character rather than a possibly-stale closure/ref. This keeps the
                 // debounced edit safe even when this field's component is memoized and
