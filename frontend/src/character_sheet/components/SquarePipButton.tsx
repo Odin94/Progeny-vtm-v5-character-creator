@@ -1,6 +1,6 @@
 import { ActionIcon, Tooltip, useMantineTheme } from "@mantine/core"
-import { useRef, useMemo } from "react"
-import { motion } from "framer-motion"
+import { useMemo, useRef } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 type SquarePipButtonProps = {
     onClick?: () => void
@@ -19,10 +19,12 @@ const SquarePipButton = ({
     disabledReason
 }: SquarePipButtonProps) => {
     const theme = useMantineTheme()
+    const shouldReduceMotion = useReducedMotion()
     const prevState = useRef(damageState)
     const keyCounter = useRef(0)
     const strokeColor = theme.colors[color][6]
     const isDisabled = !!disabledReason
+    const isInteractive = !!onClick && !isDisabled
 
     const { superficialKey, aggravatedKey } = useMemo(() => {
         const isNewSuperficial = damageState !== "none" && prevState.current === "none"
@@ -45,8 +47,11 @@ const SquarePipButton = ({
         border: `2px solid ${theme.colors[color][6]}`,
         borderRadius: "4px",
         backgroundColor: "transparent",
-        cursor: onClick && !isDisabled ? "pointer" : "default",
-        transition: "transform 0.2s ease",
+        cursor: isInteractive ? "pointer" : "default",
+        transform: "scale(1)",
+        transition: shouldReduceMotion
+            ? "none"
+            : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
         overflow: "visible",
         ...style
@@ -60,13 +65,19 @@ const SquarePipButton = ({
             size="xs"
             style={buttonStyle}
             disabled={isDisabled}
-            onMouseEnter={(e) => {
-                if (onClick && !isDisabled) {
-                    e.currentTarget.style.transform = "scale(1.15)"
+            onPointerDown={(event) => {
+                if (isInteractive && !shouldReduceMotion) {
+                    event.currentTarget.style.transform = "scale(0.97)"
                 }
             }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)"
+            onPointerUp={(event) => {
+                event.currentTarget.style.transform = "scale(1)"
+            }}
+            onPointerCancel={(event) => {
+                event.currentTarget.style.transform = "scale(1)"
+            }}
+            onPointerLeave={(event) => {
+                event.currentTarget.style.transform = "scale(1)"
             }}
         >
             <svg
@@ -90,11 +101,15 @@ const SquarePipButton = ({
                         y1="2"
                         x2="2"
                         y2="22"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
+                        initial={
+                            shouldReduceMotion
+                                ? { pathLength: 1, opacity: 0 }
+                                : { pathLength: 0, opacity: 1 }
+                        }
+                        animate={{ pathLength: 1, opacity: 1 }}
                         transition={{
-                            duration: 0.2,
-                            ease: "easeOut"
+                            duration: shouldReduceMotion ? 0.12 : 0.2,
+                            ease: [0.23, 1, 0.32, 1]
                         }}
                         stroke={strokeColor}
                         strokeWidth="3"
@@ -108,11 +123,15 @@ const SquarePipButton = ({
                         y1="2"
                         x2="22"
                         y2="22"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
+                        initial={
+                            shouldReduceMotion
+                                ? { pathLength: 1, opacity: 0 }
+                                : { pathLength: 0, opacity: 1 }
+                        }
+                        animate={{ pathLength: 1, opacity: 1 }}
                         transition={{
-                            duration: 0.2,
-                            ease: "easeOut"
+                            duration: shouldReduceMotion ? 0.12 : 0.2,
+                            ease: [0.23, 1, 0.32, 1]
                         }}
                         stroke={strokeColor}
                         strokeWidth="3"

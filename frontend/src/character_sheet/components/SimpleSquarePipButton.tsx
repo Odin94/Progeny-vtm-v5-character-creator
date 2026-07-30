@@ -1,5 +1,6 @@
 import { ActionIcon, Tooltip, useMantineTheme } from "@mantine/core"
-import { memo, useEffect, useMemo, useRef } from "react"
+import { useReducedMotion } from "framer-motion"
+import { memo } from "react"
 import { SheetOptions } from "../CharacterSheet"
 
 type SimpleSquarePipButtonProps = {
@@ -17,49 +18,27 @@ const SimpleSquarePipButton = ({
     filled = false,
     onClick,
     style,
-    index = 0,
-    firstChangingIndex = null,
-    isFilling: isFillingProp = false,
     options,
     disabledReason
 }: SimpleSquarePipButtonProps) => {
     const theme = useMantineTheme()
+    const shouldReduceMotion = useReducedMotion()
     const color = options?.primaryColor || "grape"
     const isDisabled = !!disabledReason
-    const prevFilledRef = useRef(filled)
-
-    const { delay } = useMemo(() => {
-        const prevFilled = prevFilledRef.current
-        const isFilling = filled && !prevFilled
-        const isEmptying = !filled && prevFilled
-
-        const delayScale = 0.05
-        let delay = 0
-
-        if ((isFilling || isEmptying) && firstChangingIndex !== null) {
-            if (isFillingProp) {
-                delay = (index - firstChangingIndex) * delayScale
-            } else {
-                delay = (firstChangingIndex - index) * delayScale
-            }
-        }
-
-        return { delay }
-    }, [filled, index, firstChangingIndex, isFillingProp])
-
-    useEffect(() => {
-        prevFilledRef.current = filled
-    }, [filled])
 
     const baseColor = theme.colors[color][6]
+    const isInteractive = !!onClick && !isDisabled
 
     const buttonStyle: React.CSSProperties = {
         padding: 0,
         border: `2px solid ${baseColor}`,
         borderRadius: "4px",
         backgroundColor: "transparent",
-        cursor: onClick && !isDisabled ? "pointer" : "default",
-        transition: "transform 0.2s ease",
+        cursor: isInteractive ? "pointer" : "default",
+        transform: "scale(1)",
+        transition: shouldReduceMotion
+            ? "none"
+            : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
         overflow: "visible",
         ...style
@@ -73,10 +52,18 @@ const SimpleSquarePipButton = ({
             size="xs"
             style={buttonStyle}
             disabled={isDisabled}
-            onMouseEnter={(event) => {
-                if (onClick && !isDisabled) event.currentTarget.style.transform = "scale(1.15)"
+            onPointerDown={(event) => {
+                if (isInteractive && !shouldReduceMotion) {
+                    event.currentTarget.style.transform = "scale(0.97)"
+                }
             }}
-            onMouseLeave={(event) => {
+            onPointerUp={(event) => {
+                event.currentTarget.style.transform = "scale(1)"
+            }}
+            onPointerCancel={(event) => {
+                event.currentTarget.style.transform = "scale(1)"
+            }}
+            onPointerLeave={(event) => {
                 event.currentTarget.style.transform = "scale(1)"
             }}
         >
@@ -86,8 +73,15 @@ const SimpleSquarePipButton = ({
                     inset: 0,
                     backgroundColor: baseColor,
                     borderRadius: "4px",
-                    transform: filled ? "scale(1.3)" : "scale(0)",
-                    transition: `transform 0.3s ease-out ${delay}s`,
+                    opacity: filled ? 1 : 0,
+                    transform: shouldReduceMotion
+                        ? "scale(1)"
+                        : filled
+                          ? "scale(1)"
+                          : "scale(0.95)",
+                    transition: shouldReduceMotion
+                        ? "opacity 120ms cubic-bezier(0.23, 1, 0.32, 1)"
+                        : "opacity 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
                     pointerEvents: "none"
                 }}
             />
