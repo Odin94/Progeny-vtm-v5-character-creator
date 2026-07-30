@@ -3,9 +3,11 @@ import {
     Badge,
     Button,
     Card,
+    Checkbox,
     Divider,
     Group,
     Menu,
+    Modal,
     Paper,
     Stack,
     Text,
@@ -16,6 +18,7 @@ import {
     IconDots,
     IconEdit,
     IconExternalLink,
+    IconFlask,
     IconInfoCircle,
     IconLink,
     IconMessageCircle,
@@ -24,12 +27,17 @@ import {
     IconUserMinus,
     IconUsers
 } from "@tabler/icons-react"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieCharacter, CoteriePlayerResponse, CoterieResponse } from "~/utils/api"
 import { getCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
 import NameTag from "~/components/NameTag"
+import {
+    useCoterieHomebrew,
+    useHomebrewCollections,
+    useSetCoterieHomebrew
+} from "~/hooks/useHomebrew"
 
 type Character = CoterieCharacter
 type CoteriePlayer = CoteriePlayerResponse
@@ -73,6 +81,18 @@ const CoteriesSection = ({
     setCoterieSummaryModalOpened,
     vitalsByCharacterId
 }: CoteriesSectionProps) => {
+    const [homebrewCoterie, setHomebrewCoterie] = useState<Coterie | null>(null)
+    const [selectedHomebrewIds, setSelectedHomebrewIds] = useState<string[]>([])
+    const { data: homebrewCollections = [] } = useHomebrewCollections()
+    const { data: coterieHomebrew } = useCoterieHomebrew(homebrewCoterie?.id)
+    const setCoterieHomebrewMutation = useSetCoterieHomebrew()
+
+    useEffect(() => {
+        if (coterieHomebrew) {
+            setSelectedHomebrewIds(coterieHomebrew.collections.map((collection) => collection.id))
+        }
+    }, [coterieHomebrew])
+
     const memberDetailsByCharacterId = useMemo(() => {
         const details: Record<
             string,
@@ -207,6 +227,14 @@ const CoteriesSection = ({
                                                             }
                                                         >
                                                             Edit
+                                                        </Menu.Item>
+                                                        <Menu.Item
+                                                            leftSection={<IconFlask size={14} />}
+                                                            onClick={() =>
+                                                                setHomebrewCoterie(coterie)
+                                                            }
+                                                        >
+                                                            Manage Homebrew
                                                         </Menu.Item>
                                                         <Menu.Item
                                                             leftSection={<IconTrash size={14} />}
@@ -415,6 +443,60 @@ const CoteriesSection = ({
                     ))}
                 </Stack>
             )}
+            <Modal
+                opened={!!homebrewCoterie}
+                onClose={() => setHomebrewCoterie(null)}
+                title={`Homebrew for ${homebrewCoterie?.name ?? "coterie"}`}
+            >
+                <Stack>
+                    <Text size="sm" c="dimmed">
+                        Characters in this coterie can select items from enabled collections. Your
+                        collection edits appear here immediately.
+                    </Text>
+                    {homebrewCollections.length === 0 ? (
+                        <Text c="dimmed">
+                            You do not own any collections yet. Create or copy one from the Homebrew
+                            page first.
+                        </Text>
+                    ) : (
+                        <Checkbox.Group
+                            value={selectedHomebrewIds}
+                            onChange={setSelectedHomebrewIds}
+                        >
+                            <Stack gap="xs">
+                                {homebrewCollections.map((collection) => (
+                                    <Checkbox
+                                        key={collection.id}
+                                        value={collection.id}
+                                        label={`${collection.name} (${collection.items.length} items)`}
+                                    />
+                                ))}
+                            </Stack>
+                        </Checkbox.Group>
+                    )}
+                    <Group justify="flex-end">
+                        <Button variant="subtle" onClick={() => setHomebrewCoterie(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            color="grape"
+                            loading={setCoterieHomebrewMutation.isPending}
+                            onClick={() => {
+                                if (!homebrewCoterie) return
+                                setCoterieHomebrewMutation.mutate(
+                                    {
+                                        coterieId: homebrewCoterie.id,
+                                        collectionIds: selectedHomebrewIds
+                                    },
+                                    { onSuccess: () => setHomebrewCoterie(null) }
+                                )
+                            }}
+                        >
+                            Save
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         </Card>
     )
 }

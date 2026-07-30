@@ -670,6 +670,11 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 return reply.send(approved)
             }
 
+            const denialMessage = request.body.message?.trim()
+            if (!denialMessage) {
+                return reply.code(400).send({ error: "A denial message is required" })
+            }
+
             const item = await db.query.homebrewPublishRequests.findFirst({
                 where: eq(schema.homebrewPublishRequests.id, request.params.id)
             })
@@ -679,7 +684,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 .update(schema.homebrewPublishRequests)
                 .set({
                     status: "denied",
-                    denialMessage: request.body.message,
+                    denialMessage,
                     reviewedById: request.actorUser!.id,
                     reviewedAt: new Date()
                 })

@@ -1,3 +1,10 @@
+import type {
+    HomebrewCollection,
+    HomebrewCollectionInput,
+    HomebrewLibraryDetail,
+    HomebrewLibrarySummary,
+    HomebrewPublishRequest
+} from "~/data/Homebrew"
 import {
     characterApiResponseListSchema,
     characterApiResponseSchema,
@@ -461,6 +468,92 @@ export const api = {
                 method: "POST"
             }
         ),
+
+    // Homebrew
+    getHomebrewCollections: () => apiRequest<HomebrewCollection[]>("/homebrew/collections"),
+    getHomebrewCollection: (id: string) =>
+        apiRequest<HomebrewCollection>(`/homebrew/collections/${id}`),
+    createHomebrewCollection: (data: HomebrewCollectionInput) =>
+        apiRequest<HomebrewCollection>("/homebrew/collections", { method: "POST", body: data }),
+    updateHomebrewCollection: (id: string, data: HomebrewCollectionInput) =>
+        apiRequest<HomebrewCollection>(`/homebrew/collections/${id}`, {
+            method: "PUT",
+            body: data
+        }),
+    deleteHomebrewCollection: (id: string) =>
+        apiRequest<void>(`/homebrew/collections/${id}`, { method: "DELETE" }),
+    getCoterieHomebrew: (coterieId: string) =>
+        apiRequest<{ canManage: boolean; collections: HomebrewCollection[] }>(
+            `/coteries/${coterieId}/homebrew`
+        ),
+    setCoterieHomebrew: (coterieId: string, collectionIds: string[]) =>
+        apiRequest<{ collectionIds: string[] }>(`/coteries/${coterieId}/homebrew`, {
+            method: "PUT",
+            body: { collectionIds }
+        }),
+    getCharacterHomebrew: (characterId: string) =>
+        apiRequest<HomebrewCollection[]>(`/characters/${characterId}/homebrew`),
+    getHomebrewLibrary: (filters?: {
+        query?: string
+        type?: string
+        tag?: string
+        sort?: "top" | "trending" | "newest" | "copied"
+    }) => {
+        const query = new URLSearchParams()
+        if (filters?.query) query.set("query", filters.query)
+        if (filters?.type) query.set("type", filters.type)
+        if (filters?.tag) query.set("tag", filters.tag)
+        if (filters?.sort) query.set("sort", filters.sort)
+        const suffix = query.size > 0 ? `?${query}` : ""
+        return apiRequest<HomebrewLibrarySummary[]>(`/homebrew/library${suffix}`)
+    },
+    getHomebrewLibraryDetail: (id: string) =>
+        apiRequest<HomebrewLibraryDetail>(`/homebrew/library/${id}`),
+    getHomebrewPublishRequests: () =>
+        apiRequest<HomebrewPublishRequest[]>("/homebrew/publish-requests"),
+    requestHomebrewPublication: (collectionId: string) =>
+        apiRequest<HomebrewPublishRequest>("/homebrew/publish-requests", {
+            method: "POST",
+            body: { collectionId, shareAcknowledged: true }
+        }),
+    withdrawHomebrewPublishRequest: (id: string) =>
+        apiRequest<{ status: "withdrawn" }>(`/homebrew/publish-requests/${id}/withdraw`, {
+            method: "POST"
+        }),
+    copyHomebrewLibraryCollection: (id: string) =>
+        apiRequest<HomebrewCollection>(`/homebrew/library/${id}/copy`, { method: "POST" }),
+    rateHomebrewLibraryCollection: (id: string, rating: number) =>
+        apiRequest<{ rating: number }>(`/homebrew/library/${id}/rating`, {
+            method: "POST",
+            body: { rating }
+        }),
+    removeHomebrewLibraryRating: (id: string) =>
+        apiRequest<void>(`/homebrew/library/${id}/rating`, { method: "DELETE" }),
+    commentOnHomebrewLibraryCollection: (id: string, body: string) =>
+        apiRequest(`/homebrew/library/${id}/comments`, { method: "POST", body: { body } }),
+    updateHomebrewLibraryComment: (id: string, commentId: string, body: string) =>
+        apiRequest(`/homebrew/library/${id}/comments/${commentId}`, {
+            method: "PATCH",
+            body: { body }
+        }),
+    deleteHomebrewLibraryComment: (id: string, commentId: string) =>
+        apiRequest<void>(`/homebrew/library/${id}/comments/${commentId}`, {
+            method: "DELETE"
+        }),
+    unpublishHomebrewLibraryCollection: (id: string) =>
+        apiRequest<{ unpublished: true }>(`/homebrew/library/${id}/unpublish`, {
+            method: "POST"
+        }),
+    getAdminHomebrewPublishRequests: () =>
+        apiRequest<HomebrewPublishRequest[]>("/admin/homebrew/publish-requests"),
+    moderateHomebrewPublishRequest: (
+        id: string,
+        decision: { decision: "approve" } | { decision: "deny"; message: string }
+    ) =>
+        apiRequest(`/admin/homebrew/publish-requests/${id}`, {
+            method: "POST",
+            body: decision
+        }),
 
     // Shares
     shareCharacter: (characterId: string, data: { sharedWithUserNickname: string }) =>

@@ -13,6 +13,7 @@ import {
 } from "@mantine/core"
 import { RAW_RED, rgba } from "~/theme/colors"
 import { notifications } from "@mantine/notifications"
+import { IconBook2 } from "@tabler/icons-react"
 import { trackEvent } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema, DisciplineName } from "~/data/NameSchemas"
@@ -26,6 +27,9 @@ import {
     generatorScrollableShellStyle
 } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewClan } from "~/data/Homebrew"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type ClanPickerProps = {
     character: Character
@@ -35,6 +39,12 @@ type ClanPickerProps = {
 
 const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
     const theme = useMantineTheme()
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const homebrewClans = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter((item): item is HomebrewClan & { id: string } => item.kind === "clan")
+            .map((clan) => ({ clan, collection }))
+    )
 
     const c1 = "rgba(26, 27, 30, 0.90)"
 
@@ -89,6 +99,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                             setCharacter({
                                 ...character,
                                 clan,
+                                homebrewClan: undefined,
                                 disciplines: [],
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
                                 predatorType:
@@ -102,6 +113,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                             setCharacter({
                                 ...character,
                                 clan,
+                                homebrewClan: undefined,
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
                                 merits: newMerits,
                                 flaws: newFlaws
@@ -165,6 +177,78 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
             </Grid.Col>
         )
     }
+
+    const createHomebrewClanPick = (
+        clan: HomebrewClan & { id: string },
+        collection: (typeof homebrewCollections)[number]
+    ) => (
+        <Grid.Col key={`${collection.id}-${clan.id}`} span={globals.isPhoneScreen ? 12 : 4}>
+            <Card
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                h={globals.isPhoneScreen ? 350 : 330}
+                style={{
+                    background: `linear-gradient(0deg, ${c1}, ${mantineRgba(theme.colors.grape[8], 0.9)})`,
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column"
+                }}
+                onClick={() => {
+                    const source = {
+                        itemId: clan.id,
+                        collectionId: collection.id,
+                        collectionName: collection.name
+                    }
+                    setCharacter({
+                        ...character,
+                        clan: "",
+                        homebrewClan: { ...clan, homebrewSource: source },
+                        disciplines: [],
+                        availableDisciplineNames: clan.nativeDisciplines,
+                        predatorType: character.predatorType
+                    })
+                    nextStep()
+                }}
+            >
+                <Card.Section>
+                    <Center pt={10}>
+                        {clan.logo ? (
+                            <Image
+                                fit="contain"
+                                src={clan.logo}
+                                height={120}
+                                width={120}
+                                alt={`${clan.name} clan symbol`}
+                            />
+                        ) : (
+                            <Center h={120}>
+                                <IconBook2 size={64} />
+                            </Center>
+                        )}
+                    </Center>
+                </Card.Section>
+                <Center>
+                    <Title p="md">{clan.name}</Title>
+                </Center>
+                <Center>
+                    <HomebrewBadge source={{ ...sourceFor(clan, collection) }} />
+                </Center>
+                <Text h={55} size="sm" c="dimmed" ta="center" mt="xs">
+                    {clan.summary || clan.description}
+                </Text>
+                <Box mt="auto" style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                    {clan.nativeDisciplines.map((discipline) => (
+                        <DisciplineCard
+                            key={discipline}
+                            discipline={discipline}
+                            accentColor={theme.colors.grape[8]}
+                        />
+                    ))}
+                </Box>
+            </Card>
+        </Grid.Col>
+    )
     return (
         <div style={generatorScrollableShellStyle}>
             <ScrollArea
@@ -256,11 +340,27 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                             .map((c) => clanNameSchema.parse(c))
                             .map((clan) => createClanPick(clan, theme.colors.teal[8]))}
                     </Grid>
+
+                    {homebrewClans.length > 0 ? (
+                        <>
+                            <CategoryHeading label="Homebrew Clans" />
+                            <Grid grow m={0}>
+                                {homebrewClans.map(({ clan, collection }) =>
+                                    createHomebrewClanPick(clan, collection)
+                                )}
+                            </Grid>
+                        </>
+                    ) : null}
                 </div>
             </ScrollArea>
         </div>
     )
 }
+
+const sourceFor = (
+    clan: HomebrewClan & { id: string },
+    collection: { id: string; name: string }
+) => ({ itemId: clan.id, collectionId: collection.id, collectionName: collection.name })
 
 const CategoryHeading = ({ label }: { label: string }) => (
     <Box my="md">

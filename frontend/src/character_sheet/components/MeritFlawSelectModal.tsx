@@ -26,6 +26,7 @@ import {
     essentialLoresheets,
     essentialMeritsAndFlaws,
     essentialThinbloodMeritsAndFlaws,
+    Loresheet,
     MeritOrFlaw
 } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
@@ -33,6 +34,13 @@ import { intersection } from "~/generator/utils"
 import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
 import PipButton from "./PipButton"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewLoresheet, HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
+import { getHomebrewSource } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
+
+type DisplayMeritFlaw = MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
+type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMeritFlaw[] }
 
 type MeritFlawSelectModalProps = {
     opened: boolean
@@ -43,7 +51,7 @@ type MeritFlawSelectModalProps = {
 
 const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelectModalProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const [selectedMeritFlaw, setSelectedMeritFlaw] = useState<MeritOrFlaw | null>(null)
+    const [selectedMeritFlaw, setSelectedMeritFlaw] = useState<DisplayMeritFlaw | null>(null)
     const [selectedLevel, setSelectedLevel] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<string | null>("regular")
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
@@ -54,6 +62,38 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const [customDescription, setCustomDescription] = useState("")
     const [contentReady, setContentReady] = useState(false)
     const isEditable = mode === "xp" || mode === "free"
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const homebrewMeritsAndFlaws = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter(
+                (item): item is HomebrewMeritFlaw & { id: string } =>
+                    item.kind === "merit" || item.kind === "flaw"
+            )
+            .map((item) => ({ item, collection }))
+    )
+    const homebrewCategory = {
+        title: "Homebrew",
+        merits: homebrewMeritsAndFlaws
+            .filter(({ item }) => item.kind === "merit")
+            .map(({ item, collection }) => ({
+                name: item.name,
+                cost: item.costs,
+                summary: item.summary,
+                excludes: item.excludes,
+                text: item.description,
+                homebrewSource: getHomebrewSource(item, collection)
+            })),
+        flaws: homebrewMeritsAndFlaws
+            .filter(({ item }) => item.kind === "flaw")
+            .map(({ item, collection }) => ({
+                name: item.name,
+                cost: item.costs,
+                summary: item.summary,
+                excludes: item.excludes,
+                text: item.description,
+                homebrewSource: getHomebrewSource(item, collection)
+            }))
+    }
 
     useEffect(() => {
         if (!opened) {
@@ -79,10 +119,16 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         }
     }, [opened])
 
-    const allMeritsAndFlaws =
-        character.clan === "Thin-blood"
+    const allMeritsAndFlaws: Array<{
+        title: string
+        merits: DisplayMeritFlaw[]
+        flaws: DisplayMeritFlaw[]
+    }> = [
+        ...(character.clan === "Thin-blood"
             ? [essentialThinbloodMeritsAndFlaws, ...essentialMeritsAndFlaws]
-            : essentialMeritsAndFlaws
+            : essentialMeritsAndFlaws),
+        ...(homebrewMeritsAndFlaws.length ? [homebrewCategory] : [])
+    ]
     const characterMeritFlawNames = new Set(
         type === "merit" ? character.merits.map((m) => m.name) : character.flaws.map((f) => f.name)
     )
@@ -124,7 +170,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 })
             })
         }
-        const clan = clans[character.clan]
+        const clan = character.homebrewClan ?? clans[character.clan]
         if (clan?.excludedMeritsAndFlaws) {
             clan.excludedMeritsAndFlaws.forEach((excludedName) => {
                 if (!map.has(excludedName)) {
@@ -148,8 +194,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         }
     }, [selectedMeritFlaw])
 
-    const getAvailableMeritsOrFlaws = (): MeritOrFlaw[] => {
-        const all: MeritOrFlaw[] = []
+    const getAvailableMeritsOrFlaws = (): DisplayMeritFlaw[] => {
+        const all: DisplayMeritFlaw[] = []
         allMeritsAndFlaws.forEach((category) => {
             const items = type === "merit" ? category.merits : category.flaws
             items.forEach((item) => {
@@ -163,13 +209,15 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
     const availableItems = getAvailableMeritsOrFlaws()
 
-    const addMeritFlaw = (meritFlaw: MeritOrFlaw, level: number) => {
+    const addMeritFlaw = (meritFlaw: DisplayMeritFlaw, level: number) => {
         const newMeritFlaw: MeritFlaw = {
             name: meritFlaw.name,
             level: level,
             summary: meritFlaw.summary,
             excludes: meritFlaw.excludes,
-            type
+            type,
+            text: meritFlaw.text,
+            homebrewSource: meritFlaw.homebrewSource
         }
 
         if (mode === "xp" && type === "merit") {
@@ -344,14 +392,14 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         return getMeritCost(level, previousLevel)
     }
 
-    const getCostForItem = (item: MeritOrFlaw, level: number): number => {
+    const getCostForItem = (item: DisplayMeritFlaw, level: number): number => {
         if (type === "flaw" || mode !== "xp") return 0
         const existingMerit = character.merits.find((m) => m.name === item.name)
         const previousLevel = existingMerit ? existingMerit.level : 0
         return getMeritCost(level, previousLevel)
     }
 
-    const handleItemClick = (item: MeritOrFlaw) => {
+    const handleItemClick = (item: DisplayMeritFlaw) => {
         if (exclusionMap.has(item.name)) {
             return
         }
@@ -377,7 +425,30 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         return getMeritCost(level, previousLevel)
     }
 
-    const openLoresheet = essentialLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const loresheetCatalog: DisplayLoresheet[] = [
+        ...essentialLoresheets,
+        ...homebrewCollections.flatMap((collection) =>
+            collection.items
+                .filter(
+                    (item): item is HomebrewLoresheet & { id: string } => item.kind === "loresheet"
+                )
+                .map((item) => ({
+                    title: item.name,
+                    summary: item.summary || item.description,
+                    source: item.source,
+                    requirementFunctions: [],
+                    merits: item.tiers.map((tier) => ({
+                        name: tier.name,
+                        cost: [tier.level],
+                        summary: tier.summary,
+                        excludes: [],
+                        text: item.requirements,
+                        homebrewSource: getHomebrewSource(item, collection)
+                    }))
+                }))
+        )
+    ]
+    const openLoresheet = loresheetCatalog.find((sheet) => sheet.title === openLoresheetTitle)
     const pickedMeritsAndFlaws = [...character.merits, ...character.flaws]
 
     const renderLoresheetsContent = () => {
@@ -463,6 +534,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                 <Badge size="sm" variant="dot" color={primaryColor}>
                                                     {merit.cost.join("/")}
                                                 </Badge>
+                                                {merit.homebrewSource ? (
+                                                    <HomebrewBadge source={merit.homebrewSource} />
+                                                ) : null}
                                             </Group>
                                             {merit.summary ? (
                                                 <Text size="xs" c="dimmed" lineClamp={3}>
@@ -496,7 +570,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         }
 
         const normalizedLoresheetQuery = loresheetQuery.trim().toLocaleLowerCase()
-        const availableLoresheets = essentialLoresheets.filter((loresheet) => {
+        const availableLoresheets = loresheetCatalog.filter((loresheet) => {
             const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
             if (!requirementsMet) return false
             const titleMatches =
@@ -565,6 +639,11 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             <Text fw={600} size="sm" ta="center">
                                                 {loresheet.title}
                                             </Text>
+                                            {loresheet.merits[0]?.homebrewSource ? (
+                                                <HomebrewBadge
+                                                    source={loresheet.merits[0].homebrewSource}
+                                                />
+                                            ) : null}
                                             <Text
                                                 size="xs"
                                                 c="dimmed"
@@ -870,6 +949,13 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                                                                     "/"
                                                                                                 )}
                                                                                             </Badge>
+                                                                                            {item.homebrewSource ? (
+                                                                                                <HomebrewBadge
+                                                                                                    source={
+                                                                                                        item.homebrewSource
+                                                                                                    }
+                                                                                                />
+                                                                                            ) : null}
                                                                                         </Group>
                                                                                         {item.summary ? (
                                                                                             <Text

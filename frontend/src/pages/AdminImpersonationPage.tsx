@@ -24,6 +24,7 @@ import Topbar from "~/topbar/Topbar"
 import NameTag from "~/components/NameTag"
 import { useAuth } from "~/hooks/useAuth"
 import { api, type AdminUser } from "~/utils/api"
+import HomebrewModerationPanel from "~/components/HomebrewModerationPanel"
 import { refreshIdentityBoundQueries } from "~/utils/impersonation"
 
 const topbarHeight = 52
@@ -324,6 +325,7 @@ const AdminImpersonationPage = () => {
                                         </Table.ScrollContainer>
                                     )}
                                 </Paper>
+                                <HomebrewModerationPanel />
                             </Stack>
                         )}
                     </Container>

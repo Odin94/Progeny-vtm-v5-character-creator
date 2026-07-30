@@ -34,4 +34,19 @@ describe("character compatibility patches", () => {
         expect(parsed.clanBane).toBe("default")
         expect(parsed.version).toBe(schemaVersion)
     })
+
+    it("upgrades pre-v8 characters without inventing a Homebrew clan source", () => {
+        const parsed: Record<string, unknown> = {
+            version: 7,
+            rituals: [],
+            ceremonies: [],
+            availableDisciplineNames: [],
+            predatorType: { pickedMeritsAndFlaws: [] }
+        }
+
+        applyCharacterCompatibilityPatches(parsed)
+
+        expect(parsed.homebrewClan).toBeUndefined()
+        expect(parsed.version).toBe(schemaVersion)
+    })
 })

@@ -24,6 +24,7 @@ import {
 import { notifications } from "@mantine/notifications"
 import {
     IconArrowRight,
+    IconBook2,
     IconCopy,
     IconDownload,
     IconEyeOff,
@@ -1772,6 +1773,15 @@ const MePage = () => {
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
                             <Group mb="xl" justify="flex-end">
+                                <Button
+                                    component={Link}
+                                    to="/homebrew"
+                                    color="grape"
+                                    variant="light"
+                                    leftSection={<IconBook2 size={18} />}
+                                >
+                                    Homebrew
+                                </Button>
                                 <SupportConversationButton
                                     source="account-page"
                                     color="red"

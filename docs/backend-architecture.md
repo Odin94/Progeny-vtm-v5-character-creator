@@ -44,6 +44,18 @@ fastify.post<{ Body: MyInput }>(
 
 Schemas live in `src/schemas/`. The `zodToFastifySchema` helper is in `src/utils/schema.ts`. Do not add routes without a Zod schema for any user-supplied input.
 
+## Homebrew API
+
+`src/routes/homebrew.ts` owns the full Homebrew lifecycle. Its input contracts live in `src/schemas/homebrew.ts`, and collection serialization/copy helpers live in `src/utils/homebrew.ts`.
+
+- `/homebrew/collections` provides owner-only collection CRUD.
+- `/coteries/:id/homebrew` lets a coterie owner attach their collections; `/characters/:id/homebrew` resolves only collections enabled through that character's current coteries.
+- `/homebrew/library` and `/homebrew/library/:id` are public reads of approved snapshots. Copy, rating, comment, and unpublish endpoints require authentication as appropriate.
+- `/homebrew/publish-requests` creates and lists a user's requests. A user may submit five requests in any rolling seven-day window, including requests later denied or withdrawn.
+- `/admin/homebrew/publish-requests` is protected by `requireSuperadmin` and approves or denies snapshots. Denials require a message.
+
+Private coterie attachments intentionally reference a live collection. Publishing creates an immutable snapshot and approval promotes that snapshot as the library entry's active version; editing the source collection never mutates an approved publication. Copies create independent private snapshots and retain both immediate and root source references.
+
 ## Safe change checklist
 
 - **Auth behavior**: inspect both `src/routes/auth.ts` (login/callback/logout) and `src/middleware/auth.ts` (per-request validation) — they share state assumptions.

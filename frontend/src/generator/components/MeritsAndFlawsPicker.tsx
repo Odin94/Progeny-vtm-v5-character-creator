@@ -44,6 +44,10 @@ import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrol
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { useProgressiveRendering } from "./useProgressiveRendering"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
+import { getHomebrewSource } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type MeritsAndFlawsPickerProps = {
     character: Character
@@ -61,7 +65,7 @@ const meritIcon = () => {
 }
 
 type MeritOrFlawCardProps = {
-    meritOrFlaw: MeritOrFlaw
+    meritOrFlaw: MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
     type: "flaw" | "merit"
     pickedByName: Map<string, MeritFlaw>
     exclusionMap: Map<string, string[]>
@@ -163,7 +167,9 @@ const MeritOrFlawCard = memo(
                                 level,
                                 type,
                                 summary: meritOrFlaw.summary,
-                                excludes: meritOrFlaw.excludes
+                                excludes: meritOrFlaw.excludes,
+                                text: meritOrFlaw.text,
+                                homebrewSource: meritOrFlaw.homebrewSource
                             }
                         ])
                     }}
@@ -240,6 +246,9 @@ const MeritOrFlawCard = memo(
                     >
                         {icon} &nbsp;<span>{meritOrFlaw.name}</span>
                     </Text>
+                    {meritOrFlaw.homebrewSource ? (
+                        <HomebrewBadge source={meritOrFlaw.homebrewSource} />
+                    ) : null}
                 </Group>
 
                 <Text
@@ -306,11 +315,49 @@ const MeritOrFlawCard = memo(
 const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFlawsPickerProps) => {
     const theme = useMantineTheme()
     const phoneScreen = globals.isPhoneScreen
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const homebrewMerits = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter(
+                (item): item is HomebrewMeritFlaw & { id: string } =>
+                    item.kind === "merit" || item.kind === "flaw"
+            )
+            .map((item) => ({
+                item: {
+                    name: item.name,
+                    cost: item.costs,
+                    summary: item.summary,
+                    excludes: item.excludes,
+                    text: item.description,
+                    homebrewSource: getHomebrewSource(item, collection)
+                },
+                type: item.kind
+            }))
+    )
+    const meritFlawCategories = useMemo(
+        () => [
+            ...essentialMeritsAndFlaws,
+            ...(homebrewMerits.length
+                ? [
+                      {
+                          title: "Homebrew",
+                          merits: homebrewMerits
+                              .filter(({ type }) => type === "merit")
+                              .map(({ item }) => item),
+                          flaws: homebrewMerits
+                              .filter(({ type }) => type === "flaw")
+                              .map(({ item }) => item)
+                      }
+                  ]
+                : [])
+        ],
+        [homebrewMerits]
+    )
 
     const [activeTab, setActiveTab] = useState<string | null>("merits")
     const [resetTarget, setResetTarget] = useState<ResetTarget>(null)
     const { visibleCount: visibleCategoryCount, sentinelRef: categorySentinelRef } =
-        useProgressiveRendering(essentialMeritsAndFlaws.length, 4, 2)
+        useProgressiveRendering(meritFlawCategories.length, 4, 2)
 
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([
         ...character.merits,
@@ -401,7 +448,10 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         setRemainingThinbloodMeritPoints
     }
 
-    const getMeritOrFlawLine = (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit"): JSX.Element => (
+    const getMeritOrFlawLine = (
+        meritOrFlaw: MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string },
+        type: "flaw" | "merit"
+    ): JSX.Element => (
         <MeritOrFlawCard
             key={`${type}-${meritOrFlaw.name}`}
             meritOrFlaw={meritOrFlaw}
@@ -625,7 +675,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                   )
                                                 : null}
 
-                                            {essentialMeritsAndFlaws
+                                            {meritFlawCategories
                                                 .slice(0, visibleCategoryCount)
                                                 .map((category) => {
                                                     return (
@@ -659,7 +709,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                     )
                                                 })}
                                         </Grid>
-                                        {visibleCategoryCount < essentialMeritsAndFlaws.length ? (
+                                        {visibleCategoryCount < meritFlawCategories.length ? (
                                             <div ref={categorySentinelRef} aria-hidden="true" />
                                         ) : null}
                                     </Box>
@@ -670,6 +720,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         character={character}
                                         getMeritOrFlawLine={getMeritOrFlawLine}
                                         pickedMeritsAndFlaws={pickedMeritsAndFlaws}
+                                        homebrewCollections={homebrewCollections}
                                     />
                                 </Tabs.Panel>
                             </Tabs>

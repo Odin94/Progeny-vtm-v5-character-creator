@@ -14,6 +14,10 @@ import {
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { globals } from "../../globals"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewPower } from "~/data/Homebrew"
+import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type RitualsPickerProps = {
     character: Character
@@ -58,6 +62,7 @@ const RitualCard = ({ ritual, onTake }: { ritual: Ritual; onTake: () => void }) 
                 <Badge variant="light" color="pink" radius="sm" size="xs" style={{ flexShrink: 0 }}>
                     lv {ritual.level}
                 </Badge>
+                {ritual.homebrewSource ? <HomebrewBadge source={ritual.homebrewSource} /> : null}
             </Group>
 
             <Text
@@ -152,6 +157,18 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
 )
 
 const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps) => {
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const availableRituals = [
+        ...Rituals,
+        ...homebrewCollections.flatMap((collection) =>
+            collection.items
+                .filter(
+                    (item): item is HomebrewPower & { id: string } =>
+                        item.kind === "ritual" && item.level === 1
+                )
+                .map((item) => homebrewPowerToRitual(item, collection))
+        )
+    ]
     if (!containsBloodSorcery(character.disciplines)) {
         return <></>
     }
@@ -202,7 +219,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                                 columnGap: 12
                             }}
                         >
-                            {Rituals.map((ritual) => (
+                            {availableRituals.map((ritual) => (
                                 <RitualCard
                                     key={ritual.name}
                                     ritual={ritual}

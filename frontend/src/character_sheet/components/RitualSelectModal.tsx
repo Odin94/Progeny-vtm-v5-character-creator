@@ -7,6 +7,10 @@ import { Rituals } from "~/data/Rituals"
 import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomRitualModal from "./CustomRitualModal"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewPower } from "~/data/Homebrew"
+import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type RitualSelectModalProps = {
     opened: boolean
@@ -19,13 +23,22 @@ const getBloodSorceryLevel = (character: Character): number =>
 
 const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
     const knownRitualNames = useMemo(
         () => new Set(character.rituals.map((ritual) => ritual.name)),
         [character.rituals]
     )
     const bloodSorceryLevel = getBloodSorceryLevel(character)
-    const availableRituals = Rituals.filter(
+    const ritualCatalog = [
+        ...Rituals,
+        ...homebrewCollections.flatMap((collection) =>
+            collection.items
+                .filter((item): item is HomebrewPower & { id: string } => item.kind === "ritual")
+                .map((item) => homebrewPowerToRitual(item, collection))
+        )
+    ]
+    const availableRituals = ritualCatalog.filter(
         (ritual) => ritual.level <= bloodSorceryLevel && !knownRitualNames.has(ritual.name)
     )
     const ritualsByLevel = new Map<number, Ritual[]>()
@@ -117,6 +130,11 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
                                                     >
                                                         Lv.{ritual.level}
                                                     </Badge>
+                                                    {ritual.homebrewSource ? (
+                                                        <HomebrewBadge
+                                                            source={ritual.homebrewSource}
+                                                        />
+                                                    ) : null}
                                                 </Group>
                                                 {ritual.summary ? (
                                                     <Text

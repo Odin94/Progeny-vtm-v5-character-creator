@@ -19,6 +19,7 @@ import { memo, useState, useMemo } from "react"
 import type { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
+import HomebrewBadge from "~/components/HomebrewBadge"
 import { MeritFlaw } from "~/data/Character"
 import { IconPlus, IconX } from "@tabler/icons-react"
 import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
@@ -147,6 +148,11 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     >
                                                         {getMeritFlawDisplayName(merit)}
                                                     </Text>
+                                                    {merit.homebrewSource ? (
+                                                        <HomebrewBadge
+                                                            source={merit.homebrewSource}
+                                                        />
+                                                    ) : null}
                                                     {!isFreeMode ? (
                                                         <Badge color={primaryColor} circle>
                                                             {merit.level}
@@ -300,6 +306,11 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     >
                                                         {getMeritFlawDisplayName(flaw)}
                                                     </Text>
+                                                    {flaw.homebrewSource ? (
+                                                        <HomebrewBadge
+                                                            source={flaw.homebrewSource}
+                                                        />
+                                                    ) : null}
                                                     {!isFreeMode ? (
                                                         <Badge color="red" circle>
                                                             {flaw.level}

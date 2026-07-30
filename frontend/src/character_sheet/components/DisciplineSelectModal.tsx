@@ -25,6 +25,10 @@ import CustomPowerModal from "./CustomPowerModal"
 import { getDisciplineCost } from "../utils/xp"
 import posthog from "posthog-js"
 import { IconPlus } from "@tabler/icons-react"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewDiscipline } from "~/data/Homebrew"
+import { getHomebrewDisciplineOptions, getHomebrewSource } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisciplineSelectModalProps = {
     opened: boolean
@@ -49,6 +53,21 @@ const DisciplineSelectModal = ({
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
     const [customPowerModalOpened, setCustomPowerModalOpened] = useState(false)
     const [contentReady, setContentReady] = useState(false)
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const homebrewDisciplineItems = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter(
+                (item): item is HomebrewDiscipline & { id: string } => item.kind === "discipline"
+            )
+            .map((item) => ({ item, collection }))
+    )
+    const disciplineCatalog = {
+        ...disciplines,
+        ...getHomebrewDisciplineOptions(homebrewCollections, [
+            ...Object.keys(disciplines),
+            ...homebrewDisciplineItems.map(({ item }) => item.name)
+        ])
+    }
 
     useEffect(() => {
         if (!opened) {
@@ -83,7 +102,7 @@ const DisciplineSelectModal = ({
     }
 
     const getAvailablePowers = (disciplineName: DisciplineName): Power[] => {
-        const discipline = disciplines[disciplineName]
+        const discipline = disciplineCatalog[disciplineName]
         if (!discipline) return []
 
         const currentLevel = getCurrentDisciplineLevel(disciplineName)
@@ -122,13 +141,15 @@ const DisciplineSelectModal = ({
         return missingPrereqs.length > 0 ? `Requires: ${missingPrereqs.join(", ")}` : null
     }
 
-    const clanDisciplines = new Set(clans[character.clan]?.nativeDisciplines || [])
+    const clanDisciplines = new Set(
+        character.homebrewClan?.nativeDisciplines ?? clans[character.clan]?.nativeDisciplines ?? []
+    )
 
-    const allDisciplines = Object.keys(disciplines) as DisciplineName[]
+    const allDisciplines = Object.keys(disciplineCatalog) as DisciplineName[]
     const availableDisciplines = allDisciplines
         .filter((disciplineName) => {
             if (disciplineName === "") return false
-            const discipline = disciplines[disciplineName]
+            const discipline = disciplineCatalog[disciplineName]
             if (!discipline) return false
             const hasAvailablePowers = getAvailablePowers(disciplineName).length > 0
             return hasAvailablePowers
@@ -147,9 +168,26 @@ const DisciplineSelectModal = ({
 
     const handleSelectPower = (power: Power) => {
         setCharacter((current) => {
+            const sourceDiscipline = homebrewDisciplineItems.find(
+                ({ item }) => item.name.toLowerCase() === power.discipline.toLowerCase()
+            )
             const updatedCharacter = {
                 ...current,
-                disciplines: [...current.disciplines, power]
+                disciplines: [...current.disciplines, power],
+                customDisciplines: sourceDiscipline
+                    ? {
+                          ...current.customDisciplines,
+                          [sourceDiscipline.item.name]: {
+                              name: sourceDiscipline.item.name,
+                              summary: sourceDiscipline.item.summary,
+                              logo: sourceDiscipline.item.logo,
+                              homebrewSource: getHomebrewSource(
+                                  sourceDiscipline.item,
+                                  sourceDiscipline.collection
+                              )
+                          }
+                      }
+                    : current.customDisciplines
             }
             updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
 
@@ -228,7 +266,7 @@ const DisciplineSelectModal = ({
                             ) : (
                                 <Grid gutter="md">
                                     {availableDisciplines.map((disciplineName) => {
-                                        const discipline = disciplines[disciplineName]
+                                        const discipline = disciplineCatalog[disciplineName]
                                         if (!discipline) return null
 
                                         return (
@@ -318,6 +356,11 @@ const DisciplineSelectModal = ({
                                                         >
                                                             Clan
                                                         </Badge>
+                                                    ) : null}
+                                                    {homebrewDisciplineItems.some(
+                                                        ({ item }) => item.name === disciplineName
+                                                    ) ? (
+                                                        <HomebrewBadge />
                                                     ) : null}
                                                 </Box>
                                             </Grid.Col>

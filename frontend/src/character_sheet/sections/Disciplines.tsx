@@ -24,6 +24,7 @@ import { Ceremony, Ceremonies, getCeremonyPrerequisiteLabel } from "~/data/Cerem
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
+import HomebrewBadge from "~/components/HomebrewBadge"
 import CustomDisciplineModal from "../components/CustomDisciplineModal"
 import CustomPowerModal from "../components/CustomPowerModal"
 import RitualSelectModal from "../components/RitualSelectModal"
@@ -239,6 +240,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         }}
                                                     />
                                                 ) : null}
+                                                {customDiscipline?.homebrewSource ? (
+                                                    <HomebrewBadge
+                                                        source={customDiscipline.homebrewSource}
+                                                    />
+                                                ) : null}
                                                 <Group
                                                     justify="space-between"
                                                     style={{ flex: 1 }}
@@ -253,7 +259,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         }}
                                                     >
                                                         {upcase(disciplineName)}
-                                                        {isCustom ? (
+                                                        {isCustom &&
+                                                        !customDiscipline?.homebrewSource ? (
                                                             <Badge
                                                                 size="xs"
                                                                 variant="dot"
@@ -273,7 +280,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         >
                                                             {powers.length}
                                                         </Badge>
-                                                        {isCustom && isFreeMode ? (
+                                                        {isCustom &&
+                                                        !customDiscipline?.homebrewSource &&
+                                                        isFreeMode ? (
                                                             <ActionIcon
                                                                 size="sm"
                                                                 variant="subtle"
@@ -660,6 +669,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             <Badge variant="light" color={primaryColor}>
                                                 {ritual.isCustom ? "Custom Ritual" : "Ritual"}
                                             </Badge>
+                                            {ritual.homebrewSource ? (
+                                                <HomebrewBadge source={ritual.homebrewSource} />
+                                            ) : null}
                                             {ritual.isCustom && isFreeMode ? (
                                                 <ActionIcon
                                                     size="sm"
@@ -775,6 +787,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             <Badge variant="light" color={primaryColor}>
                                                 {ceremony.isCustom ? "Custom Ceremony" : "Ceremony"}
                                             </Badge>
+                                            {ceremony.homebrewSource ? (
+                                                <HomebrewBadge source={ceremony.homebrewSource} />
+                                            ) : null}
                                             {ceremony.isCustom && isFreeMode ? (
                                                 <ActionIcon
                                                     size="sm"

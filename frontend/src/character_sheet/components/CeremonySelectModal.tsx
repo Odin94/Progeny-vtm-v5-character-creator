@@ -11,6 +11,10 @@ import {
 import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomCeremonyModal from "./CustomCeremonyModal"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewPower } from "~/data/Homebrew"
+import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremonySelectModalProps = {
     opened: boolean
@@ -23,13 +27,25 @@ const getOblivionLevel = (character: Character): number =>
 
 const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
     const knownCeremonyNames = useMemo(
         () => new Set(character.ceremonies.map((ceremony) => ceremony.name)),
         [character.ceremonies]
     )
     const oblivionLevel = getOblivionLevel(character)
-    const availableCeremonies = Ceremonies.filter(
+    const ceremonyCatalog = [
+        ...Ceremonies,
+        ...homebrewCollections.flatMap((collection) =>
+            collection.items
+                .filter((item): item is HomebrewPower & { id: string } => item.kind === "ceremony")
+                .map((item) => ({
+                    ...homebrewPowerToRitual(item, collection),
+                    prerequisitePowers: []
+                }))
+        )
+    ]
+    const availableCeremonies = ceremonyCatalog.filter(
         (ceremony) =>
             ceremony.level <= oblivionLevel &&
             !knownCeremonyNames.has(ceremony.name) &&
@@ -134,6 +150,11 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
                                                 >
                                                     Lv.{ceremony.level}
                                                 </Badge>
+                                                {ceremony.homebrewSource ? (
+                                                    <HomebrewBadge
+                                                        source={ceremony.homebrewSource}
+                                                    />
+                                                ) : null}
                                             </Group>
                                             <Text
                                                 size="xs"

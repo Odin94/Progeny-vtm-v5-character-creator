@@ -258,4 +258,66 @@ describe("Homebrew collections and library", () => {
         })
         expect(selfRating.statusCode).toBe(400)
     })
+
+    it("enforces the rolling five-request limit", async () => {
+        const collection = await createCollection()
+        await db.insert(schema.homebrewPublishRequests).values(
+            [1, 2, 3, 4, 5].map((index) => ({
+                id: `recent-request-${index}`,
+                collectionId: collection.id,
+                requesterId: AUTHOR_ID,
+                snapshot: JSON.stringify({ name: `Snapshot ${index}`, items: [] }),
+                status: "withdrawn" as const,
+                createdAt: new Date(Date.now() - index * 60_000)
+            }))
+        )
+
+        const response = await app.inject({
+            method: "POST",
+            url: "/homebrew/publish-requests",
+            headers: csrfHeaders,
+            payload: { collectionId: collection.id, shareAcknowledged: true }
+        })
+
+        expect(response.statusCode).toBe(429)
+    })
+
+    it("shows a required denial message to the requester", async () => {
+        const collection = await createCollection()
+        const submitted = await app.inject({
+            method: "POST",
+            url: "/homebrew/publish-requests",
+            headers: csrfHeaders,
+            payload: { collectionId: collection.id, shareAcknowledged: true }
+        })
+        const requestId = submitted.json().id as string
+
+        setUser(ADMIN_ID)
+        const missingMessage = await app.inject({
+            method: "POST",
+            url: `/admin/homebrew/publish-requests/${requestId}`,
+            headers: csrfHeaders,
+            payload: { decision: "deny" }
+        })
+        expect(missingMessage.statusCode).toBe(400)
+
+        const denied = await app.inject({
+            method: "POST",
+            url: `/admin/homebrew/publish-requests/${requestId}`,
+            headers: csrfHeaders,
+            payload: { decision: "deny", message: "Please replace the copied sourcebook text." }
+        })
+        expect(denied.statusCode, denied.body).toBe(200)
+
+        setUser(AUTHOR_ID)
+        const requests = await app.inject({
+            method: "GET",
+            url: "/homebrew/publish-requests",
+            headers: csrfHeaders
+        })
+        expect(requests.json()[0]).toMatchObject({
+            status: "denied",
+            denialMessage: "Please replace the copied sourcebook text."
+        })
+    })
 })

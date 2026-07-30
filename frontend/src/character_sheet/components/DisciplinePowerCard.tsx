@@ -4,6 +4,7 @@ import { Character } from "~/data/Character"
 import Tally from "~/components/Tally"
 import { getValueForKey } from "~/generator/utils"
 import { bgAlpha, hexToRgba } from "../utils/style"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisciplinePowerCardProps = {
     power: Power
@@ -70,6 +71,7 @@ const DisciplinePowerCard = ({
             >
                 {power.name}
             </Text>
+            {power.homebrewSource ? <HomebrewBadge source={power.homebrewSource} /> : null}
             {power.summary ? (
                 <Text size="xs" c="dimmed" lineClamp={4}>
                     {power.summary}

@@ -18,6 +18,10 @@ import {
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { globals } from "../../globals"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewPower } from "~/data/Homebrew"
+import { homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremoniesPickerProps = {
     character: Character
@@ -98,6 +102,9 @@ const CeremonyCard = ({
                 <Badge variant="light" color="pink" radius="sm" size="xs" style={{ flexShrink: 0 }}>
                     lv {ceremony.level}
                 </Badge>
+                {ceremony.homebrewSource ? (
+                    <HomebrewBadge source={ceremony.homebrewSource} />
+                ) : null}
             </Group>
 
             <Text
@@ -174,12 +181,26 @@ const CeremonyCard = ({
 }
 
 const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPickerProps) => {
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     if (!containsOblivion(character.disciplines)) {
         return <></>
     }
 
     const phoneScreen = globals.isPhoneScreen
-    const levelOneCeremonies = Ceremonies.filter((ceremony) => ceremony.level === 1)
+    const levelOneCeremonies = [
+        ...Ceremonies.filter((ceremony) => ceremony.level === 1),
+        ...homebrewCollections.flatMap((collection) =>
+            collection.items
+                .filter(
+                    (item): item is HomebrewPower & { id: string } =>
+                        item.kind === "ceremony" && item.level === 1
+                )
+                .map((item) => ({
+                    ...homebrewPowerToRitual(item, collection),
+                    prerequisitePowers: []
+                }))
+        )
+    ]
     const canTakeAnyCeremony = levelOneCeremonies.some((ceremony) =>
         characterHasCeremonyPrerequisite(character, ceremony)
     )

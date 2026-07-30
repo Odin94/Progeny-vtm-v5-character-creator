@@ -29,6 +29,10 @@ import {
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { getDisciplinePowerDisabledReason } from "../disciplinePowerAvailability"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import { getHomebrewDisciplineOptions, getHomebrewSource } from "~/utils/homebrewOptions"
+import type { HomebrewDiscipline } from "~/data/Homebrew"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisciplinesPickerProps = {
     character: Character
@@ -63,12 +67,23 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
     const [pickedPowers, setPickedPowers] = useState<Power[]>([])
     const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
     const [hoveredTakeButton, setHoveredTakeButton] = useState<string | null>(null)
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
 
     let allPickedPowers = pickedPredatorTypePower
         ? [...pickedPowers, pickedPredatorTypePower]
         : pickedPowers
 
-    const disciplinesForClan = getAvailableDisciplines(character)
+    const disciplinesForClan = {
+        ...getAvailableDisciplines(character),
+        ...getHomebrewDisciplineOptions(homebrewCollections, character.availableDisciplineNames)
+    }
+    const homebrewDisciplineItems = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter(
+                (item): item is HomebrewDiscipline & { id: string } => item.kind === "discipline"
+            )
+            .map((item) => ({ item, collection }))
+    )
     const predatorTypeDiscipline = disciplines[character.predatorType.pickedDiscipline]
 
     const isPicked = (power: Power) => allPickedPowers.map((p) => p.name).includes(power.name)
@@ -205,6 +220,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                     >
                         lv {power.level}
                     </Badge>
+                    {power.homebrewSource ? <HomebrewBadge source={power.homebrewSource} /> : null}
                 </Group>
 
                 <Text
@@ -688,6 +704,30 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                             const updatedCharacter = {
                                                 ...character,
                                                 disciplines: allPickedPowers,
+                                                customDisciplines: {
+                                                    ...character.customDisciplines,
+                                                    ...Object.fromEntries(
+                                                        homebrewDisciplineItems
+                                                            .filter(({ item }) =>
+                                                                character.availableDisciplineNames.includes(
+                                                                    item.name
+                                                                )
+                                                            )
+                                                            .map(({ item, collection }) => [
+                                                                item.name,
+                                                                {
+                                                                    name: item.name,
+                                                                    summary: item.summary,
+                                                                    logo: item.logo,
+                                                                    homebrewSource:
+                                                                        getHomebrewSource(
+                                                                            item,
+                                                                            collection
+                                                                        )
+                                                                }
+                                                            ])
+                                                    )
+                                                },
                                                 rituals: containsBloodSorcery(allPickedPowers)
                                                     ? character.rituals
                                                     : [],

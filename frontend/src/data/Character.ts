@@ -1,6 +1,11 @@
 import { z } from "zod"
 import { attributesSchema } from "./Attributes.js"
-import { powerSchema, ritualSchema, customDisciplineSchema } from "./Disciplines.js"
+import {
+    powerSchema,
+    ritualSchema,
+    customDisciplineSchema,
+    homebrewSourceSchema
+} from "./Disciplines.js"
 import { ceremonySchema } from "./Ceremonies.js"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas.js"
 import { skillsSchema } from "./Skills.js"
@@ -18,7 +23,8 @@ export const meritFlawSchema = z.object({
     summary: z.string(),
     excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
-    text: z.string().optional()
+    text: z.string().optional(),
+    homebrewSource: homebrewSourceSchema.optional()
 })
 
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
@@ -31,7 +37,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 7
+export const schemaVersion = 8
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -44,6 +50,20 @@ export const characterSchema = z.object({
 
     clan: clanNameSchema,
     clanBane: clanBaneSchema.optional().default("default"),
+    homebrewClan: z
+        .object({
+            name: z.string(),
+            description: z.string(),
+            summary: z.string(),
+            logo: z.string(),
+            bane: z.string(),
+            compulsion: z.string(),
+            nativeDisciplines: disciplineNameSchema.array(),
+            excludedPredatorTypes: z.string().array(),
+            excludedMeritsAndFlaws: z.string().array(),
+            homebrewSource: homebrewSourceSchema
+        })
+        .optional(),
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
@@ -247,8 +267,18 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV3ToV4Compatibility(parsed)
     patchV5ToV6Compatibility(parsed)
     patchV6ToV7Compatibility(parsed)
+    patchV7ToV8Compatibility(parsed)
 
     parsed["version"] = schemaVersion
+}
+
+export const patchV7ToV8Compatibility = (parsed: Record<string, unknown>): void => {
+    if (
+        (typeof parsed["version"] !== "number" || parsed["version"] < 8) &&
+        !parsed["homebrewClan"]
+    ) {
+        delete parsed["homebrewClan"]
+    }
 }
 
 export const patchV2ToV3Compatibility = (parsed: Record<string, unknown>): void => {

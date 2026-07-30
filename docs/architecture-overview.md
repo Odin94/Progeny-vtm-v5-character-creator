@@ -28,10 +28,12 @@ WebSocket connections use the same `wos-session` cookie, not a separate token. N
 
 The backend mixes typed relational columns with JSON blobs:
 
-- Relational: users, characters, coteries, coterie player memberships, coterie invite hashes, character memberships, shares (`backend/src/db/schema.ts`)
+- Relational: users, characters, coteries, coterie player memberships, coterie invite hashes, character memberships, shares, and Homebrew collections/library activity (`backend/src/db/schema.ts`)
 - JSON-backed: `characters.data` (full character payload), `users.preferences` (UI preferences)
 
 The JSON fields mean that schema migrations alone are not enough — the serialization and parsing code in routes and WebSocket handlers is part of the contract. Preferences parsing must be tolerant of missing or malformed data because old records may not have new fields.
+
+Homebrew collection items are relational records whose typed item payload is stored as JSON. Coteries point to live private collections, while library publications and character selections contain immutable snapshots. This is deliberate: collection edits immediately affect picker options for enabled coteries, but cannot silently rewrite published versions or content already selected on a character.
 
 ## 4. Realtime boundary
 

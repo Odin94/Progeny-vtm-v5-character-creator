@@ -153,13 +153,12 @@ export const publishRequestSchema = z.object({
 })
 
 export const publishRequestParamsSchema = z.object({ id: idSchema })
-export const moderatePublishRequestSchema = z.discriminatedUnion("decision", [
-    z.object({ decision: z.literal("approve") }),
-    z.object({
-        decision: z.literal("deny"),
-        message: z.string().trim().min(1).max(2_000)
-    })
-])
+// Keep this as one object schema: Fastify's removeAdditional handling mutates
+// discriminated-union payloads while evaluating the first branch.
+export const moderatePublishRequestSchema = z.object({
+    decision: z.enum(["approve", "deny"]),
+    message: z.string().trim().max(2_000).optional()
+})
 
 export const ratingSchema = z.object({ rating: z.number().int().min(1).max(5) })
 export const commentSchema = z.object({ body: z.string().trim().min(1).max(5_000) })

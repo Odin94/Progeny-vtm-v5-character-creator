@@ -1,6 +1,12 @@
 import { z } from "zod"
 import { attributesSchema } from "./Attributes.js"
-import { powerSchema, ritualSchema, ceremonySchema, customDisciplineSchema } from "./Disciplines.js"
+import {
+    powerSchema,
+    ritualSchema,
+    ceremonySchema,
+    customDisciplineSchema,
+    homebrewSourceSchema
+} from "./Disciplines.js"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas.js"
 import { skillsSchema } from "./Skills.js"
 import { specialtySchema } from "./Specialties.js"
@@ -11,7 +17,8 @@ export const meritFlawSchema = z.object({
     summary: z.string(),
     excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
-    text: z.string().optional()
+    text: z.string().optional(),
+    homebrewSource: homebrewSourceSchema.optional()
 })
 
 export type MeritFlaw = z.infer<typeof meritFlawSchema>
@@ -27,7 +34,7 @@ export type Touchstone = z.infer<typeof touchstoneSchema>
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
 
-export const schemaVersion = 7
+export const schemaVersion = 8
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -40,6 +47,20 @@ export const characterSchema = z.object({
 
     clan: clanNameSchema,
     clanBane: clanBaneSchema.optional().default("default"),
+    homebrewClan: z
+        .object({
+            name: z.string(),
+            description: z.string(),
+            summary: z.string(),
+            logo: z.string(),
+            bane: z.string(),
+            compulsion: z.string(),
+            nativeDisciplines: disciplineNameSchema.array(),
+            excludedPredatorTypes: z.string().array(),
+            excludedMeritsAndFlaws: z.string().array(),
+            homebrewSource: homebrewSourceSchema
+        })
+        .optional(),
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,

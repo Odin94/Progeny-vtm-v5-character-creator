@@ -22,6 +22,10 @@ import {
     useDebouncedUncontrolledStringField,
     useDebouncedUncontrolledNumberField
 } from "../utils/useDebouncedUncontrolledField"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import type { HomebrewClan } from "~/data/Homebrew"
+import { getHomebrewSource } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
 
 type TopDataProps = {
     options: SheetOptions
@@ -30,7 +34,13 @@ type TopDataProps = {
 const TopData = ({ options }: TopDataProps) => {
     const { character, primaryColor, mode, setCharacter } = options
     const theme = useMantineTheme()
-    const clan = character.clan ? clans[character.clan] : null
+    const clan = character.homebrewClan ?? (character.clan ? clans[character.clan] : null)
+    const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const homebrewClans = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter((item): item is HomebrewClan & { id: string } => item.kind === "clan")
+            .map((item) => ({ item, collection }))
+    )
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isFreeMode = mode === "free"
 
@@ -155,14 +165,49 @@ const TopData = ({ options }: TopDataProps) => {
                                         .map((clanName) => ({
                                             value: clanName,
                                             label: clanName
-                                        }))}
-                                    value={character.clan || null}
+                                        }))
+                                        .concat(
+                                            homebrewClans.map(({ item, collection }) => ({
+                                                value: `homebrew:${collection.id}:${item.id}`,
+                                                label: `${item.name} · Homebrew (${collection.name})`
+                                            }))
+                                        )}
+                                    value={
+                                        character.homebrewClan
+                                            ? `homebrew:${character.homebrewClan.homebrewSource.collectionId}:${character.homebrewClan.homebrewSource.itemId}`
+                                            : character.clan || null
+                                    }
                                     onChange={(value) => {
                                         if (value) {
+                                            if (value.startsWith("homebrew:")) {
+                                                const [, collectionId, itemId] = value.split(":")
+                                                const match = homebrewClans.find(
+                                                    ({ item, collection }) =>
+                                                        item.id === itemId &&
+                                                        collection.id === collectionId
+                                                )
+                                                if (match) {
+                                                    setCharacter((current) => ({
+                                                        ...current,
+                                                        clan: "",
+                                                        homebrewClan: {
+                                                            ...match.item,
+                                                            homebrewSource: getHomebrewSource(
+                                                                match.item,
+                                                                match.collection
+                                                            )
+                                                        },
+                                                        availableDisciplineNames:
+                                                            match.item.nativeDisciplines
+                                                    }))
+                                                }
+                                                return
+                                            }
                                             const selectedClan = value as ClanName
                                             setCharacter((current) => ({
                                                 ...current,
                                                 clan: selectedClan,
+                                                homebrewClan: undefined,
                                                 availableDisciplineNames:
                                                     clans[selectedClan].nativeDisciplines
                                             }))
@@ -183,6 +228,11 @@ const TopData = ({ options }: TopDataProps) => {
                             ) : (
                                 <Group gap="xs">
                                     <Text>{clan.name}</Text>
+                                    {character.homebrewClan ? (
+                                        <HomebrewBadge
+                                            source={character.homebrewClan.homebrewSource}
+                                        />
+                                    ) : null}
                                 </Group>
                             )}
                         </Group>

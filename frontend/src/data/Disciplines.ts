@@ -22,6 +22,12 @@ export const amalgamPrerequisiteSchema = z.object({
 
 export type AmalgamPrerequisite = z.infer<typeof amalgamPrerequisiteSchema>
 
+export const homebrewSourceSchema = z.object({
+    itemId: z.string(),
+    collectionId: z.string(),
+    collectionName: z.string()
+})
+
 export const powerSchema = z.object({
     name: z.string(),
     description: z.string(),
@@ -31,7 +37,8 @@ export const powerSchema = z.object({
     discipline: disciplineNameSchema,
     rouseChecks: z.number().min(0).int(),
     amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
-    isCustom: z.boolean().optional()
+    isCustom: z.boolean().optional(),
+    homebrewSource: homebrewSourceSchema.optional()
 })
 
 export type Power = z.infer<typeof powerSchema>
@@ -45,7 +52,8 @@ export const ritualSchema = z.object({
     ingredients: z.string(),
     level: z.number().min(1).int(),
     discipline: disciplineNameSchema.optional(),
-    isCustom: z.boolean().optional()
+    isCustom: z.boolean().optional(),
+    homebrewSource: homebrewSourceSchema.optional()
 })
 
 export type Ritual = z.infer<typeof ritualSchema>
@@ -80,7 +88,8 @@ export type Discipline = z.infer<typeof disciplineSchema>
 export const customDisciplineSchema = z.object({
     name: z.string(),
     summary: z.string(),
-    logo: customDisciplineLogoSchema
+    logo: customDisciplineLogoSchema,
+    homebrewSource: homebrewSourceSchema.optional()
 })
 export type CustomDiscipline = z.infer<typeof customDisciplineSchema>
 

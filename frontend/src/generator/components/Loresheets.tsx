@@ -18,26 +18,57 @@ import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
 import { useProgressiveRendering } from "./useProgressiveRendering"
+import type { HomebrewCollection, HomebrewLoresheet, HomebrewSource } from "~/data/Homebrew"
+import { getHomebrewSource } from "~/utils/homebrewOptions"
+import HomebrewBadge from "~/components/HomebrewBadge"
+
+type DisplayMerit = MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
+type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMerit[] }
 
 type LoresheetProps = {
     character: Character
-    getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element
+    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => JSX.Element
     pickedMeritsAndFlaws: MeritFlaw[]
+    homebrewCollections: HomebrewCollection[]
 }
 
 export const Loresheets = ({
     character,
     getMeritOrFlawLine,
-    pickedMeritsAndFlaws
+    pickedMeritsAndFlaws,
+    homebrewCollections
 }: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const [loresheetQuery, setLoresheetQuery] = useState("")
-    const openLoresheet = essentialLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
+    const availableLoresheets: DisplayLoresheet[] = [
+        ...essentialLoresheets,
+        ...homebrewCollections.flatMap((collection) =>
+            collection.items
+                .filter(
+                    (item): item is HomebrewLoresheet & { id: string } => item.kind === "loresheet"
+                )
+                .map((item) => ({
+                    title: item.name,
+                    summary: item.summary || item.description,
+                    source: item.source,
+                    requirementFunctions: [],
+                    merits: item.tiers.map((tier) => ({
+                        name: tier.name,
+                        cost: [tier.level],
+                        summary: tier.summary,
+                        excludes: [],
+                        text: item.requirements,
+                        homebrewSource: getHomebrewSource(item, collection)
+                    }))
+                }))
+        )
+    ]
+    const openLoresheet = availableLoresheets.find((sheet) => sheet.title === openLoresheetTitle)
     const normalizedLoresheetQuery = loresheetQuery.trim().toLocaleLowerCase()
 
     const filteredLoresheets = useMemo(
         () =>
-            essentialLoresheets.filter((loresheet) => {
+            availableLoresheets.filter((loresheet) => {
                 const requirementsMet = loresheet.requirementFunctions.every((fun) =>
                     fun(character)
                 )
@@ -47,11 +78,11 @@ export const Loresheets = ({
 
                 return requirementsMet && titleMatches
             }),
-        [character, normalizedLoresheetQuery]
+        [availableLoresheets, character, normalizedLoresheetQuery]
     )
     const { visibleCount, sentinelRef } = useProgressiveRendering(filteredLoresheets.length, 9, 6)
 
-    const getLoresheetCol = (loresheet: Loresheet) => {
+    const getLoresheetCol = (loresheet: DisplayLoresheet) => {
         const sheetPicked =
             intersection(
                 pickedMeritsAndFlaws.map((m) => m.name),
@@ -104,6 +135,9 @@ export const Loresheets = ({
                                     <Badge color="teal" variant="light">
                                         picked
                                     </Badge>
+                                ) : null}
+                                {loresheet.merits[0]?.homebrewSource ? (
+                                    <HomebrewBadge source={loresheet.merits[0].homebrewSource} />
                                 ) : null}
                             </Group>
                             <Text
@@ -208,8 +242,8 @@ const OpenedLoresheet = ({
     getMeritOrFlawLine,
     setOpenLoresheetTitle
 }: {
-    loresheet: Loresheet
-    getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element
+    loresheet: DisplayLoresheet
+    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => JSX.Element
     setOpenLoresheetTitle: (t: string) => void
 }) => {
     const smallScreen = globals.isSmallScreen
