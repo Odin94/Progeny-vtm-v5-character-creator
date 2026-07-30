@@ -49,6 +49,7 @@ export type HomebrewPower = HomebrewItemBase & {
     amalgamPrerequisites: Array<{ discipline: string; level: number }>
     requiredTime?: string
     ingredients?: string
+    prerequisitePowers?: string[]
 }
 
 export type HomebrewMeritFlaw = HomebrewItemBase & {
@@ -197,6 +198,9 @@ export const createEmptyHomebrewItem = (kind: HomebrewItemKind): HomebrewItem =>
             ...((kind === "ritual" || kind === "ceremony" || kind === "formula") && {
                 requiredTime: "",
                 ingredients: ""
+            }),
+            ...(kind === "ceremony" && {
+                prerequisitePowers: []
             })
         }
     }

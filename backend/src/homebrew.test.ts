@@ -453,6 +453,22 @@ describe("Homebrew collections and library", () => {
                         dicePool: "",
                         rouseChecks: 0,
                         amalgamPrerequisites: []
+                    },
+                    {
+                        id: "local-ceremony",
+                        kind: "ceremony",
+                        name: "Call the Moon's Shade",
+                        summary: "",
+                        description: "",
+                        discipline: "oblivion",
+                        disciplineRef: { type: "official", name: "oblivion" },
+                        level: 1,
+                        dicePool: "",
+                        rouseChecks: 1,
+                        amalgamPrerequisites: [],
+                        requiredTime: "One hour",
+                        ingredients: "Moonlit vitae",
+                        prerequisitePowers: ["Ashes to Ashes"]
                     }
                 ]
             }
@@ -463,6 +479,7 @@ describe("Homebrew collections and library", () => {
             name: "Noctis",
             itemId: response.json().items[0].id
         })
+        expect(response.json().items[2].prerequisitePowers).toEqual(["Ashes to Ashes"])
 
         const invalid = await app.inject({
             method: "PUT",
@@ -484,6 +501,20 @@ describe("Homebrew collections and library", () => {
             }
         })
         expect(invalid.statusCode).toBe(400)
+
+        const duplicateIds = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${response.json().id as string}`,
+            headers: csrfHeaders,
+            payload: {
+                ...response.json(),
+                items: response.json().items.map((item: Record<string, unknown>) => ({
+                    ...item,
+                    id: "duplicate-item"
+                }))
+            }
+        })
+        expect(duplicateIds.statusCode).toBe(400)
     })
 
     it("returns the original publication provenance for copied collections", async () => {

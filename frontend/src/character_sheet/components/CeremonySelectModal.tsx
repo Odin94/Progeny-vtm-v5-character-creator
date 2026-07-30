@@ -13,7 +13,7 @@ import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomCeremonyModal from "./CustomCeremonyModal"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToCeremony } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremonySelectModalProps = {
@@ -39,10 +39,7 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
         ...homebrewCollections.flatMap((collection) =>
             collection.items
                 .filter((item): item is HomebrewPower & { id: string } => item.kind === "ceremony")
-                .map((item) => ({
-                    ...homebrewPowerToRitual(item, collection),
-                    prerequisitePowers: []
-                }))
+                .map((item) => homebrewPowerToCeremony(item, collection))
         )
     ]
     const availableCeremonies = ceremonyCatalog.filter(

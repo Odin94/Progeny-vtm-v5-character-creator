@@ -4,6 +4,7 @@ import {
     getHomebrewDisciplineOptions,
     getPowerIdentity,
     homebrewMeritFlawToCharacter,
+    homebrewPowerToCeremony,
     homebrewPowerToCharacterPower
 } from "~/utils/homebrewOptions"
 
@@ -111,6 +112,19 @@ describe("Homebrew character options", () => {
             requiredTime: "One night",
             ingredients: "Moonlit vitae"
         })
+        expect(
+            homebrewPowerToCeremony(
+                {
+                    ...powerItem,
+                    id: "ceremony-1",
+                    kind: "ceremony",
+                    discipline: "oblivion",
+                    disciplineRef: { type: "official", name: "oblivion" },
+                    prerequisitePowers: ["Ashes to Ashes"]
+                },
+                collection
+            ).prerequisitePowers
+        ).toEqual(["Ashes to Ashes"])
         expect(merit).toMatchObject({
             name: "Moon-Kissed",
             level: 2,
@@ -178,5 +192,30 @@ describe("Homebrew character options", () => {
 
         expect(options.auspex.powers.map((power) => power.name)).toContain("Read the Ashes")
         expect(homebrewOption?.powers.map((power) => power.name)).not.toContain("Read the Ashes")
+    })
+
+    it("does not expose an official Discipline for an explicit same-named Homebrew target", () => {
+        const collisionCollection: HomebrewCollection = {
+            ...collection,
+            items: [
+                {
+                    id: "homebrew-auspex",
+                    kind: "discipline",
+                    name: "auspex",
+                    summary: "An alternate Auspex.",
+                    description: "",
+                    logo: ""
+                }
+            ]
+        }
+
+        const options = getHomebrewDisciplineOptions(
+            [collisionCollection],
+            [{ type: "homebrew", name: "auspex", itemId: "homebrew-auspex" }]
+        )
+
+        expect(options.auspex).toBeUndefined()
+        expect(Object.values(options)).toHaveLength(1)
+        expect(Object.values(options)[0].homebrewSource?.itemId).toBe("homebrew-auspex")
     })
 })

@@ -295,7 +295,11 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
         "/homebrew/collections",
         {
             preHandler: authenticateUser,
-            schema: { body: zodToFastifySchema(homebrewCollectionInputSchema) }
+            schema: {
+                body: zodToFastifySchema(homebrewCollectionInputSchema, {
+                    preserveUnionBranchProperties: true
+                })
+            }
         },
         async (request, reply) => {
             const parsedInput = homebrewCollectionInputSchema.safeParse(request.body)
@@ -333,7 +337,9 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             preHandler: authenticateUser,
             schema: {
                 params: zodToFastifySchema(homebrewCollectionParamsSchema),
-                body: zodToFastifySchema(homebrewCollectionInputSchema)
+                body: zodToFastifySchema(homebrewCollectionInputSchema, {
+                    preserveUnionBranchProperties: true
+                })
             }
         },
         async (request, reply) => {

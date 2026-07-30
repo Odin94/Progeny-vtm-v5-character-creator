@@ -142,7 +142,12 @@ export const replaceHomebrewCollection = async (
     input: HomebrewCollectionInput
 ) => {
     const parsed = homebrewCollectionInputSchema.parse(input)
-    const items = await normalizeItemIds(collectionId, parsed.items)
+    const normalizedItems = await normalizeItemIds(collectionId, parsed.items)
+    const normalized = homebrewCollectionInputSchema.parse({
+        ...parsed,
+        items: normalizedItems
+    })
+    const items = normalized.items.map((item) => ({ ...item, id: item.id! }))
 
     db.transaction((tx) => {
         tx.update(schema.homebrewCollections)

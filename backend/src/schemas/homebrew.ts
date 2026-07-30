@@ -51,7 +51,8 @@ export const homebrewCeremonySchema = powerBaseSchema.extend({
     kind: z.literal("ceremony"),
     discipline: z.literal("oblivion"),
     requiredTime: z.string().trim().max(500),
-    ingredients: z.string().trim().max(2_000)
+    ingredients: z.string().trim().max(2_000),
+    prerequisitePowers: z.array(nameSchema).max(10).optional()
 })
 export const homebrewFormulaSchema = powerBaseSchema.extend({
     kind: z.literal("formula"),
@@ -131,6 +132,14 @@ export const homebrewCollectionInputSchema = z
         items: z.array(homebrewItemSchema).max(200).default([])
     })
     .superRefine((collection, context) => {
+        const submittedIds = collection.items.flatMap((item) => (item.id ? [item.id] : []))
+        if (new Set(submittedIds).size !== submittedIds.length) {
+            context.addIssue({
+                code: "custom",
+                path: ["items"],
+                message: "Homebrew item IDs must be unique within a collection"
+            })
+        }
         const disciplinesById = new Map(
             collection.items
                 .filter((item) => item.kind === "discipline" && item.id)

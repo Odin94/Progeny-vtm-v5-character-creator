@@ -237,6 +237,14 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                               />
                           </SimpleGrid>
                       ) : null}
+                      {power.kind === "ceremony" ? (
+                          <TagsInput
+                              label="Prerequisite Powers"
+                              description="The character must know at least one of these Oblivion Powers. Leave empty for none."
+                              value={power.prerequisitePowers ?? []}
+                              onChange={(prerequisitePowers) => update({ prerequisitePowers })}
+                          />
+                      ) : null}
                   </>
               )
           })()

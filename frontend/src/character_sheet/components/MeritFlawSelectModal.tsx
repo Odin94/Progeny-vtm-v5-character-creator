@@ -176,7 +176,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 if (!map.has(excludedName)) {
                     map.set(excludedName, [])
                 }
-                map.get(excludedName)?.push(`${character.clan} clan`)
+                map.get(excludedName)?.push(
+                    `${character.homebrewClan?.name ?? character.clan} clan`
+                )
             })
         }
         return map
@@ -185,7 +187,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         character.flaws,
         character.predatorType.pickedMeritsAndFlaws,
         character.predatorType.name,
-        character.clan
+        character.clan,
+        character.homebrewClan
     ])
 
     useEffect(() => {

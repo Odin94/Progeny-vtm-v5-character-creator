@@ -1,4 +1,5 @@
 import type { MeritFlaw } from "~/data/Character"
+import type { Ceremony } from "~/data/Ceremonies"
 import type { Discipline, Power, Ritual } from "~/data/Disciplines"
 import { disciplines } from "~/data/Disciplines"
 import type {
@@ -65,6 +66,14 @@ export const homebrewPowerToRitual = (
     ingredients: item.ingredients ?? "",
     isCustom: false,
     homebrewSource: getHomebrewSource(item, collection)
+})
+
+export const homebrewPowerToCeremony = (
+    item: HomebrewPower & { id: string },
+    collection: HomebrewCollection
+): Ceremony => ({
+    ...homebrewPowerToRitual(item, collection),
+    prerequisitePowers: item.prerequisitePowers ?? []
 })
 
 export const getPowerIdentity = (power: Pick<Power, "name" | "discipline" | "homebrewSource">) =>
@@ -140,7 +149,13 @@ export const getHomebrewDisciplineOptions = (
 
     for (const name of new Set(availableNames)) {
         const official = disciplines[name]
-        if (official) {
+        const officialIsAvailable = availableDisciplines.some((reference) =>
+            typeof reference === "string"
+                ? reference.toLowerCase() === name.toLowerCase()
+                : reference.type === "official" &&
+                  reference.name.toLowerCase() === name.toLowerCase()
+        )
+        if (official && officialIsAvailable) {
             result[name] = {
                 ...official,
                 optionKey: name,

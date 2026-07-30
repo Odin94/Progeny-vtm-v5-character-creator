@@ -20,7 +20,7 @@ import { globals } from "../../globals"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import { getRitualIdentity, homebrewPowerToRitual } from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToCeremony } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremoniesPickerProps = {
@@ -195,10 +195,7 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
                     (item): item is HomebrewPower & { id: string } =>
                         item.kind === "ceremony" && item.level === 1
                 )
-                .map((item) => ({
-                    ...homebrewPowerToRitual(item, collection),
-                    prerequisitePowers: []
-                }))
+                .map((item) => homebrewPowerToCeremony(item, collection))
         )
     ]
     const canTakeAnyCeremony = levelOneCeremonies.some((ceremony) =>
