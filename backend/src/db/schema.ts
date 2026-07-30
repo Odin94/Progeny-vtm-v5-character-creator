@@ -229,6 +229,220 @@ export const impersonationSessions = sqliteTable(
     })
 )
 
+export const homebrewCollections = sqliteTable(
+    "homebrew_collections",
+    {
+        id: text("id").primaryKey(),
+        ownerId: text("owner_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        name: text("name").notNull(),
+        shortDescription: text("short_description").notNull().default(""),
+        description: text("description").notNull().default(""),
+        tags: text("tags").notNull().default("[]"),
+        contentWarning: text("content_warning").notNull().default(""),
+        sourceLibraryEntryId: text("source_library_entry_id"),
+        sourcePublicationId: text("source_publication_id"),
+        rootSourceLibraryEntryId: text("root_source_library_entry_id"),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        updatedAt: integer("updated_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        ownerIdIdx: index("homebrew_collections_owner_id_idx").on(table.ownerId)
+    })
+)
+
+export const homebrewItems = sqliteTable(
+    "homebrew_items",
+    {
+        id: text("id").primaryKey(),
+        collectionId: text("collection_id")
+            .notNull()
+            .references(() => homebrewCollections.id, { onDelete: "cascade" }),
+        kind: text("kind", {
+            enum: [
+                "discipline",
+                "power",
+                "ritual",
+                "ceremony",
+                "formula",
+                "loresheet",
+                "merit",
+                "flaw",
+                "clan"
+            ]
+        }).notNull(),
+        data: text("data").notNull(),
+        sortOrder: integer("sort_order").notNull().default(0),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        updatedAt: integer("updated_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        collectionIdIdx: index("homebrew_items_collection_id_idx").on(table.collectionId)
+    })
+)
+
+export const coterieHomebrewCollections = sqliteTable(
+    "coterie_homebrew_collections",
+    {
+        id: text("id").primaryKey(),
+        coterieId: text("coterie_id")
+            .notNull()
+            .references(() => coteries.id, { onDelete: "cascade" }),
+        collectionId: text("collection_id")
+            .notNull()
+            .references(() => homebrewCollections.id, { onDelete: "cascade" }),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        coterieIdIdx: index("coterie_homebrew_collections_coterie_id_idx").on(table.coterieId),
+        uniqueCollection: uniqueIndex("coterie_homebrew_collections_unique_idx").on(
+            table.coterieId,
+            table.collectionId
+        )
+    })
+)
+
+export const homebrewLibraryEntries = sqliteTable(
+    "homebrew_library_entries",
+    {
+        id: text("id").primaryKey(),
+        originalCollectionId: text("original_collection_id"),
+        authorId: text("author_id").references(() => users.id, { onDelete: "set null" }),
+        authorNickname: text("author_nickname").notNull(),
+        activePublicationId: text("active_publication_id"),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        unpublishedAt: integer("unpublished_at", { mode: "timestamp" })
+    },
+    (table) => ({
+        authorIdIdx: index("homebrew_library_entries_author_id_idx").on(table.authorId)
+    })
+)
+
+export const homebrewPublications = sqliteTable(
+    "homebrew_publications",
+    {
+        id: text("id").primaryKey(),
+        libraryEntryId: text("library_entry_id")
+            .notNull()
+            .references(() => homebrewLibraryEntries.id, { onDelete: "cascade" }),
+        version: integer("version").notNull(),
+        snapshot: text("snapshot").notNull(),
+        approvedById: text("approved_by_id").references(() => users.id, {
+            onDelete: "set null"
+        }),
+        approvedAt: integer("approved_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        libraryEntryIdIdx: index("homebrew_publications_library_entry_id_idx").on(
+            table.libraryEntryId
+        ),
+        uniqueVersion: uniqueIndex("homebrew_publications_unique_version_idx").on(
+            table.libraryEntryId,
+            table.version
+        )
+    })
+)
+
+export const homebrewPublishRequests = sqliteTable(
+    "homebrew_publish_requests",
+    {
+        id: text("id").primaryKey(),
+        collectionId: text("collection_id").references(() => homebrewCollections.id, {
+            onDelete: "set null"
+        }),
+        requesterId: text("requester_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        libraryEntryId: text("library_entry_id").references(() => homebrewLibraryEntries.id, {
+            onDelete: "set null"
+        }),
+        snapshot: text("snapshot").notNull(),
+        status: text("status", { enum: ["pending", "approved", "denied", "withdrawn"] })
+            .notNull()
+            .default("pending"),
+        denialMessage: text("denial_message"),
+        reviewedById: text("reviewed_by_id").references(() => users.id, {
+            onDelete: "set null"
+        }),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        reviewedAt: integer("reviewed_at", { mode: "timestamp" })
+    },
+    (table) => ({
+        requesterIdIdx: index("homebrew_publish_requests_requester_id_idx").on(table.requesterId),
+        statusIdx: index("homebrew_publish_requests_status_idx").on(table.status),
+        createdAtIdx: index("homebrew_publish_requests_created_at_idx").on(table.createdAt)
+    })
+)
+
+export const homebrewRatings = sqliteTable(
+    "homebrew_ratings",
+    {
+        id: text("id").primaryKey(),
+        libraryEntryId: text("library_entry_id")
+            .notNull()
+            .references(() => homebrewLibraryEntries.id, { onDelete: "cascade" }),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        rating: integer("rating").notNull(),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        updatedAt: integer("updated_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        uniqueRating: uniqueIndex("homebrew_ratings_unique_idx").on(
+            table.libraryEntryId,
+            table.userId
+        )
+    })
+)
+
+export const homebrewComments = sqliteTable(
+    "homebrew_comments",
+    {
+        id: text("id").primaryKey(),
+        libraryEntryId: text("library_entry_id")
+            .notNull()
+            .references(() => homebrewLibraryEntries.id, { onDelete: "cascade" }),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        body: text("body").notNull(),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        updatedAt: integer("updated_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        entryCreatedIdx: index("homebrew_comments_entry_created_idx").on(
+            table.libraryEntryId,
+            table.createdAt
+        )
+    })
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Character = typeof characters.$inferSelect
@@ -249,6 +463,11 @@ export type CharacterShare = typeof characterShares.$inferSelect
 export type NewCharacterShare = typeof characterShares.$inferInsert
 export type ImpersonationSession = typeof impersonationSessions.$inferSelect
 export type NewImpersonationSession = typeof impersonationSessions.$inferInsert
+export type HomebrewCollection = typeof homebrewCollections.$inferSelect
+export type HomebrewItem = typeof homebrewItems.$inferSelect
+export type HomebrewLibraryEntry = typeof homebrewLibraryEntries.$inferSelect
+export type HomebrewPublication = typeof homebrewPublications.$inferSelect
+export type HomebrewPublishRequest = typeof homebrewPublishRequests.$inferSelect
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -259,7 +478,10 @@ export const usersRelations = relations(users, ({ many }) => ({
     sharedCharacters: many(characterShares, { relationName: "sharedWith" }),
     sharedBy: many(characterShares, { relationName: "sharedBy" }),
     impersonationSessionsStarted: many(impersonationSessions, { relationName: "superadmin" }),
-    impersonationSessionsReceived: many(impersonationSessions, { relationName: "impersonated" })
+    impersonationSessionsReceived: many(impersonationSessions, { relationName: "impersonated" }),
+    homebrewCollections: many(homebrewCollections),
+    homebrewRatings: many(homebrewRatings),
+    homebrewComments: many(homebrewComments)
 }))
 
 export const charactersRelations = relations(characters, ({ one, many }) => ({
@@ -280,7 +502,97 @@ export const coteriesRelations = relations(coteries, ({ one, many }) => ({
     members: many(coterieMembers),
     playerMemberships: many(coteriePlayerMemberships),
     invites: many(coterieInvites),
-    noteVersions: many(coterieNoteVersions)
+    noteVersions: many(coterieNoteVersions),
+    homebrewCollections: many(coterieHomebrewCollections)
+}))
+
+export const homebrewCollectionsRelations = relations(homebrewCollections, ({ one, many }) => ({
+    owner: one(users, {
+        fields: [homebrewCollections.ownerId],
+        references: [users.id]
+    }),
+    items: many(homebrewItems),
+    coteries: many(coterieHomebrewCollections),
+    publishRequests: many(homebrewPublishRequests)
+}))
+
+export const homebrewItemsRelations = relations(homebrewItems, ({ one }) => ({
+    collection: one(homebrewCollections, {
+        fields: [homebrewItems.collectionId],
+        references: [homebrewCollections.id]
+    })
+}))
+
+export const coterieHomebrewCollectionsRelations = relations(
+    coterieHomebrewCollections,
+    ({ one }) => ({
+        coterie: one(coteries, {
+            fields: [coterieHomebrewCollections.coterieId],
+            references: [coteries.id]
+        }),
+        collection: one(homebrewCollections, {
+            fields: [coterieHomebrewCollections.collectionId],
+            references: [homebrewCollections.id]
+        })
+    })
+)
+
+export const homebrewLibraryEntriesRelations = relations(
+    homebrewLibraryEntries,
+    ({ one, many }) => ({
+        author: one(users, {
+            fields: [homebrewLibraryEntries.authorId],
+            references: [users.id]
+        }),
+        publications: many(homebrewPublications),
+        requests: many(homebrewPublishRequests),
+        ratings: many(homebrewRatings),
+        comments: many(homebrewComments)
+    })
+)
+
+export const homebrewPublicationsRelations = relations(homebrewPublications, ({ one }) => ({
+    libraryEntry: one(homebrewLibraryEntries, {
+        fields: [homebrewPublications.libraryEntryId],
+        references: [homebrewLibraryEntries.id]
+    })
+}))
+
+export const homebrewPublishRequestsRelations = relations(homebrewPublishRequests, ({ one }) => ({
+    collection: one(homebrewCollections, {
+        fields: [homebrewPublishRequests.collectionId],
+        references: [homebrewCollections.id]
+    }),
+    requester: one(users, {
+        fields: [homebrewPublishRequests.requesterId],
+        references: [users.id]
+    }),
+    libraryEntry: one(homebrewLibraryEntries, {
+        fields: [homebrewPublishRequests.libraryEntryId],
+        references: [homebrewLibraryEntries.id]
+    })
+}))
+
+export const homebrewRatingsRelations = relations(homebrewRatings, ({ one }) => ({
+    libraryEntry: one(homebrewLibraryEntries, {
+        fields: [homebrewRatings.libraryEntryId],
+        references: [homebrewLibraryEntries.id]
+    }),
+    user: one(users, {
+        fields: [homebrewRatings.userId],
+        references: [users.id]
+    })
+}))
+
+export const homebrewCommentsRelations = relations(homebrewComments, ({ one }) => ({
+    libraryEntry: one(homebrewLibraryEntries, {
+        fields: [homebrewComments.libraryEntryId],
+        references: [homebrewLibraryEntries.id]
+    }),
+    user: one(users, {
+        fields: [homebrewComments.userId],
+        references: [users.id]
+    })
 }))
 
 export const coterieMembersRelations = relations(coterieMembers, ({ one }) => ({

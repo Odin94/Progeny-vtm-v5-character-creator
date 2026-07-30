@@ -11,6 +11,7 @@ import { shareRoutes } from "./routes/shares.js"
 import { authRoutes } from "./routes/auth.js"
 import { adminRoutes } from "./routes/admin.js"
 import { preferencesRoutes } from "./routes/preferences.js"
+import { homebrewRoutes } from "./routes/homebrew.js"
 import { characterSyncWebSocket } from "./websocket/characterSync.js"
 import { sessionChatWebSocket } from "./websocket/sessionChat.js"
 import { env } from "./config/env.js"
@@ -174,6 +175,7 @@ export async function buildApp() {
     await fastify.register(characterNoteRoutes)
     await fastify.register(coterieRoutes)
     await fastify.register(shareRoutes)
+    await fastify.register(homebrewRoutes)
 
     await fastify.register(characterSyncWebSocket)
     await fastify.register(sessionChatWebSocket)

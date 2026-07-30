@@ -71,6 +71,13 @@
       "when": 1784136495770,
       "tag": "0009_chemical_havok",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1785444750735,
+      "tag": "0010_new_slapstick",
+      "breakpoints": true
     }
   ]
 }

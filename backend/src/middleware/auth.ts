@@ -32,6 +32,14 @@ export type ImpersonationRequestState = {
     impersonatedUser: AuthenticatedUser
 }
 
+declare module "fastify" {
+    interface FastifyRequest {
+        user?: AuthenticatedUser
+        actorUser?: AuthenticatedUser
+        impersonation?: ImpersonationRequestState
+    }
+}
+
 export interface AuthenticatedRequest extends FastifyRequest {
     user?: AuthenticatedUser
     actorUser?: AuthenticatedUser
