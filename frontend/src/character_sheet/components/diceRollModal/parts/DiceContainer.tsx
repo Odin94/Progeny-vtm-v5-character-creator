@@ -33,6 +33,36 @@ const DiceContainer = ({
         }))
     )
 
+    if (isMobile) {
+        return (
+            <Group
+                justify="center"
+                gap="xs"
+                wrap="wrap"
+                style={{ minHeight: dice.length > 0 ? "50px" : 0, flexShrink: 0 }}
+            >
+                <AnimatePresence>
+                    {dice.map((die, index) => (
+                        <Die
+                            key={die.id}
+                            value={die.value}
+                            isRolling={die.isRolling}
+                            primaryColor={die.isBloodDie ? vtmRed : primaryColor}
+                            onClick={() => onDieClick?.(die.id, die.isBloodDie)}
+                            isSelected={selectedDiceIds.has(die.id)}
+                            isSelectable={
+                                !die.isBloodDie && !die.isRolling && onDieClick !== undefined
+                            }
+                            isMobile
+                            isBloodDie={die.isBloodDie}
+                            ariaLabel={`${die.isBloodDie ? "Hunger" : "Regular"} die ${index + 1} showing ${die.value === 10 ? "0" : die.value}`}
+                        />
+                    ))}
+                </AnimatePresence>
+            </Group>
+        )
+    }
+
     return (
         <Group
             justify="center"
@@ -141,7 +171,7 @@ const DiceContainer = ({
                                 isSelectable={
                                     !die.isBloodDie && !die.isRolling && onDieClick !== undefined
                                 }
-                                isMobile={false}
+                                isMobile={isMobile}
                                 isBloodDie={die.isBloodDie}
                             />
                         </motion.div>

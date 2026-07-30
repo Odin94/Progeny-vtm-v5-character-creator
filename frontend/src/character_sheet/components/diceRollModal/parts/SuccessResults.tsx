@@ -7,6 +7,7 @@ import criticalIcon from "~/resources/diceResults/critical.svg"
 import bloodSuccessIcon from "~/resources/diceResults/blood-success.svg"
 import bloodCriticalIcon from "~/resources/diceResults/blood-critical.svg"
 import bestialFailureIcon from "~/resources/diceResults/bestial-failure.svg"
+import { globals } from "~/globals"
 
 type SuccessResult = {
     type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"
@@ -20,8 +21,6 @@ type SuccessResultsProps = {
     onReroll?: () => void
     canReroll?: boolean
     selectedDiceCount?: number
-    rerollableDiceCount?: number
-    isMobile?: boolean
     rerollDisabledReason?: string
 }
 
@@ -32,8 +31,6 @@ const SuccessResults = ({
     onReroll,
     canReroll = false,
     selectedDiceCount = 0,
-    rerollableDiceCount = 0,
-    isMobile = false,
     rerollDisabledReason
 }: SuccessResultsProps) => {
     const theme = useMantineTheme()
@@ -114,12 +111,15 @@ const SuccessResults = ({
                         </Text>
                         {onReroll ? (
                             <Group gap="xs" wrap="nowrap">
-                                {isMobile ? (
-                                    rerollableDiceCount > 0 ? (
-                                        <Badge size="sm" variant="filled" color={primaryColor}>
-                                            {rerollableDiceCount} WP rerollable
-                                        </Badge>
-                                    ) : null
+                                {rerollDisabledReason === "No willpower left to reroll" ? (
+                                    <Badge size="sm" variant="outline" color="gray">
+                                        No WP left
+                                    </Badge>
+                                ) : rerollDisabledReason ===
+                                  "Select up to 3 regular dice to reroll" ? (
+                                    <Badge size="sm" variant="outline" color={primaryColor}>
+                                        Tap dice
+                                    </Badge>
                                 ) : selectedDiceCount > 0 ? (
                                     <Badge size="sm" variant="filled" color={primaryColor}>
                                         {selectedDiceCount}/3
@@ -128,25 +128,28 @@ const SuccessResults = ({
                                 <Tooltip
                                     label={
                                         rerollDisabledReason ??
-                                        (isMobile
-                                            ? rerollableDiceCount > 0
-                                                ? `Reroll ${rerollableDiceCount} non-success dice (1 willpower)`
-                                                : "No dice to reroll"
-                                            : selectedDiceCount > 0
-                                              ? `Reroll ${selectedDiceCount} dice (1 willpower)`
-                                              : "Select up to 3 non-blood dice to reroll (1 willpower)")
+                                        (selectedDiceCount > 0
+                                            ? `Reroll ${selectedDiceCount} dice (1 willpower)`
+                                            : "Select up to 3 regular dice to reroll (1 willpower)")
                                     }
                                     zIndex={2100}
+                                    events={globals.tooltipTriggerEvents}
                                 >
-                                    <ActionIcon
-                                        color={primaryColor}
-                                        variant={canReroll ? "filled" : "outline"}
-                                        onClick={onReroll}
-                                        disabled={!canReroll}
-                                        size="sm"
-                                    >
-                                        <IconRefresh size={16} />
-                                    </ActionIcon>
+                                    <span style={{ display: "inline-flex" }}>
+                                        <ActionIcon
+                                            aria-label="Reroll selected dice with willpower"
+                                            color={primaryColor}
+                                            variant={canReroll ? "filled" : "outline"}
+                                            onClick={onReroll}
+                                            disabled={!canReroll}
+                                            size="sm"
+                                            style={
+                                                !canReroll ? { pointerEvents: "none" } : undefined
+                                            }
+                                        >
+                                            <IconRefresh size={16} />
+                                        </ActionIcon>
+                                    </span>
                                 </Tooltip>
                             </Group>
                         ) : null}

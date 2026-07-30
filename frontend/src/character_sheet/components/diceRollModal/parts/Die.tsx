@@ -14,6 +14,7 @@ type DieProps = {
     isSelectable?: boolean
     isMobile?: boolean
     isBloodDie?: boolean
+    ariaLabel?: string
 }
 
 const Die = ({
@@ -26,7 +27,8 @@ const Die = ({
     isSelected = false,
     isSelectable = false,
     isMobile = false,
-    isBloodDie = false
+    isBloodDie = false,
+    ariaLabel
 }: DieProps) => {
     const theme = useMantineTheme()
     const colorValue = primaryColor.startsWith("#")
@@ -38,14 +40,26 @@ const Die = ({
         const dieColor = isBloodDie ? vtmRed : colorValue
 
         return (
-            <motion.div
+            <motion.button
+                type="button"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 whileTap={isSelectable ? { scale: 0.9 } : undefined}
                 onClick={isSelectable ? onClick : undefined}
-                style={{ cursor: isSelectable ? "pointer" : "default" }}
+                disabled={!isSelectable}
+                aria-label={
+                    ariaLabel ?? `${isBloodDie ? "Hunger" : "Regular"} die showing ${displayValue}`
+                }
+                aria-pressed={isSelectable ? isSelected : undefined}
+                style={{
+                    cursor: isSelectable ? "pointer" : "default",
+                    appearance: "none",
+                    background: "none",
+                    border: 0,
+                    padding: 0
+                }}
             >
                 <Badge
                     size="xl"
@@ -70,7 +84,7 @@ const Die = ({
                 >
                     {displayValue}
                 </Badge>
-            </motion.div>
+            </motion.button>
         )
     }
     const seededRandom = (offset: number = 0) => {
