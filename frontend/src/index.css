@@ -16,6 +16,11 @@ html {
 
 :root {
     --text-color: "#c9c9c9";
+    --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --motion-duration-press: 140ms;
+    --motion-duration-ui: 180ms;
 }
 
 body {

@@ -18,7 +18,7 @@ import {
     IconMessageCircle
 } from "@tabler/icons-react"
 import { Buffer } from "buffer"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
@@ -45,13 +45,8 @@ type CharacterSheetMenuProps = {
     options: SheetOptions
 }
 
-const slideVariants = {
-    enter: (dir: number) => ({ x: dir * 40, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir * -40, opacity: 0 })
-}
-
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
+    const shouldReduceMotion = useReducedMotion()
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
@@ -63,6 +58,11 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const direction = useRef<1 | -1>(1)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [wrapperMinHeight, setWrapperMinHeight] = useState<number | undefined>(undefined)
+    const slideVariants = {
+        enter: (dir: number) => ({ x: shouldReduceMotion ? 0 : dir * 40, opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (dir: number) => ({ x: shouldReduceMotion ? 0 : dir * -40, opacity: 0 })
+    }
 
     const navigateTo = (nextView: MenuView) => {
         direction.current = nextView === "menu" ? -1 : 1
@@ -291,7 +291,11 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                 initial="enter"
                                 animate="center"
                                 exit="exit"
-                                transition={{ type: "tween", duration: 0.18, ease: "easeInOut" }}
+                                transition={{
+                                    type: "tween",
+                                    duration: 0.18,
+                                    ease: [0.77, 0, 0.175, 1]
+                                }}
                             >
                                 {view === "menu" ? (
                                     <Stack gap="xl">

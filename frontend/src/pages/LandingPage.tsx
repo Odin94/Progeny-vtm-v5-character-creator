@@ -18,7 +18,7 @@ import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import { IconSparkles } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { useState } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import SupportConversationButton from "~/components/SupportConversationButton"
@@ -75,6 +75,7 @@ function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick }: FeatureCa
 }
 
 export default function LandingPage() {
+    const shouldReduceMotion = useReducedMotion()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const { isAuthenticated, signIn } = useAuth()
@@ -204,9 +205,12 @@ export default function LandingPage() {
                 />
                 <Container size="md" className="landing-page__hero-content">
                     <motion.div
-                        initial={{ opacity: 0, y: 28 }}
+                        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 28 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.55, ease: "easeOut" }}
+                        transition={{
+                            duration: shouldReduceMotion ? 0.12 : 0.55,
+                            ease: [0.23, 1, 0.32, 1]
+                        }}
                     >
                         <Stack gap="lg" align="center">
                             <Text size="xs" className="landing-page__eyebrow">
