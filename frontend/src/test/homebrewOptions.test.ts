@@ -35,6 +35,7 @@ const collection: HomebrewCollection = {
             summary: "Draw strength from moonlight.",
             description: "",
             discipline: "Noctis",
+            disciplineRef: { type: "homebrew", name: "Noctis", itemId: "discipline-1" },
             level: 1,
             dicePool: "Resolve + Noctis",
             rouseChecks: 1,
@@ -47,6 +48,7 @@ const collection: HomebrewCollection = {
             summary: "Read memories left in ash.",
             description: "",
             discipline: "auspex",
+            disciplineRef: { type: "official", name: "auspex" },
             level: 1,
             dicePool: "Wits + Auspex",
             rouseChecks: 0,
@@ -85,6 +87,18 @@ describe("Homebrew character options", () => {
         }
 
         const power = homebrewPowerToCharacterPower(powerItem, collection)
+        const formula = homebrewPowerToCharacterPower(
+            {
+                ...powerItem,
+                id: "formula-1",
+                kind: "formula",
+                discipline: "thin-blood alchemy",
+                disciplineRef: { type: "official", name: "thin-blood alchemy" },
+                requiredTime: "One night",
+                ingredients: "Moonlit vitae"
+            },
+            collection
+        )
         const merit = homebrewMeritFlawToCharacter(meritItem, 2, collection)
 
         expect(power.homebrewSource).toEqual({
@@ -93,6 +107,10 @@ describe("Homebrew character options", () => {
             collectionName: "Night Arts"
         })
         expect(power.disciplineHomebrewSource).toMatchObject({ itemId: "discipline-1" })
+        expect(formula).toMatchObject({
+            requiredTime: "One night",
+            ingredients: "Moonlit vitae"
+        })
         expect(merit).toMatchObject({
             name: "Moon-Kissed",
             level: 2,
@@ -108,7 +126,15 @@ describe("Homebrew character options", () => {
             name: "Other Night Arts",
             items: collection.items.map((item) => ({
                 ...item,
-                id: `${item.id}-other`
+                id: `${item.id}-other`,
+                ...(item.kind === "power" && item.disciplineRef?.type === "homebrew"
+                    ? {
+                          disciplineRef: {
+                              ...item.disciplineRef,
+                              itemId: `${item.disciplineRef.itemId}-other`
+                          }
+                      }
+                    : {})
             }))
         }
         const options = getHomebrewDisciplineOptions([collection, secondCollection], ["Noctis"])
@@ -122,5 +148,35 @@ describe("Homebrew character options", () => {
             "homebrew:collection-1:power-1",
             "homebrew:collection-2:power-1-other"
         ])
+    })
+
+    it("keeps an explicit official target separate from a same-named Homebrew Discipline", () => {
+        const officialAuspexPower = {
+            ...collection.items[2],
+            id: "official-auspex-power",
+            disciplineRef: { type: "official" as const, name: "auspex" }
+        }
+        const collisionCollection: HomebrewCollection = {
+            ...collection,
+            items: [
+                {
+                    id: "homebrew-auspex",
+                    kind: "discipline",
+                    name: "auspex",
+                    summary: "An alternate Auspex.",
+                    description: "",
+                    logo: ""
+                },
+                officialAuspexPower
+            ]
+        }
+
+        const options = getHomebrewDisciplineOptions([collisionCollection], ["auspex"])
+        const homebrewOption = Object.values(options).find(
+            (option) => option.homebrewSource?.itemId === "homebrew-auspex"
+        )
+
+        expect(options.auspex.powers.map((power) => power.name)).toContain("Read the Ashes")
+        expect(homebrewOption?.powers.map((power) => power.name)).not.toContain("Read the Ashes")
     })
 })

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
     applyCharacterCompatibilityPatches,
+    getCharacterExcludedMeritsAndFlaws,
     getCharacterExcludedPredatorTypes,
     getEmptyCharacter,
     schemaVersion
@@ -66,7 +67,7 @@ describe("character compatibility patches", () => {
             compulsion: "Wander",
             nativeDisciplines: ["auspex"],
             excludedPredatorTypes: ["Alleycat"],
-            excludedMeritsAndFlaws: [],
+            excludedMeritsAndFlaws: ["Beautiful"],
             homebrewSource: {
                 itemId: "clan-1",
                 collectionId: "collection-1",
@@ -75,5 +76,6 @@ describe("character compatibility patches", () => {
         }
 
         expect(getCharacterExcludedPredatorTypes(character)).toEqual(["Alleycat"])
+        expect(getCharacterExcludedMeritsAndFlaws(character)).toEqual(["Beautiful"])
     })
 })

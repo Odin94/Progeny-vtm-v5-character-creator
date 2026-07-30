@@ -2,6 +2,7 @@ import {
     Alert,
     Badge,
     Button,
+    Code,
     Group,
     Modal,
     Paper,
@@ -16,6 +17,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import type { HomebrewPublishRequest } from "~/data/Homebrew"
 import { api } from "~/utils/api"
+
+const formatRuleValue = (value: unknown) =>
+    typeof value === "string" ? value : JSON.stringify(value, null, 2)
 
 const HomebrewModerationPanel = () => {
     const client = useQueryClient()
@@ -114,11 +118,27 @@ const HomebrewModerationPanel = () => {
                     <Stack gap="xs">
                         {review?.snapshot.items.map((item) => (
                             <Paper key={item.id} p="xs" withBorder>
-                                <Text fw={600}>{item.name}</Text>
-                                <Text size="xs" c="dimmed">
-                                    {item.kind}
-                                    {"summary" in item && item.summary ? ` · ${item.summary}` : ""}
-                                </Text>
+                                <Group justify="space-between">
+                                    <Text fw={600}>{item.name}</Text>
+                                    <Badge color="grape">{item.kind}</Badge>
+                                </Group>
+                                <Stack gap={6} mt="xs">
+                                    {Object.entries(item)
+                                        .filter(
+                                            ([key, value]) =>
+                                                !["id", "kind", "name"].includes(key) &&
+                                                value !== "" &&
+                                                value !== undefined
+                                        )
+                                        .map(([key, value]) => (
+                                            <div key={key}>
+                                                <Text size="xs" fw={600} tt="capitalize">
+                                                    {key.replace(/([A-Z])/g, " $1")}
+                                                </Text>
+                                                <Code block>{formatRuleValue(value)}</Code>
+                                            </div>
+                                        ))}
+                                </Stack>
                             </Paper>
                         ))}
                     </Stack>

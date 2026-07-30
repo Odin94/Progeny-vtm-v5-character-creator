@@ -17,8 +17,7 @@ import {
 import { notifications } from "@mantine/notifications"
 import { Dispatch, memo, SetStateAction, useMemo, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
-import { Character, MeritFlaw } from "../../data/Character"
-import { clans } from "../../data/Clans"
+import { Character, getCharacterExcludedMeritsAndFlaws, MeritFlaw } from "../../data/Character"
 import {
     getMeritFlawPointCost,
     getPredatorTypeMeritsByName
@@ -417,13 +416,15 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 map.get(excludedName)?.push(meritFlaw.name)
             })
         })
-        const clan = clans[character.clan]
-        if (clan?.excludedMeritsAndFlaws) {
-            clan.excludedMeritsAndFlaws.forEach((excludedName) => {
+        const clanExclusions = getCharacterExcludedMeritsAndFlaws(character)
+        if (clanExclusions.length > 0) {
+            clanExclusions.forEach((excludedName) => {
                 if (!map.has(excludedName)) {
                     map.set(excludedName, [])
                 }
-                map.get(excludedName)?.push(`${character.clan} clan`)
+                map.get(excludedName)?.push(
+                    `${character.homebrewClan?.name ?? character.clan} clan`
+                )
             })
         }
         return map
@@ -431,7 +432,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         pickedMeritsAndFlaws,
         character.predatorType.name,
         character.predatorType.pickedMeritsAndFlaws,
-        character.clan
+        character.clan,
+        character.homebrewClan
     ])
 
     const cardProps: Omit<MeritOrFlawCardProps, "meritOrFlaw" | "type"> = {

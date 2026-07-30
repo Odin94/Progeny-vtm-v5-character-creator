@@ -81,7 +81,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
     const disciplinesForClan = getHomebrewDisciplineOptions(
         homebrewCollections,
-        character.availableDisciplineNames
+        character.homebrewClan?.nativeDisciplineRefs ?? character.availableDisciplineNames
     )
     const homebrewDisciplineItems = homebrewCollections.flatMap((collection) =>
         collection.items

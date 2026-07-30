@@ -39,7 +39,9 @@ export const powerSchema = z.object({
     amalgamPrerequisites: amalgamPrerequisiteSchema.array(),
     isCustom: z.boolean().optional(),
     homebrewSource: homebrewSourceSchema.optional(),
-    disciplineHomebrewSource: homebrewSourceSchema.optional()
+    disciplineHomebrewSource: homebrewSourceSchema.optional(),
+    requiredTime: z.string().optional(),
+    ingredients: z.string().optional()
 })
 
 export type Power = z.infer<typeof powerSchema>

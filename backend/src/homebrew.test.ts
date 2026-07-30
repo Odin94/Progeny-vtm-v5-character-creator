@@ -416,4 +416,111 @@ describe("Homebrew collections and library", () => {
         ])
         expect(attempts.map(({ statusCode }) => statusCode)).toEqual([404, 404])
     })
+
+    it("preserves explicit Homebrew Discipline references", async () => {
+        const response = await app.inject({
+            method: "POST",
+            url: "/homebrew/collections",
+            headers: csrfHeaders,
+            payload: {
+                name: "Referenced Arts",
+                shortDescription: "",
+                description: "",
+                tags: [],
+                contentWarning: "",
+                items: [
+                    {
+                        id: "local-discipline",
+                        kind: "discipline",
+                        name: "Noctis",
+                        summary: "",
+                        description: "",
+                        logo: ""
+                    },
+                    {
+                        id: "local-power",
+                        kind: "power",
+                        name: "Drink the Moon",
+                        summary: "",
+                        description: "",
+                        discipline: "Noctis",
+                        disciplineRef: {
+                            type: "homebrew",
+                            name: "Noctis",
+                            itemId: "local-discipline"
+                        },
+                        level: 1,
+                        dicePool: "",
+                        rouseChecks: 0,
+                        amalgamPrerequisites: []
+                    }
+                ]
+            }
+        })
+        expect(response.statusCode, response.body).toBe(201)
+        expect(response.json().items[1].disciplineRef).toEqual({
+            type: "homebrew",
+            name: "Noctis",
+            itemId: response.json().items[0].id
+        })
+
+        const invalid = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${response.json().id as string}`,
+            headers: csrfHeaders,
+            payload: {
+                ...response.json(),
+                items: [
+                    response.json().items[0],
+                    {
+                        ...response.json().items[1],
+                        disciplineRef: {
+                            type: "homebrew",
+                            name: "Noctis",
+                            itemId: "missing-discipline"
+                        }
+                    }
+                ]
+            }
+        })
+        expect(invalid.statusCode).toBe(400)
+    })
+
+    it("returns the original publication provenance for copied collections", async () => {
+        const sourceEntryId = await publishCollection()
+        setUser(RATER_ID)
+        const copied = await app.inject({
+            method: "POST",
+            url: `/homebrew/library/${sourceEntryId}/copy`,
+            headers: csrfHeaders
+        })
+        expect(copied.statusCode, copied.body).toBe(201)
+        const submitted = await app.inject({
+            method: "POST",
+            url: "/homebrew/publish-requests",
+            headers: csrfHeaders,
+            payload: { collectionId: copied.json().id, shareAcknowledged: true }
+        })
+        expect(submitted.statusCode, submitted.body).toBe(201)
+
+        setUser(ADMIN_ID)
+        const approved = await app.inject({
+            method: "POST",
+            url: `/admin/homebrew/publish-requests/${submitted.json().id as string}`,
+            headers: csrfHeaders,
+            payload: { decision: "approve" }
+        })
+        const detail = await app.inject({
+            method: "GET",
+            url: `/homebrew/library/${approved.json().libraryEntryId as string}`
+        })
+        expect(detail.statusCode, detail.body).toBe(200)
+        expect(detail.json().source).toMatchObject({
+            entryId: sourceEntryId,
+            version: 1,
+            name: "Night Arts",
+            authorNickname: "Brewer",
+            available: true
+        })
+    })
 })

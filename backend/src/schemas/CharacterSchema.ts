@@ -56,6 +56,15 @@ export const characterSchema = z.object({
             bane: z.string(),
             compulsion: z.string(),
             nativeDisciplines: disciplineNameSchema.array(),
+            nativeDisciplineRefs: z
+                .array(
+                    z.object({
+                        type: z.enum(["official", "homebrew"]),
+                        name: disciplineNameSchema,
+                        itemId: z.string().optional()
+                    })
+                )
+                .optional(),
             excludedPredatorTypes: z.string().array(),
             excludedMeritsAndFlaws: z.string().array(),
             homebrewSource: homebrewSourceSchema

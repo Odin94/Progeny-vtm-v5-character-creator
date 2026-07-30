@@ -3,7 +3,9 @@ import {
     Button,
     Group,
     Modal,
+    MultiSelect,
     NumberInput,
+    Select,
     SimpleGrid,
     Stack,
     TagsInput,
@@ -14,21 +16,25 @@ import {
 import { useEffect, useState } from "react"
 import type {
     HomebrewClan,
+    HomebrewDiscipline,
+    HomebrewDisciplineReference,
     HomebrewItem,
     HomebrewLoresheet,
     HomebrewMeritFlaw,
     HomebrewPower
 } from "~/data/Homebrew"
 import { homebrewKindLabel } from "~/data/Homebrew"
+import { disciplines } from "~/data/Disciplines"
 
 type Props = {
     opened: boolean
     item: HomebrewItem
+    collectionItems: HomebrewItem[]
     onClose: () => void
     onSave: (item: HomebrewItem) => void
 }
 
-const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
+const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: Props) => {
     const [draft, setDraft] = useState(item)
     const [error, setError] = useState("")
 
@@ -41,6 +47,35 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
 
     const update = (values: Partial<HomebrewItem>) =>
         setDraft((current) => ({ ...current, ...values }) as HomebrewItem)
+
+    const homebrewDisciplines = collectionItems.filter(
+        (candidate): candidate is HomebrewDiscipline & { id: string } =>
+            candidate.kind === "discipline" && !!candidate.id
+    )
+    const disciplineOptions = [
+        ...Object.keys(disciplines).map((name) => ({
+            value: `official:${name}`,
+            label: `${name} (Official)`
+        })),
+        ...homebrewDisciplines.map((discipline) => ({
+            value: `homebrew:${discipline.id}`,
+            label: `${discipline.name} (Homebrew)`
+        }))
+    ]
+
+    const decodeDisciplineReference = (value: string): HomebrewDisciplineReference => {
+        const [type, identifier] = value.split(":", 2)
+        if (type === "homebrew") {
+            const discipline = homebrewDisciplines.find((candidate) => candidate.id === identifier)
+            return { type, itemId: identifier, name: discipline?.name ?? "" }
+        }
+        return { type: "official", name: identifier ?? "" }
+    }
+
+    const encodeDisciplineReference = (reference: HomebrewDisciplineReference) =>
+        reference.type === "homebrew"
+            ? `homebrew:${reference.itemId ?? ""}`
+            : `official:${reference.name}`
 
     const save = () => {
         if (!draft.name.trim()) {
@@ -62,13 +97,21 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
                 return
             }
         }
-        onSave(
+        const normalizedDraft =
             draft.kind === "ritual"
-                ? { ...draft, discipline: "blood sorcery" }
+                ? {
+                      ...draft,
+                      discipline: "blood sorcery",
+                      disciplineRef: { type: "official" as const, name: "blood sorcery" }
+                  }
                 : draft.kind === "ceremony"
-                  ? { ...draft, discipline: "oblivion" }
+                  ? {
+                        ...draft,
+                        discipline: "oblivion",
+                        disciplineRef: { type: "official" as const, name: "oblivion" }
+                    }
                   : draft
-        )
+        onSave(normalizedDraft)
     }
 
     const commonFields = (
@@ -108,7 +151,7 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
               return (
                   <>
                       <SimpleGrid cols={{ base: 1, sm: 2 }}>
-                          <TextInput
+                          <Select
                               label="Discipline"
                               description={
                                   power.kind === "ritual"
@@ -117,11 +160,20 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
                                         ? "Ceremonies belong to Oblivion."
                                         : "Official or Homebrew Discipline name."
                               }
-                              value={power.discipline}
+                              data={disciplineOptions}
+                              searchable
+                              value={encodeDisciplineReference(
+                                  power.disciplineRef ?? {
+                                      type: "official",
+                                      name: power.discipline
+                                  }
+                              )}
                               disabled={power.kind === "ritual" || power.kind === "ceremony"}
-                              onChange={(event) =>
-                                  update({ discipline: event.currentTarget.value })
-                              }
+                              onChange={(value) => {
+                                  if (!value) return
+                                  const disciplineRef = decodeDisciplineReference(value)
+                                  update({ discipline: disciplineRef.name, disciplineRef })
+                              }}
                               required
                           />
                           <NumberInput
@@ -211,7 +263,15 @@ const HomebrewItemEditor = ({ opened, item, onClose, onSave }: Props) => {
                 {draft.kind === "merit" || draft.kind === "flaw" ? (
                     <MeritFlawFields draft={draft} update={update} />
                 ) : null}
-                {draft.kind === "clan" ? <ClanFields draft={draft} update={update} /> : null}
+                {draft.kind === "clan" ? (
+                    <ClanFields
+                        draft={draft}
+                        update={update}
+                        disciplineOptions={disciplineOptions}
+                        encodeDisciplineReference={encodeDisciplineReference}
+                        decodeDisciplineReference={decodeDisciplineReference}
+                    />
+                ) : null}
                 {draft.kind === "loresheet" ? (
                     <LoresheetFields draft={draft} update={update} />
                 ) : null}
@@ -260,10 +320,16 @@ const MeritFlawFields = ({
 
 const ClanFields = ({
     draft,
-    update
+    update,
+    disciplineOptions,
+    encodeDisciplineReference,
+    decodeDisciplineReference
 }: {
     draft: HomebrewClan
     update: (values: Partial<HomebrewItem>) => void
+    disciplineOptions: Array<{ value: string; label: string }>
+    encodeDisciplineReference: (reference: HomebrewDisciplineReference) => string
+    decodeDisciplineReference: (value: string) => HomebrewDisciplineReference
 }) => (
     <>
         <Textarea
@@ -280,11 +346,22 @@ const ClanFields = ({
             onChange={(event) => update({ compulsion: event.currentTarget.value })}
             required
         />
-        <TagsInput
+        <MultiSelect
             label="Native Disciplines"
             description="Official and Homebrew Disciplines are both supported."
-            value={draft.nativeDisciplines}
-            onChange={(nativeDisciplines) => update({ nativeDisciplines })}
+            data={disciplineOptions}
+            searchable
+            value={(
+                draft.nativeDisciplineRefs ??
+                draft.nativeDisciplines.map((name) => ({ type: "official" as const, name }))
+            ).map(encodeDisciplineReference)}
+            onChange={(values) => {
+                const nativeDisciplineRefs = values.map(decodeDisciplineReference)
+                update({
+                    nativeDisciplineRefs,
+                    nativeDisciplines: nativeDisciplineRefs.map((reference) => reference.name)
+                })
+            }}
         />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <TagsInput

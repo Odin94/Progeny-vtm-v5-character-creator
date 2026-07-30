@@ -298,6 +298,10 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { body: zodToFastifySchema(homebrewCollectionInputSchema) }
         },
         async (request, reply) => {
+            const parsedInput = homebrewCollectionInputSchema.safeParse(request.body)
+            if (!parsedInput.success) {
+                return reply.code(400).send({ error: parsedInput.error.issues[0]?.message })
+            }
             const [{ count }] = await db
                 .select({ count: sql<number>`count(*)` })
                 .from(schema.homebrewCollections)
@@ -312,13 +316,13 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             await db.insert(schema.homebrewCollections).values({
                 id,
                 ownerId: request.user!.id,
-                name: request.body.name,
-                shortDescription: request.body.shortDescription,
-                description: request.body.description,
-                tags: JSON.stringify(request.body.tags),
-                contentWarning: request.body.contentWarning
+                name: parsedInput.data.name,
+                shortDescription: parsedInput.data.shortDescription,
+                description: parsedInput.data.description,
+                tags: JSON.stringify(parsedInput.data.tags),
+                contentWarning: parsedInput.data.contentWarning
             })
-            const collection = await replaceHomebrewCollection(id, request.body)
+            const collection = await replaceHomebrewCollection(id, parsedInput.data)
             reply.code(201).send(collection)
         }
     )
@@ -335,7 +339,11 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
         async (request, reply) => {
             const collection = await getOwnedCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
-            reply.send(await replaceHomebrewCollection(collection.id, request.body))
+            const parsedInput = homebrewCollectionInputSchema.safeParse(request.body)
+            if (!parsedInput.success) {
+                return reply.code(400).send({ error: parsedInput.error.issues[0]?.message })
+            }
+            reply.send(await replaceHomebrewCollection(collection.id, parsedInput.data))
         }
     )
 
@@ -496,6 +504,42 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 where: eq(schema.homebrewPublications.id, entry.activePublicationId)
             })
             if (!publication) return reply.code(404).send({ error: "Library collection not found" })
+            const snapshot = parseSnapshot(publication.snapshot)
+
+            let source: null | {
+                entryId: string
+                publicationId: string
+                version: number
+                name: string
+                authorNickname: string
+                available: boolean
+            } = null
+            if (snapshot.sourceLibraryEntryId && snapshot.sourcePublicationId) {
+                const [sourceEntry, sourcePublication] = await Promise.all([
+                    db.query.homebrewLibraryEntries.findFirst({
+                        where: eq(schema.homebrewLibraryEntries.id, snapshot.sourceLibraryEntryId)
+                    }),
+                    db.query.homebrewPublications.findFirst({
+                        where: and(
+                            eq(schema.homebrewPublications.id, snapshot.sourcePublicationId),
+                            eq(
+                                schema.homebrewPublications.libraryEntryId,
+                                snapshot.sourceLibraryEntryId
+                            )
+                        )
+                    })
+                ])
+                if (sourceEntry && sourcePublication) {
+                    source = {
+                        entryId: sourceEntry.id,
+                        publicationId: sourcePublication.id,
+                        version: sourcePublication.version,
+                        name: parseSnapshot(sourcePublication.snapshot).name,
+                        authorNickname: sourceEntry.authorNickname,
+                        available: !sourceEntry.unpublishedAt
+                    }
+                }
+            }
 
             const [ratings, comments] = await Promise.all([
                 db.query.homebrewRatings.findMany({
@@ -515,7 +559,8 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 authorId: entry.authorId,
                 authorNickname: entry.authorNickname,
                 publishedAt: publication.approvedAt,
-                snapshot: parseSnapshot(publication.snapshot),
+                snapshot,
+                source,
                 ratingCount: ratings.length,
                 averageRating:
                     ratings.length > 0

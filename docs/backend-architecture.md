@@ -56,6 +56,8 @@ Schemas live in `src/schemas/`. The `zodToFastifySchema` helper is in `src/utils
 
 Private coterie attachments intentionally reference a live collection. Publishing creates an immutable snapshot and approval promotes that snapshot as the library entry's active version; editing the source collection never mutates an approved publication. Copies create independent private snapshots and retain both immediate and root source references.
 
+Copied collection detail responses resolve the immediate source entry and publication into display metadata. That provenance remains readable even if the source is later unpublished, while the UI only links to a source that is still publicly available.
+
 ## Safe change checklist
 
 - **Auth behavior**: inspect both `src/routes/auth.ts` (login/callback/logout) and `src/middleware/auth.ts` (per-request validation) — they share state assumptions.

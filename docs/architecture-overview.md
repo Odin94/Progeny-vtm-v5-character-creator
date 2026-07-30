@@ -35,6 +35,8 @@ The JSON fields mean that schema migrations alone are not enough — the seriali
 
 Homebrew collection items are relational records whose typed item payload is stored as JSON. Coteries point to live private collections, while library publications and character selections contain immutable snapshots. This is deliberate: collection edits immediately affect picker options for enabled coteries, but cannot silently rewrite published versions or content already selected on a character.
 
+References from Homebrew Powers and Clans to Disciplines carry an explicit official/Homebrew discriminator and, for Homebrew targets, the Discipline item ID. Copying a collection remaps those IDs inside the snapshot. Do not reduce these references back to names: multiple enabled collections may intentionally define identically named content.
+
 ## 4. Realtime boundary
 
 Two independent WebSocket systems share the same cookie-based auth:

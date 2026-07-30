@@ -4,6 +4,7 @@ import { disciplines } from "~/data/Disciplines"
 import type {
     HomebrewCollection,
     HomebrewDiscipline,
+    HomebrewDisciplineReference,
     HomebrewItem,
     HomebrewMeritFlaw,
     HomebrewPower,
@@ -26,7 +27,10 @@ export const homebrewPowerToCharacterPower = (
     const disciplineItem = collection.items.find(
         (candidate): candidate is HomebrewDiscipline & { id: string } =>
             candidate.kind === "discipline" &&
-            candidate.name.toLowerCase() === item.discipline.toLowerCase()
+            (item.disciplineRef?.type === "homebrew"
+                ? candidate.id === item.disciplineRef.itemId
+                : !item.disciplineRef &&
+                  candidate.name.toLowerCase() === item.discipline.toLowerCase())
     )
     return {
         name: item.name,
@@ -37,6 +41,8 @@ export const homebrewPowerToCharacterPower = (
         dicePool: item.dicePool,
         rouseChecks: item.rouseChecks,
         amalgamPrerequisites: item.amalgamPrerequisites,
+        requiredTime: item.requiredTime,
+        ingredients: item.ingredients,
         isCustom: false,
         homebrewSource: getHomebrewSource(item, collection),
         ...(disciplineItem && {
@@ -101,7 +107,7 @@ export const homebrewMeritFlawToCharacter = (
 
 export const getHomebrewDisciplineOptions = (
     collections: HomebrewCollection[],
-    availableNames: string[]
+    availableDisciplines: Array<string | HomebrewDisciplineReference>
 ): Record<string, HomebrewDisciplineOption> => {
     const result: Record<string, HomebrewDisciplineOption> = {}
     const disciplineItems = collections.flatMap((collection) =>
@@ -120,6 +126,18 @@ export const getHomebrewDisciplineOptions = (
             .map((item) => ({ item, collection }))
     )
 
+    const explicitReferences = availableDisciplines.filter(
+        (reference): reference is HomebrewDisciplineReference => typeof reference !== "string"
+    )
+    const availableNames = availableDisciplines.map((reference) =>
+        typeof reference === "string" ? reference : reference.name
+    )
+    const allowedHomebrewIds = new Set(
+        explicitReferences.flatMap((reference) =>
+            reference.type === "homebrew" && reference.itemId ? [reference.itemId] : []
+        )
+    )
+
     for (const name of new Set(availableNames)) {
         const official = disciplines[name]
         if (official) {
@@ -133,6 +151,8 @@ export const getHomebrewDisciplineOptions = (
                     ...powerItems
                         .filter(({ item, collection }) => {
                             if (item.discipline.toLowerCase() !== name.toLowerCase()) return false
+                            if (item.disciplineRef?.type === "homebrew") return false
+                            if (item.disciplineRef?.type === "official") return true
                             return !collection.items.some(
                                 (candidate) =>
                                     candidate.kind === "discipline" &&
@@ -147,7 +167,9 @@ export const getHomebrewDisciplineOptions = (
         }
 
         for (const homebrew of disciplineItems.filter(
-            ({ item }) => item.name.toLowerCase() === name.toLowerCase()
+            ({ item }) =>
+                item.name.toLowerCase() === name.toLowerCase() &&
+                (explicitReferences.length === 0 || allowedHomebrewIds.has(item.id))
         )) {
             const source = getHomebrewSource(homebrew.item, homebrew.collection)
             const optionKey = `homebrew:${source.collectionId}:${source.itemId}`
@@ -159,7 +181,10 @@ export const getHomebrewDisciplineOptions = (
                     .filter(
                         ({ item, collection }) =>
                             collection.id === homebrew.collection.id &&
-                            item.discipline.toLowerCase() === name.toLowerCase()
+                            item.discipline.toLowerCase() === name.toLowerCase() &&
+                            (item.disciplineRef?.type === "homebrew"
+                                ? item.disciplineRef.itemId === homebrew.item.id
+                                : !item.disciplineRef)
                     )
                     .map(({ item, collection }) => homebrewPowerToCharacterPower(item, collection)),
                 isCustom: true,

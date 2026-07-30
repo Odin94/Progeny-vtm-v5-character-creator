@@ -77,6 +77,16 @@ const DisciplinePowerCard = ({
                     {power.summary}
                 </Text>
             ) : null}
+            {power.requiredTime ? (
+                <Text size="xs" c="dimmed">
+                    Time: {power.requiredTime}
+                </Text>
+            ) : null}
+            {power.ingredients ? (
+                <Text size="xs" c="dimmed" lineClamp={2}>
+                    Ingredients: {power.ingredients}
+                </Text>
+            ) : null}
             <Box style={{ flex: 1 }} />
             <Stack gap={2} mt="auto">
                 {power.dicePool && power.dicePool !== "-" ? (

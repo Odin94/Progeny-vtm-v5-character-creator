@@ -23,10 +23,17 @@ const amalgamPrerequisiteSchema = z.object({
     level: z.number().int().min(1).max(5)
 })
 
+const disciplineReferenceSchema = z.object({
+    type: z.enum(["official", "homebrew"]),
+    name: nameSchema,
+    itemId: idSchema.optional()
+})
+
 const powerBaseSchema = itemBaseSchema.extend({
     summary: summarySchema,
     description: descriptionSchema,
     discipline: nameSchema,
+    disciplineRef: disciplineReferenceSchema.optional(),
     level: z.number().int().min(1).max(5),
     dicePool: z.string().trim().max(250),
     rouseChecks: z.number().int().min(0).max(5),
@@ -96,6 +103,7 @@ export const homebrewClanSchema = itemBaseSchema.extend({
     bane: z.string().trim().min(1).max(5_000),
     compulsion: z.string().trim().min(1).max(5_000),
     nativeDisciplines: z.array(nameSchema).min(1).max(5),
+    nativeDisciplineRefs: z.array(disciplineReferenceSchema).min(1).max(5).optional(),
     excludedPredatorTypes: z.array(nameSchema).max(30),
     excludedMeritsAndFlaws: z.array(nameSchema).max(50)
 })
@@ -112,15 +120,56 @@ export const homebrewItemSchema = z.discriminatedUnion("kind", [
     homebrewClanSchema
 ])
 
-export const homebrewCollectionInputSchema = z.object({
-    name: nameSchema,
-    shortDescription: z.string().trim().max(240).default(""),
-    description: z.string().trim().max(10_000).default(""),
-    tags: z.array(z.string().trim().min(1).max(32)).max(8).default([]),
-    contentWarning: z.string().trim().max(1_000).default(""),
-    shareAcknowledged: z.boolean().optional(),
-    items: z.array(homebrewItemSchema).max(200).default([])
-})
+export const homebrewCollectionInputSchema = z
+    .object({
+        name: nameSchema,
+        shortDescription: z.string().trim().max(240).default(""),
+        description: z.string().trim().max(10_000).default(""),
+        tags: z.array(z.string().trim().min(1).max(32)).max(8).default([]),
+        contentWarning: z.string().trim().max(1_000).default(""),
+        shareAcknowledged: z.boolean().optional(),
+        items: z.array(homebrewItemSchema).max(200).default([])
+    })
+    .superRefine((collection, context) => {
+        const disciplinesById = new Map(
+            collection.items
+                .filter((item) => item.kind === "discipline" && item.id)
+                .map((item) => [item.id!, item.name])
+        )
+        const validateReference = (
+            reference: z.infer<typeof disciplineReferenceSchema> | undefined,
+            path: Array<string | number>
+        ) => {
+            if (!reference || reference.type === "official") return
+            if (!reference.itemId || disciplinesById.get(reference.itemId) !== reference.name) {
+                context.addIssue({
+                    code: "custom",
+                    path,
+                    message: "Homebrew Discipline references must target an item in this collection"
+                })
+            }
+        }
+
+        collection.items.forEach((item, index) => {
+            if (["power", "ritual", "ceremony", "formula"].includes(item.kind)) {
+                validateReference("disciplineRef" in item ? item.disciplineRef : undefined, [
+                    "items",
+                    index,
+                    "disciplineRef"
+                ])
+            }
+            if (item.kind === "clan") {
+                item.nativeDisciplineRefs?.forEach((reference, referenceIndex) =>
+                    validateReference(reference, [
+                        "items",
+                        index,
+                        "nativeDisciplineRefs",
+                        referenceIndex
+                    ])
+                )
+            }
+        })
+    })
 
 export const homebrewCollectionParamsSchema = z.object({ id: idSchema })
 export const homebrewCommentParamsSchema = z.object({ id: idSchema, commentId: idSchema })

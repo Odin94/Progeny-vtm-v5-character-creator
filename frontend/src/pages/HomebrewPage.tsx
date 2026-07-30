@@ -326,7 +326,10 @@ const HomebrewPage = () => {
                                 leftSection={<IconPlus size={16} />}
                                 onClick={() =>
                                     setItemEditor({
-                                        item: createEmptyHomebrewItem(itemKind),
+                                        item: {
+                                            ...createEmptyHomebrewItem(itemKind),
+                                            id: crypto.randomUUID()
+                                        },
                                         index: null
                                     })
                                 }
@@ -402,6 +405,7 @@ const HomebrewPage = () => {
                 <HomebrewItemEditor
                     opened
                     item={itemEditor.item}
+                    collectionItems={draft.items}
                     onClose={() => setItemEditor(null)}
                     onSave={(item) => {
                         const items = [...draft.items]

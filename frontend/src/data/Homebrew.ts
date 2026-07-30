@@ -18,6 +18,12 @@ export type HomebrewSource = {
     collectionName: string
 }
 
+export type HomebrewDisciplineReference = {
+    type: "official" | "homebrew"
+    name: string
+    itemId?: string
+}
+
 export type HomebrewItemBase = {
     id?: string
     kind: HomebrewItemKind
@@ -36,6 +42,7 @@ export type HomebrewPower = HomebrewItemBase & {
     summary: string
     description: string
     discipline: string
+    disciplineRef?: HomebrewDisciplineReference
     level: number
     dicePool: string
     rouseChecks: number
@@ -69,6 +76,7 @@ export type HomebrewClan = HomebrewItemBase & {
     bane: string
     compulsion: string
     nativeDisciplines: string[]
+    nativeDisciplineRefs?: HomebrewDisciplineReference[]
     excludedPredatorTypes: string[]
     excludedMeritsAndFlaws: string[]
 }
@@ -140,6 +148,14 @@ export type HomebrewLibraryDetail = {
     authorNickname: string
     publishedAt: string
     snapshot: HomebrewCollection
+    source: {
+        entryId: string
+        publicationId: string
+        version: number
+        name: string
+        authorNickname: string
+        available: boolean
+    } | null
     ratingCount: number
     averageRating: number
     comments: HomebrewComment[]
@@ -170,6 +186,10 @@ export const createEmptyHomebrewItem = (kind: HomebrewItemKind): HomebrewItem =>
             summary: "",
             description: "",
             discipline,
+            disciplineRef: {
+                type: "official",
+                name: discipline
+            },
             level: 1,
             dicePool: "",
             rouseChecks: 0,
@@ -210,6 +230,7 @@ export const createEmptyHomebrewItem = (kind: HomebrewItemKind): HomebrewItem =>
         bane: "",
         compulsion: "",
         nativeDisciplines: [],
+        nativeDisciplineRefs: [],
         excludedPredatorTypes: [],
         excludedMeritsAndFlaws: []
     }

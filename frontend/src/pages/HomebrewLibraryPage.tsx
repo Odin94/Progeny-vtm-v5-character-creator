@@ -35,7 +35,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
-import type { HomebrewLibraryDetail, HomebrewLibrarySummary } from "~/data/Homebrew"
+import type { HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { useHomebrewCollections } from "~/hooks/useHomebrew"
@@ -74,7 +74,7 @@ const HomebrewLibraryPage = () => {
     const [query, setQuery] = useState("")
     const [kind, setKind] = useState<string | null>(null)
     const [sort, setSort] = useState<"top" | "trending" | "newest" | "copied">("top")
-    const [selected, setSelected] = useState<HomebrewLibrarySummary | null>(null)
+    const [selected, setSelected] = useState<string | null>(null)
     const [publishOpened, setPublishOpened] = useState(false)
     const [publishCollectionId, setPublishCollectionId] = useState<string | null>(null)
     const [acknowledged, setAcknowledged] = useState(false)
@@ -86,8 +86,8 @@ const HomebrewLibraryPage = () => {
         queryFn: () => api.getHomebrewLibrary({ query, type: kind ?? undefined, sort })
     })
     const detailQuery = useQuery({
-        queryKey: ["homebrew", "library", "detail", selected?.id],
-        queryFn: () => api.getHomebrewLibraryDetail(selected!.id),
+        queryKey: ["homebrew", "library", "detail", selected],
+        queryFn: () => api.getHomebrewLibraryDetail(selected!),
         enabled: !!selected
     })
     const requestsQuery = useQuery({
@@ -141,7 +141,7 @@ const HomebrewLibraryPage = () => {
         onSuccess: () => {
             setComment("")
             client.invalidateQueries({
-                queryKey: ["homebrew", "library", "detail", selected?.id]
+                queryKey: ["homebrew", "library", "detail", selected]
             })
             refreshLibrary()
         }
@@ -151,7 +151,7 @@ const HomebrewLibraryPage = () => {
             api.deleteHomebrewLibraryComment(id, commentId),
         onSuccess: () => {
             client.invalidateQueries({
-                queryKey: ["homebrew", "library", "detail", selected?.id]
+                queryKey: ["homebrew", "library", "detail", selected]
             })
             refreshLibrary()
         }
@@ -162,7 +162,7 @@ const HomebrewLibraryPage = () => {
         onSuccess: () => {
             setEditingComment(null)
             client.invalidateQueries({
-                queryKey: ["homebrew", "library", "detail", selected?.id]
+                queryKey: ["homebrew", "library", "detail", selected]
             })
         }
     })
@@ -311,7 +311,7 @@ const HomebrewLibraryPage = () => {
                                                         size="xs"
                                                         variant="light"
                                                         color="grape"
-                                                        onClick={() => setSelected(entry)}
+                                                        onClick={() => setSelected(entry.id)}
                                                     >
                                                         Open
                                                     </Button>
@@ -438,16 +438,16 @@ const HomebrewLibraryPage = () => {
                 signIn={signIn}
                 comment={comment}
                 setComment={setComment}
-                onCopy={() => selected && copyMutation.mutate(selected.id)}
+                onCopy={() => selected && copyMutation.mutate(selected)}
                 copyPending={copyMutation.isPending}
-                onRate={(rating) => selected && rateMutation.mutate({ id: selected.id, rating })}
+                onRate={(rating) => selected && rateMutation.mutate({ id: selected, rating })}
                 onComment={() =>
                     selected &&
                     comment.trim() &&
-                    commentMutation.mutate({ id: selected.id, body: comment })
+                    commentMutation.mutate({ id: selected, body: comment })
                 }
                 onDeleteComment={(commentId) =>
-                    selected && deleteCommentMutation.mutate({ id: selected.id, commentId })
+                    selected && deleteCommentMutation.mutate({ id: selected, commentId })
                 }
                 editingComment={editingComment}
                 onStartEditingComment={(id, body) => setEditingComment({ id, body })}
@@ -459,13 +459,14 @@ const HomebrewLibraryPage = () => {
                     selected &&
                     editingComment?.body.trim() &&
                     updateCommentMutation.mutate({
-                        id: selected.id,
+                        id: selected,
                         commentId: editingComment.id,
                         body: editingComment.body
                     })
                 }
                 updateCommentPending={updateCommentMutation.isPending}
-                onUnpublish={() => selected && unpublishMutation.mutate(selected.id)}
+                onOpenSource={setSelected}
+                onUnpublish={() => selected && unpublishMutation.mutate(selected)}
                 unpublishPending={unpublishMutation.isPending}
             />
         </AppShell>
@@ -494,6 +495,7 @@ const LibraryDetailModal = ({
     onCancelEditingComment,
     onSaveEditingComment,
     updateCommentPending,
+    onOpenSource,
     onUnpublish,
     unpublishPending
 }: {
@@ -518,6 +520,7 @@ const LibraryDetailModal = ({
     onCancelEditingComment: () => void
     onSaveEditingComment: () => void
     updateCommentPending: boolean
+    onOpenSource: (entryId: string) => void
     onUnpublish: () => void
     unpublishPending: boolean
 }) => (
@@ -558,6 +561,27 @@ const LibraryDetailModal = ({
                     ) : null}
                 </Group>
                 <Text>{detail.snapshot.description || detail.snapshot.shortDescription}</Text>
+                {detail.source ? (
+                    <Alert color="blue" title="Derived collection">
+                        <Group justify="space-between" align="center">
+                            <Text size="sm">
+                                Based on {detail.source.name}, version {detail.source.version}, by{" "}
+                                {detail.source.authorNickname}.
+                            </Text>
+                            {detail.source.available ? (
+                                <Button
+                                    size="compact-xs"
+                                    variant="light"
+                                    onClick={() => onOpenSource(detail.source!.entryId)}
+                                >
+                                    Open source
+                                </Button>
+                            ) : (
+                                <Badge color="gray">Source unpublished</Badge>
+                            )}
+                        </Group>
+                    </Alert>
+                ) : null}
                 {detail.snapshot.contentWarning ? (
                     <Alert color="yellow" title="Content warning">
                         {detail.snapshot.contentWarning}
