@@ -37,6 +37,7 @@ test("Free-mode name input syncs external changes without remounting or flashing
             page.evaluate(() => JSON.parse(localStorage.getItem("character") ?? "{}").name)
         )
         .toBe("Original Name")
+    await nameInput.blur()
 
     // Tag the live DOM node so we can detect a remount: a remount replaces the node
     // and loses the marker.
