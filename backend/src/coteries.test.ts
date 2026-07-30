@@ -601,7 +601,7 @@ describe("coterie invites and membership permissions", () => {
         expect(optedInNameTagResponse.statusCode).toBe(200)
         expect(optedInNameTagResponse.json().players).toContainEqual(
             expect.objectContaining({
-                nickname: "Visible Player",
+                nickname: "Visible",
                 showNameTag: true
             })
         )
