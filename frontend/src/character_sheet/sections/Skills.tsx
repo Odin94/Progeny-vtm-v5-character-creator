@@ -8,6 +8,7 @@ import { getAvailableXP, canAffordUpgrade, getSpecialtyCost } from "../utils/xp"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import { removeSkillSpecialty } from "../utils/specialties"
 
 type SkillsProps = {
     options: SheetOptions
@@ -381,7 +382,6 @@ const skillTextStyle: React.CSSProperties = {
     fontFamily: "Courier New"
 }
 
-// TODOdin: Refund XP when a newly created specialty is removed
 const Skills = ({ options }: SkillsProps) => {
     const { character, primaryColor, mode, setCharacter } = options
     const isEditable = mode === "xp" || mode === "free"
@@ -469,21 +469,11 @@ const Skills = ({ options }: SkillsProps) => {
 
     const removeSpecialty = useCallback(
         (skill: SkillsKey, index: number) => {
-            setCharacter((currentCharacter) => {
-                const skillSpecialtiesForThisSkill = currentCharacter.skillSpecialties.filter(
-                    (specialty) => specialty.skill === skill
-                )
-                const specialtyToRemove = skillSpecialtiesForThisSkill[index]
-                if (!specialtyToRemove) return currentCharacter
-                return {
-                    ...currentCharacter,
-                    skillSpecialties: currentCharacter.skillSpecialties.filter(
-                        (specialty) => specialty !== specialtyToRemove
-                    )
-                }
-            })
+            setCharacter((currentCharacter) =>
+                removeSkillSpecialty(currentCharacter, skill, index, mode === "xp")
+            )
         },
-        [setCharacter]
+        [mode, setCharacter]
     )
 
     /*
