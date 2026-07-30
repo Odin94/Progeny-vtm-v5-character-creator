@@ -27,7 +27,8 @@ const callbackQuerySchema = z.object({
 })
 
 const loginQuerySchema = z.object({
-    returnTo: z.string().optional()
+    returnTo: z.string().optional(),
+    distinctId: z.string().min(1).max(200).optional()
 })
 
 const serializeImpersonationState = (request: AuthenticatedRequest) =>
@@ -72,6 +73,10 @@ export async function authRoutes(fastify: FastifyInstance) {
                 const returnTo = loginQueryResult.success
                     ? getSafeReturnPath(loginQueryResult.data.returnTo)
                     : DEFAULT_POST_AUTH_PATH
+                // Attribute the login to the visitor's PostHog distinct id when the
+                // frontend forwards it; fall back to "anonymous" only when it's absent.
+                const loginDistinctId =
+                    (loginQueryResult.success && loginQueryResult.data.distinctId) || "anonymous"
 
                 // Construct the frontend URL for the callback
                 // WorkOS will redirect to the frontend, which then calls the backend API
@@ -116,7 +121,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                         method: "GET",
                         returnTo
                     },
-                    "anonymous",
+                    loginDistinctId,
                     request
                 )
 

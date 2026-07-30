@@ -155,7 +155,20 @@ export const useAuth = () => {
     const signIn = () => {
         const returnTo = getCurrentReturnTo()
         sessionStorage.setItem(AUTH_RETURN_TO_STORAGE_KEY, returnTo)
-        window.location.href = `${API_URL}/auth/login?returnTo=${encodeURIComponent(returnTo)}`
+        let loginUrl = `${API_URL}/auth/login?returnTo=${encodeURIComponent(returnTo)}`
+        // Pass the current PostHog distinct id so the backend attributes
+        // `auth_login_initiated` to this visitor instead of a shared "anonymous"
+        // id (which collapses every login to a single person). It merges into the
+        // user once the callback calls `posthog.identify`.
+        try {
+            const distinctId = posthog.get_distinct_id()
+            if (distinctId) {
+                loginUrl += `&distinctId=${encodeURIComponent(distinctId)}`
+            }
+        } catch (error) {
+            console.warn("PostHog distinct id lookup failed:", error)
+        }
+        window.location.href = loginUrl
     }
 
     const signOut = () => {

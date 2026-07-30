@@ -70,7 +70,15 @@ const DiceRollModal = ({
 }: DiceRollModalProps) => {
     const theme = useMantineTheme()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
+    // `useMediaQuery` can return `undefined` when `matchMedia` is unavailable (old
+    // low-end browsers) or before it resolves. Evaluate synchronously and fall back
+    // to the mobile layout so an unresolved result is one deliberate default instead
+    // of accidentally landing in the desktop branch, which has no self-sufficient
+    // reroll path on a phone.
+    const isMobile =
+        useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`, true, {
+            getInitialValueInEffect: false
+        }) ?? true
     const { selectedDicePool, resetSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             selectedDicePool: state.selectedDicePool,
@@ -372,17 +380,41 @@ const DiceRollModal = ({
         return dice.filter((d) => !d.isBloodDie && !d.isRolling && d.value < 6)
     }, [dice])
 
-    const canReroll = useMemo(() => {
-        if (!character || !setCharacter || editDisabledReason) return false
+    const availableWillpower = useMemo(() => {
+        if (!character) return 0
         const totalWillpowerDamage =
             (character.ephemeral?.superficialWillpowerDamage ?? 0) +
             (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
-        const availableWillpower = character.willpower - totalWillpowerDamage
+        return character.willpower - totalWillpowerDamage
+    }, [character])
+
+    const canReroll = useMemo(() => {
+        if (!character || !setCharacter || editDisabledReason) return false
+        if (availableWillpower <= 0) return false
         if (isMobile) {
-            return availableWillpower > 0 && rerollableDice.length > 0
+            return rerollableDice.length > 0
         }
-        return availableWillpower > 0 && selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
-    }, [character, editDisabledReason, selectedDiceIds, isMobile, rerollableDice.length])
+        return selectedDiceIds.size > 0 && selectedDiceIds.size <= 3
+    }, [
+        character,
+        setCharacter,
+        editDisabledReason,
+        availableWillpower,
+        selectedDiceIds,
+        isMobile,
+        rerollableDice.length
+    ])
+
+    // Surface the real reason the reroll button is dead. Without this the icon just
+    // goes disabled once willpower is spent and the tooltip only ever shows
+    // `editDisabledReason`, so a player reads it as "rerolls stopped working".
+    const rerollDisabledReason = useMemo(() => {
+        if (editDisabledReason) return editDisabledReason
+        if (character && setCharacter && availableWillpower <= 0) {
+            return "No willpower left to reroll"
+        }
+        return undefined
+    }, [editDisabledReason, character, setCharacter, availableWillpower])
 
     const handleDieClick = useCallback(
         (dieId: number, isBloodDie: boolean) => {
@@ -404,10 +436,6 @@ const DiceRollModal = ({
     const handleReroll = () => {
         if (!character || !setCharacter || editDisabledReason || !canReroll) return
 
-        const totalWillpowerDamage =
-            (character.ephemeral?.superficialWillpowerDamage ?? 0) +
-            (character.ephemeral?.aggravatedWillpowerDamage ?? 0)
-        const availableWillpower = character.willpower - totalWillpowerDamage
         if (availableWillpower <= 0) return
 
         let diceIdsToReroll: Set<number>
@@ -416,6 +444,20 @@ const DiceRollModal = ({
         } else {
             diceIdsToReroll = selectedDiceIds
             if (diceIdsToReroll.size === 0) return
+        }
+
+        // Rerolls were previously uninstrumented, so regressions in the reroll path
+        // (like this one) only surfaced via support tickets. Capture the spend so it
+        // shows up in the data.
+        try {
+            posthog.capture("dice-roll-reroll", {
+                mode: activeTab === "selected" ? "selected-pool" : "custom",
+                is_mobile: isMobile,
+                reroll_dice_count: diceIdsToReroll.size,
+                available_willpower_before: availableWillpower
+            })
+        } catch (error) {
+            console.warn("PostHog dice reroll tracking failed:", error)
         }
 
         setCharacter({
@@ -919,7 +961,7 @@ const DiceRollModal = ({
                                     : undefined
                             }
                             canReroll={canReroll}
-                            rerollDisabledReason={editDisabledReason}
+                            rerollDisabledReason={rerollDisabledReason}
                             selectedDiceCount={selectedDiceIds.size}
                             rerollableDiceCount={rerollableDice.length}
                             isMobile={isMobile}

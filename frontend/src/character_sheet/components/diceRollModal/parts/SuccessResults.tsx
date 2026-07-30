@@ -139,6 +139,7 @@ const SuccessResults = ({
                                     zIndex={2100}
                                 >
                                     <ActionIcon
+                                        aria-label="Reroll with willpower"
                                         color={primaryColor}
                                         variant={canReroll ? "filled" : "outline"}
                                         onClick={onReroll}
