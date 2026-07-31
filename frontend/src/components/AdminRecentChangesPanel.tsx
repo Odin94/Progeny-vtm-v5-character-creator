@@ -24,6 +24,7 @@ const AdminRecentChangesPanel = () => {
     } | null>(null)
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
+    const [imageUrl, setImageUrl] = useState("")
     const changesQuery = useQuery({
         queryKey: ["admin", "recent-changes"],
         queryFn: api.getAdminRecentChanges
@@ -34,6 +35,7 @@ const AdminRecentChangesPanel = () => {
         if (!selectedChange) return
         setTitle(selectedChange.title)
         setBody(selectedChange.body)
+        setImageUrl(selectedChange.imageUrl ?? "")
     }, [selectedChange])
 
     const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin", "recent-changes"] })
@@ -41,12 +43,17 @@ const AdminRecentChangesPanel = () => {
         setEditingId(null)
         setTitle("")
         setBody("")
+        setImageUrl("")
     }
     const saveMutation = useMutation({
         mutationFn: () =>
             editingId
-                ? api.updateAdminRecentChange(editingId, { title, body })
-                : api.createAdminRecentChange({ title, body }),
+                ? api.updateAdminRecentChange(editingId, {
+                      title,
+                      body,
+                      imageUrl: imageUrl.trim() || null
+                  })
+                : api.createAdminRecentChange({ title, body, imageUrl: imageUrl.trim() || null }),
         onSuccess: (change) => {
             setEditingId(change.id)
             void refresh()
@@ -161,6 +168,14 @@ const AdminRecentChangesPanel = () => {
                         maxLength={10_000}
                         disabled={isReadOnly}
                         required
+                    />
+                    <TextInput
+                        label="Image URL"
+                        description="Optional. Shown beside the introductory text in the update modal."
+                        placeholder="https://example.com/update-image.jpg"
+                        value={imageUrl}
+                        onChange={(event) => setImageUrl(event.currentTarget.value)}
+                        disabled={isReadOnly}
                     />
                     {isReadOnly ? (
                         <Text size="sm" c="dimmed">

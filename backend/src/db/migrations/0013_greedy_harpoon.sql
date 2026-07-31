@@ -1,0 +1,1 @@
+ALTER TABLE `recent_changes` ADD `image_url` text;

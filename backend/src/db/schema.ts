@@ -452,6 +452,7 @@ export const recentChanges = sqliteTable(
         id: text("id").primaryKey(),
         title: text("title").notNull(),
         body: text("body").notNull(),
+        imageUrl: text("image_url"),
         status: text("status", { enum: ["draft", "published", "deleted"] })
             .notNull()
             .default("draft"),

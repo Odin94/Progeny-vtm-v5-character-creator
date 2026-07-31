@@ -196,6 +196,7 @@ export type RecentChange = {
     id: string
     title: string
     body: string
+    imageUrl: string | null
     status: "draft" | "published" | "deleted"
     publishedAt: string | null
     createdAt: string
@@ -434,10 +435,12 @@ export const api = {
             method: "POST"
         }),
     getAdminRecentChanges: () => apiRequest<RecentChangesResponse>("/admin/recent-changes"),
-    createAdminRecentChange: (data: { title: string; body: string }) =>
+    createAdminRecentChange: (data: { title: string; body: string; imageUrl?: string | null }) =>
         apiRequest<RecentChange>("/admin/recent-changes", { method: "POST", body: data }),
-    updateAdminRecentChange: (id: string, data: { title: string; body: string }) =>
-        apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
+    updateAdminRecentChange: (
+        id: string,
+        data: { title: string; body: string; imageUrl?: string | null }
+    ) => apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
     publishAdminRecentChange: (id: string) =>
         apiRequest<RecentChange>(`/admin/recent-changes/${id}/publish`, { method: "POST" }),
     softDeleteAdminRecentChange: (id: string) =>

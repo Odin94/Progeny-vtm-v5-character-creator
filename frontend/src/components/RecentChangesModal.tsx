@@ -1,7 +1,8 @@
-import { ActionIcon, Button, Group, Modal, Stack, Text } from "@mantine/core"
+import { ActionIcon, Button, Group, Modal, Text } from "@mantine/core"
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
+import ornamentalDivider from "~/assets/ornamental-divider.svg"
 import type { RecentChange } from "~/utils/api"
 import "./RecentChangesModal.css"
 
@@ -19,6 +20,20 @@ const formatPublishedDate = (publishedAt: string | null) => {
         month: "long",
         day: "numeric"
     })
+}
+
+const splitMarkdownBlocks = (markdown: string) =>
+    markdown
+        .trim()
+        .split(/\n\s*\n/)
+        .map((block) => block.trim())
+        .filter(Boolean)
+
+const getTitleLetterSpacing = (title: string) => {
+    if (title.length <= 10) return "0.32em"
+    if (title.length <= 18) return "0.22em"
+    if (title.length <= 30) return "0.14em"
+    return "0.08em"
 }
 
 const RecentChangesModal = ({
@@ -42,54 +57,115 @@ const RecentChangesModal = ({
     const currentChange = changes[currentIndex]
     const canGoPrevious = currentIndex > 0
     const canGoNext = currentIndex < changes.length - 1
+    const { introBlock, detailColumns } = useMemo(() => {
+        if (!currentChange) return { introBlock: "", detailColumns: [] as string[][] }
+
+        const [introBlock = "", ...detailBlocks] = splitMarkdownBlocks(currentChange.body)
+        const columnCount = Math.min(3, detailBlocks.length)
+        const detailColumns = Array.from({ length: columnCount }, () => [] as string[])
+
+        detailBlocks.forEach((block, index) => detailColumns[index % columnCount].push(block))
+
+        return { introBlock, detailColumns }
+    }, [currentChange])
 
     return (
         <Modal
             opened={opened && !!currentChange}
             onClose={onClose}
-            title="Progeny Update 🩸"
             centered
-            size="lg"
+            size="xl"
             zIndex={2500}
+            withCloseButton={false}
+            classNames={{ content: "recent-changes__modal", body: "recent-changes__modal-body" }}
         >
             {currentChange ? (
-                <Stack gap="md">
-                    <div>
-                        <Text fw={700} size="xl">
-                            {currentChange.title}
-                        </Text>
-                        <Text c="dimmed" size="sm">
-                            {formatPublishedDate(currentChange.publishedAt)}
-                        </Text>
-                    </div>
-                    <div className="recent-changes__body">
-                        <ReactMarkdown>{currentChange.body}</ReactMarkdown>
-                    </div>
-                    <Group justify="space-between" align="center">
-                        <Group gap="xs">
-                            <ActionIcon
-                                variant="subtle"
-                                aria-label="Previous update"
-                                disabled={!canGoPrevious}
-                                onClick={() => setCurrentIndex((index) => index - 1)}
+                <div className="recent-changes__sheet-shell">
+                    <article className="recent-changes__sheet">
+                        <header className="recent-changes__header">
+                            <Text
+                                className="recent-changes__title"
+                                style={{
+                                    letterSpacing: getTitleLetterSpacing(currentChange.title),
+                                    textIndent: getTitleLetterSpacing(currentChange.title)
+                                }}
                             >
-                                <IconChevronLeft size={20} />
-                            </ActionIcon>
-                            <Text size="sm" c="dimmed">
-                                {currentIndex + 1} of {changes.length}
+                                {currentChange.title}
                             </Text>
-                            <ActionIcon
-                                variant="subtle"
-                                aria-label="Next update"
-                                disabled={!canGoNext}
-                                onClick={() => setCurrentIndex((index) => index + 1)}
+                            <Text className="recent-changes__date">
+                                {formatPublishedDate(currentChange.publishedAt)}
+                            </Text>
+                        </header>
+
+                        <section
+                            className={`recent-changes__intro ${currentChange.imageUrl ? "recent-changes__intro--with-image" : ""}`}
+                        >
+                            <div className="recent-changes__markdown recent-changes__intro-copy">
+                                <ReactMarkdown>{introBlock}</ReactMarkdown>
+                            </div>
+                            {currentChange.imageUrl ? (
+                                <img
+                                    className="recent-changes__image"
+                                    src={currentChange.imageUrl}
+                                    alt=""
+                                />
+                            ) : null}
+                        </section>
+
+                        <div className="recent-changes__divider" aria-label="Progeny Update">
+                            <img src={ornamentalDivider} alt="" />
+                            <Text>Progeny Update</Text>
+                            <img src={ornamentalDivider} alt="" />
+                        </div>
+
+                        {detailColumns.length ? (
+                            <section
+                                className="recent-changes__details"
+                                style={{
+                                    gridTemplateColumns: `repeat(${detailColumns.length}, minmax(0, 1fr))`
+                                }}
                             >
-                                <IconChevronRight size={20} />
-                            </ActionIcon>
-                        </Group>
-                        <Button onClick={onClose}>Got it</Button>
-                    </Group>
-                </Stack>
+                                {detailColumns.map((column, index) => (
+                                    <div className="recent-changes__column" key={index}>
+                                        {column.map((block, blockIndex) => (
+                                            <div
+                                                className="recent-changes__markdown"
+                                                key={`${index}-${blockIndex}`}
+                                            >
+                                                <ReactMarkdown>{block}</ReactMarkdown>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </section>
+                        ) : null}
+
+                        <footer className="recent-changes__footer">
+                            <Group gap="xs">
+                                <ActionIcon
+                                    variant="subtle"
+                                    aria-label="Previous update"
+                                    disabled={!canGoPrevious}
+                                    onClick={() => setCurrentIndex((index) => index - 1)}
+                                >
+                                    <IconChevronLeft size={20} />
+                                </ActionIcon>
+                                <Text size="sm" c="dimmed">
+                                    {currentIndex + 1} of {changes.length}
+                                </Text>
+                                <ActionIcon
+                                    variant="subtle"
+                                    aria-label="Next update"
+                                    disabled={!canGoNext}
+                                    onClick={() => setCurrentIndex((index) => index + 1)}
+                                >
+                                    <IconChevronRight size={20} />
+                                </ActionIcon>
+                            </Group>
+                            <Button onClick={onClose}>Got it</Button>
+                        </footer>
+                    </article>
+                </div>
             ) : null}
         </Modal>
     )

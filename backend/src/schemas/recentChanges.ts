@@ -6,7 +6,8 @@ export const recentChangeParamsSchema = z.object({
 
 export const recentChangeDraftSchema = z.object({
     title: z.string().trim().min(1).max(160),
-    body: z.string().trim().min(1).max(10_000)
+    body: z.string().trim().min(1).max(10_000),
+    imageUrl: z.string().url().max(2_048).nullable().optional()
 })
 
 export type RecentChangeParams = z.infer<typeof recentChangeParamsSchema>

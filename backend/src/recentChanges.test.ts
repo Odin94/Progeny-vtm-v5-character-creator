@@ -67,6 +67,7 @@ describe("recent changes", () => {
                 id text PRIMARY KEY NOT NULL,
                 title text NOT NULL,
                 body text NOT NULL,
+                image_url text,
                 status text DEFAULT 'draft' NOT NULL,
                 created_by_user_id text REFERENCES users(id) ON DELETE SET NULL,
                 published_by_user_id text REFERENCES users(id) ON DELETE SET NULL,
@@ -173,10 +174,17 @@ describe("recent changes", () => {
             method: "POST",
             url: "/admin/recent-changes",
             headers: csrfHeaders,
-            payload: { title: "New feature", body: "It is ready." }
+            payload: {
+                title: "New feature",
+                body: "It is ready.",
+                imageUrl: "https://example.com/new-feature.jpg"
+            }
         })
         expect(createDraft.statusCode).toBe(201)
-        expect(createDraft.json().status).toBe("draft")
+        expect(createDraft.json()).toMatchObject({
+            status: "draft",
+            imageUrl: "https://example.com/new-feature.jpg"
+        })
 
         setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
         const beforePublish = await app.inject({
