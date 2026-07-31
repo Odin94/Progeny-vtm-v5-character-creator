@@ -3,6 +3,7 @@ import { notifications } from "@mantine/notifications"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { api, type RecentChange } from "~/utils/api"
+import RecentChangesModal from "~/components/RecentChangesModal"
 
 const formatDate = (date: string | null) =>
     date
@@ -16,6 +17,7 @@ const formatDate = (date: string | null) =>
 const AdminRecentChangesPanel = () => {
     const queryClient = useQueryClient()
     const [editingId, setEditingId] = useState<string | null>(null)
+    const [previewChange, setPreviewChange] = useState<RecentChange | null>(null)
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const changesQuery = useQuery({
@@ -79,6 +81,13 @@ const AdminRecentChangesPanel = () => {
     }
     const isPublished = selectedChange?.status === "published"
     const canSave = title.trim().length > 0 && body.trim().length > 0 && !isPublished
+    const publishedChanges =
+        changesQuery.data?.changes.filter((change) => change.status === "published") ?? []
+    const previewChanges = !previewChange
+        ? []
+        : previewChange.status === "published"
+          ? publishedChanges
+          : [{ ...previewChange, publishedAt: new Date().toISOString() }, ...publishedChanges]
 
     return (
         <Stack gap="lg">
@@ -167,12 +176,24 @@ const AdminRecentChangesPanel = () => {
                                             : "Draft"}
                                     </Text>
                                 </div>
-                                <Text
-                                    size="sm"
-                                    c={change.status === "published" ? "green" : "yellow"}
-                                >
-                                    {change.status === "published" ? "Published" : "Draft"}
-                                </Text>
+                                <Group gap="md">
+                                    <Text
+                                        size="sm"
+                                        c={change.status === "published" ? "green" : "yellow"}
+                                    >
+                                        {change.status === "published" ? "Published" : "Draft"}
+                                    </Text>
+                                    <Button
+                                        size="xs"
+                                        variant="light"
+                                        onClick={(event) => {
+                                            event.stopPropagation()
+                                            setPreviewChange(change)
+                                        }}
+                                    >
+                                        View
+                                    </Button>
+                                </Group>
                             </Group>
                         </Paper>
                     ))
@@ -180,6 +201,13 @@ const AdminRecentChangesPanel = () => {
                     <Text c="dimmed">No recent changes yet.</Text>
                 )}
             </Stack>
+
+            <RecentChangesModal
+                opened={!!previewChange}
+                onClose={() => setPreviewChange(null)}
+                changes={previewChanges}
+                initialChangeId={previewChange?.id}
+            />
         </Stack>
     )
 }
