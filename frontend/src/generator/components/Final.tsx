@@ -84,6 +84,11 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
         window.location.reload()
     }
 
+    const handleOpenFeatures = () => {
+        window.history.pushState({}, "", "/features")
+        window.location.reload()
+    }
+
     const handleDownloadPDF = async () => {
         try {
             const { downloadCharacterSheet } = await import("../pdfCreator")
@@ -497,9 +502,17 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         description="Use this character right away"
                         onClick={handleCharacterSheet}
                     />
+                    <ActionCard
+                        animationIndex={4}
+                        shouldReduceMotion={shouldReduceMotion}
+                        icon={<IconHelpHexagon size={20} />}
+                        label="Feature Guide"
+                        description="Learn what else you can do with Progeny"
+                        onClick={handleOpenFeatures}
+                    />
                     {hasAnalyticsConsent ? (
                         <ActionCard
-                            animationIndex={4}
+                            animationIndex={5}
                             shouldReduceMotion={shouldReduceMotion}
                             icon={<IconMessageCircle size={20} />}
                             label="Feedback & support"
@@ -508,7 +521,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         />
                     ) : (
                         <ActionCard
-                            animationIndex={4}
+                            animationIndex={5}
                             shouldReduceMotion={shouldReduceMotion}
                             icon={<IconCookie size={20} />}
                             label="Cookie preferences"

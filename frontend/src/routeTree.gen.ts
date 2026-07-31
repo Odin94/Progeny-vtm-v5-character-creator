@@ -9,6 +9,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SheetRouteImport } from './routes/sheet'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HomebrewRouteImport } from './routes/homebrew'
 import { Route as HomebrewLibraryRouteImport } from './routes/homebrew.library'
 import { Route as HomebrewCollectionIdRouteImport } from './routes/homebrew.$collectionId'
@@ -26,6 +27,11 @@ const SheetRoute = SheetRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomebrewRoute = HomebrewRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
+  '/features': typeof FeaturesRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
+  '/features': typeof FeaturesRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
+  '/features': typeof FeaturesRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -108,16 +117,17 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  fullPaths: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
-  id: '__root__' | '/' | '/create' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  to: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  id: '__root__' | '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
   MeRoute: typeof MeRoute
+  FeaturesRoute: typeof FeaturesRoute
   SheetRoute: typeof SheetRoute
   HomebrewRoute: typeof HomebrewRoute
   HomebrewLibraryRoute: typeof HomebrewLibraryRoute
@@ -141,6 +151,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/homebrew': {
@@ -206,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
   MeRoute: MeRoute,
+  FeaturesRoute: FeaturesRoute,
   SheetRoute: SheetRoute,
   HomebrewRoute: HomebrewRoute,
   HomebrewLibraryRoute: HomebrewLibraryRoute,

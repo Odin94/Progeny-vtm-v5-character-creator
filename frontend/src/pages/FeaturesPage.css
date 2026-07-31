@@ -1,0 +1,197 @@
+.features-page {
+    --features-bg: #0c0a0b;
+    --features-surface: rgba(28, 20, 22, 0.76);
+    --features-border: rgba(212, 175, 100, 0.17);
+    --features-text: #f3ece8;
+    --features-muted: rgba(235, 225, 218, 0.68);
+    --features-gold: #d4af64;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 76% 0%, rgba(120, 17, 29, 0.18), transparent 30rem),
+        linear-gradient(180deg, #0b090a 0%, var(--features-bg) 100%);
+    color: var(--features-text);
+    font-family: "Crimson Text", Georgia, serif;
+}
+
+.features-page__header {
+    background: rgba(8, 7, 8, 0.72);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--features-border);
+}
+
+.features-page__masthead {
+    padding: 5.5rem 0 3.25rem;
+    border-bottom: 1px solid var(--features-border);
+    background: linear-gradient(180deg, rgba(74, 28, 34, 0.16), transparent);
+}
+
+.features-page__masthead-inner {
+    width: 100%;
+}
+
+.features-page__eyebrow,
+.features-page__navigation-label,
+.features-page__page-number {
+    color: var(--features-gold);
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.features-page__title,
+.features-page__page-title,
+.features-page__section-title {
+    font-family: Cinzel, Georgia, serif;
+    color: var(--features-text);
+}
+
+.features-page__title {
+    font-size: clamp(2.5rem, 7vw, 4.5rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.features-page__creator-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--features-text);
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.features-page__creator-link:hover {
+    color: var(--features-gold);
+}
+
+.features-page__layout {
+    display: grid;
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+    gap: clamp(2rem, 7vw, 6rem);
+    width: 100%;
+    padding-top: 3.5rem;
+    padding-bottom: 6rem;
+}
+
+.features-page__sidebar {
+    align-self: start;
+    position: sticky;
+    top: 5.5rem;
+    padding-right: 1.5rem;
+    border-right: 1px solid var(--features-border);
+}
+
+.features-page__page-link,
+.features-page__section-link {
+    display: block;
+    text-decoration: none;
+}
+
+.features-page__page-link {
+    color: var(--features-text);
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.features-page__section-links {
+    padding-left: 0.75rem;
+    border-left: 1px solid rgba(212, 175, 100, 0.15);
+}
+
+.features-page__section-link {
+    color: var(--features-muted);
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.features-page__page-link:hover,
+.features-page__section-link:hover {
+    color: var(--features-gold);
+}
+
+.features-page__mobile-navigation {
+    display: none;
+}
+
+.features-page__content {
+    min-width: 0;
+}
+
+.features-page__page {
+    scroll-margin-top: 5.75rem;
+}
+
+.features-page__page + .features-page__page {
+    margin-top: 5rem;
+}
+
+.features-page__page-divider {
+    margin-bottom: 3rem;
+    border-color: var(--features-border);
+}
+
+.features-page__page-title {
+    margin-top: 0.4rem;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.features-page__section {
+    scroll-margin-top: 5.75rem;
+}
+
+.features-page__section-title {
+    font-size: 1.15rem;
+    letter-spacing: 0.035em;
+}
+
+.features-page__placeholder,
+.features-page__contribute {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+    padding: 1.1rem 1.25rem;
+    color: var(--features-muted);
+    background: linear-gradient(135deg, var(--features-surface), rgba(17, 13, 14, 0.74));
+    border: 1px dashed rgba(212, 175, 100, 0.24);
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 0.86rem;
+}
+
+.features-page__placeholder {
+    min-height: 5.75rem;
+}
+
+.features-page__contribute {
+    margin-top: 5rem;
+    color: var(--features-text);
+}
+
+@media (max-width: 48rem) {
+    .features-page__masthead {
+        padding: 3.5rem 0 2.25rem;
+    }
+
+    .features-page__layout {
+        display: block;
+        padding-top: 1.5rem;
+    }
+
+    .features-page__sidebar {
+        display: none;
+    }
+
+    .features-page__mobile-navigation {
+        display: block;
+        margin-bottom: 3rem;
+        padding: 1rem;
+        background: rgba(28, 20, 22, 0.56);
+        border: 1px solid var(--features-border);
+        border-radius: 0.5rem;
+    }
+}
