@@ -1,0 +1,209 @@
+.homebrew-loresheet__modal {
+    background: transparent;
+    box-shadow: none;
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+}
+
+.homebrew-loresheet__modal-body {
+    padding: 0;
+}
+
+.homebrew-loresheet__shell {
+    --corner: 1.25rem;
+    background: #8b2b35;
+    clip-path: polygon(
+        var(--corner) 0,
+        calc(100% - var(--corner)) 0,
+        100% var(--corner),
+        100% calc(100% - var(--corner)),
+        calc(100% - var(--corner)) 100%,
+        var(--corner) 100%,
+        0 calc(100% - var(--corner)),
+        0 var(--corner)
+    );
+    padding: 2px;
+}
+
+.homebrew-loresheet__sheet {
+    --corner: 1.15rem;
+    background: linear-gradient(145deg, #1c1519, #100d11 68%);
+    clip-path: polygon(
+        var(--corner) 0,
+        calc(100% - var(--corner)) 0,
+        100% var(--corner),
+        100% calc(100% - var(--corner)),
+        calc(100% - var(--corner)) 100%,
+        var(--corner) 100%,
+        0 calc(100% - var(--corner)),
+        0 var(--corner)
+    );
+    color: #e8dfdc;
+    padding: clamp(1.5rem, 4vw, 3.25rem);
+}
+
+.homebrew-loresheet__header {
+    margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+    text-align: center;
+}
+
+.homebrew-loresheet__title-input {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: #c74650;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: clamp(1.5rem, 4vw, 2.75rem);
+    font-weight: 700;
+    height: auto;
+    letter-spacing: 0.2em;
+    line-height: 1.2;
+    padding: 0 0 0 0.2em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.homebrew-loresheet__title-input:focus {
+    border-bottom: 1px solid rgba(199, 70, 80, 0.65);
+    box-shadow: none;
+}
+
+.homebrew-loresheet__title-input::placeholder {
+    color: rgba(199, 70, 80, 0.55);
+}
+
+.homebrew-loresheet__eyebrow {
+    color: #9e8f91;
+    letter-spacing: 0.12em;
+    margin-top: 0.7rem;
+    text-transform: uppercase;
+}
+
+.homebrew-loresheet__intro {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    grid-template-columns: minmax(0, 1.25fr) minmax(13rem, 0.75fr);
+}
+
+.homebrew-loresheet__details {
+    border-left: 1px solid rgba(178, 72, 80, 0.42);
+    padding-left: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.homebrew-loresheet__divider {
+    align-items: center;
+    display: flex;
+    gap: 0.65rem;
+    margin: clamp(1.5rem, 4vw, 2.75rem) 0 clamp(1.25rem, 3vw, 2rem);
+}
+
+.homebrew-loresheet__divider img {
+    height: auto;
+    min-width: 0;
+    opacity: 0.9;
+    width: 42%;
+}
+
+.homebrew-loresheet__divider img:first-child {
+    transform: scaleX(-1);
+}
+
+.homebrew-loresheet__divider .mantine-Text-root {
+    color: #b9414c;
+    flex: 0 0 auto;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: clamp(0.73rem, 1.6vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.homebrew-loresheet__tiers {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.homebrew-loresheet__tier + .homebrew-loresheet__tier {
+    border-left: 1px solid rgba(178, 72, 80, 0.42);
+    padding-left: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.homebrew-loresheet__tier:nth-child(4) {
+    border-left: 0;
+    padding-left: 0;
+}
+
+.homebrew-loresheet__dots {
+    color: #b9414c;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    margin-bottom: 0.35rem;
+}
+
+.homebrew-loresheet__tier-name {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(178, 72, 80, 0.42);
+    border-radius: 0;
+    color: #e1cbca;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: 1rem;
+    font-weight: 700;
+    height: auto;
+    padding: 0.2rem 0 0.35rem;
+}
+
+.homebrew-loresheet__tier-name:focus {
+    border-bottom-color: #c74650;
+    box-shadow: none;
+}
+
+.homebrew-loresheet__tier-summary {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: #e8dfdc;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+    padding: 0.65rem 0 0;
+    resize: vertical;
+}
+
+.homebrew-loresheet__tier-summary:focus {
+    box-shadow: inset 0 0 0 1px rgba(199, 70, 80, 0.5);
+}
+
+.homebrew-loresheet__footer {
+    align-items: center;
+    border-top: 1px solid rgba(178, 72, 80, 0.42);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+    padding-top: 1rem;
+}
+
+@media (max-width: 40rem) {
+    .homebrew-loresheet__sheet {
+        padding: 1.5rem;
+    }
+
+    .homebrew-loresheet__intro,
+    .homebrew-loresheet__tiers {
+        grid-template-columns: 1fr;
+    }
+
+    .homebrew-loresheet__details,
+    .homebrew-loresheet__tier + .homebrew-loresheet__tier,
+    .homebrew-loresheet__tier:nth-child(4) {
+        border-left: 0;
+        border-top: 1px solid rgba(178, 72, 80, 0.42);
+        padding-left: 0;
+        padding-top: 1.25rem;
+    }
+
+    .homebrew-loresheet__divider img {
+        width: 30%;
+    }
+}

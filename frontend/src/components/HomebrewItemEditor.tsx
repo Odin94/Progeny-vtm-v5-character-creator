@@ -14,6 +14,7 @@ import {
     Textarea
 } from "@mantine/core"
 import { useEffect, useState } from "react"
+import ornamentalDivider from "~/assets/ornamental-divider.svg"
 import type {
     HomebrewClan,
     HomebrewDiscipline,
@@ -25,6 +26,7 @@ import type {
 } from "~/data/Homebrew"
 import { homebrewKindLabel } from "~/data/Homebrew"
 import { disciplines } from "~/data/Disciplines"
+import "./HomebrewItemEditor.css"
 
 type Props = {
     opened: boolean
@@ -250,6 +252,30 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
           })()
         : null
 
+    if (draft.kind === "loresheet") {
+        return (
+            <Modal
+                opened={opened}
+                onClose={onClose}
+                centered
+                size="xl"
+                withCloseButton={false}
+                classNames={{
+                    content: "homebrew-loresheet__modal",
+                    body: "homebrew-loresheet__modal-body"
+                }}
+            >
+                <LoresheetEditor
+                    draft={draft}
+                    update={update}
+                    error={error}
+                    onClose={onClose}
+                    onSave={save}
+                />
+            </Modal>
+        )
+    }
+
     return (
         <Modal
             opened={opened}
@@ -279,9 +305,6 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                         encodeDisciplineReference={encodeDisciplineReference}
                         decodeDisciplineReference={decodeDisciplineReference}
                     />
-                ) : null}
-                {draft.kind === "loresheet" ? (
-                    <LoresheetFields draft={draft} update={update} />
                 ) : null}
                 {error ? <Alert color="red">{error}</Alert> : null}
                 <Group justify="flex-end">
@@ -386,51 +409,131 @@ const ClanFields = ({
     </>
 )
 
-const LoresheetFields = ({
+const LoresheetEditor = ({
     draft,
-    update
+    update,
+    error,
+    onClose,
+    onSave
 }: {
     draft: HomebrewLoresheet
     update: (values: Partial<HomebrewItem>) => void
-}) => (
-    <>
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-            <TextInput
-                label="Source label"
-                value={draft.source}
-                onChange={(event) => update({ source: event.currentTarget.value })}
-            />
-            <TextInput
-                label="Requirements"
-                description="Displayed as guidance; not automatically enforced."
-                value={draft.requirements}
-                onChange={(event) => update({ requirements: event.currentTarget.value })}
-            />
-        </SimpleGrid>
-        <Text fw={600}>Loresheet levels</Text>
-        {draft.tiers.map((tier, index) => (
-            <SimpleGrid key={tier.level} cols={{ base: 1, sm: 2 }}>
-                <TextInput
-                    label={`Level ${tier.level} name`}
-                    value={tier.name}
-                    onChange={(event) => {
-                        const tiers = [...draft.tiers]
-                        tiers[index] = { ...tier, name: event.currentTarget.value }
-                        update({ tiers })
-                    }}
-                />
-                <Textarea
-                    label={`Level ${tier.level} summary`}
-                    value={tier.summary}
-                    onChange={(event) => {
-                        const tiers = [...draft.tiers]
-                        tiers[index] = { ...tier, summary: event.currentTarget.value }
-                        update({ tiers })
-                    }}
-                />
-            </SimpleGrid>
-        ))}
-    </>
-)
+    error: string
+    onClose: () => void
+    onSave: () => void
+}) => {
+    const updateTier = (index: number, values: Partial<HomebrewLoresheet["tiers"][number]>) => {
+        const tiers = [...draft.tiers]
+        tiers[index] = { ...tiers[index], ...values }
+        update({ tiers })
+    }
+
+    return (
+        <div className="homebrew-loresheet__shell">
+            <article className="homebrew-loresheet__sheet">
+                <header className="homebrew-loresheet__header">
+                    <TextInput
+                        aria-label="Loresheet name"
+                        placeholder="Untitled loresheet"
+                        value={draft.name}
+                        maxLength={100}
+                        onChange={(event) => update({ name: event.currentTarget.value })}
+                        classNames={{ input: "homebrew-loresheet__title-input" }}
+                    />
+                    <Text size="xs" className="homebrew-loresheet__eyebrow">
+                        {draft.id ? "Edit Homebrew Loresheet" : "New Homebrew Loresheet"}
+                    </Text>
+                </header>
+
+                <section className="homebrew-loresheet__intro">
+                    <Stack gap="sm">
+                        <Textarea
+                            label="Short summary"
+                            description="Shown in pickers and library previews."
+                            minRows={2}
+                            autosize
+                            maxRows={5}
+                            value={draft.summary}
+                            onChange={(event) => update({ summary: event.currentTarget.value })}
+                        />
+                        <Textarea
+                            label="Full description"
+                            minRows={5}
+                            autosize
+                            maxRows={12}
+                            value={draft.description}
+                            onChange={(event) => update({ description: event.currentTarget.value })}
+                        />
+                    </Stack>
+                    <Stack gap="sm" className="homebrew-loresheet__details">
+                        <TextInput
+                            label="Source label"
+                            value={draft.source}
+                            onChange={(event) => update({ source: event.currentTarget.value })}
+                        />
+                        <Textarea
+                            label="Requirements"
+                            description="Displayed as guidance; not automatically enforced."
+                            minRows={4}
+                            value={draft.requirements}
+                            onChange={(event) =>
+                                update({ requirements: event.currentTarget.value })
+                            }
+                        />
+                    </Stack>
+                </section>
+
+                <div className="homebrew-loresheet__divider" aria-label="Lore">
+                    <img src={ornamentalDivider} alt="" />
+                    <Text>Lore</Text>
+                    <img src={ornamentalDivider} alt="" />
+                </div>
+
+                <section className="homebrew-loresheet__tiers" aria-label="Loresheet levels">
+                    {draft.tiers.map((tier, index) => (
+                        <div className="homebrew-loresheet__tier" key={tier.level}>
+                            <Text
+                                className="homebrew-loresheet__dots"
+                                aria-label={`Level ${tier.level}`}
+                            >
+                                {"●".repeat(tier.level)}
+                            </Text>
+                            <TextInput
+                                aria-label={`Level ${tier.level} name`}
+                                placeholder={`Level ${tier.level} name`}
+                                value={tier.name}
+                                onChange={(event) =>
+                                    updateTier(index, { name: event.currentTarget.value })
+                                }
+                                classNames={{ input: "homebrew-loresheet__tier-name" }}
+                            />
+                            <Textarea
+                                aria-label={`Level ${tier.level} summary`}
+                                placeholder="Describe this benefit"
+                                minRows={5}
+                                autosize
+                                value={tier.summary}
+                                onChange={(event) =>
+                                    updateTier(index, { summary: event.currentTarget.value })
+                                }
+                                classNames={{ input: "homebrew-loresheet__tier-summary" }}
+                            />
+                        </div>
+                    ))}
+                </section>
+
+                {error ? <Alert color="red">{error}</Alert> : null}
+                <footer className="homebrew-loresheet__footer">
+                    <Button variant="subtle" color="gray" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button color="grape" onClick={onSave}>
+                        Save loresheet
+                    </Button>
+                </footer>
+            </article>
+        </div>
+    )
+}
 
 export default HomebrewItemEditor
