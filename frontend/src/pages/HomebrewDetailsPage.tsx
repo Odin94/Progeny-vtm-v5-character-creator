@@ -381,7 +381,16 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                         {items.length === 1 ? "entry" : "entries"}
                                                     </Text>
                                                 </Group>
-                                                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+                                                <SimpleGrid
+                                                    cols={{
+                                                        base: 1,
+                                                        md:
+                                                            kind === "merit" || kind === "flaw"
+                                                                ? 3
+                                                                : 2
+                                                    }}
+                                                    spacing="sm"
+                                                >
                                                     {items.map((item) => {
                                                         const index = draft.items.indexOf(item)
                                                         return (

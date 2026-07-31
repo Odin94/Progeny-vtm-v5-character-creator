@@ -102,7 +102,8 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
         }
     })
     const deleteCommentMutation = useMutation({
-        mutationFn: (commentId: string) => api.deleteHomebrewLibraryComment(collectionId, commentId),
+        mutationFn: (commentId: string) =>
+            api.deleteHomebrewLibraryComment(collectionId, commentId),
         onSuccess: () => {
             client.invalidateQueries({ queryKey: ["homebrew", "library", "detail", collectionId] })
             refreshLibrary()
@@ -135,8 +136,15 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
                 <Card withBorder p="xl">
                     <Stack align="center">
                         <Title order={2}>Collection not found</Title>
-                        <Text c="dimmed">It may have been unpublished or is no longer available.</Text>
-                        <Button component={Link} to="/homebrew/library" variant="light" color="grape">
+                        <Text c="dimmed">
+                            It may have been unpublished or is no longer available.
+                        </Text>
+                        <Button
+                            component={Link}
+                            to="/homebrew/library"
+                            variant="light"
+                            color="grape"
+                        >
                             Back to the library
                         </Button>
                     </Stack>
@@ -246,7 +254,10 @@ const LibraryDetail = ({
     confirmation
 }: LibraryDetailProps) => {
     const itemsByKind = homebrewItemKinds
-        .map((kind) => ({ kind, items: detail.snapshot.items.filter((item) => item.kind === kind) }))
+        .map((kind) => ({
+            kind,
+            items: detail.snapshot.items.filter((item) => item.kind === kind)
+        }))
         .filter(({ items }) => items.length)
 
     return (
@@ -307,7 +318,8 @@ const LibraryDetail = ({
                                         <Text size="lg">{detail.snapshot.shortDescription}</Text>
                                     ) : null}
                                     {detail.snapshot.description &&
-                                    detail.snapshot.description !== detail.snapshot.shortDescription ? (
+                                    detail.snapshot.description !==
+                                        detail.snapshot.shortDescription ? (
                                         <Text c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                                             {detail.snapshot.description}
                                         </Text>
@@ -328,7 +340,8 @@ const LibraryDetail = ({
                                 <Alert color="blue" title="Derived collection">
                                     <Group justify="space-between" align="center">
                                         <Text size="sm">
-                                            Based on {detail.source.name}, version {detail.source.version}, by{" "}
+                                            Based on {detail.source.name}, version{" "}
+                                            {detail.source.version}, by{" "}
                                             {detail.source.authorNickname}.
                                         </Text>
                                         {detail.source.available ? (
@@ -367,15 +380,30 @@ const LibraryDetail = ({
                                                     {homebrewKindLabel(kind)}
                                                 </Badge>
                                                 <Text size="sm" c="dimmed">
-                                                    {items.length} {items.length === 1 ? "entry" : "entries"}
+                                                    {items.length}{" "}
+                                                    {items.length === 1 ? "entry" : "entries"}
                                                 </Text>
                                             </Group>
-                                            {items.map((item) => (
-                                                <HomebrewItemPreview
-                                                    key={item.id ?? `${item.kind}-${item.name}`}
-                                                    item={item}
-                                                />
-                                            ))}
+                                            {kind === "merit" || kind === "flaw" ? (
+                                                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+                                                    {items.map((item) => (
+                                                        <HomebrewItemPreview
+                                                            key={
+                                                                item.id ??
+                                                                `${item.kind}-${item.name}`
+                                                            }
+                                                            item={item}
+                                                        />
+                                                    ))}
+                                                </SimpleGrid>
+                                            ) : (
+                                                items.map((item) => (
+                                                    <HomebrewItemPreview
+                                                        key={item.id ?? `${item.kind}-${item.name}`}
+                                                        item={item}
+                                                    />
+                                                ))
+                                            )}
                                         </Stack>
                                     ))
                                 ) : (
@@ -390,7 +418,8 @@ const LibraryDetail = ({
                                 <div>
                                     <Text fw={600}>Community rating</Text>
                                     <Text size="sm" c="dimmed">
-                                        {detail.averageRating.toFixed(1)} from {detail.ratingCount} ratings
+                                        {detail.averageRating.toFixed(1)} from {detail.ratingCount}{" "}
+                                        ratings
                                     </Text>
                                 </div>
                                 {detail.authorId === currentUserId ? (
@@ -419,10 +448,16 @@ const LibraryDetail = ({
                                             style={{ flex: 1 }}
                                             minRows={2}
                                             value={comment}
-                                            onChange={(event) => setComment(event.currentTarget.value)}
+                                            onChange={(event) =>
+                                                setComment(event.currentTarget.value)
+                                            }
                                             placeholder="Add to the discussion"
                                         />
-                                        <Button color="grape" disabled={!comment.trim()} onClick={onComment}>
+                                        <Button
+                                            color="grape"
+                                            disabled={!comment.trim()}
+                                            onClick={onComment}
+                                        >
                                             Comment
                                         </Button>
                                     </Group>
@@ -464,7 +499,9 @@ const LibraryDetail = ({
                                                                 <Button
                                                                     size="compact-xs"
                                                                     color="grape"
-                                                                    disabled={!editingComment.body.trim()}
+                                                                    disabled={
+                                                                        !editingComment.body.trim()
+                                                                    }
                                                                     loading={updateCommentPending}
                                                                     onClick={onSaveEditingComment}
                                                                 >
@@ -494,12 +531,15 @@ const LibraryDetail = ({
                                                             <IconEdit size={15} />
                                                         </ActionIcon>
                                                     ) : null}
-                                                    {entryComment.userId === currentUserId || isSuperadmin ? (
+                                                    {entryComment.userId === currentUserId ||
+                                                    isSuperadmin ? (
                                                         <ActionIcon
                                                             color="red"
                                                             variant="subtle"
                                                             aria-label="Delete comment"
-                                                            onClick={() => onDeleteComment(entryComment.id)}
+                                                            onClick={() =>
+                                                                onDeleteComment(entryComment.id)
+                                                            }
                                                         >
                                                             <IconTrash size={15} />
                                                         </ActionIcon>
