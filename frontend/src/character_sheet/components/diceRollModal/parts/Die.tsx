@@ -12,6 +12,7 @@ type DieProps = {
     isSelectable?: boolean
     ariaLabel?: string
     animateAppearance?: boolean
+    keepRollCentered?: boolean
 }
 
 const Die = ({
@@ -24,7 +25,8 @@ const Die = ({
     isSelected = false,
     isSelectable = false,
     ariaLabel,
-    animateAppearance = true
+    animateAppearance = true,
+    keepRollCentered = false
 }: DieProps) => {
     const theme = useMantineTheme()
     const shouldReduceMotion = useReducedMotion()
@@ -165,8 +167,8 @@ const Die = ({
         const finalRotateY = endRotateY + 2160 + seededRandom(4) * 720
         const reducedMotionTransform = getDieTransform(0, 0, 1, endRotateX, endRotateY)
         const rollingStartTransform = getDieTransform(
-            (seededRandom(5) - 0.5) * 100,
-            (seededRandom(6) - 0.5) * 100,
+            keepRollCentered ? 0 : (seededRandom(5) - 0.5) * 100,
+            keepRollCentered ? 0 : (seededRandom(6) - 0.5) * 100,
             1,
             startRotateX,
             startRotateY

@@ -315,11 +315,21 @@ const DiceRollModal = ({
             startRoll()
             const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
                 id: Date.now() + i,
-                value: rollDie(),
-                isRolling: false,
+                value: 0,
+                isRolling: true,
                 isBloodDie: i < bloodDiceCount
             }))
             setDice(newDice)
+
+            setTimeout(() => {
+                setDice((prev) =>
+                    prev.map((die) => ({
+                        ...die,
+                        value: rollDie(),
+                        isRolling: false
+                    }))
+                )
+            }, 1500)
         } else {
             if (dice.length > 0) {
                 setDice([])
@@ -460,131 +470,134 @@ const DiceRollModal = ({
         if (isMobile) {
             const rerolledDice = dice.filter((d) => diceIdsToReroll.has(d.id))
             const oldValuesMap = new Map(rerolledDice.map((d) => [d.id, d.value]))
+            setDice((prev) =>
+                prev.map((die) =>
+                    diceIdsToReroll.has(die.id)
+                        ? { ...die, value: 0, isRolling: true }
+                        : die
+                )
+            )
 
-            const newDice = dice.map((die) => {
-                if (diceIdsToReroll.has(die.id)) {
-                    return {
-                        ...die,
-                        value: rollDie(),
-                        isRolling: false
-                    }
-                }
-                return die
-            })
+            setTimeout(() => {
+                const newDice = dice.map((die) =>
+                    diceIdsToReroll.has(die.id)
+                        ? { ...die, value: rollDie(), isRolling: false }
+                        : die
+                )
 
-            const resultsText = rerolledDice
-                .map((die) => {
-                    const oldVal = oldValuesMap.get(die.id) ?? 0
-                    const newDie = newDice.find((d) => d.id === die.id)
-                    const newVal = newDie?.value ?? 0
-                    const displayOld = oldVal === 10 ? "0" : oldVal.toString()
-                    const displayNew = newVal === 10 ? "0" : newVal.toString()
-                    return `${displayOld}→${displayNew}`
-                })
-                .join(", ")
-
-            const newValues = rerolledDice.map((die) => {
-                const newDie = newDice.find((d) => d.id === die.id)
-                return newDie?.value ?? 0
-            })
-            const successCount = newValues.filter((v) => v >= 6).length
-            const successText =
-                successCount > 0
-                    ? ` (${successCount} ${successCount === 1 ? "success" : "successes"})`
-                    : ""
-
-            setDice(newDice)
-            setSelectedDiceIds(new Set())
-
-            const autoShareDiceRolls = getAutoShareDiceRolls()
-            if (
-                autoShareDiceRolls &&
-                connectionStatus === "connected" &&
-                sessionId &&
-                currentRollIdRef.current
-            ) {
-                try {
-                    const results: Array<{
-                        type:
-                            | "success"
-                            | "critical"
-                            | "blood-success"
-                            | "blood-critical"
-                            | "bestial-failure"
-                        value: number
-                    }> = []
-                    const allTens: typeof newDice = []
-                    let totalSuccesses = 0
-
-                    newDice.forEach((die) => {
-                        if (die.isBloodDie && die.value === 1) {
-                            results.push({ type: "bestial-failure", value: die.value })
-                        } else if (die.value >= 6) {
-                            if (die.value === 10) {
-                                allTens.push(die)
-                            } else {
-                                if (die.isBloodDie) {
-                                    results.push({ type: "blood-success", value: die.value })
-                                } else {
-                                    results.push({ type: "success", value: die.value })
-                                }
-                                totalSuccesses += 1
-                            }
-                        }
+                const resultsText = rerolledDice
+                    .map((die) => {
+                        const oldVal = oldValuesMap.get(die.id) ?? 0
+                        const newDie = newDice.find((d) => d.id === die.id)
+                        const newVal = newDie?.value ?? 0
+                        const displayOld = oldVal === 10 ? "0" : oldVal.toString()
+                        const displayNew = newVal === 10 ? "0" : newVal.toString()
+                        return `${displayOld}→${displayNew}`
                     })
+                    .join(", ")
 
-                    const totalCritPairs = Math.floor(allTens.length / 2)
-                    const remainingTens = allTens.length % 2
+                const newValues = rerolledDice.map((die) => {
+                    const newDie = newDice.find((d) => d.id === die.id)
+                    return newDie?.value ?? 0
+                })
+                const successCount = newValues.filter((v) => v >= 6).length
+                const successText =
+                    successCount > 0
+                        ? ` (${successCount} ${successCount === 1 ? "success" : "successes"})`
+                        : ""
 
-                    for (let i = 0; i < totalCritPairs; i++) {
-                        const die1 = allTens[i * 2]
-                        const die2 = allTens[i * 2 + 1]
+                setDice(newDice)
+                setSelectedDiceIds(new Set())
 
-                        results.push({
-                            type: die1.isBloodDie ? "blood-critical" : "critical",
-                            value: 10
+                const autoShareDiceRolls = getAutoShareDiceRolls()
+                if (
+                    autoShareDiceRolls &&
+                    connectionStatus === "connected" &&
+                    sessionId &&
+                    currentRollIdRef.current
+                ) {
+                    try {
+                        const results: Array<{
+                            type:
+                                | "success"
+                                | "critical"
+                                | "blood-success"
+                                | "blood-critical"
+                                | "bestial-failure"
+                            value: number
+                        }> = []
+                        const allTens: typeof newDice = []
+                        let totalSuccesses = 0
+
+                        newDice.forEach((die) => {
+                            if (die.isBloodDie && die.value === 1) {
+                                results.push({ type: "bestial-failure", value: die.value })
+                            } else if (die.value >= 6) {
+                                if (die.value === 10) {
+                                    allTens.push(die)
+                                } else {
+                                    results.push({
+                                        type: die.isBloodDie ? "blood-success" : "success",
+                                        value: die.value
+                                    })
+                                    totalSuccesses += 1
+                                }
+                            }
                         })
-                        results.push({
-                            type: die2.isBloodDie ? "blood-critical" : "critical",
-                            value: 10
-                        })
-                        totalSuccesses += 4
-                    }
 
-                    for (let i = 0; i < remainingTens; i++) {
-                        const die = allTens[totalCritPairs * 2 + i]
-                        results.push({
-                            type: die.isBloodDie ? "blood-critical" : "critical",
-                            value: 10
-                        })
-                        totalSuccesses += 1
-                    }
+                        const totalCritPairs = Math.floor(allTens.length / 2)
+                        const remainingTens = allTens.length % 2
 
-                    const rollData = {
-                        dice: newDice.map((d) => ({
-                            id: d.id,
-                            value: d.value,
-                            isBloodDie: d.isBloodDie
-                        })),
-                        totalSuccesses,
-                        results,
-                        rollId: currentRollIdRef.current,
-                        isReroll: true,
-                        poolInfo: getSharedPoolInfo(newDice)
+                        for (let i = 0; i < totalCritPairs; i++) {
+                            const die1 = allTens[i * 2]
+                            const die2 = allTens[i * 2 + 1]
+                            results.push({
+                                type: die1.isBloodDie ? "blood-critical" : "critical",
+                                value: 10
+                            })
+                            results.push({
+                                type: die2.isBloodDie ? "blood-critical" : "critical",
+                                value: 10
+                            })
+                            totalSuccesses += 4
+                        }
+
+                        for (let i = 0; i < remainingTens; i++) {
+                            const die = allTens[totalCritPairs * 2 + i]
+                            results.push({
+                                type: die.isBloodDie ? "blood-critical" : "critical",
+                                value: 10
+                            })
+                            totalSuccesses += 1
+                        }
+
+                        sendDiceRoll(
+                            {
+                                dice: newDice.map((d) => ({
+                                    id: d.id,
+                                    value: d.value,
+                                    isBloodDie: d.isBloodDie
+                                })),
+                                totalSuccesses,
+                                results,
+                                rollId: currentRollIdRef.current,
+                                isReroll: true,
+                                poolInfo: getSharedPoolInfo(newDice)
+                            },
+                            character?.name || undefined
+                        )
+                    } catch (error) {
+                        console.warn("Failed to share dice roll update:", error)
                     }
-                    const characterName = character?.name || undefined
-                    sendDiceRoll(rollData, characterName)
-                } catch (error) {
-                    console.warn("Failed to share dice roll update:", error)
                 }
-            }
 
-            notifications.show({
-                title: "Willpower Reroll",
-                message: `${resultsText}${successText}`,
-                color: primaryColor,
-                autoClose: 4000
-            })
+                notifications.show({
+                    title: "Willpower Reroll",
+                    message: `${resultsText}${successText}`,
+                    color: primaryColor,
+                    autoClose: 4000
+                })
+            }, 1500)
         } else {
             setDice((prev) =>
                 prev.map((die) => {

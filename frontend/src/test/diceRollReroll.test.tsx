@@ -1,5 +1,5 @@
 import { MantineProvider } from "@mantine/core"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import DiceRollModal from "~/character_sheet/components/diceRollModal/DiceRollModal"
 import type { DieResult } from "~/character_sheet/components/diceRollModal/parts/DiceContainer"
@@ -69,6 +69,7 @@ const renderModalWithDice = (
 describe("DiceRollModal willpower rerolls", () => {
     beforeEach(() => {
         vi.restoreAllMocks()
+        vi.useRealTimers()
         mocks.isMobile = true
         mocks.capture.mockClear()
         vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((array) => {
@@ -80,7 +81,28 @@ describe("DiceRollModal willpower rerolls", () => {
         useDiceRollModalStore.getState().reset()
     })
 
-    it("lets mobile players choose and reroll at most three regular dice", () => {
+    it("runs the mobile roll animation before showing the result", async () => {
+        renderModalWithDice([])
+
+        fireEvent.click(screen.getByRole("button", { name: "Roll Dice" }))
+
+        expect(useDiceRollModalStore.getState().dice).toEqual([
+            expect.objectContaining({ value: 0, isRolling: true })
+        ])
+
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 1550))
+        })
+
+        expect(useDiceRollModalStore.getState().dice).toEqual([
+            expect.objectContaining({ value: 6, isRolling: false })
+        ])
+        expect(
+            screen.getByRole("button", { name: "Regular die 1 showing 6" })
+        ).toBeInTheDocument()
+    })
+
+    it("lets mobile players choose and reroll at most three regular dice", async () => {
         const dice: DieResult[] = [1, 2, 3, 4].map((value, index) => ({
             id: index + 1,
             value,
@@ -107,6 +129,17 @@ describe("DiceRollModal willpower rerolls", () => {
         expect(rerollButton).toBeEnabled()
 
         fireEvent.click(rerollButton)
+
+        expect(useDiceRollModalStore.getState().dice.map((die) => die.isRolling)).toEqual([
+            true,
+            true,
+            true,
+            false
+        ])
+
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 1550))
+        })
 
         expect(setCharacter).toHaveBeenCalledWith(
             expect.objectContaining({
