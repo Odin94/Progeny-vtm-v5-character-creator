@@ -192,6 +192,24 @@ export type StartImpersonationResponse = {
     impersonatedUser: AdminUser
 }
 
+export type RecentChange = {
+    id: string
+    title: string
+    body: string
+    status: "draft" | "published"
+    publishedAt: string | null
+    createdAt: string
+    updatedAt: string
+}
+
+export type RecentChangesResponse = {
+    changes: RecentChange[]
+}
+
+export type RecentChangeDeliveryResponse = RecentChangesResponse & {
+    announcement: RecentChange | null
+}
+
 type ApiTimestamp = string
 
 export type UpdateCharacterVitalsPayload = {
@@ -410,6 +428,18 @@ export const api = {
         }),
     stopImpersonation: () =>
         apiRequest<{ stopped: boolean }>("/admin/impersonation/stop", { method: "POST" }),
+    getRecentChangesHistory: () => apiRequest<RecentChangesResponse>("/recent-changes/history"),
+    deliverLatestRecentChange: () =>
+        apiRequest<RecentChangeDeliveryResponse>("/recent-changes/deliver-latest", {
+            method: "POST"
+        }),
+    getAdminRecentChanges: () => apiRequest<RecentChangesResponse>("/admin/recent-changes"),
+    createAdminRecentChange: (data: { title: string; body: string }) =>
+        apiRequest<RecentChange>("/admin/recent-changes", { method: "POST", body: data }),
+    updateAdminRecentChange: (id: string, data: { title: string; body: string }) =>
+        apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
+    publishAdminRecentChange: (id: string) =>
+        apiRequest<RecentChange>(`/admin/recent-changes/${id}/publish`, { method: "POST" }),
 
     // Characters
     getCharacters: () =>

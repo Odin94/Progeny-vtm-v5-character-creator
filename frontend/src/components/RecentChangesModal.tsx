@@ -1,0 +1,92 @@
+import { ActionIcon, Button, Group, Modal, Stack, Text } from "@mantine/core"
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
+import { useEffect, useState } from "react"
+import type { RecentChange } from "~/utils/api"
+
+type RecentChangesModalProps = {
+    opened: boolean
+    onClose: () => void
+    changes: RecentChange[]
+    initialChangeId?: string
+}
+
+const formatPublishedDate = (publishedAt: string | null) => {
+    if (!publishedAt) return "Draft"
+    return new Date(publishedAt).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    })
+}
+
+const RecentChangesModal = ({
+    opened,
+    onClose,
+    changes,
+    initialChangeId
+}: RecentChangesModalProps) => {
+    const initialIndex = Math.max(
+        0,
+        initialChangeId ? changes.findIndex((change) => change.id === initialChangeId) : 0
+    )
+    const [currentIndex, setCurrentIndex] = useState(initialIndex)
+
+    useEffect(() => {
+        setCurrentIndex(initialIndex)
+    }, [initialChangeId, initialIndex])
+
+    const currentChange = changes[currentIndex]
+    const canGoNewer = currentIndex > 0
+    const canGoOlder = currentIndex < changes.length - 1
+
+    return (
+        <Modal
+            opened={opened && !!currentChange}
+            onClose={onClose}
+            title="Recent changes"
+            centered
+            size="lg"
+            zIndex={2500}
+        >
+            {currentChange ? (
+                <Stack gap="md">
+                    <div>
+                        <Text fw={700} size="xl">
+                            {currentChange.title}
+                        </Text>
+                        <Text c="dimmed" size="sm">
+                            {formatPublishedDate(currentChange.publishedAt)}
+                        </Text>
+                    </div>
+                    <Text style={{ whiteSpace: "pre-wrap" }}>{currentChange.body}</Text>
+                    <Group justify="space-between" align="center">
+                        <Group gap="xs">
+                            <ActionIcon
+                                variant="subtle"
+                                aria-label="Newer announcement"
+                                disabled={!canGoNewer}
+                                onClick={() => setCurrentIndex((index) => index - 1)}
+                            >
+                                <IconChevronLeft size={20} />
+                            </ActionIcon>
+                            <Text size="sm" c="dimmed">
+                                {currentIndex + 1} of {changes.length}
+                            </Text>
+                            <ActionIcon
+                                variant="subtle"
+                                aria-label="Older announcement"
+                                disabled={!canGoOlder}
+                                onClick={() => setCurrentIndex((index) => index + 1)}
+                            >
+                                <IconChevronRight size={20} />
+                            </ActionIcon>
+                        </Group>
+                        <Button onClick={onClose}>Got it</Button>
+                    </Group>
+                </Stack>
+            ) : null}
+        </Modal>
+    )
+}
+
+export default RecentChangesModal

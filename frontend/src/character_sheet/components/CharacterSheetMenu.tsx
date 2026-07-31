@@ -15,16 +15,21 @@ import {
     IconBrandDiscord,
     IconExternalLink,
     IconHelpHexagon,
-    IconMessageCircle
+    IconMessageCircle,
+    IconHistory
 } from "@tabler/icons-react"
 import { Buffer } from "buffer"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import SupportConversationButton from "~/components/SupportConversationButton"
+import RecentChangesModal from "~/components/RecentChangesModal"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
+import { useAuth } from "~/hooks/useAuth"
+import { api } from "~/utils/api"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
@@ -53,6 +58,13 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [foundryHelpOpen, setFoundryHelpOpen] = useState(false)
+    const [recentChangesOpened, setRecentChangesOpened] = useState(false)
+    const { isAuthenticated } = useAuth()
+    const recentChangesQuery = useQuery({
+        queryKey: ["recent-changes", "history"],
+        queryFn: api.getRecentChangesHistory,
+        enabled: recentChangesOpened && isAuthenticated
+    })
 
     const [view, setView] = useState<MenuView>("menu")
     const direction = useRef<1 | -1>(1)
@@ -386,6 +398,15 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                             >
                                                 Disclaimer
                                             </Button>
+                                            {isAuthenticated ? (
+                                                <Button
+                                                    leftSection={<IconHistory size={18} />}
+                                                    variant="subtle"
+                                                    onClick={() => setRecentChangesOpened(true)}
+                                                >
+                                                    Recent changes
+                                                </Button>
+                                            ) : null}
                                             <SupportConversationButton
                                                 source="character-sheet-menu"
                                                 leftSection={<IconMessageCircle size={18} />}
@@ -577,6 +598,12 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     <ErrorDetails error={downloadError} linkColor="#9c36b5" />
                 </Modal>
             ) : null}
+
+            <RecentChangesModal
+                opened={recentChangesOpened}
+                onClose={() => setRecentChangesOpened(false)}
+                changes={recentChangesQuery.data?.changes ?? []}
+            />
         </>
     )
 }

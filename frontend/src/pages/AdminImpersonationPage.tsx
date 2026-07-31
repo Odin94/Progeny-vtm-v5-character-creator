@@ -15,6 +15,7 @@ import {
     Table,
     Text,
     TextInput,
+    Tabs,
     Title
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
@@ -27,6 +28,7 @@ import { useAuth } from "~/hooks/useAuth"
 import { api, type AdminUser } from "~/utils/api"
 import HomebrewModerationPanel from "~/components/HomebrewModerationPanel"
 import { refreshIdentityBoundQueries } from "~/utils/impersonation"
+import AdminRecentChangesPanel from "~/components/AdminRecentChangesPanel"
 
 const topbarHeight = 52
 
@@ -39,6 +41,7 @@ const AdminImpersonationPage = () => {
     const [query, setQuery] = useState("")
     const [page, setPage] = useState(1)
     const [superadminCandidate, setSuperadminCandidate] = useState<AdminUser | null>(null)
+    const [activeTab, setActiveTab] = useState<string | null>("users")
     const canUseAdminTools = user?.actorIsSuperadmin && !user.impersonation?.active
 
     const usersQuery = useQuery({
@@ -272,90 +275,118 @@ const AdminImpersonationPage = () => {
                             </Paper>
                         ) : (
                             <Stack gap="lg">
-                                <Group justify="space-between" align="flex-end">
-                                    <Stack gap={4}>
-                                        <Title order={1}>User administration</Title>
-                                        <Text c="dimmed">
-                                            Manage name tags, superadmins, and 10 minute
-                                            impersonation sessions.
-                                        </Text>
-                                    </Stack>
-                                    <TextInput
-                                        w={{ base: "100%", sm: 320 }}
-                                        leftSection={<IconSearch size={16} />}
-                                        placeholder="Search users"
-                                        value={query}
-                                        onChange={(event) => {
-                                            setQuery(event.currentTarget.value)
-                                            setPage(1)
-                                        }}
-                                    />
-                                </Group>
-
-                                <Paper p="md" withBorder>
-                                    {usersQuery.isLoading ? (
-                                        <Center py="xl">
-                                            <Loader color="yellow" />
-                                        </Center>
-                                    ) : usersQuery.isError ? (
-                                        <Center py="xl">
-                                            <Stack align="center" gap="sm">
-                                                <Text fw={600}>Could not load users</Text>
-                                                <Text size="sm" c="dimmed" ta="center">
-                                                    {usersQueryErrorMessage}
-                                                </Text>
-                                                <Button
-                                                    size="xs"
-                                                    variant="light"
-                                                    color="yellow"
-                                                    onClick={() => usersQuery.refetch()}
-                                                >
-                                                    Retry
-                                                </Button>
-                                            </Stack>
-                                        </Center>
-                                    ) : (
-                                        <Stack gap="md">
-                                            <Table.ScrollContainer minWidth={720}>
-                                                <Table verticalSpacing="sm">
-                                                    <Table.Thead>
-                                                        <Table.Tr>
-                                                            <Table.Th>User</Table.Th>
-                                                            <Table.Th>Superadmin</Table.Th>
-                                                            <Table.Th>Name tag</Table.Th>
-                                                            <Table.Th>Impersonation</Table.Th>
-                                                        </Table.Tr>
-                                                    </Table.Thead>
-                                                    <Table.Tbody>{rows}</Table.Tbody>
-                                                </Table>
-                                            </Table.ScrollContainer>
-                                            {usersQuery.data.total === 0 ? (
-                                                <Text c="dimmed" ta="center">
-                                                    No users found.
-                                                </Text>
-                                            ) : (
-                                                <Group justify="space-between">
-                                                    <Text size="sm" c="dimmed">
-                                                        Showing{" "}
-                                                        {(page - 1) * usersQuery.data.pageSize + 1}–
-                                                        {Math.min(
-                                                            page * usersQuery.data.pageSize,
-                                                            usersQuery.data.total
-                                                        )}{" "}
-                                                        of {usersQuery.data.total} users
+                                <Tabs value={activeTab} onChange={setActiveTab}>
+                                    <Tabs.List>
+                                        <Tabs.Tab value="users">Users</Tabs.Tab>
+                                        <Tabs.Tab value="recent-changes">Recent changes</Tabs.Tab>
+                                    </Tabs.List>
+                                    <Tabs.Panel value="users" pt="lg">
+                                        <Stack gap="lg">
+                                            <Group justify="space-between" align="flex-end">
+                                                <Stack gap={4}>
+                                                    <Title order={1}>User administration</Title>
+                                                    <Text c="dimmed">
+                                                        Manage name tags, superadmins, and 10 minute
+                                                        impersonation sessions.
                                                     </Text>
-                                                    <Pagination
-                                                        total={usersQuery.data.totalPages}
-                                                        value={page}
-                                                        onChange={setPage}
-                                                        color="yellow"
-                                                    />
-                                                </Group>
-                                            )}
+                                                </Stack>
+                                                <TextInput
+                                                    w={{ base: "100%", sm: 320 }}
+                                                    leftSection={<IconSearch size={16} />}
+                                                    placeholder="Search users"
+                                                    value={query}
+                                                    onChange={(event) => {
+                                                        setQuery(event.currentTarget.value)
+                                                        setPage(1)
+                                                    }}
+                                                />
+                                            </Group>
+
+                                            <Paper p="md" withBorder>
+                                                {usersQuery.isLoading ? (
+                                                    <Center py="xl">
+                                                        <Loader color="yellow" />
+                                                    </Center>
+                                                ) : usersQuery.isError ? (
+                                                    <Center py="xl">
+                                                        <Stack align="center" gap="sm">
+                                                            <Text fw={600}>
+                                                                Could not load users
+                                                            </Text>
+                                                            <Text size="sm" c="dimmed" ta="center">
+                                                                {usersQueryErrorMessage}
+                                                            </Text>
+                                                            <Button
+                                                                size="xs"
+                                                                variant="light"
+                                                                color="yellow"
+                                                                onClick={() => usersQuery.refetch()}
+                                                            >
+                                                                Retry
+                                                            </Button>
+                                                        </Stack>
+                                                    </Center>
+                                                ) : (
+                                                    <Stack gap="md">
+                                                        <Table.ScrollContainer minWidth={720}>
+                                                            <Table verticalSpacing="sm">
+                                                                <Table.Thead>
+                                                                    <Table.Tr>
+                                                                        <Table.Th>User</Table.Th>
+                                                                        <Table.Th>
+                                                                            Superadmin
+                                                                        </Table.Th>
+                                                                        <Table.Th>
+                                                                            Name tag
+                                                                        </Table.Th>
+                                                                        <Table.Th>
+                                                                            Impersonation
+                                                                        </Table.Th>
+                                                                    </Table.Tr>
+                                                                </Table.Thead>
+                                                                <Table.Tbody>{rows}</Table.Tbody>
+                                                            </Table>
+                                                        </Table.ScrollContainer>
+                                                        {usersQuery.data.total === 0 ? (
+                                                            <Text c="dimmed" ta="center">
+                                                                No users found.
+                                                            </Text>
+                                                        ) : (
+                                                            <Group justify="space-between">
+                                                                <Text size="sm" c="dimmed">
+                                                                    Showing{" "}
+                                                                    {(page - 1) *
+                                                                        usersQuery.data.pageSize +
+                                                                        1}
+                                                                    –
+                                                                    {Math.min(
+                                                                        page *
+                                                                            usersQuery.data
+                                                                                .pageSize,
+                                                                        usersQuery.data.total
+                                                                    )}{" "}
+                                                                    of {usersQuery.data.total} users
+                                                                </Text>
+                                                                <Pagination
+                                                                    total={
+                                                                        usersQuery.data.totalPages
+                                                                    }
+                                                                    value={page}
+                                                                    onChange={setPage}
+                                                                    color="yellow"
+                                                                />
+                                                            </Group>
+                                                        )}
+                                                    </Stack>
+                                                )}
+                                            </Paper>
+                                            <HomebrewModerationPanel />
                                         </Stack>
-                                    )}
-                                </Paper>
-                                <HomebrewModerationPanel />
+                                    </Tabs.Panel>
+                                    <Tabs.Panel value="recent-changes" pt="lg">
+                                        <AdminRecentChangesPanel />
+                                    </Tabs.Panel>
+                                </Tabs>
                             </Stack>
                         )}
                     </Container>

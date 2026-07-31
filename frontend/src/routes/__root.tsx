@@ -16,6 +16,7 @@ import { resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import { isFramelessSyntheticNoise, type ExceptionListEntry } from "~/utils/exceptionFilter"
 import { warmSupportConversation } from "~/utils/supportConversations"
+import RecentChangesGate from "~/components/RecentChangesGate"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -183,6 +184,7 @@ export const Route = createRootRoute({
                     <CharacterAutosave />
                     <BrokenSaveModal />
                     <CookiesBanner />
+                    <RecentChangesGate />
                     <RenderProfiler id="RouteOutlet">
                         <Outlet />
                     </RenderProfiler>

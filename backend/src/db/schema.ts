@@ -446,6 +446,56 @@ export const homebrewComments = sqliteTable(
     })
 )
 
+export const recentChanges = sqliteTable(
+    "recent_changes",
+    {
+        id: text("id").primaryKey(),
+        title: text("title").notNull(),
+        body: text("body").notNull(),
+        status: text("status", { enum: ["draft", "published"] })
+            .notNull()
+            .default("draft"),
+        createdByUserId: text("created_by_user_id").references(() => users.id, {
+            onDelete: "set null"
+        }),
+        publishedByUserId: text("published_by_user_id").references(() => users.id, {
+            onDelete: "set null"
+        }),
+        publishedAt: integer("published_at", { mode: "timestamp" }),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`),
+        updatedAt: integer("updated_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        publishedAtIdx: index("recent_changes_published_at_idx").on(table.status, table.publishedAt)
+    })
+)
+
+export const recentChangeDeliveries = sqliteTable(
+    "recent_change_deliveries",
+    {
+        id: text("id").primaryKey(),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        recentChangeId: text("recent_change_id")
+            .notNull()
+            .references(() => recentChanges.id, { onDelete: "cascade" }),
+        deliveredAt: integer("delivered_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        userChangeUnique: uniqueIndex("recent_change_deliveries_user_change_idx").on(
+            table.userId,
+            table.recentChangeId
+        )
+    })
+)
+
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Character = typeof characters.$inferSelect
@@ -471,6 +521,8 @@ export type HomebrewItem = typeof homebrewItems.$inferSelect
 export type HomebrewLibraryEntry = typeof homebrewLibraryEntries.$inferSelect
 export type HomebrewPublication = typeof homebrewPublications.$inferSelect
 export type HomebrewPublishRequest = typeof homebrewPublishRequests.$inferSelect
+export type RecentChange = typeof recentChanges.$inferSelect
+export type RecentChangeDelivery = typeof recentChangeDeliveries.$inferSelect
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -484,7 +536,10 @@ export const usersRelations = relations(users, ({ many }) => ({
     impersonationSessionsReceived: many(impersonationSessions, { relationName: "impersonated" }),
     homebrewCollections: many(homebrewCollections),
     homebrewRatings: many(homebrewRatings),
-    homebrewComments: many(homebrewComments)
+    homebrewComments: many(homebrewComments),
+    recentChangeDeliveries: many(recentChangeDeliveries),
+    recentChangesCreated: many(recentChanges, { relationName: "recentChangesCreated" }),
+    recentChangesPublished: many(recentChanges, { relationName: "recentChangesPublished" })
 }))
 
 export const charactersRelations = relations(characters, ({ one, many }) => ({
@@ -680,5 +735,30 @@ export const impersonationSessionsRelations = relations(impersonationSessions, (
         fields: [impersonationSessions.impersonatedUserId],
         references: [users.id],
         relationName: "impersonated"
+    })
+}))
+
+export const recentChangesRelations = relations(recentChanges, ({ one, many }) => ({
+    createdBy: one(users, {
+        fields: [recentChanges.createdByUserId],
+        references: [users.id],
+        relationName: "recentChangesCreated"
+    }),
+    publishedBy: one(users, {
+        fields: [recentChanges.publishedByUserId],
+        references: [users.id],
+        relationName: "recentChangesPublished"
+    }),
+    deliveries: many(recentChangeDeliveries)
+}))
+
+export const recentChangeDeliveriesRelations = relations(recentChangeDeliveries, ({ one }) => ({
+    user: one(users, {
+        fields: [recentChangeDeliveries.userId],
+        references: [users.id]
+    }),
+    recentChange: one(recentChanges, {
+        fields: [recentChangeDeliveries.recentChangeId],
+        references: [recentChanges.id]
     })
 }))
