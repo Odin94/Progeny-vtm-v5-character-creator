@@ -24,8 +24,12 @@ const getMeritFlawKey = (
     meritFlaw: Pick<MeritFlaw, "name" | "type"> & Partial<Pick<MeritFlaw, "text">>
 ) => `${meritFlaw.type}:${getCatalogMeritFlawName(meritFlaw.name)}:${meritFlaw.text ?? ""}`
 
-export const getMeritFlawDisplayName = (meritFlaw: Pick<MeritFlaw, "name" | "text">): string =>
-    meritFlaw.text ? `${meritFlaw.name} (${meritFlaw.text})` : meritFlaw.name
+export const getMeritFlawDisplayName = (
+    meritFlaw: Pick<MeritFlaw, "name" | "text" | "homebrewSource">
+): string =>
+    meritFlaw.text && !meritFlaw.homebrewSource
+        ? `${meritFlaw.name} (${meritFlaw.text})`
+        : meritFlaw.name
 
 const mergeMeritFlawDetails = (base: MeritFlaw, incoming: MeritFlaw): MeritFlaw => ({
     ...base,

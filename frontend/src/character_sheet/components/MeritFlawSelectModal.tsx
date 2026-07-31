@@ -77,9 +77,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             .map(({ item, collection }) => ({
                 name: item.name,
                 cost: item.costs,
-                summary: item.summary,
+                summary: item.summary || item.description,
                 excludes: item.excludes,
-                text: item.description,
                 homebrewSource: getHomebrewSource(item, collection)
             })),
         flaws: homebrewMeritsAndFlaws
@@ -87,9 +86,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             .map(({ item, collection }) => ({
                 name: item.name,
                 cost: item.costs,
-                summary: item.summary,
+                summary: item.summary || item.description,
                 excludes: item.excludes,
-                text: item.description,
                 homebrewSource: getHomebrewSource(item, collection)
             }))
     }

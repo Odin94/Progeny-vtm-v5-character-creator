@@ -124,8 +124,7 @@ export const homebrewMeritFlawToCharacter = (
 ): MeritFlaw => ({
     name: item.name,
     level,
-    summary: item.summary,
-    text: item.description,
+    summary: item.summary || item.description,
     excludes: item.excludes,
     type: item.kind,
     homebrewSource: getHomebrewSource(item, collection)

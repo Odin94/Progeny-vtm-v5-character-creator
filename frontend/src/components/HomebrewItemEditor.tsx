@@ -125,7 +125,17 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                 onChange={(event) => update({ name: event.currentTarget.value })}
                 required
             />
-            {"summary" in draft ? (
+            {draft.kind === "merit" || draft.kind === "flaw" ? (
+                <Textarea
+                    label="Description"
+                    description="Shown on the character sheet and in pickers."
+                    minRows={3}
+                    autosize
+                    maxRows={10}
+                    value={draft.summary}
+                    onChange={(event) => update({ summary: event.currentTarget.value })}
+                />
+            ) : "summary" in draft ? (
                 <TextInput
                     label="Short summary"
                     description="Shown in pickers and library previews."
@@ -134,7 +144,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     onChange={(event) => update({ summary: event.currentTarget.value })}
                 />
             ) : null}
-            {"description" in draft ? (
+            {"description" in draft && draft.kind !== "merit" && draft.kind !== "flaw" ? (
                 <Textarea
                     label="Full description"
                     minRows={3}

@@ -12,6 +12,7 @@ import {
     homebrewPowerToCeremony,
     homebrewPowerToCharacterPower
 } from "~/utils/homebrewOptions"
+import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 
 const collection: HomebrewCollection = {
     id: "collection-1",
@@ -133,9 +134,11 @@ describe("Homebrew character options", () => {
         expect(merit).toMatchObject({
             name: "Moon-Kissed",
             level: 2,
-            text: "Full text.",
+            summary: "Favored by moonlight.",
             homebrewSource: { collectionName: "Night Arts" }
         })
+        expect(merit.text).toBeUndefined()
+        expect(getMeritFlawDisplayName(merit)).toBe("Moon-Kissed")
     })
 
     it("keeps same-named Homebrew Disciplines and Powers distinct by provenance", () => {
