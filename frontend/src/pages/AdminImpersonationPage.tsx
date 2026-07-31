@@ -19,7 +19,7 @@ import {
     Title
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { IconSearch, IconUserShield } from "@tabler/icons-react"
+import { IconBellRinging, IconSearch, IconUserShield } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import Topbar from "~/topbar/Topbar"
@@ -29,6 +29,7 @@ import { api, type AdminUser } from "~/utils/api"
 import HomebrewModerationPanel from "~/components/HomebrewModerationPanel"
 import { refreshIdentityBoundQueries } from "~/utils/impersonation"
 import AdminRecentChangesPanel from "~/components/AdminRecentChangesPanel"
+import { Route, type AdminTab } from "~/routes/admin.impersonation"
 
 const topbarHeight = 52
 
@@ -37,11 +38,12 @@ const getUserLabel = (user: AdminUser) =>
 
 const AdminImpersonationPage = () => {
     const { user, isLoading, isAuthenticated, signIn } = useAuth()
+    const navigate = Route.useNavigate()
+    const { tab: activeTab } = Route.useSearch()
     const queryClient = useQueryClient()
     const [query, setQuery] = useState("")
     const [page, setPage] = useState(1)
     const [superadminCandidate, setSuperadminCandidate] = useState<AdminUser | null>(null)
-    const [activeTab, setActiveTab] = useState<string | null>("users")
     const canUseAdminTools = user?.actorIsSuperadmin && !user.impersonation?.active
 
     const usersQuery = useQuery({
@@ -49,6 +51,18 @@ const AdminImpersonationPage = () => {
         queryFn: () => api.getAdminUsers({ query, page }),
         enabled: !!canUseAdminTools
     })
+    const homebrewRequestsQuery = useQuery({
+        queryKey: ["admin", "homebrew", "publish-requests"],
+        queryFn: api.getAdminHomebrewPublishRequests,
+        enabled: !!canUseAdminTools
+    })
+    const pendingHomebrewRequestCount =
+        homebrewRequestsQuery.data?.filter((request) => request.status === "pending").length ?? 0
+
+    const selectTab = (tab: string | null) => {
+        if (!tab) return
+        navigate({ search: { tab: tab as AdminTab } })
+    }
 
     const toggleSuperadminMutation = useMutation({
         mutationFn: ({ id, isSuperadmin }: { id: string; isSuperadmin: boolean }) =>
@@ -275,10 +289,28 @@ const AdminImpersonationPage = () => {
                             </Paper>
                         ) : (
                             <Stack gap="lg">
-                                <Tabs value={activeTab} onChange={setActiveTab}>
+                                <Tabs value={activeTab} onChange={selectTab}>
                                     <Tabs.List>
                                         <Tabs.Tab value="users">Users</Tabs.Tab>
                                         <Tabs.Tab value="recent-changes">Recent changes</Tabs.Tab>
+                                        <Tabs.Tab
+                                            value="homebrew-review"
+                                            leftSection={
+                                                <IconBellRinging
+                                                    size={16}
+                                                    color={
+                                                        pendingHomebrewRequestCount
+                                                            ? "var(--mantine-color-yellow-5)"
+                                                            : undefined
+                                                    }
+                                                />
+                                            }
+                                        >
+                                            Homebrew review
+                                            {pendingHomebrewRequestCount
+                                                ? ` (${pendingHomebrewRequestCount})`
+                                                : ""}
+                                        </Tabs.Tab>
                                     </Tabs.List>
                                     <Tabs.Panel value="users" pt="lg">
                                         <Stack gap="lg">
@@ -380,11 +412,13 @@ const AdminImpersonationPage = () => {
                                                     </Stack>
                                                 )}
                                             </Paper>
-                                            <HomebrewModerationPanel />
                                         </Stack>
                                     </Tabs.Panel>
                                     <Tabs.Panel value="recent-changes" pt="lg">
                                         <AdminRecentChangesPanel />
+                                    </Tabs.Panel>
+                                    <Tabs.Panel value="homebrew-review" pt="lg">
+                                        <HomebrewModerationPanel />
                                     </Tabs.Panel>
                                 </Tabs>
                             </Stack>
