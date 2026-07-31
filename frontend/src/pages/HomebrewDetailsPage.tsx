@@ -484,12 +484,48 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                     collectionItems={draft.items}
                     onClose={() => setItemEditor(null)}
                     onSave={(item) => {
-                        const items =
-                            itemEditor.index === null
-                                ? [...draft.items, item]
-                                : replaceItemAndReferences(draft.items, itemEditor.index, item)
-                        setDraft({ ...draft, items })
+                        const isAddingItem = itemEditor.index === null
+                        const items = isAddingItem
+                            ? [...draft.items, item]
+                            : replaceItemAndReferences(draft.items, itemEditor.index, item)
+                        const nextDraft = { ...draft, items }
+                        setDraft(nextDraft)
                         setItemEditor(null)
+
+                        if (!isAddingItem) return
+
+                        if (!nextDraft.name.trim()) {
+                            setError(
+                                "Give this collection a name before adding a rule so it can be saved."
+                            )
+                            return
+                        }
+
+                        void (
+                            isNew
+                                ? createMutation.mutateAsync(nextDraft)
+                                : updateMutation.mutateAsync({ id: collectionId, input: nextDraft })
+                        )
+                            .then((saved) => {
+                                notifications.show({
+                                    title: "Rule added",
+                                    message: `${saved.name} was saved automatically.`,
+                                    color: "grape"
+                                })
+                                if (isNew) {
+                                    navigate({
+                                        to: "/homebrew/$collectionId",
+                                        params: { collectionId: saved.id }
+                                    })
+                                }
+                            })
+                            .catch((mutationError) => {
+                                setError(
+                                    mutationError instanceof Error
+                                        ? mutationError.message
+                                        : "Could not save the collection"
+                                )
+                            })
                     }}
                 />
             ) : null}
