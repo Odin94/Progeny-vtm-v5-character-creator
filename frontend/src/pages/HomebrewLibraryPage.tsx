@@ -69,6 +69,13 @@ const BloodRating = ({
     </Group>
 )
 
+const formatRequestOpenedDate = (createdAt: string) =>
+    new Date(createdAt).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    })
+
 const HomebrewLibraryPage = () => {
     const client = useQueryClient()
     const { user, isAuthenticated, signIn } = useAuth()
@@ -345,6 +352,9 @@ const HomebrewLibraryPage = () => {
                                         <Group key={request.id} justify="space-between">
                                             <div>
                                                 <Text fw={500}>{request.snapshot.name}</Text>
+                                                <Text size="sm" c="dimmed">
+                                                    Opened {formatRequestOpenedDate(request.createdAt)}
+                                                </Text>
                                                 {request.denialMessage ? (
                                                     <Text size="sm" c="red">
                                                         {request.denialMessage}
