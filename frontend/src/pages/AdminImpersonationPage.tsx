@@ -296,14 +296,12 @@ const AdminImpersonationPage = () => {
                                         <Tabs.Tab
                                             value="homebrew-review"
                                             leftSection={
-                                                <IconBellRinging
-                                                    size={16}
-                                                    color={
-                                                        pendingHomebrewRequestCount
-                                                            ? "var(--mantine-color-yellow-5)"
-                                                            : undefined
-                                                    }
-                                                />
+                                                pendingHomebrewRequestCount ? (
+                                                    <IconBellRinging
+                                                        size={16}
+                                                        color="var(--mantine-color-yellow-5)"
+                                                    />
+                                                ) : undefined
                                             }
                                         >
                                             Homebrew review
