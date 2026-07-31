@@ -31,6 +31,7 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import ContentWarning from "~/components/ContentWarning"
 import HomebrewItemPreview from "~/components/HomebrewItemPreview"
 import type { HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
@@ -360,9 +361,7 @@ const LibraryDetail = ({
                             ) : null}
 
                             {detail.snapshot.contentWarning ? (
-                                <Alert color="yellow" title="Content warning">
-                                    {detail.snapshot.contentWarning}
-                                </Alert>
+                                <ContentWarning>{detail.snapshot.contentWarning}</ContentWarning>
                             ) : null}
 
                             <Stack gap="lg">

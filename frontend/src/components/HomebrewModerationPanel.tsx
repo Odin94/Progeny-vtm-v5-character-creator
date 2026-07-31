@@ -17,6 +17,7 @@ import { useState } from "react"
 import type { HomebrewPublishRequest } from "~/data/Homebrew"
 import { api } from "~/utils/api"
 import HomebrewRuleDetails from "~/components/HomebrewRuleDetails"
+import ContentWarning from "~/components/ContentWarning"
 
 const HomebrewModerationPanel = () => {
     const client = useQueryClient()
@@ -108,9 +109,7 @@ const HomebrewModerationPanel = () => {
                 <Stack>
                     <Text>{review?.snapshot.description || review?.snapshot.shortDescription}</Text>
                     {review?.snapshot.contentWarning ? (
-                        <Alert color="yellow" title="Content warning">
-                            {review.snapshot.contentWarning}
-                        </Alert>
+                        <ContentWarning>{review.snapshot.contentWarning}</ContentWarning>
                     ) : null}
                     <Stack gap="xs">
                         {review?.snapshot.items.map((item) => (
