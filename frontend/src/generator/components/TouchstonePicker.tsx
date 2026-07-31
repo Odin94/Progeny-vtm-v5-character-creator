@@ -13,6 +13,7 @@ import { RAW_GOLD, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { trackEvent } from "../../utils/analytics"
 import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons"
@@ -35,7 +36,7 @@ import {
 } from "./sharedGeneratorUi"
 type TouchstonePickerProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     nextStep: () => void
 }
 type TouchstonePlaceholder = {
@@ -87,9 +88,16 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
     const [touchstoneToDelete, setTouchstoneToDelete] = useState<number | null>(null)
     const [addButtonHovered, setAddButtonHovered] = useState(false)
     const touchstoneFieldStyles = getGeneratorFieldStyles("gold")
+    // Use the functional updater form so we merge into the latest character rather than the
+    // `character` prop snapshot captured at render. A plain spread would clobber concurrent
+    // updates written elsewhere (e.g. the `version` bump from useAutosaveCharacter), feeding the
+    // debounced save a stale version.
     const persistTouchstones = (updatedTouchstones: Touchstone[]) => {
-        setCharacter({ ...character, touchstones: updatedTouchstones })
+        setCharacter((current) => ({ ...current, touchstones: updatedTouchstones }))
     }
+    // Commit on every keystroke rather than on blur. Blur never fires if the step unmounts while
+    // an input is still focused (e.g. the user clicks Confirm on a different element or navigates
+    // away), which silently dropped whatever they had just typed.
     const updateTouchstone = (
         i: number,
         updatedTouchstone: { name?: string; description?: string; conviction?: string }
@@ -97,7 +105,12 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
         const newTouchstones = [...touchstones]
         newTouchstones[i] = { ...touchstones[i], ...updatedTouchstone }
         setTouchstones(newTouchstones)
+        persistTouchstones(newTouchstones)
     }
+    const isBlankTouchstone = (touchstone: Touchstone) =>
+        touchstone.name.trim() === "" &&
+        touchstone.description.trim() === "" &&
+        touchstone.conviction.trim() === ""
     return (
         <div style={generatorScrollableShellStyle}>
             <Stack
@@ -158,9 +171,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                                             .value
                                                                     })
                                                                 }
-                                                                onBlur={() =>
-                                                                    persistTouchstones(touchstones)
-                                                                }
                                                                 placeholder={
                                                                     touchstonePlaceholders[i]
                                                                         ?.name ??
@@ -182,9 +192,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                                                 .value
                                                                     })
                                                                 }
-                                                                onBlur={() =>
-                                                                    persistTouchstones(touchstones)
-                                                                }
                                                                 placeholder={
                                                                     touchstonePlaceholders[i]
                                                                         ?.conviction ??
@@ -205,9 +212,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                                                             event.currentTarget
                                                                                 .value
                                                                     })
-                                                                }
-                                                                onBlur={() =>
-                                                                    persistTouchstones(touchstones)
                                                                 }
                                                                 placeholder={
                                                                     touchstonePlaceholders[i]
@@ -310,11 +314,18 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                         color="grape"
                         styles={generatorConfirmButtonStyles}
                         onClick={() => {
-                            persistTouchstones(touchstones)
+                            // Drop rows the user never filled in so a skipped step doesn't persist
+                            // a placeholder touchstone onto the finished sheet. Rows with any
+                            // content (including a blank name but a filled description/conviction)
+                            // are kept so nothing typed is lost.
+                            const cleanedTouchstones = touchstones.filter(
+                                (touchstone) => !isBlankTouchstone(touchstone)
+                            )
+                            persistTouchstones(cleanedTouchstones)
                             trackEvent({
                                 action: "touchstone confirm clicked",
                                 category: "touchstones",
-                                label: `${touchstones.length}`
+                                label: `${cleanedTouchstones.length}`
                             })
                             nextStep()
                         }}

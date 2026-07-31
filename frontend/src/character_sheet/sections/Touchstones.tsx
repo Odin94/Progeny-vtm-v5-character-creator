@@ -30,6 +30,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const [modalOpened, setModalOpened] = useState(false)
     const [initialTouchstone, setInitialTouchstone] = useState<Touchstone | null>(null)
+    const [initialIndex, setInitialIndex] = useState<number | null>(null)
     const [touchstoneToDelete, setTouchstoneToDelete] = useState<Touchstone | null>(null)
     const isFreeMode = mode === "free"
 
@@ -90,6 +91,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                             color={primaryColor}
                                             onClick={() => {
                                                 setInitialTouchstone(touchstone)
+                                                setInitialIndex(index)
                                                 setModalOpened(true)
                                             }}
                                         >
@@ -146,6 +148,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                         radius="xl"
                                         onClick={() => {
                                             setInitialTouchstone(null)
+                                            setInitialIndex(null)
                                             setModalOpened(true)
                                         }}
                                         style={{
@@ -168,9 +171,11 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                     onClose={() => {
                         setModalOpened(false)
                         setInitialTouchstone(null)
+                        setInitialIndex(null)
                     }}
                     options={options}
                     initialTouchstone={initialTouchstone}
+                    initialIndex={initialIndex}
                 />
             ) : null}
             {touchstoneToDelete ? (
