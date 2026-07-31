@@ -72,6 +72,18 @@
     color: rgba(199, 70, 80, 0.55);
 }
 
+.homebrew-loresheet__title {
+    color: #c74650;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: clamp(1.5rem, 4vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    padding-left: 0.2em;
+    text-transform: uppercase;
+}
+
 .homebrew-loresheet__eyebrow {
     color: #9e8f91;
     letter-spacing: 0.12em;
@@ -88,6 +100,12 @@
 .homebrew-loresheet__details {
     border-left: 1px solid rgba(178, 72, 80, 0.42);
     padding-left: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.homebrew-loresheet__intro-copy {
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+    white-space: pre-wrap;
 }
 
 .homebrew-loresheet__divider {
@@ -157,6 +175,22 @@
 .homebrew-loresheet__tier-name:focus {
     border-bottom-color: #c74650;
     box-shadow: none;
+}
+
+.homebrew-loresheet__tier-title {
+    color: #e1cbca;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 0.65rem;
+}
+
+.homebrew-loresheet__tier-text {
+    color: #e8dfdc;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+    white-space: pre-wrap;
 }
 
 .homebrew-loresheet__tier-summary {
