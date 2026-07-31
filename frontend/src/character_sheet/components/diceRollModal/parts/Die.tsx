@@ -11,6 +11,7 @@ type DieProps = {
     isSelected?: boolean
     isSelectable?: boolean
     ariaLabel?: string
+    animateAppearance?: boolean
 }
 
 const Die = ({
@@ -22,7 +23,8 @@ const Die = ({
     onClick,
     isSelected = false,
     isSelectable = false,
-    ariaLabel
+    ariaLabel,
+    animateAppearance = true
 }: DieProps) => {
     const theme = useMantineTheme()
     const shouldReduceMotion = useReducedMotion()
@@ -221,16 +223,17 @@ const Die = ({
 
     const endRotateX = normalizeAngle(finalRotation.rotateX)
     const endRotateY = normalizeAngle(finalRotation.rotateY)
-    const settledEndRotateX = endRotateX + (shouldReduceMotion ? 0 : 1080)
-    const settledEndRotateY = endRotateY + (shouldReduceMotion ? 0 : 2160)
-    const settledInitialTransform = shouldReduceMotion
+    const skipAppearanceAnimation = shouldReduceMotion || !animateAppearance
+    const settledEndRotateX = endRotateX + (skipAppearanceAnimation ? 0 : 1080)
+    const settledEndRotateY = endRotateY + (skipAppearanceAnimation ? 0 : 2160)
+    const settledInitialTransform = skipAppearanceAnimation
         ? getDieTransform(0, 0, 1, endRotateX, endRotateY)
         : getDieTransform(0, 0, 0.9, finalRotation.rotateX - 180, finalRotation.rotateY - 180)
     const settledTransform = getDieTransform(0, 0, 1, settledEndRotateX, settledEndRotateY)
     const settledExitTransform = getDieTransform(
         0,
         0,
-        shouldReduceMotion ? 1 : 0.9,
+        skipAppearanceAnimation ? 1 : 0.9,
         settledEndRotateX,
         settledEndRotateY
     )
@@ -269,8 +272,8 @@ const Die = ({
                 }}
                 exit={{ opacity: 0, transform: settledExitTransform }}
                 transition={
-                    shouldReduceMotion
-                        ? { duration: 0.12 }
+                    skipAppearanceAnimation
+                        ? { duration: 0 }
                         : {
                               type: "spring",
                               stiffness: 200,
@@ -279,7 +282,7 @@ const Die = ({
                               ease: "easeOut"
                           }
                 }
-                whileHover={shouldReduceMotion ? undefined : { transform: hoverTransform }}
+                whileHover={skipAppearanceAnimation ? undefined : { transform: hoverTransform }}
                 style={dieStyle}
             >
                 {Array.from({ length: 10 }, (_, i) => {
