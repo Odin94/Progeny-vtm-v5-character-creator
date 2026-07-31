@@ -3,6 +3,7 @@ import cors from "@fastify/cors"
 import websocket from "@fastify/websocket"
 import cookie from "@fastify/cookie"
 import rateLimit from "@fastify/rate-limit"
+import multipart from "@fastify/multipart"
 import { readFileSync } from "fs"
 import { characterRoutes } from "./routes/characters.js"
 import { characterNoteRoutes } from "./routes/characterNotes.js"
@@ -99,6 +100,13 @@ export async function buildApp() {
 
     await fastify.register(cookie, {
         secret: env.WORKOS_COOKIE_PASSWORD
+    })
+
+    await fastify.register(multipart, {
+        limits: {
+            files: 1,
+            fileSize: 3 * 1024 * 1024
+        }
     })
 
     await fastify.register(rateLimit, {

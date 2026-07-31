@@ -3,7 +3,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
-import type { RecentChange } from "~/utils/api"
+import { api, type RecentChange } from "~/utils/api"
 import "./RecentChangesModal.css"
 
 type RecentChangesModalProps = {
@@ -34,6 +34,39 @@ const getTitleLetterSpacing = (title: string) => {
     if (title.length <= 18) return "0.22em"
     if (title.length <= 30) return "0.14em"
     return "0.08em"
+}
+
+const RecentChangeImage = ({ change }: { change: RecentChange }) => {
+    const [imageSrc, setImageSrc] = useState<string | null>(
+        change.hasImage ? null : change.imageUrl
+    )
+
+    useEffect(() => {
+        if (!change.hasImage) {
+            setImageSrc(change.imageUrl)
+            return
+        }
+
+        let objectUrl: string | null = null
+        let cancelled = false
+        void api
+            .getRecentChangeImage(change.id)
+            .then((image) => {
+                if (cancelled) return
+                objectUrl = URL.createObjectURL(image)
+                setImageSrc(objectUrl)
+            })
+            .catch(() => {
+                if (!cancelled) setImageSrc(null)
+            })
+
+        return () => {
+            cancelled = true
+            if (objectUrl) URL.revokeObjectURL(objectUrl)
+        }
+    }, [change.hasImage, change.id, change.imageUrl])
+
+    return imageSrc ? <img className="recent-changes__image" src={imageSrc} alt="" /> : null
 }
 
 const RecentChangesModal = ({
@@ -98,17 +131,13 @@ const RecentChangesModal = ({
                         </header>
 
                         <section
-                            className={`recent-changes__intro ${currentChange.imageUrl ? "recent-changes__intro--with-image" : ""}`}
+                            className={`recent-changes__intro ${currentChange.hasImage || currentChange.imageUrl ? "recent-changes__intro--with-image" : ""}`}
                         >
                             <div className="recent-changes__markdown recent-changes__intro-copy">
                                 <ReactMarkdown>{introBlock}</ReactMarkdown>
                             </div>
-                            {currentChange.imageUrl ? (
-                                <img
-                                    className="recent-changes__image"
-                                    src={currentChange.imageUrl}
-                                    alt=""
-                                />
+                            {currentChange.hasImage || currentChange.imageUrl ? (
+                                <RecentChangeImage change={currentChange} />
                             ) : null}
                         </section>
 

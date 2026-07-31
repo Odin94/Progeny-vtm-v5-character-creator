@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, integer, index, uniqueIndex, blob } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 
@@ -452,7 +452,10 @@ export const recentChanges = sqliteTable(
         id: text("id").primaryKey(),
         title: text("title").notNull(),
         body: text("body").notNull(),
+        // Retained as a temporary fallback for previously saved external images.
         imageUrl: text("image_url"),
+        imageData: blob("image_data", { mode: "buffer" }),
+        imageMimeType: text("image_mime_type"),
         status: text("status", { enum: ["draft", "published", "deleted"] })
             .notNull()
             .default("draft"),

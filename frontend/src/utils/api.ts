@@ -139,6 +139,50 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     return response.json()
 }
 
+const apiRequestBlob = async (endpoint: string): Promise<Blob> => {
+    const response = await fetch(`${API_URL}${endpoint}`, { credentials: "include" })
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Unknown error" }))
+        const httpError = new Error(
+            error.message || error.error || `HTTP ${response.status}`
+        ) as ApiError
+        httpError.status = response.status
+        if (response.status === 401) notifyAuthUnauthorized()
+        throw httpError
+    }
+
+    return response.blob()
+}
+
+const uploadFile = async <T>(endpoint: string, file: File): Promise<T> => {
+    await ensureCsrfToken()
+    const csrfToken = getCsrfToken()
+    const formData = new FormData()
+    formData.append("image", file)
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        method: "POST",
+        credentials: "include",
+        headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
+        body: formData
+    })
+
+    const csrfFromHeader = response.headers.get("X-CSRF-Token")
+    if (csrfFromHeader) csrfTokenCache = csrfFromHeader
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Unknown error" }))
+        const httpError = new Error(
+            error.message || error.error || `HTTP ${response.status}`
+        ) as ApiError
+        httpError.status = response.status
+        if (response.status === 401) notifyAuthUnauthorized()
+        throw httpError
+    }
+
+    return response.json()
+}
+
 type UserPreferences = {
     colorTheme: string | null
     backgroundImage: string | null
@@ -197,6 +241,7 @@ export type RecentChange = {
     title: string
     body: string
     imageUrl: string | null
+    hasImage: boolean
     status: "draft" | "published" | "deleted"
     publishedAt: string | null
     createdAt: string
@@ -435,12 +480,15 @@ export const api = {
             method: "POST"
         }),
     getAdminRecentChanges: () => apiRequest<RecentChangesResponse>("/admin/recent-changes"),
-    createAdminRecentChange: (data: { title: string; body: string; imageUrl?: string | null }) =>
+    getRecentChangeImage: (id: string) => apiRequestBlob(`/recent-changes/${id}/image`),
+    createAdminRecentChange: (data: { title: string; body: string }) =>
         apiRequest<RecentChange>("/admin/recent-changes", { method: "POST", body: data }),
-    updateAdminRecentChange: (
-        id: string,
-        data: { title: string; body: string; imageUrl?: string | null }
-    ) => apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
+    updateAdminRecentChange: (id: string, data: { title: string; body: string }) =>
+        apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
+    uploadAdminRecentChangeImage: (id: string, file: File) =>
+        uploadFile<RecentChange>(`/admin/recent-changes/${id}/image`, file),
+    removeAdminRecentChangeImage: (id: string) =>
+        apiRequest<RecentChange>(`/admin/recent-changes/${id}/image`, { method: "DELETE" }),
     publishAdminRecentChange: (id: string) =>
         apiRequest<RecentChange>(`/admin/recent-changes/${id}/publish`, { method: "POST" }),
     softDeleteAdminRecentChange: (id: string) =>

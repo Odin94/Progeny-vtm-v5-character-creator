@@ -68,6 +68,8 @@ describe("recent changes", () => {
                 title text NOT NULL,
                 body text NOT NULL,
                 image_url text,
+                image_data blob,
+                image_mime_type text,
                 status text DEFAULT 'draft' NOT NULL,
                 created_by_user_id text REFERENCES users(id) ON DELETE SET NULL,
                 published_by_user_id text REFERENCES users(id) ON DELETE SET NULL,
@@ -176,14 +178,13 @@ describe("recent changes", () => {
             headers: csrfHeaders,
             payload: {
                 title: "New feature",
-                body: "It is ready.",
-                imageUrl: "https://example.com/new-feature.jpg"
+                body: "It is ready."
             }
         })
         expect(createDraft.statusCode).toBe(201)
         expect(createDraft.json()).toMatchObject({
             status: "draft",
-            imageUrl: "https://example.com/new-feature.jpg"
+            hasImage: false
         })
 
         setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
@@ -210,6 +211,57 @@ describe("recent changes", () => {
             headers: csrfHeaders
         })
         expect(afterPublish.json().announcement).toMatchObject({ title: "New feature" })
+    })
+
+    it("serves a stored update image only for published updates", async () => {
+        const imageData = Buffer.from("small png image")
+        await db.insert(schema.recentChanges).values({
+            id: "image-change",
+            title: "Image update",
+            body: "An update with an image.",
+            status: "published",
+            publishedAt: new Date("2026-03-01T00:00:00.000Z"),
+            imageData,
+            imageMimeType: "image/png"
+        })
+
+        setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
+        const image = await app.inject({
+            method: "GET",
+            url: "/recent-changes/image-change/image",
+            headers: csrfHeaders
+        })
+
+        expect(image.statusCode).toBe(200)
+        expect(image.headers["content-type"]).toContain("image/png")
+        expect(image.rawPayload).toEqual(imageData)
+    })
+
+    it("uploads an image to a draft before it is published", async () => {
+        await db.insert(schema.recentChanges).values({
+            id: "draft-with-image",
+            title: "Draft with image",
+            body: "Upload image here."
+        })
+        const boundary = "recent-changes-image-boundary"
+        const imageData = "small uploaded image"
+        const upload = await app.inject({
+            method: "POST",
+            url: "/admin/recent-changes/draft-with-image/image",
+            headers: {
+                ...csrfHeaders,
+                "content-type": `multipart/form-data; boundary=${boundary}`
+            },
+            payload:
+                `--${boundary}\r\n` +
+                'Content-Disposition: form-data; name="image"; filename="update.png"\r\n' +
+                "Content-Type: image/png\r\n\r\n" +
+                imageData +
+                `\r\n--${boundary}--\r\n`
+        })
+
+        expect(upload.statusCode).toBe(200)
+        expect(upload.json()).toMatchObject({ hasImage: true, imageUrl: null })
     })
 
     it("removes soft-deleted updates from delivery and history before permanent deletion", async () => {

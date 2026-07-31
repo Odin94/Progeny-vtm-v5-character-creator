@@ -1,4 +1,16 @@
-import { Button, Group, Modal, Paper, Stack, Text, TextInput, Textarea, Title } from "@mantine/core"
+import {
+    Button,
+    FileButton,
+    Group,
+    Modal,
+    Paper,
+    Stack,
+    Text,
+    TextInput,
+    Textarea,
+    Title
+} from "@mantine/core"
+import { IconPhoto, IconTrash } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
@@ -24,7 +36,6 @@ const AdminRecentChangesPanel = () => {
     } | null>(null)
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
-    const [imageUrl, setImageUrl] = useState("")
     const changesQuery = useQuery({
         queryKey: ["admin", "recent-changes"],
         queryFn: api.getAdminRecentChanges
@@ -35,7 +46,6 @@ const AdminRecentChangesPanel = () => {
         if (!selectedChange) return
         setTitle(selectedChange.title)
         setBody(selectedChange.body)
-        setImageUrl(selectedChange.imageUrl ?? "")
     }, [selectedChange])
 
     const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin", "recent-changes"] })
@@ -43,17 +53,15 @@ const AdminRecentChangesPanel = () => {
         setEditingId(null)
         setTitle("")
         setBody("")
-        setImageUrl("")
     }
     const saveMutation = useMutation({
         mutationFn: () =>
             editingId
                 ? api.updateAdminRecentChange(editingId, {
                       title,
-                      body,
-                      imageUrl: imageUrl.trim() || null
+                      body
                   })
-                : api.createAdminRecentChange({ title, body, imageUrl: imageUrl.trim() || null }),
+                : api.createAdminRecentChange({ title, body }),
         onSuccess: (change) => {
             setEditingId(change.id)
             void refresh()
@@ -66,6 +74,43 @@ const AdminRecentChangesPanel = () => {
         onError: (error) => {
             notifications.show({
                 title: "Could not save draft",
+                message: error instanceof Error ? error.message : "Please try again.",
+                color: "red"
+            })
+        }
+    })
+    const imageUploadMutation = useMutation({
+        mutationFn: ({ id, file }: { id: string; file: File }) =>
+            api.uploadAdminRecentChangeImage(id, file),
+        onSuccess: () => {
+            void refresh()
+            notifications.show({
+                title: "Image uploaded",
+                message: "The image will appear beside the introduction in this update.",
+                color: "green"
+            })
+        },
+        onError: (error) => {
+            notifications.show({
+                title: "Could not upload image",
+                message: error instanceof Error ? error.message : "Please try again.",
+                color: "red"
+            })
+        }
+    })
+    const removeImageMutation = useMutation({
+        mutationFn: (id: string) => api.removeAdminRecentChangeImage(id),
+        onSuccess: () => {
+            void refresh()
+            notifications.show({
+                title: "Image removed",
+                message: "The draft no longer has an image.",
+                color: "green"
+            })
+        },
+        onError: (error) => {
+            notifications.show({
+                title: "Could not remove image",
                 message: error instanceof Error ? error.message : "Please try again.",
                 color: "red"
             })
@@ -169,14 +214,60 @@ const AdminRecentChangesPanel = () => {
                         disabled={isReadOnly}
                         required
                     />
-                    <TextInput
-                        label="Image URL"
-                        description="Optional. Shown beside the introductory text in the update modal."
-                        placeholder="https://example.com/update-image.jpg"
-                        value={imageUrl}
-                        onChange={(event) => setImageUrl(event.currentTarget.value)}
-                        disabled={isReadOnly}
-                    />
+                    <Stack gap={4}>
+                        <Text fw={500} size="sm">
+                            Image
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                            Optional. JPEG, PNG, or WebP, up to 3 MB. It is stored with the update.
+                        </Text>
+                        {isReadOnly ? (
+                            <Text size="sm" c="dimmed">
+                                {selectedChange?.hasImage || selectedChange?.imageUrl
+                                    ? "This update includes an image."
+                                    : "This update has no image."}
+                            </Text>
+                        ) : editingId ? (
+                            <Group gap="sm">
+                                <FileButton
+                                    onChange={(file) => {
+                                        if (file)
+                                            imageUploadMutation.mutate({ id: editingId, file })
+                                    }}
+                                    accept="image/jpeg,image/png,image/webp"
+                                    disabled={imageUploadMutation.isPending}
+                                >
+                                    {(props) => (
+                                        <Button
+                                            {...props}
+                                            variant="light"
+                                            leftSection={<IconPhoto size={16} />}
+                                            loading={imageUploadMutation.isPending}
+                                        >
+                                            {selectedChange?.hasImage
+                                                ? "Replace image"
+                                                : "Upload image"}
+                                        </Button>
+                                    )}
+                                </FileButton>
+                                {selectedChange?.hasImage ? (
+                                    <Button
+                                        color="red"
+                                        variant="subtle"
+                                        leftSection={<IconTrash size={16} />}
+                                        onClick={() => removeImageMutation.mutate(editingId)}
+                                        loading={removeImageMutation.isPending}
+                                    >
+                                        Remove image
+                                    </Button>
+                                ) : null}
+                            </Group>
+                        ) : (
+                            <Text size="sm" c="dimmed">
+                                Save the draft before uploading an image.
+                            </Text>
+                        )}
+                    </Stack>
                     {isReadOnly ? (
                         <Text size="sm" c="dimmed">
                             {isDeleted

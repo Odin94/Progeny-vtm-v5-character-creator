@@ -20,6 +20,7 @@ const serializeRecentChange = (change: typeof schema.recentChanges.$inferSelect)
     title: change.title,
     body: change.body,
     imageUrl: change.imageUrl,
+    hasImage: Boolean(change.imageData && change.imageMimeType),
     status: change.status,
     publishedAt: change.publishedAt?.toISOString() ?? null,
     createdAt: change.createdAt.toISOString(),
@@ -39,6 +40,33 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
         async (_request, reply) => {
             const changes = await getPublishedChanges()
             reply.send({ changes: changes.map(serializeRecentChange) })
+        }
+    )
+
+    fastify.get<{ Params: RecentChangeParams }>(
+        "/recent-changes/:id/image",
+        {
+            preHandler: authenticateUser,
+            schema: { params: zodToFastifySchema(recentChangeParamsSchema) }
+        },
+        async (request, reply) => {
+            const { id } = request.params as RecentChangeParams
+            const change = await db.query.recentChanges.findFirst({
+                where: and(
+                    eq(schema.recentChanges.id, id),
+                    eq(schema.recentChanges.status, "published")
+                )
+            })
+
+            if (!change?.imageData || !change.imageMimeType) {
+                reply.code(404).send({ error: "Update image not found" })
+                return
+            }
+
+            reply
+                .header("Cache-Control", "private, max-age=3600")
+                .type(change.imageMimeType)
+                .send(change.imageData)
         }
     )
 
@@ -144,6 +172,85 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
             const [updated] = await db
                 .update(schema.recentChanges)
                 .set({ ...draft, updatedAt: new Date() })
+                .where(
+                    and(eq(schema.recentChanges.id, id), eq(schema.recentChanges.status, "draft"))
+                )
+                .returning()
+
+            if (!updated) {
+                reply.code(404).send({ error: "Draft not found" })
+                return
+            }
+
+            reply.send(serializeRecentChange(updated))
+        }
+    )
+
+    fastify.post<{ Params: RecentChangeParams }>(
+        "/admin/recent-changes/:id/image",
+        {
+            preHandler: [authenticateUser, requireSuperadmin],
+            schema: { params: zodToFastifySchema(recentChangeParamsSchema) }
+        },
+        async (request, reply) => {
+            const { id } = request.params as RecentChangeParams
+            const upload = await request.file()
+
+            if (!upload || upload.fieldname !== "image") {
+                reply.code(400).send({ error: "Please upload an image file" })
+                return
+            }
+
+            const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"])
+            if (!allowedMimeTypes.has(upload.mimetype)) {
+                reply.code(400).send({ error: "Images must be JPEG, PNG, or WebP" })
+                return
+            }
+
+            const imageData = await upload.toBuffer()
+            if (upload.file.truncated || imageData.length > 3 * 1024 * 1024) {
+                reply.code(400).send({ error: "Images must be 3 MB or smaller" })
+                return
+            }
+
+            const [updated] = await db
+                .update(schema.recentChanges)
+                .set({
+                    imageUrl: null,
+                    imageData,
+                    imageMimeType: upload.mimetype,
+                    updatedAt: new Date()
+                })
+                .where(
+                    and(eq(schema.recentChanges.id, id), eq(schema.recentChanges.status, "draft"))
+                )
+                .returning()
+
+            if (!updated) {
+                reply.code(404).send({ error: "Draft not found" })
+                return
+            }
+
+            reply.send(serializeRecentChange(updated))
+        }
+    )
+
+    fastify.delete<{ Params: RecentChangeParams }>(
+        "/admin/recent-changes/:id/image",
+        {
+            preHandler: [authenticateUser, requireSuperadmin],
+            schema: { params: zodToFastifySchema(recentChangeParamsSchema) }
+        },
+        async (request, reply) => {
+            const { id } = request.params as RecentChangeParams
+            const [updated] = await db
+                .update(schema.recentChanges)
+                .set({
+                    imageUrl: null,
+                    imageData: null,
+                    imageMimeType: null,
+                    updatedAt: new Date()
+                })
                 .where(
                     and(eq(schema.recentChanges.id, id), eq(schema.recentChanges.status, "draft"))
                 )
