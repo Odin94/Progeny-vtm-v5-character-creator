@@ -25,6 +25,12 @@
     padding: 2px;
 }
 
+.homebrew-loresheet__preview {
+    margin-inline: auto;
+    max-width: 72rem;
+    width: 100%;
+}
+
 .homebrew-loresheet__sheet {
     --corner: 1.15rem;
     background: linear-gradient(145deg, #1c1519, #100d11 68%);

@@ -4,7 +4,7 @@ import type { HomebrewLoresheet } from "~/data/Homebrew"
 import "./HomebrewItemEditor.css"
 
 const HomebrewLoresheetPreview = ({ item }: { item: HomebrewLoresheet }) => (
-    <div className="homebrew-loresheet__shell">
+    <div className="homebrew-loresheet__shell homebrew-loresheet__preview">
         <article className="homebrew-loresheet__sheet">
             <header className="homebrew-loresheet__header">
                 <Text className="homebrew-loresheet__title">
