@@ -20,6 +20,7 @@ import {
 } from "@mantine/core"
 import {
     IconArrowLeft,
+    IconChevronDown,
     IconCopy,
     IconDropletFilled,
     IconEdit,
@@ -33,7 +34,7 @@ import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import ContentWarning from "~/components/ContentWarning"
 import HomebrewItemPreview from "~/components/HomebrewItemPreview"
-import type { HomebrewLibraryDetail } from "~/data/Homebrew"
+import type { HomebrewItemKind, HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
@@ -75,10 +76,22 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
     const [comment, setComment] = useState("")
     const [editingComment, setEditingComment] = useState<{ id: string; body: string } | null>(null)
     const [unpublishConfirmationOpened, setUnpublishConfirmationOpened] = useState(false)
+    const [collapsedItemKinds, setCollapsedItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
     const detailQuery = useQuery({
         queryKey: ["homebrew", "library", "detail", collectionId],
         queryFn: () => api.getHomebrewLibraryDetail(collectionId)
     })
+
+    const toggleItemKind = (kind: HomebrewItemKind) =>
+        setCollapsedItemKinds((current) => {
+            const next = new Set(current)
+            if (next.has(kind)) {
+                next.delete(kind)
+            } else {
+                next.add(kind)
+            }
+            return next
+        })
     const refreshLibrary = () => client.invalidateQueries({ queryKey: ["homebrew", "library"] })
     const copyMutation = useMutation({
         mutationFn: () => api.copyHomebrewLibraryCollection(collectionId),
@@ -372,20 +385,53 @@ const LibraryDetail = ({
                                     </Text>
                                 </div>
                                 {itemsByKind.length ? (
-                                    itemsByKind.map(({ kind, items }) => (
-                                        <Stack key={kind} gap="sm">
-                                            <Group gap="xs">
-                                                <Badge color="grape" variant="light">
-                                                    {homebrewKindLabel(kind)}
-                                                </Badge>
-                                                <Text size="sm" c="dimmed">
-                                                    {items.length}{" "}
-                                                    {items.length === 1 ? "entry" : "entries"}
-                                                </Text>
-                                            </Group>
-                                            {kind === "merit" || kind === "flaw" ? (
-                                                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
-                                                    {items.map((item) => (
+                                    itemsByKind.map(({ kind, items }) => {
+                                        const isCollapsed = collapsedItemKinds.has(kind)
+
+                                        return (
+                                            <Stack key={kind} gap="sm">
+                                                <Group gap="xs">
+                                                    <Badge color="grape" variant="light">
+                                                        {homebrewKindLabel(kind)}
+                                                    </Badge>
+                                                    <Text size="sm" c="dimmed">
+                                                        {items.length}{" "}
+                                                        {items.length === 1 ? "entry" : "entries"}
+                                                    </Text>
+                                                    <ActionIcon
+                                                        variant="subtle"
+                                                        color="gray"
+                                                        size="sm"
+                                                        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
+                                                        aria-expanded={!isCollapsed}
+                                                        onClick={() => toggleItemKind(kind)}
+                                                    >
+                                                        <IconChevronDown
+                                                            size={16}
+                                                            style={{
+                                                                transform: isCollapsed
+                                                                    ? "rotate(-90deg)"
+                                                                    : undefined,
+                                                                transition: "transform 150ms ease"
+                                                            }}
+                                                        />
+                                                    </ActionIcon>
+                                                </Group>
+                                                {!isCollapsed &&
+                                                (kind === "merit" || kind === "flaw") ? (
+                                                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+                                                        {items.map((item) => (
+                                                            <HomebrewItemPreview
+                                                                key={
+                                                                    item.id ??
+                                                                    `${item.kind}-${item.name}`
+                                                                }
+                                                                item={item}
+                                                            />
+                                                        ))}
+                                                    </SimpleGrid>
+                                                ) : !isCollapsed ? (
+                                                    items.map((item) => (
                                                         <HomebrewItemPreview
                                                             key={
                                                                 item.id ??
@@ -393,18 +439,11 @@ const LibraryDetail = ({
                                                             }
                                                             item={item}
                                                         />
-                                                    ))}
-                                                </SimpleGrid>
-                                            ) : (
-                                                items.map((item) => (
-                                                    <HomebrewItemPreview
-                                                        key={item.id ?? `${item.kind}-${item.name}`}
-                                                        item={item}
-                                                    />
-                                                ))
-                                            )}
-                                        </Stack>
-                                    ))
+                                                    ))
+                                                ) : null}
+                                            </Stack>
+                                        )
+                                    })
                                 ) : (
                                     <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
                                         <Text c="dimmed">This collection has no rules yet.</Text>
