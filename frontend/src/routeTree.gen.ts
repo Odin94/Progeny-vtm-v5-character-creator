@@ -12,6 +12,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HomebrewRouteImport } from './routes/homebrew'
 import { Route as HomebrewLibraryRouteImport } from './routes/homebrew.library'
+import { Route as HomebrewLibraryCollectionIdRouteImport } from './routes/homebrew.library.$collectionId'
 import { Route as HomebrewCollectionIdRouteImport } from './routes/homebrew.$collectionId'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
@@ -42,6 +43,11 @@ const HomebrewRoute = HomebrewRouteImport.update({
 const HomebrewLibraryRoute = HomebrewLibraryRouteImport.update({
   id: '/homebrew/library',
   path: '/homebrew/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomebrewLibraryCollectionIdRoute = HomebrewLibraryCollectionIdRouteImport.update({
+  id: '/homebrew/library/$collectionId',
+  path: '/homebrew/library/$collectionId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomebrewCollectionIdRoute = HomebrewCollectionIdRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
+  '/homebrew/library/$collectionId': typeof HomebrewLibraryCollectionIdRoute
   '/homebrew/$collectionId': typeof HomebrewCollectionIdRoute
   '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
+  '/homebrew/library/$collectionId': typeof HomebrewLibraryCollectionIdRoute
   '/homebrew/$collectionId': typeof HomebrewCollectionIdRoute
   '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
+  '/homebrew/library/$collectionId': typeof HomebrewLibraryCollectionIdRoute
   '/homebrew/$collectionId': typeof HomebrewCollectionIdRoute
   '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -117,10 +126,10 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  fullPaths: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
-  id: '__root__' | '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  to: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  id: '__root__' | '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,6 +140,7 @@ export interface RootRouteChildren {
   SheetRoute: typeof SheetRoute
   HomebrewRoute: typeof HomebrewRoute
   HomebrewLibraryRoute: typeof HomebrewLibraryRoute
+  HomebrewLibraryCollectionIdRoute: typeof HomebrewLibraryCollectionIdRoute
   HomebrewCollectionIdRoute: typeof HomebrewCollectionIdRoute
   CoteriesCoterieIdRoute: typeof CoteriesCoterieIdRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -172,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/homebrew/library'
       fullPath: '/homebrew/library'
       preLoaderRoute: typeof HomebrewLibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/homebrew/library/$collectionId': {
+      id: '/homebrew/library/$collectionId'
+      path: '/homebrew/library/$collectionId'
+      fullPath: '/homebrew/library/$collectionId'
+      preLoaderRoute: typeof HomebrewLibraryCollectionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/homebrew/$collectionId': {
@@ -227,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   SheetRoute: SheetRoute,
   HomebrewRoute: HomebrewRoute,
   HomebrewLibraryRoute: HomebrewLibraryRoute,
+  HomebrewLibraryCollectionIdRoute: HomebrewLibraryCollectionIdRoute,
   HomebrewCollectionIdRoute: HomebrewCollectionIdRoute,
   CoteriesCoterieIdRoute: CoteriesCoterieIdRoute,
   AuthCallbackRoute: AuthCallbackRoute,
