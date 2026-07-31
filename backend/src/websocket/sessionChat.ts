@@ -41,20 +41,42 @@ export const temporarySessions = new Map<string, Session>()
 export const coterieSessions = new Map<string, Session>()
 const recentChatSessions = new Map<string, RecentChatSession>()
 
-export function updateSessionNameTag(userId: string, showNameTag: boolean): void {
+// Propagate an identity change (name-tag visibility and/or a renamed nickname) into
+// every live session the user is part of. Both the participant list and any messages
+// already sitting in session.history embed the user's name, so all of them have to be
+// rewritten in place and rebroadcast — otherwise other players keep seeing the stale
+// name for the life of the in-memory session.
+export function updateSessionIdentity(
+    userId: string,
+    identity: { showNameTag: boolean; userName?: string }
+): void {
+    const { showNameTag, userName } = identity
     for (const sessions of [temporarySessions, coterieSessions]) {
         for (const session of sessions.values()) {
-            const participant = session.participants.get(userId)
             let identityChanged = false
+
+            const participant = session.participants.get(userId)
             if (participant) {
-                participant.showNameTag = showNameTag
-                identityChanged = true
+                if (participant.showNameTag !== showNameTag) {
+                    participant.showNameTag = showNameTag
+                    identityChanged = true
+                }
+                if (userName !== undefined && participant.userName !== userName) {
+                    participant.userName = userName
+                    identityChanged = true
+                }
             }
 
             for (const message of session.history) {
                 if (message.userId === userId) {
-                    message.showNameTag = showNameTag
-                    identityChanged = true
+                    if (message.showNameTag !== showNameTag) {
+                        message.showNameTag = showNameTag
+                        identityChanged = true
+                    }
+                    if (userName !== undefined && message.userName !== userName) {
+                        message.userName = userName
+                        identityChanged = true
+                    }
                 }
             }
 
@@ -62,11 +84,17 @@ export function updateSessionNameTag(userId: string, showNameTag: boolean): void
                 broadcastToSession(session, {
                     type: "user_identity_updated",
                     userId,
-                    showNameTag
+                    showNameTag,
+                    ...(userName !== undefined && { userName })
                 })
             }
         }
     }
+}
+
+// Backwards-compatible wrapper for callers that only toggle name-tag visibility.
+export function updateSessionNameTag(userId: string, showNameTag: boolean): void {
+    updateSessionIdentity(userId, { showNameTag })
 }
 
 export function ensureCoterieSession(coterieId: string, creatorUserId: string): Session {
@@ -448,9 +476,9 @@ export async function sessionChatWebSocket(fastify: FastifyInstance) {
     )
 }
 
-function getUserName(user: {
-    firstName?: string
-    lastName?: string
+export function getUserName(user: {
+    firstName?: string | null
+    lastName?: string | null
     nickname?: string | null
 }): string {
     if (user.nickname) {

@@ -165,9 +165,18 @@ export const useAuth = () => {
     const updateProfileMutation = useMutation({
         mutationFn: (data: { nickname?: string | null; nameTagVisible?: boolean }) =>
             api.updateUserProfile(data),
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             queryClient.setQueryData(["auth", "me"], data)
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
+
+            // The nickname is embedded in several other cached surfaces (the coterie
+            // owner row, coterie vitals, and character shares). Invalidate them so a
+            // nickname change is reflected without a full page reload.
+            if (Object.hasOwn(variables, "nickname")) {
+                queryClient.invalidateQueries({ queryKey: ["coteries"] })
+                queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
+                queryClient.invalidateQueries({ queryKey: ["shares"] })
+            }
         }
     })
 

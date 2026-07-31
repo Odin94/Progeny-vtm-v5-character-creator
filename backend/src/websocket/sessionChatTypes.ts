@@ -132,6 +132,7 @@ export type UserIdentityUpdatedMessage = {
     type: "user_identity_updated"
     userId: string
     showNameTag: boolean
+    userName?: string
 }
 
 export type SessionClosedMessage = {

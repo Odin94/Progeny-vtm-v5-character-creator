@@ -6,7 +6,7 @@ import { env } from "../config/env.js"
 import { z } from "zod"
 import { updateUserSchema, type UpdateUserInput } from "../schemas/user.js"
 import { zodToFastifySchema } from "../utils/schema.js"
-import { updateSessionNameTag } from "../websocket/sessionChat.js"
+import { updateSessionIdentity, getUserName } from "../websocket/sessionChat.js"
 import { authenticateUser, type AuthenticatedRequest } from "../middleware/auth.js"
 import { clearImpersonationCookie, endImpersonationSession } from "../middleware/impersonation.js"
 import { logger } from "../utils/logger.js"
@@ -519,11 +519,20 @@ export async function authRoutes(fastify: FastifyInstance) {
                     return
                 }
 
-                if (hasNameTagUpdate) {
-                    updateSessionNameTag(
-                        updated.id,
-                        updated.nameTagEnabled && updated.nameTagVisible
-                    )
+                // A nickname change must also reach any open chat: the participant list
+                // and every message already in session.history embed the old name and
+                // would otherwise stay stale for the life of the in-memory session.
+                if (hasNameTagUpdate || hasNicknameUpdate) {
+                    updateSessionIdentity(updated.id, {
+                        showNameTag: updated.nameTagEnabled && updated.nameTagVisible,
+                        ...(hasNicknameUpdate && {
+                            userName: getUserName({
+                                firstName: updated.firstName,
+                                lastName: updated.lastName,
+                                nickname: updated.nickname
+                            })
+                        })
+                    })
                 }
 
                 // Get WorkOS user data for email, firstName, lastName

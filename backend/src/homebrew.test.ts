@@ -242,6 +242,30 @@ describe("Homebrew collections and library", () => {
         expect(detail.json().snapshot.name).toBe("Night Arts")
     })
 
+    it("resolves the author name from the users table so nickname changes are reflected", async () => {
+        const libraryEntryId = await publishCollection()
+
+        await db
+            .update(schema.users)
+            .set({ nickname: "Renamed Brewer" })
+            .where(eq(schema.users.id, AUTHOR_ID))
+
+        setUser(AUTHOR_ID)
+        const detail = await app.inject({
+            method: "GET",
+            url: `/homebrew/library/${libraryEntryId}`
+        })
+        expect(detail.statusCode).toBe(200)
+        expect(detail.json().authorNickname).toBe("Renamed Brewer")
+
+        const list = await app.inject({ method: "GET", url: "/homebrew/library" })
+        expect(list.statusCode).toBe(200)
+        const summary = (list.json() as Array<{ id: string; authorNickname: string }>).find(
+            (entry) => entry.id === libraryEntryId
+        )
+        expect(summary?.authorNickname).toBe("Renamed Brewer")
+    })
+
     it("allows other users to rate but rejects self-rating", async () => {
         const collection = await createCollection()
         setUser(ADMIN_ID)

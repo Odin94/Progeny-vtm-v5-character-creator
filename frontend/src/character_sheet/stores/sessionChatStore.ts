@@ -99,6 +99,7 @@ type UserIdentityUpdatedMessage = {
     type: "user_identity_updated"
     userId: string
     showNameTag: boolean
+    userName?: string
 }
 
 type SessionClosedMessage = {
@@ -374,12 +375,24 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
                         set((state) => ({
                             participants: state.participants.map((participant) =>
                                 participant.userId === data.userId
-                                    ? { ...participant, showNameTag: data.showNameTag }
+                                    ? {
+                                          ...participant,
+                                          showNameTag: data.showNameTag,
+                                          ...(data.userName !== undefined && {
+                                              userName: data.userName
+                                          })
+                                      }
                                     : participant
                             ),
                             messages: state.messages.map((message) =>
                                 "userId" in message && message.userId === data.userId
-                                    ? { ...message, showNameTag: data.showNameTag }
+                                    ? {
+                                          ...message,
+                                          showNameTag: data.showNameTag,
+                                          ...(data.userName !== undefined && {
+                                              userName: data.userName
+                                          })
+                                      }
                                     : message
                             )
                         }))
