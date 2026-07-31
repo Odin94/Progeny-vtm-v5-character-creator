@@ -1,7 +1,9 @@
 import { ActionIcon, Button, Group, Modal, Stack, Text } from "@mantine/core"
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
 import type { RecentChange } from "~/utils/api"
+import "./RecentChangesModal.css"
 
 type RecentChangesModalProps = {
     opened: boolean
@@ -58,7 +60,9 @@ const RecentChangesModal = ({
                             {formatPublishedDate(currentChange.publishedAt)}
                         </Text>
                     </div>
-                    <Text style={{ whiteSpace: "pre-wrap" }}>{currentChange.body}</Text>
+                    <div className="recent-changes__body">
+                        <ReactMarkdown>{currentChange.body}</ReactMarkdown>
+                    </div>
                     <Group justify="space-between" align="center">
                         <Group gap="xs">
                             <ActionIcon

@@ -105,7 +105,7 @@ const AdminRecentChangesPanel = () => {
                     />
                     <Textarea
                         label="Update"
-                        description="Paragraphs are preserved in the announcement dialog."
+                        description="Markdown is supported, including headings, bold text, lists, and links."
                         value={body}
                         onChange={(event) => setBody(event.currentTarget.value)}
                         minRows={7}

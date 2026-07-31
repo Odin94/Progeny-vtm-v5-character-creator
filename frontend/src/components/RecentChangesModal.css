@@ -1,0 +1,52 @@
+.recent-changes__body > :first-child {
+    margin-top: 0;
+}
+
+.recent-changes__body > :last-child {
+    margin-bottom: 0;
+}
+
+.recent-changes__body h1,
+.recent-changes__body h2,
+.recent-changes__body h3,
+.recent-changes__body h4,
+.recent-changes__body h5,
+.recent-changes__body h6 {
+    font-family: "Cinzel, Georgia, serif";
+    line-height: 1.25;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.recent-changes__body h1 {
+    font-size: 1.5rem;
+}
+
+.recent-changes__body h2 {
+    font-size: 1.25rem;
+}
+
+.recent-changes__body h3,
+.recent-changes__body h4,
+.recent-changes__body h5,
+.recent-changes__body h6 {
+    font-size: 1.1rem;
+}
+
+.recent-changes__body p,
+.recent-changes__body ul,
+.recent-changes__body ol {
+    margin: 0 0 0.8rem;
+}
+
+.recent-changes__body ul,
+.recent-changes__body ol {
+    padding-left: 1.5rem;
+}
+
+.recent-changes__body a {
+    color: var(--mantine-primary-color-filled);
+}
+
+.recent-changes__body code {
+    font-family: var(--mantine-font-family-monospace);
+}
