@@ -110,13 +110,18 @@ const AdminRecentChangesPanel = () => {
     const isDeleted = selectedChange?.status === "deleted"
     const isReadOnly = isPublished || isDeleted
     const canSave = title.trim().length > 0 && body.trim().length > 0 && !isReadOnly
-    const publishedChanges =
-        changesQuery.data?.changes.filter((change) => change.status === "published") ?? []
+    const publishedChanges = (changesQuery.data?.changes ?? [])
+        .filter((change) => change.status === "published")
+        .sort(
+            (first, second) =>
+                new Date(first.publishedAt ?? 0).getTime() -
+                new Date(second.publishedAt ?? 0).getTime()
+        )
     const previewChanges = !previewChange
         ? []
         : previewChange.status === "published"
           ? publishedChanges
-          : [{ ...previewChange, publishedAt: new Date().toISOString() }, ...publishedChanges]
+          : [...publishedChanges, { ...previewChange, publishedAt: new Date().toISOString() }]
 
     return (
         <Stack gap="lg">

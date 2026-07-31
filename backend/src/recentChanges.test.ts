@@ -129,6 +129,16 @@ describe("recent changes", () => {
         ])
         setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
 
+        const history = await app.inject({
+            method: "GET",
+            url: "/recent-changes/history",
+            headers: csrfHeaders
+        })
+        expect(history.json().changes.map((change: { id: string }) => change.id)).toEqual([
+            "old-change",
+            "latest-change"
+        ])
+
         const firstDelivery = await app.inject({
             method: "POST",
             url: "/recent-changes/deliver-latest",
@@ -136,7 +146,10 @@ describe("recent changes", () => {
         })
         expect(firstDelivery.statusCode).toBe(200)
         expect(firstDelivery.json().announcement).toMatchObject({ id: "latest-change" })
-        expect(firstDelivery.json().changes).toHaveLength(2)
+        expect(firstDelivery.json().changes.map((change: { id: string }) => change.id)).toEqual([
+            "old-change",
+            "latest-change"
+        ])
 
         const repeatedDelivery = await app.inject({
             method: "POST",

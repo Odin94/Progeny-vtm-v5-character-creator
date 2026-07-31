@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify"
-import { and, desc, eq, ne } from "drizzle-orm"
+import { and, asc, desc, eq, ne } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { db, schema } from "../db/index.js"
 import {
@@ -28,7 +28,7 @@ const serializeRecentChange = (change: typeof schema.recentChanges.$inferSelect)
 const getPublishedChanges = () =>
     db.query.recentChanges.findMany({
         where: eq(schema.recentChanges.status, "published"),
-        orderBy: [desc(schema.recentChanges.publishedAt), desc(schema.recentChanges.createdAt)]
+        orderBy: [asc(schema.recentChanges.publishedAt), asc(schema.recentChanges.createdAt)]
     })
 
 export async function recentChangesRoutes(fastify: FastifyInstance) {
@@ -81,8 +81,8 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
                     .from(schema.recentChanges)
                     .where(eq(schema.recentChanges.status, "published"))
                     .orderBy(
-                        desc(schema.recentChanges.publishedAt),
-                        desc(schema.recentChanges.createdAt)
+                        asc(schema.recentChanges.publishedAt),
+                        asc(schema.recentChanges.createdAt)
                     )
                     .all()
 
@@ -104,7 +104,7 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
         async (_request, reply) => {
             const changes = await db.query.recentChanges.findMany({
                 orderBy: [
-                    desc(schema.recentChanges.publishedAt),
+                    desc(schema.recentChanges.updatedAt),
                     desc(schema.recentChanges.createdAt)
                 ]
             })

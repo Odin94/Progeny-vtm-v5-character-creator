@@ -29,7 +29,9 @@ const RecentChangesModal = ({
 }: RecentChangesModalProps) => {
     const initialIndex = Math.max(
         0,
-        initialChangeId ? changes.findIndex((change) => change.id === initialChangeId) : 0
+        initialChangeId
+            ? changes.findIndex((change) => change.id === initialChangeId)
+            : changes.length - 1
     )
     const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
@@ -38,8 +40,8 @@ const RecentChangesModal = ({
     }, [initialChangeId, initialIndex])
 
     const currentChange = changes[currentIndex]
-    const canGoNewer = currentIndex > 0
-    const canGoOlder = currentIndex < changes.length - 1
+    const canGoPrevious = currentIndex > 0
+    const canGoNext = currentIndex < changes.length - 1
 
     return (
         <Modal
@@ -67,8 +69,8 @@ const RecentChangesModal = ({
                         <Group gap="xs">
                             <ActionIcon
                                 variant="subtle"
-                                aria-label="Newer announcement"
-                                disabled={!canGoNewer}
+                                aria-label="Previous update"
+                                disabled={!canGoPrevious}
                                 onClick={() => setCurrentIndex((index) => index - 1)}
                             >
                                 <IconChevronLeft size={20} />
@@ -78,8 +80,8 @@ const RecentChangesModal = ({
                             </Text>
                             <ActionIcon
                                 variant="subtle"
-                                aria-label="Older announcement"
-                                disabled={!canGoOlder}
+                                aria-label="Next update"
+                                disabled={!canGoNext}
                                 onClick={() => setCurrentIndex((index) => index + 1)}
                             >
                                 <IconChevronRight size={20} />
