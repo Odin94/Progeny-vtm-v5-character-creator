@@ -281,6 +281,21 @@ describe("recent changes", () => {
         const storedMetadata = await sharp(storedChange!.imageData!).metadata()
         expect(storedChange!.imageMimeType).toBe("image/webp")
         expect(storedMetadata).toMatchObject({ format: "webp", width: 600, height: 450 })
+
+        const adminPreviewImage = await app.inject({
+            method: "GET",
+            url: "/recent-changes/draft-with-image/image",
+            headers: csrfHeaders
+        })
+        expect(adminPreviewImage.statusCode).toBe(200)
+
+        setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
+        const userPreviewImage = await app.inject({
+            method: "GET",
+            url: "/recent-changes/draft-with-image/image",
+            headers: csrfHeaders
+        })
+        expect(userPreviewImage.statusCode).toBe(404)
     })
 
     it("removes soft-deleted updates from delivery and history before permanent deletion", async () => {

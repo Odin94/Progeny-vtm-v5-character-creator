@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify"
-import { and, asc, desc, eq, ne } from "drizzle-orm"
+import { and, asc, desc, eq, ne, or } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import sharp from "sharp"
 import { db, schema } from "../db/index.js"
@@ -68,10 +68,17 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
         },
         async (request, reply) => {
             const { id } = request.params as RecentChangeParams
+            const canPreviewDraft =
+                request.actorUser?.isSuperadmin && !request.impersonation?.active
             const change = await db.query.recentChanges.findFirst({
                 where: and(
                     eq(schema.recentChanges.id, id),
-                    eq(schema.recentChanges.status, "published")
+                    canPreviewDraft
+                        ? or(
+                              eq(schema.recentChanges.status, "published"),
+                              eq(schema.recentChanges.status, "draft")
+                          )
+                        : eq(schema.recentChanges.status, "published")
                 )
             })
 
