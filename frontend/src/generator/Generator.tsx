@@ -18,10 +18,11 @@ import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
 import { GeneratorStepId, getNextGeneratorStepId } from "./steps"
 import { feedbackSurveyEvents } from "~/utils/feedbackSurveys"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
 export type GeneratorProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
 
     selectedStep: GeneratorStepId
     setSelectedStep: (step: GeneratorStepId) => void

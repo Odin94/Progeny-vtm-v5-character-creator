@@ -2,6 +2,7 @@ import { Button, ScrollArea, Stack, Text, Textarea, TextInput } from "@mantine/c
 import { RAW_RED, RAW_GOLD, RAW_GRAPE, RAW_GREY, rgba } from "~/theme/colors"
 import { useState } from "react"
 import { Character } from "../../data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { globals } from "../../globals"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
@@ -13,9 +14,11 @@ import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrol
 
 type BasicsPickerProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     nextStep: () => void
 }
+
+type BasicsFields = Pick<Character, "name" | "sire" | "ambition" | "desire" | "description">
 
 const inputStyles = {
     ...getGeneratorFieldStyles("gold"),
@@ -52,6 +55,16 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
     const [desire, setDesire] = useState(character.desire)
     const [description, setDescription] = useState(character.description)
 
+    // Persist on every keystroke rather than only inside the Confirm button. Previously these
+    // fields lived solely in local state until Confirm committed them, so a user who typed their
+    // basics and navigated away (or closed the step) without pressing Confirm silently lost
+    // everything they had entered. The functional updater merges into the latest character instead
+    // of a stale `character` prop snapshot, so it can't clobber concurrent writes (e.g. the
+    // autosave version bump).
+    const persistBasics = (updates: Partial<BasicsFields>) => {
+        setCharacter((current) => ({ ...current, ...updates }))
+    }
+
     return (
         <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
             <style>{`
@@ -76,7 +89,11 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     <TextInput
                         data-testid="basic-full-name-input"
                         value={name}
-                        onChange={(e) => setName(e.currentTarget.value)}
+                        onChange={(e) => {
+                            const value = e.currentTarget.value
+                            setName(value)
+                            persistBasics({ name: value })
+                        }}
                         placeholder="Erika Mustermann"
                         label="Full name"
                         styles={inputStyles}
@@ -86,7 +103,11 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     <TextInput
                         data-testid="basic-sire-input"
                         value={sire}
-                        onChange={(e) => setSire(e.currentTarget.value)}
+                        onChange={(e) => {
+                            const value = e.currentTarget.value
+                            setSire(value)
+                            persistBasics({ sire: value })
+                        }}
                         placeholder="Your sire"
                         label="Sire"
                         description="The vampire that turned you"
@@ -97,7 +118,11 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     <TextInput
                         data-testid="basic-ambition-input"
                         value={ambition}
-                        onChange={(e) => setAmbition(e.currentTarget.value)}
+                        onChange={(e) => {
+                            const value = e.currentTarget.value
+                            setAmbition(value)
+                            persistBasics({ ambition: value })
+                        }}
                         placeholder="Break free from my sire's clutches"
                         label="Long term ambition"
                         styles={inputStyles}
@@ -107,7 +132,11 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     <TextInput
                         data-testid="basic-desire-input"
                         value={desire}
-                        onChange={(e) => setDesire(e.currentTarget.value)}
+                        onChange={(e) => {
+                            const value = e.currentTarget.value
+                            setDesire(value)
+                            persistBasics({ desire: value })
+                        }}
                         placeholder="Embarrass my rival in court"
                         label="Short term desire"
                         styles={inputStyles}
@@ -117,7 +146,11 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                     <Textarea
                         data-testid="basic-description-input"
                         value={description}
-                        onChange={(e) => setDescription(e.currentTarget.value)}
+                        onChange={(e) => {
+                            const value = e.currentTarget.value
+                            setDescription(value)
+                            persistBasics({ description: value })
+                        }}
                         placeholder="Young alt-rock musician with a black vegan-leather jacket and long black hair"
                         label="Description & appearance"
                         autosize
@@ -134,14 +167,7 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
                         display="block"
                         styles={generatorConfirmButtonStyles}
                         onClick={() => {
-                            setCharacter({
-                                ...character,
-                                name,
-                                sire,
-                                ambition,
-                                desire,
-                                description
-                            })
+                            persistBasics({ name, sire, ambition, desire, description })
                             nextStep()
                         }}
                     >
