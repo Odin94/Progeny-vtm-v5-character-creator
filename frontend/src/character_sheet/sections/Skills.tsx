@@ -1,5 +1,6 @@
 import { Box, Grid, Group, Text, Title, Badge, Stack, TextInput, Tooltip } from "@mantine/core"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import posthog from "posthog-js"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
 import Pips from "~/character_sheet/components/Pips"
@@ -57,6 +58,12 @@ const SkillRow = ({
         index: number
     } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
+    // Reason shown inline (not just on hover) after a blocked "+" click.
+    const [addBlockedReason, setAddBlockedReason] = useState<string | undefined>(undefined)
+    // Drop a stale inline reason once the mode or affordability that caused it changes.
+    useEffect(() => {
+        setAddBlockedReason(undefined)
+    }, [options.mode, addSpecialtyDisabledReason])
     const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             isSelected: state.selectedDicePool.skill === skill,
@@ -114,37 +121,74 @@ const SkillRow = ({
         }
     }, [specialties.length, skill, character.skills[skill]])
 
+    // Number of user-added (non-predator) specialties, i.e. the index a newly added one lands at.
+    const editableSpecialtyCount = specialties.filter(
+        (specialty) => !specialty.fromPredatorType
+    ).length
+
+    const handleAddSpecialtyClick = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        // Explain a blocked add inline instead of only through a hover tooltip.
+        if (addSpecialtyDisabledReason) {
+            setAddBlockedReason(addSpecialtyDisabledReason)
+            try {
+                posthog.capture("sheet-specialty-add-blocked", {
+                    skill,
+                    mode: options.mode,
+                    reason: addSpecialtyDisabledReason
+                })
+            } catch (error) {
+                console.warn("PostHog sheet-specialty-add-blocked tracking failed:", error)
+            }
+            return
+        }
+        setAddBlockedReason(undefined)
+        addSpecialty(skill)
+        // Drop straight into naming the new specialty so it isn't left as an empty
+        // "New Specialty" badge that has to be clicked a second time to fill in.
+        setEditingSpecialty({ skill, index: editableSpecialtyCount })
+        setEditingValue("")
+        try {
+            posthog.capture("sheet-specialty-add", { skill, mode: options.mode })
+        } catch (error) {
+            console.warn("PostHog sheet-specialty-add tracking failed:", error)
+        }
+    }
+
     const renderAddSpecialtyBadge = () => {
-        const disabledReason = addSpecialtyDisabledReason
         const cost = options.mode === "xp" ? getSpecialtyCost() : undefined
-        const tooltipLabel = disabledReason || (cost !== undefined ? `${cost} XP` : undefined)
+        const tooltipLabel =
+            addSpecialtyDisabledReason || (cost !== undefined ? `${cost} XP` : undefined)
         const badge = (
             <Badge
                 variant="light"
                 size="sm"
                 color={primaryColor}
                 style={{
-                    cursor: disabledReason ? "default" : "pointer",
-                    opacity: disabledReason ? 0.6 : 1
+                    cursor: "pointer",
+                    opacity: addSpecialtyDisabledReason ? 0.6 : 1
                 }}
-                onClick={
-                    disabledReason
-                        ? undefined
-                        : (e) => {
-                              e.stopPropagation()
-                              addSpecialty(skill)
-                          }
-                }
+                onClick={handleAddSpecialtyClick}
             >
                 +
             </Badge>
         )
-        return tooltipLabel ? (
+        const badgeWithTooltip = tooltipLabel ? (
             <Tooltip label={tooltipLabel} withArrow>
                 <span style={{ display: "inline-block" }}>{badge}</span>
             </Tooltip>
         ) : (
             badge
+        )
+        return (
+            <Group gap={4} wrap="nowrap" align="center">
+                {badgeWithTooltip}
+                {addBlockedReason ? (
+                    <Text size="xs" c="red.4" style={{ lineHeight: 1.2 }}>
+                        {addBlockedReason}
+                    </Text>
+                ) : null}
+            </Group>
         )
     }
 
@@ -448,6 +492,11 @@ const Skills = ({ options }: SkillsProps) => {
 
     const updateSpecialty = useCallback(
         (skill: SkillsKey, index: number, newName: string) => {
+            try {
+                posthog.capture("sheet-specialty-rename", { skill, mode })
+            } catch (error) {
+                console.warn("PostHog sheet-specialty-rename tracking failed:", error)
+            }
             setCharacter((currentCharacter) => {
                 const skillSpecialties = [...currentCharacter.skillSpecialties]
                 const skillSpecialtiesForThisSkill = skillSpecialties.filter(
@@ -464,7 +513,7 @@ const Skills = ({ options }: SkillsProps) => {
                 return currentCharacter
             })
         },
-        [setCharacter]
+        [mode, setCharacter]
     )
 
     const removeSpecialty = useCallback(

@@ -12,6 +12,10 @@ type PipButtonProps = {
     isFilling?: boolean
     options?: SheetOptions
     disabledReason?: string
+    // A hard lock (e.g. viewing someone else's character) — the pip is truly disabled.
+    // A soft block (mode/XP rules on your own character) stays clickable so the click can
+    // surface the reason inline instead of dead-ending on a hover-only tooltip.
+    hardDisabled?: boolean
     xpCost?: number
 }
 
@@ -21,6 +25,7 @@ const PipButton = ({
     style,
     options,
     disabledReason,
+    hardDisabled = false,
     xpCost
 }: PipButtonProps) => {
     const theme = useMantineTheme()
@@ -29,7 +34,7 @@ const PipButton = ({
     const isDisabled = !!disabledReason
 
     const baseColor = theme.colors[color][6]
-    const isInteractive = !!onClick && !isDisabled
+    const isInteractive = !!onClick && !hardDisabled
 
     const buttonStyle: React.CSSProperties = {
         padding: 0,
@@ -37,6 +42,7 @@ const PipButton = ({
         borderRadius: "50%",
         backgroundColor: "transparent",
         cursor: isInteractive ? "pointer" : "default",
+        opacity: isDisabled ? 0.55 : 1,
         transform: "scale(1)",
         transition: shouldReduceMotion
             ? "none"
@@ -50,10 +56,10 @@ const PipButton = ({
         <ActionIcon
             variant="subtle"
             color={color}
-            onClick={isDisabled ? undefined : onClick}
+            onClick={hardDisabled ? undefined : onClick}
             size="xs"
             style={buttonStyle}
-            disabled={isDisabled}
+            disabled={hardDisabled}
             onPointerDown={(event) => {
                 if (isInteractive && !shouldReduceMotion) {
                     event.currentTarget.style.transform = "scale(0.97)"

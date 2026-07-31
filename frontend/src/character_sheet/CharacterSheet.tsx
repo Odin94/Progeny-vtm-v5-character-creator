@@ -237,7 +237,21 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 <span>
                                     <SegmentedControl
                                         value={effectiveMode}
-                                        onChange={(value) => setMode(value as CharacterSheetMode)}
+                                        onChange={(value) => {
+                                            const nextMode = value as CharacterSheetMode
+                                            try {
+                                                posthog.capture("sheet-mode-switch", {
+                                                    from: effectiveMode,
+                                                    to: nextMode
+                                                })
+                                            } catch (error) {
+                                                console.warn(
+                                                    "PostHog sheet-mode-switch tracking failed:",
+                                                    error
+                                                )
+                                            }
+                                            setMode(nextMode)
+                                        }}
                                         data={[
                                             {
                                                 label: (
