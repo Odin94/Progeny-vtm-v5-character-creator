@@ -1776,15 +1776,6 @@ const MePage = () => {
                             <Group mb="xl" justify="flex-end">
                                 <Button
                                     component={Link}
-                                    to="/features"
-                                    color="gray"
-                                    variant="light"
-                                    leftSection={<IconBook2 size={18} />}
-                                >
-                                    Feature guide
-                                </Button>
-                                <Button
-                                    component={Link}
                                     to="/homebrew"
                                     color="grape"
                                     variant="light"
