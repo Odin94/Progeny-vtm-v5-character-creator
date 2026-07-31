@@ -9,7 +9,7 @@ import {
     trackSessionClosed
 } from "./sessionChatLifecycle.js"
 import { type Participant, type Session } from "./sessionChatTypes.js"
-import { temporarySessions, updateSessionNameTag } from "./sessionChat.js"
+import { temporarySessions, updateSessionIdentity, updateSessionNameTag } from "./sessionChat.js"
 import { handleJoinSession } from "./chatMessageHandlers/handleJoinSession.js"
 import { handleLeaveSession } from "./chatMessageHandlers/handleLeaveSession.js"
 
@@ -100,6 +100,46 @@ describe("session chat lifecycle tracking", () => {
             type: "user_identity_updated",
             showNameTag: false
         })
+    })
+
+    it("rewrites the participant and history names when a nickname changes", () => {
+        const session = createSession()
+        const send = vi.fn()
+        session.participants.get("creator-1")!.socket = { readyState: 1, send }
+        session.participants.get("creator-1")!.userName = "Old Name"
+        session.history.push({
+            type: "chat_message",
+            userId: "creator-1",
+            userName: "Old Name",
+            showNameTag: true,
+            message: "Hello",
+            timestamp: 1
+        })
+        temporarySessions.set(session.id, session)
+
+        updateSessionIdentity("creator-1", { showNameTag: true, userName: "New Name" })
+
+        expect(session.participants.get("creator-1")?.userName).toBe("New Name")
+        expect(session.history[0]?.userName).toBe("New Name")
+        expect(JSON.parse(send.mock.calls[0][0])).toMatchObject({
+            type: "user_identity_updated",
+            userId: "creator-1",
+            showNameTag: true,
+            userName: "New Name"
+        })
+    })
+
+    it("does not broadcast when nothing about the identity changed", () => {
+        const session = createSession()
+        const send = vi.fn()
+        session.participants.get("creator-1")!.socket = { readyState: 1, send }
+        session.participants.get("creator-1")!.showNameTag = true
+        session.participants.get("creator-1")!.userName = "Same Name"
+        temporarySessions.set(session.id, session)
+
+        updateSessionIdentity("creator-1", { showNameTag: true, userName: "Same Name" })
+
+        expect(send).not.toHaveBeenCalled()
     })
 
     it("resolves current name-tag access when the same socket rejoins", async () => {

@@ -31,6 +31,7 @@ import {
     type HomebrewCollectionSnapshot
 } from "../utils/homebrew.js"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { homebrewLibraryReadRateLimit } from "../utils/rateLimit.js"
 
 const MAX_COLLECTIONS = 50
 const MAX_WEEKLY_REQUESTS = 5
@@ -175,12 +176,22 @@ const approveRequest = async (requestId: string, reviewerId: string) => {
     })
 }
 
+// `authorNickname` on a library entry is only a snapshot taken at publish-approval time,
+// so it goes stale the moment the author renames themselves. Prefer the author's current
+// nickname from the users table and fall back to the snapshot only when the author record
+// is gone (authorId was set null on user deletion) or has no nickname.
+const resolveAuthorNickname = (entry: {
+    authorNickname: string
+    author?: { nickname: string | null } | null
+}) => entry.author?.nickname?.trim() || entry.authorNickname
+
 const getLibrarySummaries = async (query: LibraryQuery) => {
     const entries = await db.query.homebrewLibraryEntries.findMany({
         where: and(
             isNull(schema.homebrewLibraryEntries.unpublishedAt),
             sql`${schema.homebrewLibraryEntries.activePublicationId} is not null`
-        )
+        ),
+        with: { author: { columns: { nickname: true } } }
     })
     if (entries.length === 0) return []
 
@@ -238,8 +249,9 @@ const getLibrarySummaries = async (query: LibraryQuery) => {
             (comment) => comment.libraryEntryId === entry.id
         ).length
         const kinds = countKinds(snapshot)
+        const authorNickname = resolveAuthorNickname(entry)
         const searchable =
-            `${snapshot.name} ${snapshot.shortDescription} ${snapshot.description} ${snapshot.tags.join(" ")} ${entry.authorNickname}`.toLocaleLowerCase()
+            `${snapshot.name} ${snapshot.shortDescription} ${snapshot.description} ${snapshot.tags.join(" ")} ${authorNickname}`.toLocaleLowerCase()
 
         if (normalizedQuery && !searchable.includes(normalizedQuery)) return []
         if (
@@ -259,7 +271,7 @@ const getLibrarySummaries = async (query: LibraryQuery) => {
                 shortDescription: snapshot.shortDescription,
                 tags: snapshot.tags,
                 contentWarning: snapshot.contentWarning,
-                authorNickname: entry.authorNickname,
+                authorNickname,
                 publishedAt: publication.approvedAt,
                 itemCounts: kinds,
                 ratingCount,
@@ -516,13 +528,17 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
 
     fastify.get<{ Params: IdParams }>(
         "/homebrew/library/:id",
-        { schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) } },
+        {
+            config: { rateLimit: homebrewLibraryReadRateLimit },
+            schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
+        },
         async (request, reply) => {
             const entry = await db.query.homebrewLibraryEntries.findFirst({
                 where: and(
                     eq(schema.homebrewLibraryEntries.id, request.params.id),
                     isNull(schema.homebrewLibraryEntries.unpublishedAt)
-                )
+                ),
+                with: { author: { columns: { nickname: true } } }
             })
             if (!entry?.activePublicationId)
                 return reply.code(404).send({ error: "Library collection not found" })
@@ -543,7 +559,8 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             if (snapshot.sourceLibraryEntryId && snapshot.sourcePublicationId) {
                 const [sourceEntry, sourcePublication] = await Promise.all([
                     db.query.homebrewLibraryEntries.findFirst({
-                        where: eq(schema.homebrewLibraryEntries.id, snapshot.sourceLibraryEntryId)
+                        where: eq(schema.homebrewLibraryEntries.id, snapshot.sourceLibraryEntryId),
+                        with: { author: { columns: { nickname: true } } }
                     }),
                     db.query.homebrewPublications.findFirst({
                         where: and(
@@ -561,7 +578,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                         publicationId: sourcePublication.id,
                         version: sourcePublication.version,
                         name: parseSnapshot(sourcePublication.snapshot).name,
-                        authorNickname: sourceEntry.authorNickname,
+                        authorNickname: resolveAuthorNickname(sourceEntry),
                         available: !sourceEntry.unpublishedAt
                     }
                 }
@@ -583,7 +600,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 publicationId: publication.id,
                 version: publication.version,
                 authorId: entry.authorId,
-                authorNickname: entry.authorNickname,
+                authorNickname: resolveAuthorNickname(entry),
                 publishedAt: publication.approvedAt,
                 snapshot,
                 source,

@@ -190,6 +190,39 @@ describe("sessionChatStore joinSession", () => {
         expect(useSessionChatStore.getState().messages[0]).toMatchObject({ showNameTag: true })
     })
 
+    it("rewrites participant and message names when a nickname changes", () => {
+        const store = useSessionChatStore.getState()
+        store.connect()
+        const ws = FakeWebSocket.instances[0]
+        ws.open()
+        ws.receive({
+            type: "session_joined",
+            sessionId: "session-1",
+            sessionType: "temporary",
+            participants: [{ userId: "user-1", userName: "Old Name", showNameTag: true }],
+            history: [
+                {
+                    type: "chat_message",
+                    userId: "user-1",
+                    userName: "Old Name",
+                    showNameTag: true,
+                    message: "Hello",
+                    timestamp: 1
+                }
+            ]
+        })
+
+        ws.receive({
+            type: "user_identity_updated",
+            userId: "user-1",
+            showNameTag: true,
+            userName: "New Name"
+        })
+
+        expect(useSessionChatStore.getState().participants[0]?.userName).toBe("New Name")
+        expect(useSessionChatStore.getState().messages[0]).toMatchObject({ userName: "New Name" })
+    })
+
     it("starts a new coterie reconnect cycle after a longer timeout", () => {
         vi.useFakeTimers()
         const store = useSessionChatStore.getState()

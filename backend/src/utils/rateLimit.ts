@@ -22,3 +22,8 @@ export const websocketConnectionRateLimit = {
     max: 120,
     timeWindow: "1 minute"
 } as const
+
+export const homebrewLibraryReadRateLimit = {
+    max: 60,
+    timeWindow: "1 minute"
+} as const
