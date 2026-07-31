@@ -31,6 +31,7 @@ import {
     type HomebrewCollectionSnapshot
 } from "../utils/homebrew.js"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { homebrewLibraryReadRateLimit } from "../utils/rateLimit.js"
 
 const MAX_COLLECTIONS = 50
 const MAX_WEEKLY_REQUESTS = 5
@@ -527,7 +528,10 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
 
     fastify.get<{ Params: IdParams }>(
         "/homebrew/library/:id",
-        { schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) } },
+        {
+            config: { rateLimit: homebrewLibraryReadRateLimit },
+            schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
+        },
         async (request, reply) => {
             const entry = await db.query.homebrewLibraryEntries.findFirst({
                 where: and(
