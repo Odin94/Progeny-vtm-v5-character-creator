@@ -433,15 +433,16 @@ export const createWoD5EVttJson = (
     const items: Record<string, unknown>[] = []
 
     // Clan item
-    if (character.clan) {
+    if (character.clan || character.homebrewClan) {
         const clanDef = clans[character.clan as keyof typeof clans]
+        const homebrewClan = character.homebrewClan
         items.push({
-            name: character.clan,
+            name: homebrewClan?.name ?? character.clan,
             type: "clan",
             system: {
-                description: clanDef?.description ?? "",
+                description: homebrewClan?.description ?? clanDef?.description ?? "",
                 // TODO: Figure out how Foundry VTT uses variant clan banes and include them here.
-                bane: clanDef?.bane ?? "",
+                bane: homebrewClan?.bane ?? clanDef?.bane ?? "",
                 bonuses: []
             }
         })

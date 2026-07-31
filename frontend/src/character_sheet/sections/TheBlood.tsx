@@ -14,9 +14,13 @@ import {
 } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { memo } from "react"
-import { clans } from "~/data/Clans"
 import { getBloodPotencyEffectLevel, potencyEffects } from "~/data/BloodPotency"
-import { getClanBaneText, hasVariantClanBane, variantClanBanes } from "~/data/VariantClanBanes"
+import {
+    getClanBaneText,
+    getClanCompulsionText,
+    hasVariantClanBane,
+    variantClanBanes
+} from "~/data/VariantClanBanes"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
 import { bgAlpha, hexToRgba } from "../utils/style"
@@ -32,9 +36,9 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const effects =
         potencyEffects[getBloodPotencyEffectLevel(character.bloodPotency)] || potencyEffects[0]
-    const clan = clans[character.clan] || clans[""]
     const variantBane = variantClanBanes[character.clan]
     const baneText = getClanBaneText(character, effects.bane)
+    const compulsionText = getClanCompulsionText(character)
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     const isExperienceEditable = mode === "xp" || mode === "free"
@@ -267,7 +271,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                 <Text span fw={600} c={primaryColor}>
                                     Clan Compulsion:
                                 </Text>{" "}
-                                {clan.compulsion}
+                                {compulsionText}
                             </Text>
                         </Stack>
                     </Paper>
@@ -289,6 +293,8 @@ export default memo(TheBlood, (prev, next) => {
         p.character.bloodPotency === n.character.bloodPotency &&
         p.character.clan === n.character.clan &&
         p.character.clanBane === n.character.clanBane &&
+        p.character.homebrewClan?.bane === n.character.homebrewClan?.bane &&
+        p.character.homebrewClan?.compulsion === n.character.homebrewClan?.compulsion &&
         p.character.experience === n.character.experience &&
         p.character.generation === n.character.generation &&
         p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent

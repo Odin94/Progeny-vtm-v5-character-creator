@@ -73,11 +73,18 @@ export const formatBaneText = (text: string, baneSeverity: number) =>
     text.replace(/BANE_SEVERITY/g, `${baneSeverity} (bane severity)`)
 
 export const getClanBaneText = (character: Character, baneSeverity: number) => {
+    if (character.homebrewClan) {
+        return formatBaneText(character.homebrewClan.bane, baneSeverity)
+    }
+
     const clan = clans[character.clan] || clans[""]
     const variantBane = variantClanBanes[character.clan]
     const baneText = character.clanBane === "variant" && variantBane ? variantBane.text : clan.bane
 
     return baneText ? formatBaneText(baneText, baneSeverity) : ""
 }
+
+export const getClanCompulsionText = (character: Character) =>
+    character.homebrewClan?.compulsion ?? clans[character.clan]?.compulsion ?? ""
 
 export const hasVariantClanBane = (clan: ClanName) => variantClanBanes[clan] !== null

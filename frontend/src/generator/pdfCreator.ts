@@ -2,7 +2,6 @@ import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
 import { PDFBool, PDFDict, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
 import { Character } from "../data/Character"
-import { clans } from "../data/Clans"
 import { SkillsKey, skillsKeySchema } from "../data/Skills"
 import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
@@ -13,7 +12,7 @@ import { upcase } from "./utils"
 import { potencyEffects } from "../data/BloodPotency"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
-import { getClanBaneText } from "~/data/VariantClanBanes"
+import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 let customFont: PDFFont
@@ -329,9 +328,9 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("Predator type").setText(character.predatorType.name)
     form.getTextField("Ambition").setText(character.ambition)
 
-    form.getTextField("Clan").setText(character.clan)
+    form.getTextField("Clan").setText(character.homebrewClan?.name ?? character.clan)
     form.getTextField("ClanBane").setText(getClanBaneText(character, effects.bane))
-    form.getTextField("ClanCompulsion").setText(clans[character.clan].compulsion)
+    form.getTextField("ClanCompulsion").setText(getClanCompulsionText(character))
 
     form.getTextField("Sire").setText(character.sire)
     form.getTextField("Desire").setText(character.desire)

@@ -6,6 +6,7 @@ import {
     getEmptyCharacter,
     schemaVersion
 } from "~/data/Character"
+import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 
 describe("character compatibility patches", () => {
     it("adds ceremonies to pre-v6 characters", () => {
@@ -77,5 +78,28 @@ describe("character compatibility patches", () => {
 
         expect(getCharacterExcludedPredatorTypes(character)).toEqual(["Alleycat"])
         expect(getCharacterExcludedMeritsAndFlaws(character)).toEqual(["Beautiful"])
+    })
+
+    it("uses Homebrew clan traits instead of the empty official clan", () => {
+        const character = getEmptyCharacter()
+        character.homebrewClan = {
+            name: "Shadow Flamer",
+            summary: "",
+            description: "",
+            logo: "",
+            bane: "Everyone is afraid of your dark aura.",
+            compulsion: "Extinguish every source of hope.",
+            nativeDisciplines: ["oblivion"],
+            excludedPredatorTypes: [],
+            excludedMeritsAndFlaws: [],
+            homebrewSource: {
+                itemId: "clan-1",
+                collectionId: "collection-1",
+                collectionName: "Night Arts"
+            }
+        }
+
+        expect(getClanBaneText(character, 2)).toBe("Everyone is afraid of your dark aura.")
+        expect(getClanCompulsionText(character)).toBe("Extinguish every source of hope.")
     })
 })
