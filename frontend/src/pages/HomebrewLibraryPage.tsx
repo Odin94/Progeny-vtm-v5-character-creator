@@ -35,6 +35,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 import type { HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
@@ -80,6 +81,7 @@ const HomebrewLibraryPage = () => {
     const [selected, setSelected] = useState<string | null>(null)
     const [publishOpened, setPublishOpened] = useState(false)
     const [publishCollectionId, setPublishCollectionId] = useState<string | null>(null)
+    const [unpublishConfirmationOpened, setUnpublishConfirmationOpened] = useState(false)
     const [acknowledged, setAcknowledged] = useState(false)
     const [comment, setComment] = useState("")
     const [editingComment, setEditingComment] = useState<{ id: string; body: string } | null>(null)
@@ -172,6 +174,7 @@ const HomebrewLibraryPage = () => {
     const unpublishMutation = useMutation({
         mutationFn: api.unpublishHomebrewLibraryCollection,
         onSuccess: () => {
+            setUnpublishConfirmationOpened(false)
             setSelected(null)
             refreshLibrary()
         }
@@ -469,8 +472,18 @@ const HomebrewLibraryPage = () => {
                 }
                 updateCommentPending={updateCommentMutation.isPending}
                 onOpenSource={setSelected}
-                onUnpublish={() => selected && unpublishMutation.mutate(selected)}
+                onUnpublish={() => setUnpublishConfirmationOpened(true)}
                 unpublishPending={unpublishMutation.isPending}
+            />
+
+            <ConfirmActionModal
+                opened={unpublishConfirmationOpened}
+                onClose={() => setUnpublishConfirmationOpened(false)}
+                onConfirm={() => selected && unpublishMutation.mutate(selected)}
+                title="Unpublish collection"
+                body="This will remove the collection from the Homebrew Community Library."
+                confirmLabel="Unpublish"
+                loading={unpublishMutation.isPending}
             />
         </AppShell>
     )
