@@ -1,4 +1,4 @@
-import { Button, Group, Paper, Stack, Text, TextInput, Textarea, Title } from "@mantine/core"
+import { Button, Group, Modal, Paper, Stack, Text, TextInput, Textarea, Title } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
@@ -18,6 +18,10 @@ const AdminRecentChangesPanel = () => {
     const queryClient = useQueryClient()
     const [editingId, setEditingId] = useState<string | null>(null)
     const [previewChange, setPreviewChange] = useState<RecentChange | null>(null)
+    const [deletionCandidate, setDeletionCandidate] = useState<{
+        change: RecentChange
+        permanently: boolean
+    } | null>(null)
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
     const changesQuery = useQuery({
@@ -33,6 +37,11 @@ const AdminRecentChangesPanel = () => {
     }, [selectedChange])
 
     const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin", "recent-changes"] })
+    const createDraft = () => {
+        setEditingId(null)
+        setTitle("")
+        setBody("")
+    }
     const saveMutation = useMutation({
         mutationFn: () =>
             editingId
@@ -73,14 +82,34 @@ const AdminRecentChangesPanel = () => {
             })
         }
     })
-
-    const createDraft = () => {
-        setEditingId(null)
-        setTitle("")
-        setBody("")
-    }
+    const deleteMutation = useMutation({
+        mutationFn: ({ id, permanently }: { id: string; permanently: boolean }) =>
+            permanently ? api.hardDeleteAdminRecentChange(id) : api.softDeleteAdminRecentChange(id),
+        onSuccess: (_result, { id, permanently }) => {
+            setDeletionCandidate(null)
+            if (editingId === id) createDraft()
+            if (previewChange?.id === id) setPreviewChange(null)
+            void refresh()
+            notifications.show({
+                title: permanently ? "Update permanently deleted" : "Update deleted",
+                message: permanently
+                    ? "The update and its delivery records have been removed."
+                    : "The update is no longer shown to users and can be permanently deleted later.",
+                color: "green"
+            })
+        },
+        onError: (error) => {
+            notifications.show({
+                title: "Could not delete update",
+                message: error instanceof Error ? error.message : "Please try again.",
+                color: "red"
+            })
+        }
+    })
     const isPublished = selectedChange?.status === "published"
-    const canSave = title.trim().length > 0 && body.trim().length > 0 && !isPublished
+    const isDeleted = selectedChange?.status === "deleted"
+    const isReadOnly = isPublished || isDeleted
+    const canSave = title.trim().length > 0 && body.trim().length > 0 && !isReadOnly
     const publishedChanges =
         changesQuery.data?.changes.filter((change) => change.status === "published") ?? []
     const previewChanges = !previewChange
@@ -103,13 +132,19 @@ const AdminRecentChangesPanel = () => {
 
             <Paper p="md" withBorder>
                 <Stack gap="md">
-                    <Text fw={600}>{isPublished ? "Published update" : "Draft editor"}</Text>
+                    <Text fw={600}>
+                        {isPublished
+                            ? "Published update"
+                            : isDeleted
+                              ? "Deleted update"
+                              : "Draft editor"}
+                    </Text>
                     <TextInput
                         label="Title"
                         value={title}
                         onChange={(event) => setTitle(event.currentTarget.value)}
                         maxLength={160}
-                        disabled={isPublished}
+                        disabled={isReadOnly}
                         required
                     />
                     <Textarea
@@ -119,12 +154,14 @@ const AdminRecentChangesPanel = () => {
                         onChange={(event) => setBody(event.currentTarget.value)}
                         minRows={7}
                         maxLength={10_000}
-                        disabled={isPublished}
+                        disabled={isReadOnly}
                         required
                     />
-                    {isPublished ? (
+                    {isReadOnly ? (
                         <Text size="sm" c="dimmed">
-                            Published updates are kept unchanged so the history remains accurate.
+                            {isDeleted
+                                ? "Deleted updates are no longer shown to users or included in history."
+                                : "Published updates are kept unchanged so the history remains accurate."}
                         </Text>
                     ) : (
                         <Group justify="flex-end">
@@ -173,25 +210,59 @@ const AdminRecentChangesPanel = () => {
                                     <Text size="sm" c="dimmed">
                                         {change.status === "published"
                                             ? `Published ${formatDate(change.publishedAt)}`
-                                            : "Draft"}
+                                            : change.status === "deleted"
+                                              ? "Deleted"
+                                              : "Draft"}
                                     </Text>
                                 </div>
                                 <Group gap="md">
                                     <Text
                                         size="sm"
-                                        c={change.status === "published" ? "green" : "yellow"}
+                                        c={
+                                            change.status === "published"
+                                                ? "green"
+                                                : change.status === "deleted"
+                                                  ? "red"
+                                                  : "yellow"
+                                        }
                                     >
-                                        {change.status === "published" ? "Published" : "Draft"}
+                                        {change.status === "published"
+                                            ? "Published"
+                                            : change.status === "deleted"
+                                              ? "Deleted"
+                                              : "Draft"}
                                     </Text>
+                                    {change.status !== "deleted" ? (
+                                        <Button
+                                            size="xs"
+                                            variant="light"
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                setPreviewChange(change)
+                                            }}
+                                        >
+                                            View
+                                        </Button>
+                                    ) : null}
                                     <Button
                                         size="xs"
-                                        variant="light"
+                                        color="red"
+                                        variant={change.status === "deleted" ? "filled" : "subtle"}
+                                        loading={
+                                            deleteMutation.isPending &&
+                                            deleteMutation.variables?.id === change.id
+                                        }
                                         onClick={(event) => {
                                             event.stopPropagation()
-                                            setPreviewChange(change)
+                                            setDeletionCandidate({
+                                                change,
+                                                permanently: change.status === "deleted"
+                                            })
                                         }}
                                     >
-                                        View
+                                        {change.status === "deleted"
+                                            ? "Delete permanently"
+                                            : "Delete"}
                                     </Button>
                                 </Group>
                             </Group>
@@ -208,6 +279,48 @@ const AdminRecentChangesPanel = () => {
                 changes={previewChanges}
                 initialChangeId={previewChange?.id}
             />
+
+            <Modal
+                opened={!!deletionCandidate}
+                onClose={() => setDeletionCandidate(null)}
+                title={
+                    deletionCandidate?.permanently ? "Permanently delete update?" : "Delete update?"
+                }
+                centered
+            >
+                <Stack gap="md">
+                    <Text>
+                        {deletionCandidate?.permanently
+                            ? `This permanently removes “${deletionCandidate.change.title}” and its delivery records. This cannot be undone.`
+                            : `“${deletionCandidate?.change.title}” will no longer be shown to users or included in update history. You can permanently delete it later.`}
+                    </Text>
+                    <Group justify="flex-end">
+                        <Button
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => setDeletionCandidate(null)}
+                            disabled={deleteMutation.isPending}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="red"
+                            loading={deleteMutation.isPending}
+                            onClick={() => {
+                                if (!deletionCandidate) return
+                                deleteMutation.mutate({
+                                    id: deletionCandidate.change.id,
+                                    permanently: deletionCandidate.permanently
+                                })
+                            }}
+                        >
+                            {deletionCandidate?.permanently
+                                ? "Delete permanently"
+                                : "Delete update"}
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         </Stack>
     )
 }

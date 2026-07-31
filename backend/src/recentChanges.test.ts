@@ -190,4 +190,52 @@ describe("recent changes", () => {
         })
         expect(afterPublish.json().announcement).toMatchObject({ title: "New feature" })
     })
+
+    it("removes soft-deleted updates from delivery and history before permanent deletion", async () => {
+        await db.insert(schema.recentChanges).values({
+            id: "deleted-change",
+            title: "Removed update",
+            body: "This should not be visible.",
+            status: "published",
+            publishedAt: new Date("2026-03-01T00:00:00.000Z")
+        })
+
+        const softDelete = await app.inject({
+            method: "POST",
+            url: "/admin/recent-changes/deleted-change/delete",
+            headers: csrfHeaders
+        })
+        expect(softDelete.statusCode).toBe(200)
+        expect(softDelete.json()).toMatchObject({ status: "deleted" })
+
+        setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
+        const history = await app.inject({
+            method: "GET",
+            url: "/recent-changes/history",
+            headers: csrfHeaders
+        })
+        expect(history.json()).toEqual({ changes: [] })
+
+        const delivery = await app.inject({
+            method: "POST",
+            url: "/recent-changes/deliver-latest",
+            headers: csrfHeaders
+        })
+        expect(delivery.json()).toEqual({ announcement: null, changes: [] })
+
+        setWorkosUser(ADMIN_ID, "recent-changes-admin@progeny.invalid")
+        const permanentlyDelete = await app.inject({
+            method: "DELETE",
+            url: "/admin/recent-changes/deleted-change",
+            headers: csrfHeaders
+        })
+        expect(permanentlyDelete.statusCode).toBe(204)
+
+        const adminChanges = await app.inject({
+            method: "GET",
+            url: "/admin/recent-changes",
+            headers: csrfHeaders
+        })
+        expect(adminChanges.json()).toEqual({ changes: [] })
+    })
 })

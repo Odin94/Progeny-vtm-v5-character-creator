@@ -452,7 +452,7 @@ export const recentChanges = sqliteTable(
         id: text("id").primaryKey(),
         title: text("title").notNull(),
         body: text("body").notNull(),
-        status: text("status", { enum: ["draft", "published"] })
+        status: text("status", { enum: ["draft", "published", "deleted"] })
             .notNull()
             .default("draft"),
         createdByUserId: text("created_by_user_id").references(() => users.id, {

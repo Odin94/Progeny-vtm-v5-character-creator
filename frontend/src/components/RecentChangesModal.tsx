@@ -45,7 +45,7 @@ const RecentChangesModal = ({
         <Modal
             opened={opened && !!currentChange}
             onClose={onClose}
-            title="Recent changes"
+            title="Progeny Update 🩸"
             centered
             size="lg"
             zIndex={2500}

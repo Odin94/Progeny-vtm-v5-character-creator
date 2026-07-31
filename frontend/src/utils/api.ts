@@ -196,7 +196,7 @@ export type RecentChange = {
     id: string
     title: string
     body: string
-    status: "draft" | "published"
+    status: "draft" | "published" | "deleted"
     publishedAt: string | null
     createdAt: string
     updatedAt: string
@@ -440,6 +440,10 @@ export const api = {
         apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
     publishAdminRecentChange: (id: string) =>
         apiRequest<RecentChange>(`/admin/recent-changes/${id}/publish`, { method: "POST" }),
+    softDeleteAdminRecentChange: (id: string) =>
+        apiRequest<RecentChange>(`/admin/recent-changes/${id}/delete`, { method: "POST" }),
+    hardDeleteAdminRecentChange: (id: string) =>
+        apiRequest<void>(`/admin/recent-changes/${id}`, { method: "DELETE" }),
 
     // Characters
     getCharacters: () =>

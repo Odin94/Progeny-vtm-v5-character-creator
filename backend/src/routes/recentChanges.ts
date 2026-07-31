@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify"
-import { and, desc, eq } from "drizzle-orm"
+import { and, desc, eq, ne } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { db, schema } from "../db/index.js"
 import {
@@ -185,6 +185,55 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
             }
 
             reply.send(serializeRecentChange(published))
+        }
+    )
+
+    fastify.post<{ Params: RecentChangeParams }>(
+        "/admin/recent-changes/:id/delete",
+        {
+            preHandler: [authenticateUser, requireSuperadmin],
+            schema: { params: zodToFastifySchema(recentChangeParamsSchema) }
+        },
+        async (request, reply) => {
+            const { id } = request.params as RecentChangeParams
+            const [deleted] = await db
+                .update(schema.recentChanges)
+                .set({ status: "deleted", updatedAt: new Date() })
+                .where(
+                    and(eq(schema.recentChanges.id, id), ne(schema.recentChanges.status, "deleted"))
+                )
+                .returning()
+
+            if (!deleted) {
+                reply.code(404).send({ error: "Update not found or already deleted" })
+                return
+            }
+
+            reply.send(serializeRecentChange(deleted))
+        }
+    )
+
+    fastify.delete<{ Params: RecentChangeParams }>(
+        "/admin/recent-changes/:id",
+        {
+            preHandler: [authenticateUser, requireSuperadmin],
+            schema: { params: zodToFastifySchema(recentChangeParamsSchema) }
+        },
+        async (request, reply) => {
+            const { id } = request.params as RecentChangeParams
+            const [deleted] = await db
+                .delete(schema.recentChanges)
+                .where(
+                    and(eq(schema.recentChanges.id, id), eq(schema.recentChanges.status, "deleted"))
+                )
+                .returning({ id: schema.recentChanges.id })
+
+            if (!deleted) {
+                reply.code(404).send({ error: "Deleted update not found" })
+                return
+            }
+
+            reply.code(204).send()
         }
     )
 }
