@@ -1690,10 +1690,14 @@ const MePage = () => {
                             <Text size="lg" fw={500}>
                                 Please log in to view your profile
                             </Text>
+                            <Button color="red" onClick={() => signIn()}>
+                                Sign in
+                            </Button>
                             <Button
                                 component={Link}
                                 to="/"
-                                color="red"
+                                variant="subtle"
+                                color="gray"
                                 leftSection={<IconArrowRight size={18} />}
                             >
                                 Go to Home
