@@ -35,8 +35,8 @@ const getPublishedChanges = () =>
     })
 
 const MAX_UPDATE_IMAGE_BYTES = 3 * 1024 * 1024
-const MAX_UPDATE_IMAGE_WIDTH = 1600
-const MAX_UPDATE_IMAGE_HEIGHT = 1200
+const MAX_UPDATE_IMAGE_WIDTH = 600
+const MAX_UPDATE_IMAGE_HEIGHT = 600
 
 const optimizeUpdateImage = (imageData: Buffer) =>
     sharp(imageData, { limitInputPixels: 40_000_000 })

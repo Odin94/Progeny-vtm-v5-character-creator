@@ -280,7 +280,7 @@ describe("recent changes", () => {
         })
         const storedMetadata = await sharp(storedChange!.imageData!).metadata()
         expect(storedChange!.imageMimeType).toBe("image/webp")
-        expect(storedMetadata).toMatchObject({ format: "webp", width: 1600, height: 1200 })
+        expect(storedMetadata).toMatchObject({ format: "webp", width: 600, height: 450 })
     })
 
     it("removes soft-deleted updates from delivery and history before permanent deletion", async () => {
