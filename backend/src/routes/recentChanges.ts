@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify"
 import { and, asc, desc, eq, ne } from "drizzle-orm"
 import { nanoid } from "nanoid"
+import sharp from "sharp"
 import { db, schema } from "../db/index.js"
 import {
     authenticateUser,
@@ -32,6 +33,22 @@ const getPublishedChanges = () =>
         where: eq(schema.recentChanges.status, "published"),
         orderBy: [asc(schema.recentChanges.publishedAt), asc(schema.recentChanges.createdAt)]
     })
+
+const MAX_UPDATE_IMAGE_BYTES = 3 * 1024 * 1024
+const MAX_UPDATE_IMAGE_WIDTH = 1600
+const MAX_UPDATE_IMAGE_HEIGHT = 1200
+
+const optimizeUpdateImage = (imageData: Buffer) =>
+    sharp(imageData, { limitInputPixels: 40_000_000 })
+        .rotate()
+        .resize({
+            width: MAX_UPDATE_IMAGE_WIDTH,
+            height: MAX_UPDATE_IMAGE_HEIGHT,
+            fit: "inside",
+            withoutEnlargement: true
+        })
+        .webp({ quality: 82, effort: 4 })
+        .toBuffer()
 
 export async function recentChangesRoutes(fastify: FastifyInstance) {
     fastify.get(
@@ -208,8 +225,21 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
             }
 
             const imageData = await upload.toBuffer()
-            if (upload.file.truncated || imageData.length > 3 * 1024 * 1024) {
+            if (upload.file.truncated || imageData.length > MAX_UPDATE_IMAGE_BYTES) {
                 reply.code(400).send({ error: "Images must be 3 MB or smaller" })
+                return
+            }
+
+            let optimizedImageData: Buffer
+            try {
+                optimizedImageData = await optimizeUpdateImage(imageData)
+            } catch {
+                reply.code(400).send({ error: "The uploaded file is not a valid image" })
+                return
+            }
+
+            if (optimizedImageData.length > MAX_UPDATE_IMAGE_BYTES) {
+                reply.code(400).send({ error: "The optimized image must be 3 MB or smaller" })
                 return
             }
 
@@ -217,8 +247,8 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
                 .update(schema.recentChanges)
                 .set({
                     imageUrl: null,
-                    imageData,
-                    imageMimeType: upload.mimetype,
+                    imageData: optimizedImageData,
+                    imageMimeType: "image/webp",
                     updatedAt: new Date()
                 })
                 .where(

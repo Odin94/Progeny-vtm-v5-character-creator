@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 import { eq, sql } from "drizzle-orm"
+import sharp from "sharp"
 import { buildApp } from "./app.js"
 import { db, schema } from "./db/index.js"
 
@@ -244,7 +245,16 @@ describe("recent changes", () => {
             body: "Upload image here."
         })
         const boundary = "recent-changes-image-boundary"
-        const imageData = "small uploaded image"
+        const imageData = await sharp({
+            create: {
+                width: 2400,
+                height: 1800,
+                channels: 3,
+                background: "#722f37"
+            }
+        })
+            .png()
+            .toBuffer()
         const upload = await app.inject({
             method: "POST",
             url: "/admin/recent-changes/draft-with-image/image",
@@ -252,16 +262,25 @@ describe("recent changes", () => {
                 ...csrfHeaders,
                 "content-type": `multipart/form-data; boundary=${boundary}`
             },
-            payload:
-                `--${boundary}\r\n` +
-                'Content-Disposition: form-data; name="image"; filename="update.png"\r\n' +
-                "Content-Type: image/png\r\n\r\n" +
-                imageData +
-                `\r\n--${boundary}--\r\n`
+            payload: Buffer.concat([
+                Buffer.from(
+                    `--${boundary}\r\n` +
+                        'Content-Disposition: form-data; name="image"; filename="update.png"\r\n' +
+                        "Content-Type: image/png\r\n\r\n"
+                ),
+                imageData,
+                Buffer.from(`\r\n--${boundary}--\r\n`)
+            ])
         })
 
         expect(upload.statusCode).toBe(200)
         expect(upload.json()).toMatchObject({ hasImage: true, imageUrl: null })
+        const storedChange = await db.query.recentChanges.findFirst({
+            where: eq(schema.recentChanges.id, "draft-with-image")
+        })
+        const storedMetadata = await sharp(storedChange!.imageData!).metadata()
+        expect(storedChange!.imageMimeType).toBe("image/webp")
+        expect(storedMetadata).toMatchObject({ format: "webp", width: 1600, height: 1200 })
     })
 
     it("removes soft-deleted updates from delivery and history before permanent deletion", async () => {
