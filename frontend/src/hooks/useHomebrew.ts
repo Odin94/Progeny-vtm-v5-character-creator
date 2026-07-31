@@ -9,6 +9,13 @@ export const useHomebrewCollections = (enabled = true) =>
         enabled
     })
 
+export const useHomebrewCollection = (id: string | null | undefined, enabled = true) =>
+    useQuery({
+        queryKey: ["homebrew", "collections", id],
+        queryFn: () => api.getHomebrewCollection(id!),
+        enabled: enabled && !!id
+    })
+
 export const useCharacterHomebrew = (characterId: string | null | undefined) =>
     useQuery({
         queryKey: ["homebrew", "character", characterId],
