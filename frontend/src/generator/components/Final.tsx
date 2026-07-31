@@ -465,8 +465,6 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     }}
                 >
                     <ActionCard
-                        animationIndex={0}
-                        shouldReduceMotion={shouldReduceMotion}
                         testId="final-download-pdf-button"
                         icon={<IconFileText size={20} />}
                         label="Download PDF"
@@ -474,24 +472,18 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         onClick={handleDownloadPDF}
                     />
                     <ActionCard
-                        animationIndex={1}
-                        shouldReduceMotion={shouldReduceMotion}
                         icon={<IconDownload size={20} />}
                         label="Save File"
                         description="JSON save file to load later"
                         onClick={handleDownloadJSON}
                     />
                     <ActionCard
-                        animationIndex={2}
-                        shouldReduceMotion={shouldReduceMotion}
                         icon={<IconShare size={20} />}
                         label="Export"
                         description="Foundry VTT, Inconnu & more"
                         onClick={openExportModal}
                     />
                     <ActionCard
-                        animationIndex={3}
-                        shouldReduceMotion={shouldReduceMotion}
                         icon={<IconBook size={20} />}
                         label="Character Sheet"
                         description="Use this character right away"
@@ -499,8 +491,6 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                     />
                     {hasAnalyticsConsent ? (
                         <ActionCard
-                            animationIndex={4}
-                            shouldReduceMotion={shouldReduceMotion}
                             icon={<IconMessageCircle size={20} />}
                             label="Feedback & support"
                             description="Questions, complaints, bugs or ideas"
@@ -508,8 +498,6 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         />
                     ) : (
                         <ActionCard
-                            animationIndex={4}
-                            shouldReduceMotion={shouldReduceMotion}
                             icon={<IconCookie size={20} />}
                             label="Cookie preferences"
                             description="Enable analytics to use support chat"
@@ -702,59 +690,41 @@ function ActionCard({
     label,
     description,
     onClick,
-    testId,
-    animationIndex,
-    shouldReduceMotion
+    testId
 }: {
     icon: React.ReactNode
     label: string
     description: string
     onClick?: () => void
     testId?: string
-    animationIndex: number
-    shouldReduceMotion: boolean | null
 }) {
     return (
-        <motion.div
-            initial={{
-                opacity: 0,
-                transform: shouldReduceMotion ? "none" : "translateY(8px)"
-            }}
-            animate={{ opacity: 1, transform: "none" }}
-            transition={{
-                duration: shouldReduceMotion ? 0.12 : 0.2,
-                delay: shouldReduceMotion ? 0 : animationIndex * 0.04,
-                ease: [0.23, 1, 0.32, 1]
-            }}
-            style={{ display: "flex" }}
-        >
-            <button className="nf-action-card" data-testid={testId} onClick={onClick}>
-                <div className="nf-icon-wrap">{icon}</div>
-                <div>
-                    <p
-                        style={{
-                            margin: 0,
-                            fontFamily: FONT_DISPLAY,
-                            fontSize: "0.88rem",
-                            letterSpacing: "0.06em",
-                            color: COLORS.foreground
-                        }}
-                    >
-                        {label}
-                    </p>
-                    <p
-                        style={{
-                            margin: "2px 0 0 0",
-                            fontFamily: FONT_UI,
-                            fontSize: 11,
-                            color: rgba(RAW_GREY, 0.55)
-                        }}
-                    >
-                        {description}
-                    </p>
-                </div>
-            </button>
-        </motion.div>
+        <button className="nf-action-card" data-testid={testId} onClick={onClick}>
+            <div className="nf-icon-wrap">{icon}</div>
+            <div>
+                <p
+                    style={{
+                        margin: 0,
+                        fontFamily: FONT_DISPLAY,
+                        fontSize: "0.88rem",
+                        letterSpacing: "0.06em",
+                        color: COLORS.foreground
+                    }}
+                >
+                    {label}
+                </p>
+                <p
+                    style={{
+                        margin: "2px 0 0 0",
+                        fontFamily: FONT_UI,
+                        fontSize: 11,
+                        color: rgba(RAW_GREY, 0.55)
+                    }}
+                >
+                    {description}
+                </p>
+            </div>
+        </button>
     )
 }
 

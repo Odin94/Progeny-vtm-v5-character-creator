@@ -36,9 +36,7 @@ if (!showBanner) {
 
 1. Final completion, rare:
    - Header enters opacity 0 + `translateY(8px)` to settled over 220ms `[0.23, 1, 0.32, 1]`.
-   - Action cards enter opacity 0 + `translateY(8px)` over 200ms with 40ms per-card stagger.
-   - Cards are interactive immediately; delays affect visuals only.
-   - Reduced motion: opacity-only 120ms, no stagger.
+   - Action cards render immediately with no entrance animation or stagger.
    - `.nf-action-card:active { transform: scale(0.98) }` with 120ms `[0.23, 1, 0.32, 1]`; reduced motion removes scale.
 2. Cookie banner, rare/occasional:
    - Keep it mounted through exit using Mantine `Transition`, `AnimatePresence`, or equivalent already-installed tooling.
@@ -57,7 +55,7 @@ if (!showBanner) {
 
 ## Steps
 
-1. Key and animate Final header and action cards with exact timings/stagger; add active card feedback and reduced-motion behavior.
+1. Animate only the Final header; render action cards immediately and add active card feedback with reduced-motion behavior.
 2. Replace CookieBanner's early return with an interruptible mounted transition that supports exit and preserves positioning.
 3. Add copy-to-check state animation in ChatWindow.
 4. Wrap chat setup subviews in a keyed, interruptible transition with exact directional travel and reduced-motion behavior.
@@ -72,5 +70,5 @@ if (!showBanner) {
 ## Verification
 
 - **Mechanical**: `cd frontend && pnpm run build`; `cd frontend && pnpm run lint`; `cd frontend && pnpm run test:run`.
-- **Feel check**: complete a character; click every Final action card; show, accept, decline, and close the cookie banner; create and join chat sessions; copy a session ID. Confirm no animation blocks input, rapid reversals retarget cleanly, and reduced motion keeps opacity/state feedback while dropping movement. Inspect Final stagger and cookie exit at 10% playback.
-- **Done when**: all five approved opportunities are present with exact timings and no rejected candidate gained motion.
+- **Feel check**: complete a character; confirm all Final action cards are visible immediately and click each one; show, accept, decline, and close the cookie banner; create and join chat sessions; copy a session ID. Confirm no animation blocks input, rapid reversals retarget cleanly, and reduced motion keeps opacity/state feedback while dropping movement. Inspect the cookie exit at 10% playback.
+- **Done when**: the approved state-boundary motion is present, Final action cards have no entrance animation, and no rejected candidate gained motion.
