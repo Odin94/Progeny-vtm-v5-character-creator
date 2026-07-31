@@ -4,6 +4,7 @@ import {
     Group,
     Modal,
     Paper,
+    SimpleGrid,
     Stack,
     Text,
     TextInput,
@@ -15,6 +16,7 @@ import { notifications } from "@mantine/notifications"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { api, type RecentChange } from "~/utils/api"
+import { composeRecentChangeBody, splitRecentChangeLayout } from "~/utils/recentChangeLayout"
 import RecentChangesModal from "~/components/RecentChangesModal"
 
 const formatDate = (date: string | null) =>
@@ -35,7 +37,8 @@ const AdminRecentChangesPanel = () => {
         permanently: boolean
     } | null>(null)
     const [title, setTitle] = useState("")
-    const [body, setBody] = useState("")
+    const [topSection, setTopSection] = useState("")
+    const [bottomColumns, setBottomColumns] = useState(["", "", ""])
     const changesQuery = useQuery({
         queryKey: ["admin", "recent-changes"],
         queryFn: api.getAdminRecentChanges
@@ -45,14 +48,23 @@ const AdminRecentChangesPanel = () => {
     useEffect(() => {
         if (!selectedChange) return
         setTitle(selectedChange.title)
-        setBody(selectedChange.body)
+        const layout = splitRecentChangeLayout(selectedChange.body)
+        setTopSection(layout.topSection)
+        setBottomColumns([...layout.columns, "", "", ""].slice(0, 3))
     }, [selectedChange])
 
     const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin", "recent-changes"] })
     const createDraft = () => {
         setEditingId(null)
         setTitle("")
-        setBody("")
+        setTopSection("")
+        setBottomColumns(["", "", ""])
+    }
+    const body = composeRecentChangeBody(topSection, bottomColumns)
+    const updateBottomColumn = (index: number, value: string) => {
+        setBottomColumns((columns) =>
+            columns.map((column, columnIndex) => (columnIndex === index ? value : column))
+        )
     }
     const saveMutation = useMutation({
         mutationFn: () =>
@@ -161,7 +173,9 @@ const AdminRecentChangesPanel = () => {
     const isPublished = selectedChange?.status === "published"
     const isDeleted = selectedChange?.status === "deleted"
     const isReadOnly = isPublished || isDeleted
-    const canSave = title.trim().length > 0 && body.trim().length > 0 && !isReadOnly
+    const bodyOverLimit = body.length > 10_000
+    const canSave =
+        title.trim().length > 0 && topSection.trim().length > 0 && !bodyOverLimit && !isReadOnly
     const publishedChanges = (changesQuery.data?.changes ?? [])
         .filter((change) => change.status === "published")
         .sort(
@@ -205,15 +219,48 @@ const AdminRecentChangesPanel = () => {
                         required
                     />
                     <Textarea
-                        label="Update"
-                        description="Markdown is supported, including headings, bold text, lists, and links."
-                        value={body}
-                        onChange={(event) => setBody(event.currentTarget.value)}
-                        minRows={7}
+                        label="Top section"
+                        description="Shown above the ornamental divider, beside the optional image. Markdown is supported."
+                        value={topSection}
+                        onChange={(event) => setTopSection(event.currentTarget.value)}
+                        minRows={5}
                         maxLength={10_000}
                         disabled={isReadOnly}
                         required
                     />
+                    <Stack gap="xs">
+                        <div>
+                            <Text fw={500} size="sm">
+                                Bottom columns
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                                Each field maps directly to its column below the divider. Leave
+                                fields empty to use fewer columns.
+                            </Text>
+                        </div>
+                        <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
+                            {(["Left column", "Center column", "Right column"] as const).map(
+                                (label, index) => (
+                                    <Textarea
+                                        key={label}
+                                        label={label}
+                                        value={bottomColumns[index]}
+                                        onChange={(event) =>
+                                            updateBottomColumn(index, event.currentTarget.value)
+                                        }
+                                        minRows={8}
+                                        maxLength={10_000}
+                                        disabled={isReadOnly}
+                                    />
+                                )
+                            )}
+                        </SimpleGrid>
+                        {bodyOverLimit ? (
+                            <Text size="sm" c="red">
+                                All sections together must be 10,000 characters or fewer.
+                            </Text>
+                        ) : null}
+                    </Stack>
                     <Stack gap={4}>
                         <Text fw={500} size="sm">
                             Image

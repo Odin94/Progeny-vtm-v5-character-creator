@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
 import { api, type RecentChange } from "~/utils/api"
+import { splitRecentChangeLayout } from "~/utils/recentChangeLayout"
 import "./RecentChangesModal.css"
 
 type RecentChangesModalProps = {
@@ -21,13 +22,6 @@ const formatPublishedDate = (publishedAt: string | null) => {
         day: "numeric"
     })
 }
-
-const splitMarkdownBlocks = (markdown: string) =>
-    markdown
-        .trim()
-        .split(/\n\s*\n/)
-        .map((block) => block.trim())
-        .filter(Boolean)
 
 const getTitleLetterSpacing = (title: string) => {
     if (title.length <= 10) return "0.32em"
@@ -90,17 +84,13 @@ const RecentChangesModal = ({
     const currentChange = changes[currentIndex]
     const canGoPrevious = currentIndex > 0
     const canGoNext = currentIndex < changes.length - 1
-    const { introBlock, detailColumns } = useMemo(() => {
-        if (!currentChange) return { introBlock: "", detailColumns: [] as string[][] }
-
-        const [introBlock = "", ...detailBlocks] = splitMarkdownBlocks(currentChange.body)
-        const columnCount = Math.min(3, detailBlocks.length)
-        const detailColumns = Array.from({ length: columnCount }, () => [] as string[])
-
-        detailBlocks.forEach((block, index) => detailColumns[index % columnCount].push(block))
-
-        return { introBlock, detailColumns }
-    }, [currentChange])
+    const { topSection, columns } = useMemo(
+        () =>
+            currentChange
+                ? splitRecentChangeLayout(currentChange.body)
+                : { topSection: "", columns: [] },
+        [currentChange]
+    )
 
     return (
         <Modal
@@ -134,7 +124,7 @@ const RecentChangesModal = ({
                             className={`recent-changes__intro ${currentChange.hasImage || currentChange.imageUrl ? "recent-changes__intro--with-image" : ""}`}
                         >
                             <div className="recent-changes__markdown recent-changes__intro-copy">
-                                <ReactMarkdown>{introBlock}</ReactMarkdown>
+                                <ReactMarkdown>{topSection}</ReactMarkdown>
                             </div>
                             {currentChange.hasImage || currentChange.imageUrl ? (
                                 <RecentChangeImage change={currentChange} />
@@ -147,23 +137,18 @@ const RecentChangesModal = ({
                             <img src={ornamentalDivider} alt="" />
                         </div>
 
-                        {detailColumns.length ? (
+                        {columns.length ? (
                             <section
                                 className="recent-changes__details"
                                 style={{
-                                    gridTemplateColumns: `repeat(${detailColumns.length}, minmax(0, 1fr))`
+                                    gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`
                                 }}
                             >
-                                {detailColumns.map((column, index) => (
+                                {columns.map((column, index) => (
                                     <div className="recent-changes__column" key={index}>
-                                        {column.map((block, blockIndex) => (
-                                            <div
-                                                className="recent-changes__markdown"
-                                                key={`${index}-${blockIndex}`}
-                                            >
-                                                <ReactMarkdown>{block}</ReactMarkdown>
-                                            </div>
-                                        ))}
+                                        <div className="recent-changes__markdown">
+                                            <ReactMarkdown>{column}</ReactMarkdown>
+                                        </div>
                                     </div>
                                 ))}
                             </section>
