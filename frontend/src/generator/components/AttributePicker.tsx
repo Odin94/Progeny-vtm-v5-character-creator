@@ -1,6 +1,6 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character } from "../../data/Character"
@@ -27,6 +27,28 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
         weakest: null,
         medium: []
     })
+
+    // Nothing assigned yet: this is the state the drop-off signals describe (users read the
+    // prompt, explore the tooltips, and leave without a first click). We use it to surface the
+    // "tap to assign" hint and the button pulse only while the first pick is still outstanding.
+    const nothingPickedYet =
+        !pickedAttributes.strongest &&
+        !pickedAttributes.weakest &&
+        pickedAttributes.medium.length === 0
+
+    // Track the first tooltip open per attribute (per mount) so "explored the tooltips but never
+    // selected" becomes a metric instead of something only visible in session replay. A Set keeps
+    // us from spamming an event on every mouse re-entry.
+    const trackedTooltipHovers = useRef<Set<AttributesKey>>(new Set())
+    const trackTooltipHover = (attribute: AttributesKey) => {
+        if (trackedTooltipHovers.current.has(attribute)) return
+        trackedTooltipHovers.current.add(attribute)
+        trackEvent({
+            action: "attribute tooltip hovered",
+            category: "attributes",
+            label: attribute
+        })
+    }
 
     const createButton = (attribute: AttributesKey, i: number) => {
         const alreadyPicked = [
@@ -114,6 +136,15 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                 >
                     <Button
                         data-testid={`attribute-${attribute}-button`}
+                        className={
+                            nothingPickedYet && !alreadyPicked ? "attribute-pick-pulse" : undefined
+                        }
+                        onMouseEnter={() => {
+                            if (!alreadyPicked) trackTooltipHover(attribute)
+                        }}
+                        onFocus={() => {
+                            if (!alreadyPicked) trackTooltipHover(attribute)
+                        }}
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
                         color="grape"
@@ -253,6 +284,23 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
             />
 
             <GeneratorSectionDivider label="Attributes" />
+
+            {nothingPickedYet ? (
+                <Text
+                    ta="center"
+                    mb="sm"
+                    className="notranslate"
+                    translate="no"
+                    style={{
+                        fontFamily: "Inter, Segoe UI, sans-serif",
+                        fontSize: "0.82rem",
+                        letterSpacing: "0.06em",
+                        color: rgba(RAW_GOLD, 0.78)
+                    }}
+                >
+                    {phoneScreen ? "Tap" : "Click"} an attribute below to assign it
+                </Text>
+            ) : null}
 
             <Group>
                 <Grid grow>

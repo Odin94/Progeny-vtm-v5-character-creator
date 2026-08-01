@@ -29,8 +29,8 @@ export type GeneratorProps = {
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
     // Fire a PostHog step-view event whenever a generator step is shown. Individual steps only
-    // send a GA pageview and a confirm-click event, so without this we cannot measure step-level
-    // drop-off (how many people reach a step vs. confirm it) outside of session replay.
+    // send a confirm-click event, so without this we cannot measure step-level drop-off (how
+    // many people reach a step vs. confirm it) outside of session replay.
     useEffect(() => {
         trackEvent({
             action: "generator step viewed",
