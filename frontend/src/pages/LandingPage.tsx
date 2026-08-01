@@ -30,6 +30,7 @@ import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters } from "~/hooks/useCharacters"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { api } from "~/utils/api"
+import { isLocalhost } from "~/utils/isLocalhost"
 import "./LandingPage.css"
 
 type FeatureCardProps = {
@@ -75,6 +76,7 @@ function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick }: FeatureCa
 }
 
 export default function LandingPage() {
+    const showFeatureGuide = isLocalhost()
     const shouldReduceMotion = useReducedMotion()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
@@ -424,6 +426,36 @@ export default function LandingPage() {
                         </Stack>
                     </Card>
 
+                    {showFeatureGuide ? (
+                        <Card radius="lg" p="xl" mt="xl" className="landing-page__explainer">
+                            <Stack gap="md" className="landing-page__explainer-inner">
+                                <Text size="xs" className="landing-page__small-label">
+                                    Feature guide
+                                </Text>
+                                <Title
+                                    order={2}
+                                    size="2.15rem"
+                                    className="landing-page__section-title"
+                                >
+                                    Explore Progeny at your own pace
+                                </Title>
+                                <Text size="xl" className="landing-page__body">
+                                    Browse the feature guide for a growing collection of walkthroughs,
+                                    tips, and visual references for every part of Progeny.
+                                </Text>
+                                <Group gap="lg" mt="xs">
+                                    <Anchor
+                                        component={Link}
+                                        to="/features"
+                                        underline="never"
+                                        className="landing-page__link"
+                                    >
+                                        Explore the feature guide
+                                    </Anchor>
+                                </Group>
+                            </Stack>
+                        </Card>
+                    ) : null}
                 </Container>
             </Box>
 

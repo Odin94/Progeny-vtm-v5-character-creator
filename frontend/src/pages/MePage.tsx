@@ -103,6 +103,7 @@ import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
 import { getCharacterVitals, isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
+import { isLocalhost } from "~/utils/isLocalhost"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 const topbarHeight = 52
@@ -241,6 +242,7 @@ const clearInviteTokenFromUrl = () => {
 // * Move a bunch of the stuff we're currently passing into sections into the section components
 
 const MePage = () => {
+    const showFeatureGuide = isLocalhost()
     const {
         user,
         isLoading: authLoading,
@@ -1774,6 +1776,17 @@ const MePage = () => {
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
                             <Group mb="xl" justify="flex-end">
+                                {showFeatureGuide ? (
+                                    <Button
+                                        component={Link}
+                                        to="/features"
+                                        color="gray"
+                                        variant="light"
+                                        leftSection={<IconBook2 size={18} />}
+                                    >
+                                        Feature guide
+                                    </Button>
+                                ) : null}
                                 <Button
                                     component={Link}
                                     to="/homebrew"
