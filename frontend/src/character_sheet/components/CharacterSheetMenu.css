@@ -64,6 +64,19 @@
     box-shadow: 0 0 25px rgba(179, 39, 56, 0.12);
 }
 
+.sheet-menu__action--wide {
+    grid-column: 1 / -1;
+    border-color: rgba(88, 101, 242, 0.4);
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.16), rgba(29, 20, 23, 0.82));
+}
+
+.sheet-menu__action--wide:hover {
+    border-color: rgba(88, 101, 242, 0.6);
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.26), rgba(43, 27, 31, 0.94));
+}
+
+.sheet-menu__action--wide .mantine-Button-section { color: #99a2f2; }
+
 .sheet-menu__action--featured:hover { background: linear-gradient(135deg, rgba(193, 38, 55, 0.92), rgba(124, 20, 34, 0.94)); }
 .sheet-menu__action .mantine-Button-inner { height: 100%; justify-content: flex-start; }
 .sheet-menu__action .mantine-Button-section { align-self: center; margin-inline-end: 15px; color: #d4af64; }

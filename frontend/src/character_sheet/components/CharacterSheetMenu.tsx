@@ -40,6 +40,7 @@ import {
     getUploadFile,
     updateHealthAndWillpowerAndBloodPotencyAndHumanity
 } from "~/generator/utils"
+import { trackEvent } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
 import "./CharacterSheetMenu.css"
@@ -139,6 +140,10 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 })
             }
 
+            trackEvent({
+                action: "JSON downloaded (foundry_wod5e vtt)",
+                category: "downloads"
+            })
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -162,6 +167,10 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 window.URL.revokeObjectURL(link.href)
             }, 100)
 
+            trackEvent({
+                action: "JSON downloaded (inconnu)",
+                category: "downloads"
+            })
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -183,6 +192,10 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 window.URL.revokeObjectURL(link.href)
             }, 100)
 
+            trackEvent({
+                action: "Commands downloaded (inconnu)",
+                category: "downloads"
+            })
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -369,6 +382,20 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                         <small>Foundry, Inconnu & more</small>
                                                     </div>
                                                 </Button>
+                                                <Button
+                                                    leftSection={<IconBrandDiscord size={22} />}
+                                                    onClick={handleExportInconnuCommands}
+                                                    className="sheet-menu__action sheet-menu__action--wide"
+                                                    justify="flex-start"
+                                                >
+                                                    <div className="sheet-menu__action-copy">
+                                                        <strong>Export to Inconnu Discord</strong>
+                                                        <small>
+                                                            Commands to paste into Discord to
+                                                            import your character
+                                                        </small>
+                                                    </div>
+                                                </Button>
                                             </div>
                                         </section>
 
@@ -515,7 +542,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                     </a>
                                                     <Text>
                                                         Use your character with the Inconnu Discord
-                                                        manager.
+                                                        manager. Pick JSON to import a file, or grab
+                                                        the ready-made commands to paste into
+                                                        Discord.
                                                     </Text>
                                                 </div>
                                                 <div className="sheet-menu__export-actions">
@@ -526,7 +555,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                         Export JSON
                                                     </Button>
                                                     <Button
-                                                        leftSection={<IconDownload size={17} />}
+                                                        leftSection={<IconBrandDiscord size={17} />}
                                                         onClick={handleExportInconnuCommands}
                                                     >
                                                         Discord commands
