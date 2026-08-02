@@ -18,6 +18,7 @@ import {
     Title,
     Tooltip
 } from "@mantine/core"
+import { notifications } from "@mantine/notifications"
 import {
     IconArrowLeft,
     IconChevronDown,
@@ -38,6 +39,9 @@ import type { HomebrewItemKind, HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
+
+const storageLimitMessage =
+    "your account is using over 100MB of storage, talk to support if you need more"
 
 type Props = { collectionId: string }
 
@@ -98,6 +102,12 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
         onSuccess: () => {
             client.invalidateQueries({ queryKey: ["homebrew", "collections"] })
             refreshLibrary()
+        },
+        onError: (error) => {
+            notifications.show({
+                message: error instanceof Error ? error.message : storageLimitMessage,
+                color: "red"
+            })
         }
     })
     const rateMutation = useMutation({

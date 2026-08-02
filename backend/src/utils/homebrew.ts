@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm"
+import { asc, eq, inArray, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { db, schema } from "../db/index.js"
 import {
@@ -7,6 +7,17 @@ import {
     type HomebrewCollectionInput,
     type HomebrewItemInput
 } from "../schemas/homebrew.js"
+
+export const HOMEBREW_STORAGE_LIMIT_BYTES = 100 * 1024 * 1024
+export const HOMEBREW_STORAGE_LIMIT_MESSAGE =
+    "your account is using over 100MB of storage, talk to support if you need more"
+
+export class HomebrewStorageLimitError extends Error {
+    constructor() {
+        super(HOMEBREW_STORAGE_LIMIT_MESSAGE)
+        this.name = "HomebrewStorageLimitError"
+    }
+}
 
 export type HomebrewCollectionSnapshot = {
     id: string
@@ -38,6 +49,79 @@ const parseItem = (row: typeof schema.homebrewItems.$inferSelect) => {
 }
 
 type HomebrewItemWithId = HomebrewItemInput & { id: string }
+
+const collectionStorageSize = (collection: {
+    name: string
+    shortDescription: string
+    description: string
+    tags: string[]
+    contentWarning: string
+}) =>
+    Buffer.byteLength(
+        [
+            collection.name,
+            collection.shortDescription,
+            collection.description,
+            JSON.stringify(collection.tags),
+            collection.contentWarning
+        ].join("")
+    )
+
+const itemsStorageSize = (items: HomebrewItemWithId[]) =>
+    items.reduce((size, item) => size + Buffer.byteLength(JSON.stringify(item)), 0)
+
+const assertHomebrewStorageLimit = (
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+    ownerId: string,
+    existingCollectionId: string | null,
+    collection: HomebrewCollectionInput,
+    items: HomebrewItemWithId[],
+    isNewCollection = false
+) => {
+    const storedCollectionSize = tx
+        .select({
+            size: sql<number>`coalesce(sum(length(cast(${schema.homebrewCollections.name} as blob)) + length(cast(${schema.homebrewCollections.shortDescription} as blob)) + length(cast(${schema.homebrewCollections.description} as blob)) + length(cast(${schema.homebrewCollections.tags} as blob)) + length(cast(${schema.homebrewCollections.contentWarning} as blob))), 0)`
+        })
+        .from(schema.homebrewCollections)
+        .where(eq(schema.homebrewCollections.ownerId, ownerId))
+        .get()?.size ?? 0
+    const storedItemSize = tx
+        .select({ size: sql<number>`coalesce(sum(length(cast(${schema.homebrewItems.data} as blob))), 0)` })
+        .from(schema.homebrewItems)
+        .innerJoin(
+            schema.homebrewCollections,
+            eq(schema.homebrewItems.collectionId, schema.homebrewCollections.id)
+        )
+        .where(eq(schema.homebrewCollections.ownerId, ownerId))
+        .get()?.size ?? 0
+    let existingCollectionSize = 0
+    if (existingCollectionId) {
+        const storedExistingCollectionSize =
+            tx
+                .select({
+                    size: sql<number>`coalesce(sum(length(cast(${schema.homebrewCollections.name} as blob)) + length(cast(${schema.homebrewCollections.shortDescription} as blob)) + length(cast(${schema.homebrewCollections.description} as blob)) + length(cast(${schema.homebrewCollections.tags} as blob)) + length(cast(${schema.homebrewCollections.contentWarning} as blob))), 0)`
+                })
+                .from(schema.homebrewCollections)
+                .where(eq(schema.homebrewCollections.id, existingCollectionId))
+                .get()?.size ?? 0
+        const storedExistingItemSize =
+            tx
+                .select({ size: sql<number>`coalesce(sum(length(cast(${schema.homebrewItems.data} as blob))), 0)` })
+                .from(schema.homebrewItems)
+                .where(eq(schema.homebrewItems.collectionId, existingCollectionId))
+                .get()?.size ?? 0
+        existingCollectionSize = Number(storedExistingCollectionSize) + Number(storedExistingItemSize)
+    }
+    const currentSize = Number(storedCollectionSize) + Number(storedItemSize)
+    const sizeBeforeSave = currentSize - existingCollectionSize
+    const projectedSize = sizeBeforeSave + collectionStorageSize(collection) + itemsStorageSize(items)
+    const sizeToCompareAgainst = isNewCollection ? sizeBeforeSave : currentSize
+
+    // Existing accounts that predate the limit can still save changes that do not grow their data.
+    if (projectedSize > HOMEBREW_STORAGE_LIMIT_BYTES && projectedSize > sizeToCompareAgainst) {
+        throw new HomebrewStorageLimitError()
+    }
+}
 
 const canonicalizeDisciplineReferences = (items: HomebrewItemWithId[]): HomebrewItemWithId[] => {
     const disciplineNamesById = new Map(
@@ -183,7 +267,9 @@ const normalizeItemIds = async (collectionId: string, items: HomebrewItemInput[]
 
 export const replaceHomebrewCollection = async (
     collectionId: string,
-    input: HomebrewCollectionInput
+    input: HomebrewCollectionInput,
+    ownerId: string,
+    isNewCollection = false
 ) => {
     const parsed = homebrewCollectionInputSchema.parse(input)
     const normalizedItems = await normalizeItemIds(collectionId, parsed.items)
@@ -194,6 +280,8 @@ export const replaceHomebrewCollection = async (
     const items = normalized.items.map((item) => ({ ...item, id: item.id! }))
 
     db.transaction((tx) => {
+        assertHomebrewStorageLimit(tx, ownerId, collectionId, normalized, items, isNewCollection)
+
         tx.update(schema.homebrewCollections)
             .set({
                 name: parsed.name,
@@ -281,6 +369,8 @@ export const insertSnapshotAsCollection = async ({
     )
 
     db.transaction((tx) => {
+        assertHomebrewStorageLimit(tx, ownerId, null, parsed, copiedItems)
+
         tx.insert(schema.homebrewCollections)
             .values({
                 id: collectionId,

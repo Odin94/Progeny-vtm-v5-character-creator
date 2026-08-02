@@ -51,6 +51,18 @@ const emptyCollection = (): HomebrewCollectionInput => ({
     items: []
 })
 
+const storageLimitMessage =
+    "your account is using over 100MB of storage, talk to support if you need more"
+
+const showSaveError = (error: unknown, setError: (message: string) => void) => {
+    const message = error instanceof Error ? error.message : "Could not save the collection"
+    if (message === storageLimitMessage) {
+        notifications.show({ message, color: "red" })
+        return
+    }
+    setError(message)
+}
+
 const toInput = (collection: HomebrewCollection): HomebrewCollectionInput => ({
     name: collection.name,
     shortDescription: collection.shortDescription,
@@ -169,7 +181,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                 navigate({ to: "/homebrew/$collectionId", params: { collectionId: saved.id } })
             }
         } catch (mutationError) {
-            setError(mutationError instanceof Error ? mutationError.message : "Could not save")
+            showSaveError(mutationError, setError)
         }
     }
 
@@ -578,13 +590,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                     })
                                 }
                             })
-                            .catch((mutationError) => {
-                                setError(
-                                    mutationError instanceof Error
-                                        ? mutationError.message
-                                        : "Could not save the collection"
-                                )
-                            })
+                            .catch((mutationError) => showSaveError(mutationError, setError))
                     }}
                 />
             ) : null}

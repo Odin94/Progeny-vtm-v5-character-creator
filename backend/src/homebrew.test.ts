@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { eq, sql } from "drizzle-orm"
 import { buildApp } from "./app.js"
 import { db, schema } from "./db/index.js"
+import { HOMEBREW_STORAGE_LIMIT_BYTES, HOMEBREW_STORAGE_LIMIT_MESSAGE } from "./utils/homebrew.js"
 
 const workosMock = vi.hoisted(() => ({
     user: { id: "brew-author", email: "brew-author@progeny.invalid" }
@@ -201,6 +202,44 @@ describe("Homebrew collections and library", () => {
             coteries: [{ id: COTERIE_ID, name: "Homebrew Coterie" }]
         })
         expect(context.json()[0].items).toHaveLength(2)
+    })
+
+    it("rejects a collection save that would exceed the account Homebrew storage limit", async () => {
+        await db.insert(schema.homebrewCollections).values({
+            id: "at-storage-limit",
+            ownerId: AUTHOR_ID,
+            name: "At the limit",
+            description: "x".repeat(HOMEBREW_STORAGE_LIMIT_BYTES),
+            shortDescription: "",
+            tags: "[]",
+            contentWarning: ""
+        })
+        const storedSize = await db
+            .select({ size: sql<number>`length(${schema.homebrewCollections.description})` })
+            .from(schema.homebrewCollections)
+            .where(eq(schema.homebrewCollections.id, "at-storage-limit"))
+        expect(storedSize[0]?.size).toBe(HOMEBREW_STORAGE_LIMIT_BYTES)
+
+        const response = await app.inject({
+            method: "POST",
+            url: "/homebrew/collections",
+            headers: csrfHeaders,
+            payload: {
+                name: "One collection too many bytes",
+                shortDescription: "",
+                description: "",
+                tags: [],
+                contentWarning: "",
+                items: []
+            }
+        })
+
+        expect(response.statusCode, response.body).toBe(413)
+        expect(response.json()).toEqual({ error: HOMEBREW_STORAGE_LIMIT_MESSAGE })
+        const collections = await db.query.homebrewCollections.findMany({
+            where: eq(schema.homebrewCollections.ownerId, AUTHOR_ID)
+        })
+        expect(collections).toHaveLength(1)
     })
 
     it("publishes an immutable snapshot through superadmin review", async () => {

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify"
+import type { FastifyInstance, FastifyReply } from "fastify"
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
 import { db, schema } from "../db/index.js"
@@ -26,6 +26,7 @@ import {
 import { getCharacterAccess } from "../utils/characterAccess.js"
 import {
     getHomebrewCollectionSnapshot,
+    HomebrewStorageLimitError,
     insertSnapshotAsCollection,
     replaceHomebrewCollection,
     type HomebrewCollectionSnapshot
@@ -80,6 +81,9 @@ const countKinds = (snapshot: HomebrewCollectionSnapshot) =>
         counts[item.kind] = (counts[item.kind] ?? 0) + 1
         return counts
     }, {})
+
+const sendHomebrewStorageLimitError = (reply: FastifyReply) =>
+    reply.code(413).send({ error: new HomebrewStorageLimitError().message })
 
 const approveRequest = async (requestId: string, reviewerId: string) => {
     const request = await db.query.homebrewPublishRequests.findFirst({
@@ -358,8 +362,23 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 tags: JSON.stringify(parsedInput.data.tags),
                 contentWarning: parsedInput.data.contentWarning
             })
-            const collection = await replaceHomebrewCollection(id, parsedInput.data)
-            reply.code(201).send(collection)
+            try {
+                const collection = await replaceHomebrewCollection(
+                    id,
+                    parsedInput.data,
+                    request.user!.id,
+                    true
+                )
+                reply.code(201).send(collection)
+            } catch (error) {
+                if (error instanceof HomebrewStorageLimitError) {
+                    await db
+                        .delete(schema.homebrewCollections)
+                        .where(eq(schema.homebrewCollections.id, id))
+                    return sendHomebrewStorageLimitError(reply)
+                }
+                throw error
+            }
         }
     )
 
@@ -381,7 +400,15 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             if (!parsedInput.success) {
                 return reply.code(400).send({ error: parsedInput.error.issues[0]?.message })
             }
-            reply.send(await replaceHomebrewCollection(collection.id, parsedInput.data))
+            try {
+                reply.send(
+                    await replaceHomebrewCollection(collection.id, parsedInput.data, request.user!.id)
+                )
+            } catch (error) {
+                if (error instanceof HomebrewStorageLimitError)
+                    return sendHomebrewStorageLimitError(reply)
+                throw error
+            }
         }
     )
 
@@ -829,14 +856,20 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                     .send({ error: `You can own at most ${MAX_COLLECTIONS} collections` })
 
             const snapshot = parseSnapshot(publication.snapshot)
-            const copied = await insertSnapshotAsCollection({
-                ownerId: request.user!.id,
-                snapshot,
-                sourceLibraryEntryId: entry.id,
-                sourcePublicationId: publication.id,
-                rootSourceLibraryEntryId: snapshot.rootSourceLibraryEntryId ?? entry.id
-            })
-            reply.code(201).send(copied)
+            try {
+                const copied = await insertSnapshotAsCollection({
+                    ownerId: request.user!.id,
+                    snapshot,
+                    sourceLibraryEntryId: entry.id,
+                    sourcePublicationId: publication.id,
+                    rootSourceLibraryEntryId: snapshot.rootSourceLibraryEntryId ?? entry.id
+                })
+                reply.code(201).send(copied)
+            } catch (error) {
+                if (error instanceof HomebrewStorageLimitError)
+                    return sendHomebrewStorageLimitError(reply)
+                throw error
+            }
         }
     )
 
