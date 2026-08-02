@@ -207,6 +207,8 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             updateCommentPending={updateCommentMutation.isPending}
             onUnpublish={() => setUnpublishConfirmationOpened(true)}
             unpublishPending={unpublishMutation.isPending}
+            collapsedItemKinds={collapsedItemKinds}
+            onToggleItemKind={toggleItemKind}
             onOpenSource={(entryId) => {
                 navigate({
                     to: "/homebrew/library/$collectionId",
@@ -250,6 +252,8 @@ type LibraryDetailProps = {
     onOpenSource: (entryId: string) => void
     onUnpublish: () => void
     unpublishPending: boolean
+    collapsedItemKinds: Set<HomebrewItemKind>
+    onToggleItemKind: (kind: HomebrewItemKind) => void
     confirmation: React.ReactNode
 }
 
@@ -275,6 +279,8 @@ const LibraryDetail = ({
     onOpenSource,
     onUnpublish,
     unpublishPending,
+    collapsedItemKinds,
+    onToggleItemKind,
     confirmation
 }: LibraryDetailProps) => {
     const itemsByKind = homebrewItemKinds
@@ -414,7 +420,7 @@ const LibraryDetail = ({
                                                         size="sm"
                                                         aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
                                                         aria-expanded={!isCollapsed}
-                                                        onClick={() => toggleItemKind(kind)}
+                                                        onClick={() => onToggleItemKind(kind)}
                                                     >
                                                         <IconChevronDown
                                                             size={16}
