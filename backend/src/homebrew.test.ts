@@ -617,6 +617,15 @@ describe("Homebrew collections and library", () => {
             }
         })
         expect(invalid.statusCode).toBe(400)
+        expect(invalid.json()).toMatchObject({
+            error: "Homebrew Discipline references must target an item in this collection",
+            issues: [
+                {
+                    message: "Homebrew Discipline references must target an item in this collection",
+                    path: ["items", 1, "disciplineRef"]
+                }
+            ]
+        })
 
         const duplicateIds = await app.inject({
             method: "PUT",

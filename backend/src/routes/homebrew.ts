@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from "fastify"
 import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
+import type { ZodIssue } from "zod"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, requireSuperadmin } from "../middleware/auth.js"
 import {
@@ -41,6 +42,12 @@ const BAYESIAN_PRIOR_WEIGHT = 8
 
 type IdParams = { id: string }
 type CommentParams = IdParams & { commentId: string }
+
+const sendHomebrewValidationError = (reply: FastifyReply, issues: ZodIssue[]) =>
+    reply.code(400).send({
+        error: issues[0]?.message ?? "Invalid Homebrew collection",
+        issues: issues.map(({ message, path }) => ({ message, path }))
+    })
 
 const getOwnedCollection = async (collectionId: string, userId: string) => {
     const collection = await db.query.homebrewCollections.findFirst({
@@ -330,17 +337,12 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
     fastify.post<{ Body: HomebrewCollectionInput }>(
         "/homebrew/collections",
         {
-            preHandler: authenticateUser,
-            schema: {
-                body: zodToFastifySchema(homebrewCollectionInputSchema, {
-                    preserveUnionBranchProperties: true
-                })
-            }
+            preHandler: authenticateUser
         },
         async (request, reply) => {
             const parsedInput = homebrewCollectionInputSchema.safeParse(request.body)
             if (!parsedInput.success) {
-                return reply.code(400).send({ error: parsedInput.error.issues[0]?.message })
+                return sendHomebrewValidationError(reply, parsedInput.error.issues)
             }
             const [{ count }] = await db
                 .select({ count: sql<number>`count(*)` })
@@ -386,19 +388,14 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
         "/homebrew/collections/:id",
         {
             preHandler: authenticateUser,
-            schema: {
-                params: zodToFastifySchema(homebrewCollectionParamsSchema),
-                body: zodToFastifySchema(homebrewCollectionInputSchema, {
-                    preserveUnionBranchProperties: true
-                })
-            }
+            schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
         },
         async (request, reply) => {
             const collection = await getOwnedCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
             const parsedInput = homebrewCollectionInputSchema.safeParse(request.body)
             if (!parsedInput.success) {
-                return reply.code(400).send({ error: parsedInput.error.issues[0]?.message })
+                return sendHomebrewValidationError(reply, parsedInput.error.issues)
             }
             try {
                 reply.send(

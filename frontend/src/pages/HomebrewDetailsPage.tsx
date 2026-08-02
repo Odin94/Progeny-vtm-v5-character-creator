@@ -40,6 +40,7 @@ import {
     useHomebrewCollection,
     useUpdateHomebrewCollection
 } from "~/hooks/useHomebrew"
+import type { ApiError } from "~/utils/api"
 
 type Props = { collectionId: string }
 
@@ -54,6 +55,20 @@ const emptyCollection = (): HomebrewCollectionInput => ({
 
 const storageLimitMessage =
     "your account is using over 100MB of storage, talk to support if you need more"
+
+type ItemValidationErrors = Record<number, string[]>
+
+const getItemValidationErrors = (error: unknown): ItemValidationErrors => {
+    const issues = (error as ApiError | undefined)?.issues
+    if (!issues) return {}
+
+    return issues.reduce<ItemValidationErrors>((itemErrors, issue) => {
+        const [field, itemIndex] = issue.path
+        if (field !== "items" || typeof itemIndex !== "number") return itemErrors
+        itemErrors[itemIndex] = [...(itemErrors[itemIndex] ?? []), issue.message]
+        return itemErrors
+    }, {})
+}
 
 const showSaveError = (error: unknown, setError: (message: string) => void) => {
     const message = error instanceof Error ? error.message : "Could not save the collection"
@@ -129,6 +144,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
     const updateMutation = useUpdateHomebrewCollection()
     const [draft, setDraft] = useState<HomebrewCollectionInput>(emptyCollection())
     const [error, setError] = useState("")
+    const [itemValidationErrors, setItemValidationErrors] = useState<ItemValidationErrors>({})
     const [itemKind, setItemKind] = useState<HomebrewItemKind>("discipline")
     const [itemEditor, setItemEditor] = useState<{
         item: HomebrewItem
@@ -144,6 +160,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         if (collectionQuery.data) {
             setDraft(toInput(collectionQuery.data))
             setError("")
+            setItemValidationErrors({})
         }
     }, [collectionQuery.data])
 
@@ -165,6 +182,24 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
             }
             return next
         })
+
+    const handleSaveError = (mutationError: unknown) => {
+        const nextItemErrors = getItemValidationErrors(mutationError)
+        setItemValidationErrors(nextItemErrors)
+        if (Object.keys(nextItemErrors).length) {
+            setError("")
+            setCollapsedItemKinds((current) => {
+                const next = new Set(current)
+                Object.keys(nextItemErrors).forEach((itemIndex) => {
+                    const item = draft.items[Number(itemIndex)]
+                    if (item) next.delete(item.kind)
+                })
+                return next
+            })
+            return
+        }
+        showSaveError(mutationError, setError)
+    }
 
     const openNewItemEditor = (kind: HomebrewItemKind) => {
         const firstHomebrewDiscipline = draft.items.find(
@@ -198,6 +233,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         }
 
         setError("")
+        setItemValidationErrors({})
         try {
             const saved = isNew
                 ? await createMutation.mutateAsync(draft)
@@ -211,7 +247,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                 navigate({ to: "/homebrew/$collectionId", params: { collectionId: saved.id } })
             }
         } catch (mutationError) {
-            showSaveError(mutationError, setError)
+            handleSaveError(mutationError)
         }
     }
 
@@ -477,11 +513,12 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                                             p="md"
                                                                             bg="rgba(0,0,0,.2)"
                                                                         >
-                                                                            <Group
-                                                                                justify="space-between"
-                                                                                align="flex-start"
-                                                                                wrap="nowrap"
-                                                                            >
+                                                                            <Stack gap="xs">
+                                                                                <Group
+                                                                                    justify="space-between"
+                                                                                    align="flex-start"
+                                                                                    wrap="nowrap"
+                                                                                >
                                                                                 <div>
                                                                                     <Text fw={600}>
                                                                                         {item.name ||
@@ -552,7 +589,19 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                                                         />
                                                                                     </ActionIcon>
                                                                                 </Group>
-                                                                            </Group>
+                                                                                </Group>
+                                                                                {itemValidationErrors[index]?.map(
+                                                                                    (message, messageIndex) => (
+                                                                                        <Alert
+                                                                                            key={`${message}-${messageIndex}`}
+                                                                                            color="red"
+                                                                                            variant="light"
+                                                                                        >
+                                                                                            {message}
+                                                                                        </Alert>
+                                                                                    )
+                                                                                )}
+                                                                            </Stack>
                                                                         </Paper>
                                                                     )
                                                                 })}
@@ -610,6 +659,12 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                             : replaceItemAndReferences(draft.items, itemEditor.index, item)
                         const nextDraft = { ...draft, items }
                         setDraft(nextDraft)
+                        if (itemEditor.index !== null) {
+                            setItemValidationErrors((current) => {
+                                const { [itemEditor.index!]: _removed, ...remaining } = current
+                                return remaining
+                            })
+                        }
                         setItemEditor(null)
 
                         if (!isAddingItem) return
@@ -639,7 +694,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                     })
                                 }
                             })
-                            .catch((mutationError) => showSaveError(mutationError, setError))
+                            .catch(handleSaveError)
                     }}
                 />
             ) : null}
@@ -652,6 +707,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                         ...current,
                         items: current.items.filter((_, index) => index !== itemToDelete.index)
                     }))
+                    setItemValidationErrors({})
                     setItemToDelete(null)
                 }}
                 title="Delete rule?"

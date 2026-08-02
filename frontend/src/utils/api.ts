@@ -39,7 +39,12 @@ type RequestOptions = {
 
 export const AUTH_UNAUTHORIZED_EVENT = "progeny:auth-unauthorized"
 
-export type ApiError = Error & { status?: number }
+export type ApiValidationIssue = {
+    message: string
+    path: Array<string | number>
+}
+
+export type ApiError = Error & { status?: number; issues?: ApiValidationIssue[] }
 
 const notifyAuthUnauthorized = () => {
     if (typeof window !== "undefined") {
@@ -125,6 +130,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
         const errorMessage = error.message || error.error || `HTTP ${response.status}`
         const httpError = new Error(errorMessage) as ApiError
         httpError.status = response.status
+        if (Array.isArray(error.issues)) httpError.issues = error.issues
         if (response.status === 401) {
             notifyAuthUnauthorized()
         }
