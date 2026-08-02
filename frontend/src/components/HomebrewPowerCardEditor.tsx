@@ -212,6 +212,7 @@ const HomebrewPowerCardEditor = ({
                 maxRows={5}
                 value={power.summary}
                 onChange={(event) => update({ summary: event.currentTarget.value })}
+                classNames={{ input: "homebrew-power-card__summary-input" }}
                 error={errors.summary}
             />
 

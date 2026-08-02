@@ -153,22 +153,49 @@
     padding-inline: 0.35rem;
 }
 
-.homebrew-power-card__dice-pool-input,
-.homebrew-power-card__description-input {
-    background: rgba(0, 0, 0, 0.18);
-    border-color: rgba(174, 107, 224, 0.28);
+.homebrew-power-card .homebrew-power-card__summary-input,
+.homebrew-power-card .homebrew-power-card__description-input {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
     color: #e8dfdc;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 1rem;
     line-height: 1.6;
+    padding: 0.65rem 0.75rem;
+    resize: vertical;
 }
 
-.homebrew-power-card__dice-pool-input {
+.homebrew-power-card .homebrew-power-card__summary-input {
+    border-bottom: 1px solid rgba(174, 107, 224, 0.42);
+}
+
+.homebrew-power-card .homebrew-power-card__summary-input:focus,
+.homebrew-power-card .homebrew-power-card__description-input:focus {
+    border-color: rgba(201, 143, 243, 0.72);
+    box-shadow: inset 0 0 0 1px rgba(174, 107, 224, 0.32);
+}
+
+.homebrew-power-card .homebrew-power-card__dice-pool-input {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(174, 107, 224, 0.42);
+    border-radius: 0;
+    box-shadow: none;
+    color: #e8dfdc;
+    font-family: "Cinzel, Georgia, serif";
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.35;
     min-height: 2.75rem;
+    padding: 0.35rem 0.6rem;
     text-align: center;
+}
+
+.homebrew-power-card .homebrew-power-card__dice-pool-input:focus {
+    border-color: rgba(201, 143, 243, 0.78);
+    box-shadow: none;
 }
 
 .homebrew-power-card__footer {
