@@ -55,10 +55,12 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             candidate.kind === "discipline" && !!candidate.id
     )
     const disciplineOptions = [
-        ...Object.keys(disciplines).map((name) => ({
-            value: `official:${name}`,
-            label: `${name} (Official)`
-        })),
+        ...Object.keys(disciplines)
+            .filter(Boolean)
+            .map((name) => ({
+                value: `official:${name}`,
+                label: `${name} (Official)`
+            })),
         ...homebrewDisciplines.map((discipline) => ({
             value: `homebrew:${discipline.id}`,
             label: `${discipline.name} (Homebrew)`

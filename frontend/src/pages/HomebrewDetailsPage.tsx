@@ -162,8 +162,26 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         })
 
     const openNewItemEditor = (kind: HomebrewItemKind) => {
+        const firstHomebrewDiscipline = draft.items.find(
+            (item): item is Extract<HomebrewItem, { kind: "discipline" }> & { id: string } =>
+                item.kind === "discipline" && !!item.id
+        )
+        const newItem = createEmptyHomebrewItem(kind)
+        const item =
+            kind === "power" && firstHomebrewDiscipline
+                ? {
+                      ...newItem,
+                      discipline: firstHomebrewDiscipline.name,
+                      disciplineRef: {
+                          type: "homebrew" as const,
+                          itemId: firstHomebrewDiscipline.id,
+                          name: firstHomebrewDiscipline.name
+                      }
+                  }
+                : newItem
+
         setItemEditor({
-            item: { ...createEmptyHomebrewItem(kind), id: crypto.randomUUID() },
+            item: { ...item, id: crypto.randomUUID() },
             index: null
         })
     }
