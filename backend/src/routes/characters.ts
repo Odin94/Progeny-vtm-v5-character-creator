@@ -17,6 +17,7 @@ import { zodToFastifySchema } from "../utils/schema.js"
 import { logger } from "../utils/logger.js"
 import { trackEvent } from "../utils/tracker.js"
 import { getCharacterAccess } from "../utils/characterAccess.js"
+import { getHomebrewCharacterUsage } from "../utils/homebrewAnalytics.js"
 
 export async function characterRoutes(fastify: FastifyInstance) {
     // Create character
@@ -68,6 +69,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
 
                 // Ensure characterVersion is set to 0 for new characters
                 const characterDataWithVersion = { ...data, characterVersion: 0 }
+                const homebrewUsage = getHomebrewCharacterUsage(characterDataWithVersion)
 
                 // Ensure user exists in database
                 const user = await db.query.users.findFirst({
@@ -113,11 +115,21 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "POST",
                         userId,
                         characterId,
-                        characterName: name
+                        characterName: name,
+                        ...homebrewUsage
                     },
                     userId,
                     request
                 )
+
+                if (homebrewUsage.hasHomebrew) {
+                    await trackEvent(
+                        "homebrew_character_used",
+                        { usageAction: "created", ...homebrewUsage },
+                        userId,
+                        request
+                    )
+                }
 
                 const { userId: _, ...characterWithoutUserId } = character
                 reply.code(201).send({
@@ -303,6 +315,10 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const characterData = updateData.data
                     ? { ...updateData.data, characterVersion: newCharacterVersion }
                     : undefined
+                const previousHomebrewUsage = getHomebrewCharacterUsage(JSON.parse(character.data))
+                const homebrewUsage = characterData
+                    ? getHomebrewCharacterUsage(characterData)
+                    : previousHomebrewUsage
 
                 const [updated] = await db
                     .update(schema.characters)
@@ -331,11 +347,21 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         method: "PUT",
                         userId,
                         characterId,
-                        updatedFields: Object.keys(updateData)
+                        updatedFields: Object.keys(updateData),
+                        ...homebrewUsage
                     },
                     userId,
                     request
                 )
+
+                if (!previousHomebrewUsage.hasHomebrew && homebrewUsage.hasHomebrew) {
+                    await trackEvent(
+                        "homebrew_character_used",
+                        { usageAction: "added", ...homebrewUsage },
+                        userId,
+                        request
+                    )
+                }
 
                 const { userId: _, ...characterWithoutUserId } = updated
                 reply.send({

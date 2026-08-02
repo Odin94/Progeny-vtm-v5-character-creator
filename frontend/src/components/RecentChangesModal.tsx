@@ -3,6 +3,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
+import { useRecentChangeViewedTracking } from "~/hooks/useRecentChangeViewedTracking"
 import { api, type RecentChange } from "~/utils/api"
 import { splitRecentChangeLayout } from "~/utils/recentChangeLayout"
 import "./RecentChangesModal.css"
@@ -82,6 +83,10 @@ const RecentChangesModal = ({
     }, [initialChangeId, initialIndex])
 
     const currentChange = changes[currentIndex]
+    useRecentChangeViewedTracking({
+        changeId: currentChange?.id,
+        opened: opened && !!currentChange
+    })
     const canGoPrevious = currentIndex > 0
     const canGoNext = currentIndex < changes.length - 1
     const { topSection, columns } = useMemo(

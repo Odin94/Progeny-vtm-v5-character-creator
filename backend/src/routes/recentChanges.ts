@@ -15,6 +15,7 @@ import {
     type RecentChangeParams
 } from "../schemas/recentChanges.js"
 import { zodToFastifySchema } from "../utils/schema.js"
+import { trackEvent } from "../utils/tracker.js"
 
 const serializeRecentChange = (change: typeof schema.recentChanges.$inferSelect) => ({
     id: change.id,
@@ -141,6 +142,15 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
 
                 return { announcement: latest, changes }
             })
+
+            if (result.announcement) {
+                await trackEvent(
+                    "recent_change_delivered",
+                    { recent_change_id: result.announcement.id },
+                    request.user!.id,
+                    request
+                )
+            }
 
             reply.send({
                 announcement: result.announcement

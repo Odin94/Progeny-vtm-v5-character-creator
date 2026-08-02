@@ -36,6 +36,7 @@ import {
 } from "../utils/homebrew.js"
 import { zodToFastifySchema } from "../utils/schema.js"
 import { homebrewLibraryReadRateLimit } from "../utils/rateLimit.js"
+import { trackEvent } from "../utils/tracker.js"
 
 const MAX_COLLECTIONS = 50
 const MAX_WEEKLY_REQUESTS = 5
@@ -330,7 +331,8 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             reply.send(
                 snapshots
                     .filter(
-                        (collection): collection is HomebrewCollectionSnapshot => collection !== null
+                        (collection): collection is HomebrewCollectionSnapshot =>
+                            collection !== null
                     )
                     .map((collection) => ({
                         ...collection,
@@ -367,7 +369,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
 
             if (request.body.enabled) {
-                await db
+                const [enabledCollection] = await db
                     .insert(schema.userHomebrewCollections)
                     .values({
                         id: nanoid(),
@@ -375,8 +377,18 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                         collectionId: collection.id
                     })
                     .onConflictDoNothing()
+                    .returning({ id: schema.userHomebrewCollections.id })
+                if (enabledCollection) {
+                    const snapshot = await getHomebrewCollectionSnapshot(collection.id)
+                    await trackEvent(
+                        "homebrew_collection_account_enabled",
+                        { collectionItemCount: snapshot?.items.length ?? 0 },
+                        request.user!.id,
+                        request
+                    )
+                }
             } else {
-                await db
+                const [disabledCollection] = await db
                     .delete(schema.userHomebrewCollections)
                     .where(
                         and(
@@ -384,6 +396,15 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                             eq(schema.userHomebrewCollections.collectionId, collection.id)
                         )
                     )
+                    .returning({ id: schema.userHomebrewCollections.id })
+                if (disabledCollection) {
+                    await trackEvent(
+                        "homebrew_collection_account_disabled",
+                        {},
+                        request.user!.id,
+                        request
+                    )
+                }
             }
 
             reply.send({ enabled: request.body.enabled })
@@ -427,6 +448,12 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                     request.user!.id,
                     true
                 )
+                await trackEvent(
+                    "homebrew_collection_created",
+                    { collectionItemCount: collection?.items.length ?? 0 },
+                    request.user!.id,
+                    request
+                )
                 reply.code(201).send(collection)
             } catch (error) {
                 if (error instanceof HomebrewStorageLimitError) {
@@ -455,7 +482,11 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             }
             try {
                 reply.send(
-                    await replaceHomebrewCollection(collection.id, parsedInput.data, request.user!.id)
+                    await replaceHomebrewCollection(
+                        collection.id,
+                        parsedInput.data,
+                        request.user!.id
+                    )
                 )
             } catch (error) {
                 if (error instanceof HomebrewStorageLimitError)
