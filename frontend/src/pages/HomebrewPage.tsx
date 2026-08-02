@@ -16,12 +16,11 @@ import {
 } from "@mantine/core"
 import {
     IconBook2,
-    IconChevronRight,
     IconPlus,
     IconTrash,
-    IconWorldShare
+    IconBooks
 } from "@tabler/icons-react"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import type { HomebrewCollection } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
@@ -29,6 +28,7 @@ import { useDeleteHomebrewCollection, useHomebrewCollections } from "~/hooks/use
 import AppTopbar from "~/components/AppTopbar"
 
 const HomebrewPage = () => {
+    const navigate = useNavigate()
     const { isAuthenticated, isLoading, signIn } = useAuth()
     const { data: collections = [], isLoading: collectionsLoading } =
         useHomebrewCollections(isAuthenticated)
@@ -82,7 +82,7 @@ const HomebrewPage = () => {
                                     to="/homebrew/library"
                                     variant="light"
                                     color="grape"
-                                    leftSection={<IconWorldShare size={17} />}
+                                    leftSection={<IconBooks size={17} />}
                                 >
                                     Community Library
                                 </Button>
@@ -126,6 +126,24 @@ const HomebrewPage = () => {
                                         withBorder
                                         p="lg"
                                         bg="rgba(0,0,0,.45)"
+                                        role="link"
+                                        tabIndex={0}
+                                        onClick={() =>
+                                            navigate({
+                                                to: "/homebrew/$collectionId",
+                                                params: { collectionId: collection.id }
+                                            })
+                                        }
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter" || event.key === " ") {
+                                                event.preventDefault()
+                                                navigate({
+                                                    to: "/homebrew/$collectionId",
+                                                    params: { collectionId: collection.id }
+                                                })
+                                            }
+                                        }}
+                                        style={{ cursor: "pointer" }}
                                     >
                                         <Stack justify="space-between" h="100%">
                                             <Stack gap="sm">
@@ -161,22 +179,14 @@ const HomebrewPage = () => {
                                                 ) : null}
                                             </Stack>
                                             <Group justify="space-between" mt="md">
-                                                <Button
-                                                    component={Link}
-                                                    to="/homebrew/$collectionId"
-                                                    params={{ collectionId: collection.id }}
-                                                    size="xs"
-                                                    variant="light"
-                                                    color="grape"
-                                                    rightSection={<IconChevronRight size={14} />}
-                                                >
-                                                    Open details
-                                                </Button>
                                                 <ActionIcon
                                                     color="red"
                                                     variant="light"
                                                     aria-label={`Delete ${collection.name}`}
-                                                    onClick={() => setDeleteTarget(collection)}
+                                                    onClick={(event) => {
+                                                        event.stopPropagation()
+                                                        setDeleteTarget(collection)
+                                                    }}
                                                 >
                                                     <IconTrash size={16} />
                                                 </ActionIcon>

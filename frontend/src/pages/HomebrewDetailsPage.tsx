@@ -25,6 +25,7 @@ import { IconArrowLeft, IconChevronDown, IconEdit, IconPlus, IconTrash } from "@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 import HomebrewItemEditor from "~/components/HomebrewItemEditor"
 import type {
     HomebrewCollection,
@@ -132,6 +133,10 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
     const [itemEditor, setItemEditor] = useState<{
         item: HomebrewItem
         index: number | null
+    } | null>(null)
+    const [itemToDelete, setItemToDelete] = useState<{
+        item: HomebrewItem
+        index: number
     } | null>(null)
     const [collapsedItemKinds, setCollapsedItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
 
@@ -534,19 +539,10 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                                                         color="red"
                                                                                         aria-label={`Delete ${item.name || "rule"}`}
                                                                                         onClick={() =>
-                                                                                            setDraft(
-                                                                                                {
-                                                                                                    ...draft,
-                                                                                                    items: draft.items.filter(
-                                                                                                        (
-                                                                                                            _,
-                                                                                                            itemIndex
-                                                                                                        ) =>
-                                                                                                            itemIndex !==
-                                                                                                            index
-                                                                                                    )
-                                                                                                }
-                                                                                            )
+                                                                                            setItemToDelete({
+                                                                                                item,
+                                                                                                index
+                                                                                            })
                                                                                         }
                                                                                     >
                                                                                         <IconTrash
@@ -647,6 +643,21 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                     }}
                 />
             ) : null}
+            <ConfirmActionModal
+                opened={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                onConfirm={() => {
+                    if (!itemToDelete) return
+                    setDraft((current) => ({
+                        ...current,
+                        items: current.items.filter((_, index) => index !== itemToDelete.index)
+                    }))
+                    setItemToDelete(null)
+                }}
+                title="Delete rule?"
+                body={`Delete ${itemToDelete?.item.name || "this rule"} from this collection?`}
+                confirmLabel="Delete rule"
+            />
         </AppShell>
     )
 }

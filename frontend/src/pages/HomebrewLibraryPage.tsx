@@ -19,11 +19,12 @@ import {
     Title
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { IconArrowLeft, IconDropletFilled, IconSend, IconWorldShare } from "@tabler/icons-react"
+import { IconArrowLeft, IconBooks, IconDropletFilled, IconSend } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { useHomebrewCollections } from "~/hooks/useHomebrew"
@@ -64,6 +65,7 @@ const HomebrewLibraryPage = () => {
     const [publishOpened, setPublishOpened] = useState(false)
     const [publishCollectionId, setPublishCollectionId] = useState<string | null>(null)
     const [acknowledged, setAcknowledged] = useState(false)
+    const [withdrawRequestId, setWithdrawRequestId] = useState<string | null>(null)
 
     const libraryQuery = useQuery({
         queryKey: ["homebrew", "library", query, kind, sort],
@@ -108,7 +110,7 @@ const HomebrewLibraryPage = () => {
                         <Group justify="space-between" align="flex-start">
                             <div>
                                 <Group gap="sm">
-                                    <IconWorldShare size={34} />
+                                    <IconBooks size={34} />
                                     <Title>Homebrew Community Library</Title>
                                 </Group>
                                 <Text c="dimmed" mt="xs">
@@ -291,9 +293,7 @@ const HomebrewLibraryPage = () => {
                                                         variant="subtle"
                                                         color="gray"
                                                         loading={withdrawMutation.isPending}
-                                                        onClick={() =>
-                                                            withdrawMutation.mutate(request.id)
-                                                        }
+                                                        onClick={() => setWithdrawRequestId(request.id)}
                                                     >
                                                         Withdraw
                                                     </Button>
@@ -352,6 +352,21 @@ const HomebrewLibraryPage = () => {
                     </Group>
                 </Stack>
             </Modal>
+
+            <ConfirmActionModal
+                opened={!!withdrawRequestId}
+                onClose={() => setWithdrawRequestId(null)}
+                onConfirm={() => {
+                    if (!withdrawRequestId) return
+                    withdrawMutation.mutate(withdrawRequestId, {
+                        onSuccess: () => setWithdrawRequestId(null)
+                    })
+                }}
+                title="Withdraw publication request?"
+                body="This removes the pending snapshot from review. You can submit it again later."
+                confirmLabel="Withdraw"
+                loading={withdrawMutation.isPending}
+            />
         </AppShell>
     )
 }

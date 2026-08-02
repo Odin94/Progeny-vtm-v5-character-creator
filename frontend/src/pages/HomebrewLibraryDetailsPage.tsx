@@ -80,6 +80,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
     const [comment, setComment] = useState("")
     const [editingComment, setEditingComment] = useState<{ id: string; body: string } | null>(null)
     const [unpublishConfirmationOpened, setUnpublishConfirmationOpened] = useState(false)
+    const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null)
     const [collapsedItemKinds, setCollapsedItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
     const detailQuery = useQuery({
         queryKey: ["homebrew", "library", "detail", collectionId],
@@ -190,7 +191,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             copyPending={copyMutation.isPending}
             onRate={(rating) => rateMutation.mutate(rating)}
             onComment={() => comment.trim() && commentMutation.mutate(comment.trim())}
-            onDeleteComment={(commentId) => deleteCommentMutation.mutate(commentId)}
+            onDeleteComment={setDeleteCommentId}
             editingComment={editingComment}
             onStartEditingComment={(id, body) => setEditingComment({ id, body })}
             onChangeEditingComment={(body) =>
@@ -216,15 +217,31 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
                 })
             }}
             confirmation={
-                <ConfirmActionModal
-                    opened={unpublishConfirmationOpened}
-                    onClose={() => setUnpublishConfirmationOpened(false)}
-                    onConfirm={() => unpublishMutation.mutate()}
-                    title="Unpublish collection"
-                    body="This will remove the collection from the Homebrew Community Library."
-                    confirmLabel="Unpublish"
-                    loading={unpublishMutation.isPending}
-                />
+                <>
+                    <ConfirmActionModal
+                        opened={unpublishConfirmationOpened}
+                        onClose={() => setUnpublishConfirmationOpened(false)}
+                        onConfirm={() => unpublishMutation.mutate()}
+                        title="Unpublish collection"
+                        body="This will remove the collection from the Homebrew Community Library."
+                        confirmLabel="Unpublish"
+                        loading={unpublishMutation.isPending}
+                    />
+                    <ConfirmActionModal
+                        opened={!!deleteCommentId}
+                        onClose={() => setDeleteCommentId(null)}
+                        onConfirm={() => {
+                            if (!deleteCommentId) return
+                            deleteCommentMutation.mutate(deleteCommentId, {
+                                onSuccess: () => setDeleteCommentId(null)
+                            })
+                        }}
+                        title="Delete comment?"
+                        body="This comment will be permanently removed."
+                        confirmLabel="Delete comment"
+                        loading={deleteCommentMutation.isPending}
+                    />
+                </>
             }
         />
     )
