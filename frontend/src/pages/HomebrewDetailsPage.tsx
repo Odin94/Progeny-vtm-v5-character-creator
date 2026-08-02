@@ -366,6 +366,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                 <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
                                     <TextInput
                                         label="Collection name"
+                                        description={<span aria-hidden="true">&nbsp;</span>}
                                         required
                                         value={draft.name}
                                         onChange={(event) =>
@@ -386,6 +387,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                     />
                                     <Textarea
                                         label="Description"
+                                        description={<span aria-hidden="true">&nbsp;</span>}
                                         minRows={4}
                                         value={draft.description}
                                         onChange={(event) =>
