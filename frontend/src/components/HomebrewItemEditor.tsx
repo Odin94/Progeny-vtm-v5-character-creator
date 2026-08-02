@@ -708,7 +708,7 @@ const LoresheetEditor = ({
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button color="grape" onClick={onSave}>
+                    <Button color="red" variant="outline" onClick={onSave}>
                         Save loresheet
                     </Button>
                 </footer>
