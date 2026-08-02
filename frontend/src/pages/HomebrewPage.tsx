@@ -1,5 +1,6 @@
 import {
     ActionIcon,
+    Alert,
     AppShell,
     Badge,
     Button,
@@ -35,7 +36,11 @@ import AppTopbar from "~/components/AppTopbar"
 const HomebrewPage = () => {
     const navigate = useNavigate()
     const { isAuthenticated, isLoading, signIn } = useAuth()
-    const { data: collections = [], isLoading: collectionsLoading } =
+    const {
+        data: collections = [],
+        isLoading: collectionsLoading,
+        error: collectionsError
+    } =
         useHomebrewCollections(isAuthenticated)
     const deleteMutation = useDeleteHomebrewCollection()
     const setAccountEnabledMutation = useSetHomebrewCollectionAccountEnabled()
@@ -106,6 +111,10 @@ const HomebrewPage = () => {
 
                         {collectionsLoading ? (
                             <Loader color="grape" />
+                        ) : collectionsError ? (
+                            <Alert color="red" title="Could not load your collections">
+                                {collectionsError.message}
+                            </Alert>
                         ) : collections.length === 0 ? (
                             <Paper withBorder p="xl" bg="rgba(0,0,0,.35)">
                                 <Stack align="center">
