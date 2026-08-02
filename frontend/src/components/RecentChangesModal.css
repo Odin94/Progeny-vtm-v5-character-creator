@@ -190,8 +190,11 @@
 }
 
 .recent-changes__support-link {
+    align-items: center;
     color: #d95a65;
+    display: inline-flex;
     font-size: 0.9rem;
+    gap: 0.4rem;
     justify-self: start;
 }
 

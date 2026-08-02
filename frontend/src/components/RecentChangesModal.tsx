@@ -1,5 +1,5 @@
 import { ActionIcon, Anchor, Button, Group, Modal, Text } from "@mantine/core"
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight, IconCoffee } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
@@ -167,6 +167,7 @@ const RecentChangesModal = ({
                                 target="_blank"
                                 rel="noreferrer"
                             >
+                                <IconCoffee aria-hidden="true" size={17} stroke={1.6} />
                                 Support me
                             </Anchor>
                             <Group className="recent-changes__navigation" gap="xs">
