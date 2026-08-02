@@ -10,6 +10,7 @@ import {
     Textarea
 } from "@mantine/core"
 import { IconDropletFilled, IconX } from "@tabler/icons-react"
+import { useState } from "react"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
 import type { HomebrewItem, HomebrewPower } from "~/data/Homebrew"
@@ -40,6 +41,8 @@ const HomebrewPowerCardEditor = ({
     onClose,
     onSave
 }: Props) => {
+    const [amalgamPickerOpened, setAmalgamPickerOpened] = useState(false)
+
     const addAmalgamPrerequisite = (value: string | null) => {
         if (!value) return
         const option = disciplineOptions.find((candidate) => candidate.value === value)
@@ -111,71 +114,86 @@ const HomebrewPowerCardEditor = ({
                     required
                 />
                 <div className="homebrew-power-card__amalgam">
-                    <Select
-                        label="Amalgam prerequisite"
-                        placeholder="Add a discipline"
-                        data={disciplineOptions.filter(
-                            (option) =>
-                                !power.amalgamPrerequisites.some(
-                                    (prerequisite) =>
-                                        prerequisite.discipline ===
-                                        disciplineNameFromOption(option.label)
-                                )
-                        )}
-                        searchable
-                        value={null}
-                        onChange={addAmalgamPrerequisite}
-                        classNames={{
-                            ...homebrewDropdownClassNames,
-                            input: "homebrew-power-card__amalgam-input"
-                        }}
-                    />
-                    {power.amalgamPrerequisites.length ? (
-                        <div className="homebrew-power-card__amalgam-list">
-                            {power.amalgamPrerequisites.map((prerequisite, index) => (
-                                <div
-                                    className="homebrew-power-card__amalgam-row"
-                                    key={`${prerequisite.discipline}-${index}`}
-                                >
-                                    <span>{prerequisite.discipline}</span>
-                                    <NumberInput
-                                        aria-label={`${prerequisite.discipline} amalgam level`}
-                                        min={1}
-                                        max={5}
-                                        value={prerequisite.level}
-                                        onChange={(value) =>
-                                            update({
-                                                amalgamPrerequisites:
-                                                    power.amalgamPrerequisites.map(
-                                                        (candidate, candidateIndex) =>
-                                                            candidateIndex === index
-                                                                ? {
-                                                                      ...candidate,
-                                                                      level: Number(value) || 1
-                                                                  }
-                                                                : candidate
-                                                    )
-                                            })
-                                        }
-                                    />
-                                    <ActionIcon
-                                        variant="subtle"
-                                        color="gray"
-                                        aria-label={`Remove ${prerequisite.discipline} prerequisite`}
-                                        onClick={() =>
-                                            update({
-                                                amalgamPrerequisites:
-                                                    power.amalgamPrerequisites.filter(
-                                                        (_, candidateIndex) =>
-                                                            candidateIndex !== index
-                                                    )
-                                            })
-                                        }
-                                    >
-                                        <IconX size={15} />
-                                    </ActionIcon>
+                    <button
+                        type="button"
+                        className={`homebrew-power-card__amalgam-trigger${
+                            amalgamPickerOpened ? " homebrew-power-card__amalgam-trigger--open" : ""
+                        }`}
+                        aria-expanded={amalgamPickerOpened}
+                        onClick={() => setAmalgamPickerOpened((current) => !current)}
+                    >
+                        Amalgam prerequisite
+                    </button>
+                    {amalgamPickerOpened ? (
+                        <div className="homebrew-power-card__amalgam-picker">
+                            <Select
+                                aria-label="Add amalgam prerequisite"
+                                placeholder="Add a discipline"
+                                data={disciplineOptions.filter(
+                                    (option) =>
+                                        !power.amalgamPrerequisites.some(
+                                            (prerequisite) =>
+                                                prerequisite.discipline ===
+                                                disciplineNameFromOption(option.label)
+                                        )
+                                )}
+                                searchable
+                                value={null}
+                                onChange={addAmalgamPrerequisite}
+                                classNames={{
+                                    ...homebrewDropdownClassNames,
+                                    input: "homebrew-power-card__amalgam-input"
+                                }}
+                            />
+                            {power.amalgamPrerequisites.length ? (
+                                <div className="homebrew-power-card__amalgam-list">
+                                    {power.amalgamPrerequisites.map((prerequisite, index) => (
+                                        <div
+                                            className="homebrew-power-card__amalgam-row"
+                                            key={`${prerequisite.discipline}-${index}`}
+                                        >
+                                            <span>{prerequisite.discipline}</span>
+                                            <NumberInput
+                                                aria-label={`${prerequisite.discipline} amalgam level`}
+                                                min={1}
+                                                max={5}
+                                                value={prerequisite.level}
+                                                onChange={(value) =>
+                                                    update({
+                                                        amalgamPrerequisites:
+                                                            power.amalgamPrerequisites.map(
+                                                                (candidate, candidateIndex) =>
+                                                                    candidateIndex === index
+                                                                        ? {
+                                                                              ...candidate,
+                                                                              level:
+                                                                                  Number(value) || 1
+                                                                          }
+                                                                        : candidate
+                                                            )
+                                                    })
+                                                }
+                                            />
+                                            <ActionIcon
+                                                variant="subtle"
+                                                color="gray"
+                                                aria-label={`Remove ${prerequisite.discipline} prerequisite`}
+                                                onClick={() =>
+                                                    update({
+                                                        amalgamPrerequisites:
+                                                            power.amalgamPrerequisites.filter(
+                                                                (_, candidateIndex) =>
+                                                                    candidateIndex !== index
+                                                            )
+                                                    })
+                                                }
+                                            >
+                                                <IconX size={15} />
+                                            </ActionIcon>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            ) : null}
                         </div>
                     ) : null}
                 </div>

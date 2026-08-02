@@ -35,7 +35,7 @@
 }
 
 .homebrew-power-card__header .mantine-InputWrapper-label,
-.homebrew-power-card__amalgam .mantine-InputWrapper-label {
+.homebrew-power-card__amalgam-trigger {
     color: rgba(232, 223, 220, 0.72);
     font-family: "Cinzel, Georgia, serif";
     font-size: 0.7rem;
@@ -74,17 +74,43 @@
 
 .homebrew-power-card__amalgam {
     margin: -1px auto 0;
-    max-width: min(100%, 31rem);
+    width: min(100%, 22rem);
 }
 
-.homebrew-power-card__amalgam .mantine-InputWrapper-label {
+.homebrew-power-card__amalgam-trigger {
     background: #100d12;
     border: 1px solid rgba(201, 143, 243, 0.28);
-    border-bottom: 0;
     border-radius: 0 0 0.4rem 0.4rem;
-    display: table;
-    margin: 0 auto;
-    padding: 0.2rem 0.6rem 0.1rem;
+    color: rgba(232, 223, 220, 0.72);
+    cursor: pointer;
+    display: block;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    padding: 0.35rem 0.6rem;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.homebrew-power-card__amalgam-trigger:hover,
+.homebrew-power-card__amalgam-trigger:focus-visible {
+    border-color: rgba(201, 143, 243, 0.52);
+    color: #f3e8f6;
+    outline: none;
+}
+
+.homebrew-power-card__amalgam-trigger--open {
+    border-bottom: 0;
+    border-radius: 0.4rem 0.4rem 0 0;
+}
+
+.homebrew-power-card__amalgam-picker {
+    background: rgba(15, 10, 18, 0.7);
+    border: 1px solid rgba(201, 143, 243, 0.28);
+    border-top: 0;
+    border-radius: 0 0 0.4rem 0.4rem;
+    padding: 0.4rem;
 }
 
 .homebrew-power-card__amalgam-input {
@@ -96,12 +122,9 @@
 
 .homebrew-power-card__amalgam-list {
     background: rgba(15, 10, 18, 0.7);
-    border: 1px solid rgba(201, 143, 243, 0.28);
-    border-radius: 0 0 0.45rem 0.45rem;
-    border-top: 0;
     display: grid;
     gap: 0.35rem;
-    padding: 0.4rem;
+    padding-top: 0.35rem;
 }
 
 .homebrew-power-card__amalgam-list .homebrew-power-card__amalgam-row {
