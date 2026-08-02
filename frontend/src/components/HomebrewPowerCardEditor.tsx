@@ -1,6 +1,5 @@
 import {
     ActionIcon,
-    Alert,
     Button,
     Group,
     Modal,
@@ -23,7 +22,7 @@ type Props = {
     disciplineValue: string
     onDisciplineChange: (value: string) => void
     update: (values: Partial<HomebrewItem>) => void
-    error: string
+    errors: Partial<Record<string, string>>
     onClose: () => void
     onSave: () => void
 }
@@ -37,7 +36,7 @@ const HomebrewPowerCardEditor = ({
     disciplineValue,
     onDisciplineChange,
     update,
-    error,
+    errors,
     onClose,
     onSave
 }: Props) => {
@@ -81,6 +80,7 @@ const HomebrewPowerCardEditor = ({
                             if (value) onDisciplineChange(value)
                         }}
                         classNames={homebrewDropdownClassNames}
+                        error={errors.discipline}
                         required
                     />
                     <NumberInput
@@ -89,6 +89,7 @@ const HomebrewPowerCardEditor = ({
                         max={5}
                         value={power.level}
                         onChange={(value) => update({ level: Number(value) || 1 })}
+                        error={errors.level}
                     />
                 </div>
                 <div aria-hidden="true" />
@@ -100,6 +101,7 @@ const HomebrewPowerCardEditor = ({
                     rightSection={<IconDropletFilled size={18} color="#c74650" />}
                     rightSectionPointerEvents="none"
                     onChange={(value) => update({ rouseChecks: Number(value) || 0 })}
+                    error={errors.rouseChecks}
                 />
             </header>
 
@@ -111,6 +113,7 @@ const HomebrewPowerCardEditor = ({
                     maxLength={100}
                     onChange={(event) => update({ name: event.currentTarget.value })}
                     classNames={{ input: "homebrew-power-card__name-input" }}
+                    error={errors.name}
                     required
                 />
                 <div className="homebrew-power-card__amalgam">
@@ -144,6 +147,7 @@ const HomebrewPowerCardEditor = ({
                                     ...homebrewDropdownClassNames,
                                     input: "homebrew-power-card__amalgam-input"
                                 }}
+                                error={errors.amalgamPrerequisites}
                             />
                             {power.amalgamPrerequisites.length ? (
                                 <div className="homebrew-power-card__amalgam-list">
@@ -173,6 +177,7 @@ const HomebrewPowerCardEditor = ({
                                                             )
                                                     })
                                                 }
+                                                error={errors[`amalgamPrerequisites.${index}.level`]}
                                             />
                                             <ActionIcon
                                                 variant="subtle"
@@ -207,6 +212,7 @@ const HomebrewPowerCardEditor = ({
                 maxRows={5}
                 value={power.summary}
                 onChange={(event) => update({ summary: event.currentTarget.value })}
+                error={errors.summary}
             />
 
             <OrnamentalDivider label="Dice pool" compact />
@@ -220,6 +226,7 @@ const HomebrewPowerCardEditor = ({
                 value={power.dicePool}
                 onChange={(event) => update({ dicePool: event.currentTarget.value })}
                 classNames={{ input: "homebrew-power-card__dice-pool-input" }}
+                error={errors.dicePool}
             />
 
             <OrnamentalDivider label="Full description" compact />
@@ -233,9 +240,9 @@ const HomebrewPowerCardEditor = ({
                 value={power.description}
                 onChange={(event) => update({ description: event.currentTarget.value })}
                 classNames={{ input: "homebrew-power-card__description-input" }}
+                error={errors.description}
             />
 
-            {error ? <Alert color="red">{error}</Alert> : null}
             <Group justify="flex-end" className="homebrew-power-card__footer">
                 <Button variant="subtle" color="gray" onClick={onClose}>
                     Cancel

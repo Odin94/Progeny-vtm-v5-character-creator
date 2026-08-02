@@ -1,5 +1,4 @@
 import {
-    Alert,
     Button,
     Group,
     Modal,
@@ -38,14 +37,16 @@ type Props = {
     onSave: (item: HomebrewItem) => void
 }
 
+type FieldErrors = Partial<Record<string, string>>
+
 const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: Props) => {
     const [draft, setDraft] = useState(item)
-    const [error, setError] = useState("")
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
     useEffect(() => {
         if (opened) {
             setDraft(item)
-            setError("")
+            setFieldErrors({})
         }
     }, [item, opened])
 
@@ -83,26 +84,131 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             ? `homebrew:${reference.itemId ?? ""}`
             : `official:${reference.name}`
 
-    const save = () => {
-        if (!draft.name.trim()) {
-            setError("Name is required.")
-            return
+    const validate = (): FieldErrors => {
+        const errors: FieldErrors = {}
+        const addError = (field: string, message: string) => {
+            if (!errors[field]) errors[field] = message
         }
-        if (draft.kind === "clan" && (!draft.bane.trim() || !draft.compulsion.trim())) {
-            setError("A Clan needs both a bane and a compulsion.")
-            return
+        const validateLength = (field: string, value: string, maximum: number) => {
+            if (value.trim().length > maximum) addError(field, `Use ${maximum} characters or fewer.`)
         }
-        if (draft.kind === "loresheet" && draft.tiers.some((tier) => !tier.name.trim())) {
-            setError("Each loresheet level needs a name.")
-            return
-        }
-        if (["power", "ritual", "ceremony", "formula"].includes(draft.kind)) {
-            const power = draft as HomebrewPower
-            if (!power.discipline.trim()) {
-                setError("Choose the official or homebrew Discipline this belongs to.")
-                return
+        const validLogo = (value: string) => {
+            if (!value.trim()) return true
+            try {
+                new URL(value)
+                return true
+            } catch {
+                return false
             }
         }
+
+        if (!draft.name.trim()) addError("name", "Name is required.")
+        validateLength("name", draft.name, 100)
+
+        if ("summary" in draft) validateLength("summary", draft.summary, 500)
+        if ("description" in draft) validateLength("description", draft.description, 20_000)
+        if ("logo" in draft && !validLogo(draft.logo)) addError("logo", "Enter a valid URL or leave this empty.")
+        if ("logo" in draft) validateLength("logo", draft.logo, 2_000)
+
+        if (["power", "ritual", "ceremony", "formula"].includes(draft.kind)) {
+            const power = draft as HomebrewPower
+            if (!power.discipline.trim()) addError("discipline", "Choose a Discipline.")
+            validateLength("discipline", power.discipline, 100)
+            if (!Number.isInteger(power.level) || power.level < 1 || power.level > 5) {
+                addError("level", "Choose a level from 1 to 5.")
+            }
+            if (!Number.isInteger(power.rouseChecks) || power.rouseChecks < 0 || power.rouseChecks > 5) {
+                addError("rouseChecks", "Use a value from 0 to 5.")
+            }
+            validateLength("dicePool", power.dicePool, 250)
+            if (power.amalgamPrerequisites.length > 5) {
+                addError("amalgamPrerequisites", "Choose at most five amalgam prerequisites.")
+            }
+            power.amalgamPrerequisites.forEach((prerequisite, index) => {
+                if (!prerequisite.discipline.trim()) {
+                    addError(`amalgamPrerequisites.${index}.discipline`, "Choose a Discipline.")
+                }
+                if (!Number.isInteger(prerequisite.level) || prerequisite.level < 1 || prerequisite.level > 5) {
+                    addError(`amalgamPrerequisites.${index}.level`, "Use a level from 1 to 5.")
+                }
+            })
+            if (power.disciplineRef?.type === "homebrew") {
+                const isAvailable = homebrewDisciplines.some(
+                    (discipline) => discipline.id === power.disciplineRef?.itemId
+                )
+                if (!isAvailable) {
+                    addError(
+                        "discipline",
+                        "This Homebrew Discipline must target an item in this collection."
+                    )
+                }
+            }
+            if (power.kind !== "power") {
+                validateLength("requiredTime", power.requiredTime ?? "", 500)
+                validateLength("ingredients", power.ingredients ?? "", 2_000)
+            }
+            if (power.kind === "ceremony" && (power.prerequisitePowers?.length ?? 0) > 10) {
+                addError("prerequisitePowers", "Choose at most ten prerequisite powers.")
+            }
+        }
+
+        if (draft.kind === "merit" || draft.kind === "flaw") {
+            if (!draft.costs.length) addError("costs", "Add at least one dot cost.")
+            if (draft.costs.length > 5 || draft.costs.some((cost) => !Number.isInteger(cost) || cost < 1 || cost > 5)) {
+                addError("costs", "Use up to five whole-number costs from 1 to 5.")
+            }
+            if (draft.excludes.length > 20 || draft.excludes.some((value) => !value.trim() || value.trim().length > 100)) {
+                addError("excludes", "Use up to twenty names of 100 characters or fewer.")
+            }
+        }
+
+        if (draft.kind === "loresheet") {
+            validateLength("source", draft.source, 200)
+            validateLength("requirements", draft.requirements, 2_000)
+            if (draft.tiers.length !== 5 || new Set(draft.tiers.map((tier) => tier.level)).size !== 5) {
+                addError("tiers", "Add one unique tier for each level from 1 to 5.")
+            }
+            draft.tiers.forEach((tier, index) => {
+                if (!tier.name.trim()) addError(`tiers.${index}.name`, "A level name is required.")
+                validateLength(`tiers.${index}.name`, tier.name, 100)
+                if (!tier.summary.trim()) addError(`tiers.${index}.summary`, "Describe this benefit.")
+                validateLength(`tiers.${index}.summary`, tier.summary, 2_000)
+            })
+        }
+
+        if (draft.kind === "clan") {
+            if (!draft.bane.trim()) addError("bane", "A bane is required.")
+            if (!draft.compulsion.trim()) addError("compulsion", "A compulsion is required.")
+            validateLength("bane", draft.bane, 5_000)
+            validateLength("compulsion", draft.compulsion, 5_000)
+            if (!draft.nativeDisciplines.length) addError("nativeDisciplines", "Choose at least one native Discipline.")
+            if (draft.nativeDisciplines.length > 5) addError("nativeDisciplines", "Choose at most five native Disciplines.")
+            if (draft.nativeDisciplineRefs?.some(
+                (reference) =>
+                    reference.type === "homebrew" &&
+                    !homebrewDisciplines.some((discipline) => discipline.id === reference.itemId)
+            )) {
+                addError(
+                    "nativeDisciplines",
+                    "Each Homebrew Discipline must target an item in this collection."
+                )
+            }
+            if (draft.excludedPredatorTypes.length > 30) {
+                addError("excludedPredatorTypes", "Choose at most thirty predator types.")
+            }
+            if (draft.excludedMeritsAndFlaws.length > 50) {
+                addError("excludedMeritsAndFlaws", "Choose at most fifty merits and flaws.")
+            }
+        }
+
+        return errors
+    }
+
+    const save = () => {
+        const errors = validate()
+        setFieldErrors(errors)
+        if (Object.keys(errors).length) return
+
         const normalizedDraft =
             draft.kind === "ritual"
                 ? {
@@ -127,6 +233,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                 value={draft.name}
                 maxLength={100}
                 onChange={(event) => update({ name: event.currentTarget.value })}
+                error={fieldErrors.name}
                 required
             />
             {draft.kind === "merit" || draft.kind === "flaw" ? (
@@ -138,6 +245,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     maxRows={10}
                     value={draft.summary}
                     onChange={(event) => update({ summary: event.currentTarget.value })}
+                    error={fieldErrors.summary}
                 />
             ) : "summary" in draft ? (
                 <TextInput
@@ -146,6 +254,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     value={draft.summary}
                     maxLength={500}
                     onChange={(event) => update({ summary: event.currentTarget.value })}
+                    error={fieldErrors.summary}
                 />
             ) : null}
             {"description" in draft && draft.kind !== "merit" && draft.kind !== "flaw" ? (
@@ -156,6 +265,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     maxRows={10}
                     value={draft.description}
                     onChange={(event) => update({ description: event.currentTarget.value })}
+                    error={fieldErrors.description}
                 />
             ) : null}
         </>
@@ -191,6 +301,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                                   update({ discipline: disciplineRef.name, disciplineRef })
                               }}
                               classNames={homebrewDropdownClassNames}
+                              error={fieldErrors.discipline}
                               required
                           />
                           <NumberInput
@@ -199,12 +310,14 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                               max={5}
                               value={power.level}
                               onChange={(value) => update({ level: Number(value) || 1 })}
+                              error={fieldErrors.level}
                           />
                           <TextInput
                               label="Dice pool"
                               placeholder="Resolve + Auspex"
                               value={power.dicePool}
                               onChange={(event) => update({ dicePool: event.currentTarget.value })}
+                              error={fieldErrors.dicePool}
                           />
                           <NumberInput
                               label="Rouse checks"
@@ -212,6 +325,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                               max={5}
                               value={power.rouseChecks}
                               onChange={(value) => update({ rouseChecks: Number(value) || 0 })}
+                              error={fieldErrors.rouseChecks}
                           />
                       </SimpleGrid>
                       <TextInput
@@ -235,6 +349,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                                       }))
                               })
                           }
+                          error={fieldErrors.amalgamPrerequisites}
                       />
                       {power.kind !== "power" ? (
                           <SimpleGrid cols={{ base: 1, sm: 2 }}>
@@ -244,6 +359,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                                   onChange={(event) =>
                                       update({ requiredTime: event.currentTarget.value })
                                   }
+                                  error={fieldErrors.requiredTime}
                               />
                               <Textarea
                                   label="Ingredients"
@@ -251,6 +367,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                                   onChange={(event) =>
                                       update({ ingredients: event.currentTarget.value })
                                   }
+                                  error={fieldErrors.ingredients}
                               />
                           </SimpleGrid>
                       ) : null}
@@ -261,6 +378,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                               value={power.prerequisitePowers ?? []}
                               onChange={(prerequisitePowers) => update({ prerequisitePowers })}
                               classNames={homebrewDropdownClassNames}
+                              error={fieldErrors.prerequisitePowers}
                           />
                       ) : null}
                   </>
@@ -284,7 +402,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                 <LoresheetEditor
                     draft={draft}
                     update={update}
-                    error={error}
+                    errors={fieldErrors}
                     onClose={onClose}
                     onSave={save}
                 />
@@ -310,7 +428,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     update({ discipline: disciplineRef.name, disciplineRef })
                 }}
                 update={update}
-                error={error}
+                errors={fieldErrors}
                 onClose={onClose}
                 onSave={save}
             />
@@ -332,11 +450,12 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                         description="Optional HTTPS image URL. A standard icon is used when empty."
                         value={draft.logo}
                         onChange={(event) => update({ logo: event.currentTarget.value })}
+                        error={fieldErrors.logo}
                     />
                 ) : null}
                 {powerFields}
                 {draft.kind === "merit" || draft.kind === "flaw" ? (
-                    <MeritFlawFields draft={draft} update={update} />
+                    <MeritFlawFields draft={draft} update={update} errors={fieldErrors} />
                 ) : null}
                 {draft.kind === "clan" ? (
                     <ClanFields
@@ -345,9 +464,9 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                         disciplineOptions={disciplineOptions}
                         encodeDisciplineReference={encodeDisciplineReference}
                         decodeDisciplineReference={decodeDisciplineReference}
+                        errors={fieldErrors}
                     />
                 ) : null}
-                {error ? <Alert color="red">{error}</Alert> : null}
                 <Group justify="flex-end">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
@@ -363,10 +482,12 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
 
 const MeritFlawFields = ({
     draft,
-    update
+    update,
+    errors
 }: {
     draft: HomebrewMeritFlaw
     update: (values: Partial<HomebrewItem>) => void
+    errors: FieldErrors
 }) => (
     <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <TagsInput
@@ -381,6 +502,7 @@ const MeritFlawFields = ({
                 })
             }
             classNames={homebrewDropdownClassNames}
+            error={errors.costs}
         />
         <TagsInput
             label="Excludes"
@@ -388,6 +510,7 @@ const MeritFlawFields = ({
             value={draft.excludes}
             onChange={(excludes) => update({ excludes })}
             classNames={homebrewDropdownClassNames}
+            error={errors.excludes}
         />
     </SimpleGrid>
 )
@@ -397,13 +520,15 @@ const ClanFields = ({
     update,
     disciplineOptions,
     encodeDisciplineReference,
-    decodeDisciplineReference
+    decodeDisciplineReference,
+    errors
 }: {
     draft: HomebrewClan
     update: (values: Partial<HomebrewItem>) => void
     disciplineOptions: Array<{ value: string; label: string }>
     encodeDisciplineReference: (reference: HomebrewDisciplineReference) => string
     decodeDisciplineReference: (value: string) => HomebrewDisciplineReference
+    errors: FieldErrors
 }) => (
     <>
         <Textarea
@@ -411,6 +536,7 @@ const ClanFields = ({
             minRows={2}
             value={draft.bane}
             onChange={(event) => update({ bane: event.currentTarget.value })}
+            error={errors.bane}
             required
         />
         <Textarea
@@ -418,6 +544,7 @@ const ClanFields = ({
             minRows={2}
             value={draft.compulsion}
             onChange={(event) => update({ compulsion: event.currentTarget.value })}
+            error={errors.compulsion}
             required
         />
         <MultiSelect
@@ -437,6 +564,7 @@ const ClanFields = ({
                 })
             }}
             classNames={homebrewDropdownClassNames}
+            error={errors.nativeDisciplines}
         />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <TagsInput
@@ -444,12 +572,14 @@ const ClanFields = ({
                 value={draft.excludedPredatorTypes}
                 onChange={(excludedPredatorTypes) => update({ excludedPredatorTypes })}
                 classNames={homebrewDropdownClassNames}
+                error={errors.excludedPredatorTypes}
             />
             <TagsInput
                 label="Excluded Merits & Flaws"
                 value={draft.excludedMeritsAndFlaws}
                 onChange={(excludedMeritsAndFlaws) => update({ excludedMeritsAndFlaws })}
                 classNames={homebrewDropdownClassNames}
+                error={errors.excludedMeritsAndFlaws}
             />
         </SimpleGrid>
     </>
@@ -458,13 +588,13 @@ const ClanFields = ({
 const LoresheetEditor = ({
     draft,
     update,
-    error,
+    errors,
     onClose,
     onSave
 }: {
     draft: HomebrewLoresheet
     update: (values: Partial<HomebrewItem>) => void
-    error: string
+    errors: FieldErrors
     onClose: () => void
     onSave: () => void
 }) => {
@@ -485,6 +615,7 @@ const LoresheetEditor = ({
                         maxLength={100}
                         onChange={(event) => update({ name: event.currentTarget.value })}
                         classNames={{ input: "homebrew-loresheet__title-input" }}
+                        error={errors.name}
                     />
                     <Text size="xs" className="homebrew-loresheet__eyebrow">
                         {draft.id ? "Edit Homebrew Loresheet" : "New Homebrew Loresheet"}
@@ -501,6 +632,7 @@ const LoresheetEditor = ({
                             maxRows={5}
                             value={draft.summary}
                             onChange={(event) => update({ summary: event.currentTarget.value })}
+                            error={errors.summary}
                         />
                         <Textarea
                             label="Full description"
@@ -509,6 +641,7 @@ const LoresheetEditor = ({
                             maxRows={12}
                             value={draft.description}
                             onChange={(event) => update({ description: event.currentTarget.value })}
+                            error={errors.description}
                         />
                     </Stack>
                     <Stack gap="sm" className="homebrew-loresheet__details">
@@ -516,6 +649,7 @@ const LoresheetEditor = ({
                             label="Source label"
                             value={draft.source}
                             onChange={(event) => update({ source: event.currentTarget.value })}
+                            error={errors.source}
                         />
                         <Textarea
                             label="Requirements"
@@ -525,6 +659,7 @@ const LoresheetEditor = ({
                             onChange={(event) =>
                                 update({ requirements: event.currentTarget.value })
                             }
+                            error={errors.requirements}
                         />
                     </Stack>
                 </section>
@@ -549,6 +684,7 @@ const LoresheetEditor = ({
                                         updateTier(index, { name: event.currentTarget.value })
                                     }
                                     classNames={{ input: "homebrew-loresheet__tier-name" }}
+                                    error={errors[`tiers.${index}.name`]}
                                 />
                             </div>
                             <Textarea
@@ -561,12 +697,13 @@ const LoresheetEditor = ({
                                     updateTier(index, { summary: event.currentTarget.value })
                                 }
                                 classNames={{ input: "homebrew-loresheet__tier-summary" }}
+                                error={errors[`tiers.${index}.summary`]}
                             />
                         </div>
                     ))}
                 </section>
 
-                {error ? <Alert color="red">{error}</Alert> : null}
+                {errors.tiers ? <Text c="red" size="sm">{errors.tiers}</Text> : null}
                 <footer className="homebrew-loresheet__footer">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
