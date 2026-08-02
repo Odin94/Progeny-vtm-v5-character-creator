@@ -47,6 +47,7 @@ const BloodRating = ({
                 color={rating <= Math.round(value) ? "red" : "gray"}
                 size="sm"
                 disabled={!interactive}
+                styles={interactive ? undefined : { root: { opacity: 1 } }}
                 aria-label={interactive ? `Rate ${rating} blood` : undefined}
                 onClick={(event) => {
                     event.stopPropagation()
