@@ -310,54 +310,63 @@ const DisciplineSelectModal = ({
                                                             minHeight: "180px"
                                                         }}
                                                     >
-                                                        <Stack
-                                                            gap="xs"
-                                                            align="center"
-                                                            style={{ width: "100%" }}
-                                                        >
-                                                            <Box
-                                                                style={{
-                                                                    width: "60px",
-                                                                    height: "60px",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center"
-                                                                }}
+                                                        <Box pos="relative" w="100%">
+                                                            <Stack
+                                                                gap="xs"
+                                                                align="center"
+                                                                style={{ width: "100%" }}
                                                             >
-                                                                {discipline.logo ? (
-                                                                    <img
-                                                                        src={discipline.logo}
-                                                                        alt={upcase(disciplineName)}
-                                                                        style={{
-                                                                            width: "60px",
-                                                                            height: "60px"
-                                                                        }}
+                                                                <Box
+                                                                    style={{
+                                                                        width: "60px",
+                                                                        height: "60px",
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        justifyContent: "center"
+                                                                    }}
+                                                                >
+                                                                    {discipline.logo ? (
+                                                                        <img
+                                                                            src={discipline.logo}
+                                                                            alt={upcase(disciplineName)}
+                                                                            style={{
+                                                                                width: "60px",
+                                                                                height: "60px"
+                                                                            }}
+                                                                        />
+                                                                    ) : null}
+                                                                </Box>
+                                                                <Title order={4} style={{ margin: 0 }}>
+                                                                    {upcase(discipline.name)}
+                                                                </Title>
+                                                                <Box
+                                                                    style={{
+                                                                        minHeight: "40px",
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        justifyContent: "center"
+                                                                    }}
+                                                                >
+                                                                    {discipline.summary ? (
+                                                                        <Text
+                                                                            size="sm"
+                                                                            c="dimmed"
+                                                                            ta="center"
+                                                                            lineClamp={2}
+                                                                        >
+                                                                            {discipline.summary}
+                                                                        </Text>
+                                                                    ) : null}
+                                                                </Box>
+                                                            </Stack>
+                                                            {discipline.homebrewSource ? (
+                                                                <Box pos="absolute" top={0} right={0}>
+                                                                    <HomebrewBadge
+                                                                        source={discipline.homebrewSource}
                                                                     />
-                                                                ) : null}
-                                                            </Box>
-                                                            <Title order={4} style={{ margin: 0 }}>
-                                                                {upcase(discipline.label)}
-                                                            </Title>
-                                                            <Box
-                                                                style={{
-                                                                    minHeight: "40px",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center"
-                                                                }}
-                                                            >
-                                                                {discipline.summary ? (
-                                                                    <Text
-                                                                        size="sm"
-                                                                        c="dimmed"
-                                                                        ta="center"
-                                                                        lineClamp={2}
-                                                                    >
-                                                                        {discipline.summary}
-                                                                    </Text>
-                                                                ) : null}
-                                                            </Box>
-                                                        </Stack>
+                                                                </Box>
+                                                            ) : null}
+                                                        </Box>
                                                     </Button>
                                                     {clanDisciplines.has(discipline.name) ? (
                                                         <Badge
@@ -372,11 +381,6 @@ const DisciplineSelectModal = ({
                                                         >
                                                             Clan
                                                         </Badge>
-                                                    ) : null}
-                                                    {discipline.homebrewSource ? (
-                                                        <HomebrewBadge
-                                                            source={discipline.homebrewSource}
-                                                        />
                                                     ) : null}
                                                 </Box>
                                             </Grid.Col>
