@@ -8,16 +8,16 @@
     --homebrew-control-border: rgba(160, 120, 178, 0.28);
 }
 
-.homebrew-page :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-TagsInput-inputField), textarea),
-.homebrew-form-controls :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-TagsInput-inputField), textarea) {
+.homebrew-page :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-PillsInputField-field, .mantine-TagsInput-inputField), textarea),
+.homebrew-form-controls :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-PillsInputField-field, .mantine-TagsInput-inputField), textarea) {
     background: var(--homebrew-control-background);
     border-color: var(--homebrew-control-border);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.18);
     color: #eee5ef;
 }
 
-.homebrew-page :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-TagsInput-inputField), textarea):focus,
-.homebrew-form-controls :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-TagsInput-inputField), textarea):focus {
+.homebrew-page :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-PillsInputField-field, .mantine-TagsInput-inputField), textarea):focus,
+.homebrew-form-controls :is(input:not([type="checkbox"], [type="radio"], .mantine-PillsInput-input, .mantine-PillsInputField-field, .mantine-TagsInput-inputField), textarea):focus {
     border-color: rgba(193, 145, 214, 0.72);
     box-shadow: 0 0 0 2px rgba(178, 91, 224, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
@@ -35,8 +35,8 @@
     box-shadow: 0 0 0 2px rgba(178, 91, 224, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.homebrew-page :is(.mantine-PillsInput-input, .mantine-TagsInput-inputField),
-.homebrew-form-controls :is(.mantine-PillsInput-input, .mantine-TagsInput-inputField) {
+.homebrew-page :is(.mantine-PillsInput-input, .mantine-PillsInputField-field, .mantine-TagsInput-inputField),
+.homebrew-form-controls :is(.mantine-PillsInput-input, .mantine-PillsInputField-field, .mantine-TagsInput-inputField) {
     background: transparent;
     border: 0;
     box-shadow: none;
