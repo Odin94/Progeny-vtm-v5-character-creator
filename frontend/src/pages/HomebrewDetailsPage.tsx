@@ -353,6 +353,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                     </div>
                                     <Button
                                         color="grape"
+                                        variant={isNew ? "filled" : "outline"}
                                         onClick={saveCollection}
                                         loading={
                                             createMutation.isPending || updateMutation.isPending
@@ -446,6 +447,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                         />
                                         <Button
                                             color="grape"
+                                            variant="outline"
                                             leftSection={<IconPlus size={16} />}
                                             onClick={() => openNewItemEditor(itemKind)}
                                         >
