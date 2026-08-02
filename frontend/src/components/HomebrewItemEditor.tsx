@@ -534,21 +534,23 @@ const LoresheetEditor = ({
                 <section className="homebrew-loresheet__tiers" aria-label="Loresheet levels">
                     {draft.tiers.map((tier, index) => (
                         <div className="homebrew-loresheet__tier" key={tier.level}>
-                            <Text
-                                className="homebrew-loresheet__dots"
-                                aria-label={`Level ${tier.level}`}
-                            >
-                                {"●".repeat(tier.level)}
-                            </Text>
-                            <TextInput
-                                aria-label={`Level ${tier.level} name`}
-                                placeholder={`Level ${tier.level} name`}
-                                value={tier.name}
-                                onChange={(event) =>
-                                    updateTier(index, { name: event.currentTarget.value })
-                                }
-                                classNames={{ input: "homebrew-loresheet__tier-name" }}
-                            />
+                            <div className="homebrew-loresheet__tier-heading">
+                                <Text
+                                    className="homebrew-loresheet__dots"
+                                    aria-label={`Level ${tier.level}`}
+                                >
+                                    {"●".repeat(tier.level)}
+                                </Text>
+                                <TextInput
+                                    aria-label={`Level ${tier.level} name`}
+                                    placeholder={`Level ${tier.level} name`}
+                                    value={tier.name}
+                                    onChange={(event) =>
+                                        updateTier(index, { name: event.currentTarget.value })
+                                    }
+                                    classNames={{ input: "homebrew-loresheet__tier-name" }}
+                                />
+                            </div>
                             <Textarea
                                 aria-label={`Level ${tier.level} summary`}
                                 placeholder="Describe this benefit"

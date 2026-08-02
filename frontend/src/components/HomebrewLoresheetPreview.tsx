@@ -1,5 +1,5 @@
 import { Stack, Text } from "@mantine/core"
-import ornamentalDivider from "~/assets/ornamental-divider.svg"
+import OrnamentalDivider from "~/components/OrnamentalDivider"
 import type { HomebrewLoresheet } from "~/data/Homebrew"
 import "./HomebrewItemEditor.css"
 
@@ -30,24 +30,22 @@ const HomebrewLoresheetPreview = ({ item }: { item: HomebrewLoresheet }) => (
                 </Stack>
             </section>
 
-            <div className="homebrew-loresheet__divider" aria-label="Lore">
-                <img src={ornamentalDivider} alt="" />
-                <Text>Lore</Text>
-                <img src={ornamentalDivider} alt="" />
-            </div>
+            <OrnamentalDivider label="Lore" />
 
             <section className="homebrew-loresheet__tiers" aria-label="Loresheet levels">
                 {item.tiers.map((tier) => (
                     <div className="homebrew-loresheet__tier" key={tier.level}>
-                        <Text
-                            className="homebrew-loresheet__dots"
-                            aria-label={`Level ${tier.level}`}
-                        >
-                            {"●".repeat(tier.level)}
-                        </Text>
-                        <Text className="homebrew-loresheet__tier-title">
-                            {tier.name || `Level ${tier.level}`}
-                        </Text>
+                        <div className="homebrew-loresheet__tier-heading">
+                            <Text
+                                className="homebrew-loresheet__dots"
+                                aria-label={`Level ${tier.level}`}
+                            >
+                                {"●".repeat(tier.level)}
+                            </Text>
+                            <Text className="homebrew-loresheet__tier-title">
+                                {tier.name || `Level ${tier.level}`}
+                            </Text>
+                        </div>
                         <Text className="homebrew-loresheet__tier-text">
                             {tier.summary || "No benefit description provided."}
                         </Text>

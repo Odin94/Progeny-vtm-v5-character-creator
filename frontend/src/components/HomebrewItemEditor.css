@@ -130,11 +130,24 @@
     padding-left: 0;
 }
 
+.homebrew-loresheet__tier-heading {
+    align-items: center;
+    display: flex;
+    gap: 0.55rem;
+    margin-bottom: 0.65rem;
+    min-width: 0;
+}
+
+.homebrew-loresheet__tier-heading .mantine-TextInput-root {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .homebrew-loresheet__dots {
     color: #b9414c;
+    flex: 0 0 auto;
     font-size: 0.7rem;
     letter-spacing: 0.16em;
-    margin-bottom: 0.35rem;
 }
 
 .homebrew-loresheet__tier-name {
@@ -161,7 +174,7 @@
     font-size: 1rem;
     font-weight: 700;
     line-height: 1.35;
-    margin-bottom: 0.65rem;
+    min-width: 0;
 }
 
 .homebrew-loresheet__tier-text {
