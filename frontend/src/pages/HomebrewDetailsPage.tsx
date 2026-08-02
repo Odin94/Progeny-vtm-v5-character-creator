@@ -652,6 +652,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                 <Group justify="flex-end">
                                     <Button
                                         color="grape"
+                                        variant={isNew ? "filled" : "outline"}
                                         onClick={saveCollection}
                                         loading={
                                             createMutation.isPending || updateMutation.isPending
