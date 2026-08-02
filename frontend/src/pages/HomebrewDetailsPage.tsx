@@ -624,7 +624,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                                     )
                                                                 })}
                                                             </SimpleGrid>
-                                                            <Group justify="center">
+                                                            <Group justify="center" mt="xs">
                                                                 <ActionIcon
                                                                     variant="light"
                                                                     color="grape"
