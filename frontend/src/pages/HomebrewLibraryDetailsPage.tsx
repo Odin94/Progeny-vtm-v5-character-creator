@@ -80,6 +80,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
         (user?.actorIsSuperadmin ?? false) && !user?.impersonation.active
     const [comment, setComment] = useState("")
     const [editingComment, setEditingComment] = useState<{ id: string; body: string } | null>(null)
+    const [copyConfirmationOpened, setCopyConfirmationOpened] = useState(false)
     const [unpublishConfirmationOpened, setUnpublishConfirmationOpened] = useState(false)
     const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null)
     const [collapsedItemKinds, setCollapsedItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
@@ -110,8 +111,10 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
     const copyMutation = useMutation({
         mutationFn: () => api.copyHomebrewLibraryCollection(collectionId),
         onSuccess: () => {
+            setCopyConfirmationOpened(false)
             client.invalidateQueries({ queryKey: ["homebrew", "collections"] })
             refreshLibrary()
+            navigate({ to: "/homebrew" })
         },
         onError: (error) => {
             notifications.show({
@@ -196,7 +199,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             signIn={signIn}
             comment={comment}
             setComment={setComment}
-            onCopy={() => copyMutation.mutate()}
+            onCopy={() => setCopyConfirmationOpened(true)}
             copyPending={copyMutation.isPending}
             onRate={(rating) => rateMutation.mutate(rating)}
             onComment={() => comment.trim() && commentMutation.mutate(comment.trim())}
@@ -228,6 +231,16 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             }}
             confirmation={
                 <>
+                    <ConfirmActionModal
+                        opened={copyConfirmationOpened}
+                        onClose={() => setCopyConfirmationOpened(false)}
+                        onConfirm={() => copyMutation.mutate()}
+                        title="Copy to your account?"
+                        body={`Create your own editable copy of ${detailQuery.data.snapshot.name} in My Homebrew.`}
+                        confirmLabel="Copy collection"
+                        confirmColor="grape"
+                        loading={copyMutation.isPending}
+                    />
                     <ConfirmActionModal
                         opened={unpublishConfirmationOpened}
                         onClose={() => setUnpublishConfirmationOpened(false)}
@@ -355,6 +368,7 @@ const LibraryDetail = ({
                                         <Group>
                                             <Button
                                                 color="grape"
+                                                variant="outline"
                                                 leftSection={<IconCopy size={16} />}
                                                 loading={copyPending}
                                                 onClick={isAuthenticated ? onCopy : signIn}
