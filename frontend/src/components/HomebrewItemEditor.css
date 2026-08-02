@@ -117,17 +117,15 @@
 .homebrew-loresheet__tiers {
     display: grid;
     gap: clamp(1.25rem, 3vw, 2.5rem);
+    grid-auto-flow: column;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, auto);
 }
 
-.homebrew-loresheet__tier + .homebrew-loresheet__tier {
+.homebrew-loresheet__tier:nth-child(3),
+.homebrew-loresheet__tier:nth-child(5) {
     border-left: 1px solid rgba(178, 72, 80, 0.42);
     padding-left: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.homebrew-loresheet__tier:nth-child(4) {
-    border-left: 0;
-    padding-left: 0;
 }
 
 .homebrew-loresheet__tier-heading {
@@ -216,12 +214,15 @@
 
     .homebrew-loresheet__intro,
     .homebrew-loresheet__tiers {
+        grid-auto-flow: row;
         grid-template-columns: 1fr;
+        grid-template-rows: none;
     }
 
     .homebrew-loresheet__details,
     .homebrew-loresheet__tier + .homebrew-loresheet__tier,
-    .homebrew-loresheet__tier:nth-child(4) {
+    .homebrew-loresheet__tier:nth-child(3),
+    .homebrew-loresheet__tier:nth-child(5) {
         border-left: 0;
         border-top: 1px solid rgba(178, 72, 80, 0.42);
         padding-left: 0;
