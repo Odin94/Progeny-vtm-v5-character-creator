@@ -11,6 +11,7 @@ import {
 } from "@mantine/core"
 import { IconDropletFilled, IconX } from "@tabler/icons-react"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
+import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
 import type { HomebrewItem, HomebrewPower } from "~/data/Homebrew"
 import "./HomebrewPowerCardEditor.css"
 
@@ -76,6 +77,7 @@ const HomebrewPowerCardEditor = ({
                         onChange={(value) => {
                             if (value) onDisciplineChange(value)
                         }}
+                        classNames={homebrewDropdownClassNames}
                         required
                     />
                     <NumberInput
@@ -123,7 +125,10 @@ const HomebrewPowerCardEditor = ({
                         searchable
                         value={null}
                         onChange={addAmalgamPrerequisite}
-                        classNames={{ input: "homebrew-power-card__amalgam-input" }}
+                        classNames={{
+                            ...homebrewDropdownClassNames,
+                            input: "homebrew-power-card__amalgam-input"
+                        }}
                     />
                     {power.amalgamPrerequisites.length ? (
                         <div className="homebrew-power-card__amalgam-list">

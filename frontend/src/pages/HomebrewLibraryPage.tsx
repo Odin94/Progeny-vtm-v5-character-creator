@@ -25,6 +25,7 @@ import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { useHomebrewCollections } from "~/hooks/useHomebrew"
@@ -156,6 +157,7 @@ const HomebrewLibraryPage = () => {
                                         label: homebrewKindLabel(itemKind)
                                     }))}
                                     onChange={setKind}
+                                    classNames={homebrewDropdownClassNames}
                                 />
                                 <Select
                                     label="Sort by"
@@ -167,6 +169,7 @@ const HomebrewLibraryPage = () => {
                                         { value: "copied", label: "Most copied" }
                                     ]}
                                     onChange={(value) => setSort(value as typeof sort)}
+                                    classNames={homebrewDropdownClassNames}
                                 />
                             </Group>
                         </Paper>
@@ -326,6 +329,7 @@ const HomebrewLibraryPage = () => {
                             label: collection.name
                         }))}
                         onChange={setPublishCollectionId}
+                        classNames={homebrewDropdownClassNames}
                     />
                     <Checkbox
                         checked={acknowledged}

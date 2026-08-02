@@ -38,3 +38,36 @@
 .homebrew-form-controls .mantine-InputWrapper-description {
     color: rgba(205, 191, 210, 0.62);
 }
+
+.homebrew-select-dropdown {
+    background: linear-gradient(145deg, #211927, #151019 72%);
+    border: 1px solid rgba(160, 120, 178, 0.3);
+    border-radius: 0.7rem;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    padding: 0.3rem;
+}
+
+.homebrew-select-options {
+    gap: 0.15rem;
+}
+
+.homebrew-select-option {
+    border-radius: 0.42rem;
+    color: #e9e0eb;
+    padding: 0.55rem 0.65rem;
+}
+
+.homebrew-select-option:is(:hover, [data-combobox-active], [data-combobox-selected]) {
+    background: rgba(126, 81, 150, 0.24);
+    color: #fff8ff;
+}
+
+.homebrew-select-search {
+    background: rgba(12, 9, 15, 0.75);
+    border-color: rgba(160, 120, 178, 0.28);
+    color: #eee5ef;
+}
+
+.homebrew-select-empty {
+    color: rgba(222, 211, 226, 0.62);
+}

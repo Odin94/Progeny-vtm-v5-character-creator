@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react"
 import HomebrewPowerCardEditor from "~/components/HomebrewPowerCardEditor"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
+import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
 import type {
     HomebrewClan,
     HomebrewDiscipline,
@@ -189,6 +190,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                                   const disciplineRef = decodeDisciplineReference(value)
                                   update({ discipline: disciplineRef.name, disciplineRef })
                               }}
+                              classNames={homebrewDropdownClassNames}
                               required
                           />
                           <NumberInput
@@ -258,6 +260,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                               description="The character must know at least one of these Oblivion Powers. Leave empty for none."
                               value={power.prerequisitePowers ?? []}
                               onChange={(prerequisitePowers) => update({ prerequisitePowers })}
+                              classNames={homebrewDropdownClassNames}
                           />
                       ) : null}
                   </>
@@ -377,12 +380,14 @@ const MeritFlawFields = ({
                     ]
                 })
             }
+            classNames={homebrewDropdownClassNames}
         />
         <TagsInput
             label="Excludes"
             description="Merits or Flaws that cannot be combined with this item."
             value={draft.excludes}
             onChange={(excludes) => update({ excludes })}
+            classNames={homebrewDropdownClassNames}
         />
     </SimpleGrid>
 )
@@ -431,17 +436,20 @@ const ClanFields = ({
                     nativeDisciplines: nativeDisciplineRefs.map((reference) => reference.name)
                 })
             }}
+            classNames={homebrewDropdownClassNames}
         />
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <TagsInput
                 label="Excluded predator types"
                 value={draft.excludedPredatorTypes}
                 onChange={(excludedPredatorTypes) => update({ excludedPredatorTypes })}
+                classNames={homebrewDropdownClassNames}
             />
             <TagsInput
                 label="Excluded Merits & Flaws"
                 value={draft.excludedMeritsAndFlaws}
                 onChange={(excludedMeritsAndFlaws) => update({ excludedMeritsAndFlaws })}
+                classNames={homebrewDropdownClassNames}
             />
         </SimpleGrid>
     </>

@@ -28,6 +28,7 @@ import AnimatedCollapse from "~/components/AnimatedCollapse"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import HomebrewItemEditor from "~/components/HomebrewItemEditor"
+import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
 import type {
     HomebrewCollection,
     HomebrewCollectionInput,
@@ -404,6 +405,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                             maxTags={8}
                                             value={draft.tags}
                                             onChange={(tags) => setDraft({ ...draft, tags })}
+                                            classNames={homebrewDropdownClassNames}
                                         />
                                         <Textarea
                                             label="Content warning"
@@ -440,6 +442,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                             onChange={(value) =>
                                                 setItemKind(value as HomebrewItemKind)
                                             }
+                                            classNames={homebrewDropdownClassNames}
                                         />
                                         <Button
                                             color="grape"
