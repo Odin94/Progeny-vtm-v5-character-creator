@@ -26,6 +26,7 @@ import {
     IconDropletFilled,
     IconEdit,
     IconMessageCircle,
+    IconSend,
     IconTrash
 } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -40,6 +41,7 @@ import type { HomebrewItemKind, HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
+import "./HomebrewLibraryDetailsPage.css"
 
 const storageLimitMessage =
     "your account is using over 100MB of storage, talk to support if you need more"
@@ -56,20 +58,24 @@ const BloodRating = ({
     onChange?: (rating: number) => void
 }) => (
     <Group gap={2} wrap="nowrap" aria-label={`${value.toFixed(1)} out of 5 blood rating`}>
-        {[1, 2, 3, 4, 5].map((rating) => (
-            <ActionIcon
-                key={rating}
-                variant="transparent"
-                color={rating <= Math.round(value) ? "red" : "gray"}
-                size="sm"
-                disabled={!interactive}
-                styles={interactive ? undefined : { root: { opacity: 1 } }}
-                aria-label={interactive ? `Rate ${rating} blood` : undefined}
-                onClick={() => onChange?.(rating)}
-            >
-                <IconDropletFilled size={15} />
-            </ActionIcon>
-        ))}
+        {[1, 2, 3, 4, 5].map((rating) => {
+            const filled = rating <= Math.round(value)
+
+            return (
+                <ActionIcon
+                    key={rating}
+                    variant="transparent"
+                    color={filled ? "red" : "gray"}
+                    size="sm"
+                    disabled={!interactive}
+                    styles={{ root: { opacity: 1 } }}
+                    aria-label={interactive ? `Rate ${rating} blood` : undefined}
+                    onClick={() => onChange?.(rating)}
+                >
+                    <IconDropletFilled size={15} color={filled ? "#c74650" : "#908990"} />
+                </ActionIcon>
+            )
+        })}
     </Group>
 )
 
@@ -204,6 +210,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             copyPending={copyMutation.isPending}
             onRate={(rating) => rateMutation.mutate(rating)}
             onComment={() => comment.trim() && commentMutation.mutate(comment.trim())}
+            commentPending={commentMutation.isPending}
             onDeleteComment={setDeleteCommentId}
             editingComment={editingComment}
             onStartEditingComment={(id, body) => setEditingComment({ id, body })}
@@ -283,6 +290,7 @@ type LibraryDetailProps = {
     copyPending: boolean
     onRate: (rating: number) => void
     onComment: () => void
+    commentPending: boolean
     onDeleteComment: (commentId: string) => void
     editingComment: { id: string; body: string } | null
     onStartEditingComment: (id: string, body: string) => void
@@ -311,6 +319,7 @@ const LibraryDetail = ({
     copyPending,
     onRate,
     onComment,
+    commentPending,
     onDeleteComment,
     editingComment,
     onStartEditingComment,
@@ -547,24 +556,32 @@ const LibraryDetail = ({
                                     <Title order={2}>Comments</Title>
                                 </Group>
                                 {isAuthenticated ? (
-                                    <Group align="flex-end">
+                                    <Box className="homebrew-library-detail__comment-composer">
                                         <Textarea
-                                            style={{ flex: 1 }}
                                             minRows={2}
                                             value={comment}
                                             onChange={(event) =>
                                                 setComment(event.currentTarget.value)
                                             }
                                             placeholder="Add to the discussion"
+                                            classNames={{
+                                                input:
+                                                    "homebrew-library-detail__comment-composer-input"
+                                            }}
                                         />
-                                        <Button
+                                        <ActionIcon
+                                            className="homebrew-library-detail__comment-send"
                                             color="grape"
+                                            variant="filled"
+                                            size="lg"
                                             disabled={!comment.trim()}
+                                            loading={commentPending}
                                             onClick={onComment}
+                                            aria-label="Post comment"
                                         >
-                                            Comment
-                                        </Button>
-                                    </Group>
+                                            <IconSend size={18} />
+                                        </ActionIcon>
+                                    </Box>
                                 ) : (
                                     <Button variant="light" onClick={signIn} w="fit-content">
                                         Sign in to comment
@@ -574,10 +591,19 @@ const LibraryDetail = ({
                                     <Text c="dimmed">No comments yet.</Text>
                                 ) : (
                                     detail.comments.map((entryComment) => (
-                                        <Paper key={entryComment.id} withBorder p="md">
+                                        <Paper
+                                            key={entryComment.id}
+                                            withBorder
+                                            p="md"
+                                            className="homebrew-library-detail__comment"
+                                        >
                                             <Group justify="space-between" align="flex-start">
                                                 <div style={{ flex: 1 }}>
-                                                    <Text size="sm" fw={600}>
+                                                    <Text
+                                                        size="sm"
+                                                        fw={600}
+                                                        className="homebrew-library-detail__comment-author"
+                                                    >
                                                         {entryComment.authorNickname}
                                                     </Text>
                                                     {editingComment?.id === entryComment.id ? (
@@ -614,7 +640,9 @@ const LibraryDetail = ({
                                                             </Group>
                                                         </Stack>
                                                     ) : (
-                                                        <Text style={{ whiteSpace: "pre-wrap" }}>
+                                                        <Text
+                                                            className="homebrew-library-detail__comment-body"
+                                                        >
                                                             {entryComment.body}
                                                         </Text>
                                                     )}

@@ -1,0 +1,35 @@
+.homebrew-library-detail__comment-composer {
+    position: relative;
+}
+
+.homebrew-library-detail__comment-composer-input {
+    background: linear-gradient(135deg, rgba(43, 35, 49, 0.96), rgba(24, 18, 29, 0.96));
+    border-color: rgba(160, 120, 178, 0.36);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 3px 12px rgba(0, 0, 0, 0.2);
+    padding-right: 3.7rem;
+}
+
+.homebrew-library-detail__comment-send {
+    bottom: 0.65rem;
+    position: absolute;
+    right: 0.65rem;
+}
+
+.homebrew-library-detail__comment {
+    background: linear-gradient(145deg, rgba(34, 26, 40, 0.88), rgba(18, 14, 21, 0.94));
+    border-color: rgba(160, 120, 178, 0.3);
+    box-shadow: inset 3px 0 0 rgba(126, 74, 160, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.homebrew-library-detail__comment-author {
+    color: #e8dcec;
+    font-family: "Cinzel, Georgia, serif";
+    letter-spacing: 0.04em;
+    margin-bottom: 0.35rem;
+}
+
+.homebrew-library-detail__comment-body {
+    color: #ded4df;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}

@@ -40,24 +40,28 @@ const BloodRating = ({
     onChange?: (rating: number) => void
 }) => (
     <Group gap={2} wrap="nowrap" aria-label={`${value.toFixed(1)} out of 5 blood rating`}>
-        {[1, 2, 3, 4, 5].map((rating) => (
-            <ActionIcon
-                key={rating}
-                variant="transparent"
-                color={rating <= Math.round(value) ? "red" : "gray"}
-                size="sm"
-                disabled={!interactive}
-                styles={interactive ? undefined : { root: { opacity: 1 } }}
-                aria-label={interactive ? `Rate ${rating} blood` : undefined}
-                onClick={(event) => {
-                    event.stopPropagation()
-                    onChange?.(rating)
-                }}
-                onKeyDown={(event) => event.stopPropagation()}
-            >
-                <IconDropletFilled size={15} />
-            </ActionIcon>
-        ))}
+        {[1, 2, 3, 4, 5].map((rating) => {
+            const filled = rating <= Math.round(value)
+
+            return (
+                <ActionIcon
+                    key={rating}
+                    variant="transparent"
+                    color={filled ? "red" : "gray"}
+                    size="sm"
+                    disabled={!interactive}
+                    styles={{ root: { opacity: 1 } }}
+                    aria-label={interactive ? `Rate ${rating} blood` : undefined}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        onChange?.(rating)
+                    }}
+                    onKeyDown={(event) => event.stopPropagation()}
+                >
+                    <IconDropletFilled size={15} color={filled ? "#c74650" : "#908990"} />
+                </ActionIcon>
+            )
+        })}
     </Group>
 )
 
