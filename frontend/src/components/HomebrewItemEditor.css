@@ -187,6 +187,7 @@
 }
 
 .homebrew-loresheet__tier:nth-child(3),
+.homebrew-loresheet__tier:nth-child(4),
 .homebrew-loresheet__tier:nth-child(5) {
     border-left: 1px solid rgba(178, 72, 80, 0.42);
     padding-left: clamp(1.25rem, 3vw, 2.5rem);
