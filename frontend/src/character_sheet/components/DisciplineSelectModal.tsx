@@ -254,7 +254,9 @@ const DisciplineSelectModal = ({
             }}
             title={
                 selectedDiscipline
-                    ? `Select a Power - ${upcase(selectedDiscipline)}`
+                    ? `Select a Power - ${upcase(
+                          disciplineCatalog[selectedDiscipline]?.name ?? selectedDiscipline
+                      )}`
                     : "Select a Discipline"
             }
             size="lg"
