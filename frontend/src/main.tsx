@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { routeTree } from "./routeTree.gen"
 import "./index.css"
+import "./components/HomebrewFormControls.css"
 import RenderProfiler from "./components/RenderProfiler"
 import reportWebVitals from "./reportWebVitals"
 

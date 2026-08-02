@@ -315,7 +315,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
             <AppShell.Header>
                 <AppTopbar />
             </AppShell.Header>
-            <AppShell.Main bg="#100d12" mih="100vh">
+            <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
                 <Box py="calc(2rem + 52px)" pb="2rem">
                     <Container size="xl">
                         <Box

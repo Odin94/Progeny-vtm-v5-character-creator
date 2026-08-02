@@ -68,7 +68,7 @@ const HomebrewPage = () => {
             <AppShell.Header>
                 <AppTopbar />
             </AppShell.Header>
-            <AppShell.Main bg="#100d12" mih="100vh">
+            <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
                 <Container size="lg" py={84}>
                     <Stack gap="xl">
                         <Group justify="space-between" align="flex-start">

@@ -1,4 +1,5 @@
 import {
+    ActionIcon,
     Alert,
     Button,
     Group,
@@ -8,7 +9,7 @@ import {
     TextInput,
     Textarea
 } from "@mantine/core"
-import { IconDropletFilled } from "@tabler/icons-react"
+import { IconDropletFilled, IconX } from "@tabler/icons-react"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 import type { HomebrewItem, HomebrewPower } from "~/data/Homebrew"
 import "./HomebrewPowerCardEditor.css"
@@ -25,12 +26,7 @@ type Props = {
     onSave: () => void
 }
 
-const parseAmalgamPrerequisites = (value: string) =>
-    value
-        .split(",")
-        .map((part) => part.trim().match(/^(.*)\s+([1-5])$/))
-        .filter((match): match is RegExpMatchArray => !!match)
-        .map((match) => ({ discipline: match[1].trim(), level: Number(match[2]) }))
+const disciplineNameFromOption = (label: string) => label.replace(/\s+\((Official|Homebrew)\)$/, "")
 
 const HomebrewPowerCardEditor = ({
     opened,
@@ -42,19 +38,34 @@ const HomebrewPowerCardEditor = ({
     error,
     onClose,
     onSave
-}: Props) => (
-    <Modal
-        opened={opened}
-        onClose={onClose}
-        centered
-        size="xl"
-        withCloseButton={false}
-        classNames={{
-            content: "homebrew-power-card__modal",
-            body: "homebrew-power-card__modal-body"
-        }}
-    >
-        <article className="homebrew-power-card">
+}: Props) => {
+    const addAmalgamPrerequisite = (value: string | null) => {
+        if (!value) return
+        const option = disciplineOptions.find((candidate) => candidate.value === value)
+        if (!option) return
+
+        const discipline = disciplineNameFromOption(option.label)
+        if (power.amalgamPrerequisites.some((prerequisite) => prerequisite.discipline === discipline)) {
+            return
+        }
+        update({
+            amalgamPrerequisites: [...power.amalgamPrerequisites, { discipline, level: 1 }]
+        })
+    }
+
+    return (
+        <Modal
+            opened={opened}
+            onClose={onClose}
+            centered
+            size="xl"
+            withCloseButton={false}
+            classNames={{
+                content: "homebrew-power-card__modal",
+                body: "homebrew-power-card__modal-body"
+            }}
+        >
+        <article className="homebrew-power-card homebrew-form-controls">
             <header className="homebrew-power-card__header">
                 <div className="homebrew-power-card__discipline-level">
                     <Select
@@ -97,24 +108,72 @@ const HomebrewPowerCardEditor = ({
                     classNames={{ input: "homebrew-power-card__name-input" }}
                     required
                 />
-                <TextInput
-                    label="Amalgam prerequisite"
-                    description="Optional. For example: Celerity 2, Potence 1."
-                    value={power.amalgamPrerequisites
-                        .map(({ discipline, level }) => `${discipline} ${level}`)
-                        .join(", ")}
-                    onChange={(event) =>
-                        update({
-                            amalgamPrerequisites: parseAmalgamPrerequisites(
-                                event.currentTarget.value
-                            )
-                        })
-                    }
-                    classNames={{
-                        root: "homebrew-power-card__amalgam",
-                        input: "homebrew-power-card__amalgam-input"
-                    }}
-                />
+                <div className="homebrew-power-card__amalgam">
+                    <Select
+                        label="Amalgam prerequisite"
+                        placeholder="Add a discipline"
+                        data={disciplineOptions.filter(
+                            (option) =>
+                                !power.amalgamPrerequisites.some(
+                                    (prerequisite) =>
+                                        prerequisite.discipline ===
+                                        disciplineNameFromOption(option.label)
+                                )
+                        )}
+                        searchable
+                        value={null}
+                        onChange={addAmalgamPrerequisite}
+                        classNames={{ input: "homebrew-power-card__amalgam-input" }}
+                    />
+                    {power.amalgamPrerequisites.length ? (
+                        <div className="homebrew-power-card__amalgam-list">
+                            {power.amalgamPrerequisites.map((prerequisite, index) => (
+                                <div
+                                    className="homebrew-power-card__amalgam-row"
+                                    key={`${prerequisite.discipline}-${index}`}
+                                >
+                                    <span>{prerequisite.discipline}</span>
+                                    <NumberInput
+                                        aria-label={`${prerequisite.discipline} amalgam level`}
+                                        min={1}
+                                        max={5}
+                                        value={prerequisite.level}
+                                        onChange={(value) =>
+                                            update({
+                                                amalgamPrerequisites:
+                                                    power.amalgamPrerequisites.map(
+                                                        (candidate, candidateIndex) =>
+                                                            candidateIndex === index
+                                                                ? {
+                                                                      ...candidate,
+                                                                      level: Number(value) || 1
+                                                                  }
+                                                                : candidate
+                                                    )
+                                            })
+                                        }
+                                    />
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        aria-label={`Remove ${prerequisite.discipline} prerequisite`}
+                                        onClick={() =>
+                                            update({
+                                                amalgamPrerequisites:
+                                                    power.amalgamPrerequisites.filter(
+                                                        (_, candidateIndex) =>
+                                                            candidateIndex !== index
+                                                    )
+                                            })
+                                        }
+                                    >
+                                        <IconX size={15} />
+                                    </ActionIcon>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+                </div>
             </section>
 
             <Textarea
@@ -127,27 +186,27 @@ const HomebrewPowerCardEditor = ({
                 onChange={(event) => update({ summary: event.currentTarget.value })}
             />
 
-            <OrnamentalDivider label="Dice pool" />
+            <OrnamentalDivider label="Dice pool" compact />
 
             <Textarea
                 aria-label="Dice pool"
                 placeholder="Resolve + Auspex"
-                minRows={2}
+                minRows={1}
                 autosize
-                maxRows={4}
+                maxRows={3}
                 value={power.dicePool}
                 onChange={(event) => update({ dicePool: event.currentTarget.value })}
                 classNames={{ input: "homebrew-power-card__dice-pool-input" }}
             />
 
-            <OrnamentalDivider label="Full description" />
+            <OrnamentalDivider label="Full description" compact />
 
             <Textarea
                 aria-label="Full description"
                 placeholder="Describe how this power works."
-                minRows={7}
+                minRows={5}
                 autosize
-                maxRows={16}
+                maxRows={12}
                 value={power.description}
                 onChange={(event) => update({ description: event.currentTarget.value })}
                 classNames={{ input: "homebrew-power-card__description-input" }}
@@ -165,5 +224,6 @@ const HomebrewPowerCardEditor = ({
         </article>
     </Modal>
 )
+}
 
 export default HomebrewPowerCardEditor

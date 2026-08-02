@@ -1,0 +1,40 @@
+.homebrew-page,
+.homebrew-form-controls {
+    --homebrew-control-background: linear-gradient(
+        135deg,
+        rgba(43, 35, 49, 0.96),
+        rgba(24, 18, 29, 0.96)
+    );
+    --homebrew-control-border: rgba(173, 112, 204, 0.42);
+}
+
+.homebrew-page :is(input:not([type="checkbox"], [type="radio"]), textarea),
+.homebrew-form-controls :is(input:not([type="checkbox"], [type="radio"]), textarea) {
+    background: var(--homebrew-control-background);
+    border-color: var(--homebrew-control-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.18);
+    color: #eee5ef;
+}
+
+.homebrew-page :is(input:not([type="checkbox"], [type="radio"]), textarea):focus,
+.homebrew-form-controls :is(input:not([type="checkbox"], [type="radio"]), textarea):focus {
+    border-color: #c88bea;
+    box-shadow: 0 0 0 2px rgba(178, 91, 224, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.homebrew-page :is(.mantine-PillsInput-input, .mantine-TagsInput-input),
+.homebrew-form-controls :is(.mantine-PillsInput-input, .mantine-TagsInput-input) {
+    background: var(--homebrew-control-background);
+    border-color: var(--homebrew-control-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.homebrew-page .mantine-InputWrapper-label,
+.homebrew-form-controls .mantine-InputWrapper-label {
+    color: rgba(239, 228, 242, 0.86);
+}
+
+.homebrew-page .mantine-InputWrapper-description,
+.homebrew-form-controls .mantine-InputWrapper-description {
+    color: rgba(205, 191, 210, 0.62);
+}

@@ -26,6 +26,10 @@
     text-transform: uppercase;
 }
 
+.ornamental-divider--compact {
+    margin: 1rem 0 0.75rem;
+}
+
 @media (max-width: 40rem) {
     .ornamental-divider img {
         width: 30%;

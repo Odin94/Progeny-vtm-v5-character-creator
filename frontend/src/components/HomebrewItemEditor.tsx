@@ -321,7 +321,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             title={`${item.id ? "Edit" : "Add"} ${homebrewKindLabel(item.kind)}`}
             size="lg"
         >
-            <Stack gap="md">
+            <Stack gap="md" className="homebrew-form-controls">
                 {commonFields}
                 {"logo" in draft ? (
                     <TextInput
@@ -468,7 +468,7 @@ const LoresheetEditor = ({
 
     return (
         <div className="homebrew-loresheet__shell">
-            <article className="homebrew-loresheet__sheet">
+            <article className="homebrew-loresheet__sheet homebrew-form-controls">
                 <header className="homebrew-loresheet__header">
                     <TextInput
                         aria-label="Loresheet name"
