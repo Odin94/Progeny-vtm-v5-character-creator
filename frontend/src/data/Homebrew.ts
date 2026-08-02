@@ -117,6 +117,7 @@ export type HomebrewCollectionInput = {
 
 export type HomebrewLibrarySummary = {
     id: string
+    authorId: string | null
     publicationId: string
     version: number
     name: string

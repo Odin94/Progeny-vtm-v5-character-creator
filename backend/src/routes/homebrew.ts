@@ -278,6 +278,7 @@ const getLibrarySummaries = async (query: LibraryQuery) => {
         return [
             {
                 id: entry.id,
+                authorId: entry.authorId,
                 publicationId: publication.id,
                 version: publication.version,
                 name: snapshot.name,

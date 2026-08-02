@@ -10,10 +10,8 @@ import {
     Loader,
     Modal,
     Paper,
-    ScrollArea,
     Select,
     Stack,
-    Table,
     Text,
     TextInput,
     Title
@@ -21,7 +19,7 @@ import {
 import { notifications } from "@mantine/notifications"
 import { IconArrowLeft, IconBooks, IconDropletFilled, IconSend } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -30,8 +28,17 @@ import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { useHomebrewCollections } from "~/hooks/useHomebrew"
 import { api } from "~/utils/api"
+import "./HomebrewLibraryPage.css"
 
-const BloodRating = ({ value }: { value: number }) => (
+const BloodRating = ({
+    value,
+    interactive = false,
+    onChange
+}: {
+    value: number
+    interactive?: boolean
+    onChange?: (rating: number) => void
+}) => (
     <Group gap={2} wrap="nowrap" aria-label={`${value.toFixed(1)} out of 5 blood rating`}>
         {[1, 2, 3, 4, 5].map((rating) => (
             <ActionIcon
@@ -39,7 +46,13 @@ const BloodRating = ({ value }: { value: number }) => (
                 variant="transparent"
                 color={rating <= Math.round(value) ? "red" : "gray"}
                 size="sm"
-                disabled
+                disabled={!interactive}
+                aria-label={interactive ? `Rate ${rating} blood` : undefined}
+                onClick={(event) => {
+                    event.stopPropagation()
+                    onChange?.(rating)
+                }}
+                onKeyDown={(event) => event.stopPropagation()}
             >
                 <IconDropletFilled size={15} />
             </ActionIcon>
@@ -56,6 +69,7 @@ const formatRequestOpenedDate = (createdAt: string) =>
 
 const HomebrewLibraryPage = () => {
     const client = useQueryClient()
+    const navigate = useNavigate()
     const { user, isAuthenticated, signIn } = useAuth()
     const hasSuperadminPrivileges =
         (user?.actorIsSuperadmin ?? false) && !user?.impersonation.active
@@ -98,6 +112,18 @@ const HomebrewLibraryPage = () => {
     const withdrawMutation = useMutation({
         mutationFn: api.withdrawHomebrewPublishRequest,
         onSuccess: () => client.invalidateQueries({ queryKey: ["homebrew", "publish-requests"] })
+    })
+    const rateMutation = useMutation({
+        mutationFn: ({ entryId, rating }: { entryId: string; rating: number }) =>
+            api.rateHomebrewLibraryCollection(entryId, rating),
+        onSuccess: refreshLibrary,
+        onError: (error) => {
+            notifications.show({
+                title: "Could not save rating",
+                message: error.message,
+                color: "red"
+            })
+        }
     })
 
     return (
@@ -177,23 +203,34 @@ const HomebrewLibraryPage = () => {
                         {libraryQuery.isLoading ? (
                             <Loader color="grape" />
                         ) : libraryQuery.data?.length ? (
-                            <ScrollArea>
-                                <Table striped highlightOnHover verticalSpacing="md" miw={900}>
-                                    <Table.Thead>
-                                        <Table.Tr>
-                                            <Table.Th>Collection</Table.Th>
-                                            <Table.Th>Author</Table.Th>
-                                            <Table.Th>Contents</Table.Th>
-                                            <Table.Th>Rating</Table.Th>
-                                            <Table.Th>Community</Table.Th>
-                                            <Table.Th />
-                                        </Table.Tr>
-                                    </Table.Thead>
-                                    <Table.Tbody>
-                                        {libraryQuery.data.map((entry) => (
-                                            <Table.Tr key={entry.id}>
-                                                <Table.Td>
-                                                    <Stack gap={4} maw={360}>
+                            <Stack gap="sm">
+                                {libraryQuery.data.map((entry) => {
+                                    const canRate =
+                                        entry.authorId !== user?.id && !rateMutation.isPending
+                                    const openEntry = () =>
+                                        navigate({
+                                            to: "/homebrew/library/$collectionId",
+                                            params: { collectionId: entry.id }
+                                        })
+
+                                    return (
+                                        <article
+                                            key={entry.id}
+                                            className="homebrew-library-card"
+                                            role="link"
+                                            tabIndex={0}
+                                            aria-label={`Open ${entry.name}`}
+                                            onClick={openEntry}
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter" || event.key === " ") {
+                                                    event.preventDefault()
+                                                    openEntry()
+                                                }
+                                            }}
+                                        >
+                                            <div className="homebrew-library-card__body">
+                                                <div className="homebrew-library-card__grid">
+                                                    <Stack gap={4} className="homebrew-library-card__collection">
                                                         <Text fw={600}>{entry.name}</Text>
                                                         <Text size="sm" c="dimmed" lineClamp={2}>
                                                             {entry.shortDescription}
@@ -210,45 +247,60 @@ const HomebrewLibraryPage = () => {
                                                             ))}
                                                         </Group>
                                                     </Stack>
-                                                </Table.Td>
-                                                <Table.Td>{entry.authorNickname}</Table.Td>
-                                                <Table.Td>
-                                                    {Object.entries(entry.itemCounts)
-                                                        .map(
-                                                            ([itemKind, count]) =>
-                                                                `${count} ${homebrewKindLabel(itemKind as never)}`
-                                                        )
-                                                        .join(", ")}
-                                                </Table.Td>
-                                                <Table.Td>
+                                                    <div>
+                                                        <Text className="homebrew-library-card__label">
+                                                            Author
+                                                        </Text>
+                                                        <Text>{entry.authorNickname}</Text>
+                                                    </div>
+                                                    <div>
+                                                        <Text className="homebrew-library-card__label">
+                                                            Contents
+                                                        </Text>
+                                                        <Text size="sm">
+                                                            {Object.entries(entry.itemCounts)
+                                                                .map(
+                                                                    ([itemKind, count]) =>
+                                                                        `${count} ${homebrewKindLabel(itemKind as never)}`
+                                                                )
+                                                                .join(", ")}
+                                                        </Text>
+                                                    </div>
                                                     <Stack gap={2}>
-                                                        <BloodRating value={entry.averageRating} />
+                                                        <Text className="homebrew-library-card__label">
+                                                            Rating
+                                                        </Text>
+                                                        <BloodRating
+                                                            value={entry.averageRating}
+                                                            interactive={canRate}
+                                                            onChange={(rating) => {
+                                                                if (isAuthenticated) {
+                                                                    rateMutation.mutate({
+                                                                        entryId: entry.id,
+                                                                        rating
+                                                                    })
+                                                                } else {
+                                                                    signIn()
+                                                                }
+                                                            }}
+                                                        />
                                                         <Text size="xs" c="dimmed">
                                                             {entry.ratingCount} ratings
                                                         </Text>
                                                     </Stack>
-                                                </Table.Td>
-                                                <Table.Td>
-                                                    <Text size="sm">{entry.copyCount} copies</Text>
-                                                    <Text size="sm">{entry.commentCount} comments</Text>
-                                                </Table.Td>
-                                                <Table.Td>
-                                                    <Button
-                                                        component={Link}
-                                                        to="/homebrew/library/$collectionId"
-                                                        params={{ collectionId: entry.id }}
-                                                        size="xs"
-                                                        variant="light"
-                                                        color="grape"
-                                                    >
-                                                        Open details
-                                                    </Button>
-                                                </Table.Td>
-                                            </Table.Tr>
-                                        ))}
-                                    </Table.Tbody>
-                                </Table>
-                            </ScrollArea>
+                                                    <div>
+                                                        <Text className="homebrew-library-card__label">
+                                                            Community
+                                                        </Text>
+                                                        <Text size="sm">{entry.copyCount} copies</Text>
+                                                        <Text size="sm">{entry.commentCount} comments</Text>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    )
+                                })}
+                            </Stack>
                         ) : (
                             <Paper withBorder p="xl">
                                 <Text c="dimmed" ta="center">

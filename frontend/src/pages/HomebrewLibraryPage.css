@@ -1,0 +1,89 @@
+.homebrew-library-card {
+    --corner: 0.9rem;
+    background: #704297;
+    clip-path: polygon(
+        var(--corner) 0,
+        calc(100% - var(--corner)) 0,
+        100% var(--corner),
+        100% calc(100% - var(--corner)),
+        calc(100% - var(--corner)) 100%,
+        var(--corner) 100%,
+        0 calc(100% - var(--corner)),
+        0 var(--corner)
+    );
+    cursor: pointer;
+    padding: 1px;
+    transition: transform var(--motion-duration-ui) var(--motion-ease-out);
+}
+
+.homebrew-library-card:hover {
+    transform: translateY(-1px);
+}
+
+.homebrew-library-card:focus-visible {
+    outline: 2px solid #d4a0f4;
+    outline-offset: 3px;
+}
+
+.homebrew-library-card__body {
+    --corner: 0.84rem;
+    background: linear-gradient(145deg, #1a141e, #100d12 72%);
+    clip-path: polygon(
+        var(--corner) 0,
+        calc(100% - var(--corner)) 0,
+        100% var(--corner),
+        100% calc(100% - var(--corner)),
+        calc(100% - var(--corner)) 100%,
+        var(--corner) 100%,
+        0 calc(100% - var(--corner)),
+        0 var(--corner)
+    );
+    min-height: 7.5rem;
+    padding: 1rem 1.2rem;
+}
+
+.homebrew-library-card__grid {
+    align-items: center;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(15rem, 1.4fr) minmax(7rem, 0.45fr) minmax(15rem, 1.25fr) minmax(7rem, 0.55fr) minmax(8rem, 0.5fr);
+}
+
+.homebrew-library-card__collection {
+    min-width: 0;
+}
+
+.homebrew-library-card__label {
+    color: rgba(225, 210, 232, 0.63);
+    font-family: "Cinzel, Georgia, serif";
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+@media (max-width: 76rem) {
+    .homebrew-library-card__grid {
+        grid-template-columns: minmax(15rem, 1.4fr) minmax(12rem, 1fr) repeat(2, minmax(8rem, 0.55fr));
+    }
+
+    .homebrew-library-card__collection {
+        grid-row: span 2;
+    }
+}
+
+@media (max-width: 48rem) {
+    .homebrew-library-card__body {
+        padding: 1rem;
+    }
+
+    .homebrew-library-card__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .homebrew-library-card__collection {
+        grid-column: 1 / -1;
+        grid-row: auto;
+    }
+}
