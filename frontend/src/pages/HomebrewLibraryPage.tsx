@@ -137,9 +137,13 @@ const HomebrewLibraryPage = () => {
                 <AppTopbar />
             </AppShell.Header>
             <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
-                <Container size="xl" py={84}>
+                <Container size="xl" py={84} className="homebrew-page__content">
                     <Stack gap="xl">
-                        <Group justify="space-between" align="flex-start">
+                        <Group
+                            justify="space-between"
+                            align="flex-start"
+                            className="homebrew-page__header"
+                        >
                             <div>
                                 <Group gap="sm">
                                     <IconBooks size={34} />
@@ -150,7 +154,7 @@ const HomebrewLibraryPage = () => {
                                     ratings.
                                 </Text>
                             </div>
-                            <Group>
+                            <Group className="homebrew-page__header-actions">
                                 <Button
                                     component={Link}
                                     to="/homebrew"
@@ -172,7 +176,7 @@ const HomebrewLibraryPage = () => {
                         </Group>
 
                         <Paper withBorder p="md" bg="rgba(0,0,0,.4)">
-                            <Group grow align="flex-end">
+                            <Group grow align="flex-end" className="homebrew-library__filters">
                                 <TextInput
                                     label="Search"
                                     placeholder="Collection, author, or tag"

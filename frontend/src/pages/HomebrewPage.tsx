@@ -74,9 +74,13 @@ const HomebrewPage = () => {
                 <AppTopbar />
             </AppShell.Header>
             <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
-                <Container size="lg" py={84}>
+                <Container size="lg" py={84} className="homebrew-page__content">
                     <Stack gap="xl">
-                        <Group justify="space-between" align="flex-start">
+                        <Group
+                            justify="space-between"
+                            align="flex-start"
+                            className="homebrew-page__header"
+                        >
                             <div>
                                 <Group gap="sm">
                                     <IconBook2 size={34} />
@@ -87,7 +91,7 @@ const HomebrewPage = () => {
                                     coteries.
                                 </Text>
                             </div>
-                            <Group>
+                            <Group className="homebrew-page__header-actions">
                                 <Button
                                     component={Link}
                                     to="/homebrew/library"

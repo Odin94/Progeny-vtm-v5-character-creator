@@ -87,3 +87,14 @@
         grid-row: auto;
     }
 }
+
+@media (max-width: 34rem) {
+    .homebrew-library-card__grid {
+        gap: 0.9rem;
+        grid-template-columns: 1fr;
+    }
+
+    .homebrew-library-card__collection {
+        grid-column: auto;
+    }
+}

@@ -104,3 +104,47 @@
 .homebrew-select-empty {
     color: rgba(222, 211, 226, 0.62);
 }
+
+@media (max-width: 40rem) {
+    .homebrew-page__content {
+        padding-block: 2rem !important;
+    }
+
+    .homebrew-page__editor-shell {
+        padding-block: calc(1rem + 52px) 1rem !important;
+    }
+
+    .homebrew-page__editor-panel {
+        padding: 1rem !important;
+    }
+
+    .homebrew-page__header,
+    .homebrew-page__rules-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .homebrew-page__header-actions,
+    .homebrew-page__rule-controls {
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .homebrew-page__header-actions > *,
+    .homebrew-page__rule-controls > * {
+        flex: 1 1 0;
+    }
+
+    .homebrew-page__header-save {
+        width: 100%;
+    }
+
+    .homebrew-library__filters {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .homebrew-library__filters > * {
+        width: 100%;
+    }
+}

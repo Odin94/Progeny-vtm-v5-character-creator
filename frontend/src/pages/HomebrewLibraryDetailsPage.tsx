@@ -365,7 +365,11 @@ const LibraryDetail = ({
 
                             <Paper withBorder p="xl" bg="rgba(0,0,0,.28)">
                                 <Stack gap="lg">
-                                    <Group justify="space-between" align="flex-start">
+                                <Group
+                                    justify="space-between"
+                                    align="flex-start"
+                                    className="homebrew-page__header"
+                                >
                                         <div>
                                             <Text size="sm" c="dimmed">
                                                 Community collection · Version {detail.version}
@@ -375,7 +379,7 @@ const LibraryDetail = ({
                                                 by {detail.authorNickname}
                                             </Text>
                                         </div>
-                                        <Group>
+                                        <Group className="homebrew-page__header-actions">
                                             <Button
                                                 color="grape"
                                                 variant="outline"

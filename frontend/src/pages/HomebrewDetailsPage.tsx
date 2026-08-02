@@ -317,9 +317,10 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                 <AppTopbar />
             </AppShell.Header>
             <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
-                <Box py="calc(2rem + 52px)" pb="2rem">
+                <Box py="calc(2rem + 52px)" pb="2rem" className="homebrew-page__editor-shell">
                     <Container size="xl">
                         <Box
+                            className="homebrew-page__editor-panel"
                             style={{
                                 backgroundColor: "rgba(255, 255, 255, 0.055)",
                                 backdropFilter: "blur(7px)",
@@ -330,7 +331,11 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                             }}
                         >
                             <Stack gap="lg">
-                                <Group justify="space-between" align="flex-start">
+                                <Group
+                                    justify="space-between"
+                                    align="flex-start"
+                                    className="homebrew-page__header"
+                                >
                                     <div>
                                         <Button
                                             component={Link}
@@ -352,6 +357,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                         </Text>
                                     </div>
                                     <Button
+                                        className="homebrew-page__header-save"
                                         color="grape"
                                         variant={isNew ? "filled" : "outline"}
                                         onClick={saveCollection}
@@ -424,7 +430,11 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
 
                                 <Divider />
 
-                                <Group justify="space-between" align="flex-end">
+                                <Group
+                                    justify="space-between"
+                                    align="flex-end"
+                                    className="homebrew-page__rules-header"
+                                >
                                     <div>
                                         <Title order={2}>Rules</Title>
                                         <Text size="sm" c="dimmed">
@@ -432,7 +442,10 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                             under the Homebrew category in character creation.
                                         </Text>
                                     </div>
-                                    <Group align="flex-end">
+                                    <Group
+                                        align="flex-end"
+                                        className="homebrew-page__rule-controls"
+                                    >
                                         <Select
                                             label="Item type"
                                             value={itemKind}

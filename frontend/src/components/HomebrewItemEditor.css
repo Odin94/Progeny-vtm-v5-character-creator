@@ -272,6 +272,23 @@
 }
 
 @media (max-width: 40rem) {
+    .homebrew-rule-modal {
+        --corner: 0.85rem;
+        max-height: calc(100dvh - 1rem);
+    }
+
+    .homebrew-rule-modal::before {
+        --inner-corner: 0.76rem;
+    }
+
+    .homebrew-rule-modal__header {
+        padding: 1rem 1rem 0.35rem;
+    }
+
+    .homebrew-rule-modal__body {
+        padding: 0.35rem 1rem 1rem;
+    }
+
     .homebrew-loresheet__sheet {
         padding: 1.5rem;
     }
@@ -291,6 +308,15 @@
         border-top: 1px solid rgba(178, 72, 80, 0.42);
         padding-left: 0;
         padding-top: 1.25rem;
+    }
+
+    .homebrew-loresheet__footer {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .homebrew-loresheet__footer > button {
+        width: 100%;
     }
 
 }

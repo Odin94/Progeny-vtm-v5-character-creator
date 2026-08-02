@@ -229,11 +229,33 @@
 }
 
 @media (max-width: 40rem) {
+    .homebrew-power-card__modal {
+        max-height: calc(100dvh - 1rem);
+    }
+
+    .homebrew-power-card__shell {
+        --corner: 0.85rem;
+    }
+
+    .homebrew-power-card {
+        --corner: 0.76rem;
+        padding: 1rem;
+    }
+
     .homebrew-power-card__header {
         grid-template-columns: 1fr;
     }
 
     .homebrew-power-card__header > div[aria-hidden="true"] {
         display: none;
+    }
+
+    .homebrew-power-card__footer {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .homebrew-power-card__footer > button {
+        width: 100%;
     }
 }
