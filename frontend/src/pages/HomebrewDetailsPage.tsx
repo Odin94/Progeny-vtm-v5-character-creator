@@ -24,6 +24,7 @@ import { notifications } from "@mantine/notifications"
 import { IconArrowLeft, IconChevronDown, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
+import AnimatedCollapse from "~/components/AnimatedCollapse"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import HomebrewItemEditor from "~/components/HomebrewItemEditor"
@@ -155,6 +156,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         index: number
     } | null>(null)
     const [collapsedItemKinds, setCollapsedItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
+    const [motionlessItemKinds, setMotionlessItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
 
     useEffect(() => {
         if (collectionQuery.data) {
@@ -172,7 +174,13 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         [draft.items]
     )
 
-    const toggleItemKind = (kind: HomebrewItemKind) =>
+    const toggleItemKind = (kind: HomebrewItemKind, motionEnabled = true) => {
+        setMotionlessItemKinds((current) => {
+            const next = new Set(current)
+            if (motionEnabled) next.delete(kind)
+            else next.add(kind)
+            return next
+        })
         setCollapsedItemKinds((current) => {
             const next = new Set(current)
             if (next.has(kind)) {
@@ -182,6 +190,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
             }
             return next
         })
+    }
 
     const handleSaveError = (mutationError: unknown) => {
         const nextItemErrors = getItemValidationErrors(mutationError)
@@ -473,21 +482,25 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                             size="sm"
                                                             aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
                                                             aria-expanded={!isCollapsed}
-                                                            onClick={() => toggleItemKind(kind)}
+                                                            onClick={(event) =>
+                                                                toggleItemKind(kind, event.detail !== 0)
+                                                            }
                                                         >
                                                             <IconChevronDown
                                                                 size={16}
+                                                                className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
                                                                 style={{
                                                                     transform: isCollapsed
                                                                         ? "rotate(-90deg)"
-                                                                        : undefined,
-                                                                    transition:
-                                                                        "transform 150ms ease"
+                                                                        : undefined
                                                                 }}
                                                             />
                                                         </ActionIcon>
                                                     </Group>
-                                                    {!isCollapsed ? (
+                                                    <AnimatedCollapse
+                                                        opened={!isCollapsed}
+                                                        motionEnabled={!motionlessItemKinds.has(kind)}
+                                                    >
                                                         <>
                                                             <SimpleGrid
                                                                 cols={{
@@ -621,7 +634,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                                 </ActionIcon>
                                                             </Group>
                                                         </>
-                                                    ) : null}
+                                                    </AnimatedCollapse>
                                                 </Stack>
                                             )
                                         })}

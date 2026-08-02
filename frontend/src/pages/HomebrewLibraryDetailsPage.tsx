@@ -31,6 +31,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
+import AnimatedCollapse from "~/components/AnimatedCollapse"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import ContentWarning from "~/components/ContentWarning"
@@ -82,12 +83,19 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
     const [unpublishConfirmationOpened, setUnpublishConfirmationOpened] = useState(false)
     const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null)
     const [collapsedItemKinds, setCollapsedItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
+    const [motionlessItemKinds, setMotionlessItemKinds] = useState<Set<HomebrewItemKind>>(new Set())
     const detailQuery = useQuery({
         queryKey: ["homebrew", "library", "detail", collectionId],
         queryFn: () => api.getHomebrewLibraryDetail(collectionId)
     })
 
-    const toggleItemKind = (kind: HomebrewItemKind) =>
+    const toggleItemKind = (kind: HomebrewItemKind, motionEnabled = true) => {
+        setMotionlessItemKinds((current) => {
+            const next = new Set(current)
+            if (motionEnabled) next.delete(kind)
+            else next.add(kind)
+            return next
+        })
         setCollapsedItemKinds((current) => {
             const next = new Set(current)
             if (next.has(kind)) {
@@ -97,6 +105,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             }
             return next
         })
+    }
     const refreshLibrary = () => client.invalidateQueries({ queryKey: ["homebrew", "library"] })
     const copyMutation = useMutation({
         mutationFn: () => api.copyHomebrewLibraryCollection(collectionId),
@@ -209,6 +218,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             onUnpublish={() => setUnpublishConfirmationOpened(true)}
             unpublishPending={unpublishMutation.isPending}
             collapsedItemKinds={collapsedItemKinds}
+            motionlessItemKinds={motionlessItemKinds}
             onToggleItemKind={toggleItemKind}
             onOpenSource={(entryId) => {
                 navigate({
@@ -270,7 +280,8 @@ type LibraryDetailProps = {
     onUnpublish: () => void
     unpublishPending: boolean
     collapsedItemKinds: Set<HomebrewItemKind>
-    onToggleItemKind: (kind: HomebrewItemKind) => void
+    motionlessItemKinds: Set<HomebrewItemKind>
+    onToggleItemKind: (kind: HomebrewItemKind, motionEnabled?: boolean) => void
     confirmation: React.ReactNode
 }
 
@@ -297,6 +308,7 @@ const LibraryDetail = ({
     onUnpublish,
     unpublishPending,
     collapsedItemKinds,
+    motionlessItemKinds,
     onToggleItemKind,
     confirmation
 }: LibraryDetailProps) => {
@@ -437,23 +449,39 @@ const LibraryDetail = ({
                                                         size="sm"
                                                         aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
                                                         aria-expanded={!isCollapsed}
-                                                        onClick={() => onToggleItemKind(kind)}
+                                                        onClick={(event) =>
+                                                            onToggleItemKind(kind, event.detail !== 0)
+                                                        }
                                                     >
                                                         <IconChevronDown
                                                             size={16}
+                                                            className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
                                                             style={{
                                                                 transform: isCollapsed
                                                                     ? "rotate(-90deg)"
-                                                                    : undefined,
-                                                                transition: "transform 150ms ease"
+                                                                    : undefined
                                                             }}
                                                         />
                                                     </ActionIcon>
                                                 </Group>
-                                                {!isCollapsed &&
-                                                (kind === "merit" || kind === "flaw") ? (
-                                                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
-                                                        {items.map((item) => (
+                                                <AnimatedCollapse
+                                                    opened={!isCollapsed}
+                                                    motionEnabled={!motionlessItemKinds.has(kind)}
+                                                >
+                                                    {kind === "merit" || kind === "flaw" ? (
+                                                        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+                                                            {items.map((item) => (
+                                                                <HomebrewItemPreview
+                                                                    key={
+                                                                        item.id ??
+                                                                        `${item.kind}-${item.name}`
+                                                                    }
+                                                                    item={item}
+                                                                />
+                                                            ))}
+                                                        </SimpleGrid>
+                                                    ) : (
+                                                        items.map((item) => (
                                                             <HomebrewItemPreview
                                                                 key={
                                                                     item.id ??
@@ -461,19 +489,9 @@ const LibraryDetail = ({
                                                                 }
                                                                 item={item}
                                                             />
-                                                        ))}
-                                                    </SimpleGrid>
-                                                ) : !isCollapsed ? (
-                                                    items.map((item) => (
-                                                        <HomebrewItemPreview
-                                                            key={
-                                                                item.id ??
-                                                                `${item.kind}-${item.name}`
-                                                            }
-                                                            item={item}
-                                                        />
-                                                    ))
-                                                ) : null}
+                                                        ))
+                                                    )}
+                                                </AnimatedCollapse>
                                             </Stack>
                                         )
                                     })
