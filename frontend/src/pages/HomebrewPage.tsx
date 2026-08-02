@@ -194,20 +194,23 @@ const HomebrewPage = () => {
                                                 ) : null}
                                             </Stack>
                                             <Group justify="space-between" mt="md">
-                                                <Switch
-                                                    size="sm"
-                                                    label="Enable for all my characters"
-                                                    checked={collection.enabledForAccount ?? false}
-                                                    disabled={setAccountEnabledMutation.isPending}
+                                                <div
                                                     onClick={(event) => event.stopPropagation()}
                                                     onKeyDown={(event) => event.stopPropagation()}
-                                                    onChange={(event) =>
-                                                        setAccountEnabledMutation.mutate({
-                                                            collectionId: collection.id,
-                                                            enabled: event.currentTarget.checked
-                                                        })
-                                                    }
-                                                />
+                                                >
+                                                    <Switch
+                                                        size="sm"
+                                                        label="Enable for all my characters"
+                                                        checked={collection.enabledForAccount ?? false}
+                                                        disabled={setAccountEnabledMutation.isPending}
+                                                        onChange={(event) =>
+                                                            setAccountEnabledMutation.mutate({
+                                                                collectionId: collection.id,
+                                                                enabled: event.currentTarget.checked
+                                                            })
+                                                        }
+                                                    />
+                                                </div>
                                                 <ActionIcon
                                                     color="red"
                                                     variant="light"
