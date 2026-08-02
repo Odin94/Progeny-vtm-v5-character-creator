@@ -243,9 +243,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                 const discipline = isOfficial
                                     ? disciplines[disciplineName]
                                     : undefined
-                                const logo =
-                                    discipline?.logo ||
-                                    sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
+                                const logo = customDiscipline?.homebrewSource
+                                    ? ""
+                                    : discipline?.logo ||
+                                      sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
 
                                 return (
                                     <Grid.Col key={identity} span={{ base: 12, md: 6, lg: 4 }}>
@@ -276,37 +277,39 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         }}
                                                     />
                                                 ) : null}
-                                                {customDiscipline?.homebrewSource ? (
-                                                    <HomebrewBadge
-                                                        source={customDiscipline.homebrewSource}
-                                                    />
-                                                ) : null}
                                                 <Group
                                                     justify="space-between"
                                                     style={{ flex: 1 }}
                                                     align="center"
                                                 >
-                                                    <Title
-                                                        order={4}
-                                                        style={{ margin: 0, cursor: "pointer" }}
-                                                        onClick={(event) => {
-                                                            event.stopPropagation()
-                                                            handleDisciplineClick(disciplineName)
-                                                        }}
-                                                    >
-                                                        {upcase(disciplineName)}
-                                                        {isCustom &&
-                                                        !customDiscipline?.homebrewSource ? (
-                                                            <Badge
-                                                                size="xs"
-                                                                variant="dot"
-                                                                color={primaryColor}
-                                                                ml="xs"
-                                                            >
-                                                                Custom
-                                                            </Badge>
+                                                    <Group gap="xs" wrap="nowrap">
+                                                        <Title
+                                                            order={4}
+                                                            style={{ margin: 0, cursor: "pointer" }}
+                                                            onClick={(event) => {
+                                                                event.stopPropagation()
+                                                                handleDisciplineClick(disciplineName)
+                                                            }}
+                                                        >
+                                                            {upcase(disciplineName)}
+                                                            {isCustom &&
+                                                            !customDiscipline?.homebrewSource ? (
+                                                                <Badge
+                                                                    size="xs"
+                                                                    variant="dot"
+                                                                    color={primaryColor}
+                                                                    ml="xs"
+                                                                >
+                                                                    Custom
+                                                                </Badge>
+                                                            ) : null}
+                                                        </Title>
+                                                        {customDiscipline?.homebrewSource ? (
+                                                            <HomebrewBadge
+                                                                source={customDiscipline.homebrewSource}
+                                                            />
                                                         ) : null}
-                                                    </Title>
+                                                    </Group>
                                                     <Group gap="xs" align="center">
                                                         <Badge
                                                             size="lg"
@@ -440,7 +443,23 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             }
                                                         }}
                                                     >
-                                                        {isCustom ? (
+                                                        {customDiscipline?.homebrewSource ? (
+                                                            <ActionIcon
+                                                                size="lg"
+                                                                radius="xl"
+                                                                variant="light"
+                                                                color={primaryColor}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setInitialDiscipline(
+                                                                        catalogKey as DisciplineName
+                                                                    )
+                                                                    setModalOpened(true)
+                                                                }}
+                                                            >
+                                                                <IconPlus size={18} />
+                                                            </ActionIcon>
+                                                        ) : isCustom ? (
                                                             <ActionIcon
                                                                 size="lg"
                                                                 radius="xl"
