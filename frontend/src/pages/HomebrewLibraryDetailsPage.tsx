@@ -509,15 +509,17 @@ const LibraryDetail = ({
                                                             ))}
                                                         </SimpleGrid>
                                                     ) : (
-                                                        items.map((item) => (
-                                                            <HomebrewItemPreview
-                                                                key={
-                                                                    item.id ??
-                                                                    `${item.kind}-${item.name}`
-                                                                }
-                                                                item={item}
-                                                            />
-                                                        ))
+                                                        <Stack gap="md">
+                                                            {items.map((item) => (
+                                                                <HomebrewItemPreview
+                                                                    key={
+                                                                        item.id ??
+                                                                        `${item.kind}-${item.name}`
+                                                                    }
+                                                                    item={item}
+                                                                />
+                                                            ))}
+                                                        </Stack>
                                                     )}
                                                 </AnimatedCollapse>
                                             </Stack>
