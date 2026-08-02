@@ -11,7 +11,7 @@
 
 .homebrew-power-card__shell {
     --corner: 1.25rem;
-    background: linear-gradient(145deg, #8150aa, #593473 72%);
+    background: linear-gradient(145deg, rgba(131, 85, 162, 0.68), rgba(82, 51, 104, 0.68) 72%);
     clip-path: polygon(
         var(--corner) 0,
         calc(100% - var(--corner)) 0,

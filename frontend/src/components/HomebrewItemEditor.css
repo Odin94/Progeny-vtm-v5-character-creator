@@ -11,7 +11,7 @@
 
 .homebrew-rule-modal {
     --corner: 1.25rem;
-    background: linear-gradient(145deg, #8150aa, #593473 72%);
+    background: linear-gradient(145deg, rgba(131, 85, 162, 0.68), rgba(82, 51, 104, 0.68) 72%);
     border: 0;
     border-radius: 0;
     box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
@@ -26,12 +26,35 @@
         0 var(--corner)
     );
     overflow: hidden;
-    padding: 2px;
+    padding: 0;
+    position: relative;
+    isolation: isolate;
+}
+
+.homebrew-rule-modal::before {
+    --inner-corner: 1.15rem;
+    background: linear-gradient(145deg, #1c151f, #100d12 68%);
+    clip-path: polygon(
+        var(--inner-corner) 0,
+        calc(100% - var(--inner-corner)) 0,
+        100% var(--inner-corner),
+        100% calc(100% - var(--inner-corner)),
+        calc(100% - var(--inner-corner)) 100%,
+        var(--inner-corner) 100%,
+        0 calc(100% - var(--inner-corner)),
+        0 var(--inner-corner)
+    );
+    content: "";
+    inset: 2px;
+    position: absolute;
+    z-index: 0;
 }
 
 .homebrew-rule-modal__header,
 .homebrew-rule-modal__body {
-    background: linear-gradient(145deg, #1c151f, #100d12 68%);
+    background: transparent;
+    position: relative;
+    z-index: 1;
 }
 
 .homebrew-rule-modal__header {
