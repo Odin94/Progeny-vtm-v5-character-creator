@@ -6,6 +6,7 @@ import {
     Modal,
     Paper,
     ScrollArea,
+    SimpleGrid,
     Stack,
     Table,
     Text,
@@ -14,14 +15,91 @@ import {
 } from "@mantine/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import type { HomebrewPublishRequest } from "~/data/Homebrew"
+import type { HomebrewCollection, HomebrewItem, HomebrewPublishRequest } from "~/data/Homebrew"
+import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { api } from "~/utils/api"
 import HomebrewRuleDetails from "~/components/HomebrewRuleDetails"
 import ContentWarning from "~/components/ContentWarning"
+import HomebrewItemPreview from "~/components/HomebrewItemPreview"
+
+const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) => {
+    const itemsByKind = homebrewItemKinds
+        .map((kind) => ({
+            kind,
+            items: collection.items.filter((item): item is HomebrewItem => item.kind === kind)
+        }))
+        .filter(({ items }) => items.length)
+
+    return (
+        <Stack gap="xl">
+            <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
+                <Stack gap="md">
+                    <div>
+                        <Text size="sm" c="dimmed">
+                            Homebrew collection preview
+                        </Text>
+                        <Title order={1}>{collection.name || "Untitled collection"}</Title>
+                    </div>
+                    {collection.shortDescription ? <Text>{collection.shortDescription}</Text> : null}
+                    {collection.description ? (
+                        <Text c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
+                            {collection.description}
+                        </Text>
+                    ) : null}
+                    {collection.tags.length ? (
+                        <Group gap="xs">
+                            {collection.tags.map((tag) => (
+                                <Badge key={tag} variant="outline" color="grape">
+                                    {tag}
+                                </Badge>
+                            ))}
+                        </Group>
+                    ) : null}
+                    {collection.contentWarning ? (
+                        <ContentWarning>{collection.contentWarning}</ContentWarning>
+                    ) : null}
+                </Stack>
+            </Paper>
+
+            {itemsByKind.map(({ kind, items }) => (
+                <Stack key={kind} gap="sm">
+                    <Group gap="xs">
+                        <Badge color="grape" variant="light">
+                            {homebrewKindLabel(kind)}
+                        </Badge>
+                        <Text size="sm" c="dimmed">
+                            {items.length} {items.length === 1 ? "entry" : "entries"}
+                        </Text>
+                    </Group>
+                    {kind === "merit" || kind === "flaw" ? (
+                        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+                            {items.map((item) => (
+                                <HomebrewItemPreview key={item.id} item={item} />
+                            ))}
+                        </SimpleGrid>
+                    ) : (
+                        <Stack gap="md">
+                            {items.map((item) => (
+                                <HomebrewItemPreview key={item.id} item={item} />
+                            ))}
+                        </Stack>
+                    )}
+                </Stack>
+            ))}
+
+            {itemsByKind.length === 0 ? (
+                <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
+                    <Text c="dimmed">This collection has no rules yet.</Text>
+                </Paper>
+            ) : null}
+        </Stack>
+    )
+}
 
 const HomebrewModerationPanel = () => {
     const client = useQueryClient()
     const [review, setReview] = useState<HomebrewPublishRequest | null>(null)
+    const [preview, setPreview] = useState<HomebrewPublishRequest | null>(null)
     const [denialMessage, setDenialMessage] = useState("")
     const requestsQuery = useQuery({
         queryKey: ["admin", "homebrew", "publish-requests"],
@@ -84,14 +162,23 @@ const HomebrewModerationPanel = () => {
                                     </Badge>
                                 </Table.Td>
                                 <Table.Td>
-                                    <Button
-                                        size="xs"
-                                        variant="light"
-                                        disabled={request.status !== "pending"}
-                                        onClick={() => setReview(request)}
-                                    >
-                                        Review
-                                    </Button>
+                                    <Group gap="xs" wrap="nowrap">
+                                        <Button
+                                            size="xs"
+                                            variant="subtle"
+                                            onClick={() => setPreview(request)}
+                                        >
+                                            Preview
+                                        </Button>
+                                        <Button
+                                            size="xs"
+                                            variant="light"
+                                            disabled={request.status !== "pending"}
+                                            onClick={() => setReview(request)}
+                                        >
+                                            Review
+                                        </Button>
+                                    </Group>
                                 </Table.Td>
                             </Table.Tr>
                         ))}
@@ -164,6 +251,18 @@ const HomebrewModerationPanel = () => {
                         </Button>
                     </Group>
                 </Stack>
+            </Modal>
+
+            <Modal
+                opened={!!preview}
+                onClose={() => setPreview(null)}
+                title={`Preview ${preview?.snapshot.name ?? "collection"}`}
+                size="calc(100vw - 4rem)"
+                centered
+            >
+                <ScrollArea h="calc(100dvh - 12rem)" type="auto" offsetScrollbars>
+                    {preview ? <CollectionPreview collection={preview.snapshot} /> : null}
+                </ScrollArea>
             </Modal>
         </Paper>
     )
