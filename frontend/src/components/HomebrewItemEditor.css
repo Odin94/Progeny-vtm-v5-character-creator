@@ -114,34 +114,6 @@
     white-space: pre-wrap;
 }
 
-.homebrew-loresheet__divider {
-    align-items: center;
-    display: flex;
-    gap: 0.65rem;
-    margin: clamp(1.5rem, 4vw, 2.75rem) 0 clamp(1.25rem, 3vw, 2rem);
-}
-
-.homebrew-loresheet__divider img {
-    height: auto;
-    min-width: 0;
-    opacity: 0.9;
-    width: 42%;
-}
-
-.homebrew-loresheet__divider img:first-child {
-    transform: scaleX(-1);
-}
-
-.homebrew-loresheet__divider .mantine-Text-root {
-    color: #b9414c;
-    flex: 0 0 auto;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: clamp(0.73rem, 1.6vw, 0.95rem);
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
 .homebrew-loresheet__tiers {
     display: grid;
     gap: clamp(1.25rem, 3vw, 2.5rem);
@@ -243,7 +215,4 @@
         padding-top: 1.25rem;
     }
 
-    .homebrew-loresheet__divider img {
-        width: 30%;
-    }
 }

@@ -14,7 +14,8 @@ import {
     Textarea
 } from "@mantine/core"
 import { useEffect, useState } from "react"
-import ornamentalDivider from "~/assets/ornamental-divider.svg"
+import HomebrewPowerCardEditor from "~/components/HomebrewPowerCardEditor"
+import OrnamentalDivider from "~/components/OrnamentalDivider"
 import type {
     HomebrewClan,
     HomebrewDiscipline,
@@ -159,7 +160,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
         </>
     )
 
-    const powerFields = ["power", "ritual", "ceremony", "formula"].includes(draft.kind)
+    const powerFields = ["ritual", "ceremony", "formula"].includes(draft.kind)
         ? (() => {
               const power = draft as HomebrewPower
               return (
@@ -285,6 +286,31 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     onSave={save}
                 />
             </Modal>
+        )
+    }
+
+    if (draft.kind === "power") {
+        const power = draft as HomebrewPower
+        return (
+            <HomebrewPowerCardEditor
+                opened={opened}
+                power={power}
+                disciplineOptions={disciplineOptions}
+                disciplineValue={encodeDisciplineReference(
+                    power.disciplineRef ?? {
+                        type: "official",
+                        name: power.discipline
+                    }
+                )}
+                onDisciplineChange={(value) => {
+                    const disciplineRef = decodeDisciplineReference(value)
+                    update({ discipline: disciplineRef.name, disciplineRef })
+                }}
+                update={update}
+                error={error}
+                onClose={onClose}
+                onSave={save}
+            />
         )
     }
 
@@ -495,11 +521,7 @@ const LoresheetEditor = ({
                     </Stack>
                 </section>
 
-                <div className="homebrew-loresheet__divider" aria-label="Lore">
-                    <img src={ornamentalDivider} alt="" />
-                    <Text>Lore</Text>
-                    <img src={ornamentalDivider} alt="" />
-                </div>
+                <OrnamentalDivider label="Lore" />
 
                 <section className="homebrew-loresheet__tiers" aria-label="Loresheet levels">
                     {draft.tiers.map((tier, index) => (

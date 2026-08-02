@@ -1,0 +1,127 @@
+.homebrew-power-card__modal {
+    background: transparent;
+    box-shadow: none;
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+}
+
+.homebrew-power-card__modal-body {
+    padding: 0;
+}
+
+.homebrew-power-card {
+    --power-accent: #7b3bb8;
+    background:
+        radial-gradient(circle at top right, rgba(123, 59, 184, 0.2), transparent 34%),
+        linear-gradient(145deg, #1c151f, #100d12 68%);
+    border: 1px solid rgba(174, 107, 224, 0.42);
+    border-radius: 1rem;
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    color: #e8dfdc;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.homebrew-power-card__header {
+    align-items: end;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(16rem, 1.4fr) minmax(0, 1fr) minmax(9rem, 0.55fr);
+}
+
+.homebrew-power-card__discipline-level {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr) 5rem;
+}
+
+.homebrew-power-card__header .mantine-InputWrapper-label,
+.homebrew-power-card__amalgam .mantine-InputWrapper-label {
+    color: rgba(232, 223, 220, 0.72);
+    font-family: "Cinzel, Georgia, serif";
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+.homebrew-power-card__identity {
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.homebrew-power-card__name-input {
+    background: linear-gradient(100deg, rgba(91, 42, 136, 0.95), rgba(53, 22, 79, 0.96));
+    border: 1px solid rgba(201, 143, 243, 0.58);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 22px rgba(0, 0, 0, 0.28);
+    color: #fbf5ff;
+    font-family: "Cinzel, Georgia, serif";
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    font-weight: 700;
+    height: auto;
+    letter-spacing: 0.07em;
+    padding: 0.8rem 1rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.homebrew-power-card__name-input:focus {
+    border-color: #e6bdff;
+    box-shadow: 0 0 0 2px rgba(187, 105, 239, 0.22);
+}
+
+.homebrew-power-card__name-input::placeholder {
+    color: rgba(251, 245, 255, 0.58);
+}
+
+.homebrew-power-card__amalgam {
+    margin: -1px auto 0;
+    max-width: min(100%, 31rem);
+}
+
+.homebrew-power-card__amalgam .mantine-InputWrapper-label {
+    background: #100d12;
+    border: 1px solid rgba(201, 143, 243, 0.42);
+    border-bottom: 0;
+    border-radius: 0 0 0.4rem 0.4rem;
+    display: table;
+    margin: 0 auto;
+    padding: 0.2rem 0.6rem 0.1rem;
+}
+
+.homebrew-power-card__amalgam-input {
+    background: rgba(15, 10, 18, 0.88);
+    border-color: rgba(201, 143, 243, 0.42);
+    border-radius: 0.45rem;
+    text-align: center;
+}
+
+.homebrew-power-card__dice-pool-input,
+.homebrew-power-card__description-input {
+    background: rgba(0, 0, 0, 0.18);
+    border-color: rgba(174, 107, 224, 0.28);
+    color: #e8dfdc;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.homebrew-power-card__dice-pool-input {
+    font-size: clamp(1.1rem, 2.3vw, 1.45rem);
+    font-weight: 700;
+    text-align: center;
+}
+
+.homebrew-power-card__footer {
+    border-top: 1px solid rgba(174, 107, 224, 0.28);
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+    padding-top: 1rem;
+}
+
+@media (max-width: 40rem) {
+    .homebrew-power-card__header {
+        grid-template-columns: 1fr;
+    }
+
+    .homebrew-power-card__header > div[aria-hidden="true"] {
+        display: none;
+    }
+}

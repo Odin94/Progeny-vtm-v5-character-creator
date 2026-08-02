@@ -1,0 +1,13 @@
+import { Text } from "@mantine/core"
+import ornamentalDivider from "~/assets/ornamental-divider.svg"
+import "./OrnamentalDivider.css"
+
+const OrnamentalDivider = ({ label }: { label: string }) => (
+    <div className="ornamental-divider" aria-label={label}>
+        <img src={ornamentalDivider} alt="" />
+        <Text>{label}</Text>
+        <img src={ornamentalDivider} alt="" />
+    </div>
+)
+
+export default OrnamentalDivider
