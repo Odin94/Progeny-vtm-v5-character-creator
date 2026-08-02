@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import DiceRollModal from "~/character_sheet/components/diceRollModal/DiceRollModal"
+import { calculateDicePoolValues } from "~/character_sheet/components/DisciplinePowerCard"
 import SelectedDicePoolDisplay from "~/character_sheet/components/diceRollModal/parts/SelectedDicePoolDisplay"
 import { useCharacterSheetStore } from "~/character_sheet/stores/characterSheetStore"
 import { useDiceRollModalStore } from "~/character_sheet/stores/diceRollModalStore"
@@ -173,5 +174,52 @@ describe("SelectedDicePoolDisplay", () => {
         )
 
         expect(screen.getByRole("button", { name: "Roll 6 dice" })).toBeInTheDocument()
+    })
+
+    it("resolves Homebrew discipline ratings by name in power cards and selected rolls", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            attributes: {
+                ...getBasicTestCharacter().attributes,
+                strength: 2
+            },
+            disciplines: [
+                {
+                    name: "Ancient Whispers",
+                    discipline: "Heartsong" as never,
+                    level: 1,
+                    summary: "",
+                    description: "",
+                    dicePool: "Resolve + Heartsong",
+                    rouseChecks: 0,
+                    amalgamPrerequisites: []
+                },
+                {
+                    name: "Mutated Flesh",
+                    discipline: "Heartsong" as never,
+                    level: 2,
+                    summary: "",
+                    description: "",
+                    dicePool: "Strength + Heartsong",
+                    rouseChecks: 0,
+                    amalgamPrerequisites: []
+                }
+            ]
+        }
+        useCharacterSheetStore.getState().updateSelectedDicePool({
+            attribute: "strength",
+            discipline: "heartsong" as never
+        })
+        useDiceRollModalStore.getState().openSelectedPool()
+
+        expect(calculateDicePoolValues("Resolve + Heartsong", character)).toBe("2 + 2")
+
+        render(
+            <MantineProvider>
+                <DiceRollModal primaryColor="red" character={character} />
+            </MantineProvider>
+        )
+
+        expect(screen.getByRole("button", { name: "Roll 4 dice" })).toBeInTheDocument()
     })
 })

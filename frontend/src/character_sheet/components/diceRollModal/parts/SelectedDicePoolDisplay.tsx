@@ -14,7 +14,7 @@ import { useDisclosure } from "@mantine/hooks"
 import { IconChevronDown, IconInfoCircle, IconRotateClockwise } from "@tabler/icons-react"
 import { Character } from "~/data/Character"
 import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
-import { upcase } from "~/generator/utils"
+import { getDisciplineRating, upcase } from "~/generator/utils"
 import { useShallow } from "zustand/react/shallow"
 import { getApplicableDisciplinePowers } from "../../../utils/disciplinePowerMatcher"
 import { getApplicableMeritFlawModifiers } from "../../../utils/meritFlawMatcher"
@@ -73,10 +73,10 @@ const SelectedDicePoolDisplay = ({
         return `${sign}${bonusDice} ${absBonus === 1 ? "die" : "dice"}`
     }
 
-    const selectedDisciplineRating = selectedDicePool.discipline
-        ? (character?.disciplines.filter((p) => p.discipline === selectedDicePool.discipline)
-              .length ?? 0)
-        : 0
+    const selectedDisciplineRating =
+        selectedDicePool.discipline && character
+            ? getDisciplineRating(selectedDicePool.discipline, character)
+            : 0
     const bloodPotencyDisciplineBonus =
         selectedDicePool.discipline && character
             ? getBloodPotencyDisciplineBonus(character.bloodPotency)

@@ -29,6 +29,7 @@ import {
     incrementFeedbackSurveyCount,
     triggerFeedbackSurveyEligibilityOnce
 } from "~/utils/feedbackSurveys"
+import { getDisciplineRating } from "~/generator/utils"
 
 type DiceRollModalProps = {
     primaryColor: string
@@ -147,10 +148,7 @@ const DiceRollModal = ({
             if (!applicablePowerKeys.has(powerKey)) continue
 
             const [disciplineName, powerName] = powerKey.split("-", 2)
-            const disciplinePowers = character.disciplines.filter(
-                (p) => p.discipline === disciplineName
-            )
-            const disciplineRating = disciplinePowers.length
+            const disciplineRating = getDisciplineRating(disciplineName, character)
 
             if (powerName === "Wrecker") {
                 disciplinePowerBonus += disciplineRating * 2
@@ -182,10 +180,7 @@ const DiceRollModal = ({
         if (selectedDicePool.skill) {
             skillOrDisciplineValue = character.skills[selectedDicePool.skill] || 0
         } else if (selectedDicePool.discipline) {
-            const disciplinePowers = character.disciplines.filter(
-                (p) => p.discipline === selectedDicePool.discipline
-            )
-            skillOrDisciplineValue = disciplinePowers.length
+            skillOrDisciplineValue = getDisciplineRating(selectedDicePool.discipline, character)
         }
 
         const bloodSurgeBonus = selectedDicePool.bloodSurge ? 2 : 0

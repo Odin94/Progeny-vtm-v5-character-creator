@@ -2,11 +2,9 @@ import { PredatorTypes } from "~/data/PredatorType"
 import { Attributes, AttributesKey } from "../data/Attributes"
 import { Character, getEmptyCharacter } from "../data/Character"
 import { Skills, SkillsKey } from "../data/Skills"
-import { DisciplineName } from "~/data/NameSchemas"
 import {
     attributeNameTo_WoD5EVtt_Key,
-    skillNameTo_WoD5EVtt_Key,
-    disciplineNameTo_WoD5EVtt_Key
+    skillNameTo_WoD5EVtt_Key
 } from "./foundryWoDJsonCreator"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 
@@ -96,6 +94,15 @@ export const notDefault = (character: Character, attribute: keyof Character) => 
 }
 export const isDefault = (character: Character, attribute: keyof Character) =>
     !notDefault(character, attribute)
+export const getDisciplineRating = (disciplineName: string, character: Character): number => {
+    const normalizedName = disciplineName.trim().toLowerCase()
+    if (!normalizedName) return 0
+
+    return character.disciplines.filter(
+        (power) => power.discipline.trim().toLowerCase() === normalizedName
+    ).length
+}
+
 export const getValueForKey = (key: string, character: Character): number => {
     if (attributeNameTo_WoD5EVtt_Key[key as AttributesKey]) {
         return character.attributes[key as AttributesKey] || 0
@@ -105,10 +112,5 @@ export const getValueForKey = (key: string, character: Character): number => {
         return character.skills[key as SkillsKey] || 0
     }
 
-    if (disciplineNameTo_WoD5EVtt_Key[key as DisciplineName]) {
-        const disciplinePowers = character.disciplines.filter((p) => p.discipline === key)
-        return disciplinePowers.length
-    }
-
-    return 0
+    return getDisciplineRating(key, character)
 }
