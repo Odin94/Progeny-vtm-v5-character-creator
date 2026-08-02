@@ -161,6 +161,13 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
             return next
         })
 
+    const openNewItemEditor = (kind: HomebrewItemKind) => {
+        setItemEditor({
+            item: { ...createEmptyHomebrewItem(kind), id: crypto.randomUUID() },
+            index: null
+        })
+    }
+
     const saveCollection = async () => {
         if (!draft.name.trim()) {
             setError("Collection name is required.")
@@ -367,15 +374,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                         <Button
                                             color="grape"
                                             leftSection={<IconPlus size={16} />}
-                                            onClick={() =>
-                                                setItemEditor({
-                                                    item: {
-                                                        ...createEmptyHomebrewItem(itemKind),
-                                                        id: crypto.randomUUID()
-                                                    },
-                                                    index: null
-                                                })
-                                            }
+                                            onClick={() => openNewItemEditor(itemKind)}
                                         >
                                             Add rule
                                         </Button>
@@ -430,99 +429,135 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                         </ActionIcon>
                                                     </Group>
                                                     {!isCollapsed ? (
-                                                        <SimpleGrid
-                                                            cols={{
-                                                                base: 1,
-                                                                md:
-                                                                    kind === "merit" ||
-                                                                    kind === "flaw"
-                                                                        ? 3
-                                                                        : 2
-                                                            }}
-                                                            spacing="sm"
-                                                        >
-                                                            {items.map((item) => {
-                                                                const index =
-                                                                    draft.items.indexOf(item)
-                                                                return (
-                                                                    <Paper
-                                                                        key={
-                                                                            item.id ??
-                                                                            `${item.kind}-${index}`
-                                                                        }
-                                                                        withBorder
-                                                                        p="md"
-                                                                        bg="rgba(0,0,0,.2)"
-                                                                    >
-                                                                        <Group
-                                                                            justify="space-between"
-                                                                            align="flex-start"
-                                                                            wrap="nowrap"
+                                                        <>
+                                                            <SimpleGrid
+                                                                cols={{
+                                                                    base: 1,
+                                                                    md:
+                                                                        kind === "merit" ||
+                                                                        kind === "flaw"
+                                                                            ? 3
+                                                                            : 2
+                                                                }}
+                                                                spacing="sm"
+                                                            >
+                                                                {items.map((item) => {
+                                                                    const index =
+                                                                        draft.items.indexOf(item)
+                                                                    return (
+                                                                        <Paper
+                                                                            key={
+                                                                                item.id ??
+                                                                                `${item.kind}-${index}`
+                                                                            }
+                                                                            withBorder
+                                                                            p="md"
+                                                                            bg="rgba(0,0,0,.2)"
                                                                         >
-                                                                            <div>
-                                                                                <Text fw={600}>
-                                                                                    {item.name ||
-                                                                                        "Untitled rule"}
-                                                                                </Text>
-                                                                                <Text
-                                                                                    size="sm"
-                                                                                    c="dimmed"
-                                                                                    lineClamp={2}
-                                                                                >
-                                                                                    {item.summary ||
-                                                                                        item.description ||
-                                                                                        "No summary yet."}
-                                                                                </Text>
-                                                                            </div>
                                                                             <Group
-                                                                                gap={4}
+                                                                                justify="space-between"
+                                                                                align="flex-start"
                                                                                 wrap="nowrap"
                                                                             >
-                                                                                <ActionIcon
-                                                                                    variant="subtle"
-                                                                                    color="grape"
-                                                                                    aria-label={`Edit ${item.name || "rule"}`}
-                                                                                    onClick={() =>
-                                                                                        setItemEditor(
-                                                                                            {
-                                                                                                item,
-                                                                                                index
-                                                                                            }
-                                                                                        )
-                                                                                    }
+                                                                                <div>
+                                                                                    <Text fw={600}>
+                                                                                        {item.name ||
+                                                                                            "Untitled rule"}
+                                                                                    </Text>
+                                                                                    {item.kind ===
+                                                                                    "power" ? (
+                                                                                        <Badge
+                                                                                            mt={4}
+                                                                                            size="sm"
+                                                                                            variant="light"
+                                                                                            color="grape"
+                                                                                        >
+                                                                                            {item.discipline ||
+                                                                                                "No discipline"}
+                                                                                        </Badge>
+                                                                                    ) : null}
+                                                                                    <Text
+                                                                                        size="sm"
+                                                                                        c="dimmed"
+                                                                                        lineClamp={
+                                                                                            2
+                                                                                        }
+                                                                                    >
+                                                                                        {item.summary ||
+                                                                                            item.description ||
+                                                                                            "No summary yet."}
+                                                                                    </Text>
+                                                                                </div>
+                                                                                <Group
+                                                                                    gap={4}
+                                                                                    wrap="nowrap"
                                                                                 >
-                                                                                    <IconEdit
-                                                                                        size={16}
-                                                                                    />
-                                                                                </ActionIcon>
-                                                                                <ActionIcon
-                                                                                    variant="subtle"
-                                                                                    color="red"
-                                                                                    aria-label={`Delete ${item.name || "rule"}`}
-                                                                                    onClick={() =>
-                                                                                        setDraft({
-                                                                                            ...draft,
-                                                                                            items: draft.items.filter(
-                                                                                                (
-                                                                                                    _,
-                                                                                                    itemIndex
-                                                                                                ) =>
-                                                                                                    itemIndex !==
+                                                                                    <ActionIcon
+                                                                                        variant="subtle"
+                                                                                        color="grape"
+                                                                                        aria-label={`Edit ${item.name || "rule"}`}
+                                                                                        onClick={() =>
+                                                                                            setItemEditor(
+                                                                                                {
+                                                                                                    item,
                                                                                                     index
+                                                                                                }
                                                                                             )
-                                                                                        })
-                                                                                    }
-                                                                                >
-                                                                                    <IconTrash
-                                                                                        size={16}
-                                                                                    />
-                                                                                </ActionIcon>
+                                                                                        }
+                                                                                    >
+                                                                                        <IconEdit
+                                                                                            size={
+                                                                                                16
+                                                                                            }
+                                                                                        />
+                                                                                    </ActionIcon>
+                                                                                    <ActionIcon
+                                                                                        variant="subtle"
+                                                                                        color="red"
+                                                                                        aria-label={`Delete ${item.name || "rule"}`}
+                                                                                        onClick={() =>
+                                                                                            setDraft(
+                                                                                                {
+                                                                                                    ...draft,
+                                                                                                    items: draft.items.filter(
+                                                                                                        (
+                                                                                                            _,
+                                                                                                            itemIndex
+                                                                                                        ) =>
+                                                                                                            itemIndex !==
+                                                                                                            index
+                                                                                                    )
+                                                                                                }
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        <IconTrash
+                                                                                            size={
+                                                                                                16
+                                                                                            }
+                                                                                        />
+                                                                                    </ActionIcon>
+                                                                                </Group>
                                                                             </Group>
-                                                                        </Group>
-                                                                    </Paper>
-                                                                )
-                                                            })}
-                                                        </SimpleGrid>
+                                                                        </Paper>
+                                                                    )
+                                                                })}
+                                                            </SimpleGrid>
+                                                            <Group justify="center">
+                                                                <ActionIcon
+                                                                    variant="light"
+                                                                    color="grape"
+                                                                    size="lg"
+                                                                    radius="xl"
+                                                                    aria-label={`Add ${homebrewKindLabel(kind)}`}
+                                                                    onClick={() =>
+                                                                        openNewItemEditor(kind)
+                                                                    }
+                                                                >
+                                                                    <IconPlus size={18} />
+                                                                </ActionIcon>
+                                                            </Group>
+                                                        </>
                                                     ) : null}
                                                 </Stack>
                                             )
