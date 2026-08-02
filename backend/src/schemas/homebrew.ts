@@ -188,6 +188,8 @@ export const attachHomebrewCollectionsSchema = z.object({
     collectionIds: z.array(idSchema).max(50)
 })
 
+export const accountHomebrewCollectionEnabledSchema = z.object({ enabled: z.boolean() })
+
 export const libraryQuerySchema = z.object({
     query: z.string().trim().max(100).optional(),
     type: z
@@ -226,6 +228,9 @@ export const commentSchema = z.object({ body: z.string().trim().min(1).max(5_000
 export type HomebrewItemInput = z.infer<typeof homebrewItemSchema>
 export type HomebrewCollectionInput = z.infer<typeof homebrewCollectionInputSchema>
 export type AttachHomebrewCollectionsInput = z.infer<typeof attachHomebrewCollectionsSchema>
+export type AccountHomebrewCollectionEnabledInput = z.infer<
+    typeof accountHomebrewCollectionEnabledSchema
+>
 export type LibraryQuery = z.infer<typeof libraryQuerySchema>
 export type PublishRequestInput = z.infer<typeof publishRequestSchema>
 export type ModeratePublishRequestInput = z.infer<typeof moderatePublishRequestSchema>

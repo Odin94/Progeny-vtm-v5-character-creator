@@ -5,6 +5,7 @@ import type { ZodIssue } from "zod"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, requireSuperadmin } from "../middleware/auth.js"
 import {
+    accountHomebrewCollectionEnabledSchema,
     attachHomebrewCollectionsSchema,
     commentSchema,
     homebrewCollectionInputSchema,
@@ -16,6 +17,7 @@ import {
     publishRequestParamsSchema,
     publishRequestSchema,
     ratingSchema,
+    type AccountHomebrewCollectionEnabledInput,
     type AttachHomebrewCollectionsInput,
     type CommentInput,
     type HomebrewCollectionInput,
@@ -314,10 +316,26 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 where: eq(schema.homebrewCollections.ownerId, request.user!.id),
                 orderBy: [desc(schema.homebrewCollections.updatedAt)]
             })
+            const enabledCollections = await db
+                .select({ collectionId: schema.userHomebrewCollections.collectionId })
+                .from(schema.userHomebrewCollections)
+                .where(eq(schema.userHomebrewCollections.userId, request.user!.id))
+            const enabledCollectionIds = new Set(
+                enabledCollections.map(({ collectionId }) => collectionId)
+            )
             const snapshots = await Promise.all(
                 collections.map((collection) => getHomebrewCollectionSnapshot(collection.id))
             )
-            reply.send(snapshots.filter(Boolean))
+            reply.send(
+                snapshots
+                    .filter(
+                        (collection): collection is HomebrewCollectionSnapshot => collection !== null
+                    )
+                    .map((collection) => ({
+                        ...collection,
+                        enabledForAccount: enabledCollectionIds.has(collection.id)
+                    }))
+            )
         }
     )
 
@@ -331,6 +349,43 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             const collection = await getOwnedCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
             reply.send(await getHomebrewCollectionSnapshot(collection.id))
+        }
+    )
+
+    fastify.put<{ Params: IdParams; Body: AccountHomebrewCollectionEnabledInput }>(
+        "/homebrew/collections/:id/account-enabled",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: zodToFastifySchema(homebrewCollectionParamsSchema),
+                body: zodToFastifySchema(accountHomebrewCollectionEnabledSchema)
+            }
+        },
+        async (request, reply) => {
+            const collection = await getOwnedCollection(request.params.id, request.user!.id)
+            if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
+
+            if (request.body.enabled) {
+                await db
+                    .insert(schema.userHomebrewCollections)
+                    .values({
+                        id: nanoid(),
+                        userId: request.user!.id,
+                        collectionId: collection.id
+                    })
+                    .onConflictDoNothing()
+            } else {
+                await db
+                    .delete(schema.userHomebrewCollections)
+                    .where(
+                        and(
+                            eq(schema.userHomebrewCollections.userId, request.user!.id),
+                            eq(schema.userHomebrewCollections.collectionId, collection.id)
+                        )
+                    )
+            }
+
+            reply.send({ enabled: request.body.enabled })
         }
     )
 
@@ -528,7 +583,26 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 )
                 .where(eq(schema.coterieMembers.characterId, request.params.id))
 
-            const collectionIds = [...new Set(rows.map((row) => row.collectionId))]
+            const accountRows = await db
+                .select({ collectionId: schema.userHomebrewCollections.collectionId })
+                .from(schema.userHomebrewCollections)
+                .innerJoin(
+                    schema.homebrewCollections,
+                    eq(schema.homebrewCollections.id, schema.userHomebrewCollections.collectionId)
+                )
+                .where(
+                    and(
+                        eq(schema.userHomebrewCollections.userId, access.character.userId),
+                        eq(schema.homebrewCollections.ownerId, access.character.userId)
+                    )
+                )
+
+            const collectionIds = [
+                ...new Set([
+                    ...rows.map((row) => row.collectionId),
+                    ...accountRows.map((row) => row.collectionId)
+                ])
+            ]
             const collections = await Promise.all(
                 collectionIds.map(async (collectionId) => ({
                     ...(await getHomebrewCollectionSnapshot(collectionId))!,

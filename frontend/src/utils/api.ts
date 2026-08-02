@@ -603,6 +603,11 @@ export const api = {
             method: "PUT",
             body: { collectionIds }
         }),
+    setHomebrewCollectionAccountEnabled: (collectionId: string, enabled: boolean) =>
+        apiRequest<{ enabled: boolean }>(`/homebrew/collections/${collectionId}/account-enabled`, {
+            method: "PUT",
+            body: { enabled }
+        }),
     getCharacterHomebrew: (characterId: string) =>
         apiRequest<HomebrewCollection[]>(`/characters/${characterId}/homebrew`),
     getHomebrewLibrary: (filters?: {

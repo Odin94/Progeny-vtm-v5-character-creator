@@ -11,6 +11,7 @@ import {
     Paper,
     SimpleGrid,
     Stack,
+    Switch,
     Text,
     Title
 } from "@mantine/core"
@@ -24,7 +25,11 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import type { HomebrewCollection } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
-import { useDeleteHomebrewCollection, useHomebrewCollections } from "~/hooks/useHomebrew"
+import {
+    useDeleteHomebrewCollection,
+    useHomebrewCollections,
+    useSetHomebrewCollectionAccountEnabled
+} from "~/hooks/useHomebrew"
 import AppTopbar from "~/components/AppTopbar"
 
 const HomebrewPage = () => {
@@ -33,6 +38,7 @@ const HomebrewPage = () => {
     const { data: collections = [], isLoading: collectionsLoading } =
         useHomebrewCollections(isAuthenticated)
     const deleteMutation = useDeleteHomebrewCollection()
+    const setAccountEnabledMutation = useSetHomebrewCollectionAccountEnabled()
     const [deleteTarget, setDeleteTarget] = useState<HomebrewCollection | null>(null)
 
     if (isLoading) {
@@ -179,6 +185,20 @@ const HomebrewPage = () => {
                                                 ) : null}
                                             </Stack>
                                             <Group justify="space-between" mt="md">
+                                                <Switch
+                                                    size="sm"
+                                                    label="Enable for all my characters"
+                                                    checked={collection.enabledForAccount ?? false}
+                                                    disabled={setAccountEnabledMutation.isPending}
+                                                    onClick={(event) => event.stopPropagation()}
+                                                    onKeyDown={(event) => event.stopPropagation()}
+                                                    onChange={(event) =>
+                                                        setAccountEnabledMutation.mutate({
+                                                            collectionId: collection.id,
+                                                            enabled: event.currentTarget.checked
+                                                        })
+                                                    }
+                                                />
                                                 <ActionIcon
                                                     color="red"
                                                     variant="light"

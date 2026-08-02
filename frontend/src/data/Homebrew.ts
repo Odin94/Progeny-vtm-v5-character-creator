@@ -103,6 +103,7 @@ export type HomebrewCollection = {
     updatedAt: string
     items: Array<HomebrewItem & { id: string }>
     coteries?: Array<{ id: string; name: string }>
+    enabledForAccount?: boolean
 }
 
 export type HomebrewCollectionInput = {

@@ -53,6 +53,8 @@ const createTables = async () => {
         `CREATE TABLE IF NOT EXISTS homebrew_items (id text PRIMARY KEY NOT NULL, collection_id text NOT NULL REFERENCES homebrew_collections(id) ON DELETE cascade, kind text NOT NULL, data text NOT NULL, sort_order integer DEFAULT 0 NOT NULL, created_at integer DEFAULT (unixepoch()) NOT NULL, updated_at integer DEFAULT (unixepoch()) NOT NULL)`,
         `CREATE TABLE IF NOT EXISTS coterie_homebrew_collections (id text PRIMARY KEY NOT NULL, coterie_id text NOT NULL REFERENCES coteries(id) ON DELETE cascade, collection_id text NOT NULL REFERENCES homebrew_collections(id) ON DELETE cascade, created_at integer DEFAULT (unixepoch()) NOT NULL)`,
         `CREATE UNIQUE INDEX IF NOT EXISTS coterie_homebrew_collections_unique_idx ON coterie_homebrew_collections (coterie_id, collection_id)`,
+        `CREATE TABLE IF NOT EXISTS user_homebrew_collections (id text PRIMARY KEY NOT NULL, user_id text NOT NULL REFERENCES users(id) ON DELETE cascade, collection_id text NOT NULL REFERENCES homebrew_collections(id) ON DELETE cascade, created_at integer DEFAULT (unixepoch()) NOT NULL)`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS user_homebrew_collections_unique_idx ON user_homebrew_collections (user_id, collection_id)`,
         `CREATE TABLE IF NOT EXISTS homebrew_library_entries (id text PRIMARY KEY NOT NULL, original_collection_id text, author_id text REFERENCES users(id) ON DELETE set null, author_nickname text NOT NULL, active_publication_id text, created_at integer DEFAULT (unixepoch()) NOT NULL, unpublished_at integer)`,
         `CREATE UNIQUE INDEX IF NOT EXISTS homebrew_library_entries_original_collection_author_idx ON homebrew_library_entries (original_collection_id, author_id)`,
         `CREATE TABLE IF NOT EXISTS homebrew_publications (id text PRIMARY KEY NOT NULL, library_entry_id text NOT NULL REFERENCES homebrew_library_entries(id) ON DELETE cascade, version integer NOT NULL, snapshot text NOT NULL, approved_by_id text REFERENCES users(id) ON DELETE set null, approved_at integer DEFAULT (unixepoch()) NOT NULL)`,
@@ -83,6 +85,7 @@ describe("Homebrew collections and library", () => {
             schema.homebrewPublications,
             schema.homebrewLibraryEntries,
             schema.coterieHomebrewCollections,
+            schema.userHomebrewCollections,
             schema.homebrewItems,
             schema.homebrewCollections,
             schema.coterieMembers,
@@ -202,6 +205,51 @@ describe("Homebrew collections and library", () => {
             coteries: [{ id: COTERIE_ID, name: "Homebrew Coterie" }]
         })
         expect(context.json()[0].items).toHaveLength(2)
+    })
+
+    it("enables a collection for every character in its owner's account", async () => {
+        const collection = await createCollection()
+
+        const enable = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${collection.id}/account-enabled`,
+            headers: csrfHeaders,
+            payload: { enabled: true }
+        })
+        expect(enable.statusCode, enable.body).toBe(200)
+
+        const collections = await app.inject({
+            method: "GET",
+            url: "/homebrew/collections",
+            headers: csrfHeaders
+        })
+        expect(collections.json()[0]).toMatchObject({
+            id: collection.id,
+            enabledForAccount: true
+        })
+
+        const context = await app.inject({
+            method: "GET",
+            url: `/characters/${CHARACTER_ID}/homebrew`,
+            headers: csrfHeaders
+        })
+        expect(context.statusCode, context.body).toBe(200)
+        expect(context.json()[0]).toMatchObject({ id: collection.id, coteries: [] })
+
+        const disable = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${collection.id}/account-enabled`,
+            headers: csrfHeaders,
+            payload: { enabled: false }
+        })
+        expect(disable.statusCode, disable.body).toBe(200)
+
+        const disabledContext = await app.inject({
+            method: "GET",
+            url: `/characters/${CHARACTER_ID}/homebrew`,
+            headers: csrfHeaders
+        })
+        expect(disabledContext.json()).toEqual([])
     })
 
     it("rejects a collection save that would exceed the account Homebrew storage limit", async () => {

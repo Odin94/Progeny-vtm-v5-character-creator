@@ -313,6 +313,29 @@ export const coterieHomebrewCollections = sqliteTable(
     })
 )
 
+export const userHomebrewCollections = sqliteTable(
+    "user_homebrew_collections",
+    {
+        id: text("id").primaryKey(),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        collectionId: text("collection_id")
+            .notNull()
+            .references(() => homebrewCollections.id, { onDelete: "cascade" }),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .default(sql`(unixepoch())`)
+    },
+    (table) => ({
+        userIdIdx: index("user_homebrew_collections_user_id_idx").on(table.userId),
+        uniqueCollection: uniqueIndex("user_homebrew_collections_unique_idx").on(
+            table.userId,
+            table.collectionId
+        )
+    })
+)
+
 export const homebrewLibraryEntries = sqliteTable(
     "homebrew_library_entries",
     {
@@ -522,6 +545,7 @@ export type ImpersonationSession = typeof impersonationSessions.$inferSelect
 export type NewImpersonationSession = typeof impersonationSessions.$inferInsert
 export type HomebrewCollection = typeof homebrewCollections.$inferSelect
 export type HomebrewItem = typeof homebrewItems.$inferSelect
+export type UserHomebrewCollection = typeof userHomebrewCollections.$inferSelect
 export type HomebrewLibraryEntry = typeof homebrewLibraryEntries.$inferSelect
 export type HomebrewPublication = typeof homebrewPublications.$inferSelect
 export type HomebrewPublishRequest = typeof homebrewPublishRequests.$inferSelect
@@ -539,6 +563,7 @@ export const usersRelations = relations(users, ({ many }) => ({
     impersonationSessionsStarted: many(impersonationSessions, { relationName: "superadmin" }),
     impersonationSessionsReceived: many(impersonationSessions, { relationName: "impersonated" }),
     homebrewCollections: many(homebrewCollections),
+    enabledHomebrewCollections: many(userHomebrewCollections),
     homebrewRatings: many(homebrewRatings),
     homebrewComments: many(homebrewComments),
     recentChangeDeliveries: many(recentChangeDeliveries),
@@ -575,6 +600,7 @@ export const homebrewCollectionsRelations = relations(homebrewCollections, ({ on
     }),
     items: many(homebrewItems),
     coteries: many(coterieHomebrewCollections),
+    enabledForUsers: many(userHomebrewCollections),
     publishRequests: many(homebrewPublishRequests)
 }))
 
@@ -598,6 +624,17 @@ export const coterieHomebrewCollectionsRelations = relations(
         })
     })
 )
+
+export const userHomebrewCollectionsRelations = relations(userHomebrewCollections, ({ one }) => ({
+    user: one(users, {
+        fields: [userHomebrewCollections.userId],
+        references: [users.id]
+    }),
+    collection: one(homebrewCollections, {
+        fields: [userHomebrewCollections.collectionId],
+        references: [homebrewCollections.id]
+    })
+}))
 
 export const homebrewLibraryEntriesRelations = relations(
     homebrewLibraryEntries,

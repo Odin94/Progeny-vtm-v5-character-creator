@@ -71,3 +71,15 @@ export const useSetCoterieHomebrew = () => {
         }
     })
 }
+
+export const useSetHomebrewCollectionAccountEnabled = () => {
+    const client = useQueryClient()
+    return useMutation({
+        mutationFn: ({ collectionId, enabled }: { collectionId: string; enabled: boolean }) =>
+            api.setHomebrewCollectionAccountEnabled(collectionId, enabled),
+        onSuccess: () => {
+            client.invalidateQueries({ queryKey: ["homebrew", "collections"] })
+            client.invalidateQueries({ queryKey: ["homebrew", "character"] })
+        }
+    })
+}
