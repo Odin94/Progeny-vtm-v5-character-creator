@@ -476,7 +476,7 @@ const LoresheetEditor = ({
 
     return (
         <div className="homebrew-loresheet__shell">
-            <article className="homebrew-loresheet__sheet homebrew-form-controls">
+            <article className="homebrew-loresheet__sheet">
                 <header className="homebrew-loresheet__header">
                     <TextInput
                         aria-label="Loresheet name"
