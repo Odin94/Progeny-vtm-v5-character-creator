@@ -18,6 +18,7 @@ import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
 import { useProgressiveRendering } from "./useProgressiveRendering"
+import { GeneratorSectionDivider } from "./sharedGeneratorUi"
 import type { HomebrewCollection, HomebrewLoresheet, HomebrewSource } from "~/data/Homebrew"
 import { getHomebrewSource } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
@@ -81,6 +82,13 @@ export const Loresheets = ({
         [availableLoresheets, character, normalizedLoresheetQuery]
     )
     const { visibleCount, sentinelRef } = useProgressiveRendering(filteredLoresheets.length, 9, 6)
+    const visibleLoresheets = filteredLoresheets.slice(0, visibleCount)
+    const visibleOfficialLoresheets = visibleLoresheets.filter(
+        (loresheet) => !loresheet.merits[0]?.homebrewSource
+    )
+    const visibleHomebrewLoresheets = visibleLoresheets.filter(
+        (loresheet) => loresheet.merits[0]?.homebrewSource
+    )
 
     const getLoresheetCol = (loresheet: DisplayLoresheet) => {
         const sheetPicked =
@@ -209,10 +217,39 @@ export const Loresheets = ({
                             }
                         }}
                     />
-                    <Grid w={"100%"} m={0} gutter="lg">
-                        {filteredLoresheets.length > 0 ? (
-                            filteredLoresheets.slice(0, visibleCount).map(getLoresheetCol)
-                        ) : (
+                    {filteredLoresheets.length > 0 ? (
+                        <Stack gap="md">
+                            {visibleOfficialLoresheets.length > 0 ? (
+                                <>
+                                    <GeneratorSectionDivider
+                                        label="Loresheets"
+                                        accentAlpha={0.32}
+                                        titleSize="0.96rem"
+                                        lineHeight={1}
+                                        marginY="xs"
+                                    />
+                                    <Grid w="100%" m={0} gutter="lg">
+                                        {visibleOfficialLoresheets.map(getLoresheetCol)}
+                                    </Grid>
+                                </>
+                            ) : null}
+                            {visibleHomebrewLoresheets.length > 0 ? (
+                                <>
+                                    <GeneratorSectionDivider
+                                        label="Homebrew"
+                                        accentAlpha={0.32}
+                                        titleSize="0.96rem"
+                                        lineHeight={1}
+                                        marginY="xs"
+                                    />
+                                    <Grid w="100%" m={0} gutter="lg">
+                                        {visibleHomebrewLoresheets.map(getLoresheetCol)}
+                                    </Grid>
+                                </>
+                            ) : null}
+                        </Stack>
+                    ) : (
+                        <Grid w="100%" m={0} gutter="lg">
                             <Grid.Col span={12}>
                                 <Text
                                     ta="center"
@@ -226,8 +263,8 @@ export const Loresheets = ({
                                     No loresheets match that title.
                                 </Text>
                             </Grid.Col>
-                        )}
-                    </Grid>
+                        </Grid>
+                    )}
                     {visibleCount < filteredLoresheets.length ? (
                         <div ref={sentinelRef} aria-hidden="true" />
                     ) : null}

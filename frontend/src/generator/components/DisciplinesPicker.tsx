@@ -83,6 +83,12 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         homebrewCollections,
         character.homebrewClan?.nativeDisciplineRefs ?? character.availableDisciplineNames
     )
+    const officialDisciplinesForClan = Object.entries(disciplinesForClan).filter(
+        ([, discipline]) => !discipline.homebrewSource
+    )
+    const homebrewDisciplinesForClan = Object.entries(disciplinesForClan).filter(
+        ([, discipline]) => discipline.homebrewSource
+    )
     const homebrewDisciplineItems = homebrewCollections.flatMap((collection) =>
         collection.items
             .filter(
@@ -671,10 +677,40 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 }
                             }}
                         >
-                            {Object.entries(disciplinesForClan).map(([name, discipline]) =>
+                            {officialDisciplinesForClan.map(([name, discipline]) =>
                                 renderDisciplineAccordionItem(name, discipline)
                             )}
                         </Accordion>
+
+                        {homebrewDisciplinesForClan.length > 0 ? (
+                            <>
+                                <GeneratorSectionDivider
+                                    label="Homebrew"
+                                    lineHeight={1}
+                                    accentAlpha={0.38}
+                                    titleSize="0.88rem"
+                                    marginY="sm"
+                                />
+                                <Accordion
+                                    variant="separated"
+                                    styles={{
+                                        item: {
+                                            background: "rgba(255, 255, 255, 0.03)",
+                                            border: "1px solid rgba(255, 255, 255, 0.07)",
+                                            borderRadius: 10,
+                                            marginBottom: 8
+                                        },
+                                        panel: {
+                                            paddingTop: 4
+                                        }
+                                    }}
+                                >
+                                    {homebrewDisciplinesForClan.map(([name, discipline]) =>
+                                        renderDisciplineAccordionItem(name, discipline)
+                                    )}
+                                </Accordion>
+                            </>
+                        ) : null}
 
                         <GeneratorSectionDivider
                             label={`Predator Type · ${upcase(character.predatorType.pickedDiscipline)}`}

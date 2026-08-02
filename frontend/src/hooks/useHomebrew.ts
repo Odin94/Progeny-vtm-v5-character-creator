@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { HomebrewCollectionInput } from "~/data/Homebrew"
+import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
 
 export const useHomebrewCollections = (enabled = true) =>
@@ -16,12 +17,20 @@ export const useHomebrewCollection = (id: string | null | undefined, enabled = t
         enabled: enabled && !!id
     })
 
-export const useCharacterHomebrew = (characterId: string | null | undefined) =>
-    useQuery({
-        queryKey: ["homebrew", "character", characterId],
-        queryFn: () => api.getCharacterHomebrew(characterId!),
-        enabled: !!characterId
+export const useCharacterHomebrew = (characterId: string | null | undefined) => {
+    const { isAuthenticated } = useAuth()
+
+    return useQuery({
+        queryKey: ["homebrew", "character", characterId ?? "new"],
+        queryFn: async () => {
+            if (characterId) return api.getCharacterHomebrew(characterId)
+
+            const collections = await api.getHomebrewCollections()
+            return collections.filter((collection) => collection.enabledForAccount)
+        },
+        enabled: isAuthenticated
     })
+}
 
 export const useCoterieHomebrew = (coterieId: string | null | undefined) =>
     useQuery({

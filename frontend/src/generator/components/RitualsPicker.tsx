@@ -158,17 +158,14 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
 
 const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps) => {
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
-    const availableRituals = [
-        ...Rituals,
-        ...homebrewCollections.flatMap((collection) =>
-            collection.items
-                .filter(
-                    (item): item is HomebrewPower & { id: string } =>
-                        item.kind === "ritual" && item.level === 1
-                )
-                .map((item) => homebrewPowerToRitual(item, collection))
-        )
-    ]
+    const homebrewRituals = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter(
+                (item): item is HomebrewPower & { id: string } =>
+                    item.kind === "ritual" && item.level === 1
+            )
+            .map((item) => homebrewPowerToRitual(item, collection))
+    )
     if (!containsBloodSorcery(character.disciplines)) {
         return <></>
     }
@@ -219,7 +216,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                                 columnGap: 12
                             }}
                         >
-                            {availableRituals.map((ritual) => (
+                            {Rituals.map((ritual) => (
                                 <RitualCard
                                     key={getRitualIdentity(ritual)}
                                     ritual={ritual}
@@ -227,6 +224,35 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
                                 />
                             ))}
                         </div>
+
+                        {homebrewRituals.length > 0 ? (
+                            <>
+                                <GeneratorSectionDivider
+                                    label="Homebrew"
+                                    lineHeight={1}
+                                    accentAlpha={0.38}
+                                    titleSize="0.88rem"
+                                    marginY="sm"
+                                />
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: phoneScreen ? "1fr" : "1fr 1fr",
+                                        alignItems: "stretch",
+                                        gap: 12,
+                                        columnGap: 12
+                                    }}
+                                >
+                                    {homebrewRituals.map((ritual) => (
+                                        <RitualCard
+                                            key={getRitualIdentity(ritual)}
+                                            ritual={ritual}
+                                            onTake={() => handleTake(ritual)}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        ) : null}
                     </Box>
                 </div>
             </ScrollArea>

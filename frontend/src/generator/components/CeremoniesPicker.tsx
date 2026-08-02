@@ -187,17 +187,16 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
     }
 
     const phoneScreen = globals.isPhoneScreen
-    const levelOneCeremonies = [
-        ...Ceremonies.filter((ceremony) => ceremony.level === 1),
-        ...homebrewCollections.flatMap((collection) =>
-            collection.items
-                .filter(
-                    (item): item is HomebrewPower & { id: string } =>
-                        item.kind === "ceremony" && item.level === 1
-                )
-                .map((item) => homebrewPowerToCeremony(item, collection))
-        )
-    ]
+    const officialLevelOneCeremonies = Ceremonies.filter((ceremony) => ceremony.level === 1)
+    const homebrewLevelOneCeremonies = homebrewCollections.flatMap((collection) =>
+        collection.items
+            .filter(
+                (item): item is HomebrewPower & { id: string } =>
+                    item.kind === "ceremony" && item.level === 1
+            )
+            .map((item) => homebrewPowerToCeremony(item, collection))
+    )
+    const levelOneCeremonies = [...officialLevelOneCeremonies, ...homebrewLevelOneCeremonies]
     const canTakeAnyCeremony = levelOneCeremonies.some((ceremony) =>
         characterHasCeremonyPrerequisite(character, ceremony)
     )
@@ -260,7 +259,7 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
                                 columnGap: 12
                             }}
                         >
-                            {levelOneCeremonies.map((ceremony) => {
+                            {officialLevelOneCeremonies.map((ceremony) => {
                                 const canTake = characterHasCeremonyPrerequisite(
                                     character,
                                     ceremony
@@ -276,6 +275,43 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
                                 )
                             })}
                         </div>
+
+                        {homebrewLevelOneCeremonies.length > 0 ? (
+                            <>
+                                <GeneratorSectionDivider
+                                    label="Homebrew"
+                                    lineHeight={1}
+                                    accentAlpha={0.38}
+                                    titleSize="0.88rem"
+                                    marginY="sm"
+                                />
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: phoneScreen ? "1fr" : "1fr 1fr",
+                                        alignItems: "stretch",
+                                        gap: 12,
+                                        columnGap: 12
+                                    }}
+                                >
+                                    {homebrewLevelOneCeremonies.map((ceremony) => {
+                                        const canTake = characterHasCeremonyPrerequisite(
+                                            character,
+                                            ceremony
+                                        )
+
+                                        return (
+                                            <CeremonyCard
+                                                key={getRitualIdentity(ceremony)}
+                                                ceremony={ceremony}
+                                                canTake={canTake}
+                                                onTake={() => handleTake(ceremony)}
+                                            />
+                                        )
+                                    })}
+                                </div>
+                            </>
+                        ) : null}
 
                         {!canTakeAnyCeremony ? (
                             <Box
