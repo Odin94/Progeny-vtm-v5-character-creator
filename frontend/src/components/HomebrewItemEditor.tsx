@@ -441,6 +441,11 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             onClose={onClose}
             title={`${item.id ? "Edit" : "Add"} ${homebrewKindLabel(item.kind)}`}
             size="lg"
+            classNames={{
+                content: "homebrew-rule-modal",
+                header: "homebrew-rule-modal__header",
+                body: "homebrew-rule-modal__body"
+            }}
         >
             <Stack gap="md" className="homebrew-form-controls">
                 {commonFields}

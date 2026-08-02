@@ -68,6 +68,7 @@ const HomebrewPowerCardEditor = ({
                 body: "homebrew-power-card__modal-body"
             }}
         >
+        <div className="homebrew-power-card__shell">
         <article className="homebrew-power-card homebrew-form-controls">
             <header className="homebrew-power-card__header">
                 <div className="homebrew-power-card__discipline-level">
@@ -253,6 +254,7 @@ const HomebrewPowerCardEditor = ({
                 </Button>
             </Group>
         </article>
+        </div>
     </Modal>
 )
 }

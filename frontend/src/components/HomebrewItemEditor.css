@@ -9,6 +9,39 @@
     padding: 0;
 }
 
+.homebrew-rule-modal {
+    --corner: 1.25rem;
+    background: linear-gradient(145deg, #8150aa, #593473 72%);
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+    clip-path: polygon(
+        var(--corner) 0,
+        calc(100% - var(--corner)) 0,
+        100% var(--corner),
+        100% calc(100% - var(--corner)),
+        calc(100% - var(--corner)) 100%,
+        var(--corner) 100%,
+        0 calc(100% - var(--corner)),
+        0 var(--corner)
+    );
+    overflow: hidden;
+    padding: 2px;
+}
+
+.homebrew-rule-modal__header,
+.homebrew-rule-modal__body {
+    background: linear-gradient(145deg, #1c151f, #100d12 68%);
+}
+
+.homebrew-rule-modal__header {
+    padding: 1.25rem 1.5rem 0.5rem;
+}
+
+.homebrew-rule-modal__body {
+    padding: 0.5rem 1.5rem 1.5rem;
+}
+
 .homebrew-loresheet__shell {
     --corner: 1.25rem;
     background: #8b2b35;
