@@ -1,8 +1,9 @@
-import { ActionIcon, Button, Group, Modal, Text } from "@mantine/core"
+import { ActionIcon, Anchor, Button, Group, Modal, Text } from "@mantine/core"
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useRecentChangeViewedTracking } from "~/hooks/useRecentChangeViewedTracking"
 import { api, type RecentChange } from "~/utils/api"
 import { splitRecentChangeLayout } from "~/utils/recentChangeLayout"
@@ -160,7 +161,15 @@ const RecentChangesModal = ({
                         ) : null}
 
                         <footer className="recent-changes__footer">
-                            <Group gap="xs">
+                            <Anchor
+                                className="recent-changes__support-link"
+                                href={CONTACT_LINKS.kofi.href}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Support me
+                            </Anchor>
+                            <Group className="recent-changes__navigation" gap="xs">
                                 <ActionIcon
                                     variant="subtle"
                                     aria-label="Previous update"
@@ -181,7 +190,9 @@ const RecentChangesModal = ({
                                     <IconChevronRight size={20} />
                                 </ActionIcon>
                             </Group>
-                            <Button onClick={onClose}>Got it</Button>
+                            <Button className="recent-changes__close-button" onClick={onClose}>
+                                Got it
+                            </Button>
                         </footer>
                     </article>
                 </div>

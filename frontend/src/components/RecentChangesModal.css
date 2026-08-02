@@ -183,10 +183,24 @@
 .recent-changes__footer {
     align-items: center;
     border-top: 1px solid rgba(178, 72, 80, 0.42);
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     margin-top: clamp(1.5rem, 3vw, 2.5rem);
     padding-top: 1rem;
+}
+
+.recent-changes__support-link {
+    color: #d95a65;
+    font-size: 0.9rem;
+    justify-self: start;
+}
+
+.recent-changes__navigation {
+    justify-self: center;
+}
+
+.recent-changes__close-button {
+    justify-self: end;
 }
 
 @media (max-width: 40rem) {
@@ -200,4 +214,17 @@
         padding-top: 1.25rem;
     }
     .recent-changes__divider img { width: 30%; }
+    .recent-changes__footer {
+        gap: 0.85rem;
+        grid-template-columns: 1fr auto;
+    }
+    .recent-changes__support-link { grid-column: 1; }
+    .recent-changes__navigation {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+    .recent-changes__close-button {
+        grid-column: 2;
+        grid-row: 1;
+    }
 }
