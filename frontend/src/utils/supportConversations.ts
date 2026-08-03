@@ -7,9 +7,12 @@ const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="
 const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
 const OPEN_RETRY_COUNT = 100
 const OPEN_RETRY_DELAY_MS = 100
+const SUPPORT_RESOURCE_FAILURE_RETENTION_MS = OPEN_RETRY_COUNT * OPEN_RETRY_DELAY_MS + 1_000
 const containersWatchingForClose = new WeakSet<HTMLElement>()
 let warmupRetryId: number | null = null
 let warmupAttempt = 0
+let supportResourceFailureAt: number | null = null
+let isMonitoringSupportResources = false
 
 export const SUPPORT_CONSENT_REQUEST_EVENT = "progeny:request-posthog-consent"
 
@@ -19,10 +22,59 @@ export type SupportConversationSource =
     | "character-sheet-menu"
     | "character-creation-complete"
 
+const isSupportScript = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLScriptElement)) {
+        return false
+    }
+
+    try {
+        const supportApiHost = new URL(posthog.config.api_host)
+        const scriptUrl = new URL(target.src)
+
+        return (
+            scriptUrl.origin === supportApiHost.origin &&
+            /\/static\/(?:[^/]+\/)?conversations\.js$/.test(scriptUrl.pathname)
+        )
+    } catch {
+        return false
+    }
+}
+
+/**
+ * Records a browser-reported failure for PostHog's lazily-loaded Support script.
+ * Browsers deliberately don't expose whether the cause was an ad blocker, a
+ * privacy filter, CSP, or a network failure, so callers must not claim a more
+ * specific cause than this signal supports.
+ */
+export const monitorSupportConversationResources = () => {
+    if (isMonitoringSupportResources || typeof document === "undefined") {
+        return
+    }
+
+    isMonitoringSupportResources = true
+    document.addEventListener(
+        "error",
+        (event) => {
+            if (isSupportScript(event.target)) {
+                supportResourceFailureAt = Date.now()
+            }
+        },
+        true
+    )
+}
+
+const supportResourceFailedRecently = () =>
+    supportResourceFailureAt !== null &&
+    Date.now() - supportResourceFailureAt <= SUPPORT_RESOURCE_FAILURE_RETENTION_MS
+
 export const showSupportUnavailableNotification = () => {
+    const resourceLoadFailed = supportResourceFailedRecently()
+
     notifications.show({
         title: "Support chat is unavailable",
-        message: "Please try again later, or use one of the other contact links.",
+        message: resourceLoadFailed
+            ? "Your browser couldn't load a required support component. An ad blocker or privacy filter can cause this. Allow info.odin-matthias.com, reload, and try again; otherwise use one of the other contact links."
+            : "Please try again later, or use one of the other contact links.",
         color: "orange"
     })
 }

@@ -1,10 +1,27 @@
 import posthog from "posthog-js"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { openSupportConversation } from "~/utils/supportConversations"
+import {
+    monitorSupportConversationResources,
+    openSupportConversation,
+    showSupportUnavailableNotification
+} from "~/utils/supportConversations"
+
+const mocks = vi.hoisted(() => ({
+    notificationsShow: vi.fn()
+}))
+
+vi.mock("@mantine/notifications", () => ({
+    notifications: {
+        show: mocks.notificationsShow
+    }
+}))
 
 vi.mock("posthog-js", () => ({
     default: {
         capture: vi.fn(),
+        config: {
+            api_host: "https://info.odin-matthias.com"
+        },
         get_explicit_consent_status: vi.fn(),
         conversations: {
             isAvailable: vi.fn(),
@@ -86,5 +103,21 @@ describe("openSupportConversation", () => {
         expect(consentRequest).toHaveBeenCalledOnce()
         expect(posthog.conversations.show).not.toHaveBeenCalled()
         window.removeEventListener("progeny:request-posthog-consent", consentRequest)
+    })
+
+    it("explains that a blocker may be responsible after the Support script fails to load", () => {
+        monitorSupportConversationResources()
+        const supportScript = document.createElement("script")
+        supportScript.src = "https://info.odin-matthias.com/static/conversations.js"
+        document.head.append(supportScript)
+        supportScript.dispatchEvent(new Event("error"))
+
+        showSupportUnavailableNotification()
+
+        expect(mocks.notificationsShow).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: expect.stringContaining("ad blocker or privacy filter")
+            })
+        )
     })
 })
