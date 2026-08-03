@@ -5,7 +5,9 @@ const WIDGET_CONTAINER_ID = "ph-conversations-widget-container"
 const WIDGET_OPEN_ATTRIBUTE = "data-progeny-support-open"
 const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="Open chat ("]'
 const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
-const OPEN_RETRY_COUNT = 100
+// Support is preloaded on app startup. Three seconds is enough to absorb a
+// slow remote-config response without making a failed user action feel stuck.
+const OPEN_RETRY_COUNT = 30
 const OPEN_RETRY_DELAY_MS = 100
 const SUPPORT_RESOURCE_FAILURE_RETENTION_MS = OPEN_RETRY_COUNT * OPEN_RETRY_DELAY_MS + 1_000
 const containersWatchingForClose = new WeakSet<HTMLElement>()
@@ -179,6 +181,13 @@ export const openSupportConversation = async (source: SupportConversationSource)
         return "consent-required" as const
     }
 
+    // The current PostHog SDK can report conversations as available after its
+    // external script has failed to load. Avoid waiting for a widget that
+    // cannot appear in that case.
+    if (supportResourceFailedRecently()) {
+        return "unavailable" as const
+    }
+
     warmSupportConversation()
 
     try {
@@ -188,6 +197,10 @@ export const openSupportConversation = async (source: SupportConversationSource)
     }
 
     for (let attempt = 0; attempt < OPEN_RETRY_COUNT; attempt += 1) {
+        if (supportResourceFailedRecently()) {
+            return "unavailable" as const
+        }
+
         try {
             if (posthog.conversations.isAvailable()) {
                 posthog.conversations.show()

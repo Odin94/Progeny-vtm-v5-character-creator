@@ -120,4 +120,15 @@ describe("openSupportConversation", () => {
             })
         )
     })
+
+    it("does not wait for a widget after its Support script has failed to load", async () => {
+        monitorSupportConversationResources()
+        const supportScript = document.createElement("script")
+        supportScript.src = "https://info.odin-matthias.com/static/conversations.js"
+        document.head.append(supportScript)
+        supportScript.dispatchEvent(new Event("error"))
+
+        await expect(openSupportConversation("landing-page")).resolves.toBe("unavailable")
+        expect(posthog.conversations.isAvailable).not.toHaveBeenCalled()
+    })
 })
