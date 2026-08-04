@@ -14,7 +14,6 @@ import {
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
 import { Dispatch, memo, SetStateAction, useMemo, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character, getCharacterExcludedMeritsAndFlaws, MeritFlaw } from "../../data/Character"
@@ -119,18 +118,12 @@ const MeritOrFlawCard = memo(
         const createButton = (level: number) => {
             const nextCost = Math.max(0, level - meritInPredatorTypeLevel)
             const previousCost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
-            const pointType = isThinbloodMerit(meritOrFlaw.name)
-                ? "Thin-blood Merit Points"
-                : type === "flaw"
-                  ? "Flaw Points"
-                  : "Advantage Points"
             const availablePoints = isThinbloodMerit(meritOrFlaw.name)
                 ? remainingThinbloodMeritPoints + previousCost
                 : type === "flaw"
                   ? remainingFlaws + previousCost
                   : remainingMerits + previousCost
             const hasEnoughPoints = isThinbloodFlaw(meritOrFlaw.name) || availablePoints >= nextCost
-            const insufficientPointsMessage = `Not enough ${pointType}. Need ${nextCost}, have ${availablePoints}.`
 
             const button = (
                 <Button
@@ -138,21 +131,10 @@ const MeritOrFlawCard = memo(
                     disabled={
                         isExcluded ||
                         (meritInPredatorType && meritInPredatorType.level >= level) ||
-                        wasPickedLevel === level
+                        wasPickedLevel === level ||
+                        !hasEnoughPoints
                     }
                     onClick={() => {
-                        if (!hasEnoughPoints) {
-                            if (phoneScreen) {
-                                notifications.show({
-                                    title: "Not enough points",
-                                    message: insufficientPointsMessage,
-                                    color: "red",
-                                    autoClose: 2500
-                                })
-                            }
-                            return
-                        }
-
                         if (isThinbloodFlaw(meritOrFlaw.name)) {
                             setRemainingThinbloodMeritPoints((prev) => prev + 1)
                         } else if (isThinbloodMerit(meritOrFlaw.name)) {
@@ -177,6 +159,12 @@ const MeritOrFlawCard = memo(
                                 homebrewSource: meritOrFlaw.homebrewSource
                             }
                         ])
+                        trackEvent({
+                            action: "merits pick clicked",
+                            category: "merits",
+                            label: `${meritOrFlaw.name}: ${level} (${type})`,
+                            value: level
+                        })
                     }}
                     style={{ marginRight: "5px" }}
                     size="xs"
@@ -204,18 +192,6 @@ const MeritOrFlawCard = memo(
                 </Button>
             )
 
-            if (!phoneScreen && !hasEnoughPoints) {
-                return (
-                    <Tooltip
-                        key={meritOrFlaw.name + level}
-                        label={insufficientPointsMessage}
-                        withArrow
-                    >
-                        {button}
-                    </Tooltip>
-                )
-            }
-
             return button
         }
 
@@ -225,6 +201,38 @@ const MeritOrFlawCard = memo(
             : isExcluded
               ? `Excluded by: ${excludingItems.join(", ")}`
               : meritOrFlaw.summary
+
+        // Persistent per-card cost/budget indicator, so the affordability rule is
+        // visible on the page instead of hidden behind a hover tooltip. `cost` is the
+        // points already reserved by the current pick and is refunded when re-picking,
+        // so it is added back into the budget the buttons are checked against.
+        const isFlaw = type === "flaw"
+        const isTbMerit = isThinbloodMerit(meritOrFlaw.name)
+        const isTbFlaw = isThinbloodFlaw(meritOrFlaw.name)
+        const pointTypeLabel = isTbMerit
+            ? "thin-blood merit points"
+            : isFlaw
+              ? "flaw points"
+              : "advantage points"
+        const availableForCard = isTbMerit
+            ? remainingThinbloodMeritPoints + cost
+            : isFlaw
+              ? remainingFlaws + cost
+              : remainingMerits + cost
+        const levelCosts = meritOrFlaw.cost.map((l) => Math.max(0, l - meritInPredatorTypeLevel))
+        const minLevelCost = Math.min(...levelCosts)
+        const maxLevelCost = Math.max(...levelCosts)
+        const costLabel =
+            minLevelCost === maxLevelCost
+                ? `${minLevelCost} pt${minLevelCost === 1 ? "" : "s"}`
+                : `${minLevelCost}–${maxLevelCost} pts`
+        const canAffordAny = isTbFlaw || availableForCard >= minLevelCost
+        // Thin-blood flaws grant points rather than cost them, and fully
+        // predator-covered / excluded items have nothing to spend, so skip the caption.
+        const showCostCaption =
+            !isTbFlaw &&
+            !isExcluded &&
+            !(meritInPredatorType && meritInPredatorType.level >= maxLevelCost)
 
         const textContent = (
             <Box
@@ -292,6 +300,12 @@ const MeritOrFlawCard = memo(
                                 } else {
                                     setRemainingMerits((prev) => prev + cost)
                                 }
+                                trackEvent({
+                                    action: "merits unpick clicked",
+                                    category: "merits",
+                                    label: `${meritOrFlaw.name}: ${wasPickedLevel} (${type})`,
+                                    value: wasPickedLevel
+                                })
                             }}
                             size="xs"
                             variant="subtle"
@@ -302,6 +316,22 @@ const MeritOrFlawCard = memo(
                         </Button>
                     ) : null}
                 </Group>
+
+                {showCostCaption ? (
+                    <Text
+                        mt={8}
+                        style={{
+                            fontFamily: "Inter, Segoe UI, sans-serif",
+                            fontSize: "0.72rem",
+                            letterSpacing: "0.04em",
+                            color: canAffordAny ? rgba(RAW_GREY, 0.6) : rgba(RAW_RED, 0.95)
+                        }}
+                    >
+                        {canAffordAny
+                            ? `Costs ${costLabel} · ${availableForCard} ${pointTypeLabel} left`
+                            : `Not enough points — costs ${costLabel}, you have ${availableForCard} ${pointTypeLabel} left`}
+                    </Text>
+                ) : null}
             </Box>
         )
 
