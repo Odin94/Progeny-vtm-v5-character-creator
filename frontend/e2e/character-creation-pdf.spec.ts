@@ -66,8 +66,11 @@ test("creates a Brujah character and downloads the PDF sheet", async ({ page }) 
     await page.getByTestId("discipline-potence-accordion").click()
     const unavailableProwess = powerCard(page, "Prowess").getByTestId("take-power-prowess-button")
     await expect(unavailableProwess).toHaveAttribute("aria-disabled", "true")
-    await unavailableProwess.hover()
-    await expect(page.getByText("Pick 1 lower-level Potence power first")).toBeVisible()
+    // The blocked reason renders inline on the card (all screen sizes), so it is visible
+    // without hovering the disabled button.
+    await expect(
+        powerCard(page, "Prowess").getByText("Pick 1 lower-level Potence power first")
+    ).toBeVisible()
 
     await takePower(page, "POTENCE", "Lethal Body")
     await takePower(page, "POTENCE", "Prowess")
