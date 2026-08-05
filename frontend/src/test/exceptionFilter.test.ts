@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { isFramelessSyntheticNoise, type ExceptionListEntry } from "~/utils/exceptionFilter"
+import {
+    isFramelessSyntheticNoise,
+    isResizeObserverLoopNoise,
+    type ExceptionListEntry
+} from "~/utils/exceptionFilter"
 
 describe("isFramelessSyntheticNoise", () => {
     it("drops the cashback extension noise (unhandled, synthetic, no frames)", () => {
@@ -61,5 +65,46 @@ describe("isFramelessSyntheticNoise", () => {
 
     it("handles a missing entry", () => {
         expect(isFramelessSyntheticNoise(undefined)).toBe(false)
+    })
+})
+
+describe("isResizeObserverLoopNoise", () => {
+    it("drops the 'completed with undelivered notifications' wording", () => {
+        expect(
+            isResizeObserverLoopNoise(
+                "ResizeObserver loop completed with undelivered notifications."
+            )
+        ).toBe(true)
+    })
+
+    it("drops the 'limit exceeded' wording", () => {
+        expect(isResizeObserverLoopNoise("ResizeObserver loop limit exceeded")).toBe(true)
+    })
+
+    it("matches when the message is wrapped by PostHog's captured-as-exception prefix", () => {
+        expect(
+            isResizeObserverLoopNoise(
+                "'Error' captured as exception with message: 'ResizeObserver loop completed with undelivered notifications.'"
+            )
+        ).toBe(true)
+    })
+
+    it("drops when only one of several candidates matches", () => {
+        expect(
+            isResizeObserverLoopNoise(
+                undefined,
+                "ResizeObserver loop completed with undelivered notifications."
+            )
+        ).toBe(true)
+    })
+
+    it("keeps unrelated exception messages", () => {
+        expect(isResizeObserverLoopNoise("TypeError: cannot read property of undefined")).toBe(
+            false
+        )
+    })
+
+    it("ignores non-string candidates", () => {
+        expect(isResizeObserverLoopNoise(undefined, null, 42, {})).toBe(false)
     })
 })
