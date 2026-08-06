@@ -5,7 +5,8 @@ import { IconAlertCircle, IconHome, IconRefresh } from "@tabler/icons-react"
 import { useCallback, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import RenderProfiler from "~/components/RenderProfiler"
-import { clearStoredAuthReturnTo, getSafeAuthReturnTo } from "~/hooks/useAuth"
+import { clearStoredAuthReturnTo, getSafeAuthReturnTo, storeAuthSignInSeed } from "~/hooks/useAuth"
+import type { ApiError } from "~/utils/api"
 import { PREFERENCES_QUERY_KEY } from "~/hooks/useUserPreferences"
 import { api, type CurrentUser } from "~/utils/api"
 
@@ -53,8 +54,26 @@ export function AuthCallback() {
             return
         }
 
+        // Guard against emitting two failure events for one broken attempt (e.g. a
+        // request that times out and later also rejects).
+        let failureReported = false
+        const reportCallbackFailure = (reason: string, error?: unknown) => {
+            if (failureReported) return
+            failureReported = true
+            try {
+                posthog.capture("auth_callback_failure", {
+                    reason,
+                    status: (error as ApiError)?.status ?? null,
+                    message: error instanceof Error ? error.message : undefined
+                })
+            } catch (captureError) {
+                console.warn("PostHog capture failed:", captureError)
+            }
+        }
+
         const timeoutId = window.setTimeout(() => {
             if (!cancelled) {
+                reportCallbackFailure("timeout")
                 setErrorMessage(
                     "Sign-in is taking longer than expected. Check your connection, then try again."
                 )
@@ -78,12 +97,18 @@ export function AuthCallback() {
                 queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
                 queryClient.invalidateQueries({ queryKey: PREFERENCES_QUERY_KEY })
 
+                // Persist the user so the full-document navigation below doesn't land
+                // on a page with an empty auth cache (which would flash the topbar back
+                // to its logged-out state), and flag a one-time confirmation toast.
+                storeAuthSignInSeed(data.user)
+
                 try {
                     posthog.identify(data.user.id, {
                         email: data.user.email,
                         firstName: data.user.firstName,
                         lastName: data.user.lastName
                     })
+                    posthog.capture("sign_in_completed", { userId: data.user.id })
                 } catch (error) {
                     console.warn("PostHog identify failed:", error)
                 }
@@ -95,6 +120,7 @@ export function AuthCallback() {
                 if (cancelled) return
 
                 console.error("Auth callback error:", error)
+                reportCallbackFailure("error", error)
                 setErrorMessage("We couldn't finish signing you in. Please try again.")
             })
             .finally(() => {

@@ -1,12 +1,59 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect } from "react"
-import { api, API_URL, type ApiError } from "../utils/api"
+import { useEffect, useRef } from "react"
+import { api, API_URL, type ApiError, type CurrentUser } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
 import { resetPostHogIdentity } from "~/utils/analytics"
 
 const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
+const AUTH_SIGN_IN_SEED_KEY = "auth:signInSeed"
+const AUTH_SIGN_IN_CONFIRM_KEY = "auth:signInConfirm"
 const DEFAULT_POST_AUTH_PATH = "/"
+
+// After a successful sign-in the callback does a full-document navigation to the
+// returnTo path, which discards the in-memory react-query cache. Persisting the
+// user in sessionStorage lets the reloaded page seed the auth query immediately
+// so the topbar renders the signed-in state instead of flashing "Loading..." /
+// "Sign in" while /auth/me is refetched from scratch.
+export const storeAuthSignInSeed = (user: CurrentUser) => {
+    try {
+        sessionStorage.setItem(AUTH_SIGN_IN_SEED_KEY, JSON.stringify(user))
+        sessionStorage.setItem(AUTH_SIGN_IN_CONFIRM_KEY, "1")
+    } catch (error) {
+        console.warn("Failed to store auth sign-in seed:", error)
+    }
+}
+
+export const readAuthSignInSeed = (): CurrentUser | null => {
+    try {
+        const raw = sessionStorage.getItem(AUTH_SIGN_IN_SEED_KEY)
+        return raw ? (JSON.parse(raw) as CurrentUser) : null
+    } catch {
+        return null
+    }
+}
+
+export const clearAuthSignInSeed = () => {
+    try {
+        sessionStorage.removeItem(AUTH_SIGN_IN_SEED_KEY)
+        sessionStorage.removeItem(AUTH_SIGN_IN_CONFIRM_KEY)
+    } catch (error) {
+        console.warn("Failed to clear auth sign-in seed:", error)
+    }
+}
+
+// Read-and-clear the one-shot confirmation flag so a landing "you're signed in"
+// toast shows exactly once after the post-sign-in reload.
+export const consumeAuthSignInConfirmation = (): CurrentUser | null => {
+    let shouldConfirm = false
+    try {
+        shouldConfirm = sessionStorage.getItem(AUTH_SIGN_IN_CONFIRM_KEY) === "1"
+        sessionStorage.removeItem(AUTH_SIGN_IN_CONFIRM_KEY)
+    } catch {
+        return null
+    }
+    return shouldConfirm ? readAuthSignInSeed() : null
+}
 
 const getCurrentReturnTo = () => {
     const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`
@@ -50,6 +97,8 @@ export const useAuth = () => {
     const {
         data: user,
         isLoading,
+        error,
+        isError,
         refetch
     } = useQuery({
         queryKey: ["auth", "me"],
@@ -65,12 +114,37 @@ export const useAuth = () => {
             return false
         },
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff
+        // Seed the freshly-reloaded page with the user captured at sign-in so the
+        // topbar shows the signed-in state right away. initialDataUpdatedAt: 0
+        // marks it stale so a background /auth/me refetch still confirms it.
+        initialData: () => readAuthSignInSeed() ?? undefined,
+        initialDataUpdatedAt: 0,
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnMount: true,
         refetchOnWindowFocus: false
     })
 
     const currentUser = user ?? null
+
+    // A failed /auth/me (server/network error — not the expected anonymous 401,
+    // which resolves to null) is otherwise invisible in analytics. Capture it once
+    // per error so a real sign-in outage becomes a metric, not a replay someone
+    // happens to watch.
+    const reportedAuthMeErrorRef = useRef<unknown>(null)
+    useEffect(() => {
+        if (!isError || !error || reportedAuthMeErrorRef.current === error) {
+            return
+        }
+        reportedAuthMeErrorRef.current = error
+        try {
+            posthog.capture("auth_me_failure", {
+                status: (error as ApiError)?.status ?? null,
+                message: error instanceof Error ? error.message : String(error)
+            })
+        } catch (captureError) {
+            console.warn("PostHog capture failed:", captureError)
+        }
+    }, [isError, error])
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
     useEffect(() => {
@@ -98,6 +172,7 @@ export const useAuth = () => {
         mutationFn: () => api.logout(),
         onSuccess: (data) => {
             queryClient.setQueryData(["auth", "me"], null)
+            clearAuthSignInSeed()
 
             // Reset PostHog user identification on logout
             try {
@@ -115,6 +190,7 @@ export const useAuth = () => {
         },
         onError: () => {
             queryClient.setQueryData(["auth", "me"], null)
+            clearAuthSignInSeed()
 
             // Reset PostHog user identification even on error
             try {
