@@ -8,6 +8,10 @@ const workosMock = vi.hoisted(() => ({
     user: { id: "brew-author", email: "brew-author@progeny.invalid" }
 }))
 
+const trackerMock = vi.hoisted(() => ({
+    trackEvent: vi.fn(async () => undefined)
+}))
+
 vi.mock("./config/workos.js", () => ({
     WORKOS_CLIENT_ID: "test-client-id",
     workos: {
@@ -19,6 +23,8 @@ vi.mock("./config/workos.js", () => ({
         }
     }
 }))
+
+vi.mock("./utils/tracker.js", () => trackerMock)
 
 const AUTHOR_ID = "brew-author"
 const ADMIN_ID = "brew-admin"
@@ -77,6 +83,7 @@ describe("Homebrew collections and library", () => {
     })
 
     beforeEach(async () => {
+        trackerMock.trackEvent.mockClear()
         for (const table of [
             schema.impersonationSessions,
             schema.homebrewComments,
@@ -205,6 +212,77 @@ describe("Homebrew collections and library", () => {
             coteries: [{ id: COTERIE_ID, name: "Homebrew Coterie" }]
         })
         expect(context.json()[0].items).toHaveLength(2)
+    })
+
+    it("tracks each newly created Homebrew item by type", async () => {
+        const collection = await createCollection()
+
+        expect(trackerMock.trackEvent).toHaveBeenCalledWith(
+            "homebrew_item_created",
+            { itemType: "discipline", collectionItemCount: 2 },
+            AUTHOR_ID,
+            expect.anything()
+        )
+        expect(trackerMock.trackEvent).toHaveBeenCalledWith(
+            "homebrew_item_created",
+            { itemType: "power", collectionItemCount: 2 },
+            AUTHOR_ID,
+            expect.anything()
+        )
+
+        trackerMock.trackEvent.mockClear()
+        const updated = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${collection.id}`,
+            headers: csrfHeaders,
+            payload: {
+                name: "Night Arts",
+                shortDescription: "Strange powers for a nocturnal chronicle.",
+                description: "An original collection.",
+                tags: ["gothic"],
+                contentWarning: "Body horror",
+                items: [
+                    {
+                        id: collection.items[0]!.id,
+                        kind: "discipline",
+                        name: "Noctis",
+                        summary: "Shape the living dark.",
+                        description: "",
+                        logo: ""
+                    },
+                    {
+                        id: collection.items[1]!.id,
+                        kind: "power",
+                        name: "Drink the Moon",
+                        summary: "Draw strength from moonlight.",
+                        description: "",
+                        discipline: "Noctis",
+                        level: 1,
+                        dicePool: "Resolve + Noctis",
+                        rouseChecks: 1,
+                        amalgamPrerequisites: []
+                    },
+                    {
+                        id: "homebrew-merit",
+                        kind: "merit",
+                        name: "Moonlit Favor",
+                        summary: "A supernatural ally owes you a boon.",
+                        description: "",
+                        costs: [1],
+                        excludes: []
+                    }
+                ]
+            }
+        })
+
+        expect(updated.statusCode, updated.body).toBe(200)
+        expect(trackerMock.trackEvent).toHaveBeenCalledTimes(1)
+        expect(trackerMock.trackEvent).toHaveBeenCalledWith(
+            "homebrew_item_created",
+            { itemType: "merit", collectionItemCount: 3 },
+            AUTHOR_ID,
+            expect.anything()
+        )
     })
 
     it("enables a collection for every character in its owner's account", async () => {

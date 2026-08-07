@@ -92,6 +92,23 @@ const countKinds = (snapshot: HomebrewCollectionSnapshot) =>
         return counts
     }, {})
 
+const getNewHomebrewItemKinds = (
+    existingItemIds: Set<string>,
+    items: HomebrewCollectionInput["items"]
+) => items.filter((item) => !item.id || !existingItemIds.has(item.id)).map((item) => item.kind)
+
+const trackCreatedHomebrewItems = async (
+    itemKinds: string[],
+    collectionItemCount: number,
+    userId: string,
+    request: Parameters<typeof trackEvent>[3]
+) =>
+    Promise.all(
+        itemKinds.map((itemType) =>
+            trackEvent("homebrew_item_created", { itemType, collectionItemCount }, userId, request)
+        )
+    )
+
 const sendHomebrewStorageLimitError = (reply: FastifyReply) =>
     reply.code(413).send({ error: new HomebrewStorageLimitError().message })
 
@@ -454,6 +471,12 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                     request.user!.id,
                     request
                 )
+                await trackCreatedHomebrewItems(
+                    parsedInput.data.items.map((item) => item.kind),
+                    collection?.items.length ?? 0,
+                    request.user!.id,
+                    request
+                )
                 reply.code(201).send(collection)
             } catch (error) {
                 if (error instanceof HomebrewStorageLimitError) {
@@ -481,13 +504,23 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
                 return sendHomebrewValidationError(reply, parsedInput.error.issues)
             }
             try {
-                reply.send(
-                    await replaceHomebrewCollection(
-                        collection.id,
-                        parsedInput.data,
-                        request.user!.id
-                    )
+                const existingItems = await getHomebrewCollectionSnapshot(collection.id)
+                const createdItemKinds = getNewHomebrewItemKinds(
+                    new Set(existingItems?.items.map((item) => item.id)),
+                    parsedInput.data.items
                 )
+                const updatedCollection = await replaceHomebrewCollection(
+                    collection.id,
+                    parsedInput.data,
+                    request.user!.id
+                )
+                await trackCreatedHomebrewItems(
+                    createdItemKinds,
+                    updatedCollection?.items.length ?? 0,
+                    request.user!.id,
+                    request
+                )
+                reply.send(updatedCollection)
             } catch (error) {
                 if (error instanceof HomebrewStorageLimitError)
                     return sendHomebrewStorageLimitError(reply)
