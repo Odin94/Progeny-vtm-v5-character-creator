@@ -1,6 +1,7 @@
 import { Group, Stack, Text } from "@mantine/core"
 import { memo, useRef, useMemo, useEffect, useState } from "react"
 import posthog from "posthog-js"
+import "./Pips.css"
 import PipButton from "./PipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
@@ -22,10 +23,16 @@ type PipsProps = {
     field?: string
 }
 
+const BLOCKED_WARNING_DURATION_MS = 2_500
+
 const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) => {
     const prevLevelRef = useRef(level)
-    // Reason shown inline (not just on hover) after a click that could not be applied.
-    const [blockedReason, setBlockedReason] = useState<string | undefined>(undefined)
+    const blockedWarningIdRef = useRef(0)
+    // A click that cannot be applied gets brief visible feedback without changing the pip row's
+    // layout. The id makes repeat clicks restart the warning's lifetime and animation.
+    const [blockedWarning, setBlockedWarning] = useState<
+        { id: number; reason: string } | undefined
+    >(undefined)
 
     // Clicking the current top-most filled pip steps the trait down one level; clicking
     // any other pip sets the trait to that level. Uniform across all levels so no click is
@@ -36,11 +43,21 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         return clickedLevel === level ? level - 1 : clickedLevel
     }
 
-    // The inline message is tied to a click; drop it once the situation that caused it
-    // (mode or level) changes so a stale reason never lingers.
+    // Drop the warning once the situation that caused it (mode or level) changes so a stale
+    // reason never lingers.
     useEffect(() => {
-        setBlockedReason(undefined)
+        setBlockedWarning(undefined)
     }, [options?.mode, level])
+
+    useEffect(() => {
+        if (!blockedWarning) return
+
+        const timeout = window.setTimeout(
+            () => setBlockedWarning(undefined),
+            BLOCKED_WARNING_DURATION_MS
+        )
+        return () => window.clearTimeout(timeout)
+    }, [blockedWarning])
 
     const { firstChangingIndex, isFilling } = useMemo(() => {
         const prevLevel = prevLevelRef.current
@@ -183,11 +200,11 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
 
         const { mode, character, setCharacter } = options
 
-        // A single source of truth for whether the click can apply. When it can't, show the
-        // explanation inline instead of returning silently behind a hover-only tooltip.
+        // A single source of truth for whether the click can apply. When it can't, show a brief
+        // visible explanation instead of returning silently behind a hover-only tooltip.
         const disabledReason = getDisabledReason(index)
         if (disabledReason) {
-            setBlockedReason(disabledReason)
+            setBlockedWarning({ id: ++blockedWarningIdRef.current, reason: disabledReason })
             capturePipEvent("sheet-pip-edit-blocked", {
                 field,
                 mode,
@@ -195,7 +212,7 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             })
             return
         }
-        setBlockedReason(undefined)
+        setBlockedWarning(undefined)
 
         const newLevel = getTargetLevel(index)
         const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
@@ -273,31 +290,38 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
     }
 
     return (
-        <Stack gap={2}>
+        <Stack gap={2} style={{ position: "relative", overflow: "visible" }}>
             <Group gap={4}>
                 {Array.from({ length: maxLevel }, (_, index) => (
-                <PipButton
-                    key={index}
-                    index={index}
-                    filled={index < level}
-                    firstChangingIndex={firstChangingIndex}
-                    isFilling={isFilling}
-                    onClick={() => handlePipClick(index)}
-                    style={
-                        (index + 1) % 5 === 0 && index < maxLevel - 1
-                            ? { marginRight: 8 }
-                            : undefined
-                    }
-                    options={options}
-                    disabledReason={getDisabledReason(index)}
-                    hardDisabled={!!options && !options.canEdit}
-                    xpCost={getXPCost(index)}
-                />
+                    <PipButton
+                        key={index}
+                        index={index}
+                        filled={index < level}
+                        firstChangingIndex={firstChangingIndex}
+                        isFilling={isFilling}
+                        onClick={() => handlePipClick(index)}
+                        style={
+                            (index + 1) % 5 === 0 && index < maxLevel - 1
+                                ? { marginRight: 8 }
+                                : undefined
+                        }
+                        options={options}
+                        disabledReason={getDisabledReason(index)}
+                        hardDisabled={!!options && !options.canEdit}
+                        xpCost={getXPCost(index)}
+                    />
                 ))}
             </Group>
-            {blockedReason ? (
-                <Text size="xs" c="red.4" style={{ maxWidth: 260, lineHeight: 1.2 }}>
-                    {blockedReason}
+            {blockedWarning ? (
+                <Text
+                    key={blockedWarning.id}
+                    className="pip-blocked-warning"
+                    role="status"
+                    aria-live="polite"
+                    size="xs"
+                    c="red.4"
+                >
+                    {blockedWarning.reason}
                 </Text>
             ) : null}
         </Stack>

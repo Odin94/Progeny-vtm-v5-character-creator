@@ -1,7 +1,7 @@
 import { MantineProvider } from "@mantine/core"
-import { render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { type SheetOptions } from "~/character_sheet/CharacterSheet"
 import Pips from "~/character_sheet/components/Pips"
 import { getEmptyCharacter } from "~/data/Character"
@@ -31,14 +31,24 @@ const getXpOptions = (setCharacter: SheetOptions["setCharacter"]): SheetOptions 
     onUpdatePreferences: vi.fn()
 })
 
-describe("blocked pip clicks explain themselves inline", () => {
+afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+})
+
+describe("blocked pip click feedback", () => {
     it("shows the insufficient-XP reason on click, without a hover, and stays clickable", async () => {
         const user = userEvent.setup()
         const setCharacter = vi.fn()
 
         render(
             <MantineProvider>
-                <Pips level={0} maxLevel={5} options={getXpOptions(setCharacter)} field="skills.brawl" />
+                <Pips
+                    level={0}
+                    maxLevel={5}
+                    options={getXpOptions(setCharacter)}
+                    field="skills.brawl"
+                />
             </MantineProvider>
         )
 
@@ -51,9 +61,32 @@ describe("blocked pip clicks explain themselves inline", () => {
         await user.click(pips[0])
 
         expect(setCharacter).not.toHaveBeenCalled()
-        // The reason must render inline as body text (a <p>), not only inside a hover tooltip.
+        // The reason must render as body text (a <p>), not only inside a hover tooltip.
         const matches = await screen.findAllByText(/Insufficient XP/)
         expect(matches.some((element) => element.tagName === "P")).toBe(true)
+    })
+
+    it("removes the blocked warning after a short delay", async () => {
+        vi.useFakeTimers()
+        const setCharacter = vi.fn()
+
+        render(
+            <MantineProvider>
+                <Pips
+                    level={0}
+                    maxLevel={5}
+                    options={getXpOptions(setCharacter)}
+                    field="skills.brawl"
+                />
+            </MantineProvider>
+        )
+
+        fireEvent.click(screen.getAllByRole("button")[0])
+        expect(screen.getByText(/Insufficient XP/)).toBeInTheDocument()
+
+        act(() => vi.advanceTimersByTime(2_500))
+
+        expect(screen.queryByText(/Insufficient XP/)).not.toBeInTheDocument()
     })
 
     it("explains that a level-1 trait cannot be decreased in XP mode", async () => {
@@ -62,7 +95,12 @@ describe("blocked pip clicks explain themselves inline", () => {
 
         render(
             <MantineProvider>
-                <Pips level={1} maxLevel={5} options={getXpOptions(setCharacter)} field="skills.brawl" />
+                <Pips
+                    level={1}
+                    maxLevel={5}
+                    options={getXpOptions(setCharacter)}
+                    field="skills.brawl"
+                />
             </MantineProvider>
         )
 
