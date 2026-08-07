@@ -3,7 +3,7 @@ import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
-import { Character, getEmptyCharacter } from "../../data/Character"
+import { Character } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { GeneratorPhasePrompt, GeneratorSectionDivider } from "./sharedGeneratorUi"
@@ -61,12 +61,6 @@ const AttributePicker = ({
     }
 
     const resetAttributes = () => {
-        const updatedCharacter = {
-            ...character,
-            attributes: getEmptyCharacter().attributes
-        }
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        setCharacter(updatedCharacter)
         setPickedAttributes(emptyAttributeSetting)
     }
 

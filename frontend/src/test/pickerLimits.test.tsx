@@ -1,5 +1,5 @@
 import { MantineProvider } from "@mantine/core"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import AttributePicker from "~/generator/components/AttributePicker"
 import SkillsPicker from "~/generator/components/SkillsPicker"
@@ -101,5 +101,77 @@ describe("creator picker limits", () => {
 
         expect(screen.getByTestId("skill-academics-button")).toBeDisabled()
         expect(screen.getByTestId("skill-athletics-button")).toBeEnabled()
+    })
+
+    it("resets confirmed attribute picks without changing the character", () => {
+        const character = getBasicTestCharacter()
+        character.attributes = {
+            ...character.attributes,
+            strength: 4,
+            charisma: 1,
+            dexterity: 3,
+            stamina: 3,
+            composure: 3
+        }
+        const setCharacter = vi.fn()
+        const setPickedAttributes = vi.fn()
+
+        render(
+            <MantineProvider>
+                <AttributePicker
+                    character={character}
+                    setCharacter={setCharacter}
+                    nextStep={vi.fn()}
+                    pickedAttributes={{
+                        strongest: "strength",
+                        weakest: "charisma",
+                        medium: ["dexterity", "stamina", "composure"]
+                    }}
+                    setPickedAttributes={setPickedAttributes}
+                />
+            </MantineProvider>
+        )
+
+        fireEvent.click(screen.getByRole("button", { name: "Reset attributes" }))
+
+        expect(setCharacter).not.toHaveBeenCalled()
+        expect(setPickedAttributes).toHaveBeenCalledWith({
+            strongest: null,
+            weakest: null,
+            medium: []
+        })
+    })
+
+    it("resets confirmed skill picks without changing the character", () => {
+        const character = getBasicTestCharacter()
+        character.skills.athletics = 3
+        const setCharacter = vi.fn()
+        const setPickedSkills = vi.fn()
+        const setPickedDistribution = vi.fn()
+
+        render(
+            <MantineProvider>
+                <SkillsPicker
+                    character={character}
+                    setCharacter={setCharacter}
+                    nextStep={vi.fn()}
+                    pickedSkills={{ special: [], strongest: ["athletics"], decent: [], acceptable: [] }}
+                    setPickedSkills={setPickedSkills}
+                    pickedDistribution="Balanced"
+                    setPickedDistribution={setPickedDistribution}
+                />
+            </MantineProvider>
+        )
+
+        fireEvent.click(screen.getByRole("button", { name: "Reset skills" }))
+
+        expect(setCharacter).not.toHaveBeenCalled()
+        expect(setPickedSkills).toHaveBeenCalledWith({
+            special: [],
+            strongest: [],
+            decent: [],
+            acceptable: []
+        })
+        expect(setPickedDistribution).toHaveBeenCalledWith(null)
     })
 })

@@ -318,11 +318,6 @@ const SkillsPicker = ({
     }
 
     const resetSkills = () => {
-        setCharacter({
-            ...character,
-            skills: emptySkills,
-            skillSpecialties: []
-        })
         setPickedSkills(emptySkillsSetting)
         setPickedDistribution(null)
     }
