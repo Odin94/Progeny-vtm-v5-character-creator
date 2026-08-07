@@ -8,9 +8,16 @@ type TouchstoneModalProps = {
     onClose: () => void
     options: SheetOptions
     initialTouchstone?: Touchstone | null
+    initialIndex?: number | null
 }
 
-const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: TouchstoneModalProps) => {
+const TouchstoneModal = ({
+    opened,
+    onClose,
+    options,
+    initialTouchstone,
+    initialIndex
+}: TouchstoneModalProps) => {
     const { character, setCharacter, primaryColor } = options
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
@@ -39,19 +46,16 @@ const TouchstoneModal = ({ opened, onClose, options, initialTouchstone }: Touchs
             conviction: conviction.trim()
         }
 
-        if (initialTouchstone) {
+        if (initialTouchstone && initialIndex != null) {
+            // Update by index. Matching on exact name/description/conviction equality dropped the
+            // edit whenever the field changed (or when two touchstones were identical), silently
+            // discarding the user's change while the modal closed.
             setCharacter((current) => {
-                const index = current.touchstones.findIndex(
-                    (t) =>
-                        t.name === initialTouchstone.name &&
-                        t.description === initialTouchstone.description &&
-                        t.conviction === initialTouchstone.conviction
-                )
-                if (index === -1) {
+                if (initialIndex < 0 || initialIndex >= current.touchstones.length) {
                     return current
                 }
                 const updatedTouchstones = [...current.touchstones]
-                updatedTouchstones[index] = newTouchstone
+                updatedTouchstones[initialIndex] = newTouchstone
                 return {
                     ...current,
                     touchstones: updatedTouchstones
