@@ -1,10 +1,9 @@
 import { Box, Button, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
 import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character, getCharacterExcludedPredatorTypes } from "../../data/Character"
-import { PredatorTypes } from "../../data/PredatorType"
+import { PredatorType, PredatorTypes } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
@@ -21,6 +20,32 @@ type PredatorTypePickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
+
+    // Lifted into Generator so a half-configured predator type survives navigating to another
+    // step and back — see the comment on the state in Generator.tsx.
+    pickedPredatorType: PredatorTypeName
+    setPickedPredatorType: (predatorType: PredatorTypeName) => void
+    specialty: string
+    setSpecialty: (specialty: string) => void
+    discipline: string
+    setDiscipline: (discipline: string) => void
+}
+
+// Build the SegmentedControl value for a stored specialty. Non-custom specialties round-trip
+// exactly; custom-input ones store the typed text as `name`, so we match on skill and use the
+// option's canonical key (the modal restores the typed text separately).
+const specialtyKeyForStored = (
+    predatorType: PredatorType,
+    stored: { skill: string; name: string } | undefined,
+    fallbackKey: string
+) => {
+    if (!stored) return fallbackKey
+    const exact = predatorType.specialtyOptions.find(
+        (o) => `${o.skill}_${o.name}` === `${stored.skill}_${stored.name}`
+    )
+    if (exact) return `${exact.skill}_${exact.name}`
+    const bySkill = predatorType.specialtyOptions.find((o) => o.skill === stored.skill)
+    return bySkill ? `${bySkill.skill}_${bySkill.name}` : fallbackKey
 }
 
 type CategoryMeta = {
@@ -84,15 +109,64 @@ const CATEGORIES: CategoryMeta[] = [
 
 const titleCase = (str: string) => str.replace(/\b\w/g, (c) => c.toUpperCase())
 
-const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypePickerProps) => {
+const PredatorTypePicker = ({
+    character,
+    setCharacter,
+    nextStep,
+    pickedPredatorType,
+    setPickedPredatorType,
+    specialty,
+    setSpecialty,
+    discipline,
+    setDiscipline
+}: PredatorTypePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
     const isThinBlood = character.clan === "Thin-blood"
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
-    const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
-    const [specialty, setSpecialty] = useState("")
-    const [discipline, setDiscipline] = useState("")
+
+    const openPredatorType = (predatorTypeName: PredatorTypeName) => {
+        if (isThinBlood) return
+
+        const predatorType = PredatorTypes[predatorTypeName]
+        const firstSpecialtyOption = predatorType.specialtyOptions[0]
+        const firstSpecialtyKey = `${firstSpecialtyOption?.skill}_${firstSpecialtyOption?.name}`
+        const firstDisciplineName = predatorType.disciplineOptions[0]?.name
+
+        // Re-opening the same card after stepping away: the lifted state still holds the
+        // in-progress edits, so keep them instead of resetting to the first option.
+        const hasInProgressSelection = pickedPredatorType === predatorTypeName && specialty !== ""
+        if (hasInProgressSelection) {
+            openModal()
+            return
+        }
+
+        // Re-opening a type the user already confirmed: seed from the stored character so the
+        // modal shows their choices, not defaults. Re-confirming an unchanged discipline is then
+        // non-destructive — it no longer trips the reset that clears disciplines, rituals and
+        // ceremonies in PredatorTypeModal.
+        const confirmed = character.predatorType
+        if (confirmed.name === predatorTypeName) {
+            setPickedPredatorType(predatorTypeName)
+            setSpecialty(
+                specialtyKeyForStored(
+                    predatorType,
+                    confirmed.pickedSpecialties[0],
+                    firstSpecialtyKey
+                )
+            )
+            setDiscipline(confirmed.pickedDiscipline || firstDisciplineName)
+            openModal()
+            return
+        }
+
+        // Genuinely fresh pick — start from the first option.
+        setPickedPredatorType(predatorTypeName)
+        setSpecialty(firstSpecialtyKey)
+        setDiscipline(firstDisciplineName)
+        openModal()
+    }
 
     const createCard = (predatorTypeName: PredatorTypeName, meta: CategoryMeta) => {
         const clanDisabled = getCharacterExcludedPredatorTypes(character).includes(predatorTypeName)
@@ -105,16 +179,9 @@ const PredatorTypePicker = ({ character, setCharacter, nextStep }: PredatorTypeP
                 key={predatorTypeName}
                 aria-disabled={isThinBlood}
                 onClick={() => {
-                    if (isThinBlood) return
-
                     // Locked cards stay openable so the coupling is legible rather than a dead
                     // end: the modal explains the clan restriction instead of blocking the click.
-                    const firstSpecialtyOption = predatorType.specialtyOptions[0]
-                    const firstDisciplineOption = predatorType.disciplineOptions[0]
-                    setPickedPredatorType(predatorTypeName)
-                    setSpecialty(`${firstSpecialtyOption?.skill}_${firstSpecialtyOption?.name}`)
-                    setDiscipline(firstDisciplineOption?.name)
-                    openModal()
+                    openPredatorType(predatorTypeName)
                 }}
                 onMouseEnter={(e) => {
                     if (!isThinBlood && !isSelected) {

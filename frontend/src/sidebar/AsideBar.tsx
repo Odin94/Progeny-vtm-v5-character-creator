@@ -68,6 +68,7 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
                     return (
                         <Box key={step.id}>
                             <UnstyledButton
+                                data-testid={`generator-step-${step.id}`}
                                 onClick={() => {
                                     if (!isAccessible) return
                                     // Track jumps back to an earlier step so abandonment that
