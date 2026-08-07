@@ -14,7 +14,8 @@ import {
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
-import { Dispatch, memo, SetStateAction, useMemo, useState } from "react"
+import { notifications } from "@mantine/notifications"
+import { Dispatch, memo, SetStateAction, useEffect, useMemo, useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character, getCharacterExcludedMeritsAndFlaws, MeritFlaw } from "../../data/Character"
 import {
@@ -46,10 +47,11 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
 import { getHomebrewSource, getMeritFlawIdentity } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
 type MeritsAndFlawsPickerProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     nextStep: () => void
 }
 
@@ -401,6 +403,23 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         ...character.merits,
         ...character.flaws
     ])
+    const hasMounted = useRef(false)
+
+    // A merits pick used to remain only in this component until Confirm. Persisting each edit
+    // means the draft survives sidebar navigation while the explicit Confirm button still
+    // represents advancing to the next generator step.
+    useEffect(() => {
+        if (!hasMounted.current) {
+            hasMounted.current = true
+            return
+        }
+
+        setCharacter((current) => ({
+            ...current,
+            merits: pickedMeritsAndFlaws.filter((item) => item.type === "merit"),
+            flaws: pickedMeritsAndFlaws.filter((item) => item.type === "flaw")
+        }))
+    }, [pickedMeritsAndFlaws, setCharacter])
 
     const predatorTypeMeritsByName = useMemo(
         () => getPredatorTypeMeritsByName(character),

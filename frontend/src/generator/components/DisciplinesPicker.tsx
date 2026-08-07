@@ -44,6 +44,10 @@ type DisciplinesPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: (characterOverride?: Character) => void
+    pickedPowers: Power[]
+    setPickedPowers: (powers: Power[]) => void
+    pickedPredatorTypePower: Power | undefined
+    setPickedPredatorTypePower: (power: Power | undefined) => void
 }
 
 const DisciplineDots = ({ count }: { count: number }) => {
@@ -68,10 +72,16 @@ const DisciplineDots = ({ count }: { count: number }) => {
     )
 }
 
-const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPickerProps) => {
+const DisciplinesPicker = ({
+    character,
+    setCharacter,
+    nextStep,
+    pickedPowers,
+    setPickedPowers,
+    pickedPredatorTypePower,
+    setPickedPredatorTypePower
+}: DisciplinesPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    const [pickedPowers, setPickedPowers] = useState<Power[]>([])
-    const [pickedPredatorTypePower, setPickedPredatorTypePower] = useState<Power | undefined>()
     const [hoveredTakeButton, setHoveredTakeButton] = useState<string | null>(null)
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
 

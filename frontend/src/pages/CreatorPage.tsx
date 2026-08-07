@@ -68,10 +68,12 @@ export default function CreatorPage() {
     const [pendingSwitchAction, setPendingSwitchAction] = useState<PendingSwitchAction>(null)
     const [switchNameValue, setSwitchNameValue] = useState("")
     const [isSavingBeforeSwitch, setIsSavingBeforeSwitch] = useState(false)
+    const [characterSessionKey, setCharacterSessionKey] = useState(0)
     const userCharacters = (
         (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
     ).filter((candidate) => !candidate.shared)
     const emptyCharacter = getEmptyCharacter()
+    const resetGeneratorSession = () => setCharacterSessionKey((key) => key + 1)
 
     const routeHash = location.hash.replace(/^#/, "")
     const fallbackStep = normalizeGeneratorStepId(storedSelectedStep, character)
@@ -121,6 +123,7 @@ export default function CreatorPage() {
             ...loadedCharacter,
             id: characterId
         } as CharacterType & { id: string })
+        resetGeneratorSession()
         setSelectedStep("final")
 
         notifications.show({
@@ -196,6 +199,7 @@ export default function CreatorPage() {
         }
 
         setCharacter(getEmptyCharacter())
+        resetGeneratorSession()
         setSelectedStep("clan")
     }
 
@@ -321,6 +325,7 @@ export default function CreatorPage() {
         const action = pendingSwitchAction
         closeNameBeforeSwitchModal()
         setCharacter(getEmptyCharacter())
+        resetGeneratorSession()
         await completePendingSwitchAction(action)
     }
 
@@ -352,6 +357,7 @@ export default function CreatorPage() {
                 setCharacter={setCharacter}
                 loadedFile={loadedFile}
                 setSelectedStep={setSelectedStep}
+                onCharacterReplaced={resetGeneratorSession}
             />
             <NameCharacterBeforeSwitchModal
                 opened={pendingSwitchAction !== null}
@@ -485,6 +491,7 @@ export default function CreatorPage() {
                         >
                             <RenderProfiler id="Generator">
                                 <Generator
+                                    key={characterSessionKey}
                                     character={character}
                                     setCharacter={setCharacter}
                                     selectedStep={selectedStep}

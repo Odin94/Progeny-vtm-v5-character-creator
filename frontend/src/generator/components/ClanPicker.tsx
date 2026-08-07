@@ -35,9 +35,10 @@ type ClanPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
+    onClanChanged?: () => void
 }
 
-const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
+const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPickerProps) => {
     const theme = useMantineTheme()
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const homebrewClans = homebrewCollections.flatMap((collection) =>
@@ -76,6 +77,7 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         event.currentTarget.style.boxShadow = ""
                     }}
                     onClick={() => {
+                        const clanChanged = clan !== character.clan || character.homebrewClan !== undefined
                         const newMerits =
                             clan === character.clan
                                 ? character.merits
@@ -101,6 +103,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 clan,
                                 homebrewClan: undefined,
                                 disciplines: [],
+                                rituals: [],
+                                ceremonies: [],
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
                                 predatorType:
                                     clan === "Thin-blood"
@@ -119,6 +123,8 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                                 flaws: newFlaws
                             })
                         }
+
+                        if (clanChanged) onClanChanged?.()
 
                         trackEvent({
                             action: "clan clicked",
@@ -195,6 +201,9 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                     flexDirection: "column"
                 }}
                 onClick={() => {
+                    const clanChanged =
+                        character.homebrewClan?.homebrewSource.itemId !== clan.id ||
+                        character.homebrewClan?.homebrewSource.collectionId !== collection.id
                     const source = {
                         itemId: clan.id,
                         collectionId: collection.id,
@@ -205,9 +214,12 @@ const ClanPicker = ({ character, setCharacter, nextStep }: ClanPickerProps) => {
                         clan: "",
                         homebrewClan: { ...clan, homebrewSource: source },
                         disciplines: [],
+                        rituals: [],
+                        ceremonies: [],
                         availableDisciplineNames: clan.nativeDisciplines,
                         predatorType: character.predatorType
                     })
+                    if (clanChanged) onClanChanged?.()
                     nextStep()
                 }}
             >

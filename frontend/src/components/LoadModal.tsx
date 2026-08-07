@@ -12,6 +12,7 @@ export type LoadModalProps = {
     closeLoadModal: () => void
     loadedFile: File | null
     setSelectedStep: (step: GeneratorStepId) => void
+    onCharacterReplaced?: () => void
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
@@ -27,7 +28,8 @@ const LoadModal = ({
     closeLoadModal,
     setCharacter,
     loadedFile,
-    setSelectedStep
+    setSelectedStep,
+    onCharacterReplaced
 }: LoadModalProps) => {
     return (
         <ConfirmActionModal
@@ -53,6 +55,7 @@ const LoadModal = ({
 
                     const loadedCharacter = await loadCharacterFromJson(json)
                     setCharacter({ ...loadedCharacter, id: "" })
+                    onCharacterReplaced?.()
                     setSelectedStep("final")
                     closeLoadModal()
                 } catch (e) {

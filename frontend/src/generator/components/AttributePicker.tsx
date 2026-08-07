@@ -7,26 +7,54 @@ import { Character } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { GeneratorPhasePrompt, GeneratorSectionDivider } from "./sharedGeneratorUi"
+import { AttributeSetting, emptyAttributeSetting } from "../creatorDrafts"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 
 type AttributePickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
+    pickedAttributes: AttributeSetting
+    setPickedAttributes: (attributes: AttributeSetting) => void
 }
 
-type AttributeSetting = {
-    strongest: AttributesKey | null
-    weakest: AttributesKey | null
-    medium: AttributesKey[]
-}
-
-const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
+const AttributePicker = ({
+    character,
+    setCharacter,
+    nextStep,
+    pickedAttributes,
+    setPickedAttributes
+}: AttributePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    const [pickedAttributes, setPickedAttributes] = useState<AttributeSetting>({
-        strongest: null,
-        weakest: null,
-        medium: []
-    })
+    const hasConfirmedAttributes = Object.values(character.attributes).some((value) => value !== 1)
+    const isComplete =
+        pickedAttributes.strongest !== null &&
+        pickedAttributes.weakest !== null &&
+        pickedAttributes.medium.length === 3
+
+    const commitAttributes = (selection: AttributeSetting, advance: boolean) => {
+        if (!selection.strongest || !selection.weakest || selection.medium.length !== 3) return
+
+        const attributes = {
+            strength: 2,
+            charisma: 2,
+            intelligence: 2,
+            dexterity: 2,
+            manipulation: 2,
+            wits: 2,
+            stamina: 2,
+            composure: 2,
+            resolve: 2
+        }
+        attributes[selection.strongest] = 4
+        attributes[selection.weakest] = 1
+        selection.medium.forEach((medium) => (attributes[medium] = 3))
+
+        const updatedCharacter = { ...character, attributes }
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+        setCharacter(updatedCharacter)
+        if (advance) nextStep()
+    }
 
     // Nothing assigned yet: this is the state the drop-off signals describe (users read the
     // prompt, explore the tooltips, and leave without a first click). We use it to surface the
@@ -97,24 +125,8 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                     ...pickedAttributes,
                     medium: [...pickedAttributes.medium, attribute]
                 }
-                const attributes = {
-                    strength: 2,
-                    charisma: 2,
-                    intelligence: 2,
-                    dexterity: 2,
-                    manipulation: 2,
-                    wits: 2,
-                    stamina: 2,
-                    composure: 2,
-                    resolve: 2
-                }
-                attributes[finalPick.strongest!] = 4
-                attributes[finalPick.weakest!] = 1
-                finalPick.medium.forEach((medium) => (attributes[medium] = 3))
-
-                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                setCharacter({ ...character, attributes })
-                nextStep()
+                setPickedAttributes(finalPick)
+                if (!hasConfirmedAttributes) commitAttributes(finalPick, true)
             }
         }
 
@@ -334,6 +346,27 @@ const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerP
                         .map((clan, i) => createButton(clan, i))}
                 </Grid>
             </Group>
+
+            {hasConfirmedAttributes ? (
+                <Group justify="center" mt="xl">
+                    <Button
+                        variant="outline"
+                        color="red"
+                        onClick={() => setPickedAttributes(emptyAttributeSetting)}
+                    >
+                        Reset selection
+                    </Button>
+                    <Button
+                        data-testid="attributes-confirm-button"
+                        color="grape"
+                        disabled={!isComplete}
+                        styles={generatorConfirmButtonStyles}
+                        onClick={() => commitAttributes(pickedAttributes, true)}
+                    >
+                        Confirm
+                    </Button>
+                </Group>
+            ) : null}
         </div>
     )
 }

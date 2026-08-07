@@ -1,6 +1,6 @@
 import { Box, Button, ScrollArea, Select, Stack, Text } from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { calculateBloodPotency } from "../../data/BloodPotency"
@@ -24,6 +24,8 @@ type GenerationPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
+    generation: string | null
+    setGeneration: (generation: string | null) => void
 }
 
 type GenerationOption = {
@@ -69,17 +71,21 @@ const getGenerationSummary = (generation: number) => {
     return { bloodPotency, bonusXp, additionalAdvantageDots, additionalFlawDots }
 }
 
-const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPickerProps) => {
+const GenerationPicker = ({
+    character,
+    setCharacter,
+    nextStep,
+    generation,
+    setGeneration
+}: GenerationPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
     const isThinBlood = character.clan === "Thin-blood"
     const defaultGeneration = isThinBlood ? "14" : "13"
-    const initialGeneration =
-        character.generation !== getEmptyCharacter().generation
+    const selectedGenerationValue = generation ??
+        (character.generation !== getEmptyCharacter().generation
             ? character.generation.toString()
-            : defaultGeneration
-
-    const [generation, setGeneration] = useState<string | null>(initialGeneration)
+            : defaultGeneration)
 
     const availableOptions = useMemo(
         () =>
@@ -90,11 +96,13 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
     )
 
     const selectedGeneration =
-        availableOptions.find((option) => option.value === generation) ?? null
-    const generationSummary = generation ? getGenerationSummary(parseInt(generation, 10)) : null
+        availableOptions.find((option) => option.value === selectedGenerationValue) ?? null
+    const generationSummary = selectedGenerationValue
+        ? getGenerationSummary(parseInt(selectedGenerationValue, 10))
+        : null
 
     const handleGenerationChange = (value: string | null) => {
-        if (value === null && generation !== null) {
+        if (value === null && selectedGenerationValue !== null) {
             return
         }
 
@@ -320,11 +328,11 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                 <Stack gap="xs" align="center">
                     <Button
                         data-testid="generation-confirm-button"
-                        disabled={generation === null}
+                        disabled={selectedGenerationValue === null}
                         color="grape"
                         styles={generatorConfirmButtonStyles}
                         onClick={() => {
-                            const genValue = parseInt(generation ?? "0")
+                            const genValue = parseInt(selectedGenerationValue ?? "0")
                             let experience = 0
                             if (character.experience === 0) {
                                 experience = getGenerationBonusXp(genValue)
@@ -334,7 +342,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                             trackEvent({
                                 action: "generation submit clicked",
                                 category: "generation",
-                                label: generation ?? "0"
+                                label: selectedGenerationValue ?? "0"
                             })
                             nextStep()
                         }}

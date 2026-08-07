@@ -1,7 +1,6 @@
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import {
@@ -19,21 +18,22 @@ import {
     GeneratorSectionDivider,
     GeneratorStepHero
 } from "./sharedGeneratorUi"
+import {
+    DistributionKey,
+    emptySkillsSetting,
+    SkillsSetting
+} from "../creatorDrafts"
+import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 
 type SkillsPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
+    pickedSkills: SkillsSetting
+    setPickedSkills: (skills: SkillsSetting) => void
+    pickedDistribution: DistributionKey | null
+    setPickedDistribution: (distribution: DistributionKey | null) => void
 }
-
-type SkillsSetting = {
-    special: SkillsKey[]
-    strongest: SkillsKey[]
-    decent: SkillsKey[]
-    acceptable: SkillsKey[]
-}
-
-type DistributionKey = "Jack of All Trades" | "Balanced" | "Specialist"
 
 type SkillDistribution = { strongest: number; decent: number; acceptable: number; special: number }
 
@@ -68,21 +68,38 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
     return Object.values(skillSetting).reduce((acc, s) => [...acc, ...s], [])
 }
 
-const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) => {
+const SkillsPicker = ({
+    character,
+    setCharacter,
+    nextStep,
+    pickedSkills,
+    setPickedSkills,
+    pickedDistribution,
+    setPickedDistribution
+}: SkillsPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
-    const [skills, setSkills] = useState(emptySkills)
-    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({
-        special: [],
-        strongest: [],
-        decent: [],
-        acceptable: []
-    })
-    const [pickedDistribution, setPickedDistribution] = useState<DistributionKey | null>(null)
+    const hasConfirmedSkills = Object.values(character.skills).some((value) => value !== 0)
     const distr = pickedDistribution
         ? distributionByType[pickedDistribution]
         : { special: 0, strongest: 0, decent: 0, acceptable: 0 }
+
+    const skillsFromSelection = (selection: SkillsSetting): Skills => {
+        const skills = { ...emptySkills }
+        selection.special.forEach((skill) => (skills[skill] = 4))
+        selection.strongest.forEach((skill) => (skills[skill] = 3))
+        selection.decent.forEach((skill) => (skills[skill] = 2))
+        selection.acceptable.forEach((skill) => (skills[skill] = 1))
+        return skills
+    }
+
+    const isComplete =
+        pickedDistribution !== null &&
+        pickedSkills.special.length === distr.special &&
+        pickedSkills.strongest.length === distr.strongest &&
+        pickedSkills.decent.length === distr.decent &&
+        pickedSkills.acceptable.length === distr.acceptable
 
     const createButton = (skill: SkillsKey, i: number) => {
         const alreadyPicked = [
@@ -131,45 +148,8 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
         } else {
             const finalPick = { ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] }
             onClick = () => {
-                const skills: Skills = {
-                    athletics: 0,
-                    brawl: 0,
-                    craft: 0,
-                    drive: 0,
-                    firearms: 0,
-                    melee: 0,
-                    larceny: 0,
-                    stealth: 0,
-                    survival: 0,
-
-                    "animal ken": 0,
-                    etiquette: 0,
-                    insight: 0,
-                    intimidation: 0,
-                    leadership: 0,
-                    performance: 0,
-                    persuasion: 0,
-                    streetwise: 0,
-                    subterfuge: 0,
-
-                    academics: 0,
-                    awareness: 0,
-                    finance: 0,
-                    investigation: 0,
-                    medicine: 0,
-                    occult: 0,
-                    politics: 0,
-                    science: 0,
-                    technology: 0
-                }
-                finalPick.special.forEach((special) => (skills[special] = 4))
-                finalPick.strongest.forEach((strongest) => (skills[strongest] = 3))
-                finalPick.decent.forEach((decent) => (skills[decent] = 2))
-                finalPick.acceptable.forEach((acceptable) => (skills[acceptable] = 1))
-
                 setPickedSkills(finalPick)
-                setSkills(skills)
-                openModal()
+                if (!hasConfirmedSkills) openModal()
             }
         }
 
@@ -306,6 +286,18 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
     const closeModalAndUndoLastPick = () => {
         setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
         closeModal()
+    }
+
+    const confirmEditedSkills = () => {
+        const pickedSkillNames = getAll(pickedSkills)
+        setCharacter({
+            ...character,
+            skills: skillsFromSelection(pickedSkills),
+            skillSpecialties: character.skillSpecialties.filter((specialty) =>
+                pickedSkillNames.includes(specialty.skill)
+            )
+        })
+        nextStep()
     }
 
     const createSkillButtons = () => (
@@ -484,8 +476,31 @@ const SkillsPicker = ({ character, setCharacter, nextStep }: SkillsPickerProps) 
                 nextStep={nextStep}
                 character={character}
                 pickedSkillNames={getAll(pickedSkills)}
-                skills={skills}
+                skills={skillsFromSelection(pickedSkills)}
             />
+            {hasConfirmedSkills ? (
+                <Group justify="center" mt="xl">
+                    <Button
+                        variant="outline"
+                        color="red"
+                        onClick={() => {
+                            setPickedSkills(emptySkillsSetting)
+                            setPickedDistribution(null)
+                        }}
+                    >
+                        Reset selection
+                    </Button>
+                    <Button
+                        data-testid="skills-confirm-button"
+                        color="grape"
+                        disabled={!isComplete}
+                        styles={generatorConfirmButtonStyles}
+                        onClick={confirmEditedSkills}
+                    >
+                        Confirm
+                    </Button>
+                </Group>
+            ) : null}
         </div>
     )
 }

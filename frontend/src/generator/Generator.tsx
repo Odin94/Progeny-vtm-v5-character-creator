@@ -3,7 +3,17 @@ import { useEffect, useState } from "react"
 import posthog from "posthog-js"
 import ErrorBoundary from "../components/ErrorBoundary"
 import { Character } from "../data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { PredatorTypeName } from "../data/NameSchemas"
+import {
+    AttributeSetting,
+    DistributionKey,
+    getAttributeSetting,
+    getDisciplineDraft,
+    getSkillDistribution,
+    getSkillsSetting,
+    SkillsSetting
+} from "./creatorDrafts"
 import { trackEvent } from "../utils/analytics"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
@@ -27,9 +37,15 @@ export type GeneratorProps = {
 
     selectedStep: GeneratorStepId
     setSelectedStep: (step: GeneratorStepId) => void
+
 }
 
-const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
+const Generator = ({
+    character,
+    setCharacter,
+    selectedStep,
+    setSelectedStep
+}: GeneratorProps) => {
     // The predator-type picker is the generator's busiest back-and-forth step, so its in-progress
     // selection lives here rather than in the picker: the picker (and its modal) is unmounted every
     // time another step is shown, and component-local state would be discarded on the way out. Held
@@ -37,6 +53,27 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
     const [predatorTypeSpecialty, setPredatorTypeSpecialty] = useState("")
     const [predatorTypeDiscipline, setPredatorTypeDiscipline] = useState("")
+    const [attributeDraft, setAttributeDraft] = useState<AttributeSetting>(() =>
+        getAttributeSetting(character.attributes)
+    )
+    const [skillsDraft, setSkillsDraft] = useState<SkillsSetting>(() =>
+        getSkillsSetting(character.skills)
+    )
+    const [skillsDistribution, setSkillsDistribution] = useState<DistributionKey | null>(() =>
+        getSkillDistribution(getSkillsSetting(character.skills))
+    )
+    const [generationDraft, setGenerationDraft] = useState<string | null>(() =>
+        character.generation ? character.generation.toString() : null
+    )
+    const [{ clanPowers: disciplineDraft, predatorPower: predatorDisciplineDraft }, setDisciplinesDraft] =
+        useState(() => getDisciplineDraft(character.disciplines, character.predatorType.pickedDiscipline))
+
+    const clearClanDependentDrafts = () => {
+        setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
+        setPickedPredatorType("")
+        setPredatorTypeSpecialty("")
+        setPredatorTypeDiscipline("")
+    }
 
     // Fire a PostHog step-view event whenever a generator step is shown. Individual steps only
     // send a confirm-click event, so without this we cannot measure step-level drop-off (how
@@ -71,6 +108,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
+                        onClanChanged={clearClanDependentDrafts}
                     />
                 )
             case "attributes":
@@ -79,6 +117,8 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
+                        pickedAttributes={attributeDraft}
+                        setPickedAttributes={setAttributeDraft}
                     />
                 )
             case "skills":
@@ -87,6 +127,10 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
+                        pickedSkills={skillsDraft}
+                        setPickedSkills={setSkillsDraft}
+                        pickedDistribution={skillsDistribution}
+                        setPickedDistribution={setSkillsDistribution}
                     />
                 )
             case "generation":
@@ -95,6 +139,8 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
+                        generation={generationDraft}
+                        setGeneration={setGenerationDraft}
                     />
                 )
             case "predator-type":
@@ -103,6 +149,14 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
+                        pickedPowers={disciplineDraft}
+                        setPickedPowers={(clanPowers) =>
+                            setDisciplinesDraft((current) => ({ ...current, clanPowers }))
+                        }
+                        pickedPredatorTypePower={predatorDisciplineDraft}
+                        setPickedPredatorTypePower={(predatorPower) =>
+                            setDisciplinesDraft((current) => ({ ...current, predatorPower }))
+                        }
                         pickedPredatorType={pickedPredatorType}
                         setPickedPredatorType={setPickedPredatorType}
                         specialty={predatorTypeSpecialty}
