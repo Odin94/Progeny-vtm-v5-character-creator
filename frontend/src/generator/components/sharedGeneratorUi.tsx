@@ -191,6 +191,7 @@ export const GeneratorPhasePrompt = ({
     marginBottom = "md"
 }: GeneratorPhasePromptProps) => {
     const shouldReduceMotion = useReducedMotion()
+    const hasFooterText = footerText !== undefined && footerText !== null
 
     return (
         // translate="no" / notranslate: this subtree re-renders its text on every pick (the
@@ -302,19 +303,22 @@ export const GeneratorPhasePrompt = ({
                     </Box>
                 )
             })}
-            {footerText ? (
-                <Text
-                    ta="center"
-                    style={{
-                        fontFamily: "Inter, Segoe UI, sans-serif",
-                        fontSize: "0.78rem",
-                        letterSpacing: "0.06em",
-                        color: rgba(RAW_GREY, 0.42)
-                    }}
-                >
-                    {footerText}
-                </Text>
-            ) : null}
+            {/* Keep the instruction slot in the layout after its copy is cleared. Otherwise the
+                section below jumps upward and shifts the attribute buttons under the pointer. */}
+            <Text
+                aria-hidden={!hasFooterText}
+                data-testid="generator-phase-prompt-footer"
+                ta="center"
+                style={{
+                    fontFamily: "Inter, Segoe UI, sans-serif",
+                    fontSize: "0.78rem",
+                    letterSpacing: "0.06em",
+                    color: rgba(RAW_GREY, 0.42),
+                    visibility: hasFooterText ? "visible" : "hidden"
+                }}
+            >
+                {hasFooterText ? footerText : "\u00a0"}
+            </Text>
         </Stack>
     )
 }

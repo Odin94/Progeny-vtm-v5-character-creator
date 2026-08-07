@@ -19,7 +19,7 @@ Object.defineProperty(window, "matchMedia", {
 
 afterEach(cleanup)
 
-const renderPrompt = () =>
+const renderPrompt = (footerText?: string) =>
     render(
         <MantineProvider>
             <GeneratorPhasePrompt
@@ -43,7 +43,7 @@ const renderPrompt = () =>
                 ]}
                 activeKey="strongest"
                 phoneScreen={false}
-                footerText="Remaining attributes will be lvl 2"
+                footerText={footerText}
             />
         </MantineProvider>
     )
@@ -54,10 +54,18 @@ describe("GeneratorPhasePrompt", () => {
     // translator mutates text nodes out from under React and the reconciler throws a
     // DOMException (insertBefore/removeChild NotFoundError) on /create#attributes.
     it("marks the animated cascade as non-translatable", () => {
-        const { container } = renderPrompt()
+        const { container } = renderPrompt("Remaining attributes will be lvl 2")
 
         const guarded = container.querySelector('[translate="no"]')
         expect(guarded).not.toBeNull()
         expect(guarded).toHaveClass("notranslate")
+    })
+
+    it("keeps the footer's layout slot when its instruction is cleared", () => {
+        const { getByTestId } = renderPrompt()
+
+        const footer = getByTestId("generator-phase-prompt-footer")
+        expect(footer).toHaveStyle({ visibility: "hidden" })
+        expect(footer).toHaveAttribute("aria-hidden", "true")
     })
 })
