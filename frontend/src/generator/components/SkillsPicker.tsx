@@ -106,6 +106,12 @@ const SkillsPicker = ({
         pickedSkills.strongest.length === distr.strongest &&
         pickedSkills.decent.length === distr.decent &&
         pickedSkills.acceptable.length === distr.acceptable
+    const skillAllocationIsFull =
+        pickedDistribution !== null &&
+        pickedSkills.special.length >= distr.special &&
+        pickedSkills.strongest.length >= distr.strongest &&
+        pickedSkills.decent.length >= distr.decent &&
+        pickedSkills.acceptable.length >= distr.acceptable
 
     const createButton = (skill: SkillsKey, i: number) => {
         const alreadyPicked = [
@@ -144,19 +150,22 @@ const SkillsPicker = ({
             onClick = () => {
                 setPickedSkills({ ...pickedSkills, decent: [...pickedSkills.decent, skill] })
             }
-        } else if (pickedSkills.acceptable.length < distr.acceptable - 1) {
-            onClick = () => {
-                setPickedSkills({
-                    ...pickedSkills,
-                    acceptable: [...pickedSkills.acceptable, skill]
-                })
-            }
-        } else {
+        } else if (pickedSkills.acceptable.length < distr.acceptable) {
             const finalPick = { ...pickedSkills, acceptable: [...pickedSkills.acceptable, skill] }
             onClick = () => {
                 setPickedSkills(finalPick)
-                if (!hasConfirmedSkills) openModal()
+                if (
+                    !hasConfirmedSkills &&
+                    finalPick.special.length === distr.special &&
+                    finalPick.strongest.length === distr.strongest &&
+                    finalPick.decent.length === distr.decent &&
+                    finalPick.acceptable.length === distr.acceptable
+                ) {
+                    openModal()
+                }
             }
+        } else {
+            onClick = () => {}
         }
 
         const trackClick = () => {
@@ -179,7 +188,9 @@ const SkillsPicker = ({
                         data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
-                        disabled={pickedDistribution === null}
+                        disabled={
+                            pickedDistribution === null || (!alreadyPicked && skillAllocationIsFull)
+                        }
                         color="grape"
                         fullWidth={false}
                         style={{

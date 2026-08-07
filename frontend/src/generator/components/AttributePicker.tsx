@@ -31,6 +31,10 @@ const AttributePicker = ({
         pickedAttributes.strongest !== null &&
         pickedAttributes.weakest !== null &&
         pickedAttributes.medium.length === 3
+    const attributeAllocationIsFull =
+        pickedAttributes.strongest !== null &&
+        pickedAttributes.weakest !== null &&
+        pickedAttributes.medium.length >= 3
 
     const commitAttributes = (selection: AttributeSetting, advance: boolean) => {
         if (!selection.strongest || !selection.weakest || selection.medium.length !== 3) return
@@ -122,22 +126,19 @@ const AttributePicker = ({
             onClick = () => {
                 setPickedAttributes({ ...pickedAttributes, weakest: attribute })
             }
-        } else if (pickedAttributes.medium.length < 2) {
-            onClick = () => {
-                setPickedAttributes({
-                    ...pickedAttributes,
-                    medium: [...pickedAttributes.medium, attribute]
-                })
-            }
-        } else {
+        } else if (pickedAttributes.medium.length < 3) {
             onClick = () => {
                 const finalPick = {
                     ...pickedAttributes,
                     medium: [...pickedAttributes.medium, attribute]
                 }
                 setPickedAttributes(finalPick)
-                if (!hasConfirmedAttributes) commitAttributes(finalPick, true)
+                if (finalPick.medium.length === 3 && !hasConfirmedAttributes) {
+                    commitAttributes(finalPick, true)
+                }
             }
+        } else {
+            onClick = () => {}
         }
 
         const trackClick = () => {
@@ -169,6 +170,7 @@ const AttributePicker = ({
                         }}
                         p={phoneScreen ? 0 : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
+                        disabled={!alreadyPicked && attributeAllocationIsFull}
                         color="grape"
                         fullWidth={false}
                         style={{
@@ -288,11 +290,11 @@ const AttributePicker = ({
         },
         {
             key: "medium",
-            prompt: `Pick ${3 - pickedAttributes.medium.length}`,
+            prompt: `Pick ${Math.max(0, 3 - pickedAttributes.medium.length)}`,
             bold: "medium",
             suffix: `attribute${pickedAttributes.medium.length < 2 ? "s" : ""}`,
             level: 3,
-            done: pickedAttributes.medium.length === 2
+            done: pickedAttributes.medium.length >= 3
         }
     ]
 
