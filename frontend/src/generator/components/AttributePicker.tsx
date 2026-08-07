@@ -3,7 +3,7 @@ import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
-import { Character } from "../../data/Character"
+import { Character, getEmptyCharacter } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { GeneratorPhasePrompt, GeneratorSectionDivider } from "./sharedGeneratorUi"
@@ -54,6 +54,16 @@ const AttributePicker = ({
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
         setCharacter(updatedCharacter)
         if (advance) nextStep()
+    }
+
+    const resetAttributes = () => {
+        const updatedCharacter = {
+            ...character,
+            attributes: getEmptyCharacter().attributes
+        }
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+        setCharacter(updatedCharacter)
+        setPickedAttributes(emptyAttributeSetting)
     }
 
     // Nothing assigned yet: this is the state the drop-off signals describe (users read the
@@ -352,9 +362,9 @@ const AttributePicker = ({
                     <Button
                         variant="outline"
                         color="red"
-                        onClick={() => setPickedAttributes(emptyAttributeSetting)}
+                        onClick={resetAttributes}
                     >
-                        Reset selection
+                        Reset attributes
                     </Button>
                     <Button
                         data-testid="attributes-confirm-button"

@@ -24,6 +24,12 @@ import {
     SkillsSetting
 } from "../creatorDrafts"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
+import {
+    generatorScrollableAreaStyle,
+    generatorScrollableContentStyle,
+    generatorScrollableShellStyle
+} from "./sharedGeneratorScrollableLayout"
+import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type SkillsPickerProps = {
     character: Character
@@ -300,6 +306,16 @@ const SkillsPicker = ({
         nextStep()
     }
 
+    const resetSkills = () => {
+        setCharacter({
+            ...character,
+            skills: emptySkills,
+            skillSpecialties: []
+        })
+        setPickedSkills(emptySkillsSetting)
+        setPickedDistribution(null)
+    }
+
     const createSkillButtons = () => (
         <Group>
             <Grid grow m={0}>
@@ -353,7 +369,6 @@ const SkillsPicker = ({
         </Group>
     )
 
-    const height = globals.viewportHeightPx
     const phases = [
         pickedDistribution === "Specialist"
             ? {
@@ -399,9 +414,20 @@ const SkillsPicker = ({
     }>
 
     return (
-        <div style={{ marginTop: height < globals.heightBreakPoint ? "60px" : 0 }}>
-            {!pickedDistribution ? (
-                <>
+        <div style={generatorScrollableShellStyle}>
+            <ScrollArea
+                style={generatorScrollableAreaStyle}
+                w="100%"
+                px={20}
+                pt={4}
+                pb={8}
+                type="always"
+                scrollbarSize={nightfallScrollbarSize}
+                styles={nightfallScrollAreaStyles}
+            >
+                <div style={generatorScrollableContentStyle}>
+                    {!pickedDistribution ? (
+                        <>
                     <GeneratorStepHero
                         leadText="Pick your"
                         accentText="Skill Distribution"
@@ -449,25 +475,23 @@ const SkillsPicker = ({
                     </Grid>
                     <Space h="xl" />
                     <Space h="xl" />
-                </>
-            ) : (
-                <GeneratorPhasePrompt
-                    lines={phases}
-                    activeKey={toPick}
-                    phoneScreen={phoneScreen}
-                    caption={pickedDistribution}
-                />
-            )}
+                        </>
+                    ) : (
+                        <GeneratorPhasePrompt
+                            lines={phases}
+                            activeKey={toPick}
+                            phoneScreen={phoneScreen}
+                            caption={pickedDistribution}
+                        />
+                    )}
 
-            <GeneratorSectionDivider label="Skills" />
+                    <GeneratorSectionDivider label="Skills" />
 
-            <Space h="sm" />
+                    <Space h="sm" />
 
-            {height < globals.heightBreakPoint ? (
-                <ScrollArea h={height - 340}>{createSkillButtons()}</ScrollArea>
-            ) : (
-                createSkillButtons()
-            )}
+                    {createSkillButtons()}
+                </div>
+            </ScrollArea>
 
             <SpecialtyModal
                 modalOpened={modalOpened}
@@ -479,16 +503,13 @@ const SkillsPicker = ({
                 skills={skillsFromSelection(pickedSkills)}
             />
             {hasConfirmedSkills ? (
-                <Group justify="center" mt="xl">
+                <Group justify="center" mt="md">
                     <Button
                         variant="outline"
                         color="red"
-                        onClick={() => {
-                            setPickedSkills(emptySkillsSetting)
-                            setPickedDistribution(null)
-                        }}
+                        onClick={resetSkills}
                     >
-                        Reset selection
+                        Reset skills
                     </Button>
                     <Button
                         data-testid="skills-confirm-button"
