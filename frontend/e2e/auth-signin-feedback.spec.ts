@@ -61,7 +61,7 @@ test("the persisted sign-in seed shows the signed-in topbar immediately with a c
     await expect(topbar.getByRole("link", { name: "Sign in", exact: true })).toHaveCount(0)
 
     // And the landing shows an explicit confirmation instead of a silent reload,
-    // naming the user so it reads as a real sign-in acknowledgement.
+    // without putting account details on screen.
     await expect(page.getByText("Signed in", { exact: true })).toBeVisible()
-    await expect(page.getByText(`You're signed in as ${SIGNED_IN_USER.firstName}.`)).toBeVisible()
+    await expect(page.getByText("You're signed in.", { exact: true })).toBeVisible()
 })

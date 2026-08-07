@@ -234,7 +234,11 @@ describe("AuthSignInConfirmation", () => {
 
         expect(mocks.notificationsShow).toHaveBeenCalledTimes(1)
         expect(mocks.notificationsShow).toHaveBeenCalledWith(
-            expect.objectContaining({ title: "Signed in", color: "green" })
+            expect.objectContaining({
+                title: "Signed in",
+                message: "You're signed in.",
+                color: "green"
+            })
         )
         expect(sessionStorage.getItem("auth:signInConfirm")).toBeNull()
 

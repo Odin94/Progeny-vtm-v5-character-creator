@@ -382,20 +382,6 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                         <small>Foundry, Inconnu & more</small>
                                                     </div>
                                                 </Button>
-                                                <Button
-                                                    leftSection={<IconBrandDiscord size={22} />}
-                                                    onClick={handleExportInconnuCommands}
-                                                    className="sheet-menu__action sheet-menu__action--wide"
-                                                    justify="flex-start"
-                                                >
-                                                    <div className="sheet-menu__action-copy">
-                                                        <strong>Export to Inconnu Discord</strong>
-                                                        <small>
-                                                            Commands to paste into Discord to
-                                                            import your character
-                                                        </small>
-                                                    </div>
-                                                </Button>
                                             </div>
                                         </section>
 

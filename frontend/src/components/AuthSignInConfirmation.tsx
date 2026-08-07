@@ -7,14 +7,11 @@ import { consumeAuthSignInConfirmation } from "~/hooks/useAuth"
 // the small topbar label changing.
 export const AuthSignInConfirmation = () => {
     useEffect(() => {
-        const user = consumeAuthSignInConfirmation()
-        if (!user) return
-
-        const label = user.firstName || user.email
+        if (!consumeAuthSignInConfirmation()) return
 
         notifications.show({
             title: "Signed in",
-            message: label ? `You're signed in as ${label}.` : "You're signed in.",
+            message: "You're signed in.",
             color: "green",
             autoClose: 4000
         })
