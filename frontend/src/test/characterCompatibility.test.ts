@@ -57,6 +57,15 @@ describe("character compatibility patches", () => {
         expect(parsed.version).toBe(schemaVersion)
     })
 
+    it("returns no exclusions for clans that omit the optional fields", () => {
+        const character = getEmptyCharacter()
+        // Brujah declares neither excludedPredatorTypes nor excludedMeritsAndFlaws.
+        character.clan = "Brujah"
+
+        expect(getCharacterExcludedPredatorTypes(character)).toEqual([])
+        expect(getCharacterExcludedMeritsAndFlaws(character)).toEqual([])
+    })
+
     it("uses Homebrew clan predator-type exclusions", () => {
         const character = getEmptyCharacter()
         character.homebrewClan = {
