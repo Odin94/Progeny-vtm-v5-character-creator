@@ -1,5 +1,6 @@
-import { Group } from "@mantine/core"
-import { memo, useRef, useMemo, useEffect } from "react"
+import { Group, Stack, Text } from "@mantine/core"
+import { memo, useRef, useMemo, useEffect, useState } from "react"
+import posthog from "posthog-js"
 import PipButton from "./PipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
@@ -23,6 +24,23 @@ type PipsProps = {
 
 const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) => {
     const prevLevelRef = useRef(level)
+    // Reason shown inline (not just on hover) after a click that could not be applied.
+    const [blockedReason, setBlockedReason] = useState<string | undefined>(undefined)
+
+    // Clicking the current top-most filled pip steps the trait down one level; clicking
+    // any other pip sets the trait to that level. Uniform across all levels so no click is
+    // a silent no-op (previously only level 1 handled the step-down, and clicking the top
+    // pip of a higher trait did nothing).
+    const getTargetLevel = (index: number): number => {
+        const clickedLevel = index + 1
+        return clickedLevel === level ? level - 1 : clickedLevel
+    }
+
+    // The inline message is tied to a click; drop it once the situation that caused it
+    // (mode or level) changes so a stale reason never lingers.
+    useEffect(() => {
+        setBlockedReason(undefined)
+    }, [options?.mode, level])
 
     const { firstChangingIndex, isFilling } = useMemo(() => {
         const prevLevel = prevLevelRef.current
@@ -91,12 +109,7 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             return editDisabledReason
         }
 
-        let newLevel: number
-        if (level === 1 && index === 0) {
-            newLevel = 0
-        } else {
-            newLevel = index + 1
-        }
+        const newLevel = getTargetLevel(index)
         const wouldDecrease = newLevel < level
 
         // Health and willpower are not editable in play or XP mode
@@ -157,43 +170,46 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         return "th"
     }
 
+    const capturePipEvent = (event: string, properties: Record<string, unknown>) => {
+        try {
+            posthog.capture(event, properties)
+        } catch (error) {
+            console.warn(`PostHog ${event} tracking failed:`, error)
+        }
+    }
+
     const handlePipClick = (index: number) => {
         if (!options || !field) return
 
         const { mode, character, setCharacter } = options
-        let newLevel: number
-        if (level === 1 && index === 0) {
-            newLevel = 0
-        } else {
-            newLevel = index + 1
-        }
-        const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
-        if (mode === "play") {
+        // A single source of truth for whether the click can apply. When it can't, show the
+        // explanation inline instead of returning silently behind a hover-only tooltip.
+        const disabledReason = getDisabledReason(index)
+        if (disabledReason) {
+            setBlockedReason(disabledReason)
+            capturePipEvent("sheet-pip-edit-blocked", {
+                field,
+                mode,
+                reason: disabledReason
+            })
             return
         }
+        setBlockedReason(undefined)
+
+        const newLevel = getTargetLevel(index)
+        const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
         if (mode === "xp") {
-            if (clampedLevel !== level + 1) {
-                return
-            }
-
-            // Check blood potency generation limits
-            if (field === "bloodPotency") {
-                const limits = potencyLimitByGeneration[character.generation]
-                if (limits) {
-                    if (clampedLevel < limits.min || clampedLevel > limits.max) {
-                        return
-                    }
-                }
-            }
-
             const costFunction = getCostFunction()
             const cost = costFunction ? costFunction(clampedLevel) : 0
-            const availableXP = getAvailableXP(character)
-            if (!canAffordUpgrade(availableXP, cost)) {
-                return
-            }
+            capturePipEvent("sheet-pip-edit", {
+                field,
+                mode,
+                fromLevel: level,
+                toLevel: clampedLevel,
+                xpCost: cost
+            })
             setCharacter((currentCharacter) => {
                 const update: Partial<Character> = {}
                 // TODOdin: Find a way to stop looking for specific things here, and also get better type safety (no "as never")
@@ -225,6 +241,12 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
             return
         }
 
+        capturePipEvent("sheet-pip-edit", {
+            field,
+            mode,
+            fromLevel: level,
+            toLevel: clampedLevel
+        })
         setCharacter((currentCharacter) => {
             const update: Partial<Character> = {}
             if (field === "bloodPotency") {
@@ -251,8 +273,9 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
     }
 
     return (
-        <Group gap={4}>
-            {Array.from({ length: maxLevel }, (_, index) => (
+        <Stack gap={2}>
+            <Group gap={4}>
+                {Array.from({ length: maxLevel }, (_, index) => (
                 <PipButton
                     key={index}
                     index={index}
@@ -267,10 +290,17 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                     }
                     options={options}
                     disabledReason={getDisabledReason(index)}
+                    hardDisabled={!!options && !options.canEdit}
                     xpCost={getXPCost(index)}
                 />
-            ))}
-        </Group>
+                ))}
+            </Group>
+            {blockedReason ? (
+                <Text size="xs" c="red.4" style={{ maxWidth: 260, lineHeight: 1.2 }}>
+                    {blockedReason}
+                </Text>
+            ) : null}
+        </Stack>
     )
 }
 
