@@ -28,7 +28,7 @@ import {
 } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
-import { getDisciplinePowerDisabledReason } from "../disciplinePowerAvailability"
+import { getDisciplinePowerDisabledReasons } from "../disciplinePowerAvailability"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import {
     getHomebrewDisciplineOptions,
@@ -160,6 +160,7 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
     // Cascade: remove a power and iteratively drop any that now have missing prerequisites
     const cascadeRemove = (toRemove: Power, isForPredatorType: boolean) => {
+        const beforeCount = pickedPowers.length + (pickedPredatorTypePower ? 1 : 0)
         let clanPowers = isForPredatorType
             ? pickedPowers
             : pickedPowers.filter((p) => getPowerIdentity(p) !== getPowerIdentity(toRemove))
@@ -192,17 +193,39 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
 
         setPickedPowers(clanPowers)
         setPickedPredatorTypePower(predPower)
+
+        // The undo/cascade path was previously unmeasured, yet take-then-undo churn
+        // dominates this step. Track it, and count any dependent powers dropped alongside
+        // the one the user actually clicked so the removal isn't silent.
+        const afterCount = clanPowers.length + (predPower ? 1 : 0)
+        const droppedDependents = beforeCount - afterCount - 1
+        trackEvent({
+            action: "power removed",
+            category: "disciplines",
+            label: toRemove.name,
+            value: droppedDependents
+        })
+        if (droppedDependents > 0) {
+            notifications.show({
+                title: "Removed dependent powers",
+                message: `Undoing ${toRemove.name} also dropped ${droppedDependents} power${
+                    droppedDependents > 1 ? "s" : ""
+                } that required it`,
+                color: "red",
+                autoClose: 3500
+            })
+        }
     }
 
     const renderPowerCard = (power: Power, isForPredatorType = false) => {
         const picked = isPicked(power)
-        const takeDisabledReason = getDisciplinePowerDisabledReason({
+        const takeDisabledReasons = getDisciplinePowerDisabledReasons({
             power,
             isForPredatorType,
             pickedClanPowers: pickedPowers,
             pickedPredatorTypePower
         })
-        const takeDisabled = takeDisabledReason !== null
+        const takeDisabled = takeDisabledReasons.length > 0
         const isPickedAsPredatorType =
             !isForPredatorType &&
             pickedPredatorTypePower !== undefined &&
@@ -353,15 +376,10 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                                 }}
                                 onClick={(event) => {
                                     if (takeDisabled) {
+                                        // The reason is rendered inline on the card below, so
+                                        // there's nothing to surface here beyond swallowing the
+                                        // click on an untakeable power.
                                         event.preventDefault()
-                                        if (phoneScreen && takeDisabledReason) {
-                                            notifications.show({
-                                                title: "Can't take this power yet",
-                                                message: takeDisabledReason,
-                                                color: "red",
-                                                autoClose: 2500
-                                            })
-                                        }
                                         return
                                     }
 
@@ -378,17 +396,49 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
                             </Button>
                         )
 
-                        if (!phoneScreen && takeDisabledReason) {
+                        if (takeDisabled) {
                             return (
-                                <Tooltip
-                                    label={takeDisabledReason}
-                                    withArrow
-                                    multiline
-                                    w={220}
-                                    events={{ hover: true, focus: true, touch: false }}
-                                >
+                                <>
                                     {takeButton}
-                                </Tooltip>
+                                    <Stack
+                                        gap={2}
+                                        mt={6}
+                                        data-testid={`take-power-${power.name
+                                            .toLowerCase()
+                                            .replace(/\s+/g, "-")}-blocked`}
+                                    >
+                                        {takeDisabledReasons.map((reason) => (
+                                            <Group
+                                                key={reason}
+                                                gap={6}
+                                                wrap="nowrap"
+                                                align="center"
+                                            >
+                                                <Text
+                                                    component="span"
+                                                    aria-hidden
+                                                    style={{
+                                                        color: rgba(RAW_RED, 0.85),
+                                                        fontSize: "0.72rem",
+                                                        lineHeight: 1
+                                                    }}
+                                                >
+                                                    🔒
+                                                </Text>
+                                                <Text
+                                                    style={{
+                                                        fontFamily: "Inter, sans-serif",
+                                                        fontSize: "0.72rem",
+                                                        lineHeight: 1.3,
+                                                        color: rgba(RAW_RED, 0.85)
+                                                    }}
+                                                >
+                                                    {reason}
+                                                </Text>
+                                            </Group>
+                                        ))}
+                                    </Stack>
+                                </>
                             )
                         }
 
@@ -472,9 +522,15 @@ const DisciplinesPicker = ({ character, setCharacter, nextStep }: DisciplinesPic
         const lvl2 = eligiblePowers.filter((p) => p.level === 2)
         const lvl3 = eligiblePowers.filter((p) => p.level === 3)
 
+        // Level-3 powers are only reachable as the predator-type pick: a level-3 clan pick
+        // needs two lower picks in the same discipline, which immediately trips the
+        // 2-per-discipline clan cap. So only surface the level-3 column in the predator
+        // accordion, and only when the clan actually has the discipline to fund the two
+        // lower picks it requires.
         const canReachLvl3 =
+            isPredatorType &&
             actualDisciplineName === character.predatorType.pickedDiscipline &&
-            !(isPredatorType && !clanHasDiscipline(actualDisciplineName))
+            clanHasDiscipline(actualDisciplineName)
 
         const columnGroups = canReachLvl3 ? [lvl1, lvl2, lvl3] : [lvl1, lvl2]
         const colWidth = phoneScreen ? "100%" : `${Math.floor(100 / columnGroups.length)}%`

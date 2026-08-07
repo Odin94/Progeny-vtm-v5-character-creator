@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 import { disciplines, type Power } from "~/data/Disciplines"
-import { getDisciplinePowerDisabledReason } from "~/generator/disciplinePowerAvailability"
+import {
+    getDisciplinePowerDisabledReason,
+    getDisciplinePowerDisabledReasons
+} from "~/generator/disciplinePowerAvailability"
 
 const power = (discipline: keyof typeof disciplines, name: string): Power => {
     const found = disciplines[discipline].powers.find((candidate) => candidate.name === name)
@@ -67,5 +70,29 @@ describe("discipline power availability", () => {
         expect(reasonFor(senseTheUnseen, [], heightenedSenses, true)).toBe(
             "You've already chosen your predator type power"
         )
+    })
+
+    it("returns every active blocker at once", () => {
+        // Three clan powers picked, none in Auspex: this pick trips both the all-3 cap
+        // and the two-discipline cap, and both should be reported rather than just the first.
+        const reasons = getDisciplinePowerDisabledReasons({
+            power: heightenedSenses,
+            isForPredatorType: false,
+            pickedClanPowers: [lethalBody, soaringLeap, catsGrace]
+        })
+        expect(reasons).toEqual([
+            "You've already chosen all 3 clan powers",
+            "Clan powers may only come from 2 disciplines"
+        ])
+    })
+
+    it("returns no reasons for a takeable power", () => {
+        expect(
+            getDisciplinePowerDisabledReasons({
+                power: lethalBody,
+                isForPredatorType: false,
+                pickedClanPowers: []
+            })
+        ).toEqual([])
     })
 })
