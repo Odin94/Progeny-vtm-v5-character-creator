@@ -1,3 +1,26 @@
 .App {
     text-align: center;
 }
+
+/* Draws the eye to the (clickable) attribute buttons on the Attributes step until the first
+   pick is made — the step is the largest drop-off point in character creation, where users read
+   the prompt and hover the tooltips but never click. Paired with an in-app "tap to assign" hint. */
+@keyframes attributePickPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(204, 166, 51, 0);
+    }
+    50% {
+        box-shadow: 0 0 10px 1px rgba(204, 166, 51, 0.35);
+    }
+}
+
+.attribute-pick-pulse {
+    animation: attributePickPulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .attribute-pick-pulse {
+        animation: none;
+    }
+}
