@@ -32,3 +32,15 @@ export const isFramelessSyntheticNoise = (entry: ExceptionListEntry | undefined)
     const hasInAppFrame = Array.isArray(frames) && frames.some((frame) => frame?.in_app === true)
     return !hasInAppFrame
 }
+
+// "ResizeObserver loop limit exceeded" / "ResizeObserver loop completed with undelivered
+// notifications" is the benign notification browsers fire per spec when a ResizeObserver
+// callback resizes its own observation target. It arrives with no stack and no user-facing
+// breakage. PostHog attaches a synthetic in-app frame, so isFramelessSyntheticNoise misses it;
+// match on the message instead. The regex covers both wordings across browsers.
+const RESIZE_OBSERVER_LOOP_NOISE = /ResizeObserver loop/
+
+export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
+    candidates.some(
+        (candidate) => typeof candidate === "string" && RESIZE_OBSERVER_LOOP_NOISE.test(candidate)
+    )
