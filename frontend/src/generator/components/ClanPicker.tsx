@@ -78,6 +78,11 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                     }}
                     onClick={() => {
                         const clanChanged = clan !== character.clan || character.homebrewClan !== undefined
+                        const predatorType =
+                            clan === "Thin-blood" ||
+                            clans[clan].excludedPredatorTypes.includes(character.predatorType.name)
+                                ? getEmptyCharacter().predatorType
+                                : character.predatorType
                         const newMerits =
                             clan === character.clan
                                 ? character.merits
@@ -106,10 +111,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                                 rituals: [],
                                 ceremonies: [],
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
-                                predatorType:
-                                    clan === "Thin-blood"
-                                        ? getEmptyCharacter().predatorType
-                                        : character.predatorType,
+                                predatorType,
                                 merits: newMerits,
                                 flaws: newFlaws
                             })
@@ -119,6 +121,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                                 clan,
                                 homebrewClan: undefined,
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
+                                predatorType,
                                 merits: newMerits,
                                 flaws: newFlaws
                             })
@@ -204,6 +207,11 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                     const clanChanged =
                         character.homebrewClan?.homebrewSource.itemId !== clan.id ||
                         character.homebrewClan?.homebrewSource.collectionId !== collection.id
+                    const predatorType = clan.excludedPredatorTypes.includes(
+                        character.predatorType.name
+                    )
+                        ? getEmptyCharacter().predatorType
+                        : character.predatorType
                     const source = {
                         itemId: clan.id,
                         collectionId: collection.id,
@@ -217,7 +225,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                         rituals: [],
                         ceremonies: [],
                         availableDisciplineNames: clan.nativeDisciplines,
-                        predatorType: character.predatorType
+                        predatorType
                     })
                     if (clanChanged) onClanChanged?.()
                     nextStep()
