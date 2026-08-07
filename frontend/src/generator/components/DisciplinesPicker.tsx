@@ -106,7 +106,13 @@ const DisciplinesPicker = ({
             )
             .map((item) => ({ item, collection }))
     )
-    const predatorTypeDiscipline = disciplines[character.predatorType.pickedDiscipline]
+    // Resolve the predator-type discipline through the homebrew-aware clan options first,
+    // then fall back to the official map. Either lookup can miss — homebrew content or a
+    // predator type left dangling by a clan change means the name resolves to nothing — so
+    // this is deliberately typed as possibly undefined and guarded at the render site below.
+    const predatorTypeDiscipline: Discipline | HomebrewDisciplineOption | undefined =
+        disciplinesForClan[character.predatorType.pickedDiscipline] ??
+        disciplines[character.predatorType.pickedDiscipline]
 
     const isPicked = (power: Power) =>
         allPickedPowers.some(
@@ -799,11 +805,13 @@ const DisciplinesPicker = ({
                                 }
                             }}
                         >
-                            {renderDisciplineAccordionItem(
-                                character.predatorType.pickedDiscipline,
-                                predatorTypeDiscipline,
-                                true
-                            )}
+                            {predatorTypeDiscipline
+                                ? renderDisciplineAccordionItem(
+                                      character.predatorType.pickedDiscipline,
+                                      predatorTypeDiscipline,
+                                      true
+                                  )
+                                : null}
                         </Accordion>
 
                         <Group justify="center" mt="xl">
