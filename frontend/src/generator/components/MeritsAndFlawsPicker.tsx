@@ -96,6 +96,9 @@ const MeritOrFlawCard = memo(
         setRemainingFlaws,
         setRemainingThinbloodMeritPoints
     }: MeritOrFlawCardProps) => {
+        const [attemptedUnaffordableLevel, setAttemptedUnaffordableLevel] = useState<number | null>(
+            null
+        )
         const buttonColor = type === "flaw" ? "red" : "teal"
         const icon = type === "flaw" ? flawIcon() : meritIcon()
         const meritFlawIdentity = getMeritFlawIdentity(meritOrFlaw, type)
@@ -126,17 +129,23 @@ const MeritOrFlawCard = memo(
                   ? remainingFlaws + previousCost
                   : remainingMerits + previousCost
             const hasEnoughPoints = isThinbloodFlaw(meritOrFlaw.name) || availablePoints >= nextCost
+            const isUnavailable =
+                isExcluded ||
+                (meritInPredatorType && meritInPredatorType.level >= level) ||
+                wasPickedLevel === level
 
             const button = (
                 <Button
                     key={meritOrFlaw.name + level}
-                    disabled={
-                        isExcluded ||
-                        (meritInPredatorType && meritInPredatorType.level >= level) ||
-                        wasPickedLevel === level ||
-                        !hasEnoughPoints
-                    }
+                    disabled={isUnavailable}
+                    aria-disabled={!hasEnoughPoints || undefined}
                     onClick={() => {
+                        if (!hasEnoughPoints) {
+                            setAttemptedUnaffordableLevel(level)
+                            return
+                        }
+
+                        setAttemptedUnaffordableLevel(null)
                         if (isThinbloodFlaw(meritOrFlaw.name)) {
                             setRemainingThinbloodMeritPoints((prev) => prev + 1)
                         } else if (isThinbloodMerit(meritOrFlaw.name)) {
@@ -186,7 +195,9 @@ const MeritOrFlawCard = memo(
                                 meritInPredatorType?.level === level
                                     ? accentColor
                                     : "transparent",
-                            color: "rgba(244, 236, 232, 0.92)"
+                            color: "rgba(244, 236, 232, 0.92)",
+                            opacity: !hasEnoughPoints ? 0.5 : 1,
+                            cursor: !hasEnoughPoints ? "not-allowed" : undefined
                         }
                     }}
                 >
@@ -228,7 +239,12 @@ const MeritOrFlawCard = memo(
             minLevelCost === maxLevelCost
                 ? `${minLevelCost} pt${minLevelCost === 1 ? "" : "s"}`
                 : `${minLevelCost}–${maxLevelCost} pts`
-        const canAffordAny = isTbFlaw || availableForCard >= minLevelCost
+        const attemptedCost =
+            attemptedUnaffordableLevel === null
+                ? null
+                : Math.max(0, attemptedUnaffordableLevel - meritInPredatorTypeLevel)
+        const showAffordabilityWarning =
+            attemptedCost !== null && !isTbFlaw && availableForCard < attemptedCost
         // Thin-blood flaws grant points rather than cost them, and fully
         // predator-covered / excluded items have nothing to spend, so skip the caption.
         const showCostCaption =
@@ -326,12 +342,24 @@ const MeritOrFlawCard = memo(
                             fontFamily: "Inter, Segoe UI, sans-serif",
                             fontSize: "0.72rem",
                             letterSpacing: "0.04em",
-                            color: canAffordAny ? rgba(RAW_GREY, 0.6) : rgba(RAW_RED, 0.95)
+                            color: rgba(RAW_GREY, 0.6)
                         }}
                     >
-                        {canAffordAny
-                            ? `Costs ${costLabel} · ${availableForCard} ${pointTypeLabel} left`
-                            : `Not enough points — costs ${costLabel}, you have ${availableForCard} ${pointTypeLabel} left`}
+                        {`Costs ${costLabel} · ${availableForCard} ${pointTypeLabel} left`}
+                    </Text>
+                ) : null}
+                {showAffordabilityWarning ? (
+                    <Text
+                        mt={6}
+                        style={{
+                            fontFamily: "Inter, Segoe UI, sans-serif",
+                            fontSize: "0.72rem",
+                            letterSpacing: "0.04em",
+                            color: rgba(RAW_RED, 0.95)
+                        }}
+                    >
+                        Not enough points — costs {attemptedCost} pt{attemptedCost === 1 ? "" : "s"}
+                        , you have {availableForCard} {pointTypeLabel} left
                     </Text>
                 ) : null}
             </Box>

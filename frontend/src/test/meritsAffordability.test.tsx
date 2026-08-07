@@ -71,7 +71,7 @@ describe("Merits & Flaws affordability", () => {
         expect(within(cardFor("Beautiful")).getByRole("button", { name: "2" })).toBeEnabled()
     })
 
-    it("disables an unaffordable level and states the reason on the page", () => {
+    it("explains an unaffordable level only after the user tries to pick it", () => {
         renderPicker()
 
         // Spend 6 of 7 advantage points with non-excluding Haven merits (leaves 1).
@@ -80,9 +80,18 @@ describe("Merits & Flaws affordability", () => {
         clickLevel("Watchmen", "1")
         clickLevel("Luxury", "1")
 
-        // Beautiful (cost 2) is now unaffordable: button disabled, reason persistent (no hover).
+        // Beautiful (cost 2) is now unaffordable, but the page stays uncluttered until
+        // the user asks to take it.
         const beautiful = cardFor("Beautiful")
-        expect(within(beautiful).getByRole("button", { name: "2" })).toBeDisabled()
+        const levelButton = within(beautiful).getByRole("button", { name: "2" })
+        expect(levelButton).toHaveAttribute("aria-disabled", "true")
+        expect(
+            within(beautiful).queryByText(
+                "Not enough points — costs 2 pts, you have 1 advantage points left"
+            )
+        ).not.toBeInTheDocument()
+
+        fireEvent.click(levelButton)
         expect(
             within(beautiful).getByText(
                 "Not enough points — costs 2 pts, you have 1 advantage points left"
