@@ -24,6 +24,8 @@ import {
     warmSupportConversation
 } from "~/utils/supportConversations"
 import RecentChangesGate from "~/components/RecentChangesGate"
+import { AuthSignInConfirmation } from "~/components/AuthSignInConfirmation"
+import { clearAuthSignInSeed } from "~/hooks/useAuth"
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -146,6 +148,8 @@ const AuthUnauthorizedHandler = () => {
         const handleUnauthorized = () => {
             const wasAuthenticated = Boolean(queryClient.getQueryData(["auth", "me"]))
             queryClient.setQueryData(["auth", "me"], null)
+            // Drop the sign-in seed so an expired session isn't re-seeded on reload.
+            clearAuthSignInSeed()
             queryClient.removeQueries({ queryKey: ["characters"] })
             queryClient.removeQueries({ queryKey: ["coteries"] })
             queryClient.removeQueries({ queryKey: ["shares"] })
@@ -193,6 +197,7 @@ export const Route = createRootRoute({
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
                     <AuthUnauthorizedHandler />
+                    <AuthSignInConfirmation />
                     <CharacterAutosave />
                     <BrokenSaveModal />
                     <CookiesBanner />
