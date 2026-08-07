@@ -185,7 +185,25 @@ const PredatorTypeModal = ({
     } = usePointStates(predatorType.selectableMeritsAndFlaws)
     useEffect(() => {
         setFromSelectableMeritsAndFlaws(predatorType.selectableMeritsAndFlaws)
-        setCustomSpecialtyText("")
+
+        // Restore custom specialty text when reopening the already-confirmed type, so a
+        // pre-filled "which scene?"-style input isn't silently blanked on the way back in.
+        // A fresh pick (or a different type) starts empty.
+        const storedSpecialty =
+            character.predatorType.name === pickedPredatorType
+                ? character.predatorType.pickedSpecialties[0]
+                : undefined
+        const selectedOption = predatorType.specialtyOptions.find(
+            (s) => `${s.skill}_${s.name}` === specialty
+        )
+        const restoredCustomText =
+            storedSpecialty &&
+            selectedOption?.customInput &&
+            storedSpecialty.skill === selectedOption.skill &&
+            storedSpecialty.name !== selectedOption.name
+                ? storedSpecialty.name
+                : ""
+        setCustomSpecialtyText(restoredCustomText)
     }, [pickedPredatorType])
 
     // Prevent crashing modal in render before useEffect-update goes through.

@@ -1,8 +1,9 @@
 import { Text } from "@mantine/core"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import posthog from "posthog-js"
 import ErrorBoundary from "../components/ErrorBoundary"
 import { Character } from "../data/Character"
+import { PredatorTypeName } from "../data/NameSchemas"
 import { trackEvent } from "../utils/analytics"
 import AttributePicker from "./components/AttributePicker"
 import BasicsPicker from "./components/BasicsPicker"
@@ -29,6 +30,14 @@ export type GeneratorProps = {
 }
 
 const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
+    // The predator-type picker is the generator's busiest back-and-forth step, so its in-progress
+    // selection lives here rather than in the picker: the picker (and its modal) is unmounted every
+    // time another step is shown, and component-local state would be discarded on the way out. Held
+    // here it survives a step change, so a half-configured predator type is still there on return.
+    const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
+    const [predatorTypeSpecialty, setPredatorTypeSpecialty] = useState("")
+    const [predatorTypeDiscipline, setPredatorTypeDiscipline] = useState("")
+
     // Fire a PostHog step-view event whenever a generator step is shown. Individual steps only
     // send a confirm-click event, so without this we cannot measure step-level drop-off (how
     // many people reach a step vs. confirm it) outside of session replay.
@@ -94,6 +103,12 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
+                        pickedPredatorType={pickedPredatorType}
+                        setPickedPredatorType={setPickedPredatorType}
+                        specialty={predatorTypeSpecialty}
+                        setSpecialty={setPredatorTypeSpecialty}
+                        discipline={predatorTypeDiscipline}
+                        setDiscipline={setPredatorTypeDiscipline}
                     />
                 )
             case "basics":
