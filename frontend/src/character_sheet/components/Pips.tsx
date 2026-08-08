@@ -127,7 +127,6 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         }
 
         const newLevel = getTargetLevel(index)
-        const wouldDecrease = newLevel < level
 
         // Health and willpower are not editable in play or XP mode
         if (
@@ -142,16 +141,10 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         }
 
         if (mode === "xp") {
-            if (wouldDecrease) {
-                return "Cannot decrease in XP mode"
-            }
             const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
-            const currentLevel = level
-            if (clampedLevel !== currentLevel + 1) {
-                return "Can only increase one level at a time in XP mode"
-            }
 
-            // Check blood potency generation limits
+            // Blood Potency stays inside the generation's allowed range whether the click
+            // raises or lowers it.
             if (field === "bloodPotency") {
                 const limits = potencyLimitByGeneration[character.generation]
                 if (limits) {
@@ -164,11 +157,19 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                 }
             }
 
-            const costFunction = getCostFunction()
-            const cost = costFunction ? costFunction(clampedLevel) : 0
-            const availableXP = getAvailableXP(character)
-            if (!canAffordUpgrade(availableXP, cost)) {
-                return `Insufficient XP. Need ${cost}, have ${availableXP}`
+            // Lowering a trait refunds its XP, so a mistaken purchase can be undone in
+            // place instead of forcing a switch to Free mode. Only raising by more than
+            // one level, or an unaffordable increase, stays blocked.
+            if (clampedLevel > level + 1) {
+                return "Can only increase one level at a time in XP mode"
+            }
+            if (clampedLevel > level) {
+                const costFunction = getCostFunction()
+                const cost = costFunction ? costFunction(clampedLevel) : 0
+                const availableXP = getAvailableXP(character)
+                if (!canAffordUpgrade(availableXP, cost)) {
+                    return `Insufficient XP. Need ${cost}, have ${availableXP}`
+                }
             }
         }
 
@@ -185,6 +186,23 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         if (lastDigit === 2) return "nd"
         if (lastDigit === 3) return "rd"
         return "th"
+    }
+
+    // XP spent to move a trait between two levels. Raising levels spends XP; lowering them
+    // refunds the same amount, so an undo returns exactly what the purchase cost.
+    const getXpTransaction = (fromLevel: number, toLevel: number): number => {
+        const costFunction = getCostFunction()
+        if (!costFunction || fromLevel === toLevel) return 0
+
+        let total = 0
+        for (
+            let lvl = Math.min(fromLevel, toLevel) + 1;
+            lvl <= Math.max(fromLevel, toLevel);
+            lvl++
+        ) {
+            total += costFunction(lvl)
+        }
+        return toLevel > fromLevel ? total : -total
     }
 
     const capturePipEvent = (event: string, properties: Record<string, unknown>) => {
@@ -217,15 +235,18 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
         const newLevel = getTargetLevel(index)
         const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
+        // A click clamped back to the current level (e.g. the lone pip of a min-level trait)
+        // changes nothing, so skip it instead of firing a no-op edit.
+        if (clampedLevel === level) return
+
         if (mode === "xp") {
-            const costFunction = getCostFunction()
-            const cost = costFunction ? costFunction(clampedLevel) : 0
+            const xpDelta = getXpTransaction(level, clampedLevel)
             capturePipEvent("sheet-pip-edit", {
                 field,
                 mode,
                 fromLevel: level,
                 toLevel: clampedLevel,
-                xpCost: cost
+                xpCost: xpDelta
             })
             setCharacter((currentCharacter) => {
                 const update: Partial<Character> = {}
@@ -246,7 +267,10 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                     ...update,
                     ephemeral: {
                         ...currentCharacter.ephemeral,
-                        experienceSpent: currentCharacter.ephemeral.experienceSpent + cost
+                        experienceSpent: Math.max(
+                            0,
+                            currentCharacter.ephemeral.experienceSpent + xpDelta
+                        )
                     }
                 }
                 // Update health, willpower, blood potency, and humanity when attributes change

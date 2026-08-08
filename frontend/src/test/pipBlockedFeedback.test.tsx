@@ -89,26 +89,61 @@ describe("blocked pip click feedback", () => {
         expect(screen.queryByText(/Insufficient XP/)).not.toBeInTheDocument()
     })
 
-    it("explains that a level-1 trait cannot be decreased in XP mode", async () => {
+    it("lowers a trait in XP mode and refunds the spent XP instead of blocking", async () => {
         const user = userEvent.setup()
         const setCharacter = vi.fn()
+        const character = getEmptyCharacter()
+        character.experience = 100
+        character.ephemeral.experienceSpent = 30
+        character.skills.brawl = 2
 
         render(
             <MantineProvider>
                 <Pips
-                    level={1}
+                    level={2}
                     maxLevel={5}
-                    options={getXpOptions(setCharacter)}
+                    options={{ ...getXpOptions(setCharacter), character }}
                     field="skills.brawl"
                 />
             </MantineProvider>
         )
 
         const pips = screen.getAllByRole("button")
-        await user.click(pips[0])
+        // Clicking the top filled pip steps Brawl down from 2 to 1.
+        await user.click(pips[1])
 
-        expect(setCharacter).not.toHaveBeenCalled()
-        const matches = await screen.findAllByText("Cannot decrease in XP mode")
-        expect(matches.some((element) => element.tagName === "P")).toBe(true)
+        expect(screen.queryByText("Cannot decrease in XP mode")).not.toBeInTheDocument()
+        expect(setCharacter).toHaveBeenCalledTimes(1)
+
+        const updater = setCharacter.mock.calls[0][0]
+        const updated = updater(character)
+        expect(updated.skills.brawl).toBe(1)
+        // getSkillCost(2) = 6 comes back, so 30 spent drops to 24.
+        expect(updated.ephemeral.experienceSpent).toBe(24)
+    })
+
+    it("does not let an XP refund push spent experience below zero", () => {
+        const setCharacter = vi.fn()
+        const character = getEmptyCharacter()
+        character.experience = 100
+        character.ephemeral.experienceSpent = 2
+        character.skills.brawl = 2
+
+        render(
+            <MantineProvider>
+                <Pips
+                    level={2}
+                    maxLevel={5}
+                    options={{ ...getXpOptions(setCharacter), character }}
+                    field="skills.brawl"
+                />
+            </MantineProvider>
+        )
+
+        fireEvent.click(screen.getAllByRole("button")[1])
+
+        const updater = setCharacter.mock.calls[0][0]
+        const updated = updater(character)
+        expect(updated.ephemeral.experienceSpent).toBe(0)
     })
 })
