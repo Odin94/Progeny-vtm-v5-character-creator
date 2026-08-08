@@ -15,7 +15,8 @@ import {
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
-import { memo, useState } from "react"
+import { memo, useEffect, useState } from "react"
+import posthog from "posthog-js"
 import { DisciplineName } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
@@ -46,6 +47,93 @@ import {
 
 type DisciplinesProps = {
     options: SheetOptions
+}
+
+const BLOCKED_WARNING_DURATION_MS = 2_500
+
+type XpAddButtonProps = {
+    cost: number
+    availableXP: number
+    onAdd: () => void
+    blockedEvent: string
+    eventProperties?: Record<string, unknown>
+    primaryColor: string
+    // The prominent empty-state "add" button (new discipline) is larger than the inline ones.
+    large?: boolean
+    ariaLabel: string
+}
+
+// XP-mode "add" control that mirrors the pip buttons: it stays clickable when the purchase
+// is unaffordable and shows the reason inline (not only on hover), and reports the block to
+// PostHog. Touch users get feedback, and the block rate becomes measurable.
+const XpAddButton = ({
+    cost,
+    availableXP,
+    onAdd,
+    blockedEvent,
+    eventProperties,
+    primaryColor,
+    large = false,
+    ariaLabel
+}: XpAddButtonProps) => {
+    const canAfford = canAffordUpgrade(availableXP, cost)
+    const blockedReason = canAfford
+        ? undefined
+        : `Insufficient XP. Need ${cost}, have ${availableXP}`
+    const [warning, setWarning] = useState<string | undefined>(undefined)
+
+    // Drop a stale reason once affordability changes.
+    useEffect(() => {
+        setWarning(undefined)
+    }, [blockedReason])
+
+    useEffect(() => {
+        if (!warning) return
+        const timeout = window.setTimeout(() => setWarning(undefined), BLOCKED_WARNING_DURATION_MS)
+        return () => window.clearTimeout(timeout)
+    }, [warning])
+
+    const handleClick = (event: React.MouseEvent) => {
+        event.stopPropagation()
+        if (blockedReason) {
+            setWarning(blockedReason)
+            try {
+                posthog.capture(blockedEvent, {
+                    ...eventProperties,
+                    mode: "xp",
+                    reason: blockedReason
+                })
+            } catch (error) {
+                console.warn(`PostHog ${blockedEvent} tracking failed:`, error)
+            }
+            return
+        }
+        setWarning(undefined)
+        onAdd()
+    }
+
+    return (
+        <Stack gap={4} align="center">
+            <Tooltip label={canAfford ? `${cost} XP` : blockedReason} withArrow>
+                <ActionIcon
+                    size={large ? "xl" : "lg"}
+                    radius="xl"
+                    variant="light"
+                    color={primaryColor}
+                    onClick={handleClick}
+                    aria-label={ariaLabel}
+                    style={{ opacity: canAfford ? 1 : 0.55, cursor: "pointer" }}
+                >
+                    <IconPlus size={large ? 24 : 18} />
+                </ActionIcon>
+            </Tooltip>
+            {warning ? (
+                <Text role="status" aria-live="polite" size="xs" c="red.4" ta="center">
+                    {warning}
+                </Text>
+            ) : null}
+        </Stack>
+    )
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
@@ -288,7 +376,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             style={{ margin: 0, cursor: "pointer" }}
                                                             onClick={(event) => {
                                                                 event.stopPropagation()
-                                                                handleDisciplineClick(disciplineName)
+                                                                handleDisciplineClick(
+                                                                    disciplineName
+                                                                )
                                                             }}
                                                         >
                                                             {upcase(disciplineName)}
@@ -306,7 +396,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         </Title>
                                                         {customDiscipline?.homebrewSource ? (
                                                             <HomebrewBadge
-                                                                source={customDiscipline.homebrewSource}
+                                                                source={
+                                                                    customDiscipline.homebrewSource
+                                                                }
                                                             />
                                                         ) : null}
                                                     </Group>
@@ -480,61 +572,26 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                 <IconPlus size={18} />
                                                             </ActionIcon>
                                                         ) : mode === "xp" ? (
-                                                            (() => {
-                                                                const cost = getDisciplineCost(
+                                                            <XpAddButton
+                                                                cost={getDisciplineCost(
                                                                     character,
                                                                     disciplineName,
                                                                     identity
-                                                                )
-                                                                const availableXP =
-                                                                    getAvailableXP(character)
-                                                                const canAfford = canAffordUpgrade(
-                                                                    availableXP,
-                                                                    cost
-                                                                )
-                                                                const tooltipLabel = canAfford
-                                                                    ? `${cost} XP`
-                                                                    : `Insufficient XP. Need ${cost}, have ${availableXP}`
-
-                                                                return (
-                                                                    <Tooltip label={tooltipLabel}>
-                                                                        <span
-                                                                            style={{
-                                                                                display:
-                                                                                    "inline-block"
-                                                                            }}
-                                                                        >
-                                                                            <ActionIcon
-                                                                                size="lg"
-                                                                                radius="xl"
-                                                                                variant="light"
-                                                                                color={primaryColor}
-                                                                                disabled={
-                                                                                    !canAfford
-                                                                                }
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation()
-                                                                                    setInitialDiscipline(
-                                                                                        catalogKey
-                                                                                    )
-                                                                                    setModalOpened(
-                                                                                        true
-                                                                                    )
-                                                                                }}
-                                                                                style={{
-                                                                                    cursor: canAfford
-                                                                                        ? "pointer"
-                                                                                        : "default"
-                                                                                }}
-                                                                            >
-                                                                                <IconPlus
-                                                                                    size={18}
-                                                                                />
-                                                                            </ActionIcon>
-                                                                        </span>
-                                                                    </Tooltip>
-                                                                )
-                                                            })()
+                                                                )}
+                                                                availableXP={getAvailableXP(
+                                                                    character
+                                                                )}
+                                                                onAdd={() => {
+                                                                    setInitialDiscipline(catalogKey)
+                                                                    setModalOpened(true)
+                                                                }}
+                                                                blockedEvent="sheet-power-pick-blocked"
+                                                                eventProperties={{
+                                                                    discipline: disciplineName
+                                                                }}
+                                                                primaryColor={primaryColor}
+                                                                ariaLabel={`Add ${upcase(disciplineName)} power`}
+                                                            />
                                                         ) : (
                                                             <ActionIcon
                                                                 size="lg"
@@ -594,41 +651,21 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                 )
                                                 const minCost =
                                                     costs.length > 0 ? Math.min(...costs) : 0
-                                                const availableXP = getAvailableXP(character)
-                                                const canAfford = canAffordUpgrade(
-                                                    availableXP,
-                                                    minCost
-                                                )
-                                                const tooltipLabel = canAfford
-                                                    ? `${minCost} XP`
-                                                    : `Insufficient XP. Need ${minCost}, have ${availableXP}`
 
                                                 return (
-                                                    <Tooltip label={tooltipLabel}>
-                                                        <span style={{ display: "inline-block" }}>
-                                                            <ActionIcon
-                                                                size="xl"
-                                                                variant="light"
-                                                                color={primaryColor}
-                                                                radius="xl"
-                                                                disabled={!canAfford}
-                                                                onClick={() => {
-                                                                    setInitialDiscipline(null)
-                                                                    setModalOpened(true)
-                                                                }}
-                                                                style={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center",
-                                                                    cursor: canAfford
-                                                                        ? "pointer"
-                                                                        : "default"
-                                                                }}
-                                                            >
-                                                                <IconPlus size={24} />
-                                                            </ActionIcon>
-                                                        </span>
-                                                    </Tooltip>
+                                                    <XpAddButton
+                                                        cost={minCost}
+                                                        availableXP={getAvailableXP(character)}
+                                                        onAdd={() => {
+                                                            setInitialDiscipline(null)
+                                                            setModalOpened(true)
+                                                        }}
+                                                        blockedEvent="sheet-power-pick-blocked"
+                                                        eventProperties={{ discipline: "new" }}
+                                                        primaryColor={primaryColor}
+                                                        large
+                                                        ariaLabel="Add a new discipline"
+                                                    />
                                                 )
                                             })()
                                         ) : (
@@ -679,30 +716,16 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                     availableCosts.push(getRitualCost(1))
                                     const minCost =
                                         availableCosts.length > 0 ? Math.min(...availableCosts) : 0
-                                    const availableXP = getAvailableXP(character)
-                                    const canAfford = canAffordUpgrade(availableXP, minCost)
-                                    const tooltipLabel = canAfford
-                                        ? `${minCost} XP`
-                                        : `Insufficient XP. Need ${minCost}, have ${availableXP}`
 
                                     return (
-                                        <Tooltip label={tooltipLabel}>
-                                            <span style={{ display: "inline-block" }}>
-                                                <ActionIcon
-                                                    size="lg"
-                                                    radius="xl"
-                                                    variant="light"
-                                                    color={primaryColor}
-                                                    disabled={!canAfford}
-                                                    onClick={() => setRitualModalOpened(true)}
-                                                    style={{
-                                                        cursor: canAfford ? "pointer" : "default"
-                                                    }}
-                                                >
-                                                    <IconPlus size={18} />
-                                                </ActionIcon>
-                                            </span>
-                                        </Tooltip>
+                                        <XpAddButton
+                                            cost={minCost}
+                                            availableXP={getAvailableXP(character)}
+                                            onAdd={() => setRitualModalOpened(true)}
+                                            blockedEvent="sheet-ritual-pick-blocked"
+                                            primaryColor={primaryColor}
+                                            ariaLabel="Add a ritual"
+                                        />
                                     )
                                 })()
                             ) : (
@@ -797,30 +820,16 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                     availableCosts.push(getRitualCost(1))
                                     const minCost =
                                         availableCosts.length > 0 ? Math.min(...availableCosts) : 0
-                                    const availableXP = getAvailableXP(character)
-                                    const canAfford = canAffordUpgrade(availableXP, minCost)
-                                    const tooltipLabel = canAfford
-                                        ? `${minCost} XP`
-                                        : `Insufficient XP. Need ${minCost}, have ${availableXP}`
 
                                     return (
-                                        <Tooltip label={tooltipLabel}>
-                                            <span style={{ display: "inline-block" }}>
-                                                <ActionIcon
-                                                    size="lg"
-                                                    radius="xl"
-                                                    variant="light"
-                                                    color={primaryColor}
-                                                    disabled={!canAfford}
-                                                    onClick={() => setCeremonyModalOpened(true)}
-                                                    style={{
-                                                        cursor: canAfford ? "pointer" : "default"
-                                                    }}
-                                                >
-                                                    <IconPlus size={18} />
-                                                </ActionIcon>
-                                            </span>
-                                        </Tooltip>
+                                        <XpAddButton
+                                            cost={minCost}
+                                            availableXP={getAvailableXP(character)}
+                                            onAdd={() => setCeremonyModalOpened(true)}
+                                            blockedEvent="sheet-ceremony-pick-blocked"
+                                            primaryColor={primaryColor}
+                                            ariaLabel="Add a ceremony"
+                                        />
                                     )
                                 })()
                             ) : (
