@@ -6,8 +6,13 @@ import SkillsPicker from "~/generator/components/SkillsPicker"
 import type { AttributeSetting, SkillsSetting } from "~/generator/creatorDrafts"
 import { getBasicTestCharacter } from "./testUtils"
 
+const { renderSpecialtyModal } = vi.hoisted(() => ({ renderSpecialtyModal: vi.fn() }))
+
 vi.mock("~/generator/components/SkillSpecialtyModal", () => ({
-    SpecialtyModal: () => null
+    SpecialtyModal: (props: { modalOpened: boolean }) => {
+        renderSpecialtyModal(props)
+        return null
+    }
 }))
 
 Object.defineProperty(window, "matchMedia", {
@@ -33,6 +38,45 @@ globalThis.ResizeObserver = class {
 afterEach(cleanup)
 
 describe("creator picker limits", () => {
+    it("opens the specialty dialog when confirming edited skills", () => {
+        const nextStep = vi.fn()
+        const character = getBasicTestCharacter()
+
+        render(
+            <MantineProvider>
+                <SkillsPicker
+                    character={character}
+                    setCharacter={vi.fn()}
+                    nextStep={nextStep}
+                    pickedSkills={{
+                        special: [],
+                        strongest: ["athletics", "brawl", "craft"],
+                        decent: ["drive", "firearms", "melee", "larceny", "stealth"],
+                        acceptable: [
+                            "animal ken",
+                            "etiquette",
+                            "insight",
+                            "intimidation",
+                            "leadership",
+                            "performance",
+                            "survival"
+                        ]
+                    }}
+                    setPickedSkills={vi.fn()}
+                    pickedDistribution="Balanced"
+                    setPickedDistribution={vi.fn()}
+                />
+            </MantineProvider>
+        )
+
+        fireEvent.click(screen.getByTestId("skills-confirm-button"))
+
+        expect(renderSpecialtyModal).toHaveBeenLastCalledWith(
+            expect.objectContaining({ modalOpened: true })
+        )
+        expect(nextStep).not.toHaveBeenCalled()
+    })
+
     it("prevents extra attribute picks while leaving assigned attributes removable", () => {
         const pickedAttributes: AttributeSetting = {
             strongest: "strength",

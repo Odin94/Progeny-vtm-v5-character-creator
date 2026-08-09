@@ -1,7 +1,7 @@
 import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconSparkles } from "@tabler/icons-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Character } from "../../data/Character"
 import { Skills, SkillsKey, allSkills, skillsKeySchema } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
@@ -52,6 +52,37 @@ export const SpecialtyModal = ({
     const [bonusTexts, setBonusTexts] = useState<Record<string, string>>(() =>
         Object.fromEntries(BONUS_SPECIALTY_SKILLS.map((s) => [s, ""]))
     )
+
+    useEffect(() => {
+        if (!modalOpened) return
+
+        // The one free specialty belongs to the character rather than a particular skill
+        // allocation, so preserve its skill and text even when that skill was removed. Bonus
+        // specialties only remain available while their matching skill is still selected.
+        const previousFreeSpecialty = character.skillSpecialties.find(
+            (specialty) =>
+                !BONUS_SPECIALTY_SKILLS.includes(
+                    specialty.skill as (typeof BONUS_SPECIALTY_SKILLS)[number]
+                )
+        )
+        setFreeEntries([
+            {
+                skill: previousFreeSpecialty?.skill ?? "",
+                text: previousFreeSpecialty?.name ?? ""
+            }
+        ])
+        setBonusTexts(
+            Object.fromEntries(
+                BONUS_SPECIALTY_SKILLS.map((skill) => [
+                    skill,
+                    bonusSkills.includes(skill as SkillsKey)
+                        ? character.skillSpecialties.find((specialty) => specialty.skill === skill)
+                              ?.name ?? ""
+                        : ""
+                ])
+            )
+        )
+    }, [bonusSkills, character.skillSpecialties, modalOpened])
 
     const usedFreeSkills = freeEntries.map((e) => e.skill).filter(Boolean)
 
@@ -157,12 +188,17 @@ export const SpecialtyModal = ({
                                 placeholder="Choose a skill…"
                                 value={entry.skill || null}
                                 onChange={(v) => updateFreeEntry(i, "skill", v ?? "")}
-                                data={freeSkills
-                                    .filter((s) => s === entry.skill || !usedFreeSkills.includes(s))
+                                data={Array.from(new Set([...freeSkills, entry.skill]))
+                                    .filter(
+                                        (s) =>
+                                            s &&
+                                            (s === entry.skill || !usedFreeSkills.includes(s))
+                                    )
                                     .map((s) => ({ value: s, label: upcase(s) }))}
                                 color={RED}
                                 style={{ flex: 1 }}
                                 styles={{ input: { textTransform: "capitalize" } }}
+                                aria-label="Free specialty skill"
                             />{" "}
                             <TextInput
                                 value={entry.text}
@@ -171,6 +207,7 @@ export const SpecialtyModal = ({
                                 maxLength={40}
                                 color={RED}
                                 style={{ flex: 1 }}
+                                aria-label="Free specialty name"
                             />
                         </Group>
                     ))}
@@ -208,6 +245,7 @@ export const SpecialtyModal = ({
                                         maxLength={40}
                                         color={RED}
                                         style={{ flex: 1 }}
+                                        aria-label={`${upcase(s)} specialty`}
                                     />
                                 </Group>
                             ))}

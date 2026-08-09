@@ -1,6 +1,7 @@
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
+import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import {
@@ -86,6 +87,7 @@ const SkillsPicker = ({
     const phoneScreen = globals.isPhoneScreen
 
     const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
+    const [undoLastPickOnModalClose, setUndoLastPickOnModalClose] = useState(false)
     const hasConfirmedSkills = Object.values(character.skills).some((value) => value !== 0)
     const distr = pickedDistribution
         ? distributionByType[pickedDistribution]
@@ -161,6 +163,7 @@ const SkillsPicker = ({
                     finalPick.decent.length === distr.decent &&
                     finalPick.acceptable.length === distr.acceptable
                 ) {
+                    setUndoLastPickOnModalClose(true)
                     openModal()
                 }
             }
@@ -301,20 +304,15 @@ const SkillsPicker = ({
     })()
 
     const closeModalAndUndoLastPick = () => {
-        setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
+        if (undoLastPickOnModalClose) {
+            setPickedSkills({ ...pickedSkills, acceptable: pickedSkills.acceptable.slice(0, -1) })
+        }
         closeModal()
     }
 
     const confirmEditedSkills = () => {
-        const pickedSkillNames = getAll(pickedSkills)
-        setCharacter({
-            ...character,
-            skills: skillsFromSelection(pickedSkills),
-            skillSpecialties: character.skillSpecialties.filter((specialty) =>
-                pickedSkillNames.includes(specialty.skill)
-            )
-        })
-        nextStep()
+        setUndoLastPickOnModalClose(false)
+        openModal()
     }
 
     const resetSkills = () => {
