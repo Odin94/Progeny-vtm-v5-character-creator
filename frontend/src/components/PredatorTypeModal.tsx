@@ -154,6 +154,7 @@ type PredatorTypeModalProps = {
     setSpecialty: (specialty: string) => void
     discipline: string
     setDiscipline: (specialty: string) => void
+    onPredatorTypeChanged: () => void
 }
 
 const PredatorTypeModal = ({
@@ -166,7 +167,8 @@ const PredatorTypeModal = ({
     specialty,
     setSpecialty,
     discipline,
-    setDiscipline
+    setDiscipline,
+    onPredatorTypeChanged
 }: PredatorTypeModalProps) => {
     const phoneScreen = globals.isPhoneScreen
 
@@ -785,17 +787,27 @@ const PredatorTypeModal = ({
                                     )
                                 const changedPickedDiscipline =
                                     pickedDisciplineName !== character.predatorType.pickedDiscipline
+                                const changedPredatorType =
+                                    pickedPredatorType !== character.predatorType.name
+                                const shouldResetDisciplineProgress =
+                                    changedPredatorType || changedPickedDiscipline
                                 updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                 setCharacter({
                                     ...character,
                                     ...adjustedPickedMeritsAndFlaws,
                                     predatorType: nextPredatorType,
-                                    disciplines: changedPickedDiscipline
+                                    disciplines: shouldResetDisciplineProgress
                                         ? []
                                         : character.disciplines,
-                                    rituals: changedPickedDiscipline ? [] : character.rituals,
-                                    ceremonies: changedPickedDiscipline ? [] : character.ceremonies
+                                    rituals: shouldResetDisciplineProgress ? [] : character.rituals,
+                                    ceremonies: shouldResetDisciplineProgress
+                                        ? []
+                                        : character.ceremonies
                                 })
+
+                                if (shouldResetDisciplineProgress) {
+                                    onPredatorTypeChanged()
+                                }
 
                                 trackEvent({
                                     action: "predatortype confirm clicked",

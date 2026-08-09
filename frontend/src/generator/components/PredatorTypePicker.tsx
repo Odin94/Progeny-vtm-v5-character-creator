@@ -29,6 +29,7 @@ type PredatorTypePickerProps = {
     setSpecialty: (specialty: string) => void
     discipline: string
     setDiscipline: (discipline: string) => void
+    onPredatorTypeChanged: () => void
 }
 
 // Build the SegmentedControl value for a stored specialty. Non-custom specialties round-trip
@@ -118,7 +119,8 @@ const PredatorTypePicker = ({
     specialty,
     setSpecialty,
     discipline,
-    setDiscipline
+    setDiscipline,
+    onPredatorTypeChanged
 }: PredatorTypePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
@@ -383,6 +385,7 @@ const PredatorTypePicker = ({
                     setSpecialty={setSpecialty}
                     discipline={discipline}
                     setDiscipline={setDiscipline}
+                    onPredatorTypeChanged={onPredatorTypeChanged}
                 />
             ) : null}
         </div>

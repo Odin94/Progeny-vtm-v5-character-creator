@@ -73,6 +73,10 @@ const Generator = ({
         setPredatorTypeDiscipline("")
     }
 
+    const clearPredatorTypeDisciplineDraft = () => {
+        setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
+    }
+
     // Fire a PostHog step-view event whenever a generator step is shown. Individual steps only
     // send a confirm-click event, so without this we cannot measure step-level drop-off (how
     // many people reach a step vs. confirm it) outside of session replay.
@@ -161,6 +165,7 @@ const Generator = ({
                         setSpecialty={setPredatorTypeSpecialty}
                         discipline={predatorTypeDiscipline}
                         setDiscipline={setPredatorTypeDiscipline}
+                        onPredatorTypeChanged={clearPredatorTypeDisciplineDraft}
                     />
                 )
             case "basics":
