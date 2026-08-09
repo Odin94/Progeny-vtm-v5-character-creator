@@ -109,6 +109,32 @@ const GenerationPicker = ({
         setGeneration(value)
     }
 
+    const confirmButton = (
+        <Button
+            data-testid="generation-confirm-button"
+            disabled={selectedGenerationValue === null}
+            color="grape"
+            styles={generatorConfirmButtonStyles}
+            onClick={() => {
+                const genValue = parseInt(selectedGenerationValue ?? "0")
+                let experience = 0
+                if (character.experience === 0) {
+                    experience = getGenerationBonusXp(genValue)
+                }
+                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+                setCharacter({ ...character, generation: genValue, experience })
+                trackEvent({
+                    action: "generation submit clicked",
+                    category: "generation",
+                    label: selectedGenerationValue ?? "0"
+                })
+                nextStep()
+            }}
+        >
+            Confirm
+        </Button>
+    )
+
     return (
         <div style={generatorScrollableShellStyle}>
             <Stack
@@ -167,6 +193,8 @@ const GenerationPicker = ({
                                     }
                                 }}
                             />
+
+                            {phoneScreen ? confirmButton : null}
 
                             {selectedGeneration && generationSummary ? (
                                 <Box
@@ -325,31 +353,11 @@ const GenerationPicker = ({
                     </div>
                 </ScrollArea>
 
-                <Stack gap="xs" align="center">
-                    <Button
-                        data-testid="generation-confirm-button"
-                        disabled={selectedGenerationValue === null}
-                        color="grape"
-                        styles={generatorConfirmButtonStyles}
-                        onClick={() => {
-                            const genValue = parseInt(selectedGenerationValue ?? "0")
-                            let experience = 0
-                            if (character.experience === 0) {
-                                experience = getGenerationBonusXp(genValue)
-                            }
-                            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                            setCharacter({ ...character, generation: genValue, experience })
-                            trackEvent({
-                                action: "generation submit clicked",
-                                category: "generation",
-                                label: selectedGenerationValue ?? "0"
-                            })
-                            nextStep()
-                        }}
-                    >
-                        Confirm
-                    </Button>
-                </Stack>
+                {!phoneScreen ? (
+                    <Stack gap="xs" align="center">
+                        {confirmButton}
+                    </Stack>
+                ) : null}
             </Stack>
         </div>
     )
