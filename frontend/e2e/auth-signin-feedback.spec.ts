@@ -25,6 +25,18 @@ const mockSlowAuthMe = async (page: import("@playwright/test").Page) => {
     })
 }
 
+// A seeded user represents a completed sign-in, so authenticated background work
+// must receive the same success response as it would with the new session cookie.
+const mockAuthenticatedRecentChanges = async (page: import("@playwright/test").Page) => {
+    await page.route("**/api/recent-changes/deliver-latest", async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ announcement: null, changes: [] })
+        })
+    })
+}
+
 test("without the sign-in seed, the topbar flashes its logged-out state", async ({ page }) => {
     await page.addInitScript(() => {
         localStorage.clear()
@@ -51,6 +63,7 @@ test("the persisted sign-in seed shows the signed-in topbar immediately with a c
         sessionStorage.setItem("auth:signInConfirm", "1")
     }, SIGNED_IN_USER)
     await mockSlowAuthMe(page)
+    await mockAuthenticatedRecentChanges(page)
 
     await page.goto("/features")
 
