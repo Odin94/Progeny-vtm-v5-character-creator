@@ -24,6 +24,8 @@ import {
     getPredatorTypeMeritsByName
 } from "../../data/meritsAndFlawsResolution"
 import {
+    advancedMeritsAndFlaws,
+    advancedThinbloodMeritsAndFlaws,
     essentialMeritsAndFlaws,
     essentialThinbloodMeritsAndFlaws,
     isThinbloodFlaw,
@@ -396,6 +398,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const theme = useMantineTheme()
     const phoneScreen = globals.isPhoneScreen
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
+    const [showAllMerits, setShowAllMerits] = useState(false)
     const homebrewMerits = homebrewCollections.flatMap((collection) =>
         collection.items
             .filter(
@@ -416,6 +419,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const meritFlawCategories = useMemo(
         () => [
             ...essentialMeritsAndFlaws,
+            ...(showAllMerits ? advancedMeritsAndFlaws : []),
             ...(homebrewMerits.length
                 ? [
                       {
@@ -430,7 +434,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                   ]
                 : [])
         ],
-        [homebrewMerits]
+        [homebrewMerits, showAllMerits]
     )
 
     const [activeTab, setActiveTab] = useState<string | null>("merits")
@@ -493,15 +497,31 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const [remainingFlaws, setRemainingFlaws] = useState(flawPoints - usedFLawsLevel)
 
     const isThinBlood = character.clan === "Thin-blood"
-    const filteredThinbloodMerits = essentialThinbloodMeritsAndFlaws.merits.filter((merit) =>
+    const thinbloodMeritFlawCatalog = showAllMerits
+        ? {
+              merits: [
+                  ...essentialThinbloodMeritsAndFlaws.merits,
+                  ...advancedThinbloodMeritsAndFlaws.merits
+              ],
+              flaws: [
+                  ...essentialThinbloodMeritsAndFlaws.flaws,
+                  ...advancedThinbloodMeritsAndFlaws.flaws
+              ]
+          }
+        : essentialThinbloodMeritsAndFlaws
+    const filteredThinbloodMerits = thinbloodMeritFlawCatalog.merits.filter((merit) =>
         matchesMeritFlawSearch(merit, "Thin-blood merits", normalizedMeritFlawQuery)
     )
-    const filteredThinbloodFlaws = essentialThinbloodMeritsAndFlaws.flaws.filter((flaw) =>
+    const filteredThinbloodFlaws = thinbloodMeritFlawCatalog.flaws.filter((flaw) =>
         matchesMeritFlawSearch(flaw, "Thin-blood flaws", normalizedMeritFlawQuery)
     )
     const hasSearchResults =
         filteredMeritFlawCategories.length > 0 ||
         (isThinBlood && (filteredThinbloodMerits.length > 0 || filteredThinbloodFlaws.length > 0))
+    const showEveryFilteredCategory = showAllMerits || normalizedMeritFlawQuery.length > 0
+    const displayedCategoryCount = showEveryFilteredCategory
+        ? filteredMeritFlawCategories.length
+        : visibleCategoryCount
     const tbMeritCount = character.merits.filter((m) => isThinbloodMerit(m.name)).length
     const tbFlawCount = character.flaws.filter((f) => isThinbloodFlaw(f.name)).length
     const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(
@@ -715,7 +735,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                     }
                                 }}
                             >
-                                <Tabs.List>
+                                <Group gap="sm" align="center" wrap="wrap">
+                                <Tabs.List style={{ flex: 1, minWidth: 0 }}>
                                     <Tabs.Tab
                                         value="merits"
                                         style={
@@ -751,6 +772,25 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         Loresheets
                                     </Tabs.Tab>
                                 </Tabs.List>
+                                    <Button
+                                        data-testid="toggle-all-merits-button"
+                                        variant="outline"
+                                        color="red"
+                                        size="xs"
+                                        onClick={() => setShowAllMerits((showingAll) => !showingAll)}
+                                        styles={{
+                                            root: {
+                                                whiteSpace: "nowrap",
+                                                fontFamily: "Cinzel, Georgia, serif",
+                                                letterSpacing: "0.04em"
+                                            }
+                                        }}
+                                    >
+                                        {showAllMerits
+                                            ? "Show essential merits"
+                                            : "Show all merits"}
+                                    </Button>
+                                </Group>
 
                                 <Tabs.Panel value="merits">
                                     <Box
@@ -833,7 +873,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                 : null}
 
                                             {filteredMeritFlawCategories
-                                                .slice(0, visibleCategoryCount)
+                                                .slice(0, displayedCategoryCount)
                                                 .map((category) => {
                                                     return (
                                                         <Grid.Col
@@ -866,7 +906,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                     )
                                                 })}
                                         </Grid>
-                                        {visibleCategoryCount < filteredMeritFlawCategories.length ? (
+                                        {!showEveryFilteredCategory &&
+                                        visibleCategoryCount < filteredMeritFlawCategories.length ? (
                                             <div ref={categorySentinelRef} aria-hidden="true" />
                                         ) : null}
                                     </Box>

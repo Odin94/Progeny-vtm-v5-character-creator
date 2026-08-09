@@ -62,6 +62,18 @@ const clickLevel = (name: string, level: string) => {
 }
 
 describe("Merits & Flaws affordability", () => {
+    it("reveals advanced merits and flaws when requested", () => {
+        renderPicker()
+
+        expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
+        fireEvent.click(screen.getByTestId("toggle-all-merits-button"))
+
+        expect(screen.getByText("Laboratory", { exact: true })).toBeInTheDocument()
+        expect(
+            screen.getByRole("button", { name: "Show essential merits" })
+        ).toBeInTheDocument()
+    })
+
     it("filters by case-insensitive title, description, and category substrings", () => {
         renderPicker()
         const search = screen.getByRole("textbox", { name: "Search merits and flaws" })
