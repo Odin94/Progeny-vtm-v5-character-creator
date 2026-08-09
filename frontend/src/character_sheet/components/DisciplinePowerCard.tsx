@@ -15,6 +15,7 @@ type DisciplinePowerCardProps = {
     character?: Character
     disabled?: boolean
     disabledTooltip?: string | null
+    onDisabledClick?: () => void
 }
 
 export const calculateDicePoolValues = (
@@ -58,7 +59,8 @@ const DisciplinePowerCard = ({
     renderActions,
     character,
     disabled = false,
-    disabledTooltip
+    disabledTooltip,
+    onDisabledClick
 }: DisciplinePowerCardProps) => {
     const theme = useMantineTheme()
     const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
@@ -138,7 +140,7 @@ const DisciplinePowerCard = ({
         const cardContent = (
             <Box
                 p="xs"
-                onClick={disabled ? undefined : onClick}
+                onClick={disabled ? onDisabledClick : onClick}
                 style={{
                     border: "1px solid var(--mantine-color-gray-8)",
                     borderRadius: "var(--mantine-radius-sm)",
