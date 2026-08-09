@@ -186,7 +186,7 @@ const SkillsPicker = ({
                 >
                     <Button
                         data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
-                        p={phoneScreen ? 0 : "default"}
+                        p={phoneScreen ? "xs" : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
                         disabled={
                             pickedDistribution === null || (!alreadyPicked && skillAllocationIsFull)
@@ -203,7 +203,7 @@ const SkillsPicker = ({
                         styles={{
                             inner: {
                                 alignItems: "center",
-                                justifyContent: phoneScreen ? "center" : "space-between",
+                                justifyContent: phoneScreen ? "flex-start" : "space-between",
                                 paddingTop: 2,
                                 paddingBottom: 3
                             },
@@ -281,7 +281,7 @@ const SkillsPicker = ({
                         <Text
                             fz={phoneScreen ? 12 : "inherit"}
                             lh={1.3}
-                            ta={phoneScreen ? "center" : "left"}
+                            ta="left"
                             style={{ width: "100%" }}
                         >
                             {upcase(skill)}
@@ -320,6 +320,11 @@ const SkillsPicker = ({
     const resetSkills = () => {
         setPickedSkills(emptySkillsSetting)
         setPickedDistribution(null)
+        setCharacter({
+            ...character,
+            skills: { ...emptySkills },
+            skillSpecialties: []
+        })
     }
 
     const createSkillButtons = () => (
@@ -456,7 +461,7 @@ const SkillsPicker = ({
                                             data-testid={`skill-distribution-${distribution
                                                 .toLowerCase()
                                                 .replace(/\s+/g, "-")}-button`}
-                                            p={phoneScreen ? 0 : "default"}
+                                            p={phoneScreen ? "xs" : "default"}
                                             disabled={pickedDistribution !== null}
                                             color="red"
                                             fullWidth={false}
@@ -470,7 +475,7 @@ const SkillsPicker = ({
                                                 setPickedDistribution(distribution)
                                             }}
                                         >
-                                            <Text fz={phoneScreen ? 12 : "inherit"}>
+                                            <Text fz={phoneScreen ? 12 : "inherit"} ta="left">
                                                 {distribution}
                                             </Text>
                                         </Button>

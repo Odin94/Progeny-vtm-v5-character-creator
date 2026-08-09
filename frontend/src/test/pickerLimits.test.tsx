@@ -103,7 +103,7 @@ describe("creator picker limits", () => {
         expect(screen.getByTestId("skill-athletics-button")).toBeEnabled()
     })
 
-    it("resets confirmed attribute picks without changing the character", () => {
+    it("resets confirmed attributes on the character and clears the draft", () => {
         const character = getBasicTestCharacter()
         character.attributes = {
             ...character.attributes,
@@ -116,7 +116,7 @@ describe("creator picker limits", () => {
         const setCharacter = vi.fn()
         const setPickedAttributes = vi.fn()
 
-        render(
+        const { rerender } = render(
             <MantineProvider>
                 <AttributePicker
                     character={character}
@@ -134,22 +134,53 @@ describe("creator picker limits", () => {
 
         fireEvent.click(screen.getByRole("button", { name: "Reset attributes" }))
 
-        expect(setCharacter).not.toHaveBeenCalled()
         expect(setPickedAttributes).toHaveBeenCalledWith({
             strongest: null,
             weakest: null,
             medium: []
         })
+        expect(setCharacter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                attributes: {
+                    strength: 1,
+                    dexterity: 1,
+                    stamina: 1,
+                    charisma: 1,
+                    manipulation: 1,
+                    composure: 1,
+                    intelligence: 1,
+                    wits: 1,
+                    resolve: 1
+                },
+                maxHealth: 4,
+                willpower: 2
+            })
+        )
+
+        rerender(
+            <MantineProvider>
+                <AttributePicker
+                    character={setCharacter.mock.calls[0][0]}
+                    setCharacter={setCharacter}
+                    nextStep={vi.fn()}
+                    pickedAttributes={{ strongest: null, weakest: null, medium: [] }}
+                    setPickedAttributes={setPickedAttributes}
+                />
+            </MantineProvider>
+        )
+
+        expect(screen.queryByRole("button", { name: "Reset attributes" })).not.toBeInTheDocument()
+        expect(screen.queryByTestId("attributes-confirm-button")).not.toBeInTheDocument()
     })
 
-    it("resets confirmed skill picks without changing the character", () => {
+    it("resets confirmed skills on the character and clears the draft", () => {
         const character = getBasicTestCharacter()
         character.skills.athletics = 3
         const setCharacter = vi.fn()
         const setPickedSkills = vi.fn()
         const setPickedDistribution = vi.fn()
 
-        render(
+        const { rerender } = render(
             <MantineProvider>
                 <SkillsPicker
                     character={character}
@@ -165,7 +196,6 @@ describe("creator picker limits", () => {
 
         fireEvent.click(screen.getByRole("button", { name: "Reset skills" }))
 
-        expect(setCharacter).not.toHaveBeenCalled()
         expect(setPickedSkills).toHaveBeenCalledWith({
             special: [],
             strongest: [],
@@ -173,5 +203,32 @@ describe("creator picker limits", () => {
             acceptable: []
         })
         expect(setPickedDistribution).toHaveBeenCalledWith(null)
+        expect(setCharacter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                skillSpecialties: [],
+                skills: expect.objectContaining({ athletics: 0 })
+            })
+        )
+        const resetCharacter = setCharacter.mock.calls[0][0]
+        expect(Object.values(resetCharacter.skills)).toSatisfy((skills) =>
+            skills.every((level) => level === 0)
+        )
+
+        rerender(
+            <MantineProvider>
+                <SkillsPicker
+                    character={resetCharacter}
+                    setCharacter={setCharacter}
+                    nextStep={vi.fn()}
+                    pickedSkills={{ special: [], strongest: [], decent: [], acceptable: [] }}
+                    setPickedSkills={setPickedSkills}
+                    pickedDistribution={null}
+                    setPickedDistribution={setPickedDistribution}
+                />
+            </MantineProvider>
+        )
+
+        expect(screen.queryByRole("button", { name: "Reset skills" })).not.toBeInTheDocument()
+        expect(screen.queryByTestId("skills-confirm-button")).not.toBeInTheDocument()
     })
 })

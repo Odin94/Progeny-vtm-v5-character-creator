@@ -3,7 +3,7 @@ import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
-import { Character } from "../../data/Character"
+import { Character, getEmptyCharacter } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { GeneratorPhasePrompt, GeneratorSectionDivider } from "./sharedGeneratorUi"
@@ -62,6 +62,13 @@ const AttributePicker = ({
 
     const resetAttributes = () => {
         setPickedAttributes(emptyAttributeSetting)
+
+        const updatedCharacter = {
+            ...character,
+            attributes: getEmptyCharacter().attributes
+        }
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+        setCharacter(updatedCharacter)
     }
 
     // Nothing assigned yet: this is the state the drop-off signals describe (users read the
@@ -162,7 +169,7 @@ const AttributePicker = ({
                         onFocus={() => {
                             if (!alreadyPicked) trackTooltipHover(attribute)
                         }}
-                        p={phoneScreen ? 0 : "default"}
+                        p={phoneScreen ? "xs" : "default"}
                         variant={alreadyPicked ? "outline" : "filled"}
                         disabled={!alreadyPicked && attributeAllocationIsFull}
                         color="grape"
@@ -177,7 +184,7 @@ const AttributePicker = ({
                         styles={{
                             inner: {
                                 alignItems: "center",
-                                justifyContent: phoneScreen ? "center" : "space-between",
+                                justifyContent: phoneScreen ? "flex-start" : "space-between",
                                 paddingTop: 2,
                                 paddingBottom: 3
                             },
@@ -246,7 +253,7 @@ const AttributePicker = ({
                         <Text
                             fz={phoneScreen ? 12 : "inherit"}
                             lh={1.3}
-                            ta={phoneScreen ? "center" : "left"}
+                            ta="left"
                             style={{ width: "100%" }}
                         >
                             {upcase(attribute)}
