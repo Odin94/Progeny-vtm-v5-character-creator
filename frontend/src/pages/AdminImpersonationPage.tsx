@@ -21,7 +21,7 @@ import {
 import { notifications } from "@mantine/notifications"
 import { IconBellRinging, IconSearch, IconUserShield } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Topbar from "~/topbar/Topbar"
 import NameTag from "~/components/NameTag"
 import { useAuth } from "~/hooks/useAuth"
@@ -37,14 +37,33 @@ const getUserLabel = (user: AdminUser) =>
     user.nickname || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
 
 const AdminImpersonationPage = () => {
-    const { user, isLoading, isAuthenticated, signIn } = useAuth()
+    const { user, isLoading, isAuthenticated, signIn, refetch } = useAuth()
     const navigate = Route.useNavigate()
     const { tab: activeTab } = Route.useSearch()
     const queryClient = useQueryClient()
+    const [isVerifyingAdminSession, setIsVerifyingAdminSession] = useState(true)
     const [query, setQuery] = useState("")
     const [page, setPage] = useState(1)
     const [superadminCandidate, setSuperadminCandidate] = useState<AdminUser | null>(null)
-    const canUseAdminTools = user?.actorIsSuperadmin && !user.impersonation?.active
+    const canUseAdminTools =
+        !isVerifyingAdminSession && user?.actorIsSuperadmin && !user.impersonation?.active
+
+    // A browser may retain an impersonation cookie after the in-memory session has
+    // expired or been lost. `/auth/me` intentionally clears that cookie and returns
+    // the actor's identity, while other protected endpoints correctly reject the
+    // first request. Verify here before enabling admin queries so opening this page
+    // never leaves the user with a transient 401 that disappears after a refresh.
+    useEffect(() => {
+        let mounted = true
+
+        void refetch().finally(() => {
+            if (mounted) setIsVerifyingAdminSession(false)
+        })
+
+        return () => {
+            mounted = false
+        }
+    }, [refetch])
 
     const usersQuery = useQuery({
         queryKey: ["admin", "users", query, page],
@@ -265,7 +284,7 @@ const AdminImpersonationPage = () => {
             <AppShell.Main bg="#100d13" mih="100vh">
                 <Box py="xl">
                     <Container size="lg">
-                        {isLoading ? (
+                        {isLoading || isVerifyingAdminSession ? (
                             <Center py="xl">
                                 <Loader color="yellow" />
                             </Center>
@@ -289,7 +308,7 @@ const AdminImpersonationPage = () => {
                             </Paper>
                         ) : (
                             <Stack gap="lg">
-                                <Tabs value={activeTab} onChange={selectTab}>
+                                <Tabs value={activeTab} onChange={selectTab} keepMounted={false}>
                                     <Tabs.List>
                                         <Tabs.Tab value="users">Users</Tabs.Tab>
                                         <Tabs.Tab value="recent-changes">Recent changes</Tabs.Tab>
