@@ -62,6 +62,24 @@ const clickLevel = (name: string, level: string) => {
 }
 
 describe("Merits & Flaws affordability", () => {
+    it("filters by case-insensitive title, description, and category substrings", () => {
+        renderPicker()
+        const search = screen.getByRole("textbox", { name: "Search merits and flaws" })
+
+        fireEvent.change(search, { target: { value: "LoOkS" } })
+        expect(screen.getByText("Beautiful", { exact: true })).toBeInTheDocument()
+        expect(screen.queryByText("Watchmen", { exact: true })).not.toBeInTheDocument()
+
+        fireEvent.change(search, { target: { value: "secu" } })
+        expect(screen.getByText("Haven", { exact: true })).toBeInTheDocument()
+        expect(screen.getByText("Watchmen", { exact: true })).toBeInTheDocument()
+        expect(screen.queryByText("Beautiful", { exact: true })).not.toBeInTheDocument()
+
+        fireEvent.change(search, { target: { value: "watchmen" } })
+        expect(screen.getByText("Watchmen", { exact: true })).toBeInTheDocument()
+        expect(screen.queryByText("Beautiful", { exact: true })).not.toBeInTheDocument()
+    })
+
     it("shows a persistent per-item cost + remaining budget for each merit", () => {
         renderPicker()
         expect(

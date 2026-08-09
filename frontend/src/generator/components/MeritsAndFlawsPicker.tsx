@@ -11,6 +11,7 @@ import {
     Stack,
     Tabs,
     Text,
+    TextInput,
     Tooltip,
     useMantineTheme
 } from "@mantine/core"
@@ -56,6 +57,16 @@ type MeritsAndFlawsPickerProps = {
 }
 
 type ResetTarget = "merit" | "flaw" | null
+
+const matchesMeritFlawSearch = (
+    meritOrFlaw: MeritOrFlaw,
+    category: string,
+    normalizedQuery: string
+) =>
+    !normalizedQuery ||
+    category.toLowerCase().includes(normalizedQuery) ||
+    meritOrFlaw.name.toLowerCase().includes(normalizedQuery) ||
+    meritOrFlaw.summary.toLowerCase().includes(normalizedQuery)
 
 const flawIcon = () => {
     return <FontAwesomeIcon icon={faPlay} rotation={90} style={{ color: COLOR_RED }} />
@@ -424,8 +435,22 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const [activeTab, setActiveTab] = useState<string | null>("merits")
     const [resetTarget, setResetTarget] = useState<ResetTarget>(null)
+    const [meritFlawQuery, setMeritFlawQuery] = useState("")
+    const normalizedMeritFlawQuery = meritFlawQuery.trim().toLowerCase()
+    const filteredMeritFlawCategories = useMemo(() => {
+        if (!normalizedMeritFlawQuery) return meritFlawCategories
+
+        return meritFlawCategories.flatMap((category) => {
+            const itemMatches = (item: MeritOrFlaw) =>
+                matchesMeritFlawSearch(item, category.title, normalizedMeritFlawQuery)
+            const merits = category.merits.filter(itemMatches)
+            const flaws = category.flaws.filter(itemMatches)
+
+            return merits.length || flaws.length ? [{ ...category, merits, flaws }] : []
+        })
+    }, [meritFlawCategories, normalizedMeritFlawQuery])
     const { visibleCount: visibleCategoryCount, sentinelRef: categorySentinelRef } =
-        useProgressiveRendering(meritFlawCategories.length, 4, 2)
+        useProgressiveRendering(filteredMeritFlawCategories.length, 4, 2)
 
     const [pickedMeritsAndFlaws, setPickedMeritsAndFlaws] = useState<MeritFlaw[]>([
         ...character.merits,
@@ -468,6 +493,15 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const [remainingFlaws, setRemainingFlaws] = useState(flawPoints - usedFLawsLevel)
 
     const isThinBlood = character.clan === "Thin-blood"
+    const filteredThinbloodMerits = essentialThinbloodMeritsAndFlaws.merits.filter((merit) =>
+        matchesMeritFlawSearch(merit, "Thin-blood merits", normalizedMeritFlawQuery)
+    )
+    const filteredThinbloodFlaws = essentialThinbloodMeritsAndFlaws.flaws.filter((flaw) =>
+        matchesMeritFlawSearch(flaw, "Thin-blood flaws", normalizedMeritFlawQuery)
+    )
+    const hasSearchResults =
+        filteredMeritFlawCategories.length > 0 ||
+        (isThinBlood && (filteredThinbloodMerits.length > 0 || filteredThinbloodFlaws.length > 0))
     const tbMeritCount = character.merits.filter((m) => isThinbloodMerit(m.name)).length
     const tbFlawCount = character.flaws.filter((f) => isThinbloodFlaw(f.name)).length
     const [remainingThinbloodMeritPoints, setRemainingThinbloodMeritPoints] = useState(
@@ -758,15 +792,47 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                             </Stack>
                                         ) : null}
 
+                                        <TextInput
+                                            aria-label="Search merits and flaws"
+                                            placeholder="Search by title, description, or category"
+                                            value={meritFlawQuery}
+                                            onChange={(event) =>
+                                                setMeritFlawQuery(event.currentTarget.value)
+                                            }
+                                            mb="lg"
+                                            styles={{
+                                                input: {
+                                                    background: "rgba(255, 255, 255, 0.04)",
+                                                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                                                    color: "rgba(244, 236, 232, 0.94)"
+                                                }
+                                            }}
+                                        />
+
+                                        {!hasSearchResults ? (
+                                            <Text
+                                                ta="center"
+                                                style={{
+                                                    fontFamily: "Inter, Segoe UI, sans-serif",
+                                                    fontSize: "0.85rem",
+                                                    color: rgba(RAW_GREY, 0.66)
+                                                }}
+                                            >
+                                                No merits or flaws match “{meritFlawQuery.trim()}”.
+                                            </Text>
+                                        ) : null}
+
                                         <Grid m={0} gutter="lg">
                                             {isThinBlood
                                                 ? thinBloodMeritsAndFlawsComponent(
-                                                      getMeritOrFlawLine,
-                                                      phoneScreen
+                                                    getMeritOrFlawLine,
+                                                      phoneScreen,
+                                                      filteredThinbloodMerits,
+                                                      filteredThinbloodFlaws
                                                   )
                                                 : null}
 
-                                            {meritFlawCategories
+                                            {filteredMeritFlawCategories
                                                 .slice(0, visibleCategoryCount)
                                                 .map((category) => {
                                                     return (
@@ -800,7 +866,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                     )
                                                 })}
                                         </Grid>
-                                        {visibleCategoryCount < meritFlawCategories.length ? (
+                                        {visibleCategoryCount < filteredMeritFlawCategories.length ? (
                                             <div ref={categorySentinelRef} aria-hidden="true" />
                                         ) : null}
                                     </Box>
@@ -984,11 +1050,18 @@ const PointCard = ({
 
 function thinBloodMeritsAndFlawsComponent(
     getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element,
-    phoneScreen: boolean
+    phoneScreen: boolean,
+    merits: MeritOrFlaw[],
+    flaws: MeritOrFlaw[]
 ) {
+    const hasMerits = merits.length > 0
+    const hasFlaws = flaws.length > 0
+
+    if (!hasMerits && !hasFlaws) return null
+
     return (
         <>
-            <Grid.Col span={phoneScreen ? 12 : 6}>
+            {hasMerits ? <Grid.Col span={phoneScreen ? 12 : 6}>
                 <Stack gap={"sm"}>
                     <GeneratorSectionDivider
                         label="Thin-blood merits"
@@ -997,12 +1070,12 @@ function thinBloodMeritsAndFlawsComponent(
                         lineHeight={1}
                         marginY="xs"
                     />
-                    {essentialThinbloodMeritsAndFlaws.merits.map((merit) =>
+                    {merits.map((merit) =>
                         getMeritOrFlawLine(merit, "merit")
                     )}
                 </Stack>
-            </Grid.Col>
-            <Grid.Col span={phoneScreen ? 12 : 6}>
+            </Grid.Col> : null}
+            {hasFlaws ? <Grid.Col span={phoneScreen ? 12 : 6}>
                 <Stack gap={"sm"}>
                     <GeneratorSectionDivider
                         label="Thin-blood flaws"
@@ -1011,11 +1084,11 @@ function thinBloodMeritsAndFlawsComponent(
                         lineHeight={1}
                         marginY="xs"
                     />
-                    {essentialThinbloodMeritsAndFlaws.flaws.map((flaw) =>
+                    {flaws.map((flaw) =>
                         getMeritOrFlawLine(flaw, "flaw")
                     )}
                 </Stack>
-            </Grid.Col>
+            </Grid.Col> : null}
 
             <Grid.Col span={12}>
                 <Divider mt={0} w={"100%"} my={"sm"} color="rgba(255, 255, 255, 0.1)" />
