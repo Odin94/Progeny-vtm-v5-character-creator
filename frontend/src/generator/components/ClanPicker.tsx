@@ -77,10 +77,13 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                         event.currentTarget.style.boxShadow = ""
                     }}
                     onClick={() => {
-                        const clanChanged = clan !== character.clan || character.homebrewClan !== undefined
+                        const clanChanged =
+                            clan !== character.clan || character.homebrewClan !== undefined
                         const predatorType =
                             clan === "Thin-blood" ||
-                            clans[clan].excludedPredatorTypes.includes(character.predatorType.name)
+                            (clans[clan].excludedPredatorTypes ?? []).includes(
+                                character.predatorType.name
+                            )
                                 ? getEmptyCharacter().predatorType
                                 : character.predatorType
                         const newMerits =

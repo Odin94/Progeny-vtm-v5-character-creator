@@ -75,6 +75,15 @@ test("Ventrue-locked predator types stay legible and openable", async ({ page })
     await expect(page.getByTestId("predator-type-confirm-button")).toBeEnabled()
 })
 
+test("clans without predator-type restrictions can be selected", async ({ page }) => {
+    await page.goto("/create")
+    await page.getByTestId("cookie-banner-close").click()
+
+    await page.getByTestId("clan-brujah-card").click()
+
+    await expect(page).toHaveURL(/#attributes$/)
+})
+
 test("Thin-blood characters cannot select or confirm a predator type", async ({ page }) => {
     await page.goto("/create")
     await page.getByTestId("cookie-banner-close").click()
