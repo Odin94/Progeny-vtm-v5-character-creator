@@ -10,7 +10,8 @@ import {
     Modal,
     Stack,
     Text,
-    Title
+    Title,
+    Tooltip
 } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -73,6 +74,14 @@ const DisciplineSelectModal = ({
         ])
     }
 
+    const captureModalEvent = (event: string, properties: Record<string, unknown>) => {
+        try {
+            posthog.capture(event, properties)
+        } catch (error) {
+            console.warn(`PostHog ${event} tracking failed:`, error)
+        }
+    }
+
     useEffect(() => {
         if (!opened) {
             setContentReady(false)
@@ -81,6 +90,21 @@ const DisciplineSelectModal = ({
 
         const frame = window.requestAnimationFrame(() => setContentReady(true))
         return () => window.cancelAnimationFrame(frame)
+    }, [opened])
+
+    // No open/close event existed, so every failure in here was only visible from a replay.
+    useEffect(() => {
+        if (!opened) return
+        captureModalEvent("sheet-discipline-modal-opened", {
+            discipline: initialDiscipline ?? null,
+            mode: options.mode
+        })
+        return () => {
+            captureModalEvent("sheet-discipline-modal-closed", {
+                mode: options.mode
+            })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [opened])
 
     useEffect(() => {
@@ -114,40 +138,48 @@ const DisciplineSelectModal = ({
         const discipline = disciplineCatalog[disciplineName]
         if (!discipline) return []
 
-        const currentLevel = getCurrentDisciplineLevel(disciplineName)
-        const maxLevel = currentLevel === 0 ? 1 : currentLevel + 1
         const characterPowerIds = new Set(character.disciplines.map(getPowerIdentity))
 
         return discipline.powers.filter(
-            (power) => !characterPowerIds.has(getPowerIdentity(power)) && power.level <= maxLevel
+            (power) => !characterPowerIds.has(getPowerIdentity(power))
         )
     }
 
-    const hasAmalgamPrerequisites = (power: Power): boolean => {
+    // Powers the character cannot take yet stay on screen but disabled, with the reason spelled
+    // out. Hiding them left users with no way to learn which lower power unlocks the one they want.
+    const getPowerDisabledReasons = (power: Power): string[] => {
+        const reasons: string[] = []
+
+        if (selectedDiscipline) {
+            const currentLevel = getCurrentDisciplineLevel(selectedDiscipline)
+            const maxLevel = currentLevel === 0 ? 1 : currentLevel + 1
+            if (power.level > maxLevel) {
+                const disciplineLabel = upcase(
+                    disciplineCatalog[selectedDiscipline]?.name ?? selectedDiscipline
+                )
+                reasons.push(`Requires ${disciplineLabel} Level ${power.level - 1}`)
+            }
+        }
+
         for (const {
             discipline: requiredDiscipline,
             level: requiredLevel
         } of power.amalgamPrerequisites) {
-            const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
-            if (characterDisciplineLevel < requiredLevel) {
-                return false
+            if (getCurrentDisciplineLevel(requiredDiscipline) < requiredLevel) {
+                reasons.push(`Requires ${upcase(requiredDiscipline)} Level ${requiredLevel}`)
             }
         }
-        return true
+
+        return reasons
     }
 
-    const getAmalgamTooltip = (power: Power): string | null => {
-        const missingPrereqs: string[] = []
-        for (const {
-            discipline: requiredDiscipline,
-            level: requiredLevel
-        } of power.amalgamPrerequisites) {
-            const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
-            if (characterDisciplineLevel < requiredLevel) {
-                missingPrereqs.push(`${upcase(requiredDiscipline)} Level ${requiredLevel}`)
-            }
-        }
-        return missingPrereqs.length > 0 ? `Requires: ${missingPrereqs.join(", ")}` : null
+    const getPowerXpCost = (power: Power): number | null => {
+        if (options.mode !== "xp" || !selectedDiscipline) return null
+        const currentCount = getCurrentDisciplineLevel(selectedDiscipline)
+        const identity = getPowerDisciplineIdentity(power)
+        const nextCost = getDisciplineCost(character, power.discipline, identity)
+        const perLevelCost = nextCost / (currentCount + 1)
+        return Math.round(perLevelCost * power.level)
     }
 
     const clanDisciplines = new Set(
@@ -218,19 +250,25 @@ const DisciplineSelectModal = ({
             return updatedCharacter
         })
 
-        try {
-            posthog.capture("sheet-power-pick", {
-                power_name: power.name,
-                discipline: power.discipline,
-                level: power.level,
-                mode: options.mode
-            })
-        } catch (error) {
-            console.warn("PostHog sheet-power-pick tracking failed:", error)
-        }
+        captureModalEvent("sheet-power-pick", {
+            power_name: power.name,
+            discipline: power.discipline,
+            level: power.level,
+            mode: options.mode
+        })
 
         onClose()
         setSelectedDiscipline(null)
+    }
+
+    const handleBlockedPick = (power: Power, reason: string) => {
+        captureModalEvent("sheet-power-pick-blocked", {
+            power_name: power.name,
+            discipline: power.discipline,
+            level: power.level,
+            reason,
+            mode: options.mode
+        })
     }
 
     const handleBack = () => {
@@ -272,8 +310,9 @@ const DisciplineSelectModal = ({
                             onCreateCustomPower={() => setCustomPowerModalOpened(true)}
                             hideBackButton={hideBackButton}
                             character={character}
-                            hasAmalgamPrerequisites={hasAmalgamPrerequisites}
-                            getAmalgamTooltip={getAmalgamTooltip}
+                            getPowerDisabledReasons={getPowerDisabledReasons}
+                            getPowerXpCost={getPowerXpCost}
+                            onBlockedPick={handleBlockedPick}
                         />
                     ) : opened ? (
                         <>
@@ -350,14 +389,21 @@ const DisciplineSelectModal = ({
                                                                     }}
                                                                 >
                                                                     {discipline.summary ? (
-                                                                        <Text
-                                                                            size="sm"
-                                                                            c="dimmed"
-                                                                            ta="center"
-                                                                            lineClamp={2}
+                                                                        <Tooltip
+                                                                            label={discipline.summary}
+                                                                            multiline
+                                                                            w={260}
+                                                                            withArrow
                                                                         >
-                                                                            {discipline.summary}
-                                                                        </Text>
+                                                                            <Text
+                                                                                size="sm"
+                                                                                c="dimmed"
+                                                                                ta="center"
+                                                                                lineClamp={2}
+                                                                            >
+                                                                                {discipline.summary}
+                                                                            </Text>
+                                                                        </Tooltip>
                                                                     ) : null}
                                                                 </Box>
                                                             </Stack>
@@ -444,8 +490,9 @@ type PowerPickerProps = {
     onCreateCustomPower: () => void
     hideBackButton?: boolean
     character: Character
-    hasAmalgamPrerequisites: (power: Power) => boolean
-    getAmalgamTooltip: (power: Power) => string | null
+    getPowerDisabledReasons: (power: Power) => string[]
+    getPowerXpCost: (power: Power) => number | null
+    onBlockedPick: (power: Power, reason: string) => void
 }
 
 const PowerPicker = ({
@@ -456,8 +503,9 @@ const PowerPicker = ({
     onCreateCustomPower,
     hideBackButton,
     character,
-    hasAmalgamPrerequisites,
-    getAmalgamTooltip
+    getPowerDisabledReasons,
+    getPowerXpCost,
+    onBlockedPick
 }: PowerPickerProps) => {
     const powersByLevel = new Map<number, Power[]>()
     availablePowers.forEach((power) => {
@@ -504,8 +552,11 @@ const PowerPicker = ({
                                 </Title>
                                 <Grid gutter="md">
                                     {powers.map((power) => {
-                                        const hasAmalgams = hasAmalgamPrerequisites(power)
-                                        const amalgamTooltip = getAmalgamTooltip(power)
+                                        const disabledReasons = getPowerDisabledReasons(power)
+                                        const disabledTooltip =
+                                            disabledReasons.join(" · ") || null
+                                        const disabled = disabledTooltip !== null
+                                        const xpCost = getPowerXpCost(power)
                                         return (
                                             <Grid.Col
                                                 key={getPowerIdentity(power)}
@@ -514,15 +565,27 @@ const PowerPicker = ({
                                                 <DisciplinePowerCard
                                                     power={power}
                                                     primaryColor={primaryColor}
-                                                    onClick={
-                                                        hasAmalgams
-                                                            ? () => onSelectPower(power)
-                                                            : undefined
+                                                    onClick={() => onSelectPower(power)}
+                                                    onDisabledClick={() =>
+                                                        onBlockedPick(power, disabledTooltip ?? "")
                                                     }
                                                     inModal={true}
                                                     character={character}
-                                                    disabled={!hasAmalgams}
-                                                    disabledTooltip={amalgamTooltip}
+                                                    disabled={disabled}
+                                                    disabledTooltip={disabledTooltip}
+                                                    renderActions={
+                                                        xpCost !== null
+                                                            ? () => (
+                                                                  <Badge
+                                                                      size="sm"
+                                                                      variant="light"
+                                                                      color={primaryColor}
+                                                                  >
+                                                                      {xpCost} XP
+                                                                  </Badge>
+                                                              )
+                                                            : undefined
+                                                    }
                                                 />
                                             </Grid.Col>
                                         )
