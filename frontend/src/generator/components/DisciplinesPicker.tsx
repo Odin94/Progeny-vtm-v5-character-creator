@@ -83,6 +83,9 @@ const DisciplinesPicker = ({
 }: DisciplinesPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
     const [hoveredTakeButton, setHoveredTakeButton] = useState<string | null>(null)
+    const [blockedPowerAttempts, setBlockedPowerAttempts] = useState<Set<string>>(
+        () => new Set()
+    )
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
 
     let allPickedPowers = pickedPredatorTypePower
@@ -246,6 +249,8 @@ const DisciplinesPicker = ({
         const showUndo = picked && !isPickedAsPredatorType && !isPickedAsClan
         const takeButtonHoverKey = `${isForPredatorType ? "predator" : "clan"}-${getPowerIdentity(power)}`
         const takeButtonHovered = hoveredTakeButton === takeButtonHoverKey
+        const showBlockedReasons =
+            takeDisabled && blockedPowerAttempts.has(takeButtonHoverKey)
 
         return (
             <div
@@ -386,10 +391,10 @@ const DisciplinesPicker = ({
                                 }}
                                 onClick={(event) => {
                                     if (takeDisabled) {
-                                        // The reason is rendered inline on the card below, so
-                                        // there's nothing to surface here beyond swallowing the
-                                        // click on an untakeable power.
                                         event.preventDefault()
+                                        setBlockedPowerAttempts((attempted) =>
+                                            new Set(attempted).add(takeButtonHoverKey)
+                                        )
                                         return
                                     }
 
@@ -406,7 +411,7 @@ const DisciplinesPicker = ({
                             </Button>
                         )
 
-                        if (takeDisabled) {
+                        if (showBlockedReasons) {
                             return (
                                 <>
                                     {takeButton}
