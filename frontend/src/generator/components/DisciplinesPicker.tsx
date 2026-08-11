@@ -8,8 +8,7 @@ import {
     List,
     ScrollArea,
     Stack,
-    Text,
-    Tooltip
+    Text
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
@@ -127,13 +126,13 @@ const DisciplinesPicker = ({
     }
 
     const allPowersPicked = () => pickedPowers.length >= 3
-    const confirmTooltip = (() => {
+    const confirmReason = (() => {
         if (pickedPowers.length < 2) return "Pick two clan disciplines"
         if (!allPowersPicked()) return "Pick another clan discipline"
         if (!pickedPredatorTypePower) return "Pick predator type discipline"
         return undefined
     })()
-    const confirmDisabled = Boolean(confirmTooltip)
+    const confirmDisabled = Boolean(confirmReason)
     const getPickedPowerCountForDiscipline = (
         disciplineName: string,
         discipline: Discipline | HomebrewDisciplineOption,
@@ -591,6 +590,20 @@ const DisciplinesPicker = ({
                             {upcase(disciplineLabel)}
                         </Text>
                         <DisciplineDots count={pickedPowerCount} />
+                        {pickedPowerCount > 0 && (
+                            <Text
+                                component="span"
+                                ml={8}
+                                style={{
+                                    fontFamily: "Inter, sans-serif",
+                                    fontSize: "0.72rem",
+                                    letterSpacing: "0.04em",
+                                    color: rgba(RAW_GREY, 0.55)
+                                }}
+                            >
+                                {pickedPowerCount} picked
+                            </Text>
+                        )}
                     </Group>
                 </Accordion.Control>
                 <Accordion.Panel>
@@ -811,100 +824,104 @@ const DisciplinesPicker = ({
                             )}
                         </Accordion>
 
-                        <Group justify="center" mt="xl">
-                            <Tooltip
-                                label={confirmTooltip}
-                                disabled={!confirmDisabled}
-                                withArrow
-                                events={globals.tooltipTriggerEvents}
-                            >
-                                <span>
-                                    <Button
-                                        data-testid="disciplines-confirm-button"
-                                        disabled={confirmDisabled}
-                                        color="grape"
-                                        styles={{
-                                            ...generatorConfirmButtonStyles,
-                                            root: {
-                                                ...generatorConfirmButtonStyles.root,
-                                                background: confirmDisabled
-                                                    ? "rgba(80, 80, 80, 0.75)"
-                                                    : generatorConfirmButtonStyles.root.background,
-                                                boxShadow: confirmDisabled
-                                                    ? "none"
-                                                    : generatorConfirmButtonStyles.root.boxShadow,
-                                                color: confirmDisabled
-                                                    ? rgba(RAW_GREY, 0.55)
-                                                    : undefined,
-                                                cursor: confirmDisabled ? "not-allowed" : undefined
-                                            }
-                                        }}
-                                        onClick={() => {
-                                            updateHealthAndWillpowerAndBloodPotencyAndHumanity(
-                                                character
-                                            )
-                                            const pickedDisciplineIdentities = new Set(
-                                                allPickedPowers.map(getPowerDisciplineIdentity)
-                                            )
-                                            const retainedCustomDisciplines = Object.entries(
-                                                character.customDisciplines
-                                            ).filter(([, definition]) => !definition.homebrewSource)
-                                            const pickedHomebrewDisciplines =
-                                                homebrewDisciplineItems
-                                                    .map(({ item, collection }) => {
-                                                        const homebrewSource = getHomebrewSource(
-                                                            item,
-                                                            collection
-                                                        )
-                                                        const identity = `homebrew:${homebrewSource.collectionId}:${homebrewSource.itemId}`
-                                                        return [
-                                                            identity,
-                                                            {
-                                                                name: item.name,
-                                                                summary: item.summary,
-                                                                logo: item.logo,
-                                                                homebrewSource
-                                                            }
-                                                        ] as const
-                                                    })
-                                                    .filter(([identity]) =>
-                                                        pickedDisciplineIdentities.has(identity)
-                                                    )
-                                            const updatedCharacter = {
-                                                ...character,
-                                                disciplines: allPickedPowers,
-                                                customDisciplines: {
-                                                    ...Object.fromEntries(
-                                                        retainedCustomDisciplines
-                                                    ),
-                                                    ...Object.fromEntries(pickedHomebrewDisciplines)
-                                                },
-                                                rituals: containsBloodSorcery(allPickedPowers)
-                                                    ? character.rituals
-                                                    : [],
-                                                ceremonies: containsOblivion(allPickedPowers)
-                                                    ? character.ceremonies
-                                                    : []
-                                            }
-                                            trackEvent({
-                                                action: "disciplines confirm clicked",
-                                                category: "disciplines",
-                                                label: allPickedPowers
-                                                    .map(
-                                                        (pickedPower) =>
-                                                            `${pickedPower.discipline}: ${pickedPower.name}`
-                                                    )
-                                                    .join(", ")
+                        <Stack gap="xs" align="center" mt="xl">
+                            {confirmReason ? (
+                                <Text
+                                    data-testid="disciplines-confirm-reason"
+                                    ta="center"
+                                    style={{
+                                        fontFamily: "Inter, sans-serif",
+                                        fontSize: "0.82rem",
+                                        color: rgba(RAW_RED, 0.85)
+                                    }}
+                                >
+                                    {confirmReason}
+                                </Text>
+                            ) : null}
+                            <Button
+                                data-testid="disciplines-confirm-button"
+                                disabled={confirmDisabled}
+                                color="grape"
+                                styles={{
+                                    ...generatorConfirmButtonStyles,
+                                    root: {
+                                        ...generatorConfirmButtonStyles.root,
+                                        background: confirmDisabled
+                                            ? "rgba(80, 80, 80, 0.75)"
+                                            : generatorConfirmButtonStyles.root.background,
+                                        boxShadow: confirmDisabled
+                                            ? "none"
+                                            : generatorConfirmButtonStyles.root.boxShadow,
+                                        color: confirmDisabled
+                                            ? rgba(RAW_GREY, 0.55)
+                                            : undefined,
+                                        cursor: confirmDisabled ? "not-allowed" : undefined
+                                    }
+                                }}
+                                onClick={() => {
+                                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                        character
+                                    )
+                                    const pickedDisciplineIdentities = new Set(
+                                        allPickedPowers.map(getPowerDisciplineIdentity)
+                                    )
+                                    const retainedCustomDisciplines = Object.entries(
+                                        character.customDisciplines
+                                    ).filter(([, definition]) => !definition.homebrewSource)
+                                    const pickedHomebrewDisciplines =
+                                        homebrewDisciplineItems
+                                            .map(({ item, collection }) => {
+                                                const homebrewSource = getHomebrewSource(
+                                                    item,
+                                                    collection
+                                                )
+                                                const identity = `homebrew:${homebrewSource.collectionId}:${homebrewSource.itemId}`
+                                                return [
+                                                    identity,
+                                                    {
+                                                        name: item.name,
+                                                        summary: item.summary,
+                                                        logo: item.logo,
+                                                        homebrewSource
+                                                    }
+                                                ] as const
                                             })
-                                            setCharacter(updatedCharacter)
-                                            nextStep(updatedCharacter)
-                                        }}
-                                    >
-                                        Confirm
-                                    </Button>
-                                </span>
-                            </Tooltip>
-                        </Group>
+                                            .filter(([identity]) =>
+                                                pickedDisciplineIdentities.has(identity)
+                                            )
+                                    const updatedCharacter = {
+                                        ...character,
+                                        disciplines: allPickedPowers,
+                                        customDisciplines: {
+                                            ...Object.fromEntries(
+                                                retainedCustomDisciplines
+                                            ),
+                                            ...Object.fromEntries(pickedHomebrewDisciplines)
+                                        },
+                                        rituals: containsBloodSorcery(allPickedPowers)
+                                            ? character.rituals
+                                            : [],
+                                        ceremonies: containsOblivion(allPickedPowers)
+                                            ? character.ceremonies
+                                            : []
+                                    }
+                                    trackEvent({
+                                        action: "disciplines confirm clicked",
+                                        category: "disciplines",
+                                        label: allPickedPowers
+                                            .map(
+                                                (pickedPower) =>
+                                                    `${pickedPower.discipline}: ${pickedPower.name}`
+                                            )
+                                            .join(", ")
+                                    })
+                                    setCharacter(updatedCharacter)
+                                    nextStep(updatedCharacter)
+                                }}
+                            >
+                                Confirm
+                            </Button>
+                        </Stack>
                     </Box>
                 </div>
             </ScrollArea>
