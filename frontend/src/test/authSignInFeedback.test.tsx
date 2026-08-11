@@ -218,6 +218,47 @@ describe("useAuth sign-in seed", () => {
     }, 10000)
 })
 
+describe("useAuth sign-in pending state", () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        sessionStorage.clear()
+        window.history.replaceState(null, "", "/sheet")
+        stubLocation()
+        mocks.getCurrentUser.mockResolvedValue(null)
+    })
+
+    afterEach(() => {
+        cleanup()
+        restoreLocation()
+    })
+
+    it("flips isSigningIn and captures sign_in_started on the first click", () => {
+        const { result } = renderHook(() => useAuth(), { wrapper })
+
+        expect(result.current.isSigningIn).toBe(false)
+
+        act(() => {
+            result.current.signIn()
+        })
+
+        expect(result.current.isSigningIn).toBe(true)
+        expect(mocks.capture).toHaveBeenCalledWith("sign_in_started")
+    })
+
+    it("ignores repeat clicks while the redirect is in flight", () => {
+        const { result } = renderHook(() => useAuth(), { wrapper })
+
+        act(() => {
+            result.current.signIn()
+            result.current.signIn()
+            result.current.signIn()
+        })
+
+        const startedCalls = mocks.capture.mock.calls.filter((call) => call[0] === "sign_in_started")
+        expect(startedCalls).toHaveLength(1)
+    })
+})
+
 describe("AuthSignInConfirmation", () => {
     beforeEach(() => {
         vi.clearAllMocks()

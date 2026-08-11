@@ -23,7 +23,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
     const navigate = useNavigate()
     const location = useLocation()
     const queryClient = useQueryClient()
-    const { isAuthenticated, signIn, user } = useAuth()
+    const { isAuthenticated, signIn, isSigningIn, user } = useAuth()
     const smallScreen = globals.isSmallScreen
     const impersonation = user?.impersonation
     const isImpersonating = !!impersonation?.active
@@ -103,9 +103,18 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                             href="#"
                             underline="never"
                             onClick={handleAccountClick}
-                            style={navLinkStyle}
+                            aria-disabled={isSigningIn}
+                            style={
+                                isSigningIn
+                                    ? { ...navLinkStyle, opacity: 0.6, pointerEvents: "none" }
+                                    : navLinkStyle
+                            }
                         >
-                            {isAuthenticated ? "Account" : "Sign in"}
+                            {isAuthenticated
+                                ? "Account"
+                                : isSigningIn
+                                  ? "Signing in…"
+                                  : "Sign in"}
                         </Anchor>
                         {canUseAdminTools ? (
                             <Anchor
