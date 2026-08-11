@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { api, API_URL, type ApiError, type CurrentUser } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
@@ -228,10 +228,38 @@ export const useAuth = () => {
         }
     })
 
+    // The redirect to WorkOS is a full-document navigation that takes several
+    // seconds. isSigningIn lets callers render a pending label so the click is
+    // acknowledged, and the ref ignores repeat clicks while it is in flight.
+    const [isSigningIn, setIsSigningIn] = useState(false)
+    const signInStartedRef = useRef(false)
+
     const signIn = () => {
+        if (signInStartedRef.current) {
+            return
+        }
+        signInStartedRef.current = true
+        setIsSigningIn(true)
+
+        try {
+            posthog.capture("sign_in_started")
+        } catch (error) {
+            console.warn("PostHog capture failed:", error)
+        }
+
         const returnTo = getCurrentReturnTo()
         sessionStorage.setItem(AUTH_RETURN_TO_STORAGE_KEY, returnTo)
-        window.location.href = `${API_URL}/auth/login?returnTo=${encodeURIComponent(returnTo)}`
+        const target = `${API_URL}/auth/login?returnTo=${encodeURIComponent(returnTo)}`
+
+        // Let React paint the pending label before the full-document navigation
+        // starts. A synchronous window.location.href here preempts the render, so
+        // the page still looks unchanged for the seconds the redirect takes. Two
+        // animation frames guarantee one paint of the pending state first.
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                window.location.href = target
+            })
+        })
     }
 
     const signOut = () => {
@@ -261,6 +289,7 @@ export const useAuth = () => {
         isLoading,
         isAuthenticated: !!currentUser,
         signIn,
+        isSigningIn,
         signOut,
         refreshAuth,
         handleCallback: handleCallbackMutation.mutate,

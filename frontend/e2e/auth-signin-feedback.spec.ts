@@ -37,6 +37,40 @@ const mockAuthenticatedRecentChanges = async (page: import("@playwright/test").P
     })
 }
 
+test("the topbar Sign in link shows a pending label while the redirect is in flight", async ({
+    page
+}) => {
+    await page.addInitScript(() => {
+        localStorage.clear()
+        sessionStorage.clear()
+    })
+    // Anonymous user, so the topbar renders its "Sign in" link.
+    await page.route("**/api/auth/me", async (route) => {
+        await route.fulfill({ status: 401, contentType: "application/json", body: "{}" })
+    })
+    // Cancel the redirect to /auth/login so the page stays put and the pending
+    // state the user now sees remains observable.
+    let loginRequests = 0
+    await page.route("**/api/auth/login**", async (route) => {
+        loginRequests += 1
+        await route.abort()
+    })
+
+    await page.goto("/features")
+
+    const topbar = page.getByRole("banner")
+    // noWaitAfter: the click starts a navigation we cancel, so do not block on it.
+    await topbar
+        .getByRole("link", { name: "Sign in", exact: true })
+        .click({ noWaitAfter: true })
+
+    // The click is now acknowledged: the label flips to a pending state instead
+    // of sitting silent, and the plain "Sign in" link is gone.
+    await expect(topbar.getByText("Signing in…", { exact: true })).toBeVisible()
+    await expect(topbar.getByRole("link", { name: "Sign in", exact: true })).toHaveCount(0)
+    await expect.poll(() => loginRequests).toBe(1)
+})
+
 test("without the sign-in seed, the topbar flashes its logged-out state", async ({ page }) => {
     await page.addInitScript(() => {
         localStorage.clear()

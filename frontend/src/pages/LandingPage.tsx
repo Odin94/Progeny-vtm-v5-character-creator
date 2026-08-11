@@ -38,9 +38,16 @@ type FeatureCardProps = {
     bullets: string[]
     primaryLabel: string
     onPrimaryClick: () => void
+    primaryLoading?: boolean
 }
 
-function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick }: FeatureCardProps) {
+function FeatureCard({
+    title,
+    bullets,
+    primaryLabel,
+    onPrimaryClick,
+    primaryLoading
+}: FeatureCardProps) {
     return (
         <Card radius="lg" p="xl" className="landing-page__feature-card">
             <Stack gap="xl" className="landing-page__feature-card-inner">
@@ -66,6 +73,7 @@ function FeatureCard({ title, bullets, primaryLabel, onPrimaryClick }: FeatureCa
                         variant="transparent"
                         className="landing-page__card-button"
                         onClick={onPrimaryClick}
+                        loading={primaryLoading}
                     >
                         {primaryLabel}
                     </Button>
@@ -80,7 +88,7 @@ export default function LandingPage() {
     const shouldReduceMotion = useReducedMotion()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
-    const { isAuthenticated, signIn } = useAuth()
+    const { isAuthenticated, signIn, isSigningIn } = useAuth()
     const [character, setCharacter] = useCharacterLocalStorage()
     const [, setStoredSelectedStep] = useLocalStorage<GeneratorStepId>({
         key: "selectedGeneratorStep",
@@ -337,7 +345,14 @@ export default function LandingPage() {
                                     "Share your characters with your coterie",
                                     "Chat and auto-share dice rolls in play sessions"
                                 ]}
-                                primaryLabel={isAuthenticated ? "Account" : "Sign in"}
+                                primaryLabel={
+                                    isAuthenticated
+                                        ? "Account"
+                                        : isSigningIn
+                                          ? "Signing in…"
+                                          : "Sign in"
+                                }
+                                primaryLoading={!isAuthenticated && isSigningIn}
                                 onPrimaryClick={openAccountArea}
                             />
                         </Grid.Col>
@@ -415,12 +430,18 @@ export default function LandingPage() {
                                     href="#"
                                     underline="never"
                                     className="landing-page__link"
+                                    aria-disabled={isSigningIn}
+                                    style={
+                                        isSigningIn
+                                            ? { opacity: 0.6, pointerEvents: "none" }
+                                            : undefined
+                                    }
                                     onClick={(event) => {
                                         event.preventDefault()
                                         openAccountArea()
                                     }}
                                 >
-                                    Sign In
+                                    {isSigningIn ? "Signing in…" : "Sign In"}
                                 </Anchor>
                             </Group>
                         </Stack>
