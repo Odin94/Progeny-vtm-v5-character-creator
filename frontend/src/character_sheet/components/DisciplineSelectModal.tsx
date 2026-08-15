@@ -175,11 +175,7 @@ const DisciplineSelectModal = ({
 
     const getPowerXpCost = (power: Power): number | null => {
         if (options.mode !== "xp" || !selectedDiscipline) return null
-        const currentCount = getCurrentDisciplineLevel(selectedDiscipline)
-        const identity = getPowerDisciplineIdentity(power)
-        const nextCost = getDisciplineCost(character, power.discipline, identity)
-        const perLevelCost = nextCost / (currentCount + 1)
-        return Math.round(perLevelCost * power.level)
+        return getDisciplineCost(character, power.discipline, getPowerDisciplineIdentity(power))
     }
 
     const clanDisciplines = new Set(
