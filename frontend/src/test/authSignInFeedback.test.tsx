@@ -43,7 +43,7 @@ vi.mock("~/components/RenderProfiler", () => ({
 
 import { AuthCallback } from "~/routes/auth.callback"
 import { AuthSignInConfirmation } from "~/components/AuthSignInConfirmation"
-import { readAuthSignInSeed, useAuth } from "~/hooks/useAuth"
+import { clearSignInPending, readAuthSignInSeed, useAuth } from "~/hooks/useAuth"
 import type { CurrentUser } from "~/utils/api"
 
 const testUser: CurrentUser = {
@@ -117,6 +117,7 @@ const wrapper = ({ children }: { children: ReactNode }) => {
 describe("auth callback success feedback + telemetry", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        clearSignInPending()
         sessionStorage.clear()
         stubLocation()
     })
@@ -221,6 +222,7 @@ describe("useAuth sign-in seed", () => {
 describe("useAuth sign-in pending state", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        clearSignInPending()
         sessionStorage.clear()
         window.history.replaceState(null, "", "/sheet")
         stubLocation()
@@ -256,6 +258,15 @@ describe("useAuth sign-in pending state", () => {
 
         const startedCalls = mocks.capture.mock.calls.filter((call) => call[0] === "sign_in_started")
         expect(startedCalls).toHaveLength(1)
+    })
+
+    it("shares the pending state across useAuth callers", () => {
+        const first = renderHook(() => useAuth(), { wrapper })
+        const second = renderHook(() => useAuth(), { wrapper })
+
+        act(() => first.result.current.signIn())
+
+        expect(second.result.current.isSigningIn).toBe(true)
     })
 })
 
