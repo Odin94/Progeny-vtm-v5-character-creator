@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useRef, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react"
 import { api, API_URL, type ApiError, type CurrentUser } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
@@ -188,12 +188,12 @@ export const useAuth = () => {
         }
     }, [currentUser])
 
-    const refreshAuth = async () => {
+    const refreshAuth = useCallback(async () => {
         // Invalidate the query cache first to force a fresh fetch
         queryClient.invalidateQueries({ queryKey: ["auth", "me"] })
         // Then refetch
         return refetch()
-    }
+    }, [queryClient, refetch])
 
     const logoutMutation = useMutation({
         mutationFn: () => api.logout(),

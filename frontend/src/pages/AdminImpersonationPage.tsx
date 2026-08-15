@@ -37,7 +37,7 @@ const getUserLabel = (user: AdminUser) =>
     user.nickname || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
 
 const AdminImpersonationPage = () => {
-    const { user, isLoading, isAuthenticated, signIn, refetch } = useAuth()
+    const { user, isLoading, isAuthenticated, signIn, refreshAuth } = useAuth()
     const navigate = Route.useNavigate()
     const { tab: activeTab } = Route.useSearch()
     const queryClient = useQueryClient()
@@ -56,14 +56,14 @@ const AdminImpersonationPage = () => {
     useEffect(() => {
         let mounted = true
 
-        void refetch().finally(() => {
+        void refreshAuth().finally(() => {
             if (mounted) setIsVerifyingAdminSession(false)
         })
 
         return () => {
             mounted = false
         }
-    }, [refetch])
+    }, [refreshAuth])
 
     const usersQuery = useQuery({
         queryKey: ["admin", "users", query, page],
