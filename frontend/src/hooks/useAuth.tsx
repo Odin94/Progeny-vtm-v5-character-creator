@@ -113,6 +113,14 @@ export const useAuth = () => {
         () => false
     )
 
+    useEffect(() => {
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) clearSignInPending()
+        }
+        window.addEventListener("pageshow", handlePageShow)
+        return () => window.removeEventListener("pageshow", handlePageShow)
+    }, [])
+
     const {
         data: user,
         isLoading,

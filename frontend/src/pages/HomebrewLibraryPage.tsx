@@ -75,7 +75,7 @@ const formatRequestOpenedDate = (createdAt: string) =>
 const HomebrewLibraryPage = () => {
     const client = useQueryClient()
     const navigate = useNavigate()
-    const { user, isAuthenticated, signIn } = useAuth()
+    const { user, isAuthenticated, signIn, isSigningIn } = useAuth()
     const hasSuperadminPrivileges =
         (user?.actorIsSuperadmin ?? false) && !user?.impersonation.active
     const { data: collections = [] } = useHomebrewCollections(isAuthenticated)
@@ -169,8 +169,11 @@ const HomebrewLibraryPage = () => {
                                     onClick={() =>
                                         isAuthenticated ? setPublishOpened(true) : signIn()
                                     }
+                                    loading={!isAuthenticated && isSigningIn}
                                 >
-                                    Request to publish
+                                    {!isAuthenticated && isSigningIn
+                                        ? "Signing in…"
+                                        : "Request to publish"}
                                 </Button>
                             </Group>
                         </Group>
@@ -281,7 +284,7 @@ const HomebrewLibraryPage = () => {
                                                         </Text>
                                                         <BloodRating
                                                             value={entry.averageRating}
-                                                            interactive={canRate}
+                                                            interactive={canRate && !isSigningIn}
                                                             onChange={(rating) => {
                                                                 if (isAuthenticated) {
                                                                     rateMutation.mutate({
@@ -293,6 +296,9 @@ const HomebrewLibraryPage = () => {
                                                                 }
                                                             }}
                                                         />
+                                                        {!isAuthenticated && isSigningIn ? (
+                                                            <Text size="xs">Signing in…</Text>
+                                                        ) : null}
                                                         <Text size="xs" c="dimmed">
                                                             {entry.ratingCount} ratings
                                                         </Text>

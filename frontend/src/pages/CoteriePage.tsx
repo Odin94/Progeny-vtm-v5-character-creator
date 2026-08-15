@@ -83,7 +83,7 @@ const formatDateTime = (value: string) =>
     })
 
 const CoteriePage = ({ coterieId }: CoteriePageProps) => {
-    const { user, isLoading: authLoading, isAuthenticated, signIn } = useAuth()
+    const { user, isLoading: authLoading, isAuthenticated, signIn, isSigningIn } = useAuth()
     const {
         data: coterie,
         isLoading: coterieLoading,
@@ -428,8 +428,8 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                         <Text size="lg" fw={500}>
                             Sign in to view this coterie
                         </Text>
-                        <Button color="red" onClick={() => signIn()}>
-                            Sign in
+                        <Button color="red" onClick={signIn} loading={isSigningIn}>
+                            {isSigningIn ? "Signing in…" : "Sign in"}
                         </Button>
                     </Stack>
                 </Card>

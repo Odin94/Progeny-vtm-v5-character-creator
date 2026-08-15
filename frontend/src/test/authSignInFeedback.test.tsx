@@ -268,6 +268,17 @@ describe("useAuth sign-in pending state", () => {
 
         expect(second.result.current.isSigningIn).toBe(true)
     })
+
+    it("clears pending state when a page is restored from BFCache", () => {
+        const { result } = renderHook(() => useAuth(), { wrapper })
+        act(() => result.current.signIn())
+
+        const pageShow = new Event("pageshow")
+        Object.defineProperty(pageShow, "persisted", { value: true })
+        act(() => window.dispatchEvent(pageShow))
+
+        expect(result.current.isSigningIn).toBe(false)
+    })
 })
 
 describe("AuthSignInConfirmation", () => {

@@ -250,6 +250,7 @@ const MePage = () => {
         updateProfile,
         isUpdatingProfile,
         signIn,
+        isSigningIn,
         signOut
     } = useAuth()
     const { data: characters } = useCharacters(isAuthenticated)
@@ -1692,8 +1693,8 @@ const MePage = () => {
                             <Text size="lg" fw={500}>
                                 Please log in to view your profile
                             </Text>
-                            <Button color="red" onClick={() => signIn()}>
-                                Sign in
+                            <Button color="red" onClick={signIn} loading={isSigningIn}>
+                                {isSigningIn ? "Signing in…" : "Sign in"}
                             </Button>
                             <Button
                                 component={Link}
