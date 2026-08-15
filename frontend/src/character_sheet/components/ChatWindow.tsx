@@ -106,7 +106,7 @@ const ChatWindow = ({
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const restoredSessionForUserRef = useRef<string | null>(null)
     const loadedOpenPanelDataRef = useRef(false)
-    const { user, isAuthenticated, signIn } = useAuth()
+    const { user, isAuthenticated, signIn, isSigningIn } = useAuth()
     const shouldReduceMotion = useReducedMotion()
 
     const {
@@ -803,8 +803,11 @@ const ChatWindow = ({
                                 {isAuthenticated ? (
                                     "Join or create a session to start chatting"
                                 ) : (
-                                    <Text style={{ cursor: "pointer" }} onClick={() => signIn()}>
-                                        Sign in to use chat
+                                    <Text
+                                        style={{ cursor: isSigningIn ? "default" : "pointer" }}
+                                        onClick={isSigningIn ? undefined : signIn}
+                                    >
+                                        {isSigningIn ? "Signing in…" : "Sign in to use chat"}
                                     </Text>
                                 )}
                             </Text>
