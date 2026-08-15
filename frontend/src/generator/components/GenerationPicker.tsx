@@ -1,6 +1,6 @@
 import { Box, Button, ScrollArea, Select, Stack, Text } from "@mantine/core"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { calculateBloodPotency } from "../../data/BloodPotency"
@@ -55,10 +55,22 @@ const generationOptions: GenerationOption[] = [
     { value: "10", label: "10th Gen - Ancilla", tier: "Ancilla" }
 ]
 
-const getGenerationBonusXp = (generation: number) => {
+export const getGenerationBonusXp = (generation: number) => {
     if (generation === 13 || generation === 12) return 15
     if (generation === 11 || generation === 10) return 35
     return 0
+}
+
+export const getCharacterWithGeneration = (character: Character, generation: number) => {
+    const updatedCharacter = {
+        ...character,
+        generation,
+        experience:
+            character.experience === 0 ? getGenerationBonusXp(generation) : character.experience
+    }
+    updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
+
+    return updatedCharacter
 }
 
 const getGenerationSummary = (generation: number) => {
@@ -101,12 +113,32 @@ const GenerationPicker = ({
         ? getGenerationSummary(parseInt(selectedGenerationValue, 10))
         : null
 
+    // Generation defaults to Neonate (or Thin-blood) in the UI. Persist that displayed choice
+    // immediately so sidebar navigation cannot leave a character with a shown XP bonus that was
+    // never written to the sheet.
+    useEffect(() => {
+        if (!selectedGenerationValue) return
+
+        const selectedGenerationNumber = parseInt(selectedGenerationValue, 10)
+        const updatedCharacter = getCharacterWithGeneration(character, selectedGenerationNumber)
+
+        if (
+            updatedCharacter.generation !== character.generation ||
+            updatedCharacter.experience !== character.experience
+        ) {
+            setCharacter(updatedCharacter)
+        }
+    }, [character, selectedGenerationValue, setCharacter])
+
     const handleGenerationChange = (value: string | null) => {
         if (value === null && selectedGenerationValue !== null) {
             return
         }
 
         setGeneration(value)
+        if (value !== null) {
+            setCharacter(getCharacterWithGeneration(character, parseInt(value, 10)))
+        }
     }
 
     const confirmButton = (
@@ -117,12 +149,7 @@ const GenerationPicker = ({
             styles={generatorConfirmButtonStyles}
             onClick={() => {
                 const genValue = parseInt(selectedGenerationValue ?? "0")
-                let experience = 0
-                if (character.experience === 0) {
-                    experience = getGenerationBonusXp(genValue)
-                }
-                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                setCharacter({ ...character, generation: genValue, experience })
+                setCharacter(getCharacterWithGeneration(character, genValue))
                 trackEvent({
                     action: "generation submit clicked",
                     category: "generation",
