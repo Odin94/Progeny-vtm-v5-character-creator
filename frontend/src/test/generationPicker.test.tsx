@@ -1,5 +1,5 @@
 import { MantineProvider } from "@mantine/core"
-import { render } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import GenerationPicker from "~/generator/components/GenerationPicker"
 import { getBasicTestCharacter } from "./testUtils"
@@ -29,6 +29,25 @@ globalThis.ResizeObserver = class {
 }
 
 describe("GenerationPicker", () => {
+    it("shows the displayed default in the Select", () => {
+        const character = getBasicTestCharacter()
+        character.generation = 0
+
+        render(
+            <MantineProvider>
+                <GenerationPicker
+                    character={character}
+                    setCharacter={vi.fn()}
+                    nextStep={vi.fn()}
+                    generation={null}
+                    setGeneration={vi.fn()}
+                />
+            </MantineProvider>
+        )
+
+        expect(screen.getByRole("combobox")).toHaveValue("13th Gen - Neonate")
+    })
+
     it("persists the displayed default Neonate generation and its XP bonus", () => {
         const character = getBasicTestCharacter()
         character.generation = 0
