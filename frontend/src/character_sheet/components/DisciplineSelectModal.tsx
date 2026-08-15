@@ -23,7 +23,7 @@ import { SheetOptions } from "../CharacterSheet"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import CustomDisciplineModal from "./CustomDisciplineModal"
 import CustomPowerModal from "./CustomPowerModal"
-import { getDisciplineCost } from "../utils/xp"
+import { canAffordUpgrade, getAvailableXP, getDisciplineCost } from "../utils/xp"
 import posthog from "posthog-js"
 import { IconPlus } from "@tabler/icons-react"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
@@ -170,6 +170,18 @@ const DisciplineSelectModal = ({
             }
         }
 
+        if (options.mode === "xp") {
+            const cost = getDisciplineCost(
+                character,
+                power.discipline,
+                getPowerDisciplineIdentity(power)
+            )
+            const availableXP = getAvailableXP(character)
+            if (!canAffordUpgrade(availableXP, cost)) {
+                reasons.push(`Insufficient XP. Need ${cost}, have ${availableXP}`)
+            }
+        }
+
         return reasons
     }
 
@@ -204,6 +216,7 @@ const DisciplineSelectModal = ({
     }
 
     const handleSelectPower = (power: Power) => {
+        if (getPowerDisabledReasons(power).length > 0) return
         setCharacter((current) => {
             const selectedOption = selectedDiscipline
                 ? disciplineCatalog[selectedDiscipline]
