@@ -195,7 +195,7 @@ const GenerationPicker = ({
 
                         <Stack align="center" gap="xl">
                             <Select
-                                value={generation}
+                                value={selectedGenerationValue}
                                 onChange={handleGenerationChange}
                                 placeholder="Select your generation"
                                 data={availableOptions}
