@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useSyncExternalStore } from "react"
 import { api, API_URL, type ApiError, type CurrentUser } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
@@ -9,6 +9,20 @@ const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
 const AUTH_SIGN_IN_SEED_KEY = "auth:signInSeed"
 const AUTH_SIGN_IN_CONFIRM_KEY = "auth:signInConfirm"
 const DEFAULT_POST_AUTH_PATH = "/"
+let signInPending = false
+const signInPendingListeners = new Set<() => void>()
+
+const setSignInPending = (pending: boolean) => {
+    signInPending = pending
+    signInPendingListeners.forEach((listener) => listener())
+}
+
+export const clearSignInPending = () => setSignInPending(false)
+
+const subscribeToSignInPending = (listener: () => void) => {
+    signInPendingListeners.add(listener)
+    return () => signInPendingListeners.delete(listener)
+}
 
 // After a successful sign-in the callback does a full-document navigation to the
 // returnTo path, which discards the in-memory react-query cache. Persisting the
@@ -93,6 +107,11 @@ export const getSafeAuthReturnTo = (candidate?: string | null) => {
 
 export const useAuth = () => {
     const queryClient = useQueryClient()
+    const isSigningIn = useSyncExternalStore(
+        subscribeToSignInPending,
+        () => signInPending,
+        () => false
+    )
 
     const {
         data: user,
@@ -231,15 +250,11 @@ export const useAuth = () => {
     // The redirect to WorkOS is a full-document navigation that takes several
     // seconds. isSigningIn lets callers render a pending label so the click is
     // acknowledged, and the ref ignores repeat clicks while it is in flight.
-    const [isSigningIn, setIsSigningIn] = useState(false)
-    const signInStartedRef = useRef(false)
-
     const signIn = () => {
-        if (signInStartedRef.current) {
+        if (signInPending) {
             return
         }
-        signInStartedRef.current = true
-        setIsSigningIn(true)
+        setSignInPending(true)
 
         try {
             posthog.capture("sign_in_started")
