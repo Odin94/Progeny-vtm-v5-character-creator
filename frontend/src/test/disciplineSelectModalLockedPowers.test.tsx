@@ -91,11 +91,13 @@ describe("DisciplineSelectModal locked powers", () => {
         )
     })
 
-    it("shows the XP cost on the power cards", async () => {
+    it("shows the same XP cost that the purchase flow will charge", async () => {
         renderModal()
 
         await screen.findByText("Blink")
-        expect(screen.getAllByText(/\d+ XP/).length).toBeGreaterThan(0)
+        // Celerity is not a clan discipline for this fixture, so its next
+        // power costs 14 XP. Blink's own level must not inflate this display.
+        expect(screen.getAllByText("14 XP").length).toBeGreaterThan(0)
     })
 
     it("captures a modal open event", async () => {
