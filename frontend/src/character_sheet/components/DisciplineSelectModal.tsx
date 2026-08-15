@@ -22,7 +22,7 @@ import { SheetOptions } from "../CharacterSheet"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import CustomDisciplineModal from "./CustomDisciplineModal"
 import CustomPowerModal from "./CustomPowerModal"
-import { getDisciplineCost } from "../utils/xp"
+import { canAffordUpgrade, getAvailableXP, getDisciplineCost } from "../utils/xp"
 import posthog from "posthog-js"
 import { IconPlus } from "@tabler/icons-react"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
@@ -123,19 +123,6 @@ const DisciplineSelectModal = ({
         )
     }
 
-    const hasAmalgamPrerequisites = (power: Power): boolean => {
-        for (const {
-            discipline: requiredDiscipline,
-            level: requiredLevel
-        } of power.amalgamPrerequisites) {
-            const characterDisciplineLevel = getCurrentDisciplineLevel(requiredDiscipline)
-            if (characterDisciplineLevel < requiredLevel) {
-                return false
-            }
-        }
-        return true
-    }
-
     const getAmalgamTooltip = (power: Power): string | null => {
         const missingPrereqs: string[] = []
         for (const {
@@ -148,6 +135,22 @@ const DisciplineSelectModal = ({
             }
         }
         return missingPrereqs.length > 0 ? `Requires: ${missingPrereqs.join(", ")}` : null
+    }
+
+    const getPowerDisabledReason = (power: Power): string | null => {
+        const amalgamReason = getAmalgamTooltip(power)
+        if (amalgamReason) return amalgamReason
+        if (options.mode !== "xp") return null
+
+        const cost = getDisciplineCost(
+            character,
+            power.discipline,
+            getPowerDisciplineIdentity(power)
+        )
+        const availableXP = getAvailableXP(character)
+        return canAffordUpgrade(availableXP, cost)
+            ? null
+            : `Insufficient XP. Need ${cost}, have ${availableXP}`
     }
 
     const clanDisciplines = new Set(
@@ -176,6 +179,7 @@ const DisciplineSelectModal = ({
     }
 
     const handleSelectPower = (power: Power) => {
+        if (getPowerDisabledReason(power)) return
         setCharacter((current) => {
             const selectedOption = selectedDiscipline
                 ? disciplineCatalog[selectedDiscipline]
@@ -272,8 +276,7 @@ const DisciplineSelectModal = ({
                             onCreateCustomPower={() => setCustomPowerModalOpened(true)}
                             hideBackButton={hideBackButton}
                             character={character}
-                            hasAmalgamPrerequisites={hasAmalgamPrerequisites}
-                            getAmalgamTooltip={getAmalgamTooltip}
+                            getPowerDisabledReason={getPowerDisabledReason}
                         />
                     ) : opened ? (
                         <>
@@ -444,8 +447,7 @@ type PowerPickerProps = {
     onCreateCustomPower: () => void
     hideBackButton?: boolean
     character: Character
-    hasAmalgamPrerequisites: (power: Power) => boolean
-    getAmalgamTooltip: (power: Power) => string | null
+    getPowerDisabledReason: (power: Power) => string | null
 }
 
 const PowerPicker = ({
@@ -456,8 +458,7 @@ const PowerPicker = ({
     onCreateCustomPower,
     hideBackButton,
     character,
-    hasAmalgamPrerequisites,
-    getAmalgamTooltip
+    getPowerDisabledReason
 }: PowerPickerProps) => {
     const powersByLevel = new Map<number, Power[]>()
     availablePowers.forEach((power) => {
@@ -504,8 +505,7 @@ const PowerPicker = ({
                                 </Title>
                                 <Grid gutter="md">
                                     {powers.map((power) => {
-                                        const hasAmalgams = hasAmalgamPrerequisites(power)
-                                        const amalgamTooltip = getAmalgamTooltip(power)
+                                        const disabledTooltip = getPowerDisabledReason(power)
                                         return (
                                             <Grid.Col
                                                 key={getPowerIdentity(power)}
@@ -515,14 +515,14 @@ const PowerPicker = ({
                                                     power={power}
                                                     primaryColor={primaryColor}
                                                     onClick={
-                                                        hasAmalgams
-                                                            ? () => onSelectPower(power)
-                                                            : undefined
+                                                        disabledTooltip
+                                                            ? undefined
+                                                            : () => onSelectPower(power)
                                                     }
                                                     inModal={true}
                                                     character={character}
-                                                    disabled={!hasAmalgams}
-                                                    disabledTooltip={amalgamTooltip}
+                                                    disabled={!!disabledTooltip}
+                                                    disabledTooltip={disabledTooltip}
                                                 />
                                             </Grid.Col>
                                         )

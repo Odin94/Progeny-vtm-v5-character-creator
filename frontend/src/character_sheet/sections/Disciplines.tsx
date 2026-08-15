@@ -529,21 +529,46 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         }}
                                                     >
                                                         {customDiscipline?.homebrewSource ? (
-                                                            <ActionIcon
-                                                                size="lg"
-                                                                radius="xl"
-                                                                variant="light"
-                                                                color={primaryColor}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    setInitialDiscipline(
-                                                                        catalogKey as DisciplineName
-                                                                    )
-                                                                    setModalOpened(true)
-                                                                }}
-                                                            >
-                                                                <IconPlus size={18} />
-                                                            </ActionIcon>
+                                                            mode === "xp" ? (
+                                                                <XpAddButton
+                                                                    cost={getDisciplineCost(
+                                                                        character,
+                                                                        disciplineName,
+                                                                        identity
+                                                                    )}
+                                                                    availableXP={getAvailableXP(
+                                                                        character
+                                                                    )}
+                                                                    onAdd={() => {
+                                                                        setInitialDiscipline(
+                                                                            catalogKey as DisciplineName
+                                                                        )
+                                                                        setModalOpened(true)
+                                                                    }}
+                                                                    blockedEvent="sheet-power-pick-blocked"
+                                                                    eventProperties={{
+                                                                        discipline: disciplineName
+                                                                    }}
+                                                                    primaryColor={primaryColor}
+                                                                    ariaLabel={`Add ${upcase(disciplineName)} power`}
+                                                                />
+                                                            ) : (
+                                                                <ActionIcon
+                                                                    size="lg"
+                                                                    radius="xl"
+                                                                    variant="light"
+                                                                    color={primaryColor}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        setInitialDiscipline(
+                                                                            catalogKey as DisciplineName
+                                                                        )
+                                                                        setModalOpened(true)
+                                                                    }}
+                                                                >
+                                                                    <IconPlus size={18} />
+                                                                </ActionIcon>
+                                                            )
                                                         ) : isCustom ? (
                                                             <ActionIcon
                                                                 size="lg"
