@@ -14,12 +14,14 @@ import {
 import { useDisclosure } from "@mantine/hooks"
 import { IconArrowUpRight, IconBook2, IconPhoto } from "@tabler/icons-react"
 import { Link } from "@tanstack/react-router"
+import type { ReactNode } from "react"
 import AppTopbar from "~/components/AppTopbar"
 import "./FeaturesPage.css"
 
 type FeatureSection = {
     id: string
     title: string
+    content?: ReactNode
 }
 
 type FeaturePage = {
@@ -30,19 +32,72 @@ type FeaturePage = {
 
 const featurePages: FeaturePage[] = [
     {
-        id: "getting-started",
-        title: "Getting started",
-        sections: [
-            { id: "welcome", title: "Welcome to Progeny" },
-            { id: "your-character", title: "Your character" }
-        ]
-    },
-    {
         id: "character-creation",
         title: "Character creation",
         sections: [
-            { id: "guided-creation", title: "Guided creation" },
-            { id: "saving-and-exporting", title: "Saving and exporting" }
+            {
+                id: "guided-creation",
+                title: "Guided creation",
+                content: (
+                    <>
+                        <Text component="p">
+                            The character generator is purpose-built for helping beginners create
+                            fully fleshed out characters. Experienced players can still use it to
+                            create characters quickly, or use the free-edit mode on the {" "}
+                            <Anchor component={Link} to="/sheet">
+                                Character Sheet
+                            </Anchor>{" "}
+                            to create their character without constraints.
+                        </Text>
+                        <ImagePlaceholder />
+                        <Text component="p">
+                            Simply click “Embrace a new Character” on the {" "}
+                            <Anchor component={Link} to="/">
+                                home page
+                            </Anchor>{" "}
+                            to get started, and then follow the prompts.
+                        </Text>
+                        <Text component="p">
+                            You can use the side bar to navigate between steps and change your
+                            mind on previous entries, for example, change attributes after picking
+                            your disciplines. Some choices will reset other choices. If you pick a
+                            different clan, it will reset your chosen discipline as the new clan
+                            has access to a different set of disciplines.
+                        </Text>
+                        <Text component="p">
+                            On the left you will see a live-updated overview of your character as
+                            you build it (not shown on small screens).
+                        </Text>
+                        <ImagePlaceholder />
+                    </>
+                )
+            },
+            {
+                id: "saving-and-exporting",
+                title: "Saving and exporting",
+                content: (
+                    <>
+                        <Text component="p">
+                            By default, your character will be saved in your browser. This means
+                            that clearing your browser data may delete your character. To keep your
+                            character safe, you can download it as a <code>.json</code> file, and
+                            re-import it later.
+                        </Text>
+                        <ImagePlaceholder />
+                        <Text component="p">
+                            You can also sign up for a free account to save your character in the
+                            cloud. This also lets you easily create and manage multiple characters
+                            in Progeny.
+                        </Text>
+                        <Text component="p">
+                            If you want to use your character outside of Progeny, you can export
+                            it to Inconnu or Foundry VTT (WoD5E). You can find detailed
+                            instructions on the export page.
+                        </Text>
+                        <ImagePlaceholder />
+                    </>
+                )
+            }
         ]
     },
     {
@@ -54,14 +109,27 @@ const featurePages: FeaturePage[] = [
         ]
     },
     {
-        id: "account-and-coteries",
-        title: "Account & coteries",
+        id: "account-and-multiple-characters",
+        title: "Account & Multiple Characters",
+        sections: [{ id: "your-account", title: "Your account" }]
+    },
+    {
+        id: "coteries",
+        title: "Coteries",
         sections: [
-            { id: "your-account", title: "Your account" },
             { id: "playing-together", title: "Playing together" }
         ]
     }
 ]
+
+function ImagePlaceholder() {
+    return (
+        <Paper className="features-page__placeholder" radius="md">
+            <IconPhoto size={22} stroke={1.4} />
+            <Text>Image coming soon</Text>
+        </Paper>
+    )
+}
 
 export default function FeaturesPage() {
     const [
@@ -170,13 +238,23 @@ export default function FeaturesPage() {
                                                 >
                                                     {section.title}
                                                 </Title>
-                                                <Paper
-                                                    className="features-page__placeholder"
-                                                    radius="md"
-                                                >
-                                                    <IconPhoto size={22} stroke={1.4} />
-                                                    <Text>Content and screenshots coming soon</Text>
-                                                </Paper>
+                                                {section.content ? (
+                                                    <Stack
+                                                        gap="md"
+                                                        mt="md"
+                                                        className="features-page__section-content"
+                                                    >
+                                                        {section.content}
+                                                    </Stack>
+                                                ) : (
+                                                    <Paper
+                                                        className="features-page__placeholder"
+                                                        radius="md"
+                                                    >
+                                                        <IconPhoto size={22} stroke={1.4} />
+                                                        <Text>Content and screenshots coming soon</Text>
+                                                    </Paper>
+                                                )}
                                             </section>
                                         ))}
                                     </Stack>
