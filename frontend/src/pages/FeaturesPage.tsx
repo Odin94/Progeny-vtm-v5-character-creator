@@ -22,6 +22,14 @@ import creatorImage from "~/assets/feature-docs-images/character-creation/creato
 import exportImage from "~/assets/feature-docs-images/character-creation/export.png"
 import importExportImage from "~/assets/feature-docs-images/character-creation/import-export.jpeg"
 import landingImage from "~/assets/feature-docs-images/character-creation/landing.jpeg"
+import rollDiceImage from "~/assets/feature-docs-images/character-sheet/1roll-dice.png"
+import rerollImage from "~/assets/feature-docs-images/character-sheet/2reroll.png"
+import selectedPoolImage from "~/assets/feature-docs-images/character-sheet/3selected-pool.png"
+import quickRollImage from "~/assets/feature-docs-images/character-sheet/4quickroll.png"
+import modesImage from "~/assets/feature-docs-images/character-sheet/5modes.png"
+import healthWillpowerHungerImage from "~/assets/feature-docs-images/character-sheet/6health-wp-hunger.png"
+import menuImage from "~/assets/feature-docs-images/character-sheet/7menu.jpeg"
+import chatImage from "~/assets/feature-docs-images/character-sheet/8chat.png"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import "./FeaturesPage.css"
@@ -154,12 +162,18 @@ const featurePages: FeaturePage[] = [
                             modal. Here you can either free-roll a number of dice, or roll with a
                             pool selected from your attributes, skills, and disciplines.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={rollDiceImage}
+                            alt="Character sheet dice rolling modal"
+                        />
                         <Text component="p">
                             After a roll, you can click non-hunger dice to reroll them using
                             willpower.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={rerollImage}
+                            alt="Character sheet dice roll results with reroll options"
+                        />
                         <Text component="p">
                             You can also click the blood drop icon to quickly roll a rouse check.
                             Your hunger will be updated automatically.
@@ -170,12 +184,18 @@ const featurePages: FeaturePage[] = [
                             automatically offer other modifiers that may apply, like Blood Surge,
                             bonuses from merits, and bonuses from disciplines.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={selectedPoolImage}
+                            alt="Character sheet selected dice pool tab"
+                        />
                         <Text component="p">
                             The character sheet has quick-roll buttons for rouse checks next to your
                             hunger, and for remorse checks next to your humanity.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={quickRollImage}
+                            alt="Character sheet quick-roll controls"
+                        />
                     </>
                 )
             },
@@ -184,7 +204,10 @@ const featurePages: FeaturePage[] = [
                 title: "Editing your character",
                 content: (
                     <>
-                        <ImagePlaceholder label="Play modes image coming soon" />
+                        <FeatureImage
+                            src={modesImage}
+                            alt="Character sheet play mode selector"
+                        />
                         <Text component="p">
                             While in play mode, you can only edit the dynamic parts of your
                             character: taken damage on your health, willpower, humanity, and hunger.
@@ -193,7 +216,10 @@ const featurePages: FeaturePage[] = [
                             Clicking again clears the damage. Humanity stains fill from right to
                             left.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={healthWillpowerHungerImage}
+                            alt="Character sheet health, willpower, and hunger controls"
+                        />
                         <Text component="p">
                             In XP mode and Free edit mode you can change all aspects of your
                             character. XP is spent automatically in XP mode, and you can’t spend
@@ -231,7 +257,7 @@ const featurePages: FeaturePage[] = [
                             feedback or ask for support (requires that you accepted cookies), and
                             open the dialog to see recent changes to Progeny.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage src={menuImage} alt="Character sheet menu" />
                     </>
                 )
             },
@@ -246,7 +272,7 @@ const featurePages: FeaturePage[] = [
                             inactive for some time for privacy. By default, all your dice rolls are
                             shared automatically in chat.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage src={chatImage} alt="Character sheet chat" />
                         <Text component="p">Using chat requires that you are signed in.</Text>
                     </>
                 )
