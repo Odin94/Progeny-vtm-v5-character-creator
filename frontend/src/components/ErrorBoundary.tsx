@@ -6,6 +6,7 @@ import ErrorDetails from "./ErrorDetails"
 
 type Props = {
     children?: ReactNode
+    fallback?: ReactNode
 }
 
 type State = {
@@ -55,6 +56,10 @@ class ErrorBoundary extends Component<Props, State> {
 
     public render() {
         if (this.state.hasError) {
+            if (this.props.fallback !== undefined) {
+                return this.props.fallback
+            }
+
             return (
                 <Center>
                     <Alert
