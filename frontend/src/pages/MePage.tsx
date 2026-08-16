@@ -26,7 +26,6 @@ import {
     IconArrowRight,
     IconBook2,
     IconCopy,
-    IconDownload,
     IconEyeOff,
     IconInfoCircle,
     IconLink,
@@ -311,7 +310,6 @@ const MePage = () => {
     const [revokeInviteModalOpened, setRevokeInviteModalOpened] = useState(false)
     const [deleteCharacterModalOpened, setDeleteCharacterModalOpened] = useState(false)
     const [deleteCoterieModalOpened, setDeleteCoterieModalOpened] = useState(false)
-    const [loadCharacterWarningModalOpened, setLoadCharacterWarningModalOpened] = useState(false)
     const [loadSameCharacterWarningModalOpened, setLoadSameCharacterWarningModalOpened] =
         useState(false)
     const [loadJsonModalOpened, setLoadJsonModalOpened] = useState(false)
@@ -816,94 +814,66 @@ const MePage = () => {
             }
         }
 
-        // Check if we're loading a different character from the current one
-        const isDifferentCharacter = char.id !== character.id
+        // Switching characters must preserve the current character first. This includes a
+        // character that has not been saved before, which is created automatically here.
+        if (char.id !== character.id && character.name.trim()) {
+            try {
+                const currentCharacter = character.id
+                    ? userCharacters.find((candidate) => candidate.id === character.id)
+                    : undefined
 
-        // If loading a different character and current character has unsaved changes, save it first
-        if (isDifferentCharacter && character.name.trim()) {
-            const currentCharacterExists =
-                character.id && userCharacters.find((c) => c.id === character.id)
+                if (currentCharacter?.shared) {
+                    throw new Error("Shared characters cannot be saved")
+                }
 
-            if (currentCharacterExists) {
-                // Current character exists in backend - save it first
-                const targetCharacter = userCharacters.find((c) => c.id === character.id)
-                if (targetCharacter && !targetCharacter.shared) {
-                    try {
-                        // Check version before saving
-                        const response = await api.getCharacter(character.id)
-                        const beCharacter = characterSchema.parse((response as any).data)
-                        const feVersion = character.characterVersion ?? 0
+                if (currentCharacter) {
+                    const response = await api.getCharacter(currentCharacter.id)
+                    const savedCharacter = characterSchema.parse((response as any).data)
+                    const localVersion = character.characterVersion ?? 0
 
-                        if (beCharacter.characterVersion > feVersion) {
-                            // Version conflict - show modal
-                            setVersionConflictInfo({
-                                beVersion: beCharacter.characterVersion,
-                                feVersion,
-                                message: `(Saving ${character.name}): Character version in database (${beCharacter.characterVersion}) is higher than in browser (${feVersion}) - saving might overwrite changes you made on another device.`
-                            })
-                            setCharacterToLoad({
-                                id: char.id,
-                                name: char.name,
-                                data: charData
-                            })
-                            setVersionConflictModalOpened(true)
-                            return
-                        }
-
-                        // Save current character
-                        await new Promise<void>((resolve, reject) => {
-                            updateCharacterMutation.mutate(
-                                {
-                                    id: targetCharacter.id,
-                                    data: {
-                                        name: character.name,
-                                        data: character,
-                                        version: character.version
-                                    }
-                                },
-                                {
-                                    onSuccess: (savedCharacter) => {
-                                        const saved = savedCharacter as {
-                                            id: string
-                                            name: string
-                                            data: unknown
-                                            version?: number
-                                            characterVersion?: number
-                                        }
-                                        const savedData = saved.data as
-                                            | { characterVersion?: number }
-                                            | undefined
-                                        setCharacter({
-                                            ...character,
-                                            id: saved.id,
-                                            characterVersion:
-                                                saved.characterVersion ??
-                                                savedData?.characterVersion ??
-                                                0
-                                        } as CharacterType & { characterVersion: number })
-                                        resolve()
-                                    },
-                                    onError: (error) => {
-                                        reject(error)
-                                    }
-                                }
-                            )
-                        })
-                    } catch (error) {
-                        console.warn("Failed to save current character before loading:", error)
-                        notifications.show({
-                            title: "Warning",
-                            message:
-                                "Failed to save current character. Loading new character anyway.",
-                            color: "yellow"
-                        })
+                    if (savedCharacter.characterVersion > localVersion) {
+                        throw new Error(
+                            `"${character.name}" has a newer version in the database. Resolve that conflict before switching characters.`
+                        )
                     }
                 }
-            } else {
-                // Current character doesn't exist in backend - show warning modal
-                setLoadingCharacterId(null)
-                setCharacterToLoad({ id: char.id, name: char.name, data: charData })
-                setLoadCharacterWarningModalOpened(true)
+
+                const savedCharacter = currentCharacter
+                    ? await updateCharacterMutation.mutateAsync({
+                          id: currentCharacter.id,
+                          data: {
+                              name: character.name,
+                              data: character,
+                              version: character.version
+                          }
+                      })
+                    : await createCharacterMutation.mutateAsync({
+                          name: character.name,
+                          data: character,
+                          version: character.version
+                      })
+                const saved = savedCharacter as {
+                    id: string
+                    data?: { characterVersion?: number }
+                    characterVersion?: number
+                }
+
+                setCharacter({
+                    ...character,
+                    id: saved.id,
+                    characterVersion:
+                        saved.characterVersion ??
+                        saved.data?.characterVersion ??
+                        character.characterVersion ??
+                        0
+                } as CharacterType & { id: string; characterVersion: number })
+            } catch (error) {
+                console.warn("Failed to save current character before loading:", error)
+                notifications.show({
+                    title: "Unable to load character",
+                    message: `Couldn't load "${char.name}" because saving the current character failed.`,
+                    color: "red"
+                })
                 return
             }
         }
@@ -914,14 +884,6 @@ const MePage = () => {
             name: char.name,
             data: charData
         })
-    }
-
-    const handleConfirmLoadCharacter = () => {
-        if (!characterToLoad) return
-
-        performLoadCharacter(characterToLoad)
-        setLoadCharacterWarningModalOpened(false)
-        setCharacterToLoad(null)
     }
 
     const handleConfirmLoadSameCharacter = () => {
@@ -1188,69 +1150,6 @@ const MePage = () => {
         } finally {
             setIsSharing(false)
         }
-    }
-
-    const handleSaveCurrentAndLoad = () => {
-        if (!characterToLoad) return
-
-        // Save current character first
-        if (!character.name.trim()) {
-            notifications.show({
-                title: "Error",
-                message: "Character must have a name",
-                color: "red"
-            })
-            return
-        }
-
-        // Create new character (since it doesn't exist in backend)
-        createCharacterMutation.mutate(
-            {
-                name: character.name,
-                data: character,
-                version: character.version
-            },
-            {
-                onSuccess: (savedCharacter) => {
-                    // Update character in memory with the ID from backend
-                    const saved = savedCharacter as {
-                        id: string
-                        name: string
-                        data: unknown
-                        version?: number
-                    }
-                    setCharacter({
-                        ...character,
-                        id: saved.id
-                    })
-                    notifications.show({
-                        title: "Success",
-                        message: `Character "${character.name}" saved`,
-                        color: "green"
-                    })
-                    // Then load the new character
-                    setCharacter({
-                        ...characterToLoad.data,
-                        id: characterToLoad.id
-                    } as CharacterType & { id: string })
-                    notifications.show({
-                        title: "Success",
-                        message: `Loaded "${characterToLoad.name}"`,
-                        color: "green"
-                    })
-                    setLoadCharacterWarningModalOpened(false)
-                    setCharacterToLoad(null)
-                },
-                onError: (error) => {
-                    notifications.show({
-                        title: "Error",
-                        message:
-                            error instanceof Error ? error.message : "Failed to save character",
-                        color: "red"
-                    })
-                }
-            }
-        )
     }
 
     const handleConfirmDeleteCharacter = () => {
@@ -2240,60 +2139,6 @@ const MePage = () => {
                 }
                 confirmLabel="Delete"
             />
-
-            <Modal
-                opened={loadCharacterWarningModalOpened}
-                onClose={() => {
-                    setLoadCharacterWarningModalOpened(false)
-                    setCharacterToLoad(null)
-                    setLoadingCharacterId(null)
-                }}
-                title="Warning: Unsaved Character"
-                centered
-            >
-                <Stack gap="md">
-                    <Text>
-                        Loading <strong>{characterToLoad?.name}</strong> will overwrite your current
-                        unsaved character <strong>{character.name || "Untitled"}</strong>. Your
-                        current character has not been saved to the backend.
-                    </Text>
-                    <Text c="dimmed" size="sm">
-                        You can save your current character first, or load the new character anyway
-                        (which will discard your current changes).
-                    </Text>
-                    <Group justify="flex-end" gap="xs">
-                        <Button
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                                setLoadCharacterWarningModalOpened(false)
-                                setCharacterToLoad(null)
-                                setLoadingCharacterId(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            variant="light"
-                            leftSection={<IconDownload size={16} />}
-                            onClick={handleSaveCurrentAndLoad}
-                            disabled={isAnyOperationInFlight}
-                            loading={isSavingCharacter}
-                        >
-                            Save Current Character
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleConfirmLoadCharacter}
-                            disabled={isAnyOperationInFlight}
-                            loading={isLoadingCharacter}
-                        >
-                            Load Anyway
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
 
             <Modal
                 opened={loadSameCharacterWarningModalOpened}
