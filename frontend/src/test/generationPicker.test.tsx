@@ -1,7 +1,11 @@
 import { MantineProvider } from "@mantine/core"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import GenerationPicker from "~/generator/components/GenerationPicker"
+import {
+    getCharacterWithGeneration,
+    getGenerationBonusXp,
+    default as GenerationPicker
+} from "~/generator/components/GenerationPicker"
 import { getBasicTestCharacter } from "./testUtils"
 
 vi.mock("~/utils/analytics", () => ({
@@ -69,5 +73,18 @@ describe("GenerationPicker", () => {
         expect(setCharacter).toHaveBeenCalledWith(
             expect.objectContaining({ generation: 13, experience: 15 })
         )
+    })
+
+    it("replaces the generation budget after the Neonate XP was spent", () => {
+        const character = getBasicTestCharacter()
+        character.generation = 13
+        character.experience = getGenerationBonusXp(13)
+        character.ephemeral.experienceSpent = 15
+
+        const updated = getCharacterWithGeneration(character, 10)
+
+        expect(updated.generation).toBe(10)
+        expect(updated.experience).toBe(35)
+        expect(updated.ephemeral.experienceSpent).toBe(15)
     })
 })
