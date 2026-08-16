@@ -10,6 +10,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SheetRouteImport } from './routes/sheet'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as FeaturesAccountAndMultipleCharactersRouteImport } from './routes/features.account-and-multiple-characters'
+import { Route as FeaturesCharacterCreationRouteImport } from './routes/features.character-creation'
+import { Route as FeaturesCharacterSheetRouteImport } from './routes/features.character-sheet'
+import { Route as FeaturesCoteriesRouteImport } from './routes/features.coteries'
 import { Route as HomebrewRouteImport } from './routes/homebrew'
 import { Route as HomebrewLibraryRouteImport } from './routes/homebrew.library'
 import { Route as HomebrewLibraryCollectionIdRouteImport } from './routes/homebrew.library.$collectionId'
@@ -33,6 +37,26 @@ const MeRoute = MeRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesAccountAndMultipleCharactersRoute = FeaturesAccountAndMultipleCharactersRouteImport.update({
+  id: '/features/account-and-multiple-characters',
+  path: '/features/account-and-multiple-characters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesCharacterCreationRoute = FeaturesCharacterCreationRouteImport.update({
+  id: '/features/character-creation',
+  path: '/features/character-creation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesCharacterSheetRoute = FeaturesCharacterSheetRouteImport.update({
+  id: '/features/character-sheet',
+  path: '/features/character-sheet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesCoteriesRoute = FeaturesCoteriesRouteImport.update({
+  id: '/features/coteries',
+  path: '/features/coteries',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomebrewRoute = HomebrewRouteImport.update({
@@ -86,6 +110,10 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/features': typeof FeaturesRoute
+  '/features/account-and-multiple-characters': typeof FeaturesAccountAndMultipleCharactersRoute
+  '/features/character-creation': typeof FeaturesCharacterCreationRoute
+  '/features/character-sheet': typeof FeaturesCharacterSheetRoute
+  '/features/coteries': typeof FeaturesCoteriesRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -100,6 +128,10 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/features': typeof FeaturesRoute
+  '/features/account-and-multiple-characters': typeof FeaturesAccountAndMultipleCharactersRoute
+  '/features/character-creation': typeof FeaturesCharacterCreationRoute
+  '/features/character-sheet': typeof FeaturesCharacterSheetRoute
+  '/features/coteries': typeof FeaturesCoteriesRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -115,6 +147,10 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/me': typeof MeRoute
   '/features': typeof FeaturesRoute
+  '/features/account-and-multiple-characters': typeof FeaturesAccountAndMultipleCharactersRoute
+  '/features/character-creation': typeof FeaturesCharacterCreationRoute
+  '/features/character-sheet': typeof FeaturesCharacterSheetRoute
+  '/features/coteries': typeof FeaturesCoteriesRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -126,10 +162,10 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  fullPaths: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
-  id: '__root__' | '/' | '/create' | '/features' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  to: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  id: '__root__' | '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -137,6 +173,10 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   MeRoute: typeof MeRoute
   FeaturesRoute: typeof FeaturesRoute
+  FeaturesAccountAndMultipleCharactersRoute: typeof FeaturesAccountAndMultipleCharactersRoute
+  FeaturesCharacterCreationRoute: typeof FeaturesCharacterCreationRoute
+  FeaturesCharacterSheetRoute: typeof FeaturesCharacterSheetRoute
+  FeaturesCoteriesRoute: typeof FeaturesCoteriesRoute
   SheetRoute: typeof SheetRoute
   HomebrewRoute: typeof HomebrewRoute
   HomebrewLibraryRoute: typeof HomebrewLibraryRoute
@@ -168,6 +208,34 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/account-and-multiple-characters': {
+      id: '/features/account-and-multiple-characters'
+      path: '/features/account-and-multiple-characters'
+      fullPath: '/features/account-and-multiple-characters'
+      preLoaderRoute: typeof FeaturesAccountAndMultipleCharactersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/character-creation': {
+      id: '/features/character-creation'
+      path: '/features/character-creation'
+      fullPath: '/features/character-creation'
+      preLoaderRoute: typeof FeaturesCharacterCreationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/character-sheet': {
+      id: '/features/character-sheet'
+      path: '/features/character-sheet'
+      fullPath: '/features/character-sheet'
+      preLoaderRoute: typeof FeaturesCharacterSheetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/coteries': {
+      id: '/features/coteries'
+      path: '/features/coteries'
+      fullPath: '/features/coteries'
+      preLoaderRoute: typeof FeaturesCoteriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/homebrew': {
@@ -241,6 +309,10 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   MeRoute: MeRoute,
   FeaturesRoute: FeaturesRoute,
+  FeaturesAccountAndMultipleCharactersRoute: FeaturesAccountAndMultipleCharactersRoute,
+  FeaturesCharacterCreationRoute: FeaturesCharacterCreationRoute,
+  FeaturesCharacterSheetRoute: FeaturesCharacterSheetRoute,
+  FeaturesCoteriesRoute: FeaturesCoteriesRoute,
   SheetRoute: SheetRoute,
   HomebrewRoute: HomebrewRoute,
   HomebrewLibraryRoute: HomebrewLibraryRoute,

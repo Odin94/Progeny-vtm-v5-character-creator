@@ -1,19 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { lazy, Suspense } from "react"
-import RenderProfiler from "~/components/RenderProfiler"
-
-const FeaturesPage = lazy(() => import("~/pages/FeaturesPage"))
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/features")({
-    component: Features
+    beforeLoad: () => {
+        throw redirect({ to: "/features/character-creation" })
+    }
 })
-
-function Features() {
-    return (
-        <RenderProfiler id="FeaturesPage">
-            <Suspense fallback={null}>
-                <FeaturesPage />
-            </Suspense>
-        </RenderProfiler>
-    )
-}

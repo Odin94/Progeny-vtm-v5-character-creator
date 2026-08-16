@@ -24,9 +24,18 @@ type FeatureSection = {
     content?: ReactNode
 }
 
+type FeaturePageId =
+    | "character-creation"
+    | "character-sheet"
+    | "account-and-multiple-characters"
+    | "coteries"
+
+type FeaturePagePath = `/features/${FeaturePageId}`
+
 type FeaturePage = {
-    id: string
+    id: FeaturePageId
     title: string
+    path: FeaturePagePath
     sections: FeatureSection[]
 }
 
@@ -34,6 +43,7 @@ const featurePages: FeaturePage[] = [
     {
         id: "character-creation",
         title: "Character creation",
+        path: "/features/character-creation",
         sections: [
             {
                 id: "guided-creation",
@@ -43,7 +53,7 @@ const featurePages: FeaturePage[] = [
                         <Text component="p">
                             The character generator is purpose-built for helping beginners create
                             fully fleshed out characters. Experienced players can still use it to
-                            create characters quickly, or use the free-edit mode on the {" "}
+                            create characters quickly, or use the free-edit mode on the{" "}
                             <Anchor component={Link} to="/sheet">
                                 Character Sheet
                             </Anchor>{" "}
@@ -51,18 +61,18 @@ const featurePages: FeaturePage[] = [
                         </Text>
                         <ImagePlaceholder />
                         <Text component="p">
-                            Simply click “Embrace a new Character” on the {" "}
+                            Simply click “Embrace a new Character” on the{" "}
                             <Anchor component={Link} to="/">
                                 home page
                             </Anchor>{" "}
                             to get started, and then follow the prompts.
                         </Text>
                         <Text component="p">
-                            You can use the side bar to navigate between steps and change your
-                            mind on previous entries, for example, change attributes after picking
-                            your disciplines. Some choices will reset other choices. If you pick a
-                            different clan, it will reset your chosen discipline as the new clan
-                            has access to a different set of disciplines.
+                            You can use the side bar to navigate between steps and change your mind
+                            on previous entries, for example, change attributes after picking your
+                            disciplines. Some choices will reset other choices. If you pick a
+                            different clan, it will reset your chosen discipline as the new clan has
+                            access to a different set of disciplines.
                         </Text>
                         <Text component="p">
                             On the left you will see a live-updated overview of your character as
@@ -90,9 +100,9 @@ const featurePages: FeaturePage[] = [
                             in Progeny.
                         </Text>
                         <Text component="p">
-                            If you want to use your character outside of Progeny, you can export
-                            it to Inconnu or Foundry VTT (WoD5E). You can find detailed
-                            instructions on the export page.
+                            If you want to use your character outside of Progeny, you can export it
+                            to Inconnu or Foundry VTT (WoD5E). You can find detailed instructions on
+                            the export page.
                         </Text>
                         <ImagePlaceholder />
                     </>
@@ -103,6 +113,7 @@ const featurePages: FeaturePage[] = [
     {
         id: "character-sheet",
         title: "Character sheet",
+        path: "/features/character-sheet",
         sections: [
             { id: "playing-online", title: "Playing online" },
             { id: "rolling-dice", title: "Rolling dice" }
@@ -111,14 +122,14 @@ const featurePages: FeaturePage[] = [
     {
         id: "account-and-multiple-characters",
         title: "Account & Multiple Characters",
+        path: "/features/account-and-multiple-characters",
         sections: [{ id: "your-account", title: "Your account" }]
     },
     {
         id: "coteries",
         title: "Coteries",
-        sections: [
-            { id: "playing-together", title: "Playing together" }
-        ]
+        path: "/features/coteries",
+        sections: [{ id: "playing-together", title: "Playing together" }]
     }
 ]
 
@@ -131,7 +142,11 @@ function ImagePlaceholder() {
     )
 }
 
-export default function FeaturesPage() {
+type FeaturesPageProps = {
+    pageId: FeaturePageId
+}
+
+export default function FeaturesPage({ pageId }: FeaturesPageProps) {
     const [
         mobileNavigationOpened,
         { toggle: toggleMobileNavigation, close: closeMobileNavigation }
@@ -145,7 +160,8 @@ export default function FeaturesPage() {
             {featurePages.map((page) => (
                 <Box key={page.id}>
                     <Anchor
-                        href={`#${page.id}`}
+                        component={Link}
+                        to={page.path}
                         onClick={closeNavigation}
                         className="features-page__page-link"
                     >
@@ -155,7 +171,9 @@ export default function FeaturesPage() {
                         {page.sections.map((section) => (
                             <Anchor
                                 key={section.id}
-                                href={`#${section.id}`}
+                                component={Link}
+                                to={page.path}
+                                hash={section.id}
                                 onClick={closeNavigation}
                                 className="features-page__section-link"
                             >
@@ -214,52 +232,60 @@ export default function FeaturesPage() {
                         </Box>
 
                         <main className="features-page__content">
-                            {featurePages.map((page, pageIndex) => (
-                                <section key={page.id} id={page.id} className="features-page__page">
-                                    {pageIndex > 0 ? (
-                                        <Divider className="features-page__page-divider" />
-                                    ) : null}
-                                    <Text className="features-page__page-number">
-                                        {String(pageIndex + 1).padStart(2, "0")}
-                                    </Text>
-                                    <Title order={2} className="features-page__page-title">
-                                        {page.title}
-                                    </Title>
-                                    <Stack gap="xl" mt="xl">
-                                        {page.sections.map((section) => (
-                                            <section
-                                                key={section.id}
-                                                id={section.id}
-                                                className="features-page__section"
-                                            >
-                                                <Title
-                                                    order={3}
-                                                    className="features-page__section-title"
+                            {featurePages
+                                .filter((page) => page.id === pageId)
+                                .map((page) => (
+                                    <section
+                                        key={page.id}
+                                        id={page.id}
+                                        className="features-page__page"
+                                    >
+                                        <Text className="features-page__page-number">
+                                            {String(featurePages.indexOf(page) + 1).padStart(
+                                                2,
+                                                "0"
+                                            )}
+                                        </Text>
+                                        <Title order={2} className="features-page__page-title">
+                                            {page.title}
+                                        </Title>
+                                        <Stack gap="xl" mt="xl">
+                                            {page.sections.map((section) => (
+                                                <section
+                                                    key={section.id}
+                                                    id={section.id}
+                                                    className="features-page__section"
                                                 >
-                                                    {section.title}
-                                                </Title>
-                                                {section.content ? (
-                                                    <Stack
-                                                        gap="md"
-                                                        mt="md"
-                                                        className="features-page__section-content"
+                                                    <Title
+                                                        order={3}
+                                                        className="features-page__section-title"
                                                     >
-                                                        {section.content}
-                                                    </Stack>
-                                                ) : (
-                                                    <Paper
-                                                        className="features-page__placeholder"
-                                                        radius="md"
-                                                    >
-                                                        <IconPhoto size={22} stroke={1.4} />
-                                                        <Text>Content and screenshots coming soon</Text>
-                                                    </Paper>
-                                                )}
-                                            </section>
-                                        ))}
-                                    </Stack>
-                                </section>
-                            ))}
+                                                        {section.title}
+                                                    </Title>
+                                                    {section.content ? (
+                                                        <Stack
+                                                            gap="md"
+                                                            mt="md"
+                                                            className="features-page__section-content"
+                                                        >
+                                                            {section.content}
+                                                        </Stack>
+                                                    ) : (
+                                                        <Paper
+                                                            className="features-page__placeholder"
+                                                            radius="md"
+                                                        >
+                                                            <IconPhoto size={22} stroke={1.4} />
+                                                            <Text>
+                                                                Content and screenshots coming soon
+                                                            </Text>
+                                                        </Paper>
+                                                    )}
+                                                </section>
+                                            ))}
+                                        </Stack>
+                                    </section>
+                                ))}
 
                             <Paper className="features-page__contribute" radius="md">
                                 <IconBook2 size={20} />
