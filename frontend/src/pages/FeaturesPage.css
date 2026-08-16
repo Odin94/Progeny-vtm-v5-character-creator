@@ -149,6 +149,10 @@
     letter-spacing: 0.035em;
 }
 
+.features-page__section-content {
+    font-family: Inter, "Segoe UI", sans-serif;
+}
+
 .features-page__placeholder {
     display: flex;
     align-items: center;
