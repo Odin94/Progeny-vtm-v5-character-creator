@@ -18,6 +18,8 @@ import { Link } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import AppTopbar from "~/components/AppTopbar"
 import SupportConversationButton from "~/components/SupportConversationButton"
+import nicknameImage from "~/assets/feature-docs-images/account/1nickname.jpeg"
+import charactersImage from "~/assets/feature-docs-images/account/2characters.jpeg"
 import creatorImage from "~/assets/feature-docs-images/character-creation/creator.jpeg"
 import exportImage from "~/assets/feature-docs-images/character-creation/export.png"
 import importExportImage from "~/assets/feature-docs-images/character-creation/import-export.jpeg"
@@ -331,7 +333,10 @@ const featurePages: FeaturePage[] = [
                                 </Anchor>
                             </List.Item>
                         </List>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={nicknameImage}
+                            alt="Account page nickname settings"
+                        />
                     </>
                 )
             },
@@ -345,7 +350,10 @@ const featurePages: FeaturePage[] = [
                             empty character, or load one of your existing characters. You can also
                             load a new character from a <code>json</code> save file.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={charactersImage}
+                            alt="Account page character management"
+                        />
                         <Text component="p">
                             Loading a new character automatically saves your previous character, so
                             you won’t lose your changes.
