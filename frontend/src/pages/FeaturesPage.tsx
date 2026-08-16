@@ -18,6 +18,10 @@ import { Link } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import AppTopbar from "~/components/AppTopbar"
 import SupportConversationButton from "~/components/SupportConversationButton"
+import creatorImage from "~/assets/feature-docs-images/character-creation/creator.jpeg"
+import exportImage from "~/assets/feature-docs-images/character-creation/export.png"
+import importExportImage from "~/assets/feature-docs-images/character-creation/import-export.jpeg"
+import landingImage from "~/assets/feature-docs-images/character-creation/landing.jpeg"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import "./FeaturesPage.css"
@@ -65,7 +69,6 @@ const featurePages: FeaturePage[] = [
                             </Anchor>{" "}
                             to create their character without constraints.
                         </Text>
-                        <ImagePlaceholder />
                         <Text component="p">
                             Simply click “Embrace a new Character” on the{" "}
                             <Anchor component={Link} to="/">
@@ -73,6 +76,10 @@ const featurePages: FeaturePage[] = [
                             </Anchor>{" "}
                             to get started, and then follow the prompts.
                         </Text>
+                        <FeatureImage
+                            src={landingImage}
+                            alt="Progeny landing page with the Embrace a New Character button"
+                        />
                         <Text component="p">
                             You can use the side bar to navigate between steps and change your mind
                             on previous entries, for example, change attributes after picking your
@@ -84,7 +91,10 @@ const featurePages: FeaturePage[] = [
                             On the left you will see a live-updated overview of your character as
                             you build it (not shown on small screens).
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={creatorImage}
+                            alt="Progeny guided character creator with a character overview"
+                        />
                     </>
                 )
             },
@@ -99,7 +109,10 @@ const featurePages: FeaturePage[] = [
                             character safe, you can download it as a <code>.json</code> file, and
                             re-import it later.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={importExportImage}
+                            alt="Progeny import and export options"
+                        />
                         <Text component="p">
                             You can also sign up for a free account to save your character in the
                             cloud. This also lets you easily create and manage multiple characters
@@ -110,7 +123,7 @@ const featurePages: FeaturePage[] = [
                             to Inconnu or Foundry VTT (WoD5E). You can find detailed instructions on
                             the export page.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage src={exportImage} alt="Progeny character export options" />
                     </>
                 )
             }
@@ -539,6 +552,10 @@ function ImagePlaceholder({ label = "Image coming soon" }: { label?: string }) {
             <Text>{label}</Text>
         </Paper>
     )
+}
+
+function FeatureImage({ src, alt }: { src: string; alt: string }) {
+    return <img src={src} alt={alt} loading="lazy" className="features-page__image" />
 }
 
 function AccountLink({ children }: { children: ReactNode }) {

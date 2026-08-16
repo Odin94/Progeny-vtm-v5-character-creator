@@ -170,6 +170,16 @@
     min-height: 5.75rem;
 }
 
+.features-page__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 0.8rem;
+    border: 1px solid var(--features-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24);
+}
+
 .features-page__next-page {
     background: var(--features-gold);
     color: #1a1112;
