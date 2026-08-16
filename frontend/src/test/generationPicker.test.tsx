@@ -87,4 +87,15 @@ describe("GenerationPicker", () => {
         expect(updated.experience).toBe(35)
         expect(updated.ephemeral.experienceSpent).toBe(15)
     })
+
+    it("never lowers an existing XP total when generation changes", () => {
+        const character = getBasicTestCharacter()
+        character.generation = 10
+        character.experience = 35
+
+        const updated = getCharacterWithGeneration(character, 13)
+
+        expect(updated.generation).toBe(13)
+        expect(updated.experience).toBe(35)
+    })
 })

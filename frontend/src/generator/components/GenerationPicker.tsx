@@ -62,16 +62,14 @@ export const getGenerationBonusXp = (generation: number) => {
 }
 
 export const getCharacterWithGeneration = (character: Character, generation: number) => {
-    const generationBonusDelta =
-        getGenerationBonusXp(generation) - getGenerationBonusXp(character.generation)
     const updatedCharacter = {
         ...character,
         generation,
-        // Keep any XP awarded outside character creation while replacing only the
-        // budget granted by the previously selected generation. This makes a
-        // 13th-generation character with 15 XP become a 10th-generation character
-        // with 35 XP even after some or all of the original budget was spent.
-        experience: Math.max(0, character.experience + generationBonusDelta)
+        // Changing generation may grant a larger starting budget, but it must never
+        // take XP away from an existing character. This makes a 13th-generation
+        // character with 15 XP become 35 XP at 10th generation while preserving a
+        // character that already has more XP than the newly selected budget.
+        experience: Math.max(character.experience, getGenerationBonusXp(generation))
     }
     updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
 
