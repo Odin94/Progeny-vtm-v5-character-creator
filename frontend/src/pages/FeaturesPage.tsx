@@ -24,6 +24,8 @@ import creatorImage from "~/assets/feature-docs-images/character-creation/creato
 import exportImage from "~/assets/feature-docs-images/character-creation/export.png"
 import importExportImage from "~/assets/feature-docs-images/character-creation/import-export.jpeg"
 import landingImage from "~/assets/feature-docs-images/character-creation/landing.jpeg"
+import coteriesImage from "~/assets/feature-docs-images/coteries/1coteries.jpeg"
+import coterieDetailsImage from "~/assets/feature-docs-images/coteries/2details.jpeg"
 import rollDiceImage from "~/assets/feature-docs-images/character-sheet/1roll-dice.png"
 import rerollImage from "~/assets/feature-docs-images/character-sheet/2reroll.png"
 import selectedPoolImage from "~/assets/feature-docs-images/character-sheet/3selected-pool.png"
@@ -398,7 +400,10 @@ const featurePages: FeaturePage[] = [
                             live summary and updates of their characters. Everyone can see the
                             current level of health, hunger, and willpower of all characters.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={coteriesImage}
+                            alt="Account page coterie management"
+                        />
                         <Text component="p">
                             Coteries come with a coterie-specific chat that all members can join at
                             any time. This chat works like any other chat on Progeny: auto-shared
@@ -420,7 +425,10 @@ const featurePages: FeaturePage[] = [
                             notes on the coterie or chronicle here. These notes are <em>not</em>{" "}
                             shared with other players or the Storyteller.
                         </Text>
-                        <ImagePlaceholder />
+                        <FeatureImage
+                            src={coterieDetailsImage}
+                            alt="Coterie details page with character summaries and chat"
+                        />
                     </>
                 )
             }
