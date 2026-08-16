@@ -334,9 +334,48 @@ const featurePages: FeaturePage[] = [
     },
     {
         id: "coteries",
-        title: "Coteries",
+        title: "Coteries & Playing Together",
         path: "/features/coteries",
-        sections: [{ id: "playing-together", title: "Playing together" }]
+        sections: [
+            {
+                id: "coteries",
+                title: "Coteries",
+                content: (
+                    <>
+                        <Text component="p">
+                            You can create and manage coteries on your{" "}
+                            <AccountLink>account page</AccountLink>. You can invite your friends to
+                            a coterie to play together. Everyone can add their character and share a
+                            live summary and updates of their characters. Everyone can see the
+                            current level of health, hunger, and willpower of all characters.
+                        </Text>
+                        <ImagePlaceholder />
+                        <Text component="p">
+                            Coteries come with a coterie-specific chat that all members can join at
+                            any time. This chat works like any other chat on Progeny: auto-shared
+                            dice rolls and ephemeral messages that will be deleted after the chat is
+                            inactive for a bit.
+                        </Text>
+                    </>
+                )
+            },
+            {
+                id: "coterie-details-view",
+                title: "Coterie details view",
+                content: (
+                    <>
+                        <Text component="p">
+                            Every member of a coterie can go to the coterie’s details view by
+                            clicking the “View” button. Here you can see a summary of everyone’s
+                            character sheet and the coterie chat. Everyone can also take private
+                            notes on the coterie or chronicle here. These notes are <em>not</em>{" "}
+                            shared with other players or the Storyteller.
+                        </Text>
+                        <ImagePlaceholder />
+                    </>
+                )
+            }
+        ]
     },
     {
         id: "credits-and-contact",
