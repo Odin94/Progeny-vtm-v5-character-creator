@@ -777,6 +777,15 @@ const MePage = () => {
     const handleLoadCharacter = async (char: Character) => {
         const charData = char.data as CharacterType | undefined
         if (!charData) return
+        const emptyCharacter = getEmptyCharacter()
+        const hasCurrentCharacterChanges =
+            JSON.stringify({
+                ...character,
+                id: "",
+                name: "",
+                version: emptyCharacter.version,
+                characterVersion: emptyCharacter.characterVersion
+            }) !== JSON.stringify(emptyCharacter)
 
         // Check if we're loading the same character as the current one
         const isSameCharacter = char.id === character.id && char.id
@@ -816,8 +825,12 @@ const MePage = () => {
 
         // Switching characters must preserve the current character first. This includes a
         // character that has not been saved before, which is created automatically here.
-        if (char.id !== character.id && character.name.trim()) {
+        if (char.id !== character.id && (character.name.trim() || hasCurrentCharacterChanges)) {
             try {
+                if (!character.name.trim()) {
+                    throw new Error("The current character needs a name before it can be saved")
+                }
+
                 const currentCharacter = character.id
                     ? userCharacters.find((candidate) => candidate.id === character.id)
                     : undefined
@@ -869,9 +882,10 @@ const MePage = () => {
                 } as CharacterType & { id: string; characterVersion: number })
             } catch (error) {
                 console.warn("Failed to save current character before loading:", error)
+                const reason = error instanceof Error ? error.message : "Unknown save error"
                 notifications.show({
                     title: "Unable to load character",
-                    message: `Couldn't load "${char.name}" because saving the current character failed.`,
+                    message: `Couldn't load "${char.name}" because saving the current character failed: ${reason}`,
                     color: "red"
                 })
                 return
