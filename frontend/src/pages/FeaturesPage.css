@@ -149,8 +149,7 @@
     letter-spacing: 0.035em;
 }
 
-.features-page__placeholder,
-.features-page__contribute {
+.features-page__placeholder {
     display: flex;
     align-items: center;
     gap: 0.8rem;
@@ -167,9 +166,18 @@
     min-height: 5.75rem;
 }
 
-.features-page__contribute {
-    margin-top: 5rem;
-    color: var(--features-text);
+.features-page__next-page {
+    background: var(--features-gold);
+    color: #1a1112;
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.features-page__next-page:hover {
+    background: #ecd08f;
 }
 
 @media (max-width: 48rem) {
