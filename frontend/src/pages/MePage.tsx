@@ -283,7 +283,6 @@ const MePage = () => {
         getInitialValueInEffect: true
     })
     const phoneScreen = globals.isPhoneScreen
-    const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
     const theme = useMantineTheme()
     const redColorValue = theme.colors.red[6]
@@ -491,10 +490,6 @@ const MePage = () => {
             }
         )
     }
-
-    useEffect(() => {
-        setShowAsideBar(!globals.isSmallScreen)
-    }, [globals.isSmallScreen])
 
     const handleCreateEmptyCharacter = () => {
         if (!newCharacterName.trim()) {
@@ -1563,12 +1558,7 @@ const MePage = () => {
                 })}
             >
                 <AppShell.Header>
-                    <Topbar
-                        asideBar={{
-                            show: showAsideBar,
-                            onToggle: () => setShowAsideBar((prev) => !prev)
-                        }}
-                    />
+                    <Topbar />
                 </AppShell.Header>
                 <Center h="100%">
                     <Loader size="lg" color="red" />
@@ -1605,12 +1595,7 @@ const MePage = () => {
                 })}
             >
                 <AppShell.Header>
-                    <Topbar
-                        asideBar={{
-                            show: showAsideBar,
-                            onToggle: () => setShowAsideBar((prev) => !prev)
-                        }}
-                    />
+                    <Topbar />
                 </AppShell.Header>
                 <Center h="100%">
                     <Card p="xl" withBorder>
@@ -1680,12 +1665,7 @@ const MePage = () => {
                 })}
             >
                 <AppShell.Header>
-                    <Topbar
-                        asideBar={{
-                            show: showAsideBar,
-                            onToggle: () => setShowAsideBar((prev) => !prev)
-                        }}
-                    />
+                    <Topbar />
                 </AppShell.Header>
                 <BackgroundImage
                     h="100%"
