@@ -367,7 +367,7 @@ const CoteriesSection = ({
                                                             {memberVitals ? (
                                                                 <>
                                                                     <Badge
-                                                                        size="xs"
+                                                                        size="md"
                                                                         color="red"
                                                                         variant="light"
                                                                     >
@@ -386,7 +386,7 @@ const CoteriesSection = ({
                                                                         /{memberVitals.willpower}
                                                                     </Badge>
                                                                     <Badge
-                                                                        size="xs"
+                                                                        size="md"
                                                                         color="blue"
                                                                         variant="light"
                                                                     >
