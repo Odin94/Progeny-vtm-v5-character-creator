@@ -17,6 +17,8 @@ import { IconArrowRight, IconArrowUpRight, IconPhoto } from "@tabler/icons-react
 import { Link } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import AppTopbar from "~/components/AppTopbar"
+import SupportConversationButton from "~/components/SupportConversationButton"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import "./FeaturesPage.css"
 
@@ -381,7 +383,152 @@ const featurePages: FeaturePage[] = [
         id: "credits-and-contact",
         title: "Credits & Contact",
         path: "/features/credits-and-contact",
-        sections: []
+        sections: [
+            {
+                id: "contact-odin",
+                title: "Contact Odin",
+                content: (
+                    <>
+                        <Text component="p">
+                            You can contact me with feedback, support requests or anything else
+                            that&apos;s on your mind. I love hearing from you!
+                        </Text>
+                        <Text component="p">
+                            I may take up to a week to reply. <Anchor
+                                href={CONTACT_LINKS.kofi.href}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Ko-Fi
+                            </Anchor>{" "}
+                            supporters get priority support &lt;3
+                        </Text>
+                        <List withPadding>
+                            <List.Item>
+                                <Anchor
+                                    href={CONTACT_LINKS.website.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Odin&apos;s blog
+                                </Anchor>
+                            </List.Item>
+                            <List.Item>
+                                <Anchor
+                                    href={CONTACT_LINKS.reddit.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    {CONTACT_LINKS.reddit.label}
+                                </Anchor>
+                            </List.Item>
+                            <List.Item>
+                                <Anchor
+                                    href={CONTACT_LINKS.github.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Progeny on GitHub
+                                </Anchor>
+                            </List.Item>
+                            <List.Item>
+                                <Anchor
+                                    href={CONTACT_LINKS.bluesky.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    {CONTACT_LINKS.bluesky.label}
+                                </Anchor>
+                            </List.Item>
+                            <List.Item>
+                                <Anchor
+                                    href={CONTACT_LINKS.kofi.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    {CONTACT_LINKS.kofi.label}
+                                </Anchor>
+                            </List.Item>
+                            <List.Item>
+                                <SupportConversationButton source="features-page">
+                                    Open support chat
+                                </SupportConversationButton>
+                            </List.Item>
+                        </List>
+                    </>
+                )
+            },
+            {
+                id: "credits",
+                title: "Credits",
+                content: (
+                    <>
+                        <Text component="p">
+                            This is an independent production and is not affiliated with or endorsed
+                            by World of Darkness, Paradox Interactive, or any of their subsidiaries.
+                        </Text>
+                        <Text component="p">
+                            This tool is created under the{" "}
+                            <Anchor
+                                href="https://www.worldofdarkness.com/dark-pack"
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Dark Pack License
+                            </Anchor>
+                            .
+                        </Text>
+                        <Text component="p">
+                            Vampire: The Masquerade and World of Darkness are trademarks of Paradox
+                            Interactive. All rights reserved.
+                        </Text>
+                        <List withPadding>
+                            <List.Item>
+                                The PDF template used for exporting was provided by{" "}
+                                <Anchor
+                                    href="https://linktr.ee/nerdbert"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Nerdbert
+                                </Anchor>
+                                .
+                            </List.Item>
+                            <List.Item>
+                                FavIcon, discipline icons, and dice result icons were provided by{" "}
+                                <Anchor
+                                    href="https://drive.google.com/drive/folders/166CN03nsT6VF-cjjttS0uBfvMZRoNqgK"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Nerdbert
+                                </Anchor>
+                                .
+                            </List.Item>
+                            <List.Item>CheckSolid.base64 is converted from Font Awesome.</List.Item>
+                            <List.Item>
+                                Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer,
+                                Marcus Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
+                                <Anchor href="https://unsplash.com" target="_blank" rel="noreferrer">
+                                    Unsplash
+                                </Anchor>
+                                .
+                            </List.Item>
+                            <List.Item>
+                                <Anchor
+                                    href="https://fonts.google.com/specimen/Roboto"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Roboto
+                                </Anchor>{" "}
+                                font by Google Fonts.
+                            </List.Item>
+                        </List>
+                    </>
+                )
+            }
+        ]
     }
 ]
 

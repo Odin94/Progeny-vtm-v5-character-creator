@@ -20,6 +20,7 @@ export const SUPPORT_CONSENT_REQUEST_EVENT = "progeny:request-posthog-consent"
 
 export type SupportConversationSource =
     | "landing-page"
+    | "features-page"
     | "account-page"
     | "character-sheet-menu"
     | "character-creation-complete"
