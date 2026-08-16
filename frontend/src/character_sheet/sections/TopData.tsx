@@ -31,6 +31,49 @@ type TopDataProps = {
     options: SheetOptions
 }
 
+type DescriptionFieldProps = {
+    character: SheetOptions["character"]
+    setCharacter: SheetOptions["setCharacter"]
+    primaryColor: string
+}
+
+// Keep the text editor's local state below the TopData boundary. A long description
+// should only re-render this textarea while typing, rather than all of the sheet's
+// top-level controls.
+const DescriptionField = memo(
+    ({ character, setCharacter, primaryColor }: DescriptionFieldProps) => {
+        const theme = useMantineTheme()
+        const descriptionField = useDebouncedUncontrolledStringField({
+            character,
+            setCharacter,
+            field: "description"
+        })
+
+        return (
+            <Textarea
+                value={descriptionField.value}
+                onChange={(event) => descriptionField.onChange(event.target.value)}
+                placeholder="Character description..."
+                minRows={2}
+                maxRows={4}
+                color={primaryColor}
+                styles={{
+                    input: {
+                        textAlign: "center",
+                        color: "var(--mantine-color-dimmed)",
+                        backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha)
+                    }
+                }}
+                mb="lg"
+            />
+        )
+    },
+    (prev, next) =>
+        prev.character.description === next.character.description &&
+        prev.setCharacter === next.setCharacter &&
+        prev.primaryColor === next.primaryColor
+)
+
 const TopData = ({ options }: TopDataProps) => {
     const { character, primaryColor, mode, setCharacter } = options
     const theme = useMantineTheme()
@@ -48,11 +91,6 @@ const TopData = ({ options }: TopDataProps) => {
         character,
         setCharacter,
         field: "name"
-    })
-    const descriptionField = useDebouncedUncontrolledStringField({
-        character,
-        setCharacter,
-        field: "description"
     })
     const ambitionField = useDebouncedUncontrolledStringField({
         character,
@@ -129,21 +167,10 @@ const TopData = ({ options }: TopDataProps) => {
                     ) : null}
                 </Group>
                 {isFreeMode ? (
-                    <Textarea
-                        value={descriptionField.value}
-                        onChange={(e) => descriptionField.onChange(e.target.value)}
-                        placeholder="Character description..."
-                        minRows={2}
-                        maxRows={4}
-                        color={primaryColor}
-                        styles={{
-                            input: {
-                                textAlign: "center",
-                                color: "var(--mantine-color-dimmed)",
-                                backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha)
-                            }
-                        }}
-                        mb="lg"
+                    <DescriptionField
+                        character={character}
+                        setCharacter={setCharacter}
+                        primaryColor={primaryColor}
                     />
                 ) : character.description ? (
                     <Text c="dimmed" ta="center" mb="lg">

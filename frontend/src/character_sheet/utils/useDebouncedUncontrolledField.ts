@@ -32,18 +32,26 @@ export const useDebouncedUncontrolledStringField = ({
 }: UseDebouncedUncontrolledStringFieldOptions) => {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
     const pendingValueRef = useRef<string | undefined>(undefined)
+    const lastCommittedValueRef = useRef<string | undefined>(undefined)
 
     const rawValue = character[field]
     const externalValue = rawValue !== undefined && rawValue !== null ? String(rawValue) : ""
 
     const [value, setValue] = useState(externalValue)
 
-    // A matching external value acknowledges our debounced write. A different value
-    // is a genuine external update (for example, loading another character), so it
-    // cancels the queued edit instead of being overwritten when the timer fires.
+    // A matching external value acknowledges our debounced write. The previous write
+    // may arrive after the user has already typed another character, though. Keep
+    // track of it separately so that acknowledgement cannot cancel the newer pending
+    // edit and make a character appear to be swallowed.
     useEffect(() => {
         if (pendingValueRef.current === externalValue) {
             pendingValueRef.current = undefined
+            lastCommittedValueRef.current = undefined
+            return
+        }
+
+        if (lastCommittedValueRef.current === externalValue) {
+            lastCommittedValueRef.current = undefined
             return
         }
 
@@ -72,6 +80,7 @@ export const useDebouncedUncontrolledStringField = ({
                 // character rather than a possibly-stale closure/ref. This keeps the
                 // debounced edit safe even when this field's component is memoized and
                 // has not re-rendered since another field changed elsewhere.
+                lastCommittedValueRef.current = nextValue
                 setCharacter((currentCharacter) => ({
                     ...currentCharacter,
                     [field]: nextValue

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { SheetOptions } from "~/character_sheet/CharacterSheet"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import { useCharacterLocalStorage, type SetCharacter } from "~/hooks/useCharacterLocalStorage"
+import { useDebouncedUncontrolledStringField } from "~/character_sheet/utils/useDebouncedUncontrolledField"
 
 // Count how many times the Touchstones section actually renders by instrumenting its
 // editor after opening it. When the memo comparator bails out, the child is not
@@ -162,5 +163,54 @@ describe("functional setCharacter prevents clobbering concurrent edits", () => {
         const result = store.get()
         expect(result.name).toBe("Renamed")
         expect(result.touchstones.map((t) => t.name)).toEqual(["Mentor"])
+    })
+})
+
+describe("debounced sheet fields", () => {
+    it("keeps a newer keystroke when an older debounced write is acknowledged", () => {
+        vi.useFakeTimers()
+
+        try {
+            const initialCharacter = getEmptyCharacter()
+            const setCharacter = vi.fn<SetCharacter>()
+            const { result, rerender } = renderHook(
+                ({ character }: { character: Character }) =>
+                    useDebouncedUncontrolledStringField({
+                        character,
+                        setCharacter,
+                        field: "description"
+                    }),
+                { initialProps: { character: initialCharacter } }
+            )
+
+            act(() => {
+                result.current.onChange("A")
+                vi.advanceTimersByTime(150)
+            })
+
+            // The user continues typing before React receives the first write. When it
+            // does arrive, it must be recognized as an acknowledgement, not as an
+            // external change that cancels the pending "AB" value.
+            act(() => {
+                result.current.onChange("AB")
+            })
+            rerender({ character: { ...initialCharacter, description: "A" } })
+
+            expect(result.current.value).toBe("AB")
+
+            act(() => {
+                vi.advanceTimersByTime(150)
+            })
+
+            expect(setCharacter).toHaveBeenCalledTimes(2)
+            const latestUpdate = setCharacter.mock.calls[1][0] as (
+                character: Character
+            ) => Character
+            expect(latestUpdate({ ...initialCharacter, description: "A" }).description).toBe(
+                "AB"
+            )
+        } finally {
+            vi.useRealTimers()
+        }
     })
 })
