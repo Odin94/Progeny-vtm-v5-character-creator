@@ -35,7 +35,7 @@ import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { openCookiePreferences } from "~/utils/cookiePreferences"
-import { isLocalhost } from "~/utils/isLocalhost"
+import { trackFeatureGuideOpened } from "~/utils/analytics"
 import { useAnalyticsConsent } from "~/hooks/useAnalyticsConsent"
 import { motion, useReducedMotion } from "framer-motion"
 
@@ -74,7 +74,6 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
         useDisclosure(false)
     const hasAnalyticsConsent = useAnalyticsConsent()
-    const showFeatureGuide = isLocalhost()
     const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
     const shouldReduceMotion = useReducedMotion()
 
@@ -87,6 +86,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
     }
 
     const handleOpenFeatures = () => {
+        trackFeatureGuideOpened("character-creation-complete")
         window.history.pushState({}, "", "/features")
         window.location.reload()
     }
@@ -496,14 +496,12 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
                         description="Use this character right away"
                         onClick={handleCharacterSheet}
                     />
-                    {showFeatureGuide ? (
-                        <ActionCard
-                            icon={<IconHelpHexagon size={20} />}
-                            label="Feature Guide"
-                            description="Learn what else you can do with Progeny"
-                            onClick={handleOpenFeatures}
-                        />
-                    ) : null}
+                    <ActionCard
+                        icon={<IconHelpHexagon size={20} />}
+                        label="Feature Guide"
+                        description="Learn what else you can do with Progeny"
+                        onClick={handleOpenFeatures}
+                    />
                     {hasAnalyticsConsent ? (
                         <ActionCard
                             icon={<IconMessageCircle size={20} />}

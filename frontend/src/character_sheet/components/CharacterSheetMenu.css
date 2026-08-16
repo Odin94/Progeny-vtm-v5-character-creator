@@ -93,6 +93,11 @@
         grid-column: 2;
         justify-self: center;
     }
+
+    .sheet-menu__feature-guide {
+        grid-column: 3;
+        justify-self: center;
+    }
 }
 .sheet-menu__disclaimer { color: rgba(244, 236, 232, 0.86); font-family: Inter, "Segoe UI", sans-serif; line-height: 1.65; }
 .sheet-menu__disclaimer a { color: #d4af64; text-underline-offset: 3px; }

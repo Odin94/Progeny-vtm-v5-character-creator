@@ -106,7 +106,7 @@ import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
 import { getCharacterVitals, isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
-import { isLocalhost } from "~/utils/isLocalhost"
+import { trackFeatureGuideOpened } from "~/utils/analytics"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 const topbarHeight = 52
@@ -253,7 +253,6 @@ const clearInviteTokenFromUrl = () => {
 // * Move a bunch of the stuff we're currently passing into sections into the section components
 
 const MePage = () => {
-    const showFeatureGuide = isLocalhost()
     const {
         user,
         isLoading: authLoading,
@@ -1685,38 +1684,39 @@ const MePage = () => {
                         }}
                     >
                         <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
-                            <Group mb="xl" justify="flex-end">
-                                {showFeatureGuide ? (
+                            <Group mb="xl" justify="space-between" align="center" wrap="wrap">
+                                <Button
+                                    component={Link}
+                                    to="/features"
+                                    color="gray"
+                                    variant="light"
+                                    leftSection={<IconBook2 size={18} />}
+                                    onClick={() => trackFeatureGuideOpened("account-page")}
+                                >
+                                    Feature guide
+                                </Button>
+                                <Group justify="flex-end" wrap="wrap">
                                     <Button
                                         component={Link}
-                                        to="/features"
-                                        color="gray"
+                                        to="/homebrew"
+                                        color="grape"
                                         variant="light"
                                         leftSection={<IconBook2 size={18} />}
                                     >
-                                        Feature guide
+                                        Homebrew
                                     </Button>
-                                ) : null}
-                                <Button
-                                    component={Link}
-                                    to="/homebrew"
-                                    color="grape"
-                                    variant="light"
-                                    leftSection={<IconBook2 size={18} />}
-                                >
-                                    Homebrew
-                                </Button>
-                                <SupportConversationButton
-                                    source="account-page"
-                                    color="red"
-                                    variant="outline"
-                                    leftSection={<IconMessageCircle size={18} />}
-                                >
-                                    Feedback & Support
-                                </SupportConversationButton>
-                                <Button onClick={signOut} color="red" variant="outline">
-                                    Sign Out
-                                </Button>
+                                    <SupportConversationButton
+                                        source="account-page"
+                                        color="red"
+                                        variant="outline"
+                                        leftSection={<IconMessageCircle size={18} />}
+                                    >
+                                        Feedback & Support
+                                    </SupportConversationButton>
+                                    <Button onClick={signOut} color="red" variant="outline">
+                                        Sign Out
+                                    </Button>
+                                </Group>
                             </Group>
                             <Stack gap="xl">
                                 <UserProfileSection

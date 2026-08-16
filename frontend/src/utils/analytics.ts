@@ -9,6 +9,17 @@ type EventParams = {
     value?: number
 }
 
+type FeatureGuideEntryPoint =
+    | "account-page"
+    | "character-sheet-menu"
+    | "character-creation-complete"
+    | "landing-page"
+
+type FeatureGuideNavigationTarget = {
+    page: string
+    section?: string
+}
+
 export const trackEvent = ({ action, category, label, value }: EventParams) => {
     try {
         posthog.capture(action, {
@@ -18,6 +29,28 @@ export const trackEvent = ({ action, category, label, value }: EventParams) => {
         })
     } catch (error) {
         console.warn("PostHog event tracking failed:", error)
+    }
+}
+
+export const trackFeatureGuideOpened = (entryPoint: FeatureGuideEntryPoint) => {
+    try {
+        posthog.capture("feature_guide_opened", { entry_point: entryPoint })
+    } catch (error) {
+        console.warn("Feature guide open tracking failed:", error)
+    }
+}
+
+export const trackFeatureGuideNavigationSelected = ({
+    page,
+    section
+}: FeatureGuideNavigationTarget) => {
+    try {
+        posthog.capture("feature_guide_navigation_selected", {
+            page,
+            ...(section ? { section } : {})
+        })
+    } catch (error) {
+        console.warn("Feature guide navigation tracking failed:", error)
     }
 }
 

@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
-import { resetPostHogIdentity } from "~/utils/analytics"
+import {
+    resetPostHogIdentity,
+    trackFeatureGuideNavigationSelected,
+    trackFeatureGuideOpened
+} from "~/utils/analytics"
 
 vi.mock("posthog-js", () => ({
     default: {
@@ -45,5 +49,22 @@ describe("resetPostHogIdentity", () => {
         expect(posthog.reset).toHaveBeenCalledOnce()
         expect(posthog.opt_in_capturing).not.toHaveBeenCalled()
         expect(posthog.opt_out_capturing).not.toHaveBeenCalled()
+    })
+
+    it("captures a feature guide entry point without user data", () => {
+        trackFeatureGuideOpened("account-page")
+
+        expect(posthog.capture).toHaveBeenCalledWith("feature_guide_opened", {
+            entry_point: "account-page"
+        })
+    })
+
+    it("captures the selected guide page and optional section", () => {
+        trackFeatureGuideNavigationSelected({ page: "character-sheet", section: "rolling-dice" })
+
+        expect(posthog.capture).toHaveBeenCalledWith("feature_guide_navigation_selected", {
+            page: "character-sheet",
+            section: "rolling-dice"
+        })
     })
 })

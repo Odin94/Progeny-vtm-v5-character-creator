@@ -36,6 +36,7 @@ import menuImage from "~/assets/feature-docs-images/character-sheet/7menu.jpeg"
 import chatImage from "~/assets/feature-docs-images/character-sheet/8chat.png"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
+import { trackFeatureGuideNavigationSelected } from "~/utils/analytics"
 import "./FeaturesPage.css"
 
 type FeatureSection = {
@@ -208,10 +209,7 @@ const featurePages: FeaturePage[] = [
                 title: "Editing your character",
                 content: (
                     <>
-                        <FeatureImage
-                            src={modesImage}
-                            alt="Character sheet play mode selector"
-                        />
+                        <FeatureImage src={modesImage} alt="Character sheet play mode selector" />
                         <Text component="p">
                             While in play mode, you can only edit the dynamic parts of your
                             character: taken damage on your health, willpower, humanity, and hunger.
@@ -335,10 +333,7 @@ const featurePages: FeaturePage[] = [
                                 </Anchor>
                             </List.Item>
                         </List>
-                        <FeatureImage
-                            src={nicknameImage}
-                            alt="Account page nickname settings"
-                        />
+                        <FeatureImage src={nicknameImage} alt="Account page nickname settings" />
                     </>
                 )
             },
@@ -400,10 +395,7 @@ const featurePages: FeaturePage[] = [
                             live summary and updates of their characters. Everyone can see the
                             current level of health, hunger, and willpower of all characters.
                         </Text>
-                        <FeatureImage
-                            src={coteriesImage}
-                            alt="Account page coterie management"
-                        />
+                        <FeatureImage src={coteriesImage} alt="Account page coterie management" />
                         <Text component="p">
                             Coteries come with a coterie-specific chat that all members can join at
                             any time. This chat works like any other chat on Progeny: auto-shared
@@ -449,11 +441,8 @@ const featurePages: FeaturePage[] = [
                             that&apos;s on your mind. I love hearing from you!
                         </Text>
                         <Text component="p">
-                            I may take up to a week to reply. <Anchor
-                                href={CONTACT_LINKS.kofi.href}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
+                            I may take up to a week to reply.{" "}
+                            <Anchor href={CONTACT_LINKS.kofi.href} target="_blank" rel="noreferrer">
                                 Ko-Fi
                             </Anchor>{" "}
                             supporters get priority support &lt;3
@@ -564,7 +553,11 @@ const featurePages: FeaturePage[] = [
                             <List.Item>
                                 Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer,
                                 Marcus Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
-                                <Anchor href="https://unsplash.com" target="_blank" rel="noreferrer">
+                                <Anchor
+                                    href="https://unsplash.com"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
                                     Unsplash
                                 </Anchor>
                                 .
@@ -639,7 +632,10 @@ export default function FeaturesPage({ pageId }: FeaturesPageProps) {
                     <Anchor
                         component={Link}
                         to={page.path}
-                        onClick={closeNavigation}
+                        onClick={() => {
+                            trackFeatureGuideNavigationSelected({ page: page.id })
+                            closeNavigation()
+                        }}
                         className="features-page__page-link"
                     >
                         {page.title}
@@ -651,7 +647,13 @@ export default function FeaturesPage({ pageId }: FeaturesPageProps) {
                                 component={Link}
                                 to={page.path}
                                 hash={section.id}
-                                onClick={closeNavigation}
+                                onClick={() => {
+                                    trackFeatureGuideNavigationSelected({
+                                        page: page.id,
+                                        section: section.id
+                                    })
+                                    closeNavigation()
+                                }}
                                 className="features-page__section-link"
                             >
                                 {section.title}
@@ -792,6 +794,11 @@ export default function FeaturesPage({ pageId }: FeaturesPageProps) {
                                 <Button
                                     component={Link}
                                     to={nextPage.path}
+                                    onClick={() =>
+                                        trackFeatureGuideNavigationSelected({
+                                            page: nextPage.id
+                                        })
+                                    }
                                     rightSection={<IconArrowRight size={16} />}
                                     className="features-page__next-page"
                                 >

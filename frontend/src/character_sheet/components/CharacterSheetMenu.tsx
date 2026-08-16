@@ -22,6 +22,7 @@ import { Buffer } from "buffer"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -40,7 +41,7 @@ import {
     getUploadFile,
     updateHealthAndWillpowerAndBloodPotencyAndHumanity
 } from "~/generator/utils"
-import { trackEvent } from "~/utils/analytics"
+import { trackEvent, trackFeatureGuideOpened } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
 import "./CharacterSheetMenu.css"
@@ -410,6 +411,19 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                 onClick={() => navigateTo("disclaimer")}
                                             >
                                                 Disclaimer
+                                            </Button>
+                                            <Button
+                                                component={Link}
+                                                to="/features"
+                                                leftSection={<IconHelpHexagon size={18} />}
+                                                variant="subtle"
+                                                className="sheet-menu__feature-guide"
+                                                onClick={() => {
+                                                    trackFeatureGuideOpened("character-sheet-menu")
+                                                    handleMenuClose()
+                                                }}
+                                            >
+                                                Feature guide
                                             </Button>
                                             {isAuthenticated ? (
                                                 <Button
