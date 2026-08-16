@@ -178,6 +178,11 @@
 
 .features-page__next-page:hover {
     background: #ecd08f;
+    color: #1a1112;
+}
+
+.features-page__next-page:active {
+    transform: scale(0.97);
 }
 
 @media (max-width: 48rem) {
