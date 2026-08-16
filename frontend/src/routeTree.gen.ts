@@ -14,6 +14,7 @@ import { Route as FeaturesAccountAndMultipleCharactersRouteImport } from './rout
 import { Route as FeaturesCharacterCreationRouteImport } from './routes/features.character-creation'
 import { Route as FeaturesCharacterSheetRouteImport } from './routes/features.character-sheet'
 import { Route as FeaturesCoteriesRouteImport } from './routes/features.coteries'
+import { Route as FeaturesCreditsAndContactRouteImport } from './routes/features.credits-and-contact'
 import { Route as HomebrewRouteImport } from './routes/homebrew'
 import { Route as HomebrewLibraryRouteImport } from './routes/homebrew.library'
 import { Route as HomebrewLibraryCollectionIdRouteImport } from './routes/homebrew.library.$collectionId'
@@ -57,6 +58,11 @@ const FeaturesCharacterSheetRoute = FeaturesCharacterSheetRouteImport.update({
 const FeaturesCoteriesRoute = FeaturesCoteriesRouteImport.update({
   id: '/features/coteries',
   path: '/features/coteries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesCreditsAndContactRoute = FeaturesCreditsAndContactRouteImport.update({
+  id: '/features/credits-and-contact',
+  path: '/features/credits-and-contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomebrewRoute = HomebrewRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/features/character-creation': typeof FeaturesCharacterCreationRoute
   '/features/character-sheet': typeof FeaturesCharacterSheetRoute
   '/features/coteries': typeof FeaturesCoteriesRoute
+  '/features/credits-and-contact': typeof FeaturesCreditsAndContactRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/features/character-creation': typeof FeaturesCharacterCreationRoute
   '/features/character-sheet': typeof FeaturesCharacterSheetRoute
   '/features/coteries': typeof FeaturesCoteriesRoute
+  '/features/credits-and-contact': typeof FeaturesCreditsAndContactRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/features/character-creation': typeof FeaturesCharacterCreationRoute
   '/features/character-sheet': typeof FeaturesCharacterSheetRoute
   '/features/coteries': typeof FeaturesCoteriesRoute
+  '/features/credits-and-contact': typeof FeaturesCreditsAndContactRoute
   '/sheet': typeof SheetRoute
   '/homebrew': typeof HomebrewRoute
   '/homebrew/library': typeof HomebrewLibraryRoute
@@ -162,10 +171,10 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  fullPaths: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
-  id: '__root__' | '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  to: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  id: '__root__' | '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -177,6 +186,7 @@ export interface RootRouteChildren {
   FeaturesCharacterCreationRoute: typeof FeaturesCharacterCreationRoute
   FeaturesCharacterSheetRoute: typeof FeaturesCharacterSheetRoute
   FeaturesCoteriesRoute: typeof FeaturesCoteriesRoute
+  FeaturesCreditsAndContactRoute: typeof FeaturesCreditsAndContactRoute
   SheetRoute: typeof SheetRoute
   HomebrewRoute: typeof HomebrewRoute
   HomebrewLibraryRoute: typeof HomebrewLibraryRoute
@@ -236,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/features/coteries'
       fullPath: '/features/coteries'
       preLoaderRoute: typeof FeaturesCoteriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/credits-and-contact': {
+      id: '/features/credits-and-contact'
+      path: '/features/credits-and-contact'
+      fullPath: '/features/credits-and-contact'
+      preLoaderRoute: typeof FeaturesCreditsAndContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/homebrew': {
@@ -313,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesCharacterCreationRoute: FeaturesCharacterCreationRoute,
   FeaturesCharacterSheetRoute: FeaturesCharacterSheetRoute,
   FeaturesCoteriesRoute: FeaturesCoteriesRoute,
+  FeaturesCreditsAndContactRoute: FeaturesCreditsAndContactRoute,
   SheetRoute: SheetRoute,
   HomebrewRoute: HomebrewRoute,
   HomebrewLibraryRoute: HomebrewLibraryRoute,

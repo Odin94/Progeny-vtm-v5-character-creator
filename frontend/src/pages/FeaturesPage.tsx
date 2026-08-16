@@ -6,6 +6,7 @@ import {
     Button,
     Container,
     Group,
+    List,
     Paper,
     Stack,
     Text,
@@ -30,6 +31,7 @@ type FeaturePageId =
     | "character-sheet"
     | "account-and-multiple-characters"
     | "coteries"
+    | "credits-and-contact"
 
 type FeaturePagePath = `/features/${FeaturePageId}`
 
@@ -240,13 +242,107 @@ const featurePages: FeaturePage[] = [
         id: "account-and-multiple-characters",
         title: "Account & Multiple Characters",
         path: "/features/account-and-multiple-characters",
-        sections: [{ id: "your-account", title: "Your account" }]
+        sections: [
+            {
+                id: "account",
+                title: "Account",
+                content: (
+                    <>
+                        <Text component="p">
+                            You can <AccountLink>create a free account</AccountLink> either via SSO
+                            or just email and password. Progeny features that rely on the server
+                            require you to be signed in:
+                        </Text>
+                        <List withPadding>
+                            <List.Item>
+                                Storing characters in the cloud and switching between them
+                            </List.Item>
+                            <List.Item>Creating or joining a friend’s Coterie</List.Item>
+                            <List.Item>Creating or joining chats</List.Item>
+                            <List.Item>Using the live-updating Coterie page</List.Item>
+                            <List.Item>
+                                Taking personal notes on your character or Coterie
+                            </List.Item>
+                        </List>
+                        <Text component="p">And then some more.</Text>
+                    </>
+                )
+            },
+            {
+                id: "managing-your-account",
+                title: "Managing your account",
+                content: (
+                    <>
+                        <List withPadding>
+                            <List.Item>
+                                Give yourself a nickname to be displayed to other players you
+                                interact with on Progeny—this way your email address stays private.
+                            </List.Item>
+                            <List.Item>
+                                If you don’t set a username, parts of your email address may be used
+                                as a placeholder nickname.
+                            </List.Item>
+                            <List.Item>
+                                You can delete your account by sending me a message on any platform
+                                or in support chat.{" "}
+                                <Anchor component={Link} to="/features/credits-and-contact">
+                                    See more.
+                                </Anchor>
+                            </List.Item>
+                        </List>
+                        <ImagePlaceholder />
+                    </>
+                )
+            },
+            {
+                id: "managing-characters",
+                title: "Managing characters",
+                content: (
+                    <>
+                        <Text component="p">
+                            On the account page, you can save your current character, create an
+                            empty character, or load one of your existing characters. You can also
+                            load a new character from a <code>json</code> save file.
+                        </Text>
+                        <ImagePlaceholder />
+                        <Text component="p">
+                            Loading a new character automatically saves your previous character, so
+                            you won’t lose your changes.
+                        </Text>
+                        <Text component="p">
+                            You can also share your characters with other players by their nickname.
+                            Those players will be able to see your character and any changes you
+                            make to it, but they won’t be able to make edits to your character.
+                        </Text>
+                    </>
+                )
+            },
+            {
+                id: "coteries",
+                title: "Coteries",
+                content: (
+                    <Text component="p">
+                        You can create and manage coteries on the{" "}
+                        <AccountLink>account page</AccountLink>. For details, see{" "}
+                        <Anchor component={Link} to="/features/coteries">
+                            Coteries features.
+                        </Anchor>
+                    </Text>
+                )
+            }
+        ]
     },
     {
         id: "coteries",
         title: "Coteries",
         path: "/features/coteries",
         sections: [{ id: "playing-together", title: "Playing together" }]
+    },
+    {
+        id: "credits-and-contact",
+        title: "Credits & Contact",
+        path: "/features/credits-and-contact",
+        sections: []
     }
 ]
 
@@ -256,6 +352,20 @@ function ImagePlaceholder({ label = "Image coming soon" }: { label?: string }) {
             <IconPhoto size={22} stroke={1.4} />
             <Text>{label}</Text>
         </Paper>
+    )
+}
+
+function AccountLink({ children }: { children: ReactNode }) {
+    const { isAuthenticated, signIn } = useAuth()
+
+    return isAuthenticated ? (
+        <Anchor component={Link} to="/me">
+            {children}
+        </Anchor>
+    ) : (
+        <Anchor component="button" type="button" onClick={signIn}>
+            {children}
+        </Anchor>
     )
 }
 
