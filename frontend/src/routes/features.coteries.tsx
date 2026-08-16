@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { lazy, Suspense } from "react"
+import { Suspense } from "react"
 import RenderProfiler from "~/components/RenderProfiler"
-
-const FeaturesPage = lazy(() => import("~/pages/FeaturesPage"))
+import FeaturesPage from "~/pages/LazyFeaturesPage"
 
 export const Route = createFileRoute("/features/coteries")({
     component: CoteriesFeatureGuide
