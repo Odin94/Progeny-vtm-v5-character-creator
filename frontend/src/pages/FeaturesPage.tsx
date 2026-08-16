@@ -459,7 +459,7 @@ export default function FeaturesPage({ pageId }: FeaturesPageProps) {
 
     return (
         <Box className="features-page">
-            <AppShell header={{ height: 64 }} padding={0}>
+            <AppShell header={{ height: 52 }} padding={0}>
                 <AppShell.Header className="features-page__header">
                     <AppTopbar />
                 </AppShell.Header>
