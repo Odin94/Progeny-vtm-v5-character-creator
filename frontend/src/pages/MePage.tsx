@@ -40,7 +40,10 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
-import ConfirmActionModal from "~/components/ConfirmActionModal"
+import ConfirmActionModal, {
+    confirmationModalCancelButtonStyles,
+    confirmationModalWithHeaderStyles
+} from "~/components/ConfirmActionModal"
 import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
@@ -51,6 +54,7 @@ import type { DisciplineName } from "~/data/NameSchemas"
 import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
 import { skillsKeySchema } from "~/data/Skills"
 import { downloadCharacterSheet } from "~/generator/pdfCreator"
+import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 import {
     downloadJson,
     getUploadFile,
@@ -176,8 +180,15 @@ const ShareCharacterModalContent = ({
                     </Group>
                 </Stack>
             ) : null}
-            <Group justify="flex-end" gap="xs">
-                <Button variant="subtle" color="red" onClick={onClose} disabled={isSharing}>
+            <Divider color={rgba(RAW_GOLD, 0.3)} />
+            <Group justify="space-between" gap="xs">
+                <Button
+                    variant="subtle"
+                    color="gray"
+                    onClick={onClose}
+                    disabled={isSharing}
+                    styles={confirmationModalCancelButtonStyles}
+                >
                     Cancel
                 </Button>
                 <Button
@@ -185,6 +196,7 @@ const ShareCharacterModalContent = ({
                     onClick={handleConfirmShare}
                     loading={isSharing}
                     disabled={!shareNickname.trim()}
+                    styles={confirmationModalDangerConfirmButtonStyles}
                 >
                     Share
                 </Button>
@@ -1791,6 +1803,9 @@ const MePage = () => {
                 }}
                 title="Create Empty Character"
                 centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <TextInput
@@ -1804,10 +1819,12 @@ const MePage = () => {
                             }
                         }}
                     />
-                    <Group justify="flex-end">
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
+                    <Group justify="space-between">
                         <Button
                             variant="subtle"
-                            color="red"
+                            color="gray"
+                            styles={confirmationModalCancelButtonStyles}
                             onClick={() => {
                                 setCreateCharacterModalOpened(false)
                                 setNewCharacterName("")
@@ -1815,7 +1832,11 @@ const MePage = () => {
                         >
                             Cancel
                         </Button>
-                        <Button color="red" onClick={handleCreateEmptyCharacter}>
+                        <Button
+                            color="red"
+                            onClick={handleCreateEmptyCharacter}
+                            styles={confirmationModalDangerConfirmButtonStyles}
+                        >
                             Create
                         </Button>
                     </Group>
@@ -1831,6 +1852,9 @@ const MePage = () => {
                 }}
                 title="Create Coterie"
                 centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <TextInput
@@ -1844,10 +1868,12 @@ const MePage = () => {
                             }
                         }}
                     />
-                    <Group justify="flex-end">
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
+                    <Group justify="space-between">
                         <Button
                             variant="subtle"
-                            color="red"
+                            color="gray"
+                            styles={confirmationModalCancelButtonStyles}
                             onClick={() => {
                                 setCreateCoterieModalOpened(false)
                                 setNewCoterieName("")
@@ -1855,7 +1881,11 @@ const MePage = () => {
                         >
                             Cancel
                         </Button>
-                        <Button color="red" onClick={handleCreateCoterie}>
+                        <Button
+                            color="red"
+                            onClick={handleCreateCoterie}
+                            styles={confirmationModalDangerConfirmButtonStyles}
+                        >
                             Create
                         </Button>
                     </Group>
@@ -1872,6 +1902,9 @@ const MePage = () => {
                 }}
                 title="Edit Coterie"
                 centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <TextInput
@@ -1885,10 +1918,12 @@ const MePage = () => {
                             }
                         }}
                     />
-                    <Group justify="flex-end">
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
+                    <Group justify="space-between">
                         <Button
                             variant="subtle"
-                            color="red"
+                            color="gray"
+                            styles={confirmationModalCancelButtonStyles}
                             onClick={() => {
                                 setEditCoterieModalOpened(false)
                                 setEditingCoterie(null)
@@ -1897,7 +1932,11 @@ const MePage = () => {
                         >
                             Cancel
                         </Button>
-                        <Button color="red" onClick={handleUpdateCoterie}>
+                        <Button
+                            color="red"
+                            onClick={handleUpdateCoterie}
+                            styles={confirmationModalDangerConfirmButtonStyles}
+                        >
                             Save
                         </Button>
                     </Group>
@@ -1914,6 +1953,9 @@ const MePage = () => {
                 }}
                 title={`Add Character to ${selectedCoterieForAdd?.name || "Coterie"}`}
                 centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <Select
@@ -1931,10 +1973,12 @@ const MePage = () => {
                         value={selectedCharacterForCoterie}
                         onChange={(value) => setSelectedCharacterForCoterie(value || "")}
                     />
-                    <Group justify="flex-end">
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
+                    <Group justify="space-between">
                         <Button
                             variant="subtle"
-                            color="red"
+                            color="gray"
+                            styles={confirmationModalCancelButtonStyles}
                             onClick={() => {
                                 setAddCharacterToCoterieModalOpened(false)
                                 setSelectedCoterieForAdd(null)
@@ -1947,6 +1991,7 @@ const MePage = () => {
                             color="red"
                             onClick={handleConfirmAddCharacterToCoterie}
                             disabled={!selectedCharacterForCoterie}
+                            styles={confirmationModalDangerConfirmButtonStyles}
                         >
                             Add
                         </Button>
@@ -1965,6 +2010,9 @@ const MePage = () => {
                 title={`Invites for ${coterieForInvites?.name || "Coterie"}`}
                 centered
                 size="lg"
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <Button
@@ -2008,7 +2056,7 @@ const MePage = () => {
                         </Stack>
                     ) : null}
 
-                    <Divider />
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
 
                     <Stack gap="xs">
                         {coterieInvites && coterieInvites.length > 0 ? (
@@ -2163,6 +2211,9 @@ const MePage = () => {
                 }}
                 title="Warning: Unsaved Changes"
                 centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <Text>
@@ -2174,10 +2225,12 @@ const MePage = () => {
                         You can save your current changes first, or load the character anyway (which
                         will discard your unsaved changes).
                     </Text>
-                    <Group justify="flex-end" gap="xs">
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
+                    <Group justify="space-between" gap="xs">
                         <Button
                             variant="subtle"
-                            color="red"
+                            color="gray"
+                            styles={confirmationModalCancelButtonStyles}
                             onClick={() => {
                                 setLoadSameCharacterWarningModalOpened(false)
                                 setCharacterToLoad(null)
@@ -2191,6 +2244,7 @@ const MePage = () => {
                             onClick={handleConfirmLoadSameCharacter}
                             disabled={isAnyOperationInFlight}
                             loading={isLoadingCharacter}
+                            styles={confirmationModalDangerConfirmButtonStyles}
                         >
                             Load Anyway
                         </Button>
@@ -2207,6 +2261,9 @@ const MePage = () => {
                 }}
                 title="Share Character"
                 centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <ShareCharacterModalContent
                     characterToShare={characterToShare}
@@ -2255,16 +2312,12 @@ const MePage = () => {
                     setCoterieSummaryModalOpened(false)
                     setCoterieForSummary(null)
                 }}
-                title={
-                    <Group gap="xs">
-                        <IconUsers size={20} />
-                        <Text fw={600} size="lg">
-                            Coterie Summary: {currentCoterieForSummary?.name || ""}
-                        </Text>
-                    </Group>
-                }
+                title={`Coterie Summary: ${currentCoterieForSummary?.name || ""}`}
                 centered
                 size="xl"
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 {currentCoterieForSummary &&
                 currentCoterieForSummary.members &&
@@ -2285,16 +2338,12 @@ const MePage = () => {
                     setSummaryModalOpened(false)
                     setCharacterForSummary(null)
                 }}
-                title={
-                    <Group gap="xs">
-                        <IconInfoCircle size={20} />
-                        <Text fw={600} size="lg">
-                            Character Summary
-                        </Text>
-                    </Group>
-                }
+                title="Character Summary"
                 centered
                 size="xl"
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 {characterForSummary?.data ? (
                     <CharacterSummaryContent

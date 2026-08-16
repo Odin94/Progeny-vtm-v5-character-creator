@@ -28,6 +28,13 @@ import {
     IconUsers
 } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
+import {
+    confirmationModalCancelButtonStyles,
+    confirmationModalWithHeaderStyles
+} from "~/components/ConfirmActionModal"
+import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
+import { globals } from "~/globals"
+import { RAW_GOLD, rgba } from "~/theme/colors"
 import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieCharacter, CoteriePlayerResponse, CoterieResponse } from "~/utils/api"
 import { getCharacterVitals } from "~/utils/characterVitals"
@@ -447,6 +454,10 @@ const CoteriesSection = ({
                 opened={!!homebrewCoterie}
                 onClose={() => setHomebrewCoterie(null)}
                 title={`Homebrew for ${homebrewCoterie?.name ?? "coterie"}`}
+                centered
+                withCloseButton={false}
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={confirmationModalWithHeaderStyles(globals.isPhoneScreen)}
             >
                 <Stack>
                     <Text size="sm" c="dimmed">
@@ -474,13 +485,20 @@ const CoteriesSection = ({
                             </Stack>
                         </Checkbox.Group>
                     )}
-                    <Group justify="flex-end">
-                        <Button variant="subtle" onClick={() => setHomebrewCoterie(null)}>
+                    <Divider color={rgba(RAW_GOLD, 0.3)} />
+                    <Group justify="space-between">
+                        <Button
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => setHomebrewCoterie(null)}
+                            styles={confirmationModalCancelButtonStyles}
+                        >
                             Cancel
                         </Button>
                         <Button
-                            color="grape"
+                            color="red"
                             loading={setCoterieHomebrewMutation.isPending}
+                            styles={confirmationModalDangerConfirmButtonStyles}
                             onClick={() => {
                                 if (!homebrewCoterie) return
                                 setCoterieHomebrewMutation.mutate(

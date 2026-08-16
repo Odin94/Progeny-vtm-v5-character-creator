@@ -18,6 +18,17 @@ export const ConfirmationModalStyle = (
     }
 })
 
+export const confirmationModalWithHeaderStyles = (
+    phoneScreen: boolean
+): Partial<Record<ModalStylesNames, CSSProperties>> => ({
+    ...ConfirmationModalStyle(phoneScreen),
+    header: {
+        padding: phoneScreen ? "1.1rem 1.1rem 0" : "1.35rem 1.35rem 0",
+        justifyContent: "center"
+    },
+    title: confirmationModalHeadingStyle(phoneScreen)
+})
+
 export const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
     fontFamily: "Cinzel, Georgia, serif",
     fontSize: phoneScreen ? "1.2rem" : "1.35rem",
