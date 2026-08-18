@@ -5,6 +5,7 @@ import {
     getMeritFlawPointCost,
     getMeritFlawDisplayName,
     getPredatorTypeMeritsByName,
+    isMeritFlawCoveredByPredatorTypeGrant,
     getResolvedMeritsAndFlaws
 } from "~/data/meritsAndFlawsResolution"
 import { getBasicTestCharacter } from "./testUtils"
@@ -48,6 +49,41 @@ describe("MeritsAndFlawsPicker predator type merits and flaws", () => {
         })
 
         expect(exclusionMap.get("Stunning")).toEqual(["Beautiful"])
+    })
+
+    it("recognizes legacy copies of predator type grants as grants", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            predatorType: {
+                name: "Siren" as const,
+                pickedDiscipline: "presence",
+                pickedSpecialties: [],
+                pickedMeritsAndFlaws: []
+            },
+            merits: [
+                {
+                    name: "Beautiful",
+                    level: 2,
+                    summary: "+1 die in Social rolls",
+                    type: "merit" as const,
+                    excludes: ["Stunning", "Ugly", "Repulsive"]
+                }
+            ],
+            flaws: []
+        }
+        const exclusionMap = new Map<string, string[]>()
+        const beautiful = character.merits[0]
+
+        addMeritFlawExclusions(
+            exclusionMap,
+            beautiful,
+            isMeritFlawCoveredByPredatorTypeGrant(
+                beautiful,
+                getPredatorTypeMeritsByName(character)
+            )
+        )
+
+        expect(exclusionMap.get("Stunning")).toBeUndefined()
     })
 
     it("maps selectable Osiris merits and flaws to the catalog picker names", () => {

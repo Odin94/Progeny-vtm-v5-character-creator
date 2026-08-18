@@ -30,7 +30,11 @@ import {
     MeritOrFlaw
 } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
-import { addMeritFlawExclusions } from "~/data/meritsAndFlawsResolution"
+import {
+    addMeritFlawExclusions,
+    getPredatorTypeMeritsByName,
+    isMeritFlawCoveredByPredatorTypeGrant
+} from "~/data/meritsAndFlawsResolution"
 import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
 import PipButton from "./PipButton"
@@ -135,8 +139,13 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
+        const predatorTypeMeritsByName = getPredatorTypeMeritsByName(character)
         character.merits.forEach((merit) => {
-            addMeritFlawExclusions(map, merit)
+            addMeritFlawExclusions(
+                map,
+                merit,
+                isMeritFlawCoveredByPredatorTypeGrant(merit, predatorTypeMeritsByName)
+            )
         })
         character.flaws.forEach((flaw) => {
             addMeritFlawExclusions(map, flaw)

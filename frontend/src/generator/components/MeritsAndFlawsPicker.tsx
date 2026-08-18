@@ -22,7 +22,8 @@ import { Character, getCharacterExcludedMeritsAndFlaws, MeritFlaw } from "../../
 import {
     addMeritFlawExclusions,
     getMeritFlawPointCost,
-    getPredatorTypeMeritsByName
+    getPredatorTypeMeritsByName,
+    isMeritFlawCoveredByPredatorTypeGrant
 } from "../../data/meritsAndFlawsResolution"
 import {
     advancedMeritsAndFlaws,
@@ -540,7 +541,11 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
         pickedMeritsAndFlaws.forEach((meritFlaw) => {
-            addMeritFlawExclusions(map, meritFlaw)
+            addMeritFlawExclusions(
+                map,
+                meritFlaw,
+                isMeritFlawCoveredByPredatorTypeGrant(meritFlaw, predatorTypeMeritsByName)
+            )
         })
         const predatorType = PredatorTypes[character.predatorType.name]
         const predatorTypeItems = [

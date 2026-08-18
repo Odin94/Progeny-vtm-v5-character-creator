@@ -42,6 +42,19 @@ export const addMeritFlawExclusions = (
 export const getCatalogMeritFlawName = (name: string) =>
     predatorTypeMeritFlawCatalogNameAliases.get(name) ?? name
 
+export const isMeritFlawCoveredByPredatorTypeGrant = (
+    meritFlaw: MeritFlaw,
+    predatorTypeMeritsByName: Map<string, MeritFlaw>
+) => {
+    const predatorTypeMeritFlaw = predatorTypeMeritsByName.get(
+        getCatalogMeritFlawName(meritFlaw.name)
+    )
+    return (
+        predatorTypeMeritFlaw?.type === meritFlaw.type &&
+        predatorTypeMeritFlaw.level >= meritFlaw.level
+    )
+}
+
 const getMeritFlawKey = (
     meritFlaw: Pick<MeritFlaw, "name" | "type"> & Partial<Pick<MeritFlaw, "text">>
 ) => `${meritFlaw.type}:${getCatalogMeritFlawName(meritFlaw.name)}:${meritFlaw.text ?? ""}`
