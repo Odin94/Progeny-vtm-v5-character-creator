@@ -33,10 +33,21 @@ describe("MeritsAndFlawsPicker predator type merits and flaws", () => {
         const exclusionMap = new Map<string, string[]>()
         const beautiful = getPredatorTypeMeritsByName(character).get("Beautiful")!
 
-        addMeritFlawExclusions(exclusionMap, beautiful)
+        addMeritFlawExclusions(exclusionMap, beautiful, true)
 
         expect(exclusionMap.get("Stunning")).toBeUndefined()
         expect(getMeritFlawPointCost(character.merits[0], getPredatorTypeMeritsByName(character))).toBe(4)
+    })
+
+    it("keeps Stunning excluded when Beautiful was purchased normally", () => {
+        const exclusionMap = new Map<string, string[]>()
+
+        addMeritFlawExclusions(exclusionMap, {
+            name: "Beautiful",
+            excludes: ["Stunning", "Ugly", "Repulsive"]
+        })
+
+        expect(exclusionMap.get("Stunning")).toEqual(["Beautiful"])
     })
 
     it("maps selectable Osiris merits and flaws to the catalog picker names", () => {

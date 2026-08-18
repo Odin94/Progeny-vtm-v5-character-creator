@@ -548,7 +548,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             ...character.predatorType.pickedMeritsAndFlaws
         ]
         predatorTypeItems.forEach((meritFlaw) => {
-            addMeritFlawExclusions(map, meritFlaw)
+            addMeritFlawExclusions(map, meritFlaw, true)
         })
         const clanExclusions = getCharacterExcludedMeritsAndFlaws(character)
         if (clanExclusions.length > 0) {

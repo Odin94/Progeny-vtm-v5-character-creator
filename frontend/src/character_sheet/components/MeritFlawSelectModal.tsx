@@ -142,12 +142,12 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             addMeritFlawExclusions(map, flaw)
         })
         character.predatorType.pickedMeritsAndFlaws.forEach((meritFlaw) => {
-            addMeritFlawExclusions(map, meritFlaw)
+            addMeritFlawExclusions(map, meritFlaw, true)
         })
         const predatorType = PredatorTypes[character.predatorType.name]
         if (predatorType) {
             predatorType.meritsAndFlaws.forEach((meritFlaw) => {
-                addMeritFlawExclusions(map, meritFlaw)
+                addMeritFlawExclusions(map, meritFlaw, true)
             })
         }
         const clan = character.homebrewClan ?? clans[character.clan]

@@ -18,19 +18,19 @@ const predatorTypeMeritFlawCatalogNameAliases = new Map<string, string>([
 ])
 
 // Looks is represented in the catalog as two named merits, but Stunning is the
-// higher tier of Beautiful. Keep the normal one-way exclusion so a character
-// cannot add Beautiful after Stunning, while allowing Beautiful to be upgraded
-// to Stunning as a separate full-cost purchase.
+// higher tier of Beautiful. A Beautiful grant may be upgraded to Stunning;
+// purchased Beautiful remains mutually exclusive with it.
 export const isMeritFlawUpgrade = (currentName: string, nextName: string) =>
     currentName === "Beautiful" && nextName === "Stunning"
 
 export const addMeritFlawExclusions = (
     exclusionMap: Map<string, string[]>,
     meritFlaw: Pick<MeritFlaw, "name" | "excludes">,
+    allowsLooksUpgrade = false,
     label = meritFlaw.name
 ) => {
     meritFlaw.excludes.forEach((excludedName) => {
-        if (isMeritFlawUpgrade(meritFlaw.name, excludedName)) return
+        if (allowsLooksUpgrade && isMeritFlawUpgrade(meritFlaw.name, excludedName)) return
 
         if (!exclusionMap.has(excludedName)) {
             exclusionMap.set(excludedName, [])
