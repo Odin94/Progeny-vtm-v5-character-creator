@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import {
+    removeUtmParametersFromCurrentUrl,
     resetPostHogIdentity,
     trackFeatureGuideNavigationSelected,
     trackFeatureGuideOpened
@@ -66,5 +67,33 @@ describe("resetPostHogIdentity", () => {
             page: "character-sheet",
             section: "rolling-dice"
         })
+    })
+})
+
+describe("removeUtmParametersFromCurrentUrl", () => {
+    beforeEach(() => {
+        window.history.replaceState(null, "", "/")
+    })
+
+    it("removes UTM parameters without affecting the route, other query parameters, or hash", () => {
+        window.history.replaceState(
+            null,
+            "",
+            "/features/character-creation?utm_source=reddit&utm_medium=3.4&utm_campaign=vtm&tab=overview#details"
+        )
+
+        expect(removeUtmParametersFromCurrentUrl()).toBe(true)
+
+        expect(window.location.pathname).toBe("/features/character-creation")
+        expect(window.location.search).toBe("?tab=overview")
+        expect(window.location.hash).toBe("#details")
+    })
+
+    it("does not update the URL when it has no UTM parameters", () => {
+        window.history.replaceState(null, "", "/features/character-creation?tab=overview#details")
+        const replaceState = vi.spyOn(window.history, "replaceState")
+
+        expect(removeUtmParametersFromCurrentUrl()).toBe(false)
+        expect(replaceState).not.toHaveBeenCalled()
     })
 })

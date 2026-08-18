@@ -12,7 +12,7 @@ import CharacterAutosave from "~/components/CharacterAutosave"
 import { CookiesBanner } from "~/components/CookiesBanner"
 import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
-import { resetPostHogIdentity } from "~/utils/analytics"
+import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
     isFramelessSyntheticNoise,
@@ -141,6 +141,7 @@ const posthogOptions: Partial<PostHogConfig> = {
 // Restore persisted consent before children such as CookiesBanner read the PostHog client.
 monitorSupportConversationResources()
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, posthogOptions)
+removeUtmParametersFromCurrentUrl()
 warmSupportConversation()
 
 const AuthUnauthorizedHandler = () => {

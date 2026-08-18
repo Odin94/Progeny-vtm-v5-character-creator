@@ -20,6 +20,29 @@ type FeatureGuideNavigationTarget = {
     section?: string
 }
 
+/**
+ * Cleans campaign parameters from the address bar after PostHog has read them
+ * during initialization. `replaceState` updates the displayed URL without a
+ * navigation, so it neither reloads the page nor adds a history entry.
+ */
+export const removeUtmParametersFromCurrentUrl = () => {
+    const url = new URL(window.location.href)
+    const utmParameters = [...url.searchParams.keys()].filter((parameter) =>
+        parameter.toLowerCase().startsWith("utm_")
+    )
+
+    if (utmParameters.length === 0) {
+        return false
+    }
+
+    for (const parameter of utmParameters) {
+        url.searchParams.delete(parameter)
+    }
+
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`)
+    return true
+}
+
 export const trackEvent = ({ action, category, label, value }: EventParams) => {
     try {
         posthog.capture(action, {
