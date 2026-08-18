@@ -42,7 +42,8 @@
 
 ## Verification
 When the task description below says "run the build" or "verify", these are the bars to clear — not just that the command exits 0:
-- Frontend build: no TypeScript errors (`cd frontend && pnpm run build`)
+- Frontend build: production bundle completes (`cd frontend && pnpm run build`). Vite does not type-check TypeScript during this command.
+- Before pushing frontend changes: run `cd frontend && pnpm exec tsc --noEmit`. Do not add this check to the build script.
 - Frontend tests: all tests pass (`cd frontend && pnpm run test:run`) — required for any character model or export change
 - Backend build: no TypeScript errors (`cd backend && pnpm run build`)
 - Backend tests: health check passes (`cd backend && pnpm run test:run`) — required after any route or middleware change
