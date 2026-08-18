@@ -231,6 +231,7 @@ const AdminImpersonationPage = () => {
     const usersQueryErrorMessage = usersQueryError
         ? `${usersQueryError.message}${usersQueryError.status ? ` (HTTP ${usersQueryError.status})` : ""}`
         : "Could not load users."
+    const usersData = usersQuery.data
 
     return (
         <AppShell header={{ height: topbarHeight }}>
@@ -396,7 +397,7 @@ const AdminImpersonationPage = () => {
                                                                 <Table.Tbody>{rows}</Table.Tbody>
                                                             </Table>
                                                         </Table.ScrollContainer>
-                                                        {usersQuery.data.total === 0 ? (
+                                                        {!usersData ? null : usersData.total === 0 ? (
                                                             <Text c="dimmed" ta="center">
                                                                 No users found.
                                                             </Text>
@@ -405,20 +406,20 @@ const AdminImpersonationPage = () => {
                                                                 <Text size="sm" c="dimmed">
                                                                     Showing{" "}
                                                                     {(page - 1) *
-                                                                        usersQuery.data.pageSize +
+                                                                        usersData.pageSize +
                                                                         1}
                                                                     –
                                                                     {Math.min(
                                                                         page *
-                                                                            usersQuery.data
+                                                                            usersData
                                                                                 .pageSize,
-                                                                        usersQuery.data.total
+                                                                        usersData.total
                                                                     )}{" "}
-                                                                    of {usersQuery.data.total} users
+                                                                    of {usersData.total} users
                                                                 </Text>
                                                                 <Pagination
                                                                     total={
-                                                                        usersQuery.data.totalPages
+                                                                        usersData.totalPages
                                                                     }
                                                                     value={page}
                                                                     onChange={setPage}

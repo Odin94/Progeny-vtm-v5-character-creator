@@ -687,15 +687,16 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                     collectionItems={draft.items}
                     onClose={() => setItemEditor(null)}
                     onSave={(item) => {
-                        const isAddingItem = itemEditor.index === null
+                        const itemIndex = itemEditor.index
+                        const isAddingItem = itemIndex === null
                         const items = isAddingItem
                             ? [...draft.items, item]
-                            : replaceItemAndReferences(draft.items, itemEditor.index, item)
+                            : replaceItemAndReferences(draft.items, itemIndex, item)
                         const nextDraft = { ...draft, items }
                         setDraft(nextDraft)
-                        if (itemEditor.index !== null) {
+                        if (itemIndex !== null) {
                             setItemValidationErrors((current) => {
-                                const { [itemEditor.index!]: _removed, ...remaining } = current
+                                const { [itemIndex]: _removed, ...remaining } = current
                                 return remaining
                             })
                         }

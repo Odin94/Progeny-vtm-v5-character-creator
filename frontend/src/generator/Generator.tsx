@@ -151,14 +151,6 @@ const Generator = ({
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
-                        pickedPowers={disciplineDraft}
-                        setPickedPowers={(clanPowers) =>
-                            setDisciplinesDraft((current) => ({ ...current, clanPowers }))
-                        }
-                        pickedPredatorTypePower={predatorDisciplineDraft}
-                        setPickedPredatorTypePower={(predatorPower) =>
-                            setDisciplinesDraft((current) => ({ ...current, predatorPower }))
-                        }
                         pickedPredatorType={pickedPredatorType}
                         setPickedPredatorType={setPickedPredatorType}
                         specialty={predatorTypeSpecialty}

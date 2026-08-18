@@ -482,7 +482,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                             All merits from this loresheet have been added.
                         </Text>
                     ) : (
-                        <Grid gutter="md">
+                        <Grid gap="md">
                             {availableMerits.map((merit) => {
                                 const excludingItems = exclusionMap.get(merit.name) ?? []
                                 const isExcluded = excludingItems.length > 0
@@ -622,7 +622,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
                 />
                 <ScrollArea h={400}>
-                    <Grid gutter="md">
+                    <Grid gap="md">
                         {availableLoresheets.map((loresheet) => {
                             const pickedIdentities = new Set(
                                 pickedMeritsAndFlaws.map((item) =>
@@ -837,7 +837,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                                 <Title order={4} c={primaryColor}>
                                                                     {category.title}
                                                                 </Title>
-                                                                <Grid gutter="md">
+                                                                <Grid gap="md">
                                                                     {availableCategoryItems.map(
                                                                         (item) => {
                                                                             const excludingItems =

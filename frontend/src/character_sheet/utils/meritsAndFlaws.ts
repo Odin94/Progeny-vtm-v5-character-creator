@@ -5,6 +5,8 @@ export type SheetMeritFlaw = {
     meritFlaw: MeritFlaw
     isFromPredatorType: boolean
     isUpgradedFromPredatorType: boolean
+    isFromLoresheet?: boolean
+    isUpgradedFromLoresheet?: boolean
 }
 
 export const getSheetMeritsAndFlaws = (

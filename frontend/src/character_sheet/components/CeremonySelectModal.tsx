@@ -107,7 +107,7 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
                             <Title order={4} c={primaryColor}>
                                 Level {level}
                             </Title>
-                            <Grid gutter="md">
+                            <Grid gap="md">
                                 {ceremoniesByLevel.get(level)!.map((ceremony) => {
                                     const cost = getRitualCost(ceremony.level)
                                     const canAfford =

@@ -173,7 +173,7 @@ type SessionChatStore = {
         ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage | ErrorMessage
     >
     ws: WebSocket | null
-    reconnectTimeout: NodeJS.Timeout | null
+    reconnectTimeout: ReturnType<typeof setTimeout> | null
     reconnectAttempts: number
     messageQueue: Array<{ type: string; [key: string]: unknown }>
     isManualDisconnect: boolean

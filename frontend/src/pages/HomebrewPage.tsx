@@ -102,9 +102,12 @@ const HomebrewPage = () => {
                                     Community Library
                                 </Button>
                                 <Button
-                                    component={Link}
-                                    to="/homebrew/$collectionId"
-                                    params={{ collectionId: "new" }}
+                                    onClick={() =>
+                                        navigate({
+                                            to: "/homebrew/$collectionId",
+                                            params: { collectionId: "new" }
+                                        })
+                                    }
                                     color="grape"
                                     leftSection={<IconPlus size={17} />}
                                 >
@@ -128,9 +131,12 @@ const HomebrewPage = () => {
                                         Merits, Flaws, and Clans.
                                     </Text>
                                     <Button
-                                        component={Link}
-                                        to="/homebrew/$collectionId"
-                                        params={{ collectionId: "new" }}
+                                        onClick={() =>
+                                            navigate({
+                                                to: "/homebrew/$collectionId",
+                                                params: { collectionId: "new" }
+                                            })
+                                        }
                                         color="grape"
                                     >
                                         Create your first collection

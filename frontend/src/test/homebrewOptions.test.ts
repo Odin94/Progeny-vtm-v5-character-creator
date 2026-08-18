@@ -236,8 +236,6 @@ describe("Homebrew character options", () => {
         expect(
             getDisciplineDefinitionIdentity({
                 name: "auspex",
-                summary: "",
-                logo: "",
                 homebrewSource: source
             })
         ).toBe("homebrew:collection-1:discipline-1")

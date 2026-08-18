@@ -26,7 +26,7 @@ const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) =
     const itemsByKind = homebrewItemKinds
         .map((kind) => ({
             kind,
-            items: collection.items.filter((item): item is HomebrewItem => item.kind === kind)
+            items: collection.items.filter((item) => item.kind === kind)
         }))
         .filter(({ items }) => items.length)
 

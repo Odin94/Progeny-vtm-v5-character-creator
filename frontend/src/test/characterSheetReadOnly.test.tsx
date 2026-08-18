@@ -31,7 +31,7 @@ const getReadOnlyOptions = (setCharacter: SheetOptions["setCharacter"]): SheetOp
     setCharacter,
     canEdit: false,
     editDisabledReason: CHARACTER_OWNERSHIP_EDIT_REASON,
-    preferences: {},
+    preferences: { colorTheme: null, backgroundImage: null },
     onUpdatePreferences: vi.fn()
 })
 

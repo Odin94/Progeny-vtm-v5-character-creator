@@ -66,13 +66,10 @@ const DisciplineSelectModal = ({
             )
             .map((item) => ({ item, collection }))
     )
-    const disciplineCatalog = {
-        ...disciplines,
-        ...getHomebrewDisciplineOptions(homebrewCollections, [
-            ...Object.keys(disciplines),
-            ...homebrewDisciplineItems.map(({ item }) => item.name)
-        ])
-    }
+    const disciplineCatalog = getHomebrewDisciplineOptions(homebrewCollections, [
+        ...Object.keys(disciplines),
+        ...homebrewDisciplineItems.map(({ item }) => item.name)
+    ])
 
     const captureModalEvent = (event: string, properties: Record<string, unknown>) => {
         try {
@@ -330,7 +327,7 @@ const DisciplineSelectModal = ({
                                     No available disciplines to add.
                                 </Text>
                             ) : (
-                                <Grid gutter="md">
+                                <Grid gap="md">
                                     {availableDisciplines.map((disciplineName) => {
                                         const discipline = disciplineCatalog[disciplineName]
                                         if (!discipline) return null
@@ -559,7 +556,7 @@ const PowerPicker = ({
                                 <Title order={4} c={primaryColor}>
                                     Level {level}
                                 </Title>
-                                <Grid gutter="md">
+                                <Grid gap="md">
                                     {powers.map((power) => {
                                         const disabledReasons = getPowerDisabledReasons(power)
                                         const disabledTooltip =

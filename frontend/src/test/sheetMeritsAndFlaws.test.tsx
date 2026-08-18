@@ -102,7 +102,7 @@ describe("sheet merits and flaws", () => {
                         primaryColor: "red",
                         character,
                         setCharacter: vi.fn(),
-                        diceModalOpened: false,
+                        canEdit: true,
                         preferences: {
                             colorTheme: null,
                             backgroundImage: null
@@ -186,7 +186,7 @@ describe("sheet merits and flaws", () => {
                         primaryColor: "red",
                         character,
                         setCharacter: vi.fn(),
-                        diceModalOpened: false,
+                        canEdit: true,
                         preferences: {
                             colorTheme: null,
                             backgroundImage: null

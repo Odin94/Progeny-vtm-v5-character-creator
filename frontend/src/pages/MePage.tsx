@@ -2347,7 +2347,12 @@ const MePage = () => {
 }
 
 type CoterieSummaryContentProps = {
-    members: Array<{ characterId: string; playerNickname?: string | null; character?: Character }>
+    members: Array<{
+        characterId: string
+        playerNickname?: string | null
+        showPlayerNameTag?: boolean
+        character?: Character
+    }>
     theme: ReturnType<typeof useMantineTheme>
     vitalsByCharacterId: Record<string, CharacterVitals>
 }

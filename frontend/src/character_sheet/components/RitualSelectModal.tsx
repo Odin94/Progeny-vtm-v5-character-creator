@@ -102,7 +102,7 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
                                 <Title order={4} c={primaryColor}>
                                     Level {level}
                                 </Title>
-                                <Grid gutter="md">
+                                <Grid gap="md">
                                     {ritualsByLevel.get(level)!.map((ritual) => {
                                         const cost = getRitualCost(ritual.level)
                                         const canAfford =

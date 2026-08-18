@@ -41,7 +41,7 @@ export const SpecialtyModal = ({
         () =>
             pickedSkillNames.filter(
                 (s) =>
-                    !BONUS_SPECIALTY_SKILLS.includes(s as (typeof BONUS_SPECIALTY_SKILLS)[number])
+                    !(BONUS_SPECIALTY_SKILLS as readonly string[]).includes(s)
             ),
         [pickedSkillNames]
     )
@@ -75,7 +75,7 @@ export const SpecialtyModal = ({
             Object.fromEntries(
                 BONUS_SPECIALTY_SKILLS.map((skill) => [
                     skill,
-                    bonusSkills.includes(skill as SkillsKey)
+                    bonusSkills.includes(skill)
                         ? character.skillSpecialties.find((specialty) => specialty.skill === skill)
                               ?.name ?? ""
                         : ""

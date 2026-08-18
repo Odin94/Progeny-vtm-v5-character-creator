@@ -30,7 +30,7 @@ export const useDebouncedUncontrolledStringField = ({
     field,
     delay = 150
 }: UseDebouncedUncontrolledStringFieldOptions) => {
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const pendingValueRef = useRef<string | undefined>(undefined)
     const lastCommittedValueRef = useRef<string | undefined>(undefined)
 
@@ -113,7 +113,7 @@ export const useDebouncedUncontrolledNumberField = ({
     getValue,
     updateFn
 }: UseDebouncedUncontrolledNumberFieldOptions) => {
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const pendingValueRef = useRef<number | undefined>(undefined)
 
     const getValueFn = useMemo(

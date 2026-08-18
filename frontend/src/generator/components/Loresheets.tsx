@@ -28,7 +28,7 @@ type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMerit[] }
 
 type LoresheetProps = {
     character: Character
-    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => JSX.Element
+    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => React.JSX.Element
     pickedMeritsAndFlaws: MeritFlaw[]
     homebrewCollections: HomebrewCollection[]
 }
@@ -194,7 +194,7 @@ export const Loresheets = ({
             }}
         >
             {openLoresheet ? (
-                <Grid w={"100%"} m={0} gutter="lg">
+                <Grid w={"100%"} m={0} gap="lg">
                     <OpenedLoresheet
                         loresheet={openLoresheet}
                         getMeritOrFlawLine={getMeritOrFlawLine}
@@ -228,7 +228,7 @@ export const Loresheets = ({
                                         lineHeight={1}
                                         marginY="xs"
                                     />
-                                    <Grid w="100%" m={0} gutter="lg">
+                                    <Grid w="100%" m={0} gap="lg">
                                         {visibleOfficialLoresheets.map(getLoresheetCol)}
                                     </Grid>
                                 </>
@@ -242,14 +242,14 @@ export const Loresheets = ({
                                         lineHeight={1}
                                         marginY="xs"
                                     />
-                                    <Grid w="100%" m={0} gutter="lg">
+                                    <Grid w="100%" m={0} gap="lg">
                                         {visibleHomebrewLoresheets.map(getLoresheetCol)}
                                     </Grid>
                                 </>
                             ) : null}
                         </Stack>
                     ) : (
-                        <Grid w="100%" m={0} gutter="lg">
+                        <Grid w="100%" m={0} gap="lg">
                             <Grid.Col span={12}>
                                 <Text
                                     ta="center"
@@ -280,7 +280,7 @@ const OpenedLoresheet = ({
     setOpenLoresheetTitle
 }: {
     loresheet: DisplayLoresheet
-    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => JSX.Element
+    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => React.JSX.Element
     setOpenLoresheetTitle: (t: string) => void
 }) => {
     const smallScreen = globals.isSmallScreen

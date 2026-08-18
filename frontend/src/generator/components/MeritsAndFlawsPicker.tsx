@@ -587,7 +587,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const getMeritOrFlawLine = (
         meritOrFlaw: MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string },
         type: "flaw" | "merit"
-    ): JSX.Element => (
+    ): React.JSX.Element => (
         <MeritOrFlawCard
             key={getMeritFlawIdentity(meritOrFlaw, type)}
             meritOrFlaw={meritOrFlaw}
@@ -664,7 +664,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 marginBottom={phoneScreen ? 12 : 16}
                             />
 
-                            <Grid m={0} gutter="sm">
+                            <Grid m={0} gap="sm">
                                 <Grid.Col span={phoneScreen ? 12 : 4}>
                                     <PointCard
                                         label="Advantage Points"
@@ -853,7 +853,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                             </Text>
                                         ) : null}
 
-                                        <Grid m={0} gutter="lg">
+                                        <Grid m={0} gap="lg">
                                             {isThinBlood
                                                 ? thinBloodMeritsAndFlawsComponent(
                                                     getMeritOrFlawLine,
@@ -1081,7 +1081,7 @@ const PointCard = ({
 }
 
 function thinBloodMeritsAndFlawsComponent(
-    getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => JSX.Element,
+    getMeritOrFlawLine: (meritOrFlaw: MeritOrFlaw, type: "flaw" | "merit") => React.JSX.Element,
     phoneScreen: boolean,
     merits: MeritOrFlaw[],
     flaws: MeritOrFlaw[]

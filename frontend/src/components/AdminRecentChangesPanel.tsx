@@ -147,8 +147,13 @@ const AdminRecentChangesPanel = () => {
         }
     })
     const deleteMutation = useMutation({
-        mutationFn: ({ id, permanently }: { id: string; permanently: boolean }) =>
-            permanently ? api.hardDeleteAdminRecentChange(id) : api.softDeleteAdminRecentChange(id),
+        mutationFn: async ({ id, permanently }: { id: string; permanently: boolean }) => {
+            if (permanently) {
+                await api.hardDeleteAdminRecentChange(id)
+                return
+            }
+            await api.softDeleteAdminRecentChange(id)
+        },
         onSuccess: (_result, { id, permanently }) => {
             setDeletionCandidate(null)
             if (editingId === id) createDraft()

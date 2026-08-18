@@ -255,7 +255,7 @@ describe("creator picker limits", () => {
         )
         const resetCharacter = setCharacter.mock.calls[0][0]
         expect(Object.values(resetCharacter.skills)).toSatisfy((skills) =>
-            skills.every((level) => level === 0)
+            skills.every((level: number) => level === 0)
         )
 
         rerender(

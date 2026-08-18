@@ -13,7 +13,7 @@ import {
     Text,
     Title
 } from "@mantine/core"
-import { Link } from "@tanstack/react-router"
+import { useNavigate } from "@tanstack/react-router"
 import {
     IconDots,
     IconEdit,
@@ -88,6 +88,7 @@ const CoteriesSection = ({
     setCoterieSummaryModalOpened,
     vitalsByCharacterId
 }: CoteriesSectionProps) => {
+    const navigate = useNavigate()
     const [homebrewCoterie, setHomebrewCoterie] = useState<Coterie | null>(null)
     const [selectedHomebrewIds, setSelectedHomebrewIds] = useState<string[]>([])
     const { data: homebrewCollections = [] } = useHomebrewCollections()
@@ -173,9 +174,12 @@ const CoteriesSection = ({
                                     </Group>
                                     <Group gap="xs">
                                         <Button
-                                            component={Link}
-                                            to="/coteries/$coterieId"
-                                            params={{ coterieId: coterie.id }}
+                                            onClick={() =>
+                                                navigate({
+                                                    to: "/coteries/$coterieId",
+                                                    params: { coterieId: coterie.id }
+                                                })
+                                            }
                                             size="xs"
                                             color="red"
                                             variant="filled"

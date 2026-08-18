@@ -89,7 +89,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
             <Divider mb="md" />
 
-            <Grid gutter="md">
+            <Grid gap="md">
                 <Grid.Col span={{ base: 12, md: 6 }}>
                     <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
                         <Stack gap="xs">

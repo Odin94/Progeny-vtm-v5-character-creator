@@ -315,7 +315,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     <Title order={2} mb="lg" c={primaryColor}>
                         Disciplines
                     </Title>
-                    <Grid gutter="md">
+                    <Grid gap="md">
                         {Array.from(disciplineGroups.values()).map(
                             ({ identity, disciplineName, powers, customDiscipline }) => {
                                 const isOfficial = identity === `official:${disciplineName}`
@@ -757,7 +757,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             )
                         ) : null}
                     </Group>
-                    <Grid gutter="md">
+                    <Grid gap="md">
                         {character.rituals.map((ritual) => (
                             <Grid.Col key={ritual.name} span={{ base: 12, md: 6 }}>
                                 <Paper p="md" withBorder>
@@ -860,7 +860,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             )
                         ) : null}
                     </Group>
-                    <Grid gutter="md">
+                    <Grid gap="md">
                         {character.ceremonies.map((ceremony) => (
                             <Grid.Col key={ceremony.name} span={{ base: 12, md: 6 }}>
                                 <Paper p="md" withBorder>

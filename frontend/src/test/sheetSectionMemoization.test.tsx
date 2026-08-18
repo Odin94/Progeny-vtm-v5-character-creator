@@ -41,7 +41,7 @@ const makeOptions = (character: Character, setCharacter: SetCharacter): SheetOpt
     setCharacter,
     canEdit: true,
     editDisabledReason: undefined,
-    preferences: {},
+    preferences: { colorTheme: null, backgroundImage: null },
     onUpdatePreferences: vi.fn()
 })
 

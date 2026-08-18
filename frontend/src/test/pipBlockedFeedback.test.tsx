@@ -27,7 +27,7 @@ const getXpOptions = (setCharacter: SheetOptions["setCharacter"]): SheetOptions 
     setCharacter,
     canEdit: true,
     editDisabledReason: undefined,
-    preferences: {},
+    preferences: { colorTheme: null, backgroundImage: null },
     onUpdatePreferences: vi.fn()
 })
 
