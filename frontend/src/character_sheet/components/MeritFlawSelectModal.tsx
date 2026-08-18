@@ -30,6 +30,7 @@ import {
     MeritOrFlaw
 } from "~/data/MeritsAndFlaws"
 import { PredatorTypes } from "~/data/PredatorType"
+import { addMeritFlawExclusions } from "~/data/meritsAndFlawsResolution"
 import { SheetOptions } from "../CharacterSheet"
 import { canAffordUpgrade, getAvailableXP, getMeritCost } from "../utils/xp"
 import PipButton from "./PipButton"
@@ -135,38 +136,18 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
         character.merits.forEach((merit) => {
-            merit.excludes.forEach((excludedName) => {
-                if (!map.has(excludedName)) {
-                    map.set(excludedName, [])
-                }
-                map.get(excludedName)?.push(merit.name)
-            })
+            addMeritFlawExclusions(map, merit)
         })
         character.flaws.forEach((flaw) => {
-            flaw.excludes.forEach((excludedName) => {
-                if (!map.has(excludedName)) {
-                    map.set(excludedName, [])
-                }
-                map.get(excludedName)?.push(flaw.name)
-            })
+            addMeritFlawExclusions(map, flaw)
         })
         character.predatorType.pickedMeritsAndFlaws.forEach((meritFlaw) => {
-            meritFlaw.excludes.forEach((excludedName) => {
-                if (!map.has(excludedName)) {
-                    map.set(excludedName, [])
-                }
-                map.get(excludedName)?.push(meritFlaw.name)
-            })
+            addMeritFlawExclusions(map, meritFlaw)
         })
         const predatorType = PredatorTypes[character.predatorType.name]
         if (predatorType) {
             predatorType.meritsAndFlaws.forEach((meritFlaw) => {
-                meritFlaw.excludes.forEach((excludedName) => {
-                    if (!map.has(excludedName)) {
-                        map.set(excludedName, [])
-                    }
-                    map.get(excludedName)?.push(meritFlaw.name)
-                })
+                addMeritFlawExclusions(map, meritFlaw)
             })
         }
         const clan = character.homebrewClan ?? clans[character.clan]

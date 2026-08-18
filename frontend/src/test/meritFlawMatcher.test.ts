@@ -60,6 +60,35 @@ describe("merit/flaw dice pool modifiers", () => {
         ).toBe(2)
     })
 
+    it("applies only Stunning when a character has both Looks tiers", () => {
+        const character = getBasicTestCharacter()
+        character.predatorType = {
+            name: "Siren",
+            pickedDiscipline: "presence",
+            pickedSpecialties: [],
+            pickedMeritsAndFlaws: []
+        }
+        character.merits = [
+            {
+                name: "Stunning",
+                level: 4,
+                summary: "+2 dice in Social rolls",
+                type: "merit",
+                excludes: ["Beautiful", "Ugly", "Repulsive"]
+            }
+        ]
+
+        const modifiers = getApplicableMeritFlawModifiers(character, "charisma", null)
+
+        expect(modifiers.map((modifier) => modifier.meritFlaw.name)).toEqual(["Stunning"])
+        expect(
+            getSelectedMeritFlawModifierBonus(character, "charisma", null, [
+                "merit-Beautiful",
+                "merit-Stunning"
+            ])
+        ).toBe(2)
+    })
+
     it("offers looks bonuses when only a social skill is selected", () => {
         const character = getBasicTestCharacter()
         character.merits = [

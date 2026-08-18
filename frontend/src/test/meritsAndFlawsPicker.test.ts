@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+    addMeritFlawExclusions,
     adjustPickedMeritsAndFlawsForPredatorTypeChange,
     getMeritFlawPointCost,
     getMeritFlawDisplayName,
@@ -9,6 +10,35 @@ import {
 import { getBasicTestCharacter } from "./testUtils"
 
 describe("MeritsAndFlawsPicker predator type merits and flaws", () => {
+    it("allows Beautiful to upgrade to full-cost Stunning", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            predatorType: {
+                name: "Siren" as const,
+                pickedDiscipline: "presence",
+                pickedSpecialties: [],
+                pickedMeritsAndFlaws: []
+            },
+            merits: [
+                {
+                    name: "Stunning",
+                    level: 4,
+                    summary: "+2 dice in Social rolls",
+                    type: "merit" as const,
+                    excludes: ["Beautiful", "Ugly", "Repulsive"]
+                }
+            ],
+            flaws: []
+        }
+        const exclusionMap = new Map<string, string[]>()
+        const beautiful = getPredatorTypeMeritsByName(character).get("Beautiful")!
+
+        addMeritFlawExclusions(exclusionMap, beautiful)
+
+        expect(exclusionMap.get("Stunning")).toBeUndefined()
+        expect(getMeritFlawPointCost(character.merits[0], getPredatorTypeMeritsByName(character))).toBe(4)
+    })
+
     it("maps selectable Osiris merits and flaws to the catalog picker names", () => {
         const character = {
             ...getBasicTestCharacter(),

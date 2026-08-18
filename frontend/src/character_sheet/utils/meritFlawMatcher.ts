@@ -121,8 +121,13 @@ export const getApplicableMeritFlawModifiers = (
 
     const modifiers: ApplicableMeritFlawModifier[] = []
     const characterMeritsAndFlaws = getCharacterMeritsAndFlaws(character)
+    const hasStunning = characterMeritsAndFlaws.some(
+        (meritFlaw) => meritFlaw.name === "Stunning"
+    )
 
     for (const meritFlaw of characterMeritsAndFlaws) {
+        if (hasStunning && meritFlaw.name === "Beautiful") continue
+
         const rule = meritFlawModifierRules.find((candidate) => candidate.name === meritFlaw.name)
         if (!rule || !rule.matches(attribute, skill)) continue
 

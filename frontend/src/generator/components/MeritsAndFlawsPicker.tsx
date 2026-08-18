@@ -20,6 +20,7 @@ import { Dispatch, memo, SetStateAction, useEffect, useMemo, useRef, useState } 
 import { trackEvent } from "../../utils/analytics"
 import { Character, getCharacterExcludedMeritsAndFlaws, MeritFlaw } from "../../data/Character"
 import {
+    addMeritFlawExclusions,
     getMeritFlawPointCost,
     getPredatorTypeMeritsByName
 } from "../../data/meritsAndFlawsResolution"
@@ -539,12 +540,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
         pickedMeritsAndFlaws.forEach((meritFlaw) => {
-            meritFlaw.excludes.forEach((excludedName) => {
-                if (!map.has(excludedName)) {
-                    map.set(excludedName, [])
-                }
-                map.get(excludedName)?.push(meritFlaw.name)
-            })
+            addMeritFlawExclusions(map, meritFlaw)
         })
         const predatorType = PredatorTypes[character.predatorType.name]
         const predatorTypeItems = [
@@ -552,12 +548,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
             ...character.predatorType.pickedMeritsAndFlaws
         ]
         predatorTypeItems.forEach((meritFlaw) => {
-            meritFlaw.excludes.forEach((excludedName) => {
-                if (!map.has(excludedName)) {
-                    map.set(excludedName, [])
-                }
-                map.get(excludedName)?.push(meritFlaw.name)
-            })
+            addMeritFlawExclusions(map, meritFlaw)
         })
         const clanExclusions = getCharacterExcludedMeritsAndFlaws(character)
         if (clanExclusions.length > 0) {
