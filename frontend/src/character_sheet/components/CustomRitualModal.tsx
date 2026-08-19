@@ -1,4 +1,5 @@
 import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Ritual } from "~/data/Disciplines"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -11,6 +12,7 @@ import { AttributesKey } from "~/data/Attributes"
 import { SkillsKey } from "~/data/Skills"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, getRitualCost } from "../utils/xp"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type CustomRitualModalProps = {
     opened: boolean
@@ -28,6 +30,7 @@ const CustomRitualModal = ({
     onSave
 }: CustomRitualModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -204,6 +207,10 @@ const CustomRitualModal = ({
             onClose={onClose}
             title={editingRitual ? "Edit Custom Ritual" : "Create Custom Ritual"}
             size="md"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
             <Stack gap="md">
                 <TextInput

@@ -1,4 +1,5 @@
 import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Power } from "~/data/Disciplines"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -14,6 +15,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { getDisciplineCost } from "../utils/xp"
 import type { HomebrewSource } from "~/data/Homebrew"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type CustomPowerModalProps = {
     opened: boolean
@@ -35,6 +37,7 @@ const CustomPowerModal = ({
     editingPower
 }: CustomPowerModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -206,6 +209,10 @@ const CustomPowerModal = ({
             onClose={onClose}
             title={editingPower ? "Edit Custom Power" : "Create Custom Power"}
             size="md"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
             <Stack gap="md">
                 <TextInput

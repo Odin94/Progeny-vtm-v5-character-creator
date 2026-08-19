@@ -1,7 +1,9 @@
 import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { useState, useEffect } from "react"
 import { Touchstone } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type TouchstoneModalProps = {
     opened: boolean
@@ -19,6 +21,7 @@ const TouchstoneModal = ({
     initialIndex
 }: TouchstoneModalProps) => {
     const { character, setCharacter, primaryColor } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [conviction, setConviction] = useState("")
@@ -77,6 +80,10 @@ const TouchstoneModal = ({
             onClose={onClose}
             title={initialTouchstone ? "Edit Touchstone" : "Add Touchstone"}
             size="md"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
             <Stack gap="md">
                 <TextInput

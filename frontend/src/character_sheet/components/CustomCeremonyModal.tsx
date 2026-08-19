@@ -1,8 +1,10 @@
 import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Ceremony } from "~/data/Ceremonies"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, getRitualCost } from "../utils/xp"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type CustomCeremonyModalProps = {
     opened: boolean
@@ -20,6 +22,7 @@ const CustomCeremonyModal = ({
     onSave
 }: CustomCeremonyModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -157,6 +160,10 @@ const CustomCeremonyModal = ({
             onClose={onClose}
             title={editingCeremony ? "Edit Custom Ceremony" : "Create Custom Ceremony"}
             size="md"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
             <Stack gap="md">
                 <TextInput
