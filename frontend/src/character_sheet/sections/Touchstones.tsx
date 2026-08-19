@@ -68,7 +68,6 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                         <Grid.Col key={index} span={{ base: 12, md: 6 }}>
                             <Paper
                                 p="sm"
-                                withBorder
                                 style={{
                                     ...sheetSurfaceStyle,
                                     position: "relative",

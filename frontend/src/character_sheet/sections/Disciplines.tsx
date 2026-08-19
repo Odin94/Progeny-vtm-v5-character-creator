@@ -343,7 +343,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                     <Grid.Col key={identity} span={{ base: 12, md: 6, lg: 4 }}>
                                         <Paper
                                             p="md"
-                                            withBorder
                                             style={{
                                                 height: "100%",
                                                 ...sheetSurfaceStyle,
@@ -770,7 +769,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     <Grid gap="md">
                         {character.rituals.map((ritual) => (
                             <Grid.Col key={ritual.name} span={{ base: 12, md: 6 }}>
-                                <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                                <Paper p="md" style={sheetSurfaceStyle}>
                                     <Group justify="space-between" align="flex-start" mb="xs">
                                         <Text fw={700} size="lg">
                                             {ritual.name}
@@ -874,7 +873,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     <Grid gap="md">
                         {character.ceremonies.map((ceremony) => (
                             <Grid.Col key={ceremony.name} span={{ base: 12, md: 6 }}>
-                                <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                                <Paper p="md" style={sheetSurfaceStyle}>
                                     <Group justify="space-between" align="flex-start" mb="xs">
                                         <Text fw={700} size="lg">
                                             {ceremony.name}

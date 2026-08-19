@@ -52,7 +52,7 @@ const BottomData = ({ options }: BottomDataProps) => {
     return (
         <Grid justify="space-between">
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
+                <Paper p="sm" style={sheetSurfaceStyle}>
                     <Text fw={700} mb="xs">
                         Health
                     </Text>
@@ -77,7 +77,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
+                <Paper p="sm" style={sheetSurfaceStyle}>
                     <Text fw={700} mb="xs">
                         Willpower
                     </Text>
@@ -102,7 +102,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
+                <Paper p="sm" style={sheetSurfaceStyle}>
                     <Group gap="xs" mb="xs" justify="space-between">
                         <Text fw={700}>Humanity</Text>
                         <RemorseTestButton
@@ -139,7 +139,7 @@ const BottomData = ({ options }: BottomDataProps) => {
             </Grid.Col>
 
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
+                <Paper p="sm" style={sheetSurfaceStyle}>
                     <Group gap="xs" mb="xs" justify="space-between">
                         <Text fw={700}>Hunger</Text>
                         <RouseCheckButton

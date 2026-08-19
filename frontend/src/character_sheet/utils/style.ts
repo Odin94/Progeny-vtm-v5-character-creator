@@ -7,13 +7,12 @@ export const inputAlpha = 0.7
 export const sheetSurfaceStyle = {
     background:
         "linear-gradient(145deg, rgba(32, 31, 33, 0.96) 0%, rgba(19, 17, 20, 0.98) 100%)",
-    border: "1px solid rgba(183, 169, 158, 0.3)",
     boxShadow: "0 12px 26px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.035)"
 } as const
 
 export const sheetAddSurfaceStyle = {
     ...sheetSurfaceStyle,
-    borderStyle: "dashed"
+    border: "1px dashed rgba(183, 169, 158, 0.3)"
 } as const
 
 export const hexToRgb = (hex: string): [number, number, number] | null => {

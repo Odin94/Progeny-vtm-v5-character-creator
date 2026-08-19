@@ -66,7 +66,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
     })
 
     return (
-        <Paper p="lg" withBorder style={sheetSurfaceStyle}>
+        <Paper p="lg" style={sheetSurfaceStyle}>
             <Title order={2} mb="md" c={primaryColor}>
                 The Blood
             </Title>
@@ -90,7 +90,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
             <Grid gap="md">
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
+                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Group gap="md" align="center">
                                 <Group gap="xs" align="center">
@@ -179,7 +179,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
+                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Text size="sm">
                                 <Text span fw={600}>
@@ -204,7 +204,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
+                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Feeding Penalty
@@ -227,7 +227,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
+                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Clan Traits

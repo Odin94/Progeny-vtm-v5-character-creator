@@ -111,7 +111,6 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             <Paper
                                                 key={`${merit.name}-${merit.level}-${index}`}
                                                 p="sm"
-                                                withBorder
                                                 style={{
                                                     ...sheetSurfaceStyle,
                                                     position: "relative"
@@ -265,7 +264,6 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             <Paper
                                                 key={`${flaw.name}-${flaw.level}-${index}`}
                                                 p="sm"
-                                                withBorder
                                                 style={{
                                                     ...sheetSurfaceStyle,
                                                     position: "relative"
