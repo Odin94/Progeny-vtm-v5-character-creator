@@ -300,10 +300,18 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             <Stack gap="lg">
                                 <TopData options={sheetOptions} />
 
-                                <OrnamentalDivider label="Attributes" />
+                                <OrnamentalDivider
+                                    label="Attributes"
+                                    color={`var(--mantine-color-${primaryColor}-6)`}
+                                    size="large"
+                                />
                                 <Attributes options={sheetOptions} />
 
-                                <OrnamentalDivider label="Skills" />
+                                <OrnamentalDivider
+                                    label="Skills"
+                                    color={`var(--mantine-color-${primaryColor}-6)`}
+                                    size="large"
+                                />
                                 <Skills options={sheetOptions} />
 
                                 {character.disciplines.length > 0 ||

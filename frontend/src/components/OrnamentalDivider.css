@@ -6,20 +6,26 @@
     margin: clamp(1.5rem, 4vw, 2.75rem) 0 clamp(1.25rem, 3vw, 2rem);
 }
 
-.ornamental-divider img {
+.ornamental-divider__flourish {
+    aspect-ratio: 516 / 54;
+    background-color: var(--ornamental-divider-color);
     flex: 1 1 0;
-    height: auto;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
     min-width: 0;
     opacity: 0.9;
-    width: 0;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
 }
 
-.ornamental-divider img:first-child {
+.ornamental-divider__flourish:first-child {
     transform: scaleX(-1);
 }
 
 .ornamental-divider .mantine-Text-root {
-    color: #b9414c;
+    color: var(--ornamental-divider-color);
     flex: 0 0 auto;
     font-family: "Cinzel, Georgia, serif";
     font-size: clamp(0.73rem, 1.6vw, 0.95rem);
@@ -29,12 +35,16 @@
     text-transform: uppercase;
 }
 
+.ornamental-divider--large .mantine-Text-root {
+    font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+}
+
 .ornamental-divider--compact {
     margin: 1rem 0 0.75rem;
 }
 
 @media (max-width: 40rem) {
-    .ornamental-divider img {
-        width: 30%;
+    .ornamental-divider__flourish {
+        flex-basis: 30%;
     }
 }
