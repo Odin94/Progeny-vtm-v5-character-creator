@@ -119,9 +119,6 @@ const Attributes = ({ options }: AttributesProps) => {
 
     return (
         <Box>
-            <Title order={2} mb="md" c={options.primaryColor}>
-                Attributes
-            </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>

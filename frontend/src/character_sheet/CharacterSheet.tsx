@@ -36,6 +36,7 @@ import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacters } from "~/hooks/useCharacters"
+import OrnamentalDivider from "~/components/OrnamentalDivider"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
 
@@ -299,12 +300,10 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                             <Stack gap="lg">
                                 <TopData options={sheetOptions} />
 
-                                <Divider />
-
+                                <OrnamentalDivider label="Attributes" />
                                 <Attributes options={sheetOptions} />
 
-                                <Divider />
-
+                                <OrnamentalDivider label="Skills" />
                                 <Skills options={sheetOptions} />
 
                                 {character.disciplines.length > 0 ||

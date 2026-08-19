@@ -587,9 +587,6 @@ const Skills = ({ options }: SkillsProps) => {
 
     return (
         <Box>
-            <Title order={2} mb="md" c={primaryColor}>
-                Skills
-            </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
