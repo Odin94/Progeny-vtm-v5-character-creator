@@ -124,7 +124,7 @@ const Attributes = ({ options }: AttributesProps) => {
             </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
                         <Title order={4} mb="sm" c="dimmed">
                             PHYSICAL
                         </Title>
@@ -134,7 +134,7 @@ const Attributes = ({ options }: AttributesProps) => {
                     </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
                         <Title order={4} mb="sm" c="dimmed">
                             SOCIAL
                         </Title>
@@ -144,7 +144,7 @@ const Attributes = ({ options }: AttributesProps) => {
                     </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
                         <Title order={4} mb="sm" c="dimmed">
                             MENTAL
                         </Title>

@@ -118,7 +118,9 @@ const SkillRow = ({
 
                 const availableWidth = containerWidth - pipsWidth - 20
 
-                setShowSpecialtiesBelow(testContentWidth > availableWidth)
+                // Preserve one compact line at regular desktop widths. On narrow screens,
+                // allow a second line rather than pushing the rating pips off-screen.
+                setShowSpecialtiesBelow(containerWidth < 360 && testContentWidth > availableWidth)
             })
         }
 
@@ -323,11 +325,22 @@ const SkillRow = ({
                     ) : null}
                 </Stack>
             ) : (
-                <Group gap="xs" wrap="nowrap" style={{ flex: 1 }}>
+                <Group
+                    gap="xs"
+                    wrap="nowrap"
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                        overflowX: "auto",
+                        scrollbarWidth: "none"
+                    }}
+                >
                     <Text
                         style={{
                             ...textStyle,
                             cursor: "pointer",
+                            flexShrink: 0,
+                            whiteSpace: "nowrap",
                             borderRadius: "4px",
                             backgroundColor: isSelected
                                 ? `var(--mantine-color-${primaryColor}-light)`
@@ -380,7 +393,7 @@ const SkillRow = ({
                                 }}
                                 size="xs"
                                 autoFocus
-                                style={{ width: "100%" }}
+                                style={{ width: 140, flexShrink: 0 }}
                             />
                         ) : (
                             <Badge
@@ -579,7 +592,7 @@ const Skills = ({ options }: SkillsProps) => {
             </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
                         <Title order={4} mb="sm" c="dimmed">
                             PHYSICAL
                         </Title>
@@ -599,7 +612,7 @@ const Skills = ({ options }: SkillsProps) => {
                     </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
                         <Title order={4} mb="sm" c="dimmed">
                             SOCIAL
                         </Title>
@@ -619,7 +632,7 @@ const Skills = ({ options }: SkillsProps) => {
                     </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
                         <Title order={4} mb="sm" c="dimmed">
                             MENTAL
                         </Title>
