@@ -24,6 +24,12 @@ import { IconPlus, IconX } from "@tabler/icons-react"
 import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
 import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 
+const meritFlawCardStyle = {
+    ...sheetSurfaceStyle,
+    minHeight: "156px",
+    position: "relative"
+} as const
+
 type MeritsAndFlawsProps = {
     options: SheetOptions
 }
@@ -111,10 +117,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             <Paper
                                                 key={`${merit.name}-${merit.level}-${index}`}
                                                 p="sm"
-                                                style={{
-                                                    ...sheetSurfaceStyle,
-                                                    position: "relative"
-                                                }}
+                                                style={meritFlawCardStyle}
                                             >
                                                 {isFreeMode && !isFromBonus ? (
                                                     <ActionIcon
@@ -264,10 +267,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             <Paper
                                                 key={`${flaw.name}-${flaw.level}-${index}`}
                                                 p="sm"
-                                                style={{
-                                                    ...sheetSurfaceStyle,
-                                                    position: "relative"
-                                                }}
+                                                style={meritFlawCardStyle}
                                             >
                                                 {isFreeMode && !isFromBonus ? (
                                                     <ActionIcon
