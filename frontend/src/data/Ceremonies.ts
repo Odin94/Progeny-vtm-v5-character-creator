@@ -9,6 +9,9 @@ export const ceremonySchema = ritualSchema.extend({
 
 export type Ceremony = z.infer<typeof ceremonySchema>
 
+type CeremonyPrerequisiteCharacter = Pick<Character, "disciplines"> &
+    Partial<Pick<Character, "merits">>
+
 const defaultDicePool = "Resolve + Oblivion"
 
 export const Ceremonies: Ceremony[] = [
@@ -304,8 +307,8 @@ export const Ceremonies: Ceremony[] = [
 export const containsOblivion = (character: Pick<Character, "disciplines">): boolean =>
     character.disciplines.some((power) => getPowerDisciplineIdentity(power) === "official:oblivion")
 
-export const hasMysticOfTheVoid = (character: Pick<Character, "merits">): boolean =>
-    character.merits.some((merit) => merit.name === "Mystic of the Void")
+export const hasMysticOfTheVoid = (character: CeremonyPrerequisiteCharacter): boolean =>
+    character.merits?.some((merit) => merit.name === "Mystic of the Void") ?? false
 
 export const canAccessOblivionCeremonies = (
     character: Pick<Character, "disciplines" | "merits">
@@ -322,9 +325,10 @@ export const getOblivionCeremonyLevel = (
 }
 
 export const characterHasCeremonyPrerequisite = (
-    character: Pick<Character, "disciplines">,
+    character: CeremonyPrerequisiteCharacter,
     ceremony: Ceremony
 ): boolean =>
+    hasMysticOfTheVoid(character) ||
     ceremony.prerequisitePowers.length === 0 ||
     character.disciplines.some(
         (power) =>

@@ -79,7 +79,7 @@ const collection: HomebrewCollection = {
 }
 
 describe("Homebrew character options", () => {
-    it("lets Mystic of the Void access ceremonies without Oblivion while retaining prerequisites", () => {
+    it("lets Mystic of the Void bypass Oblivion ceremony prerequisites", () => {
         const character = getBasicTestCharacter()
         character.disciplines = []
         character.merits = [
@@ -106,7 +106,7 @@ describe("Homebrew character options", () => {
                 ingredients: "",
                 prerequisitePowers: ["Ashes to Ashes"]
             })
-        ).toBe(false)
+        ).toBe(true)
     })
 
     it("combines Homebrew Disciplines and Powers with official Disciplines", () => {
