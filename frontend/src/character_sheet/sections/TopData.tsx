@@ -37,7 +37,7 @@ type DescriptionFieldProps = {
     primaryColor: string
 }
 
-const sheetInputStyles = { input: sheetSurfaceStyle }
+const sheetInputStyles = { input: { ...sheetSurfaceStyle, border: "none" } }
 
 // Keep the text editor's local state below the TopData boundary. A long description
 // should only re-render this textarea while typing, rather than all of the sheet's
@@ -61,6 +61,7 @@ const DescriptionField = memo(
                 styles={{
                     input: {
                         ...sheetSurfaceStyle,
+                        border: "none",
                         textAlign: "center",
                         color: "var(--mantine-color-dimmed)"
                     }
