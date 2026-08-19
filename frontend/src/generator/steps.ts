@@ -1,4 +1,5 @@
-import { Character, containsBloodSorcery, containsOblivion } from "~/data/Character"
+import { Character, containsBloodSorcery } from "~/data/Character"
+import { canAccessOblivionCeremonies } from "~/data/Ceremonies"
 
 type GeneratorProgressKey =
     | "clan"
@@ -54,7 +55,7 @@ const isStepAvailable = (character: Character, stepId: GeneratorStepId) => {
         return containsBloodSorcery(character.disciplines)
     }
     if (stepId === "ceremonies") {
-        return containsOblivion(character.disciplines)
+        return canAccessOblivionCeremonies(character)
     }
 
     return true

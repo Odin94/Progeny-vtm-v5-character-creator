@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest"
 import type { HomebrewCollection } from "~/data/Homebrew"
 import { containsBloodSorcery, containsOblivion } from "~/data/Character"
-import { characterHasCeremonyPrerequisite } from "~/data/Ceremonies"
+import {
+    canAccessOblivionCeremonies,
+    characterHasCeremonyPrerequisite,
+    getOblivionCeremonyLevel
+} from "~/data/Ceremonies"
+import { getBasicTestCharacter } from "./testUtils"
 import {
     getDisciplineDefinitionIdentity,
     getHomebrewDisciplineOptions,
@@ -74,6 +79,36 @@ const collection: HomebrewCollection = {
 }
 
 describe("Homebrew character options", () => {
+    it("lets Mystic of the Void access ceremonies without Oblivion while retaining prerequisites", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = []
+        character.merits = [
+            {
+                name: "Mystic of the Void",
+                level: 1,
+                summary: "",
+                type: "merit",
+                excludes: []
+            }
+        ]
+
+        expect(canAccessOblivionCeremonies(character)).toBe(true)
+        expect(getOblivionCeremonyLevel(character)).toBe(Infinity)
+        expect(
+            characterHasCeremonyPrerequisite(character, {
+                name: "A Ceremony",
+                summary: "",
+                discipline: "oblivion",
+                level: 1,
+                dicePool: "",
+                rouseChecks: 1,
+                requiredTime: "",
+                ingredients: "",
+                prerequisitePowers: ["Ashes to Ashes"]
+            })
+        ).toBe(false)
+    })
+
     it("combines Homebrew Disciplines and Powers with official Disciplines", () => {
         const options = getHomebrewDisciplineOptions([collection], ["Noctis", "auspex"])
         const noctis = Object.values(options).find(

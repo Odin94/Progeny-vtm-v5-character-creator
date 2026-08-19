@@ -304,6 +304,23 @@ export const Ceremonies: Ceremony[] = [
 export const containsOblivion = (character: Pick<Character, "disciplines">): boolean =>
     character.disciplines.some((power) => getPowerDisciplineIdentity(power) === "official:oblivion")
 
+export const hasMysticOfTheVoid = (character: Pick<Character, "merits">): boolean =>
+    character.merits.some((merit) => merit.name === "Mystic of the Void")
+
+export const canAccessOblivionCeremonies = (
+    character: Pick<Character, "disciplines" | "merits">
+): boolean => containsOblivion(character) || hasMysticOfTheVoid(character)
+
+export const getOblivionCeremonyLevel = (
+    character: Pick<Character, "disciplines" | "merits">
+): number => {
+    if (hasMysticOfTheVoid(character)) return Number.POSITIVE_INFINITY
+
+    return character.disciplines.filter(
+        (power) => getPowerDisciplineIdentity(power) === "official:oblivion"
+    ).length
+}
+
 export const characterHasCeremonyPrerequisite = (
     character: Pick<Character, "disciplines">,
     ceremony: Ceremony

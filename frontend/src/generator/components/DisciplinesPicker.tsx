@@ -14,7 +14,8 @@ import { notifications } from "@mantine/notifications"
 import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
-import { Character, containsBloodSorcery, containsOblivion } from "../../data/Character"
+import { Character, containsBloodSorcery } from "../../data/Character"
+import { canAccessOblivionCeremonies } from "../../data/Ceremonies"
 import { Discipline, Power, disciplines } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
@@ -901,7 +902,10 @@ const DisciplinesPicker = ({
                                         rituals: containsBloodSorcery(allPickedPowers)
                                             ? character.rituals
                                             : [],
-                                        ceremonies: containsOblivion(allPickedPowers)
+                                        ceremonies: canAccessOblivionCeremonies({
+                                            disciplines: allPickedPowers,
+                                            merits: character.merits
+                                        })
                                             ? character.ceremonies
                                             : []
                                     }

@@ -21,7 +21,13 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
-import { Ceremony, Ceremonies, getCeremonyPrerequisiteLabel } from "~/data/Ceremonies"
+import {
+    canAccessOblivionCeremonies,
+    Ceremony,
+    Ceremonies,
+    getCeremonyPrerequisiteLabel,
+    getOblivionCeremonyLevel
+} from "~/data/Ceremonies"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
@@ -169,11 +175,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const bloodSorceryLevel = character.disciplines.filter(
         (power) => getPowerDisciplineIdentity(power) === "official:blood sorcery"
     ).length
-    const oblivionLevel = character.disciplines.filter(
-        (power) => getPowerDisciplineIdentity(power) === "official:oblivion"
-    ).length
+    const oblivionLevel = getOblivionCeremonyLevel(character)
     const canAddRituals = isEditable && bloodSorceryLevel > 0
-    const canAddCeremonies = isEditable && oblivionLevel > 0
+    const canAddCeremonies = isEditable && canAccessOblivionCeremonies(character)
 
     const handleDisciplineClick = (disciplineName: DisciplineName) => {
         const diceModalOpened = useDiceRollModalStore.getState().opened
@@ -296,7 +300,15 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             ? []
                             : current.rituals,
                     ceremonies:
-                        itemToDelete.disciplineIdentity === "official:oblivion"
+                        itemToDelete.disciplineIdentity === "official:oblivion" &&
+                        !canAccessOblivionCeremonies({
+                            disciplines: current.disciplines.filter(
+                                (power) =>
+                                    getPowerDisciplineIdentity(power) !==
+                                    itemToDelete.disciplineIdentity
+                            ),
+                            merits: current.merits
+                        })
                             ? []
                             : current.ceremonies
                 }

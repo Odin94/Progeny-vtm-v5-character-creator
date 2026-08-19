@@ -2,10 +2,11 @@ import { Badge, Box, Button, Group, ScrollArea, Text } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
-import { Character, containsOblivion } from "../../data/Character"
+import { Character } from "../../data/Character"
 import {
     Ceremony,
     Ceremonies,
+    canAccessOblivionCeremonies,
     characterHasCeremonyPrerequisite,
     getCeremonyPrerequisiteLabel
 } from "../../data/Ceremonies"
@@ -182,7 +183,7 @@ const CeremonyCard = ({
 
 const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPickerProps) => {
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
-    if (!containsOblivion(character.disciplines)) {
+    if (!canAccessOblivionCeremonies(character)) {
         return <></>
     }
 

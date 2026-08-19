@@ -6,6 +6,7 @@ import {
     Ceremony,
     Ceremonies,
     characterHasCeremonyPrerequisite,
+    getOblivionCeremonyLevel,
     getCeremonyPrerequisiteLabel
 } from "~/data/Ceremonies"
 import { SheetOptions } from "../CharacterSheet"
@@ -13,11 +14,7 @@ import { canAffordUpgrade, getAvailableXP, getRitualCost } from "../utils/xp"
 import CustomCeremonyModal from "./CustomCeremonyModal"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
-import {
-    getPowerDisciplineIdentity,
-    getRitualIdentity,
-    homebrewPowerToCeremony
-} from "~/utils/homebrewOptions"
+import { getRitualIdentity, homebrewPowerToCeremony } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type CeremonySelectModalProps = {
@@ -25,11 +22,6 @@ type CeremonySelectModalProps = {
     onClose: () => void
     options: SheetOptions
 }
-
-const getOblivionLevel = (character: Character): number =>
-    character.disciplines.filter(
-        (power) => getPowerDisciplineIdentity(power) === "official:oblivion"
-    ).length
 
 const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
@@ -39,7 +31,7 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
         () => new Set(character.ceremonies.map(getRitualIdentity)),
         [character.ceremonies]
     )
-    const oblivionLevel = getOblivionLevel(character)
+    const oblivionLevel = getOblivionCeremonyLevel(character)
     const ceremonyCatalog = [
         ...Ceremonies,
         ...homebrewCollections.flatMap((collection) =>
