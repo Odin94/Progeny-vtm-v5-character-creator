@@ -23,6 +23,8 @@ import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import {
+    advancedMeritsAndFlaws,
+    advancedThinbloodMeritsAndFlaws,
     essentialLoresheets,
     essentialMeritsAndFlaws,
     essentialThinbloodMeritsAndFlaws,
@@ -61,6 +63,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const [loresheetQuery, setLoresheetQuery] = useState("")
     const [regularQuery, setRegularQuery] = useState("")
+    const [showAdvancedMeritsAndFlaws, setShowAdvancedMeritsAndFlaws] = useState(false)
     const [customName, setCustomName] = useState("")
     const [customLevel, setCustomLevel] = useState<number>(1)
     const [customDescription, setCustomDescription] = useState("")
@@ -115,6 +118,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             setOpenLoresheetTitle("")
             setLoresheetQuery("")
             setRegularQuery("")
+            setShowAdvancedMeritsAndFlaws(false)
             setCustomName("")
             setCustomLevel(1)
             setCustomDescription("")
@@ -127,8 +131,13 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         flaws: DisplayMeritFlaw[]
     }> = [
         ...(character.clan === "Thin-blood"
-            ? [essentialThinbloodMeritsAndFlaws, ...essentialMeritsAndFlaws]
+            ? [
+                  essentialThinbloodMeritsAndFlaws,
+                  ...(showAdvancedMeritsAndFlaws ? [advancedThinbloodMeritsAndFlaws] : []),
+                  ...essentialMeritsAndFlaws
+              ]
             : essentialMeritsAndFlaws),
+        ...(showAdvancedMeritsAndFlaws ? advancedMeritsAndFlaws : []),
         ...(homebrewMeritsAndFlaws.length ? [homebrewCategory] : [])
     ]
     const characterMeritFlawIdentities = new Set(
@@ -774,15 +783,30 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                         </>
                     ) : (
                         <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
-                            <Tabs.List>
-                                <Tabs.Tab value="regular">
-                                    {type === "merit" ? "Merits" : "Flaws"}
-                                </Tabs.Tab>
-                                {type === "merit" ? (
-                                    <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
-                                ) : null}
-                                {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
-                            </Tabs.List>
+                            <Group justify="space-between" align="center" wrap="wrap">
+                                <Tabs.List>
+                                    <Tabs.Tab value="regular">
+                                        {type === "merit" ? "Merits" : "Flaws"}
+                                    </Tabs.Tab>
+                                    {type === "merit" ? (
+                                        <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
+                                    ) : null}
+                                    {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
+                                </Tabs.List>
+                                <Button
+                                    data-testid="toggle-advanced-merits-flaws-button"
+                                    variant="outline"
+                                    color={primaryColor}
+                                    size="xs"
+                                    onClick={() =>
+                                        setShowAdvancedMeritsAndFlaws((showingAdvanced) => !showingAdvanced)
+                                    }
+                                >
+                                    {showAdvancedMeritsAndFlaws
+                                        ? "Show essential list"
+                                        : "Show advanced list"}
+                                </Button>
+                            </Group>
 
                             <Tabs.Panel value="regular" pt="md">
                                 {availableItems.length === 0 ? (
