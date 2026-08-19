@@ -63,30 +63,21 @@ const TheBlood = ({ options }: TheBloodProps) => {
             <Grid columnGap="xl" rowGap="xl">
                 <Grid.Col span={{ base: 12, md: 6 }}>
                     <Stack gap="xs">
-                        <Group gap="md" align="center">
-                            <Group gap="xs" align="center">
-                                <Text fw={600} size="sm">
-                                    Blood Surge
-                                </Text>
-                                <Badge size="lg" variant="light" color={primaryColor} circle>
-                                    {effects.surge}
-                                </Badge>
-                            </Group>
-                            <Box
-                                style={{
-                                    width: "1px",
-                                    height: "1.5rem",
-                                    backgroundColor: "var(--mantine-color-gray-3)"
-                                }}
-                            />
-                            <Group gap="xs" align="center">
-                                <Text fw={600} size="sm">
-                                    Bane Severity
-                                </Text>
-                                <Badge size="lg" variant="light" color={primaryColor} circle>
-                                    {effects.bane}
-                                </Badge>
-                            </Group>
+                        <Group gap="xs" align="center">
+                            <Text fw={600} size="sm">
+                                Blood Surge
+                            </Text>
+                            <Badge size="lg" variant="light" color={primaryColor} circle>
+                                {effects.surge}
+                            </Badge>
+                        </Group>
+                        <Group gap="xs" align="center">
+                            <Text fw={600} size="sm">
+                                Bane Severity
+                            </Text>
+                            <Badge size="lg" variant="light" color={primaryColor} circle>
+                                {effects.bane}
+                            </Badge>
                         </Group>
                     </Stack>
                 </Grid.Col>
