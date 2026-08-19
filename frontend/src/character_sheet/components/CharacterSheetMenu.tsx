@@ -386,7 +386,13 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                             </div>
                                         </section>
 
-                                        <div className="sheet-menu__utility-row">
+                                        <div
+                                            className={`sheet-menu__utility-row ${
+                                                isAuthenticated
+                                                    ? "sheet-menu__utility-row--six-items"
+                                                    : "sheet-menu__utility-row--five-items"
+                                            }`}
+                                        >
                                             <Button
                                                 leftSection={<IconPalette size={18} />}
                                                 variant="subtle"

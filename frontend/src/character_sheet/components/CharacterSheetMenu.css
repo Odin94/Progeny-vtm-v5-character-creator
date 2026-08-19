@@ -85,18 +85,19 @@
 @media (min-width: 36.01em) {
     .sheet-menu__utility-row {
         display: grid;
-        grid-template-columns: repeat(3, max-content);
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         justify-content: center;
+        gap: 4px;
     }
 
-    .sheet-menu__feedback-support {
-        grid-column: 2;
-        justify-self: center;
+    .sheet-menu__utility-row .mantine-Button-root {
+        grid-column: span 2;
+        width: 100%;
     }
 
-    .sheet-menu__feature-guide {
-        grid-column: 3;
-        justify-self: center;
+    .sheet-menu__utility-row--five-items > :nth-child(4),
+    .sheet-menu__utility-row--five-items > :nth-child(5) {
+        grid-column: span 3;
     }
 }
 .sheet-menu__disclaimer { color: rgba(244, 236, 232, 0.86); font-family: Inter, "Segoe UI", sans-serif; line-height: 1.65; }
