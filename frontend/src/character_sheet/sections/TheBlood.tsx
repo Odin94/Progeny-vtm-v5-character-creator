@@ -88,74 +88,43 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
             <Divider mb="md" />
 
-            <Grid gap="md">
+            <Grid columnGap="xl" rowGap="xl">
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
-                        <Stack gap="xs">
-                            <Group gap="md" align="center">
-                                <Group gap="xs" align="center">
-                                    <Text fw={600} size="sm">
-                                        Blood Surge
-                                    </Text>
-                                    <Badge size="lg" variant="light" color={primaryColor} circle>
-                                        {effects.surge}
-                                    </Badge>
-                                </Group>
-                                <Box
-                                    style={{
-                                        width: "1px",
-                                        height: "1.5rem",
-                                        backgroundColor: "var(--mantine-color-gray-3)"
-                                    }}
-                                />
-                                <Group gap="xs" align="center">
-                                    <Text fw={600} size="sm">
-                                        Bane Severity
-                                    </Text>
-                                    <Badge size="lg" variant="light" color={primaryColor} circle>
-                                        {effects.bane}
-                                    </Badge>
-                                </Group>
-                            </Group>
+                    <Stack gap="xs">
+                        <Group gap="md" align="center">
                             <Group gap="xs" align="center">
-                                <Text size="sm" fw={600} c="white">
-                                    XP:{" "}
+                                <Text fw={600} size="sm">
+                                    Blood Surge
                                 </Text>
-                                {isExperienceSpentEditable ? (
-                                    <>
-                                        <NumberInput
-                                            value={experienceSpentField.value}
-                                            onChange={experienceSpentField.onChange}
-                                            min={0}
-                                            size="sm"
-                                            style={{ width: "80px" }}
-                                            styles={{
-                                                input: {
-                                                    fontSize: "1.125rem",
-                                                    fontWeight: 700,
-                                                    color: colorValue,
-                                                    textAlign: "center"
-                                                }
-                                            }}
-                                        />
-                                        <Text size="lg" c={primaryColor} fw={700}>
-                                            /
-                                        </Text>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Text span size="lg" c={primaryColor} fw={700}>
-                                            {character.ephemeral.experienceSpent}
-                                        </Text>
-                                        <Text span size="lg" c={primaryColor} fw={700}>
-                                            {" / "}
-                                        </Text>
-                                    </>
-                                )}
-                                {isExperienceEditable ? (
+                                <Badge size="lg" variant="light" color={primaryColor} circle>
+                                    {effects.surge}
+                                </Badge>
+                            </Group>
+                            <Box
+                                style={{
+                                    width: "1px",
+                                    height: "1.5rem",
+                                    backgroundColor: "var(--mantine-color-gray-3)"
+                                }}
+                            />
+                            <Group gap="xs" align="center">
+                                <Text fw={600} size="sm">
+                                    Bane Severity
+                                </Text>
+                                <Badge size="lg" variant="light" color={primaryColor} circle>
+                                    {effects.bane}
+                                </Badge>
+                            </Group>
+                        </Group>
+                        <Group gap="xs" align="center">
+                            <Text size="sm" fw={600} c="white">
+                                XP:{" "}
+                            </Text>
+                            {isExperienceSpentEditable ? (
+                                <>
                                     <NumberInput
-                                        value={experienceField.value}
-                                        onChange={experienceField.onChange}
+                                        value={experienceSpentField.value}
+                                        onChange={experienceSpentField.onChange}
                                         min={0}
                                         size="sm"
                                         style={{ width: "80px" }}
@@ -163,117 +132,138 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                             input: {
                                                 fontSize: "1.125rem",
                                                 fontWeight: 700,
-                                                color: `var(--mantine-color-${primaryColor}-6)`,
+                                                color: colorValue,
                                                 textAlign: "center"
                                             }
                                         }}
                                     />
-                                ) : (
-                                    <Text span size="lg" c={primaryColor} fw={700}>
-                                        {character.experience}
+                                    <Text size="lg" c={primaryColor} fw={700}>
+                                        /
                                     </Text>
-                                )}
-                            </Group>
-                        </Stack>
-                    </Paper>
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
-                        <Stack gap="xs">
-                            <Text size="sm">
-                                <Text span fw={600}>
-                                    Power Bonus:
-                                </Text>{" "}
-                                {effects.discBonus}
-                            </Text>
-                            <Text size="sm">
-                                <Text span fw={600}>
-                                    Mend Amount:
-                                </Text>{" "}
-                                {effects.mend}
-                            </Text>
-                            <Text size="sm">
-                                <Text span fw={600}>
-                                    Rouse Re-Roll:
-                                </Text>{" "}
-                                {effects.discRouse}
-                            </Text>
-                        </Stack>
-                    </Paper>
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
-                        <Stack gap="xs">
-                            <Text fw={600} size="sm" c="dimmed" mb="xs">
-                                Feeding Penalty
-                            </Text>
-                            {effects.penalty === "-" ? (
-                                <Text size="sm" c="dimmed">
-                                    {effects.penalty}
-                                </Text>
+                                </>
                             ) : (
-                                <Stack gap={4}>
-                                    {effects.penalty.split("\n").map((line, i) => (
-                                        <Text key={i} size="sm">
-                                            {line}
-                                        </Text>
-                                    ))}
-                                </Stack>
+                                <>
+                                    <Text span size="lg" c={primaryColor} fw={700}>
+                                        {character.ephemeral.experienceSpent}
+                                    </Text>
+                                    <Text span size="lg" c={primaryColor} fw={700}>
+                                        {" / "}
+                                    </Text>
+                                </>
                             )}
-                        </Stack>
-                    </Paper>
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" style={{ height: "100%", ...sheetSurfaceStyle }}>
-                        <Stack gap="xs">
-                            <Text fw={600} size="sm" c="dimmed" mb="xs">
-                                Clan Traits
-                            </Text>
-                            <Group gap="xs" align="center" wrap="nowrap">
-                                <Text size="sm">
-                                    <Text span fw={600} c={primaryColor}>
-                                        Clan Bane:
-                                    </Text>{" "}
-                                    {baneText}
-                                </Text>
-                            </Group>
-                            {canToggleClanBane ? (
-                                <Button
-                                    size="xs"
-                                    variant="light"
-                                    color={primaryColor}
-                                    leftSection={<IconSwitchHorizontal size={14} />}
-                                    onClick={() =>
-                                        setCharacter((current) => ({
-                                            ...current,
-                                            clanBane:
-                                                current.clanBane === "variant"
-                                                    ? "default"
-                                                    : "variant"
-                                        }))
-                                    }
+                            {isExperienceEditable ? (
+                                <NumberInput
+                                    value={experienceField.value}
+                                    onChange={experienceField.onChange}
+                                    min={0}
+                                    size="sm"
+                                    style={{ width: "80px" }}
                                     styles={{
-                                        root: {
-                                            alignSelf: "flex-start"
+                                        input: {
+                                            fontSize: "1.125rem",
+                                            fontWeight: 700,
+                                            color: `var(--mantine-color-${primaryColor}-6)`,
+                                            textAlign: "center"
                                         }
                                     }}
-                                >
-                                    {character.clanBane === "variant"
-                                        ? "Use Default Bane"
-                                        : `Use ${variantBane?.name ?? "Variant"} Bane`}
-                                </Button>
-                            ) : null}
+                                />
+                            ) : (
+                                <Text span size="lg" c={primaryColor} fw={700}>
+                                    {character.experience}
+                                </Text>
+                            )}
+                        </Group>
+                    </Stack>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="xs">
+                        <Text size="sm">
+                            <Text span fw={600}>
+                                Power Bonus:
+                            </Text>{" "}
+                            {effects.discBonus}
+                        </Text>
+                        <Text size="sm">
+                            <Text span fw={600}>
+                                Mend Amount:
+                            </Text>{" "}
+                            {effects.mend}
+                        </Text>
+                        <Text size="sm">
+                            <Text span fw={600}>
+                                Rouse Re-Roll:
+                            </Text>{" "}
+                            {effects.discRouse}
+                        </Text>
+                    </Stack>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="xs">
+                        <Text fw={600} size="sm" c="dimmed" mb="xs">
+                            Feeding Penalty
+                        </Text>
+                        {effects.penalty === "-" ? (
+                            <Text size="sm" c="dimmed">
+                                {effects.penalty}
+                            </Text>
+                        ) : (
+                            <Stack gap={4}>
+                                {effects.penalty.split("\n").map((line, i) => (
+                                    <Text key={i} size="sm">
+                                        {line}
+                                    </Text>
+                                ))}
+                            </Stack>
+                        )}
+                    </Stack>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="xs">
+                        <Text fw={600} size="sm" c="dimmed" mb="xs">
+                            Clan Traits
+                        </Text>
+                        <Group gap="xs" align="center" wrap="nowrap">
                             <Text size="sm">
                                 <Text span fw={600} c={primaryColor}>
-                                    Clan Compulsion:
+                                    Clan Bane:
                                 </Text>{" "}
-                                {compulsionText}
+                                {baneText}
                             </Text>
-                        </Stack>
-                    </Paper>
+                        </Group>
+                        {canToggleClanBane ? (
+                            <Button
+                                size="xs"
+                                variant="light"
+                                color={primaryColor}
+                                leftSection={<IconSwitchHorizontal size={14} />}
+                                onClick={() =>
+                                    setCharacter((current) => ({
+                                        ...current,
+                                        clanBane:
+                                            current.clanBane === "variant" ? "default" : "variant"
+                                    }))
+                                }
+                                styles={{
+                                    root: {
+                                        alignSelf: "flex-start"
+                                    }
+                                }}
+                            >
+                                {character.clanBane === "variant"
+                                    ? "Use Default Bane"
+                                    : `Use ${variantBane?.name ?? "Variant"} Bane`}
+                            </Button>
+                        ) : null}
+                        <Text size="sm">
+                            <Text span fw={600} c={primaryColor}>
+                                Clan Compulsion:
+                            </Text>{" "}
+                            {compulsionText}
+                        </Text>
+                    </Stack>
                 </Grid.Col>
             </Grid>
         </Paper>
