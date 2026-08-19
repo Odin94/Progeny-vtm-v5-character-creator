@@ -1,4 +1,4 @@
-import { Box, Grid, Group, Text, Title } from "@mantine/core"
+import { Box, Grid, Group, Paper, Text, Title } from "@mantine/core"
 import { memo } from "react"
 import { attributesKeySchema, AttributesKey } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
@@ -7,6 +7,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import { sheetSurfaceStyle } from "../utils/style"
 
 type AttributesProps = {
     options: SheetOptions
@@ -19,7 +20,9 @@ type AttributeRowProps = {
 }
 
 const attributeTextStyle: React.CSSProperties = {
-    fontFamily: "Courier New"
+    fontFamily: "Inter, Segoe UI, sans-serif",
+    fontWeight: 600,
+    fontSize: "0.95rem"
 }
 
 const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
@@ -48,9 +51,14 @@ const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
             justify="space-between"
             mb="xs"
             style={{
+                width: "100%",
+                minWidth: 0,
+                padding: "0.4rem 0.5rem",
                 cursor: "pointer",
-                borderRadius: "4px",
-                backgroundColor: isSelected ? `${options.primaryColor}33` : "transparent",
+                borderRadius: "var(--mantine-radius-sm)",
+                backgroundColor: isSelected
+                    ? `var(--mantine-color-${options.primaryColor}-light)`
+                    : "transparent",
                 transition: "background-color 0.2s"
             }}
             onClick={() => {
@@ -116,28 +124,34 @@ const Attributes = ({ options }: AttributesProps) => {
             </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm" c="dimmed">
-                        PHYSICAL
-                    </Title>
-                    {["strength", "dexterity", "stamina"]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map(renderAttributeRow)}
+                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            PHYSICAL
+                        </Title>
+                        {["strength", "dexterity", "stamina"]
+                            .map((a) => attributesKeySchema.parse(a))
+                            .map(renderAttributeRow)}
+                    </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm" c="dimmed">
-                        SOCIAL
-                    </Title>
-                    {["charisma", "manipulation", "composure"]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map(renderAttributeRow)}
+                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            SOCIAL
+                        </Title>
+                        {["charisma", "manipulation", "composure"]
+                            .map((a) => attributesKeySchema.parse(a))
+                            .map(renderAttributeRow)}
+                    </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm" c="dimmed">
-                        MENTAL
-                    </Title>
-                    {["intelligence", "wits", "resolve"]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map(renderAttributeRow)}
+                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            MENTAL
+                        </Title>
+                        {["intelligence", "wits", "resolve"]
+                            .map((a) => attributesKeySchema.parse(a))
+                            .map(renderAttributeRow)}
+                    </Paper>
                 </Grid.Col>
             </Grid>
         </Box>

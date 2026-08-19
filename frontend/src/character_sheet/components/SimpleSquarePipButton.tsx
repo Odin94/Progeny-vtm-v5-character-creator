@@ -33,20 +33,19 @@ const SimpleSquarePipButton = ({
         padding: 0,
         border: `2px solid ${baseColor}`,
         borderRadius: "4px",
-        backgroundColor: "transparent",
+        backgroundColor: filled ? baseColor : "transparent",
         cursor: isInteractive ? "pointer" : "default",
         transform: "scale(1)",
-        transition: shouldReduceMotion
-            ? "none"
-            : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+        transition:
+            "background-color 140ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
-        overflow: "visible",
+        overflow: "hidden",
         ...style
     }
 
     const actionIcon = (
         <ActionIcon
-            variant="subtle"
+            variant="transparent"
             color={color}
             onClick={isDisabled ? undefined : onClick}
             size="xs"
@@ -66,26 +65,7 @@ const SimpleSquarePipButton = ({
             onPointerLeave={(event) => {
                 event.currentTarget.style.transform = "scale(1)"
             }}
-        >
-            <span
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: baseColor,
-                    borderRadius: "4px",
-                    opacity: filled ? 1 : 0,
-                    transform: shouldReduceMotion
-                        ? "scale(1)"
-                        : filled
-                          ? "scale(1)"
-                          : "scale(0.95)",
-                    transition: shouldReduceMotion
-                        ? "opacity 120ms cubic-bezier(0.23, 1, 0.32, 1)"
-                        : "opacity 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
-                    pointerEvents: "none"
-                }}
-            />
-        </ActionIcon>
+        />
     )
 
     const button = actionIcon

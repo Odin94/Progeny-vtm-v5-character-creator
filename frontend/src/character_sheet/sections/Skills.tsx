@@ -1,4 +1,15 @@
-import { Box, Grid, Group, Text, Title, Badge, Stack, TextInput, Tooltip } from "@mantine/core"
+import {
+    Box,
+    Grid,
+    Group,
+    Text,
+    Title,
+    Badge,
+    Stack,
+    TextInput,
+    Tooltip,
+    Paper
+} from "@mantine/core"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import posthog from "posthog-js"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
@@ -10,6 +21,7 @@ import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
 import { removeSkillSpecialty } from "../utils/specialties"
+import { sheetSurfaceStyle } from "../utils/style"
 
 type SkillsProps = {
     options: SheetOptions
@@ -193,7 +205,14 @@ const SkillRow = ({
     }
 
     return (
-        <Group ref={containerRef} justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
+        <Group
+            ref={containerRef}
+            justify="space-between"
+            mb="xs"
+            wrap="nowrap"
+            align="flex-start"
+            style={{ minWidth: 0, padding: "0.35rem 0.5rem" }}
+        >
             <Group
                 ref={testContentRef}
                 gap="xs"
@@ -310,7 +329,9 @@ const SkillRow = ({
                             ...textStyle,
                             cursor: "pointer",
                             borderRadius: "4px",
-                            backgroundColor: isSelected ? `${primaryColor}33` : undefined,
+                            backgroundColor: isSelected
+                                ? `var(--mantine-color-${primaryColor}-light)`
+                                : undefined,
                             transition: "background-color 0.2s"
                         }}
                         onClick={handleSkillClick}
@@ -423,7 +444,9 @@ const MemoizedSkillRow = memo(SkillRow, (prev, next) => {
 })
 
 const skillTextStyle: React.CSSProperties = {
-    fontFamily: "Courier New"
+    fontFamily: "Inter, Segoe UI, sans-serif",
+    fontWeight: 600,
+    fontSize: "0.95rem"
 }
 
 const Skills = ({ options }: SkillsProps) => {
@@ -556,58 +579,64 @@ const Skills = ({ options }: SkillsProps) => {
             </Title>
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm" c="dimmed">
-                        PHYSICAL
-                    </Title>
-                    {[
-                        "athletics",
-                        "brawl",
-                        "craft",
-                        "drive",
-                        "firearms",
-                        "melee",
-                        "larceny",
-                        "stealth",
-                        "survival"
-                    ]
-                        .map((s) => skillsKeySchema.parse(s))
-                        .map(renderSkillRow)}
+                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            PHYSICAL
+                        </Title>
+                        {[
+                            "athletics",
+                            "brawl",
+                            "craft",
+                            "drive",
+                            "firearms",
+                            "melee",
+                            "larceny",
+                            "stealth",
+                            "survival"
+                        ]
+                            .map((s) => skillsKeySchema.parse(s))
+                            .map(renderSkillRow)}
+                    </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm" c="dimmed">
-                        SOCIAL
-                    </Title>
-                    {[
-                        "animal ken",
-                        "etiquette",
-                        "insight",
-                        "intimidation",
-                        "leadership",
-                        "performance",
-                        "persuasion",
-                        "streetwise",
-                        "subterfuge"
-                    ]
-                        .map((s) => skillsKeySchema.parse(s))
-                        .map(renderSkillRow)}
+                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            SOCIAL
+                        </Title>
+                        {[
+                            "animal ken",
+                            "etiquette",
+                            "insight",
+                            "intimidation",
+                            "leadership",
+                            "performance",
+                            "persuasion",
+                            "streetwise",
+                            "subterfuge"
+                        ]
+                            .map((s) => skillsKeySchema.parse(s))
+                            .map(renderSkillRow)}
+                    </Paper>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Title order={4} mb="sm" c="dimmed">
-                        MENTAL
-                    </Title>
-                    {[
-                        "academics",
-                        "awareness",
-                        "finance",
-                        "investigation",
-                        "medicine",
-                        "occult",
-                        "politics",
-                        "science",
-                        "technology"
-                    ]
-                        .map((s) => skillsKeySchema.parse(s))
-                        .map(renderSkillRow)}
+                    <Paper p="md" withBorder style={sheetSurfaceStyle}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            MENTAL
+                        </Title>
+                        {[
+                            "academics",
+                            "awareness",
+                            "finance",
+                            "investigation",
+                            "medicine",
+                            "occult",
+                            "politics",
+                            "science",
+                            "technology"
+                        ]
+                            .map((s) => skillsKeySchema.parse(s))
+                            .map(renderSkillRow)}
+                    </Paper>
                 </Grid.Col>
             </Grid>
         </Box>
