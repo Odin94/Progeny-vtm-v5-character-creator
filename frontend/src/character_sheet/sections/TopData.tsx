@@ -17,7 +17,7 @@ import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAn
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
 import { PredatorTypes } from "~/data/PredatorType"
 import { SheetOptions } from "../CharacterSheet"
-import { hexToRgba, inputAlpha } from "../utils/style"
+import { sheetSurfaceStyle } from "../utils/style"
 import {
     useDebouncedUncontrolledStringField,
     useDebouncedUncontrolledNumberField
@@ -37,12 +37,13 @@ type DescriptionFieldProps = {
     primaryColor: string
 }
 
+const sheetInputStyles = { input: sheetSurfaceStyle }
+
 // Keep the text editor's local state below the TopData boundary. A long description
 // should only re-render this textarea while typing, rather than all of the sheet's
 // top-level controls.
 const DescriptionField = memo(
     ({ character, setCharacter, primaryColor }: DescriptionFieldProps) => {
-        const theme = useMantineTheme()
         const descriptionField = useDebouncedUncontrolledStringField({
             character,
             setCharacter,
@@ -59,9 +60,9 @@ const DescriptionField = memo(
                 color={primaryColor}
                 styles={{
                     input: {
+                        ...sheetSurfaceStyle,
                         textAlign: "center",
-                        color: "var(--mantine-color-dimmed)",
-                        backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha)
+                        color: "var(--mantine-color-dimmed)"
                     }
                 }}
                 mb="lg"
@@ -138,7 +139,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     borderBottom: `2px solid transparent`,
                                     borderRadius: 0,
                                     padding: "0.5rem",
-                                    backgroundColor: hexToRgba(theme.colors.dark[7], inputAlpha)
+                                    ...sheetSurfaceStyle
                                 }
                             }}
                             style={{ width: "100%" }}
@@ -243,14 +244,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "200px" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Group gap="xs">
@@ -301,14 +295,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "200px" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Text>{character.predatorType.name || "—"}</Text>
@@ -328,14 +315,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100%" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Text>{character.ambition || "—"}</Text>
@@ -351,14 +331,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100%" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Text>{character.desire || "—"}</Text>
@@ -374,14 +347,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100%" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Text>{character.player || "—"}</Text>
@@ -407,14 +373,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "100px" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Text>{character.generation || "—"}</Text>
@@ -430,14 +389,7 @@ const TopData = ({ options }: TopDataProps) => {
                                     size="sm"
                                     color={primaryColor}
                                     style={{ width: "50%" }}
-                                    styles={{
-                                        input: {
-                                            backgroundColor: hexToRgba(
-                                                theme.colors.dark[7],
-                                                inputAlpha
-                                            )
-                                        }
-                                    }}
+                                    styles={sheetInputStyles}
                                 />
                             ) : (
                                 <Text>{character.sire || "—"}</Text>
