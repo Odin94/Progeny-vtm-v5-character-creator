@@ -88,6 +88,8 @@ const TopData = ({ options }: TopDataProps) => {
     )
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isFreeMode = mode === "free"
+    const isExperienceEditable = mode === "xp" || isFreeMode
+    const isExperienceSpentEditable = isFreeMode
 
     const nameField = useDebouncedUncontrolledStringField({
         character,
@@ -118,6 +120,24 @@ const TopData = ({ options }: TopDataProps) => {
         character,
         setCharacter,
         field: "sire"
+    })
+    const experienceSpentField = useDebouncedUncontrolledNumberField({
+        character,
+        setCharacter,
+        field: "ephemeral.experienceSpent",
+        getValue: (char) => char.ephemeral.experienceSpent,
+        updateFn: (char, value) => ({
+            ...char,
+            ephemeral: {
+                ...char.ephemeral,
+                experienceSpent: value
+            }
+        })
+    })
+    const experienceField = useDebouncedUncontrolledNumberField({
+        character,
+        setCharacter,
+        field: "experience"
     })
 
     return (
@@ -396,6 +416,65 @@ const TopData = ({ options }: TopDataProps) => {
                                 <Text>{character.sire || "—"}</Text>
                             )}
                         </Group>
+                        <Group gap="xs" align="center">
+                            <Text fw={700}>XP:</Text>
+                            {isExperienceSpentEditable ? (
+                                <>
+                                    <NumberInput
+                                        value={experienceSpentField.value}
+                                        onChange={experienceSpentField.onChange}
+                                        min={0}
+                                        size="sm"
+                                        style={{ width: "72px" }}
+                                        styles={{
+                                            input: {
+                                                ...sheetSurfaceStyle,
+                                                border: "none",
+                                                fontSize: "1rem",
+                                                fontWeight: 700,
+                                                color: colorValue,
+                                                textAlign: "center"
+                                            }
+                                        }}
+                                    />
+                                    <Text c={primaryColor} fw={700}>
+                                        /
+                                    </Text>
+                                </>
+                            ) : (
+                                <>
+                                    <Text c={primaryColor} fw={700}>
+                                        {character.ephemeral.experienceSpent}
+                                    </Text>
+                                    <Text c={primaryColor} fw={700}>
+                                        /
+                                    </Text>
+                                </>
+                            )}
+                            {isExperienceEditable ? (
+                                <NumberInput
+                                    value={experienceField.value}
+                                    onChange={experienceField.onChange}
+                                    min={0}
+                                    size="sm"
+                                    style={{ width: "72px" }}
+                                    styles={{
+                                        input: {
+                                            ...sheetSurfaceStyle,
+                                            border: "none",
+                                            fontSize: "1rem",
+                                            fontWeight: 700,
+                                            color: colorValue,
+                                            textAlign: "center"
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <Text c={primaryColor} fw={700}>
+                                    {character.experience}
+                                </Text>
+                            )}
+                        </Group>
                     </Stack>
                 </Grid.Col>
             </Grid>
@@ -420,6 +499,8 @@ export default memo(TopData, (prev, next) => {
         p.character.desire === n.character.desire &&
         p.character.clan === n.character.clan &&
         p.character.generation === n.character.generation &&
+        p.character.experience === n.character.experience &&
+        p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent &&
         p.character.predatorType === n.character.predatorType
     )
 })

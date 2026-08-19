@@ -5,12 +5,10 @@ import {
     Divider,
     Grid,
     Group,
-    NumberInput,
     Paper,
     Stack,
     Text,
-    Title,
-    useMantineTheme
+    Title
 } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { memo } from "react"
@@ -24,7 +22,6 @@ import {
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
 import { sheetSurfaceStyle } from "../utils/style"
-import { useDebouncedUncontrolledNumberField } from "../utils/useDebouncedUncontrolledField"
 
 type TheBloodProps = {
     options: SheetOptions
@@ -32,38 +29,13 @@ type TheBloodProps = {
 
 const TheBlood = ({ options }: TheBloodProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const theme = useMantineTheme()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const effects =
         potencyEffects[getBloodPotencyEffectLevel(character.bloodPotency)] || potencyEffects[0]
     const variantBane = variantClanBanes[character.clan]
     const baneText = getClanBaneText(character, effects.bane)
     const compulsionText = getClanCompulsionText(character)
 
-    const isExperienceEditable = mode === "xp" || mode === "free"
-    const isExperienceSpentEditable = mode === "free"
     const canToggleClanBane = mode !== "play" && hasVariantClanBane(character.clan)
-
-    const experienceSpentField = useDebouncedUncontrolledNumberField({
-        character,
-        setCharacter,
-        field: "ephemeral.experienceSpent",
-        getValue: (char) => char.ephemeral.experienceSpent,
-        updateFn: (char, value) => ({
-            ...char,
-            ephemeral: {
-                ...char.ephemeral,
-                experienceSpent: value
-            }
-        })
-    })
-
-    const experienceField = useDebouncedUncontrolledNumberField({
-        character,
-        setCharacter,
-        field: "experience",
-        getValue: (char) => char.experience
-    })
 
     return (
         <Paper p="lg" style={sheetSurfaceStyle}>
@@ -115,63 +87,6 @@ const TheBlood = ({ options }: TheBloodProps) => {
                                     {effects.bane}
                                 </Badge>
                             </Group>
-                        </Group>
-                        <Group gap="xs" align="center">
-                            <Text size="sm" fw={600} c="white">
-                                XP:{" "}
-                            </Text>
-                            {isExperienceSpentEditable ? (
-                                <>
-                                    <NumberInput
-                                        value={experienceSpentField.value}
-                                        onChange={experienceSpentField.onChange}
-                                        min={0}
-                                        size="sm"
-                                        style={{ width: "80px" }}
-                                        styles={{
-                                            input: {
-                                                fontSize: "1.125rem",
-                                                fontWeight: 700,
-                                                color: colorValue,
-                                                textAlign: "center"
-                                            }
-                                        }}
-                                    />
-                                    <Text size="lg" c={primaryColor} fw={700}>
-                                        /
-                                    </Text>
-                                </>
-                            ) : (
-                                <>
-                                    <Text span size="lg" c={primaryColor} fw={700}>
-                                        {character.ephemeral.experienceSpent}
-                                    </Text>
-                                    <Text span size="lg" c={primaryColor} fw={700}>
-                                        {" / "}
-                                    </Text>
-                                </>
-                            )}
-                            {isExperienceEditable ? (
-                                <NumberInput
-                                    value={experienceField.value}
-                                    onChange={experienceField.onChange}
-                                    min={0}
-                                    size="sm"
-                                    style={{ width: "80px" }}
-                                    styles={{
-                                        input: {
-                                            fontSize: "1.125rem",
-                                            fontWeight: 700,
-                                            color: `var(--mantine-color-${primaryColor}-6)`,
-                                            textAlign: "center"
-                                        }
-                                    }}
-                                />
-                            ) : (
-                                <Text span size="lg" c={primaryColor} fw={700}>
-                                    {character.experience}
-                                </Text>
-                            )}
                         </Group>
                     </Stack>
                 </Grid.Col>
@@ -283,9 +198,6 @@ export default memo(TheBlood, (prev, next) => {
         p.character.clan === n.character.clan &&
         p.character.clanBane === n.character.clanBane &&
         p.character.homebrewClan?.bane === n.character.homebrewClan?.bane &&
-        p.character.homebrewClan?.compulsion === n.character.homebrewClan?.compulsion &&
-        p.character.experience === n.character.experience &&
-        p.character.generation === n.character.generation &&
-        p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent
+        p.character.homebrewClan?.compulsion === n.character.homebrewClan?.compulsion
     )
 })
