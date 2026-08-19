@@ -14,6 +14,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useState, useEffect } from "react"
+import { useMediaQuery } from "@mantine/hooks"
 import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
 import { clans } from "~/data/Clans"
@@ -34,6 +35,7 @@ import {
     getPowerIdentity
 } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type DisciplineSelectModalProps = {
     opened: boolean
@@ -52,6 +54,7 @@ const DisciplineSelectModal = ({
     hideBackButton
 }: DisciplineSelectModalProps) => {
     const { character, primaryColor, setCharacter } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [selectedDiscipline, setSelectedDiscipline] = useState<DisciplineName | null>(
         initialDiscipline || null
     )
@@ -304,6 +307,10 @@ const DisciplineSelectModal = ({
                     : "Select a Discipline"
             }
             size="lg"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
             {contentReady ? (
                 <Stack gap="md">

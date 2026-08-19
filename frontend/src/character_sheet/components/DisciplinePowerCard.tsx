@@ -1,9 +1,9 @@
-import { Badge, Box, Group, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core"
+import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core"
 import { Power } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import Tally from "~/components/Tally"
 import { getValueForKey } from "~/generator/utils"
-import { bgAlpha, hexToRgba } from "../utils/style"
+import { sheetSurfaceStyle } from "../utils/style"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisciplinePowerCardProps = {
@@ -62,8 +62,6 @@ const DisciplinePowerCard = ({
     disabledTooltip,
     onDisabledClick
 }: DisciplinePowerCardProps) => {
-    const theme = useMantineTheme()
-    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const content = (
         <Stack gap="xs" style={{ height: "100%", minHeight: "135px" }}>
             <Text
@@ -177,15 +175,13 @@ const DisciplinePowerCard = ({
     }
 
     return (
-        // TODOdin: Make this border prettier
         <Box
             p="xs"
             style={{
-                border: "1px solid var(--mantine-color-gray-3)",
                 borderRadius: "var(--mantine-radius-sm)",
                 minHeight: "140px",
                 display: "flex",
-                backgroundColor: paperBg,
+                ...sheetSurfaceStyle,
                 position: "relative"
             }}
         >

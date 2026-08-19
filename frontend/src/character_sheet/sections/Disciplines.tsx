@@ -12,8 +12,7 @@ import {
     ActionIcon,
     Modal,
     Button,
-    Tooltip,
-    useMantineTheme
+    Tooltip
 } from "@mantine/core"
 import { memo, useEffect, useState } from "react"
 import posthog from "posthog-js"
@@ -40,7 +39,7 @@ import CeremonySelectModal from "../components/CeremonySelectModal"
 import CustomCeremonyModal from "../components/CustomCeremonyModal"
 import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade, getRitualCost } from "../utils/xp"
-import { bgAlpha, hexToRgba } from "../utils/style"
+import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -65,7 +64,7 @@ type XpAddButtonProps = {
     eventProperties?: Record<string, unknown>
     primaryColor: string
     large?: boolean
-    ariaLabel: string
+    label: string
 }
 
 const XpAddButton = ({
@@ -76,7 +75,7 @@ const XpAddButton = ({
     eventProperties,
     primaryColor,
     large = false,
-    ariaLabel
+    label
 }: XpAddButtonProps) => {
     const canAfford = canAffordUpgrade(availableXP, cost)
     const blockedReason = canAfford
@@ -114,17 +113,18 @@ const XpAddButton = ({
     return (
         <Stack gap={4} align="center">
             <Tooltip label={canAfford ? `${cost} XP` : blockedReason} withArrow>
-                <ActionIcon
-                    size={large ? "xl" : "lg"}
-                    radius="xl"
+                <Button
+                    size={large ? "md" : "sm"}
+                    radius="md"
                     variant="light"
                     color={primaryColor}
+                    leftSection={<IconPlus size={large ? 18 : 16} />}
                     onClick={handleClick}
-                    aria-label={ariaLabel}
-                    style={{ opacity: canAfford ? 1 : 0.55, cursor: "pointer" }}
+                    aria-label={label}
+                    style={{ opacity: canAfford ? 1 : 0.55 }}
                 >
-                    <IconPlus size={large ? 24 : 18} />
-                </ActionIcon>
+                    {label}
+                </Button>
             </Tooltip>
             {warning ? (
                 <Text role="status" aria-live="polite" size="xs" c="red.4" ta="center">
@@ -142,7 +142,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
-    const theme = useMantineTheme()
     const [modalOpened, setModalOpened] = useState(false)
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
@@ -171,7 +170,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
-    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const bloodSorceryLevel = character.disciplines.filter(
         (power) => getPowerDisciplineIdentity(power) === "official:blood sorcery"
     ).length
@@ -348,7 +346,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             withBorder
                                             style={{
                                                 height: "100%",
-                                                backgroundColor: paperBg,
+                                                ...sheetSurfaceStyle,
                                                 cursor: "default"
                                             }}
                                             onClick={() => {
@@ -562,14 +560,15 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                         discipline: disciplineName
                                                                     }}
                                                                     primaryColor={primaryColor}
-                                                                    ariaLabel={`Add ${upcase(disciplineName)} power`}
+                                                                    label="Add power"
                                                                 />
                                                             ) : (
-                                                                <ActionIcon
-                                                                    size="lg"
-                                                                    radius="xl"
+                                                                <Button
+                                                                    size="sm"
+                                                                    radius="md"
                                                                     variant="light"
                                                                     color={primaryColor}
+                                                                    leftSection={<IconPlus size={16} />}
                                                                     onClick={(e) => {
                                                                         e.stopPropagation()
                                                                         setInitialDiscipline(
@@ -578,15 +577,16 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                         setModalOpened(true)
                                                                     }}
                                                                 >
-                                                                    <IconPlus size={18} />
-                                                                </ActionIcon>
+                                                                    Add power
+                                                                </Button>
                                                             )
                                                         ) : isCustom ? (
-                                                            <ActionIcon
-                                                                size="lg"
-                                                                radius="xl"
+                                                            <Button
+                                                                size="sm"
+                                                                radius="md"
                                                                 variant="light"
                                                                 color={primaryColor}
+                                                                leftSection={<IconPlus size={16} />}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
                                                                     setEditingDisciplineName(
@@ -599,8 +599,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                     setCustomPowerModalOpened(true)
                                                                 }}
                                                             >
-                                                                <IconPlus size={18} />
-                                                            </ActionIcon>
+                                                                Add power
+                                                            </Button>
                                                         ) : mode === "xp" ? (
                                                             <XpAddButton
                                                                 cost={getDisciplineCost(
@@ -620,22 +620,23 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                     discipline: disciplineName
                                                                 }}
                                                                 primaryColor={primaryColor}
-                                                                ariaLabel={`Add ${upcase(disciplineName)} power`}
+                                                                label="Add power"
                                                             />
                                                         ) : (
-                                                            <ActionIcon
-                                                                size="lg"
-                                                                radius="xl"
+                                                            <Button
+                                                                size="sm"
+                                                                radius="md"
                                                                 variant="light"
                                                                 color={primaryColor}
+                                                                leftSection={<IconPlus size={16} />}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
                                                                     setInitialDiscipline(catalogKey)
                                                                     setModalOpened(true)
                                                                 }}
                                                             >
-                                                                <IconPlus size={18} />
-                                                            </ActionIcon>
+                                                                Add power
+                                                            </Button>
                                                         )}
                                                     </Center>
                                                 ) : null}
@@ -655,7 +656,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        backgroundColor: paperBg
+                                        ...sheetAddSurfaceStyle
                                     }}
                                 >
                                     <Center style={{ height: "100%" }}>
@@ -693,28 +694,24 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         eventProperties={{ discipline: "new" }}
                                                         primaryColor={primaryColor}
                                                         large
-                                                        ariaLabel="Add a new discipline"
+                                                        label="Add discipline"
                                                     />
                                                 )
                                             })()
                                         ) : (
-                                            <ActionIcon
-                                                size="xl"
+                                            <Button
+                                                size="md"
                                                 variant="light"
                                                 color={primaryColor}
-                                                radius="xl"
+                                                radius="md"
+                                                leftSection={<IconPlus size={18} />}
                                                 onClick={() => {
                                                     setInitialDiscipline(null)
                                                     setModalOpened(true)
                                                 }}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center"
-                                                }}
                                             >
-                                                <IconPlus size={24} />
-                                            </ActionIcon>
+                                                Add discipline
+                                            </Button>
                                         )}
                                     </Center>
                                 </Paper>
@@ -752,27 +749,28 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             onAdd={() => setRitualModalOpened(true)}
                                             blockedEvent="sheet-ritual-pick-blocked"
                                             primaryColor={primaryColor}
-                                            ariaLabel="Add a ritual"
+                                            label="Add ritual"
                                         />
                                     )
                                 })()
                             ) : (
-                                <ActionIcon
-                                    size="lg"
-                                    radius="xl"
+                                <Button
+                                    size="sm"
+                                    radius="md"
                                     variant="light"
                                     color={primaryColor}
+                                    leftSection={<IconPlus size={16} />}
                                     onClick={() => setRitualModalOpened(true)}
                                 >
-                                    <IconPlus size={18} />
-                                </ActionIcon>
+                                    Add ritual
+                                </Button>
                             )
                         ) : null}
                     </Group>
                     <Grid gap="md">
                         {character.rituals.map((ritual) => (
                             <Grid.Col key={ritual.name} span={{ base: 12, md: 6 }}>
-                                <Paper p="md" withBorder>
+                                <Paper p="md" withBorder style={sheetSurfaceStyle}>
                                     <Group justify="space-between" align="flex-start" mb="xs">
                                         <Text fw={700} size="lg">
                                             {ritual.name}
@@ -855,27 +853,28 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             onAdd={() => setCeremonyModalOpened(true)}
                                             blockedEvent="sheet-ceremony-pick-blocked"
                                             primaryColor={primaryColor}
-                                            ariaLabel="Add a ceremony"
+                                            label="Add ceremony"
                                         />
                                     )
                                 })()
                             ) : (
-                                <ActionIcon
-                                    size="lg"
-                                    radius="xl"
+                                <Button
+                                    size="sm"
+                                    radius="md"
                                     variant="light"
                                     color={primaryColor}
+                                    leftSection={<IconPlus size={16} />}
                                     onClick={() => setCeremonyModalOpened(true)}
                                 >
-                                    <IconPlus size={18} />
-                                </ActionIcon>
+                                    Add ceremony
+                                </Button>
                             )
                         ) : null}
                     </Group>
                     <Grid gap="md">
                         {character.ceremonies.map((ceremony) => (
                             <Grid.Col key={ceremony.name} span={{ base: 12, md: 6 }}>
-                                <Paper p="md" withBorder>
+                                <Paper p="md" withBorder style={sheetSurfaceStyle}>
                                     <Group justify="space-between" align="flex-start" mb="xs">
                                         <Text fw={700} size="lg">
                                             {ceremony.name}

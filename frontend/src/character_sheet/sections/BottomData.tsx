@@ -1,4 +1,4 @@
-import { Grid, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
+import { Grid, Group, Paper, Stack, Text } from "@mantine/core"
 import { memo, useCallback } from "react"
 import DamagePips from "~/character_sheet/components/DamagePips"
 import HumanityStainsPips from "~/character_sheet/components/HumanityStainsPips"
@@ -7,7 +7,7 @@ import RemorseTestButton from "~/character_sheet/components/RemorseTestButton"
 import RouseCheckButton from "~/character_sheet/components/RouseCheckButton"
 import SquarePips from "~/character_sheet/components/SquarePips"
 import { SheetOptions } from "../CharacterSheet"
-import { bgAlpha, hexToRgba } from "../utils/style"
+import { sheetSurfaceStyle } from "../utils/style"
 
 type BottomDataProps = {
     options: SheetOptions
@@ -15,7 +15,6 @@ type BottomDataProps = {
 
 const BottomData = ({ options }: BottomDataProps) => {
     const { character, setCharacter, primaryColor } = options
-    const theme = useMantineTheme()
     const {
         superficialDamage,
         aggravatedDamage,
@@ -24,7 +23,6 @@ const BottomData = ({ options }: BottomDataProps) => {
         hunger,
         humanityStains
     } = character.ephemeral
-    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const emptyHumanityPips = 10 - character.humanity
     const updateHealthDamage = useCallback(
         (newSuperficial: number, newAggravated: number) =>
@@ -54,7 +52,7 @@ const BottomData = ({ options }: BottomDataProps) => {
     return (
         <Grid justify="space-between">
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
+                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
                     <Text fw={700} mb="xs">
                         Health
                     </Text>
@@ -79,7 +77,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
+                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
                     <Text fw={700} mb="xs">
                         Willpower
                     </Text>
@@ -104,7 +102,7 @@ const BottomData = ({ options }: BottomDataProps) => {
                 </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
+                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
                     <Group gap="xs" mb="xs" justify="space-between">
                         <Text fw={700}>Humanity</Text>
                         <RemorseTestButton
@@ -141,7 +139,7 @@ const BottomData = ({ options }: BottomDataProps) => {
             </Grid.Col>
 
             <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" withBorder style={{ backgroundColor: paperBg }}>
+                <Paper p="sm" withBorder style={sheetSurfaceStyle}>
                     <Group gap="xs" mb="xs" justify="space-between">
                         <Text fw={700}>Hunger</Text>
                         <RouseCheckButton

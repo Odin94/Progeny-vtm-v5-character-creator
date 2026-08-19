@@ -4,7 +4,6 @@ import {
     Paper,
     Text,
     Title,
-    useMantineTheme,
     Center,
     ActionIcon,
     Modal,
@@ -15,7 +14,7 @@ import {
 } from "@mantine/core"
 import { memo, useState } from "react"
 import { SheetOptions } from "../CharacterSheet"
-import { bgAlpha, hexToRgba } from "../utils/style"
+import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import TouchstoneModal from "../components/TouchstoneModal"
 import { Touchstone } from "~/data/Character"
 import { IconPlus, IconX, IconPencil } from "@tabler/icons-react"
@@ -26,8 +25,6 @@ type TouchstonesProps = {
 
 const Touchstones = ({ options }: TouchstonesProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const theme = useMantineTheme()
-    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const [modalOpened, setModalOpened] = useState(false)
     const [initialTouchstone, setInitialTouchstone] = useState<Touchstone | null>(null)
     const [initialIndex, setInitialIndex] = useState<number | null>(null)
@@ -73,7 +70,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                 p="sm"
                                 withBorder
                                 style={{
-                                    backgroundColor: paperBg,
+                                    ...sheetSurfaceStyle,
                                     position: "relative",
                                     minHeight: "120px",
                                     display: "flex",
@@ -137,28 +134,24 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    backgroundColor: paperBg
+                                    ...sheetAddSurfaceStyle
                                 }}
                             >
                                 <Center style={{ height: "100%" }}>
-                                    <ActionIcon
-                                        size="xl"
+                                    <Button
+                                        size="sm"
                                         variant="light"
                                         color={primaryColor}
-                                        radius="xl"
+                                        radius="md"
+                                        leftSection={<IconPlus size={16} />}
                                         onClick={() => {
                                             setInitialTouchstone(null)
                                             setInitialIndex(null)
                                             setModalOpened(true)
                                         }}
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center"
-                                        }}
                                     >
-                                        <IconPlus size={24} />
-                                    </ActionIcon>
+                                        Add touchstone
+                                    </Button>
                                 </Center>
                             </Paper>
                         </Grid.Col>

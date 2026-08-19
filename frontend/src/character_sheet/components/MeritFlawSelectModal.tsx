@@ -18,6 +18,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { IconSearch } from "@tabler/icons-react"
+import { useMediaQuery } from "@mantine/hooks"
 import posthog from "posthog-js"
 import { useEffect, useMemo, useState } from "react"
 import { MeritFlaw } from "~/data/Character"
@@ -44,6 +45,7 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewLoresheet, HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
 import { getHomebrewSource, getMeritFlawIdentity } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type DisplayMeritFlaw = MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
 type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMeritFlaw[] }
@@ -57,6 +59,7 @@ type MeritFlawSelectModalProps = {
 
 const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelectModalProps) => {
     const { character, primaryColor, mode, setCharacter } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [selectedMeritFlaw, setSelectedMeritFlaw] = useState<DisplayMeritFlaw | null>(null)
     const [selectedLevel, setSelectedLevel] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<string | null>("regular")
@@ -709,6 +712,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             onClose={onClose}
             title={`Select a ${type === "merit" ? "Merit" : "Flaw"}`}
             size="lg"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
             {contentReady ? (
                 <Stack gap="md">

@@ -7,7 +7,6 @@ import {
     Text,
     Title,
     Badge,
-    useMantineTheme,
     Center,
     ActionIcon,
     Modal,
@@ -17,7 +16,7 @@ import {
 } from "@mantine/core"
 import { memo, useState, useMemo } from "react"
 import type { SheetOptions } from "../CharacterSheet"
-import { bgAlpha, hexToRgba } from "../utils/style"
+import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import { MeritFlaw } from "~/data/Character"
@@ -31,8 +30,6 @@ type MeritsAndFlawsProps = {
 
 const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const theme = useMantineTheme()
-    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
     const [meritModalOpened, setMeritModalOpened] = useState(false)
     const [flawModalOpened, setFlawModalOpened] = useState(false)
     const [itemToDelete, setItemToDelete] = useState<{
@@ -116,7 +113,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                 p="sm"
                                                 withBorder
                                                 style={{
-                                                    backgroundColor: paperBg,
+                                                    ...sheetSurfaceStyle,
                                                     position: "relative"
                                                 }}
                                             >
@@ -219,24 +216,20 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            backgroundColor: paperBg
+                                            ...sheetAddSurfaceStyle
                                         }}
                                     >
                                         <Center style={{ height: "100%" }}>
-                                            <ActionIcon
-                                                size="xl"
+                                            <Button
+                                                size="sm"
                                                 variant="light"
                                                 color={primaryColor}
-                                                radius="xl"
+                                                radius="md"
+                                                leftSection={<IconPlus size={16} />}
                                                 onClick={() => setMeritModalOpened(true)}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center"
-                                                }}
                                             >
-                                                <IconPlus size={24} />
-                                            </ActionIcon>
+                                                Add merit
+                                            </Button>
                                         </Center>
                                     </Paper>
                                 ) : null}
@@ -274,7 +267,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                 p="sm"
                                                 withBorder
                                                 style={{
-                                                    backgroundColor: paperBg,
+                                                    ...sheetSurfaceStyle,
                                                     position: "relative"
                                                 }}
                                             >
@@ -379,24 +372,20 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            backgroundColor: paperBg
+                                            ...sheetAddSurfaceStyle
                                         }}
                                     >
                                         <Center style={{ height: "100%" }}>
-                                            <ActionIcon
-                                                size="xl"
+                                            <Button
+                                                size="sm"
                                                 variant="light"
                                                 color="red"
-                                                radius="xl"
+                                                radius="md"
+                                                leftSection={<IconPlus size={16} />}
                                                 onClick={() => setFlawModalOpened(true)}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center"
-                                                }}
                                             >
-                                                <IconPlus size={24} />
-                                            </ActionIcon>
+                                                Add flaw
+                                            </Button>
                                         </Center>
                                     </Paper>
                                 ) : null}

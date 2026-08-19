@@ -1,4 +1,5 @@
 import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import posthog from "posthog-js"
 import { useMemo, useState } from "react"
 import { Character } from "~/data/Character"
@@ -15,6 +16,7 @@ import {
     homebrewPowerToRitual
 } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type RitualSelectModalProps = {
     opened: boolean
@@ -29,6 +31,7 @@ const getBloodSorceryLevel = (character: Character): number =>
 
 const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
     const knownRitualIds = useMemo(
@@ -89,7 +92,16 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
     }
 
     return (
-        <Modal opened={opened} onClose={onClose} title="Select a Ritual" size="lg">
+        <Modal
+            opened={opened}
+            onClose={onClose}
+            title="Select a Ritual"
+            size="lg"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+        >
             <Stack gap="lg">
                 {availableRituals.length === 0 ? (
                     <Text c="dimmed" ta="center" py="xl">

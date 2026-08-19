@@ -1,4 +1,5 @@
 import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import posthog from "posthog-js"
 import { useMemo, useState } from "react"
 import { Character } from "~/data/Character"
@@ -16,6 +17,7 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
 import { getRitualIdentity, homebrewPowerToCeremony } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type CeremonySelectModalProps = {
     opened: boolean
@@ -25,6 +27,7 @@ type CeremonySelectModalProps = {
 
 const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
     const knownCeremonyIds = useMemo(
@@ -87,7 +90,16 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
     }
 
     return (
-        <Modal opened={opened} onClose={onClose} title="Select a Ceremony" size="lg">
+        <Modal
+            opened={opened}
+            onClose={onClose}
+            title="Select a Ceremony"
+            size="lg"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+        >
             <Stack gap="lg">
                 {availableCeremonies.length === 0 ? (
                     <Text c="dimmed" ta="center" py="xl">

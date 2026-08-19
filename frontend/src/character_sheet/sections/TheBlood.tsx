@@ -23,7 +23,7 @@ import {
 } from "~/data/VariantClanBanes"
 import Pips from "~/character_sheet/components/Pips"
 import { SheetOptions } from "../CharacterSheet"
-import { bgAlpha, hexToRgba } from "../utils/style"
+import { sheetSurfaceStyle } from "../utils/style"
 import { useDebouncedUncontrolledNumberField } from "../utils/useDebouncedUncontrolledField"
 
 type TheBloodProps = {
@@ -39,7 +39,6 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const variantBane = variantClanBanes[character.clan]
     const baneText = getClanBaneText(character, effects.bane)
     const compulsionText = getClanCompulsionText(character)
-    const paperBg = hexToRgba(theme.colors.dark[7], bgAlpha)
 
     const isExperienceEditable = mode === "xp" || mode === "free"
     const isExperienceSpentEditable = mode === "free"
@@ -67,7 +66,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
     })
 
     return (
-        <Paper p="lg" withBorder style={{ backgroundColor: paperBg }}>
+        <Paper p="lg" withBorder style={sheetSurfaceStyle}>
             <Title order={2} mb="md" c={primaryColor}>
                 The Blood
             </Title>
@@ -91,7 +90,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
             <Grid gap="md">
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Group gap="md" align="center">
                                 <Group gap="xs" align="center">
@@ -180,7 +179,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Text size="sm">
                                 <Text span fw={600}>
@@ -205,7 +204,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Feeding Penalty
@@ -228,7 +227,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Paper p="sm" withBorder style={{ height: "100%", backgroundColor: paperBg }}>
+                    <Paper p="sm" withBorder style={{ height: "100%", ...sheetSurfaceStyle }}>
                         <Stack gap="xs">
                             <Text fw={600} size="sm" c="dimmed" mb="xs">
                                 Clan Traits
