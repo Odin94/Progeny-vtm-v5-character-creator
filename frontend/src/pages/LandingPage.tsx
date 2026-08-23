@@ -306,7 +306,7 @@ export default function LandingPage() {
                 <Container size="lg">
                     <Stack gap="xl" mb="xl">
                         <Text size="xs" className="landing-page__small-label">
-                            Continue the night
+                            Stay a while and listen
                         </Text>
                         <Title order={2} size="2.5rem" className="landing-page__section-title">
                             Everything Progeny has to offer
