@@ -122,7 +122,7 @@ const Attributes = ({ options }: AttributesProps) => {
             <Grid>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
-                        <Title order={4} mb={8} c="dimmed">
+                        <Title order={4} mb={3} c="dimmed">
                             PHYSICAL
                         </Title>
                         {["strength", "dexterity", "stamina"]
@@ -132,7 +132,7 @@ const Attributes = ({ options }: AttributesProps) => {
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
-                        <Title order={4} mb={8} c="dimmed">
+                        <Title order={4} mb={3} c="dimmed">
                             SOCIAL
                         </Title>
                         {["charisma", "manipulation", "composure"]
@@ -142,7 +142,7 @@ const Attributes = ({ options }: AttributesProps) => {
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
                     <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
-                        <Title order={4} mb={8} c="dimmed">
+                        <Title order={4} mb={3} c="dimmed">
                             MENTAL
                         </Title>
                         {["intelligence", "wits", "resolve"]
