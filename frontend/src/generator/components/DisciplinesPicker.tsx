@@ -888,11 +888,22 @@ const DisciplinesPicker = ({
                                         (power) =>
                                             !pickedPowerIdentities.has(getPowerIdentity(power))
                                     )
+                                    const remainingPowerCounts = allPickedPowers.reduce(
+                                        (counts, power) => {
+                                            const identity = getPowerDisciplineIdentity(power)
+                                            counts.set(identity, (counts.get(identity) ?? 0) + 1)
+                                            return counts
+                                        },
+                                        new Map<string, number>()
+                                    )
                                     const disciplineLevels = removedPowers.reduce(
                                         (levels, power) =>
                                             decreaseDisciplineLevelForPower(
                                                 { disciplineLevels: levels },
-                                                power
+                                                power,
+                                                remainingPowerCounts.get(
+                                                    getPowerDisciplineIdentity(power)
+                                                ) ?? 0
                                             ),
                                         addedPowers.reduce(
                                             (levels, power) =>

@@ -272,12 +272,21 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         setCharacter((current) => {
             let updatedCharacter
             if (itemToDelete.type === "power") {
+                const remainingDisciplines = current.disciplines.filter(
+                    (power) => power !== itemToDelete.power
+                )
+                const remainingPowerCount = remainingDisciplines.filter(
+                    (power) =>
+                        getPowerDisciplineIdentity(power) ===
+                        getPowerDisciplineIdentity(itemToDelete.power)
+                ).length
                 updatedCharacter = {
                     ...current,
-                    disciplines: current.disciplines.filter((p) => p !== itemToDelete.power),
+                    disciplines: remainingDisciplines,
                     disciplineLevels: decreaseDisciplineLevelForPower(
                         current,
-                        itemToDelete.power
+                        itemToDelete.power,
+                        remainingPowerCount
                     )
                 }
             } else if (itemToDelete.type === "ritual") {

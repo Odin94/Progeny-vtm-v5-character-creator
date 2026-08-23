@@ -271,10 +271,13 @@ export const increaseDisciplineLevelForPower = (
 
 export const decreaseDisciplineLevelForPower = (
     character: Pick<Character, "disciplineLevels">,
-    power: Power
+    power: Power,
+    remainingPowerCount: number
 ): Record<string, number> => {
     const identity = getPowerDisciplineIdentity(power)
     const currentLevel = getDisciplineLevel(character, identity)
+    if (remainingPowerCount >= currentLevel) return character.disciplineLevels
+
     const nextLevel = Math.max(0, currentLevel - 1)
 
     if (nextLevel === 0) {

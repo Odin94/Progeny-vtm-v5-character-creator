@@ -97,17 +97,21 @@ describe("character compatibility patches", () => {
         ).toEqual({ "official:celerity": 2 })
     })
 
-    it("lowers a stored discipline rating by one when a power is removed", () => {
+    it("only lowers a discipline rating when too few powers remain to support it", () => {
         const character = getEmptyCharacter()
-        character.disciplineLevels = { "official:celerity": 2, "official:potence": 1 }
+        character.disciplineLevels = { "official:celerity": 3, "official:potence": 1 }
 
         expect(
-            decreaseDisciplineLevelForPower(character, disciplines.celerity.powers[0])
-        ).toEqual({ "official:celerity": 1, "official:potence": 1 })
+            decreaseDisciplineLevelForPower(character, disciplines.celerity.powers[0], 3)
+        ).toEqual(character.disciplineLevels)
+        expect(
+            decreaseDisciplineLevelForPower(character, disciplines.celerity.powers[0], 2)
+        ).toEqual({ "official:celerity": 2, "official:potence": 1 })
         expect(
             decreaseDisciplineLevelForPower(
                 { disciplineLevels: { "official:celerity": 1 } },
-                disciplines.celerity.powers[0]
+                disciplines.celerity.powers[0],
+                0
             )
         ).toEqual({})
     })
