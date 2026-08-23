@@ -119,7 +119,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                         {canUseAdminTools ? (
                             <Anchor
                                 component={Link}
-                                to="/admin/impersonation"
+                                to="/admin"
                                 underline="never"
                                 style={navLinkStyle}
                             >

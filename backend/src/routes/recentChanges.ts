@@ -21,6 +21,8 @@ const serializeRecentChange = (change: typeof schema.recentChanges.$inferSelect)
     id: change.id,
     title: change.title,
     body: change.body,
+    linkText: change.linkText,
+    linkUrl: change.linkUrl,
     imageUrl: change.imageUrl,
     hasImage: Boolean(change.imageData && change.imageMimeType),
     status: change.status,

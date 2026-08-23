@@ -23,7 +23,7 @@ import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoteriesCoterieIdRouteImport } from './routes/coteries.$coterieId'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as AdminImpersonationRouteImport } from './routes/admin.impersonation'
+import { Route as AdminImpersonationRouteImport } from './routes/admin'
 
 const SheetRoute = SheetRouteImport.update({
   id: '/sheet',
@@ -106,8 +106,8 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminImpersonationRoute = AdminImpersonationRouteImport.update({
-  id: '/admin/impersonation',
-  path: '/admin/impersonation',
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -128,7 +128,7 @@ export interface FileRoutesByFullPath {
   '/homebrew/$collectionId': typeof HomebrewCollectionIdRoute
   '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/admin/impersonation': typeof AdminImpersonationRoute
+  '/admin': typeof AdminImpersonationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,7 +147,7 @@ export interface FileRoutesByTo {
   '/homebrew/$collectionId': typeof HomebrewCollectionIdRoute
   '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/admin/impersonation': typeof AdminImpersonationRoute
+  '/admin': typeof AdminImpersonationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,14 +167,14 @@ export interface FileRoutesById {
   '/homebrew/$collectionId': typeof HomebrewCollectionIdRoute
   '/coteries/$coterieId': typeof CoteriesCoterieIdRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/admin/impersonation': typeof AdminImpersonationRoute
+  '/admin': typeof AdminImpersonationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  fullPaths: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
-  id: '__root__' | '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin/impersonation'
+  to: '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin'
+  id: '__root__' | '/' | '/create' | '/features' | '/features/account-and-multiple-characters' | '/features/character-creation' | '/features/character-sheet' | '/features/coteries' | '/features/credits-and-contact' | '/homebrew' | '/homebrew/library' | '/homebrew/library/$collectionId' | '/homebrew/$collectionId' | '/me' | '/sheet' | '/coteries/$coterieId' | '/auth/callback' | '/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -311,10 +311,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/impersonation': {
-      id: '/admin/impersonation'
-      path: '/admin/impersonation'
-      fullPath: '/admin/impersonation'
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
       preLoaderRoute: typeof AdminImpersonationRouteImport
       parentRoute: typeof rootRouteImport
     }

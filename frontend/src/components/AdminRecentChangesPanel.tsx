@@ -39,6 +39,8 @@ const AdminRecentChangesPanel = () => {
     const [title, setTitle] = useState("")
     const [topSection, setTopSection] = useState("")
     const [bottomColumns, setBottomColumns] = useState(["", "", ""])
+    const [linkText, setLinkText] = useState("")
+    const [linkUrl, setLinkUrl] = useState("")
     const changesQuery = useQuery({
         queryKey: ["admin", "recent-changes"],
         queryFn: api.getAdminRecentChanges
@@ -51,6 +53,8 @@ const AdminRecentChangesPanel = () => {
         const layout = splitRecentChangeLayout(selectedChange.body)
         setTopSection(layout.topSection)
         setBottomColumns([...layout.columns, "", "", ""].slice(0, 3))
+        setLinkText(selectedChange.linkText ?? "")
+        setLinkUrl(selectedChange.linkUrl ?? "")
     }, [selectedChange])
 
     const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin", "recent-changes"] })
@@ -59,6 +63,8 @@ const AdminRecentChangesPanel = () => {
         setTitle("")
         setTopSection("")
         setBottomColumns(["", "", ""])
+        setLinkText("")
+        setLinkUrl("")
     }
     const body = composeRecentChangeBody(topSection, bottomColumns)
     const updateBottomColumn = (index: number, value: string) => {
@@ -71,9 +77,16 @@ const AdminRecentChangesPanel = () => {
             editingId
                 ? api.updateAdminRecentChange(editingId, {
                       title,
-                      body
+                      body,
+                      linkText: linkText.trim() || null,
+                      linkUrl: linkUrl.trim() || null
                   })
-                : api.createAdminRecentChange({ title, body }),
+                : api.createAdminRecentChange({
+                      title,
+                      body,
+                      linkText: linkText.trim() || null,
+                      linkUrl: linkUrl.trim() || null
+                  }),
         onSuccess: (change) => {
             setEditingId(change.id)
             void refresh()
@@ -179,8 +192,13 @@ const AdminRecentChangesPanel = () => {
     const isDeleted = selectedChange?.status === "deleted"
     const isReadOnly = isPublished || isDeleted
     const bodyOverLimit = body.length > 10_000
+    const hasIncompleteLink = Boolean(linkText.trim()) !== Boolean(linkUrl.trim())
     const canSave =
-        title.trim().length > 0 && topSection.trim().length > 0 && !bodyOverLimit && !isReadOnly
+        title.trim().length > 0 &&
+        topSection.trim().length > 0 &&
+        !bodyOverLimit &&
+        !hasIncompleteLink &&
+        !isReadOnly
     const publishedChanges = (changesQuery.data?.changes ?? [])
         .filter((change) => change.status === "published")
         .sort(
@@ -263,6 +281,38 @@ const AdminRecentChangesPanel = () => {
                         {bodyOverLimit ? (
                             <Text size="sm" c="red">
                                 All sections together must be 10,000 characters or fewer.
+                            </Text>
+                        ) : null}
+                    </Stack>
+                    <Stack gap="xs">
+                        <div>
+                            <Text fw={500} size="sm">
+                                Optional link
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                                Displayed below the update content and above the footer.
+                            </Text>
+                        </div>
+                        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
+                            <TextInput
+                                label="Link text"
+                                value={linkText}
+                                onChange={(event) => setLinkText(event.currentTarget.value)}
+                                maxLength={160}
+                                disabled={isReadOnly}
+                            />
+                            <TextInput
+                                label="Link URL"
+                                type="url"
+                                value={linkUrl}
+                                onChange={(event) => setLinkUrl(event.currentTarget.value)}
+                                maxLength={2_048}
+                                disabled={isReadOnly}
+                            />
+                        </SimpleGrid>
+                        {hasIncompleteLink ? (
+                            <Text size="sm" c="red">
+                                Enter both link text and a URL, or leave both empty.
                             </Text>
                         ) : null}
                     </Stack>

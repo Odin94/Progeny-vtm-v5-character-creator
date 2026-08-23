@@ -1,6 +1,7 @@
 import { ActionIcon, Anchor, Button, Group, Modal, Text } from "@mantine/core"
 import { IconChevronLeft, IconChevronRight, IconCoffee } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
+import posthog from "posthog-js"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
@@ -158,6 +159,29 @@ const RecentChangesModal = ({
                                     </div>
                                 ))}
                             </section>
+                        ) : null}
+
+                        {currentChange.linkText && currentChange.linkUrl ? (
+                            <Anchor
+                                className="recent-changes__announcement-link"
+                                href={currentChange.linkUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => {
+                                    try {
+                                        posthog.capture("recent_change_link_clicked", {
+                                            recent_change_title: currentChange.title
+                                        })
+                                    } catch (error) {
+                                        console.warn(
+                                            "PostHog recent change link tracking failed:",
+                                            error
+                                        )
+                                    }
+                                }}
+                            >
+                                {currentChange.linkText}
+                            </Anchor>
                         ) : null}
 
                         <footer className="recent-changes__footer">

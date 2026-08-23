@@ -246,6 +246,8 @@ export type RecentChange = {
     id: string
     title: string
     body: string
+    linkText: string | null
+    linkUrl: string | null
     imageUrl: string | null
     hasImage: boolean
     status: "draft" | "published" | "deleted"
@@ -487,10 +489,16 @@ export const api = {
         }),
     getAdminRecentChanges: () => apiRequest<RecentChangesResponse>("/admin/recent-changes"),
     getRecentChangeImage: (id: string) => apiRequestBlob(`/recent-changes/${id}/image`),
-    createAdminRecentChange: (data: { title: string; body: string }) =>
-        apiRequest<RecentChange>("/admin/recent-changes", { method: "POST", body: data }),
-    updateAdminRecentChange: (id: string, data: { title: string; body: string }) =>
-        apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
+    createAdminRecentChange: (data: {
+        title: string
+        body: string
+        linkText: string | null
+        linkUrl: string | null
+    }) => apiRequest<RecentChange>("/admin/recent-changes", { method: "POST", body: data }),
+    updateAdminRecentChange: (
+        id: string,
+        data: { title: string; body: string; linkText: string | null; linkUrl: string | null }
+    ) => apiRequest<RecentChange>(`/admin/recent-changes/${id}`, { method: "PATCH", body: data }),
     uploadAdminRecentChangeImage: (id: string, file: File) =>
         uploadFile<RecentChange>(`/admin/recent-changes/${id}/image`, file),
     removeAdminRecentChangeImage: (id: string) =>

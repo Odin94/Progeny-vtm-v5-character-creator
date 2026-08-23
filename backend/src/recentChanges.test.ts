@@ -68,6 +68,8 @@ describe("recent changes", () => {
                 id text PRIMARY KEY NOT NULL,
                 title text NOT NULL,
                 body text NOT NULL,
+                link_text text,
+                link_url text,
                 image_url text,
                 image_data blob,
                 image_mime_type text,
@@ -179,13 +181,17 @@ describe("recent changes", () => {
             headers: csrfHeaders,
             payload: {
                 title: "New feature",
-                body: "It is ready."
+                body: "It is ready.",
+                linkText: "Read more",
+                linkUrl: "https://progeny.example/features"
             }
         })
         expect(createDraft.statusCode).toBe(201)
         expect(createDraft.json()).toMatchObject({
             status: "draft",
-            hasImage: false
+            hasImage: false,
+            linkText: "Read more",
+            linkUrl: "https://progeny.example/features"
         })
 
         setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")

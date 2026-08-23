@@ -29,7 +29,7 @@ import { api, type AdminUser } from "~/utils/api"
 import HomebrewModerationPanel from "~/components/HomebrewModerationPanel"
 import { refreshIdentityBoundQueries } from "~/utils/impersonation"
 import AdminRecentChangesPanel from "~/components/AdminRecentChangesPanel"
-import { Route, type AdminTab } from "~/routes/admin.impersonation"
+import { Route, type AdminTab } from "~/routes/admin"
 
 const topbarHeight = 52
 

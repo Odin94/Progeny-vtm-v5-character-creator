@@ -11,7 +11,7 @@ const getAdminTab = (value: unknown): AdminTab =>
         ? (value as AdminTab)
         : "users"
 
-export const Route = createFileRoute("/admin/impersonation")({
+export const Route = createFileRoute("/admin")({
     validateSearch: (search): { tab: AdminTab } => ({ tab: getAdminTab(search.tab) }),
     component: AdminImpersonation
 })

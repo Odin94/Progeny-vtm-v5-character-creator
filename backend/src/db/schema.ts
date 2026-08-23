@@ -475,6 +475,8 @@ export const recentChanges = sqliteTable(
         id: text("id").primaryKey(),
         title: text("title").notNull(),
         body: text("body").notNull(),
+        linkText: text("link_text"),
+        linkUrl: text("link_url"),
         // Retained as a temporary fallback for previously saved external images.
         imageUrl: text("image_url"),
         imageData: blob("image_data", { mode: "buffer" }),

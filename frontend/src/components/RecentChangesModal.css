@@ -180,6 +180,14 @@
 .recent-changes__markdown a { color: #d95a65; }
 .recent-changes__markdown code { font-family: var(--mantine-font-family-monospace); }
 
+.recent-changes__announcement-link {
+    color: #d95a65;
+    display: inline-block;
+    font-family: "Cinzel, Georgia, serif";
+    font-weight: 700;
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
 .recent-changes__footer {
     align-items: center;
     border-top: 1px solid rgba(178, 72, 80, 0.42);
