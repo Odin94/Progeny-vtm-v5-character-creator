@@ -21,7 +21,6 @@ import { motion, useReducedMotion } from "framer-motion"
 import { useState } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import SupportConversationButton from "~/components/SupportConversationButton"
-import VampireFangsIcon from "~/components/VampireFangsIcon"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
@@ -29,6 +28,7 @@ import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters } from "~/hooks/useCharacters"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
+import fangs from "~/resources/icons/noun-fangs-5617700.svg"
 import { api } from "~/utils/api"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import "./LandingPage.css"
@@ -242,7 +242,14 @@ export default function LandingPage() {
                                     radius="md"
                                     px="xl"
                                     className="landing-page__primary-button"
-                                    leftSection={<VampireFangsIcon size={22} />}
+                                    leftSection={
+                                        <img
+                                            alt=""
+                                            aria-hidden="true"
+                                            className="landing-page__fangs-icon"
+                                            src={fangs}
+                                        />
+                                    }
                                     onClick={openGenerator}
                                 >
                                     Embrace a new character
@@ -592,6 +599,28 @@ export default function LandingPage() {
                         <Anchor href="https://unsplash.com" target="_blank" rel="noreferrer">
                             Unsplash.
                         </Anchor>
+                    </Text>
+                    <Text className="landing-page__body">
+                        <Anchor
+                            href="https://thenounproject.com/browse/icons/term/fangs/"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Fangs icon
+                        </Anchor>{" "}
+                        by 선식 양 from the{" "}
+                        <Anchor href="https://thenounproject.com" target="_blank" rel="noreferrer">
+                            Noun Project
+                        </Anchor>{" "}
+                        (
+                        <Anchor
+                            href="https://creativecommons.org/licenses/by/3.0/"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            CC BY 3.0
+                        </Anchor>
+                        ).
                     </Text>
                 </Stack>
             </Modal>

@@ -175,6 +175,14 @@
     box-shadow: var(--landing-glow);
 }
 
+.landing-page__fangs-icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
 .landing-page__grid-section {
     min-height: 100vh;
     display: flex;

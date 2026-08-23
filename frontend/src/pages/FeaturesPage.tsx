@@ -551,6 +551,32 @@ const featurePages: FeaturePage[] = [
                             </List.Item>
                             <List.Item>CheckSolid.base64 is converted from Font Awesome.</List.Item>
                             <List.Item>
+                                <Anchor
+                                    href="https://thenounproject.com/browse/icons/term/fangs/"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Fangs icon
+                                </Anchor>{" "}
+                                by 선식 양 from the{" "}
+                                <Anchor
+                                    href="https://thenounproject.com"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Noun Project
+                                </Anchor>{" "}
+                                (
+                                <Anchor
+                                    href="https://creativecommons.org/licenses/by/3.0/"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    CC BY 3.0
+                                </Anchor>
+                                ).
+                            </List.Item>
+                            <List.Item>
                                 Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer,
                                 Marcus Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
                                 <Anchor
