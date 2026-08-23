@@ -242,7 +242,7 @@ export default function LandingPage() {
                                     radius="md"
                                     px="xl"
                                     className="landing-page__primary-button"
-                                    leftSection={<VampireFangsIcon />}
+                                    leftSection={<VampireFangsIcon size={22} />}
                                     onClick={openGenerator}
                                 >
                                     Embrace a new character
