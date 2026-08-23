@@ -81,13 +81,13 @@ describe("character compatibility patches", () => {
         expect(parsed.version).toBe(schemaVersion)
     })
 
-    it("raises a stored discipline rating when a power is added", () => {
+    it("raises a stored discipline rating by one when a power is added", () => {
         const character = getEmptyCharacter()
         character.disciplineLevels = { "official:celerity": 2 }
 
-        expect(increaseDisciplineLevelForPower(character, disciplines.celerity.powers[0])).toEqual({
-            "official:celerity": 3
-        })
+        expect(
+            increaseDisciplineLevelForPower(character, disciplines.celerity.powers[4])
+        ).toEqual({ "official:celerity": 3 })
         expect(
             getDisciplineLevelsFromPowers([
                 disciplines.celerity.powers[0],

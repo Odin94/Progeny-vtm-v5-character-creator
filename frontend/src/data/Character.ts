@@ -265,7 +265,7 @@ export const increaseDisciplineLevelForPower = (
 
     return {
         ...character.disciplineLevels,
-        [identity]: Math.min(5, Math.max(power.level, currentLevel + 1))
+        [identity]: Math.min(5, currentLevel + 1)
     }
 }
 

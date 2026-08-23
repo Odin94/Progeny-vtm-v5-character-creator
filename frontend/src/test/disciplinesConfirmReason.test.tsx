@@ -1,6 +1,6 @@
 import { MantineProvider } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import DisciplinesPicker from "~/generator/components/DisciplinesPicker"
 import type { Power } from "~/data/Disciplines"
@@ -42,14 +42,19 @@ const power = (name: string, discipline: string): Power => ({
     amalgamPrerequisites: []
 })
 
-const renderPicker = (pickedPowers: Power[], pickedPredatorTypePower?: Power) => {
+const renderPicker = (
+    pickedPowers: Power[],
+    pickedPredatorTypePower?: Power,
+    character = getBasicTestCharacter(),
+    setCharacter = vi.fn()
+) => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     return render(
         <QueryClientProvider client={queryClient}>
             <MantineProvider>
                 <DisciplinesPicker
-                    character={getBasicTestCharacter()}
-                    setCharacter={vi.fn()}
+                    character={character}
+                    setCharacter={setCharacter}
                     nextStep={vi.fn()}
                     pickedPowers={pickedPowers}
                     setPickedPowers={vi.fn()}
@@ -91,5 +96,35 @@ describe("Disciplines confirm reason", () => {
 
         expect(screen.getByTestId("disciplines-confirm-button")).toBeEnabled()
         expect(screen.queryByTestId("disciplines-confirm-reason")).not.toBeInTheDocument()
+    })
+
+    it("preserves ratings that are higher than the selected power count", () => {
+        const character = getBasicTestCharacter()
+        const celerity = power("Celerity Power", "celerity")
+        const animalism = power("Animalism Power", "animalism")
+        const potence = power("Potence Power", "potence")
+        const auspex = power("Auspex Power", "auspex")
+        const allPowers = [celerity, animalism, potence, auspex]
+        character.disciplines = allPowers
+        character.disciplineLevels = {
+            "official:celerity": 4,
+            "official:obfuscate": 2,
+            "official:animalism": 1,
+            "official:potence": 1,
+            "official:auspex": 1
+        }
+        const setCharacter = vi.fn()
+
+        renderPicker([celerity, animalism, potence], auspex, character, setCharacter)
+        fireEvent.click(screen.getByTestId("disciplines-confirm-button"))
+
+        expect(setCharacter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                disciplineLevels: expect.objectContaining({
+                    "official:celerity": 4,
+                    "official:obfuscate": 2
+                })
+            })
+        )
     })
 })

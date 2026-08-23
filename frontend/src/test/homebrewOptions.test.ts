@@ -109,6 +109,16 @@ describe("Homebrew character options", () => {
         ).toBe(true)
     })
 
+    it("unlocks Oblivion ceremonies from an independently tracked rating", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = []
+        character.disciplineLevels = { "official:oblivion": 3 }
+        character.merits = []
+
+        expect(canAccessOblivionCeremonies(character)).toBe(true)
+        expect(getOblivionCeremonyLevel(character)).toBe(3)
+    })
+
     it("combines Homebrew Disciplines and Powers with official Disciplines", () => {
         const options = getHomebrewDisciplineOptions([collection], ["Noctis", "auspex"])
         const noctis = Object.values(options).find(

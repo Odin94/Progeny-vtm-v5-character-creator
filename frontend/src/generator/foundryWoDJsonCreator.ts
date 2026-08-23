@@ -393,6 +393,13 @@ export const createWoD5EVttJson = (
         ceremonies: { value: 0, powers: [] }
     }
 
+    for (const [identity, level] of Object.entries(character.disciplineLevels ?? {})) {
+        if (!identity.startsWith("official:")) continue
+        const disciplineName = identity.slice("official:".length) as DisciplineName
+        const key = disciplineNameTo_WoD5EVtt_Key[disciplineName]
+        if (key) disciplineValues[key].value = level
+    }
+
     for (const disc of character.disciplines) {
         const key = disciplineNameTo_WoD5EVtt_Key[disc.discipline]
         if (!key) continue

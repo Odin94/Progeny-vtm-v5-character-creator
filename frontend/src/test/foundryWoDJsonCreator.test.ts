@@ -4,6 +4,17 @@ import { Character } from "~/data/Character"
 import { getBasicTestCharacter } from "./testUtils"
 
 describe("createWoD5EVttJson", () => {
+    it("exports a level-only discipline", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = []
+        character.disciplineLevels = { "official:celerity": 3 }
+
+        const { json, validationErrors } = createWoD5EVttJson(character)
+
+        expect(validationErrors).toEqual([])
+        expect(json.system.disciplines.celerity).toEqual({ value: 3, powers: [] })
+    })
+
     it("should create a valid WoD5E VTT JSON for a basic character (happy path)", () => {
         const basicCharacter = getBasicTestCharacter()
 

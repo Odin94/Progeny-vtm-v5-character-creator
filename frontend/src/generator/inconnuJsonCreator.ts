@@ -4,6 +4,7 @@ import type { SkillsKey } from "../data/Skills"
 import type { DisciplineName } from "../data/NameSchemas"
 import { getMeritFlawDisplayName, getResolvedMeritFlawList } from "../data/meritsAndFlawsResolution"
 import { getDisciplineRating } from "./utils"
+import { getDisciplineDefinitionIdentity } from "~/utils/homebrewOptions"
 
 type InconnuSplat = "vampire" | "thin-blood" | "ghoul" | "mortal"
 
@@ -309,6 +310,21 @@ export const createInconnuJson = (character: Character): InconnuCreationBody => 
     }
 
     const disciplineMap = new Map<string, { rating: number; powers: string[] }>()
+
+    for (const [identity, level] of Object.entries(character.disciplineLevels ?? {})) {
+        const disciplineName = identity.startsWith("official:")
+            ? identity.slice("official:".length)
+            : Object.values(character.customDisciplines ?? {}).find(
+                  (discipline) => getDisciplineDefinitionIdentity(discipline) === identity
+              )?.name
+        if (!disciplineName) continue
+        const inconnuDisciplineName = customDisciplineNameToInconnu(disciplineName)
+        if (!inconnuDisciplineName) continue
+        disciplineMap.set(inconnuDisciplineName, {
+            rating: clampInt(level, 0, 5, 0),
+            powers: []
+        })
+    }
 
     for (const power of asArray<{ discipline?: unknown; name?: unknown; level?: unknown }>(
         character.disciplines

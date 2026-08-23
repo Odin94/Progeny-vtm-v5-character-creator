@@ -1,7 +1,10 @@
 import { PredatorTypes } from "~/data/PredatorType"
 import { Attributes, AttributesKey } from "../data/Attributes"
 import { Character, getDisciplineLevel, getEmptyCharacter } from "../data/Character"
-import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import {
+    getDisciplineDefinitionIdentity,
+    getPowerDisciplineIdentity
+} from "~/utils/homebrewOptions"
 import { Skills, SkillsKey } from "../data/Skills"
 import {
     attributeNameTo_WoD5EVtt_Key,
@@ -104,13 +107,15 @@ export const getDisciplineRating = (disciplineName: string, character: Character
         return getDisciplineLevel(character, getPowerDisciplineIdentity(matchingPower))
     }
 
-    const customDisciplineIdentity = Object.entries(character.customDisciplines).find(
-        ([, discipline]) => discipline.name.trim().toLowerCase() === normalizedName
-    )?.[0]
+    const customDiscipline = Object.values(character.customDisciplines).find(
+        (discipline) => discipline.name.trim().toLowerCase() === normalizedName
+    )
 
     return getDisciplineLevel(
         character,
-        customDisciplineIdentity ?? `official:${normalizedName}`
+        customDiscipline
+            ? getDisciplineDefinitionIdentity(customDiscipline)
+            : `official:${normalizedName}`
     )
 }
 

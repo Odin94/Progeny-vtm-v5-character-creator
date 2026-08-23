@@ -132,7 +132,13 @@ const CustomPowerModal = ({
                 setDicePoolWarning(null)
             }
         }
-    }, [opened, editingPower, disciplineName, disciplineHomebrewSource, character.disciplines])
+    }, [
+        opened,
+        editingPower,
+        disciplineName,
+        disciplineHomebrewSource,
+        character.disciplineLevels
+    ])
 
     const handleSave = () => {
         if (!name.trim()) {
@@ -152,6 +158,23 @@ const CustomPowerModal = ({
         if (levelNum > 5) {
             setError("Level cannot exceed 5")
             return
+        }
+
+        if (!editingPower) {
+            const disciplineIdentity = getPowerDisciplineIdentity({
+                discipline: disciplineName,
+                isCustom: true,
+                disciplineHomebrewSource
+            })
+            const currentLevel = getDisciplineLevel(character, disciplineIdentity)
+            if (currentLevel >= 5) {
+                setError("This Discipline is already at Level 5")
+                return
+            }
+            if (levelNum > currentLevel + 1) {
+                setError(`New powers can be at most Level ${currentLevel + 1}`)
+                return
+            }
         }
 
         if (rouseChecksNum < 0) {

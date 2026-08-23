@@ -495,6 +495,11 @@ const DisciplineSelectModal = ({
                         ? (disciplineCatalog[selectedDiscipline]?.name ?? selectedDiscipline)
                         : ""
                 }
+                disciplineHomebrewSource={
+                    selectedDiscipline
+                        ? disciplineCatalog[selectedDiscipline]?.homebrewSource
+                        : undefined
+                }
             />
         </Modal>
     )

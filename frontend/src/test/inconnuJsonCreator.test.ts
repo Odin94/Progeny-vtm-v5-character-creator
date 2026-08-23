@@ -5,6 +5,43 @@ import { getBasicTestCharacter } from "./testUtils"
 const inconnuIdentifierPattern = /^[A-Za-z_]{1,20}$/
 
 describe("createInconnuJson", () => {
+    it("exports a level-only discipline", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = []
+        character.disciplineLevels = { "official:celerity": 3 }
+
+        const celerity = createInconnuJson(character).traits.find(
+            (trait) => trait.name === "Celerity"
+        )
+
+        expect(celerity).toEqual({
+            name: "Celerity",
+            rating: 3,
+            type: "discipline",
+            subtraits: []
+        })
+    })
+
+    it("exports a level-only native custom discipline", () => {
+        const character = getBasicTestCharacter()
+        character.disciplines = []
+        character.customDisciplines = {
+            Chronomancy: {
+                name: "Chronomancy",
+                summary: "Manipulate time.",
+                logo: ""
+            }
+        }
+        character.disciplineLevels = { "custom:Chronomancy": 2 }
+
+        expect(createInconnuJson(character).traits).toContainEqual({
+            name: "Chronomancy",
+            rating: 2,
+            type: "discipline",
+            subtraits: []
+        })
+    })
+
     it("creates an Inconnu wizard creation body", () => {
         const character = getBasicTestCharacter()
         const result = createInconnuJson(character)
@@ -302,7 +339,8 @@ describe("createInconnuJson", () => {
             ceremonies: undefined,
             merits: undefined,
             flaws: undefined,
-            predatorType: undefined
+            predatorType: undefined,
+            disciplineLevels: undefined
         } as unknown as Parameters<typeof createInconnuJson>[0]
 
         const result = createInconnuJson(character)

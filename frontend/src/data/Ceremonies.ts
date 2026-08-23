@@ -311,8 +311,9 @@ export const hasMysticOfTheVoid = (character: Partial<Pick<Character, "merits">>
     character.merits?.some((merit) => merit.name === "Mystic of the Void") ?? false
 
 export const canAccessOblivionCeremonies = (
-    character: Pick<Character, "disciplines" | "merits">
-): boolean => containsOblivion(character) || hasMysticOfTheVoid(character)
+    character: Pick<Character, "disciplineLevels" | "merits">
+): boolean =>
+    getDisciplineLevel(character, "official:oblivion") > 0 || hasMysticOfTheVoid(character)
 
 export const getOblivionCeremonyLevel = (
     character: Pick<Character, "disciplineLevels" | "merits">

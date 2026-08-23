@@ -238,7 +238,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     Object.entries(character.disciplineLevels).forEach(([identity, level]) => {
         if (level === 0 || disciplineGroups.has(identity)) return
 
-        const customDiscipline = character.customDisciplines[identity]
+        const customDiscipline = Object.values(character.customDisciplines).find(
+            (definition) => getDisciplineDefinitionIdentity(definition) === identity
+        )
         const disciplineName = customDiscipline?.name ?? identity.replace(/^official:/, "")
         disciplineGroups.set(identity, {
             identity,
@@ -288,6 +290,15 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 }
             } else {
                 const updatedCustomDisciplines = { ...current.customDisciplines }
+                const remainingDisciplineLevels = Object.fromEntries(
+                    Object.entries(current.disciplineLevels).filter(
+                        ([identity]) => identity !== itemToDelete.disciplineIdentity
+                    )
+                )
+                const remainingDisciplines = current.disciplines.filter(
+                    (power) =>
+                        getPowerDisciplineIdentity(power) !== itemToDelete.disciplineIdentity
+                )
                 Object.entries(updatedCustomDisciplines).forEach(([key, definition]) => {
                     if (
                         getDisciplineDefinitionIdentity(definition) ===
@@ -304,15 +315,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             itemToDelete.disciplineIdentity.startsWith("homebrew:") ||
                             disciplineName !== itemToDelete.disciplineName
                     ),
-                    disciplineLevels: Object.fromEntries(
-                        Object.entries(current.disciplineLevels).filter(
-                            ([identity]) => identity !== itemToDelete.disciplineIdentity
-                        )
-                    ),
-                    disciplines: current.disciplines.filter(
-                        (power) =>
-                            getPowerDisciplineIdentity(power) !== itemToDelete.disciplineIdentity
-                    ),
+                    disciplineLevels: remainingDisciplineLevels,
+                    disciplines: remainingDisciplines,
                     rituals:
                         itemToDelete.disciplineIdentity === "official:blood sorcery"
                             ? []
@@ -320,11 +324,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     ceremonies:
                         itemToDelete.disciplineIdentity === "official:oblivion" &&
                         !canAccessOblivionCeremonies({
-                            disciplines: current.disciplines.filter(
-                                (power) =>
-                                    getPowerDisciplineIdentity(power) !==
-                                    itemToDelete.disciplineIdentity
-                            ),
+                            disciplineLevels: remainingDisciplineLevels,
                             merits: current.merits
                         })
                             ? []
