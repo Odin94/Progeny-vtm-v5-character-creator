@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core"
+import { Box, Group, Stack, Text, Tooltip } from "@mantine/core"
 import { Power } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import Tally from "~/components/Tally"
@@ -126,9 +126,11 @@ const DisciplinePowerCard = ({
     const topRightActions = (
         <Group gap="xs" align="center" style={{ position: "absolute", top: "8px", right: "8px" }}>
             {!inModal ? (
-                <Badge size="sm" variant="dot" color={primaryColor}>
-                    Lv.{power.level}
-                </Badge>
+                <Tally
+                    n={power.level}
+                    size={24}
+                    style={{ color: `var(--mantine-color-${primaryColor}-6)` }}
+                />
             ) : null}
             {renderActions ? renderActions() : null}
         </Group>

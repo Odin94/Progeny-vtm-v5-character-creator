@@ -30,6 +30,7 @@ import {
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
 import DisciplinePowerCard from "../components/DisciplinePowerCard"
+import Pips from "../components/Pips"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import CustomDisciplineModal from "../components/CustomDisciplineModal"
 import CustomPowerModal from "../components/CustomPowerModal"
@@ -403,14 +404,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                         ) : null}
                                                     </Group>
                                                     <Group gap="xs" align="center">
-                                                        <Badge
-                                                            size="lg"
-                                                            variant="light"
-                                                            color={primaryColor}
-                                                            circle
-                                                        >
-                                                            {powers.length}
-                                                        </Badge>
+                                                        <Pips
+                                                            level={powers.length}
+                                                            options={options}
+                                                            readOnly
+                                                        />
                                                         {isCustom &&
                                                         !customDiscipline?.homebrewSource &&
                                                         isFreeMode ? (

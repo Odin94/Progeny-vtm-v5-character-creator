@@ -21,11 +21,19 @@ type PipsProps = {
     minLevel?: number
     options?: SheetOptions
     field?: string
+    readOnly?: boolean
 }
 
 const BLOCKED_WARNING_DURATION_MS = 2_500
 
-const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) => {
+const Pips = ({
+    level,
+    maxLevel = 5,
+    minLevel = 0,
+    options,
+    field,
+    readOnly = false
+}: PipsProps) => {
     const prevLevelRef = useRef(level)
     const blockedWarningIdRef = useRef(0)
     // A click that cannot be applied gets brief visible feedback without changing the pip row's
@@ -299,16 +307,16 @@ const Pips = ({ level, maxLevel = 5, minLevel = 0, options, field }: PipsProps) 
                         filled={index < level}
                         firstChangingIndex={firstChangingIndex}
                         isFilling={isFilling}
-                        onClick={() => handlePipClick(index)}
+                        onClick={readOnly ? undefined : () => handlePipClick(index)}
                         style={
                             (index + 1) % 5 === 0 && index < maxLevel - 1
                                 ? { marginRight: 8 }
                                 : undefined
                         }
                         options={options}
-                        disabledReason={getDisabledReason(index)}
-                        hardDisabled={!!options && !options.canEdit}
-                        xpCost={getXPCost(index)}
+                        disabledReason={readOnly ? undefined : getDisabledReason(index)}
+                        hardDisabled={readOnly || (!!options && !options.canEdit)}
+                        xpCost={readOnly ? undefined : getXPCost(index)}
                     />
                 ))}
             </Group>
@@ -348,6 +356,7 @@ export default memo(Pips, (prev, next) => {
         prev.maxLevel === next.maxLevel &&
         prev.minLevel === next.minLevel &&
         prev.field === next.field &&
+        prev.readOnly === next.readOnly &&
         getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
     )
 })
