@@ -1101,6 +1101,7 @@ export default memo(Disciplines, (prev, next) => {
         p.editDisabledReason === n.editDisabledReason &&
         p.setCharacter === n.setCharacter &&
         p.character.disciplines === n.character.disciplines &&
+        p.character.disciplineLevels === n.character.disciplineLevels &&
         p.character.rituals === n.character.rituals &&
         p.character.ceremonies === n.character.ceremonies &&
         p.character.customDisciplines === n.character.customDisciplines &&
