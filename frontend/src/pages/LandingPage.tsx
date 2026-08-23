@@ -16,12 +16,12 @@ import {
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
-import { IconSparkles } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { motion, useReducedMotion } from "framer-motion"
 import { useState } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import SupportConversationButton from "~/components/SupportConversationButton"
+import VampireFangsIcon from "~/components/VampireFangsIcon"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
@@ -242,7 +242,7 @@ export default function LandingPage() {
                                     radius="md"
                                     px="xl"
                                     className="landing-page__primary-button"
-                                    leftSection={<IconSparkles size={18} />}
+                                    leftSection={<VampireFangsIcon />}
                                     onClick={openGenerator}
                                 >
                                     Embrace a new character
