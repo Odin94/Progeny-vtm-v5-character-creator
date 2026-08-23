@@ -1,5 +1,5 @@
 import { Group, Stack, Text } from "@mantine/core"
-import { memo, useRef, useMemo, useEffect, useState } from "react"
+import { memo, startTransition, useRef, useMemo, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import "./Pips.css"
 import PipButton from "./PipButton"
@@ -38,8 +38,13 @@ const Pips = ({
     instant = false,
     onLevelChange
 }: PipsProps) => {
-    const prevLevelRef = useRef(level)
     const blockedWarningIdRef = useRef(0)
+    // Keep callback-driven pips responsive while the parent character update renders the rest of
+    // the sheet. The stored value catches up in a transition and then clears this local preview.
+    const [optimisticLevel, setOptimisticLevel] = useState<number | undefined>()
+    const displayedLevel =
+        onLevelChange && optimisticLevel !== undefined ? optimisticLevel : level
+    const prevLevelRef = useRef(displayedLevel)
     // A click that cannot be applied gets brief visible feedback without changing the pip row's
     // layout. The id makes repeat clicks restart the warning's lifetime and animation.
     const [blockedWarning, setBlockedWarning] = useState<
@@ -52,14 +57,19 @@ const Pips = ({
     // pip of a higher trait did nothing).
     const getTargetLevel = (index: number): number => {
         const clickedLevel = index + 1
-        return clickedLevel === level ? level - 1 : clickedLevel
+        return clickedLevel === displayedLevel ? displayedLevel - 1 : clickedLevel
     }
 
     // Drop the warning once the situation that caused it (mode or level) changes so a stale
     // reason never lingers.
     useEffect(() => {
         setBlockedWarning(undefined)
-    }, [options?.mode, level])
+    }, [options?.mode, displayedLevel])
+
+    useEffect(() => {
+        if (optimisticLevel === undefined || level !== optimisticLevel) return
+        setOptimisticLevel(undefined)
+    }, [level, optimisticLevel])
 
     useEffect(() => {
         if (!blockedWarning) return
@@ -73,8 +83,8 @@ const Pips = ({
 
     const { firstChangingIndex, isFilling } = useMemo(() => {
         const prevLevel = prevLevelRef.current
-        const filling = level > prevLevel
-        const emptying = level < prevLevel
+        const filling = displayedLevel > prevLevel
+        const emptying = displayedLevel < prevLevel
 
         if (filling) {
             return { firstChangingIndex: prevLevel, isFilling: true }
@@ -83,11 +93,11 @@ const Pips = ({
         }
 
         return { firstChangingIndex: null, isFilling: false }
-    }, [level])
+    }, [displayedLevel])
 
     useEffect(() => {
-        prevLevelRef.current = level
-    }, [level])
+        prevLevelRef.current = displayedLevel
+    }, [displayedLevel])
 
     // TODOdin: Update costFunctionByFieldName to make it usable here instaed of getCostFunction()
     const getCostFunction = (): ((newLevel: number) => number) | null => {
@@ -108,7 +118,7 @@ const Pips = ({
         if (!options || !field || options.mode !== "xp") return undefined
 
         const clickedLevel = index + 1
-        const wouldDecrease = clickedLevel <= level
+        const wouldDecrease = clickedLevel <= displayedLevel
 
         // Health and willpower are not editable in XP mode
         if (field === "maxHealth" || field === "willpower") {
@@ -121,7 +131,7 @@ const Pips = ({
 
         const newLevel = clickedLevel
         const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
-        const currentLevel = level
+        const currentLevel = displayedLevel
         if (clampedLevel !== currentLevel + 1) {
             return undefined
         }
@@ -140,7 +150,7 @@ const Pips = ({
         }
 
         const newLevel = getTargetLevel(index)
-        const wouldDecrease = newLevel < level
+        const wouldDecrease = newLevel < displayedLevel
 
         // Health and willpower are not editable in play or XP mode
         if (
@@ -159,7 +169,7 @@ const Pips = ({
                 return "Cannot decrease in XP mode"
             }
             const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
-            const currentLevel = level
+            const currentLevel = displayedLevel
             if (clampedLevel !== currentLevel + 1) {
                 return "Can only increase one level at a time in XP mode"
             }
@@ -213,7 +223,9 @@ const Pips = ({
         const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
         if (onLevelChange) {
-            onLevelChange(clampedLevel)
+            if (clampedLevel === displayedLevel) return
+            setOptimisticLevel(clampedLevel)
+            startTransition(() => onLevelChange(clampedLevel))
             return
         }
 
@@ -241,7 +253,7 @@ const Pips = ({
             capturePipEvent("sheet-pip-edit", {
                 field,
                 mode,
-                fromLevel: level,
+                fromLevel: displayedLevel,
                 toLevel: clampedLevel,
                 xpCost: cost
             })
@@ -279,7 +291,7 @@ const Pips = ({
         capturePipEvent("sheet-pip-edit", {
             field,
             mode,
-            fromLevel: level,
+            fromLevel: displayedLevel,
             toLevel: clampedLevel
         })
         setCharacter((currentCharacter) => {
@@ -314,7 +326,7 @@ const Pips = ({
                     <PipButton
                         key={index}
                         index={index}
-                        filled={index < level}
+                        filled={index < displayedLevel}
                         firstChangingIndex={firstChangingIndex}
                         isFilling={isFilling}
                         onClick={readOnly ? undefined : () => handlePipClick(index)}

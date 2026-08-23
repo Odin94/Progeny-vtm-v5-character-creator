@@ -86,7 +86,7 @@ describe("discipline level pips", () => {
         expect(screen.getByTestId("discipline-level")).toHaveTextContent("3")
     })
 
-    it("can lower a discipline below the levels of its selected powers", async () => {
+    it("can lower a discipline below the levels of its selected powers, but not below one", async () => {
         const user = userEvent.setup()
 
         const FreeEditDisciplines = () => {
@@ -125,6 +125,6 @@ describe("discipline level pips", () => {
         expect(screen.getByTestId("discipline-level")).toHaveTextContent("1")
 
         await user.click(pips[0])
-        expect(screen.getByTestId("discipline-level")).toHaveTextContent("0")
+        expect(screen.getByTestId("discipline-level")).toHaveTextContent("1")
     })
 })

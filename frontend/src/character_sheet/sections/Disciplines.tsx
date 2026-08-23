@@ -427,6 +427,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     <Group gap="xs" align="center">
                                                         <Pips
                                                             level={disciplineLevel}
+                                                            minLevel={1}
                                                             options={options}
                                                             readOnly={!isFreeMode || !options.canEdit}
                                                             instant
