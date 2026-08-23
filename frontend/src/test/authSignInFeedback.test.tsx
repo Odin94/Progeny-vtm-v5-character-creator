@@ -201,22 +201,19 @@ describe("useAuth sign-in seed", () => {
         expect(result.current.user?.id).toBe("user-123")
     })
 
-    it("captures auth_me_failure when /auth/me errors", async () => {
-        mocks.getCurrentUser.mockRejectedValue(Object.assign(new Error("nope"), { status: 500 }))
+    it("settles immediately when the local auth proxy has no backend", async () => {
+        mocks.getCurrentUser.mockRejectedValue(Object.assign(new Error("nope"), { status: 502 }))
 
-        renderHook(() => useAuth(), { wrapper })
+        const { result } = renderHook(() => useAuth(), { wrapper })
 
-        // useAuth retries server errors with backoff, so allow time for it to
-        // settle into the error state before the failure event is captured.
-        await waitFor(
-            () =>
-                expect(mocks.capture).toHaveBeenCalledWith("auth_me_failure", {
-                    status: 500,
-                    message: "nope"
-                }),
-            { timeout: 8000 }
-        )
-    }, 10000)
+        await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+        expect(mocks.getCurrentUser).toHaveBeenCalledTimes(1)
+        expect(mocks.capture).toHaveBeenCalledWith("auth_me_failure", {
+            status: 502,
+            message: "nope"
+        })
+    })
 })
 
 describe("useAuth sign-in pending state", () => {

@@ -135,6 +135,15 @@ export const useAuth = () => {
             if (status && status >= 400 && status < 500) {
                 return false
             }
+
+            // Vite returns 502 when its local /api proxy has no backend to forward to.
+            // Retrying leaves `isLoading` true for several seconds, during which saved
+            // character sheets are read-only while their ownership is unresolved. A
+            // local sheet must remain usable when the backend is intentionally offline.
+            if (status === 502) {
+                return false
+            }
+
             if (failureCount < 2) {
                 return true
             }
