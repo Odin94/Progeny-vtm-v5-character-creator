@@ -52,7 +52,7 @@ const HumanityStainsPips = ({
     const disabledReason = getDisabledReason()
 
     return (
-        <Group gap={4} justify="flex-end" style={{ marginRight: "3px" }}>
+        <Group gap={4} justify="flex-end">
             {Array.from({ length: maxLevel }, (_, index) => {
                 const reversedIndex = maxLevel - 1 - index
                 const isFilled = reversedIndex < value

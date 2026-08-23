@@ -114,26 +114,22 @@ const BottomData = ({ options }: BottomDataProps) => {
                             disabledReason={options.editDisabledReason}
                         />
                     </Group>
-                    <Stack gap="xs">
-                        <div style={{ maxWidth: "226px" }}>
-                            <div>
-                                <SquarePips
-                                    value={character.humanity}
-                                    options={options}
-                                    field="humanity"
-                                    maxLevel={10}
-                                    groupSize={5}
-                                />
-                            </div>
-                            {emptyHumanityPips > 0 ? (
-                                <HumanityStainsPips
-                                    value={humanityStains}
-                                    maxLevel={emptyHumanityPips}
-                                    filledHumanity={character.humanity}
-                                    options={options}
-                                />
-                            ) : null}
-                        </div>
+                    <Stack gap="xs" style={{ width: "fit-content" }}>
+                        <SquarePips
+                            value={character.humanity}
+                            options={options}
+                            field="humanity"
+                            maxLevel={10}
+                            groupSize={5}
+                        />
+                        {emptyHumanityPips > 0 ? (
+                            <HumanityStainsPips
+                                value={humanityStains}
+                                maxLevel={emptyHumanityPips}
+                                filledHumanity={character.humanity}
+                                options={options}
+                            />
+                        ) : null}
                     </Stack>
                 </Paper>
             </Grid.Col>
