@@ -5,7 +5,6 @@ import {
     Text,
     Title,
     Badge,
-    Stack,
     TextInput,
     Tooltip,
     Paper
@@ -208,10 +207,10 @@ const SkillRow = ({
             mb="xs"
             wrap="nowrap"
             align="flex-start"
-            style={{ minWidth: 0, padding: "0.35rem 0.5rem" }}
+            style={{ minWidth: 0, padding: "0.35rem 0.5rem", position: "relative" }}
         >
             {showSpecialtiesBelow ? (
-                <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                <Box style={{ flex: 1, minWidth: 0, position: "relative" }}>
                     <Group gap={4} wrap="nowrap">
                         <Text
                             style={{
@@ -232,7 +231,17 @@ const SkillRow = ({
                         {isEditable && renderAddSpecialtyBadge()}
                     </Group>
                     {specialties.length > 0 ? (
-                        <Group gap={4} wrap="wrap">
+                        <Group
+                            gap={4}
+                            wrap="wrap"
+                            style={{
+                                position: "absolute",
+                                top: "calc(100% + 0.15rem)",
+                                left: 0,
+                                right: 0,
+                                zIndex: 1
+                            }}
+                        >
                             {specialties.map((specialty, index) => {
                                 if (specialty.fromPredatorType) {
                                     return (
@@ -301,7 +310,7 @@ const SkillRow = ({
                             })}
                         </Group>
                     ) : null}
-                </Stack>
+                </Box>
             ) : (
                 <Group
                     gap={4}
