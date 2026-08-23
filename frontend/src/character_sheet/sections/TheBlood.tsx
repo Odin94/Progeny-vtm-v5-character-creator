@@ -1,5 +1,4 @@
 import {
-    Badge,
     Box,
     Button,
     Divider,
@@ -20,6 +19,7 @@ import {
     variantClanBanes
 } from "~/data/VariantClanBanes"
 import Pips from "~/character_sheet/components/Pips"
+import Tally from "~/components/Tally"
 import { SheetOptions } from "../CharacterSheet"
 import { sheetSurfaceStyle } from "../utils/style"
 
@@ -36,6 +36,14 @@ const TheBlood = ({ options }: TheBloodProps) => {
     const compulsionText = getClanCompulsionText(character)
 
     const canToggleClanBane = mode !== "play" && hasVariantClanBane(character.clan)
+    const effectRowsStyle = {
+        display: "grid",
+        gridTemplateColumns: "max-content minmax(0, 1fr)",
+        columnGap: "var(--mantine-spacing-xs)",
+        rowGap: "var(--mantine-spacing-xs)",
+        alignItems: "center"
+    } as const
+    const tallyStyle = { color: `var(--mantine-color-${primaryColor}-6)` }
 
     return (
         <Paper p="lg" style={sheetSurfaceStyle}>
@@ -62,47 +70,33 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
             <Grid columnGap="xl" rowGap="xl">
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Stack gap="xs">
-                        <Group gap="xs" align="center">
-                            <Text fw={600} size="sm">
-                                Blood Surge
-                            </Text>
-                            <Badge size="lg" variant="light" color={primaryColor} circle>
-                                {effects.surge}
-                            </Badge>
-                        </Group>
-                        <Group gap="xs" align="center">
-                            <Text fw={600} size="sm">
-                                Bane Severity
-                            </Text>
-                            <Badge size="lg" variant="light" color={primaryColor} circle>
-                                {effects.bane}
-                            </Badge>
-                        </Group>
-                    </Stack>
+                    <Box style={effectRowsStyle}>
+                        <Text fw={600} size="sm">
+                            Blood Surge
+                        </Text>
+                        <Tally n={effects.surge} size={22} style={tallyStyle} />
+                        <Text fw={600} size="sm">
+                            Bane Severity
+                        </Text>
+                        <Tally n={effects.bane} size={22} style={tallyStyle} />
+                    </Box>
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                    <Stack gap="xs">
-                        <Text size="sm">
-                            <Text span fw={600}>
-                                Power Bonus:
-                            </Text>{" "}
-                            {effects.discBonus}
+                    <Box style={effectRowsStyle}>
+                        <Text fw={600} size="sm">
+                            Power Bonus:
                         </Text>
-                        <Text size="sm">
-                            <Text span fw={600}>
-                                Mend Amount:
-                            </Text>{" "}
-                            {effects.mend}
+                        <Text size="sm">{effects.discBonus}</Text>
+                        <Text fw={600} size="sm">
+                            Mend Amount:
                         </Text>
-                        <Text size="sm">
-                            <Text span fw={600}>
-                                Rouse Re-Roll:
-                            </Text>{" "}
-                            {effects.discRouse}
+                        <Text size="sm">{effects.mend}</Text>
+                        <Text fw={600} size="sm">
+                            Rouse Re-Roll:
                         </Text>
-                    </Stack>
+                        <Text size="sm">{effects.discRouse}</Text>
+                    </Box>
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
