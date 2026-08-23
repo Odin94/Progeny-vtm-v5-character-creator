@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react"
 import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import RenderProfiler from "~/components/RenderProfiler"
+import SharedCharacterCreatorModal from "~/components/SharedCharacterCreatorModal"
 import {
     characterSchema,
     getEmptyCharacter,
@@ -72,6 +73,12 @@ export default function CreatorPage() {
     const userCharacters = (
         (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
     ).filter((candidate) => !candidate.shared)
+    const activeCharacterIsShared = !!(
+        character.id &&
+        (characters as Array<{ id: string; shared?: boolean }> | undefined)?.some(
+            (candidate) => candidate.id === character.id && candidate.shared
+        )
+    )
     const emptyCharacter = getEmptyCharacter()
     const resetGeneratorSession = () => setCharacterSessionKey((key) => key + 1)
 
@@ -262,6 +269,12 @@ export default function CreatorPage() {
         await completePendingSwitchAction({ type: "create" })
     }
 
+    const handleCreateNewFromSharedCharacter = () => {
+        setCharacter(getEmptyCharacter())
+        resetGeneratorSession()
+        setSelectedStep(defaultGeneratorStepId)
+    }
+
     const handleSaveAndContinueSwitch = async () => {
         if (!switchNameValue.trim()) {
             notifications.show({
@@ -372,6 +385,13 @@ export default function CreatorPage() {
                 onSaveAndContinue={handleSaveAndContinueSwitch}
                 onDiscardAndContinue={handleDeleteAndContinueSwitch}
                 isSaving={isSavingBeforeSwitch}
+            />
+            <SharedCharacterCreatorModal
+                opened={activeCharacterIsShared}
+                characterName={character.name}
+                playerName={character.player}
+                onGoToSheet={() => navigate({ to: "/sheet" })}
+                onCreateNewCharacter={handleCreateNewFromSharedCharacter}
             />
             <AppShell
                 padding="0"
