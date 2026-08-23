@@ -139,19 +139,21 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         isFreeMode ? "flex-start" : "space-between"
                                                     }
                                                 >
-                                                    <Text
-                                                        fw={700}
-                                                        style={{
-                                                            paddingRight: isFreeMode ? "60px" : "0"
-                                                        }}
-                                                    >
-                                                        {getMeritFlawDisplayName(merit)}
-                                                    </Text>
-                                                    {merit.homebrewSource ? (
-                                                        <HomebrewBadge
-                                                            source={merit.homebrewSource}
-                                                        />
-                                                    ) : null}
+                                                    <Group gap="xs">
+                                                        <Text
+                                                            fw={700}
+                                                            style={{
+                                                                paddingRight: isFreeMode ? "60px" : "0"
+                                                            }}
+                                                        >
+                                                            {getMeritFlawDisplayName(merit)}
+                                                        </Text>
+                                                        {merit.homebrewSource ? (
+                                                            <HomebrewBadge
+                                                                source={merit.homebrewSource}
+                                                            />
+                                                        ) : null}
+                                                    </Group>
                                                     {!isFreeMode ? (
                                                         <Badge color={primaryColor} circle>
                                                             {merit.level}
@@ -289,19 +291,21 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         isFreeMode ? "flex-start" : "space-between"
                                                     }
                                                 >
-                                                    <Text
-                                                        fw={700}
-                                                        style={{
-                                                            paddingRight: isFreeMode ? "60px" : "0"
-                                                        }}
-                                                    >
-                                                        {getMeritFlawDisplayName(flaw)}
-                                                    </Text>
-                                                    {flaw.homebrewSource ? (
-                                                        <HomebrewBadge
-                                                            source={flaw.homebrewSource}
-                                                        />
-                                                    ) : null}
+                                                    <Group gap="xs">
+                                                        <Text
+                                                            fw={700}
+                                                            style={{
+                                                                paddingRight: isFreeMode ? "60px" : "0"
+                                                            }}
+                                                        >
+                                                            {getMeritFlawDisplayName(flaw)}
+                                                        </Text>
+                                                        {flaw.homebrewSource ? (
+                                                            <HomebrewBadge
+                                                                source={flaw.homebrewSource}
+                                                            />
+                                                        ) : null}
+                                                    </Group>
                                                     {!isFreeMode ? (
                                                         <Badge color="red" circle>
                                                             {flaw.level}
