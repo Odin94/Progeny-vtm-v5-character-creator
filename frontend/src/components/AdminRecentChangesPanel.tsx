@@ -2,7 +2,6 @@ import {
     Button,
     FileButton,
     Group,
-    Modal,
     Paper,
     SimpleGrid,
     Stack,
@@ -18,6 +17,7 @@ import { useEffect, useState } from "react"
 import { api, type RecentChange } from "~/utils/api"
 import { composeRecentChangeBody, splitRecentChangeLayout } from "~/utils/recentChangeLayout"
 import RecentChangesModal from "~/components/RecentChangesModal"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 
 const formatDate = (date: string | null) =>
     date
@@ -493,47 +493,28 @@ const AdminRecentChangesPanel = () => {
                 initialChangeId={previewChange?.id}
             />
 
-            <Modal
+            <ConfirmActionModal
                 opened={!!deletionCandidate}
                 onClose={() => setDeletionCandidate(null)}
+                onConfirm={() => {
+                    if (!deletionCandidate) return
+                    deleteMutation.mutate({
+                        id: deletionCandidate.change.id,
+                        permanently: deletionCandidate.permanently
+                    })
+                }}
                 title={
-                    deletionCandidate?.permanently ? "Permanently delete update?" : "Delete update?"
+                    deletionCandidate?.permanently ? "Permanently Delete Update" : "Delete Update"
                 }
-                centered
-            >
-                <Stack gap="md">
-                    <Text>
-                        {deletionCandidate?.permanently
-                            ? `This permanently removes “${deletionCandidate.change.title}” and its delivery records. This cannot be undone.`
-                            : `“${deletionCandidate?.change.title}” will no longer be shown to users or included in update history. You can permanently delete it later.`}
-                    </Text>
-                    <Group justify="flex-end">
-                        <Button
-                            variant="subtle"
-                            color="gray"
-                            onClick={() => setDeletionCandidate(null)}
-                            disabled={deleteMutation.isPending}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            loading={deleteMutation.isPending}
-                            onClick={() => {
-                                if (!deletionCandidate) return
-                                deleteMutation.mutate({
-                                    id: deletionCandidate.change.id,
-                                    permanently: deletionCandidate.permanently
-                                })
-                            }}
-                        >
-                            {deletionCandidate?.permanently
-                                ? "Delete permanently"
-                                : "Delete update"}
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                body={
+                    deletionCandidate?.permanently
+                        ? `This permanently removes “${deletionCandidate.change.title}” and its delivery records. This cannot be undone.`
+                        : `“${deletionCandidate?.change.title}” will no longer be shown to users or included in update history. You can permanently delete it later.`
+                }
+                confirmLabel={deletionCandidate?.permanently ? "Delete Permanently" : "Delete"}
+                loading={deleteMutation.isPending}
+                disabled={deleteMutation.isPending}
+            />
         </Stack>
     )
 }

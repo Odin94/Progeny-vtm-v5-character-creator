@@ -12,6 +12,7 @@ import CharacterAutosave from "~/components/CharacterAutosave"
 import { CookiesBanner } from "~/components/CookiesBanner"
 import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
+import { modalTheme } from "~/theme/modal"
 import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
@@ -185,7 +186,7 @@ export const Route = createRootRoute({
                             grape: generateColors("#7e4ac9")
                         },
                         primaryColor: "grape",
-                        components: inputFocusTheme,
+                        components: { ...inputFocusTheme, ...modalTheme },
                         breakpoints: {
                             xs: "576px",
                             sm: "768px",

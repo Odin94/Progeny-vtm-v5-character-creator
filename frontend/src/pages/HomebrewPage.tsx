@@ -8,7 +8,6 @@ import {
     Container,
     Group,
     Loader,
-    Modal,
     Paper,
     SimpleGrid,
     Stack,
@@ -32,6 +31,7 @@ import {
     useSetHomebrewCollectionAccountEnabled
 } from "~/hooks/useHomebrew"
 import AppTopbar from "~/components/AppTopbar"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 
 const HomebrewPage = () => {
     const navigate = useNavigate()
@@ -242,35 +242,25 @@ const HomebrewPage = () => {
                 </Container>
             </AppShell.Main>
 
-            <Modal
+            <ConfirmActionModal
                 opened={!!deleteTarget}
                 onClose={() => setDeleteTarget(null)}
-                title="Delete Homebrew collection?"
-            >
-                <Stack>
-                    <Text>
+                onConfirm={() => {
+                    if (!deleteTarget) return
+                    deleteMutation.mutate(deleteTarget.id, {
+                        onSuccess: () => setDeleteTarget(null)
+                    })
+                }}
+                title="Delete Homebrew Collection"
+                body={
+                    <>
                         This removes <strong>{deleteTarget?.name}</strong> from every coterie.
                         Existing character selections remain as unavailable snapshots.
-                    </Text>
-                    <Group justify="flex-end">
-                        <Button variant="subtle" onClick={() => setDeleteTarget(null)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            loading={deleteMutation.isPending}
-                            onClick={() => {
-                                if (!deleteTarget) return
-                                deleteMutation.mutate(deleteTarget.id, {
-                                    onSuccess: () => setDeleteTarget(null)
-                                })
-                            }}
-                        >
-                            Delete
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                    </>
+                }
+                confirmLabel="Delete"
+                loading={deleteMutation.isPending}
+            />
         </AppShell>
     )
 }

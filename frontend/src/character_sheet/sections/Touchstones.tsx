@@ -5,11 +5,8 @@ import {
     Text,
     Center,
     ActionIcon,
-    Modal,
-    Button,
     Group,
-    Divider,
-    Stack
+    Button
 } from "@mantine/core"
 import { memo, useState } from "react"
 import { SheetOptions } from "../CharacterSheet"
@@ -17,6 +14,7 @@ import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import TouchstoneModal from "../components/TouchstoneModal"
 import { Touchstone } from "~/data/Character"
 import { IconPlus, IconX, IconPencil } from "@tabler/icons-react"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 
 type TouchstonesProps = {
     options: SheetOptions
@@ -167,36 +165,14 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                 />
             ) : null}
             {touchstoneToDelete ? (
-                <Modal
+                <ConfirmActionModal
                     opened={!!touchstoneToDelete}
-                    onClose={() => {
-                        setTouchstoneToDelete(null)
-                    }}
-                    title=""
-                    centered
-                    withCloseButton={false}
-                >
-                    <Stack>
-                        <Text fz="xl" ta="center">
-                            Delete touchstone &quot;{touchstoneToDelete?.name}&quot;?
-                        </Text>
-                        <Divider my="sm" />
-                        <Group justify="space-between">
-                            <Button
-                                color="yellow"
-                                variant="subtle"
-                                onClick={() => {
-                                    setTouchstoneToDelete(null)
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button color="red" onClick={confirmDelete}>
-                                Delete
-                            </Button>
-                        </Group>
-                    </Stack>
-                </Modal>
+                    onClose={() => setTouchstoneToDelete(null)}
+                    onConfirm={confirmDelete}
+                    title="Delete Touchstone"
+                    body={<>Delete touchstone &quot;{touchstoneToDelete.name}&quot;?</>}
+                    confirmLabel="Delete"
+                />
             ) : null}
         </>
     )

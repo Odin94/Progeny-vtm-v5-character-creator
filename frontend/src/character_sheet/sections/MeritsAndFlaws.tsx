@@ -9,9 +9,7 @@ import {
     Badge,
     Center,
     ActionIcon,
-    Modal,
     Button,
-    Divider,
     Tooltip
 } from "@mantine/core"
 import { memo, useState, useMemo } from "react"
@@ -23,6 +21,7 @@ import { MeritFlaw } from "~/data/Character"
 import { IconPlus, IconX } from "@tabler/icons-react"
 import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
 import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 
 const meritFlawCardStyle = {
     ...sheetSurfaceStyle,
@@ -410,36 +409,18 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                 />
             ) : null}
             {itemToDelete ? (
-                <Modal
+                <ConfirmActionModal
                     opened={!!itemToDelete}
-                    onClose={() => {
-                        setItemToDelete(null)
-                    }}
-                    title=""
-                    centered
-                    withCloseButton={false}
-                >
-                    <Stack>
-                        <Text fz="xl" ta="center">
-                            Delete {itemToDelete?.type} &quot;{itemToDelete?.item.name}&quot;?
-                        </Text>
-                        <Divider my="sm" />
-                        <Group justify="space-between">
-                            <Button
-                                color="yellow"
-                                variant="subtle"
-                                onClick={() => {
-                                    setItemToDelete(null)
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button color="red" onClick={confirmDelete}>
-                                Delete
-                            </Button>
-                        </Group>
-                    </Stack>
-                </Modal>
+                    onClose={() => setItemToDelete(null)}
+                    onConfirm={confirmDelete}
+                    title={`Delete ${itemToDelete.type}`}
+                    body={
+                        <>
+                            Delete {itemToDelete.type} &quot;{itemToDelete.item.name}&quot;?
+                        </>
+                    }
+                    confirmLabel="Delete"
+                />
             ) : null}
         </>
     )

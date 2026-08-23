@@ -10,7 +10,6 @@ import {
     Paper,
     Center,
     ActionIcon,
-    Modal,
     Button,
     Tooltip
 } from "@mantine/core"
@@ -52,6 +51,7 @@ import {
     getPowerIdentity
 } from "~/utils/homebrewOptions"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 
 type DisciplinesProps = {
     options: SheetOptions
@@ -1070,42 +1070,22 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                 />
             ) : null}
             {itemToDelete ? (
-                <Modal
+                <ConfirmActionModal
                     opened={!!itemToDelete}
-                    onClose={() => {
-                        setItemToDelete(null)
-                    }}
-                    title=""
-                    centered
-                    withCloseButton={false}
-                >
-                    <Stack>
-                        <Text fz="xl" ta="center">
-                            {itemToDelete?.type === "power"
-                                ? `Delete power "${itemToDelete.power.name}"?`
-                                : itemToDelete?.type === "ritual"
-                                  ? `Delete ritual "${itemToDelete.ritual.name}"?`
-                                  : itemToDelete?.type === "ceremony"
-                                    ? `Delete ceremony "${itemToDelete.ceremony.name}"?`
-                                    : `Delete discipline "${itemToDelete ? upcase(itemToDelete.disciplineName) : ""}"?`}
-                        </Text>
-                        <Divider my="sm" />
-                        <Group justify="space-between">
-                            <Button
-                                color="yellow"
-                                variant="subtle"
-                                onClick={() => {
-                                    setItemToDelete(null)
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button color="red" onClick={confirmDelete}>
-                                Delete
-                            </Button>
-                        </Group>
-                    </Stack>
-                </Modal>
+                    onClose={() => setItemToDelete(null)}
+                    onConfirm={confirmDelete}
+                    title={`Delete ${itemToDelete.type}`}
+                    body={
+                        itemToDelete.type === "power"
+                            ? `Delete power "${itemToDelete.power.name}"?`
+                            : itemToDelete.type === "ritual"
+                              ? `Delete ritual "${itemToDelete.ritual.name}"?`
+                              : itemToDelete.type === "ceremony"
+                                ? `Delete ceremony "${itemToDelete.ceremony.name}"?`
+                                : `Delete discipline "${upcase(itemToDelete.disciplineName)}"?`
+                    }
+                    confirmLabel="Delete"
+                />
             ) : null}
         </>
     )
