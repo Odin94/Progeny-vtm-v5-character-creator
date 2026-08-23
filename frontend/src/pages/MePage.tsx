@@ -829,20 +829,20 @@ const MePage = () => {
             }
         }
 
-        // Switching characters must preserve the current character first. This includes a
-        // character that has not been saved before, which is created automatically here.
-        if (char.id !== character.id && (character.name.trim() || hasCurrentCharacterChanges)) {
+        const currentCharacter = character.id
+            ? userCharacters.find((candidate) => candidate.id === character.id)
+            : undefined
+
+        // Shared characters are read-only, so switching away from one must discard its local
+        // state rather than trying to save it. Owned and unsaved characters are saved first.
+        if (
+            char.id !== character.id &&
+            !currentCharacter?.shared &&
+            (character.name.trim() || hasCurrentCharacterChanges)
+        ) {
             try {
                 if (!character.name.trim()) {
                     throw new Error("The current character needs a name before it can be saved")
-                }
-
-                const currentCharacter = character.id
-                    ? userCharacters.find((candidate) => candidate.id === character.id)
-                    : undefined
-
-                if (currentCharacter?.shared) {
-                    throw new Error("Shared characters cannot be saved")
                 }
 
                 if (currentCharacter) {
