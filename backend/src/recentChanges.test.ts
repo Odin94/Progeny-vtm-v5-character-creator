@@ -144,6 +144,15 @@ describe("recent changes", () => {
             "old-change",
             "latest-change"
         ])
+        expect(history.json().changes).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: "old-change",
+                    linkText: null,
+                    linkUrl: null
+                })
+            ])
+        )
 
         const firstDelivery = await app.inject({
             method: "POST",
@@ -151,7 +160,11 @@ describe("recent changes", () => {
             headers: csrfHeaders
         })
         expect(firstDelivery.statusCode).toBe(200)
-        expect(firstDelivery.json().announcement).toMatchObject({ id: "latest-change" })
+        expect(firstDelivery.json().announcement).toMatchObject({
+            id: "latest-change",
+            linkText: null,
+            linkUrl: null
+        })
         expect(firstDelivery.json().changes.map((change: { id: string }) => change.id)).toEqual([
             "old-change",
             "latest-change"

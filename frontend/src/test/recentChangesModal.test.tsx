@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MantineProvider } from "@mantine/core"
 import posthog from "posthog-js"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import RecentChangesModal from "~/components/RecentChangesModal"
 
 vi.mock("posthog-js", () => ({
@@ -24,6 +24,10 @@ Object.defineProperty(window, "matchMedia", {
 })
 
 describe("RecentChangesModal", () => {
+    beforeEach(() => {
+        vi.mocked(posthog.capture).mockReset()
+    })
+
     it("tracks optional announcement link clicks with the update title", async () => {
         const user = userEvent.setup()
         render(
@@ -55,5 +59,35 @@ describe("RecentChangesModal", () => {
         expect(posthog.capture).toHaveBeenCalledWith("recent_change_link_clicked", {
             recent_change_title: "Homebrew Collections"
         })
+    })
+
+    it("renders a legacy update without an announcement link", () => {
+        render(
+            <MantineProvider>
+                <RecentChangesModal
+                    opened
+                    onClose={vi.fn()}
+                    changes={[
+                        {
+                            id: "legacy-update",
+                            title: "Earlier update",
+                            body: "The existing popup content.",
+                            linkText: null,
+                            linkUrl: null,
+                            imageUrl: null,
+                            hasImage: false,
+                            status: "published",
+                            publishedAt: "2026-08-01T00:00:00.000Z",
+                            createdAt: "2026-08-01T00:00:00.000Z",
+                            updatedAt: "2026-08-01T00:00:00.000Z"
+                        }
+                    ]}
+                />
+            </MantineProvider>
+        )
+
+        expect(screen.getByRole("link", { name: "Support me" })).toBeInTheDocument()
+        expect(screen.getAllByRole("link")).toHaveLength(1)
+        expect(posthog.capture).not.toHaveBeenCalled()
     })
 })
