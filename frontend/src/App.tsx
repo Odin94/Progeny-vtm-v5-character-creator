@@ -33,14 +33,11 @@ import batWoman from "./resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsp
 import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
-import {
-    characterSchema,
-    getEmptyCharacter,
-    type Character as CharacterType
-} from "./data/Character"
+import { getEmptyCharacter, type Character as CharacterType } from "./data/Character"
 import { clearStoredAuthReturnTo, getSafeAuthReturnTo, useAuth } from "./hooks/useAuth"
 import { useCharacters } from "./hooks/useCharacters"
 import { api } from "./utils/api"
+import { parseCharacterData } from "./utils/characterData"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 type PendingSwitchAction = { type: "load"; characterId: string } | { type: "create" } | null
@@ -161,7 +158,8 @@ function App() {
 
     const loadSavedCharacter = async (characterId: string) => {
         const response = await api.getCharacter(characterId)
-        const loadedCharacter = characterSchema.parse((response as { data: unknown }).data)
+        const loadedCharacter = parseCharacterData((response as { data: unknown }).data)
+        if (!loadedCharacter) throw new Error("Unable to load character data")
 
         setCharacter({
             ...loadedCharacter,
@@ -379,6 +377,7 @@ function App() {
                     character.clan === emptyChar.clan &&
                     character.sire === emptyChar.sire &&
                     character.disciplines.length === 0 &&
+                    Object.values(character.disciplineLevels).every((level) => level === 0) &&
                     character.merits.length === 0 &&
                     character.flaws.length === 0
 

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { ritualSchema } from "./Disciplines.js"
-import type { Character } from "./Character.js"
+import { getDisciplineLevel, type Character } from "./Character.js"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
 export const ceremonySchema = ritualSchema.extend({
@@ -307,7 +307,7 @@ export const Ceremonies: Ceremony[] = [
 export const containsOblivion = (character: Pick<Character, "disciplines">): boolean =>
     character.disciplines.some((power) => getPowerDisciplineIdentity(power) === "official:oblivion")
 
-export const hasMysticOfTheVoid = (character: CeremonyPrerequisiteCharacter): boolean =>
+export const hasMysticOfTheVoid = (character: Partial<Pick<Character, "merits">>): boolean =>
     character.merits?.some((merit) => merit.name === "Mystic of the Void") ?? false
 
 export const canAccessOblivionCeremonies = (
@@ -315,13 +315,11 @@ export const canAccessOblivionCeremonies = (
 ): boolean => containsOblivion(character) || hasMysticOfTheVoid(character)
 
 export const getOblivionCeremonyLevel = (
-    character: Pick<Character, "disciplines" | "merits">
+    character: Pick<Character, "disciplineLevels" | "merits">
 ): number => {
     if (hasMysticOfTheVoid(character)) return Number.POSITIVE_INFINITY
 
-    return character.disciplines.filter(
-        (power) => getPowerDisciplineIdentity(power) === "official:oblivion"
-    ).length
+    return getDisciplineLevel(character, "official:oblivion")
 }
 
 export const characterHasCeremonyPrerequisite = (

@@ -19,7 +19,11 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
 import { clans } from "~/data/Clans"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { Character } from "~/data/Character"
+import {
+    Character,
+    getDisciplineLevel,
+    increaseDisciplineLevelForPower
+} from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import CustomDisciplineModal from "./CustomDisciplineModal"
@@ -128,10 +132,7 @@ const DisciplineSelectModal = ({
         const identity = discipline.homebrewSource
             ? `homebrew:${discipline.homebrewSource.collectionId}:${discipline.homebrewSource.itemId}`
             : `official:${discipline.name}`
-        const disciplinePowers = character.disciplines.filter(
-            (power) => getPowerDisciplineIdentity(power) === identity
-        )
-        return disciplinePowers.length
+        return getDisciplineLevel(character, identity)
     }
 
     const getAvailablePowers = (disciplineName: DisciplineName): Power[] => {
@@ -152,6 +153,9 @@ const DisciplineSelectModal = ({
 
         if (selectedDiscipline) {
             const currentLevel = getCurrentDisciplineLevel(selectedDiscipline)
+            if (currentLevel >= 5) {
+                reasons.push("This Discipline is already at Level 5")
+            }
             const maxLevel = currentLevel === 0 ? 1 : currentLevel + 1
             if (power.level > maxLevel) {
                 const disciplineLabel = upcase(
@@ -230,6 +234,7 @@ const DisciplineSelectModal = ({
             const updatedCharacter = {
                 ...current,
                 disciplines: [...current.disciplines, power],
+                disciplineLevels: increaseDisciplineLevelForPower(current, power),
                 customDisciplines: sourceDiscipline
                     ? {
                           ...current.customDisciplines,

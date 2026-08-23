@@ -1,4 +1,4 @@
-import { Character } from "~/data/Character"
+import { Character, getDisciplineLevel } from "~/data/Character"
 import { DisciplineName } from "~/data/NameSchemas"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 
@@ -27,10 +27,7 @@ export const getDisciplineCost = (
     disciplineName: DisciplineName,
     disciplineIdentity = `official:${disciplineName}`
 ): number => {
-    const newLevel =
-        character.disciplines.filter(
-            (power) => getPowerDisciplineIdentity(power) === disciplineIdentity
-        ).length + 1
+    const newLevel = getDisciplineLevel(character, disciplineIdentity) + 1
 
     if (character.clan === "Caitiff") {
         return newLevel * 6

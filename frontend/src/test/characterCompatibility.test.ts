@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
 import {
     applyCharacterCompatibilityPatches,
+    getDisciplineLevelsFromPowers,
     getCharacterExcludedMeritsAndFlaws,
     getCharacterExcludedPredatorTypes,
     getEmptyCharacter,
+    increaseDisciplineLevelForPower,
     schemaVersion
 } from "~/data/Character"
+import { disciplines } from "~/data/Disciplines"
 import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 
 describe("character compatibility patches", () => {
@@ -55,6 +58,42 @@ describe("character compatibility patches", () => {
 
         expect(parsed.homebrewClan).toBeUndefined()
         expect(parsed.version).toBe(schemaVersion)
+    })
+
+    it("preserves pre-v9 discipline ratings from their selected power counts", () => {
+        const parsed: Record<string, unknown> = {
+            ...getEmptyCharacter(),
+            version: 8,
+            disciplines: [
+                disciplines.celerity.powers[0],
+                disciplines.celerity.powers[1],
+                disciplines.potence.powers[0]
+            ],
+            disciplineLevels: undefined
+        }
+
+        applyCharacterCompatibilityPatches(parsed)
+
+        expect(parsed.disciplineLevels).toEqual({
+            "official:celerity": 2,
+            "official:potence": 1
+        })
+        expect(parsed.version).toBe(schemaVersion)
+    })
+
+    it("raises a stored discipline rating when a power is added", () => {
+        const character = getEmptyCharacter()
+        character.disciplineLevels = { "official:celerity": 2 }
+
+        expect(increaseDisciplineLevelForPower(character, disciplines.celerity.powers[0])).toEqual({
+            "official:celerity": 3
+        })
+        expect(
+            getDisciplineLevelsFromPowers([
+                disciplines.celerity.powers[0],
+                disciplines.celerity.powers[1]
+            ])
+        ).toEqual({ "official:celerity": 2 })
     })
 
     it("uses Homebrew clan predator-type exclusions", () => {

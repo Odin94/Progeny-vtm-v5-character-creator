@@ -53,7 +53,7 @@ describe("blocked discipline purchase feedback", () => {
             </MantineProvider>
         )
 
-        const addPowerButton = screen.getByRole("button", { name: "Add Potence power" })
+        const addPowerButton = screen.getAllByRole("button", { name: "Add power" })[0]
         expect(addPowerButton).not.toBeDisabled()
 
         await user.click(addPowerButton)

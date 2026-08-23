@@ -1,7 +1,7 @@
 import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
 import { PDFBool, PDFDict, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
-import { Character } from "../data/Character"
+import { Character, getDisciplineLevel } from "../data/Character"
 import { SkillsKey, skillsKeySchema } from "../data/Skills"
 import checkPng from "../resources/CheckSolid.png"
 // import base64Pdf_renegade from '../resources/v5_charactersheet_fillable_v3.base64';
@@ -286,9 +286,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     // Health
     let health = 3 + character.attributes["stamina"]
     if (character.disciplines.find((power) => power.name === "Resilience")) {
-        const fortitudeLevel = character.disciplines.filter(
-            (power) => power.discipline === "fortitude"
-        ).length
+        const fortitudeLevel = getDisciplineLevel(character, "official:fortitude")
         health += fortitudeLevel
     }
     for (let i = 1; i <= health; i++) {

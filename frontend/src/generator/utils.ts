@@ -1,6 +1,7 @@
 import { PredatorTypes } from "~/data/PredatorType"
 import { Attributes, AttributesKey } from "../data/Attributes"
-import { Character, getEmptyCharacter } from "../data/Character"
+import { Character, getDisciplineLevel, getEmptyCharacter } from "../data/Character"
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 import { Skills, SkillsKey } from "../data/Skills"
 import {
     attributeNameTo_WoD5EVtt_Key,
@@ -32,9 +33,7 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     // Health
     let health = 3 + character.attributes["stamina"]
     if (character.disciplines.find((power) => power.name === "Resilience")) {
-        const fortitudeLevel = character.disciplines.filter(
-            (power) => power.discipline === "fortitude"
-        ).length
+        const fortitudeLevel = getDisciplineLevel(character, "official:fortitude")
         health += fortitudeLevel
     }
 
@@ -98,9 +97,21 @@ export const getDisciplineRating = (disciplineName: string, character: Character
     const normalizedName = disciplineName.trim().toLowerCase()
     if (!normalizedName) return 0
 
-    return character.disciplines.filter(
+    const matchingPower = character.disciplines.find(
         (power) => power.discipline.trim().toLowerCase() === normalizedName
-    ).length
+    )
+    if (matchingPower) {
+        return getDisciplineLevel(character, getPowerDisciplineIdentity(matchingPower))
+    }
+
+    const customDisciplineIdentity = Object.entries(character.customDisciplines).find(
+        ([, discipline]) => discipline.name.trim().toLowerCase() === normalizedName
+    )?.[0]
+
+    return getDisciplineLevel(
+        character,
+        customDisciplineIdentity ?? `official:${normalizedName}`
+    )
 }
 
 export const getValueForKey = (key: string, character: Character): number => {

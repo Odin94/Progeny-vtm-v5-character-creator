@@ -178,6 +178,7 @@ describe("createWoD5EVttJson", () => {
             amalgamPrerequisites: [],
             isCustom: true
         })
+        character.disciplineLevels["official:potence"] = 2
 
         const { json, validationErrors } = createWoD5EVttJson(character)
 

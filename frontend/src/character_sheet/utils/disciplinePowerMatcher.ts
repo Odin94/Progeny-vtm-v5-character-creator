@@ -1,6 +1,6 @@
 import type { AttributesKey } from "~/data/Attributes"
 import type { SkillsKey } from "~/data/Skills"
-import type { Character } from "~/data/Character"
+import { getDisciplineLevel, type Character } from "~/data/Character"
 import { disciplines } from "~/data/Disciplines"
 import type { Power } from "~/data/Disciplines"
 
@@ -118,10 +118,7 @@ export const getApplicableDisciplinePowers = (
             if (!hasPrerequisite) continue
         }
 
-        const disciplinePowers = character.disciplines.filter(
-            (p) => p.discipline === rule.discipline
-        )
-        const disciplineRating = disciplinePowers.length
+        const disciplineRating = getDisciplineLevel(character, `official:${rule.discipline}`)
 
         applicablePowers.push({
             power,

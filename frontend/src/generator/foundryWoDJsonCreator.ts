@@ -11,7 +11,7 @@ import {
     getResolvedMeritsAndFlaws
 } from "../data/meritsAndFlawsResolution"
 import { PredatorTypes } from "../data/PredatorType"
-import { getValueForKey } from "./utils"
+import { getDisciplineRating, getValueForKey } from "./utils"
 
 const WoD5EVttDicePoolSchema = z.record(z.string(), z.object({ path: z.string() }))
 
@@ -397,7 +397,7 @@ export const createWoD5EVttJson = (
         const key = disciplineNameTo_WoD5EVtt_Key[disc.discipline]
         if (!key) continue
         disciplineValues[key].powers.push(disc.name)
-        disciplineValues[key].value = Math.max(disciplineValues[key].value, disc.level)
+        disciplineValues[key].value = getDisciplineRating(disc.discipline, character)
     }
 
     const skills = Object.entries(character.skills).reduce(

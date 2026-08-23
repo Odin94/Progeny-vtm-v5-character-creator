@@ -22,6 +22,7 @@ type PipsProps = {
     options?: SheetOptions
     field?: string
     readOnly?: boolean
+    onLevelChange?: (level: number) => void
 }
 
 const BLOCKED_WARNING_DURATION_MS = 2_500
@@ -32,7 +33,8 @@ const Pips = ({
     minLevel = 0,
     options,
     field,
-    readOnly = false
+    readOnly = false,
+    onLevelChange
 }: PipsProps) => {
     const prevLevelRef = useRef(level)
     const blockedWarningIdRef = useRef(0)
@@ -127,6 +129,7 @@ const Pips = ({
     }
 
     const getDisabledReason = (index: number): string | undefined => {
+        if (onLevelChange) return undefined
         if (!options || !field) return "No options or field provided"
 
         const { mode, character, canEdit, editDisabledReason } = options
@@ -204,6 +207,14 @@ const Pips = ({
     }
 
     const handlePipClick = (index: number) => {
+        const newLevel = getTargetLevel(index)
+        const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
+
+        if (onLevelChange) {
+            onLevelChange(clampedLevel)
+            return
+        }
+
         if (!options || !field) return
 
         const { mode, character, setCharacter } = options
@@ -221,9 +232,6 @@ const Pips = ({
             return
         }
         setBlockedWarning(undefined)
-
-        const newLevel = getTargetLevel(index)
-        const clampedLevel = Math.min(Math.max(minLevel, newLevel), maxLevel)
 
         if (mode === "xp") {
             const costFunction = getCostFunction()
@@ -357,6 +365,7 @@ export default memo(Pips, (prev, next) => {
         prev.minLevel === next.minLevel &&
         prev.field === next.field &&
         prev.readOnly === next.readOnly &&
+        prev.onLevelChange === next.onLevelChange &&
         getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
     )
 })

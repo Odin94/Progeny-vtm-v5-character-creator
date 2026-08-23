@@ -43,8 +43,9 @@ afterEach(() => {
 
 const renderModal = () => {
     const character = getBasicTestCharacter()
-    // Celerity at level 1: one power owned, so the next reachable level is 2.
+    // The picker uses the independently stored rating, rather than deriving it here.
     character.disciplines = [disciplines.celerity.powers[0]]
+    character.disciplineLevels = { "official:celerity": 1 }
 
     const options = {
         mode: "xp",

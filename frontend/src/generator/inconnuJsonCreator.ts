@@ -3,6 +3,7 @@ import type { AttributesKey } from "../data/Attributes"
 import type { SkillsKey } from "../data/Skills"
 import type { DisciplineName } from "../data/NameSchemas"
 import { getMeritFlawDisplayName, getResolvedMeritFlawList } from "../data/meritsAndFlawsResolution"
+import { getDisciplineRating } from "./utils"
 
 type InconnuSplat = "vampire" | "thin-blood" | "ghoul" | "mortal"
 
@@ -322,7 +323,7 @@ export const createInconnuJson = (character: Character): InconnuCreationBody => 
 
         const discipline = disciplineMap.get(inconnuDisciplineName)!
         discipline.powers.push(String(power.name ?? ""))
-        discipline.rating = Math.max(discipline.rating, clampInt(power.level, 0, 5, 0))
+        discipline.rating = getDisciplineRating(String(power.discipline ?? ""), character)
     }
 
     for (const ritual of asArray<{ name?: unknown }>(character.rituals)) {

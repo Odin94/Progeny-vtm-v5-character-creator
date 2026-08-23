@@ -2,6 +2,10 @@ import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } 
 import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Power } from "~/data/Disciplines"
+import {
+    getDisciplineLevel,
+    increaseDisciplineLevelForPower
+} from "~/data/Character"
 import { DisciplineName } from "~/data/NameSchemas"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import {
@@ -113,15 +117,12 @@ const CustomPowerModal = ({
                 setError(null)
                 setDicePoolWarning(validateDicePool(editingPower.dicePool))
             } else {
-                const currentLevel = character.disciplines.filter(
-                    (power) =>
-                        getPowerDisciplineIdentity(power) ===
-                        getPowerDisciplineIdentity({
-                            discipline: disciplineName,
-                            isCustom: true,
-                            disciplineHomebrewSource
-                        })
-                ).length
+                const disciplineIdentity = getPowerDisciplineIdentity({
+                    discipline: disciplineName,
+                    isCustom: true,
+                    disciplineHomebrewSource
+                })
+                const currentLevel = getDisciplineLevel(character, disciplineIdentity)
                 setName("")
                 setSummary("")
                 setDicePool("")
@@ -148,6 +149,11 @@ const CustomPowerModal = ({
             return
         }
 
+        if (levelNum > 5) {
+            setError("Level cannot exceed 5")
+            return
+        }
+
         if (rouseChecksNum < 0) {
             setError("Rouse checks must be 0 or greater")
             return
@@ -170,14 +176,23 @@ const CustomPowerModal = ({
         setCharacter((current) => {
             let updatedCharacter
             if (editingPower) {
+                const disciplineIdentity = getPowerDisciplineIdentity(power)
                 updatedCharacter = {
                     ...current,
-                    disciplines: current.disciplines.map((p) => (p === editingPower ? power : p))
+                    disciplines: current.disciplines.map((p) => (p === editingPower ? power : p)),
+                    disciplineLevels: {
+                        ...current.disciplineLevels,
+                        [disciplineIdentity]: Math.max(
+                            getDisciplineLevel(current, disciplineIdentity),
+                            power.level
+                        )
+                    }
                 }
             } else {
                 updatedCharacter = {
                     ...current,
-                    disciplines: [...current.disciplines, power]
+                    disciplines: [...current.disciplines, power],
+                    disciplineLevels: increaseDisciplineLevelForPower(current, power)
                 }
 
                 if (mode === "xp") {
@@ -254,6 +269,7 @@ const CustomPowerModal = ({
                     value={level}
                     onChange={setLevel}
                     min={1}
+                    max={5}
                     required
                     color={primaryColor}
                 />

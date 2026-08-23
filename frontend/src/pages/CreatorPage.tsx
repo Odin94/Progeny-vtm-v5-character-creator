@@ -9,11 +9,7 @@ import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import RenderProfiler from "~/components/RenderProfiler"
 import SharedCharacterCreatorModal from "~/components/SharedCharacterCreatorModal"
-import {
-    characterSchema,
-    getEmptyCharacter,
-    type Character as CharacterType
-} from "~/data/Character"
+import { getEmptyCharacter, type Character as CharacterType } from "~/data/Character"
 import Generator from "~/generator/Generator"
 import {
     defaultGeneratorStepId,
@@ -35,6 +31,7 @@ import AsideBar from "~/sidebar/AsideBar"
 import Sidebar from "~/sidebar/Sidebar"
 import Topbar from "~/topbar/Topbar"
 import { api } from "~/utils/api"
+import { parseCharacterData } from "~/utils/characterData"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 type PendingSwitchAction = { type: "load"; characterId: string } | { type: "create" } | null
@@ -124,7 +121,8 @@ export default function CreatorPage() {
 
     const loadSavedCharacter = async (characterId: string) => {
         const response = await api.getCharacter(characterId)
-        const loadedCharacter = characterSchema.parse((response as { data: unknown }).data)
+        const loadedCharacter = parseCharacterData((response as { data: unknown }).data)
+        if (!loadedCharacter) throw new Error("Unable to load character data")
 
         setCharacter({
             ...loadedCharacter,

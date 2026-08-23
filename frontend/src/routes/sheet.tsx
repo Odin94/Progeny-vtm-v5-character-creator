@@ -24,6 +24,7 @@ function Sheet() {
                 character.clan === emptyChar.clan &&
                 character.sire === emptyChar.sire &&
                 character.disciplines.length === 0 &&
+                Object.values(character.disciplineLevels).every((level) => level === 0) &&
                 character.merits.length === 0 &&
                 character.flaws.length === 0
             )

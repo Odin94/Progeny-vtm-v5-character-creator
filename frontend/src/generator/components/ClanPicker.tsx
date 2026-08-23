@@ -111,6 +111,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                                 clan,
                                 homebrewClan: undefined,
                                 disciplines: [],
+                                disciplineLevels: {},
                                 rituals: [],
                                 ceremonies: [],
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
@@ -230,6 +231,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                             homebrewSource: source
                         },
                         disciplines: [],
+                        disciplineLevels: {},
                         rituals: [],
                         ceremonies: [],
                         availableDisciplineNames: clan.nativeDisciplines,

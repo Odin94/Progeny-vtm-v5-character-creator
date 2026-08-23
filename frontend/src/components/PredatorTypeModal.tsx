@@ -799,6 +799,9 @@ const PredatorTypeModal = ({
                                     disciplines: shouldResetDisciplineProgress
                                         ? []
                                         : character.disciplines,
+                                    disciplineLevels: shouldResetDisciplineProgress
+                                        ? {}
+                                        : character.disciplineLevels,
                                     rituals: shouldResetDisciplineProgress ? [] : character.rituals,
                                     ceremonies: shouldResetDisciplineProgress
                                         ? []

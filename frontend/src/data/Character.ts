@@ -38,7 +38,9 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 8
+export const schemaVersion = 9
+
+export const disciplineLevelsSchema = z.record(z.string(), z.number().int().min(0).max(5))
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -89,6 +91,7 @@ export const characterSchema = z.object({
     skillSpecialties: specialtySchema.array(),
     availableDisciplineNames: disciplineNameSchema.array(),
     disciplines: powerSchema.array(),
+    disciplineLevels: disciplineLevelsSchema,
     rituals: ritualSchema.array(),
     ceremonies: ceremonySchema.array().optional().default([]),
     customDisciplines: z
@@ -199,6 +202,7 @@ export const getEmptyCharacter = (): Character => {
         skillSpecialties: [],
         availableDisciplineNames: [],
         disciplines: [],
+        disciplineLevels: {},
         rituals: [],
         ceremonies: [],
         customDisciplines: {},
@@ -235,6 +239,35 @@ export const containsBloodSorcery = (powers: Power[]) =>
 
 export const containsOblivion = (powers: Power[]) =>
     powers.some((power) => getPowerDisciplineIdentity(power) === "official:oblivion")
+
+export const getDisciplineLevel = (
+    character: Pick<Character, "disciplineLevels">,
+    disciplineIdentity: string
+): number => character.disciplineLevels[disciplineIdentity] ?? 0
+
+export const getDisciplineLevelsFromPowers = (powers: Power[]): Record<string, number> => {
+    const levels: Record<string, number> = {}
+
+    for (const power of powers) {
+        const identity = getPowerDisciplineIdentity(power)
+        levels[identity] = Math.min(5, (levels[identity] ?? 0) + 1)
+    }
+
+    return levels
+}
+
+export const increaseDisciplineLevelForPower = (
+    character: Pick<Character, "disciplineLevels">,
+    power: Power
+): Record<string, number> => {
+    const identity = getPowerDisciplineIdentity(power)
+    const currentLevel = getDisciplineLevel(character, identity)
+
+    return {
+        ...character.disciplineLevels,
+        [identity]: Math.min(5, Math.max(power.level, currentLevel + 1))
+    }
+}
 
 export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
     if (!parsed["rituals"]) parsed["rituals"] = []
@@ -288,6 +321,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV5ToV6Compatibility(parsed)
     patchV6ToV7Compatibility(parsed)
     patchV7ToV8Compatibility(parsed)
+    patchV8ToV9Compatibility(parsed)
 
     parsed["version"] = schemaVersion
 }
@@ -298,6 +332,18 @@ export const patchV7ToV8Compatibility = (parsed: Record<string, unknown>): void 
         !parsed["homebrewClan"]
     ) {
         delete parsed["homebrewClan"]
+    }
+}
+
+export const patchV8ToV9Compatibility = (parsed: Record<string, unknown>): void => {
+    if (
+        (typeof parsed["version"] !== "number" || parsed["version"] < 9) &&
+        !parsed["disciplineLevels"]
+    ) {
+        const powers = Array.isArray(parsed["disciplines"])
+            ? (parsed["disciplines"] as Power[])
+            : []
+        parsed["disciplineLevels"] = getDisciplineLevelsFromPowers(powers)
     }
 }
 

@@ -66,6 +66,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             character.clan === emptyChar.clan &&
             character.sire === emptyChar.sire &&
             character.disciplines.length === 0 &&
+            Object.values(character.disciplineLevels).every((level) => level === 0) &&
             character.merits.length === 0 &&
             character.flaws.length === 0
         )
@@ -315,6 +316,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 <Skills options={sheetOptions} />
 
                                 {character.disciplines.length > 0 ||
+                                Object.values(character.disciplineLevels).some((level) => level > 0) ||
                                 character.rituals.length > 0 ||
                                 character.ceremonies.length > 0 ||
                                 mode !== "play" ? (

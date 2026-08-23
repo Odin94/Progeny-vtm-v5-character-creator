@@ -48,7 +48,7 @@ import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
-import { characterSchema, Character as CharacterType, getEmptyCharacter } from "~/data/Character"
+import { Character as CharacterType, getEmptyCharacter } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import type { DisciplineName } from "~/data/NameSchemas"
 import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
@@ -243,6 +243,12 @@ const clearInviteTokenFromUrl = () => {
     const cleanedUrl = new URL(window.location.href)
     cleanedUrl.searchParams.delete("coterieInvite")
     window.history.replaceState(null, "", `${cleanedUrl.pathname}${cleanedUrl.search}`)
+}
+
+const parseStoredCharacter = (data: unknown): CharacterType => {
+    const character = parseCharacterData(data)
+    if (!character) throw new Error("Unable to load character data")
+    return character
 }
 
 // TODOdin: Refactorings:
@@ -550,7 +556,7 @@ const MePage = () => {
             // Fetch current character from backend to check version
             try {
                 const response = await api.getCharacter(targetCharacter.id)
-                const beCharacter = characterSchema.parse((response as any).data)
+                const beCharacter = parseStoredCharacter((response as any).data)
                 const feVersion = character.characterVersion ?? 0
 
                 if (beCharacter.characterVersion > feVersion) {
@@ -747,7 +753,7 @@ const MePage = () => {
         // Check version conflict before loading the character
         try {
             const response = await api.getCharacter(char.id)
-            const beCharacter = characterSchema.parse((response as any).data)
+            const beCharacter = parseStoredCharacter((response as any).data)
             const feVersion = char.data.characterVersion ?? 0
 
             if (beCharacter.characterVersion > feVersion) {
@@ -801,7 +807,7 @@ const MePage = () => {
             try {
                 // Fetch current character from backend to compare
                 const response = await api.getCharacter(char.id)
-                const beCharacter = characterSchema.parse((response as any).data)
+                const beCharacter = parseStoredCharacter((response as any).data)
 
                 // Compare current character with backend version to detect unsaved changes
                 // Simple comparison: check if characterVersion matches and do a basic equality check
@@ -847,7 +853,7 @@ const MePage = () => {
 
                 if (currentCharacter) {
                     const response = await api.getCharacter(currentCharacter.id)
-                    const savedCharacter = characterSchema.parse((response as any).data)
+                    const savedCharacter = parseStoredCharacter((response as any).data)
                     const localVersion = character.characterVersion ?? 0
 
                     if (savedCharacter.characterVersion > localVersion) {
@@ -943,7 +949,7 @@ const MePage = () => {
                 try {
                     // Check version before saving
                     const response = await api.getCharacter(character.id)
-                    const beCharacter = characterSchema.parse((response as any).data)
+                    const beCharacter = parseStoredCharacter((response as any).data)
                     const feVersion = character.characterVersion ?? 0
 
                     if (beCharacter.characterVersion > feVersion) {

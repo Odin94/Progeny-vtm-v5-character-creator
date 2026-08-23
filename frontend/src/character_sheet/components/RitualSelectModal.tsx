@@ -2,7 +2,7 @@ import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } f
 import { useMediaQuery } from "@mantine/hooks"
 import posthog from "posthog-js"
 import { useMemo, useState } from "react"
-import { Character } from "~/data/Character"
+import { Character, getDisciplineLevel } from "~/data/Character"
 import { Ritual } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
 import { SheetOptions } from "../CharacterSheet"
@@ -25,9 +25,7 @@ type RitualSelectModalProps = {
 }
 
 const getBloodSorceryLevel = (character: Character): number =>
-    character.disciplines.filter(
-        (power) => getPowerDisciplineIdentity(power) === "official:blood sorcery"
-    ).length
+    getDisciplineLevel(character, "official:blood sorcery")
 
 const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options

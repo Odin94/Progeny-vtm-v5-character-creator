@@ -17,6 +17,7 @@ import {
 import { memo, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import { DisciplineName } from "~/data/NameSchemas"
+import { getDisciplineLevel } from "~/data/Character"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
@@ -172,9 +173,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     >(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
-    const bloodSorceryLevel = character.disciplines.filter(
-        (power) => getPowerDisciplineIdentity(power) === "official:blood sorcery"
-    ).length
+    const bloodSorceryLevel = getDisciplineLevel(character, "official:blood sorcery")
     const oblivionLevel = getOblivionCeremonyLevel(character)
     const canAddRituals = isEditable && bloodSorceryLevel > 0
     const canAddCeremonies = isEditable && canAccessOblivionCeremonies(character)
@@ -195,6 +194,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
 
     if (
         character.disciplines.length === 0 &&
+        Object.values(character.disciplineLevels).every((level) => level === 0) &&
         character.rituals.length === 0 &&
         character.ceremonies.length === 0 &&
         !isEditable
@@ -234,6 +234,19 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             })
         })
     }
+
+    Object.entries(character.disciplineLevels).forEach(([identity, level]) => {
+        if (level === 0 || disciplineGroups.has(identity)) return
+
+        const customDiscipline = character.customDisciplines[identity]
+        const disciplineName = customDiscipline?.name ?? identity.replace(/^official:/, "")
+        disciplineGroups.set(identity, {
+            identity,
+            disciplineName,
+            powers: [],
+            customDiscipline
+        })
+    })
 
     const handleDeletePower = (power: Power) => {
         setItemToDelete({ type: "power", power })
@@ -291,6 +304,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                             itemToDelete.disciplineIdentity.startsWith("homebrew:") ||
                             disciplineName !== itemToDelete.disciplineName
                     ),
+                    disciplineLevels: Object.fromEntries(
+                        Object.entries(current.disciplineLevels).filter(
+                            ([identity]) => identity !== itemToDelete.disciplineIdentity
+                        )
+                    ),
                     disciplines: current.disciplines.filter(
                         (power) =>
                             getPowerDisciplineIdentity(power) !== itemToDelete.disciplineIdentity
@@ -322,7 +340,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
 
     return (
         <>
-            {character.disciplines.length > 0 || isEditable ? (
+            {character.disciplines.length > 0 ||
+            Object.values(character.disciplineLevels).some((level) => level > 0) ||
+            isEditable ? (
                 <Box>
                     <Grid gap="md">
                         {Array.from(disciplineGroups.values()).map(
@@ -337,6 +357,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                     ? ""
                                     : discipline?.logo ||
                                       sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
+                                const disciplineLevel = getDisciplineLevel(character, identity)
+                                const minimumDisciplineLevel = Math.max(
+                                    0,
+                                    ...powers.map((power) => power.level)
+                                )
 
                                 return (
                                     <Grid.Col key={identity} span={{ base: 12, md: 6, lg: 4 }}>
@@ -405,9 +430,29 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     </Group>
                                                     <Group gap="xs" align="center">
                                                         <Pips
-                                                            level={powers.length}
+                                                            level={disciplineLevel}
+                                                            minLevel={minimumDisciplineLevel}
                                                             options={options}
-                                                            readOnly
+                                                            readOnly={!isFreeMode || !options.canEdit}
+                                                            onLevelChange={
+                                                                isFreeMode && options.canEdit
+                                                                    ? (level) => {
+                                                                          setCharacter((current) => {
+                                                                              const updatedCharacter = {
+                                                                                  ...current,
+                                                                                  disciplineLevels: {
+                                                                                      ...current.disciplineLevels,
+                                                                                      [identity]: level
+                                                                                  }
+                                                                              }
+                                                                              updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                                                                  updatedCharacter
+                                                                              )
+                                                                              return updatedCharacter
+                                                                          })
+                                                                      }
+                                                                    : undefined
+                                                            }
                                                         />
                                                         {isCustom &&
                                                         !customDiscipline?.homebrewSource &&

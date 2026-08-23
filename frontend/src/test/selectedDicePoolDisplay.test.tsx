@@ -102,7 +102,8 @@ describe("SelectedDicePoolDisplay", () => {
                     rouseChecks: 0,
                     amalgamPrerequisites: []
                 }
-            ]
+            ],
+            disciplineLevels: { "official:dominate": 2 }
         }
         useCharacterSheetStore.getState().updateSelectedDicePool({
             attribute: "strength",
@@ -159,7 +160,8 @@ describe("SelectedDicePoolDisplay", () => {
                     rouseChecks: 0,
                     amalgamPrerequisites: []
                 }
-            ]
+            ],
+            disciplineLevels: { "official:dominate": 2 }
         }
         useCharacterSheetStore.getState().updateSelectedDicePool({
             attribute: "strength",
@@ -204,7 +206,8 @@ describe("SelectedDicePoolDisplay", () => {
                     rouseChecks: 0,
                     amalgamPrerequisites: []
                 }
-            ]
+            ],
+            disciplineLevels: { "official:Heartsong": 2 }
         }
         useCharacterSheetStore.getState().updateSelectedDicePool({
             attribute: "strength",

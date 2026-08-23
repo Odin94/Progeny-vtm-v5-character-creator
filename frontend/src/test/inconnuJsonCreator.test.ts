@@ -54,6 +54,7 @@ describe("createInconnuJson", () => {
             level: 1,
             discipline: "oblivion"
         })
+        character.disciplineLevels["official:oblivion"] = 1
         character.ceremonies = [
             {
                 name: "Summon Spirit",
@@ -110,6 +111,7 @@ describe("createInconnuJson", () => {
             amalgamPrerequisites: [],
             isCustom: true
         })
+        character.disciplineLevels["official:potence"] = 2
 
         const result = createInconnuJson(character)
         const potence = result.traits.find((trait) => trait.name === "Potence")
@@ -250,6 +252,7 @@ describe("createInconnuJson", () => {
                 amalgamPrerequisites: []
             }
         ]
+        character.disciplineLevels = { "official:toString": 5 }
         character.rituals = []
         character.merits = [
             {
