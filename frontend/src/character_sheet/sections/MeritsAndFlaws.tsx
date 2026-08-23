@@ -84,9 +84,6 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     return (
         <>
             <Box>
-                <Title order={2} mb="md" c={primaryColor}>
-                    Merits & Flaws
-                </Title>
                 <Grid>
                     {allMerits.length > 0 || isEditable ? (
                         <Grid.Col span={{ base: 12, md: 6 }}>

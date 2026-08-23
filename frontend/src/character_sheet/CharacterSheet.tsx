@@ -316,8 +316,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
 
                                 {character.disciplines.length > 0 ||
                                 character.rituals.length > 0 ||
-                                character.ceremonies.length > 0 ? (
-                                    <Divider />
+                                character.ceremonies.length > 0 ||
+                                mode !== "play" ? (
+                                    <OrnamentalDivider
+                                        label="Disciplines"
+                                        color={`var(--mantine-color-${primaryColor}-6)`}
+                                        size="large"
+                                    />
                                 ) : null}
 
                                 <Disciplines options={sheetOptions} />
@@ -326,15 +331,31 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
 
                                 <BottomData options={sheetOptions} />
 
-                                <Divider />
+                                <OrnamentalDivider
+                                    label="The Blood"
+                                    color={`var(--mantine-color-${primaryColor}-6)`}
+                                    size="large"
+                                />
 
                                 <TheBlood options={sheetOptions} />
 
-                                {character.touchstones.length > 0 ? <Divider /> : null}
+                                {character.touchstones.length > 0 || mode === "free" ? (
+                                    <OrnamentalDivider
+                                        label="Touchstones"
+                                        color={`var(--mantine-color-${primaryColor}-6)`}
+                                        size="large"
+                                    />
+                                ) : null}
 
                                 <Touchstones options={sheetOptions} />
 
-                                {hasSheetMeritsAndFlaws(character) ? <Divider /> : null}
+                                {hasSheetMeritsAndFlaws(character) || mode !== "play" ? (
+                                    <OrnamentalDivider
+                                        label="Merits & Flaws"
+                                        color={`var(--mantine-color-${primaryColor}-6)`}
+                                        size="large"
+                                    />
+                                ) : null}
 
                                 <MeritsAndFlaws options={sheetOptions} />
                             </Stack>

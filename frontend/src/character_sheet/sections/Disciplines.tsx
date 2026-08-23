@@ -49,6 +49,7 @@ import {
     getPowerDisciplineIdentity,
     getPowerIdentity
 } from "~/utils/homebrewOptions"
+import OrnamentalDivider from "~/components/OrnamentalDivider"
 
 type DisciplinesProps = {
     options: SheetOptions
@@ -322,9 +323,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         <>
             {character.disciplines.length > 0 || isEditable ? (
                 <Box>
-                    <Title order={2} mb="lg" c={primaryColor}>
-                        Disciplines
-                    </Title>
                     <Grid gap="md">
                         {Array.from(disciplineGroups.values()).map(
                             ({ identity, disciplineName, powers, customDiscipline }) => {
@@ -722,11 +720,12 @@ const Disciplines = ({ options }: DisciplinesProps) => {
 
             {character.rituals.length > 0 || canAddRituals ? (
                 <Box mt="xl">
-                    {character.disciplines.length > 0 ? <Divider mb="lg" /> : null}
+                    <OrnamentalDivider
+                        label="Rituals"
+                        color={`var(--mantine-color-${primaryColor}-6)`}
+                        size="large"
+                    />
                     <Group justify="center" gap="sm" mb="lg">
-                        <Title order={2} ta="center">
-                            Rituals
-                        </Title>
                         {canAddRituals ? (
                             mode === "xp" ? (
                                 (() => {
@@ -824,13 +823,12 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             ) : null}
             {character.ceremonies.length > 0 || canAddCeremonies ? (
                 <Box mt="xl">
-                    {character.disciplines.length > 0 || character.rituals.length > 0 ? (
-                        <Divider mb="lg" />
-                    ) : null}
+                    <OrnamentalDivider
+                        label="Ceremonies"
+                        color={`var(--mantine-color-${primaryColor}-6)`}
+                        size="large"
+                    />
                     <Group justify="center" gap="sm" mb="lg">
-                        <Title order={2} ta="center">
-                            Ceremonies
-                        </Title>
                         {canAddCeremonies ? (
                             mode === "xp" ? (
                                 (() => {

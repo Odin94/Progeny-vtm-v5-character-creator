@@ -6,8 +6,7 @@ import {
     Group,
     Paper,
     Stack,
-    Text,
-    Title
+    Text
 } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { memo } from "react"
@@ -47,10 +46,6 @@ const TheBlood = ({ options }: TheBloodProps) => {
 
     return (
         <Paper p="lg" style={sheetSurfaceStyle}>
-            <Title order={2} mb="md" c={primaryColor}>
-                The Blood
-            </Title>
-
             <Box mb="lg">
                 <Group gap="md" wrap="nowrap" justify="center" align="center">
                     <Text fw={700} size="lg" style={{ minWidth: "fit-content" }}>

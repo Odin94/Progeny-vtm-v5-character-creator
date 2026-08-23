@@ -3,7 +3,6 @@ import {
     Grid,
     Paper,
     Text,
-    Title,
     Center,
     ActionIcon,
     Modal,
@@ -60,9 +59,6 @@ const Touchstones = ({ options }: TouchstonesProps) => {
     return (
         <>
             <Box>
-                <Title order={2} mb="md" c={primaryColor}>
-                    Touchstones
-                </Title>
                 <Grid>
                     {character.touchstones.map((touchstone, index) => (
                         <Grid.Col key={index} span={{ base: 12, md: 6 }}>
