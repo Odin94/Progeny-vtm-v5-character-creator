@@ -22,6 +22,7 @@ type PipsProps = {
     options?: SheetOptions
     field?: string
     readOnly?: boolean
+    instant?: boolean
     onLevelChange?: (level: number) => void
 }
 
@@ -34,6 +35,7 @@ const Pips = ({
     options,
     field,
     readOnly = false,
+    instant = false,
     onLevelChange
 }: PipsProps) => {
     const prevLevelRef = useRef(level)
@@ -325,6 +327,7 @@ const Pips = ({
                         disabledReason={readOnly ? undefined : getDisabledReason(index)}
                         hardDisabled={readOnly || (!!options && !options.canEdit)}
                         xpCost={readOnly ? undefined : getXPCost(index)}
+                        instant={instant}
                     />
                 ))}
             </Group>
@@ -365,6 +368,7 @@ export default memo(Pips, (prev, next) => {
         prev.minLevel === next.minLevel &&
         prev.field === next.field &&
         prev.readOnly === next.readOnly &&
+        prev.instant === next.instant &&
         prev.onLevelChange === next.onLevelChange &&
         getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
     )

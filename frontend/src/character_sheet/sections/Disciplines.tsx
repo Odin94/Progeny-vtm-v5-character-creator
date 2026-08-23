@@ -358,10 +358,6 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                     : discipline?.logo ||
                                       sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
                                 const disciplineLevel = getDisciplineLevel(character, identity)
-                                const minimumDisciplineLevel = Math.max(
-                                    0,
-                                    ...powers.map((power) => power.level)
-                                )
 
                                 return (
                                     <Grid.Col key={identity} span={{ base: 12, md: 6, lg: 4 }}>
@@ -431,9 +427,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     <Group gap="xs" align="center">
                                                         <Pips
                                                             level={disciplineLevel}
-                                                            minLevel={minimumDisciplineLevel}
                                                             options={options}
                                                             readOnly={!isFreeMode || !options.canEdit}
+                                                            instant
                                                             onLevelChange={
                                                                 isFreeMode && options.canEdit
                                                                     ? (level) => {
@@ -445,9 +441,19 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                                       [identity]: level
                                                                                   }
                                                                               }
-                                                                              updateHealthAndWillpowerAndBloodPotencyAndHumanity(
-                                                                                  updatedCharacter
-                                                                              )
+                                                                              if (
+                                                                                  identity ===
+                                                                                      "official:fortitude" &&
+                                                                                  current.disciplines.some(
+                                                                                      (power) =>
+                                                                                          power.name ===
+                                                                                          "Resilience"
+                                                                                  )
+                                                                              ) {
+                                                                                  updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                                                                      updatedCharacter
+                                                                                  )
+                                                                              }
                                                                               return updatedCharacter
                                                                           })
                                                                       }

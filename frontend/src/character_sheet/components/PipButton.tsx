@@ -17,6 +17,7 @@ type PipButtonProps = {
     // surface the reason inline instead of dead-ending on a hover-only tooltip.
     hardDisabled?: boolean
     xpCost?: number
+    instant?: boolean
 }
 
 const PipButton = ({
@@ -26,7 +27,8 @@ const PipButton = ({
     options,
     disabledReason,
     hardDisabled = false,
-    xpCost
+    xpCost,
+    instant = false
 }: PipButtonProps) => {
     const theme = useMantineTheme()
     const shouldReduceMotion = useReducedMotion()
@@ -44,7 +46,7 @@ const PipButton = ({
         cursor: isInteractive ? "pointer" : "default",
         opacity: isDisabled ? 0.55 : 1,
         transform: "scale(1)",
-        transition: shouldReduceMotion
+        transition: instant || shouldReduceMotion
             ? "none"
             : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
@@ -61,7 +63,7 @@ const PipButton = ({
             style={buttonStyle}
             disabled={hardDisabled}
             onPointerDown={(event) => {
-                if (isInteractive && !shouldReduceMotion) {
+                if (isInteractive && !instant && !shouldReduceMotion) {
                     event.currentTarget.style.transform = "scale(0.97)"
                 }
             }}
@@ -82,14 +84,15 @@ const PipButton = ({
                     backgroundColor: baseColor,
                     borderRadius: "50%",
                     opacity: filled ? 1 : 0,
-                    transform: shouldReduceMotion
+                    transform: instant || shouldReduceMotion
                         ? "scale(1)"
                         : filled
                           ? "scale(1)"
                           : "scale(0.95)",
-                    transition: shouldReduceMotion
-                        ? "opacity 120ms cubic-bezier(0.23, 1, 0.32, 1)"
-                        : "opacity 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+                    transition:
+                        instant || shouldReduceMotion
+                            ? "none"
+                            : "opacity 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
                     pointerEvents: "none"
                 }}
             />
