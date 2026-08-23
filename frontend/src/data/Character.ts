@@ -269,6 +269,25 @@ export const increaseDisciplineLevelForPower = (
     }
 }
 
+export const decreaseDisciplineLevelForPower = (
+    character: Pick<Character, "disciplineLevels">,
+    power: Power
+): Record<string, number> => {
+    const identity = getPowerDisciplineIdentity(power)
+    const currentLevel = getDisciplineLevel(character, identity)
+    const nextLevel = Math.max(0, currentLevel - 1)
+
+    if (nextLevel === 0) {
+        const { [identity]: _, ...remainingLevels } = character.disciplineLevels
+        return remainingLevels
+    }
+
+    return {
+        ...character.disciplineLevels,
+        [identity]: nextLevel
+    }
+}
+
 export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
     if (!parsed["rituals"]) parsed["rituals"] = []
     if (!parsed["ceremonies"]) parsed["ceremonies"] = []

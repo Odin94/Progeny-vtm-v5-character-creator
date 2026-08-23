@@ -17,7 +17,7 @@ import {
 import { memo, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import { DisciplineName } from "~/data/NameSchemas"
-import { getDisciplineLevel } from "~/data/Character"
+import { decreaseDisciplineLevelForPower, getDisciplineLevel } from "~/data/Character"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
@@ -274,7 +274,11 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             if (itemToDelete.type === "power") {
                 updatedCharacter = {
                     ...current,
-                    disciplines: current.disciplines.filter((p) => p !== itemToDelete.power)
+                    disciplines: current.disciplines.filter((p) => p !== itemToDelete.power),
+                    disciplineLevels: decreaseDisciplineLevelForPower(
+                        current,
+                        itemToDelete.power
+                    )
                 }
             } else if (itemToDelete.type === "ritual") {
                 updatedCharacter = {

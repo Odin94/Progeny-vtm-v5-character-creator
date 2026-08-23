@@ -17,6 +17,7 @@ import { trackEvent } from "../../utils/analytics"
 import {
     Character,
     containsBloodSorcery,
+    decreaseDisciplineLevelForPower,
     increaseDisciplineLevelForPower
 } from "../../data/Character"
 import { canAccessOblivionCeremonies } from "../../data/Ceremonies"
@@ -873,14 +874,27 @@ const DisciplinesPicker = ({
                                     const existingPowerIdentities = new Set(
                                         character.disciplines.map(getPowerIdentity)
                                     )
-                                    const disciplineLevels = allPickedPowers
+                                    const pickedPowerIdentities = new Set(
+                                        allPickedPowers.map(getPowerIdentity)
+                                    )
+                                    const addedPowers = allPickedPowers
                                         .filter(
                                             (power) =>
                                                 !existingPowerIdentities.has(
                                                     getPowerIdentity(power)
                                                 )
                                         )
-                                        .reduce(
+                                    const removedPowers = character.disciplines.filter(
+                                        (power) =>
+                                            !pickedPowerIdentities.has(getPowerIdentity(power))
+                                    )
+                                    const disciplineLevels = removedPowers.reduce(
+                                        (levels, power) =>
+                                            decreaseDisciplineLevelForPower(
+                                                { disciplineLevels: levels },
+                                                power
+                                            ),
+                                        addedPowers.reduce(
                                             (levels, power) =>
                                                 increaseDisciplineLevelForPower(
                                                     { disciplineLevels: levels },
@@ -888,6 +902,7 @@ const DisciplinesPicker = ({
                                                 ),
                                             character.disciplineLevels
                                         )
+                                    )
                                     const retainedCustomDisciplines = Object.entries(
                                         character.customDisciplines
                                     ).filter(([, definition]) => !definition.homebrewSource)

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
     applyCharacterCompatibilityPatches,
     getDisciplineLevelsFromPowers,
+    decreaseDisciplineLevelForPower,
     getCharacterExcludedMeritsAndFlaws,
     getCharacterExcludedPredatorTypes,
     getEmptyCharacter,
@@ -94,6 +95,21 @@ describe("character compatibility patches", () => {
                 disciplines.celerity.powers[1]
             ])
         ).toEqual({ "official:celerity": 2 })
+    })
+
+    it("lowers a stored discipline rating by one when a power is removed", () => {
+        const character = getEmptyCharacter()
+        character.disciplineLevels = { "official:celerity": 2, "official:potence": 1 }
+
+        expect(
+            decreaseDisciplineLevelForPower(character, disciplines.celerity.powers[0])
+        ).toEqual({ "official:celerity": 1, "official:potence": 1 })
+        expect(
+            decreaseDisciplineLevelForPower(
+                { disciplineLevels: { "official:celerity": 1 } },
+                disciplines.celerity.powers[0]
+            )
+        ).toEqual({})
     })
 
     it("uses Homebrew clan predator-type exclusions", () => {
