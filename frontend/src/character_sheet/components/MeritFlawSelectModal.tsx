@@ -790,7 +790,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                         </>
                     ) : (
                         <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
-                            <Group justify="space-between" align="center" wrap="wrap">
+                            <Stack gap="xs">
                                 <Tabs.List>
                                     <Tabs.Tab value="regular">
                                         {type === "merit" ? "Merits" : "Flaws"}
@@ -804,7 +804,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     data-testid="toggle-advanced-merits-flaws-button"
                                     variant="outline"
                                     color={primaryColor}
-                                    size="xs"
+                                    size={phoneScreen ? "sm" : "xs"}
+                                    fullWidth={phoneScreen}
+                                    aria-pressed={showAdvancedMeritsAndFlaws}
                                     onClick={() =>
                                         setShowAdvancedMeritsAndFlaws((showingAdvanced) => !showingAdvanced)
                                     }
@@ -813,7 +815,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                         ? "Show essential list"
                                         : "Show advanced list"}
                                 </Button>
-                            </Group>
+                            </Stack>
 
                             <Tabs.Panel value="regular" pt="md">
                                 {availableItems.length === 0 ? (
