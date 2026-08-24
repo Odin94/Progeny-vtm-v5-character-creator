@@ -40,6 +40,7 @@ const getPublishedChanges = () =>
 const MAX_UPDATE_IMAGE_BYTES = 3 * 1024 * 1024
 const MAX_UPDATE_IMAGE_WIDTH = 600
 const MAX_UPDATE_IMAGE_HEIGHT = 600
+const RECENT_CHANGE_DELIVERY_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
 
 const optimizeUpdateImage = (imageData: Buffer) =>
     sharp(imageData, { limitInputPixels: 40_000_000 })
@@ -101,6 +102,7 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
         "/recent-changes/deliver-latest",
         { preHandler: authenticateUser },
         async (request: AuthenticatedRequest, reply) => {
+            const deliveryCutoff = new Date(Date.now() - RECENT_CHANGE_DELIVERY_WINDOW_MS)
             const result = db.transaction((tx) => {
                 const latest = tx
                     .select()
@@ -113,7 +115,7 @@ export async function recentChangesRoutes(fastify: FastifyInstance) {
                     .limit(1)
                     .get()
 
-                if (!latest) {
+                if (!latest || !latest.publishedAt || latest.publishedAt <= deliveryCutoff) {
                     return { announcement: null, changes: [] }
                 }
 

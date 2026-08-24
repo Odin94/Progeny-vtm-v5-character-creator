@@ -123,14 +123,14 @@ describe("recent changes", () => {
                 title: "Older update",
                 body: "Old body",
                 status: "published",
-                publishedAt: new Date("2026-01-01T00:00:00.000Z")
+                publishedAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000)
             },
             {
                 id: "latest-change",
                 title: "Latest update",
                 body: "Latest body",
                 status: "published",
-                publishedAt: new Date("2026-02-01T00:00:00.000Z")
+                publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
             }
         ])
         setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
@@ -185,6 +185,37 @@ describe("recent changes", () => {
             headers: csrfHeaders
         })
         expect(otherUserDelivery.json().announcement).toMatchObject({ id: "latest-change" })
+    })
+
+    it("does not deliver a latest update that is two weeks old", async () => {
+        const now = new Date("2026-08-24T12:00:00.000Z")
+        const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(now.getTime())
+        await db.insert(schema.recentChanges).values({
+            id: "expired-change",
+            title: "Expired update",
+            body: "This update is no longer timely.",
+            status: "published",
+            publishedAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+        })
+        setWorkosUser(USER_ID, "recent-changes-user@progeny.invalid")
+
+        try {
+            const delivery = await app.inject({
+                method: "POST",
+                url: "/recent-changes/deliver-latest",
+                headers: csrfHeaders
+            })
+
+            expect(delivery.statusCode).toBe(200)
+            expect(delivery.json()).toEqual({ announcement: null, changes: [] })
+            expect(
+                await db.query.recentChangeDeliveries.findFirst({
+                    where: eq(schema.recentChangeDeliveries.recentChangeId, "expired-change")
+                })
+            ).toBeUndefined()
+        } finally {
+            dateNowSpy.mockRestore()
+        }
     })
 
     it("keeps drafts private until a superadmin publishes them", async () => {
