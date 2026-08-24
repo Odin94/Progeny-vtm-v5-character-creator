@@ -1,4 +1,4 @@
-import { Box, Button, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
+import { Box, Button, Group, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
 import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { trackEvent } from "../../utils/analytics"
@@ -313,15 +313,6 @@ const PredatorTypePicker = ({
                 marginBottom={phoneScreen ? 18 : 26}
             />
 
-            <Button
-                data-testid="predator-type-skip-button"
-                variant="subtle"
-                color="gray"
-                onClick={skipPredatorType}
-            >
-                Skip predator type
-            </Button>
-
             {CATEGORIES.map((meta) => (
                 <Box key={meta.label} px={phoneScreen ? 4 : 12}>
                     <CategoryHeading
@@ -334,6 +325,29 @@ const PredatorTypePicker = ({
                     </SimpleGrid>
                 </Box>
             ))}
+
+            <Group justify="center" mt="sm">
+                <Button
+                    data-testid="predator-type-skip-button"
+                    variant="transparent"
+                    color="gray"
+                    size="xs"
+                    onClick={skipPredatorType}
+                    styles={{
+                        root: {
+                            color: rgba(RAW_GREY, 0.5),
+                            fontWeight: 500,
+                            letterSpacing: "0.03em",
+                            "&:hover": {
+                                background: rgba(RAW_GREY, 0.06),
+                                color: rgba(RAW_GREY, 0.8)
+                            }
+                        }
+                    }}
+                >
+                    Skip predator type
+                </Button>
+            </Group>
         </Stack>
     )
 
