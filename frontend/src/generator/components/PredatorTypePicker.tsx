@@ -30,6 +30,7 @@ type PredatorTypePickerProps = {
     discipline: string
     setDiscipline: (discipline: string) => void
     onPredatorTypeChanged: () => void
+    skipPredatorType: () => void
 }
 
 // Build the SegmentedControl value for a stored specialty. Non-custom specialties round-trip
@@ -120,7 +121,8 @@ const PredatorTypePicker = ({
     setSpecialty,
     discipline,
     setDiscipline,
-    onPredatorTypeChanged
+    onPredatorTypeChanged,
+    skipPredatorType
 }: PredatorTypePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
@@ -310,6 +312,15 @@ const PredatorTypePicker = ({
                 description="Choose a predator type that defines your feeding habits"
                 marginBottom={phoneScreen ? 18 : 26}
             />
+
+            <Button
+                data-testid="predator-type-skip-button"
+                variant="subtle"
+                color="gray"
+                onClick={skipPredatorType}
+            >
+                Skip predator type
+            </Button>
 
             {CATEGORIES.map((meta) => (
                 <Box key={meta.label} px={phoneScreen ? 4 : 12}>

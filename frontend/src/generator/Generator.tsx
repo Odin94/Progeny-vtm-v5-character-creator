@@ -2,7 +2,7 @@ import { Text } from "@mantine/core"
 import { useEffect, useState } from "react"
 import posthog from "posthog-js"
 import ErrorBoundary from "../components/ErrorBoundary"
-import { Character } from "../data/Character"
+import { Character, getEmptyCharacter } from "../data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { PredatorTypeName } from "../data/NameSchemas"
 import {
@@ -29,6 +29,8 @@ import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
 import { GeneratorStepId, getNextGeneratorStepId } from "./steps"
 import { feedbackSurveyEvents } from "~/utils/feedbackSurveys"
+import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAndFlawsResolution"
+import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "./utils"
 
 export type GeneratorProps = {
     character: Character
@@ -38,12 +40,7 @@ export type GeneratorProps = {
     setSelectedStep: (step: GeneratorStepId) => void
 }
 
-const Generator = ({
-    character,
-    setCharacter,
-    selectedStep,
-    setSelectedStep
-}: GeneratorProps) => {
+const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: GeneratorProps) => {
     // The predator-type picker is the generator's busiest back-and-forth step, so its in-progress
     // selection lives here rather than in the picker: the picker (and its modal) is unmounted every
     // time another step is shown, and component-local state would be discarded on the way out. Held
@@ -63,8 +60,12 @@ const Generator = ({
     const [generationDraft, setGenerationDraft] = useState<string | null>(() =>
         character.generation ? character.generation.toString() : null
     )
-    const [{ clanPowers: disciplineDraft, predatorPower: predatorDisciplineDraft }, setDisciplinesDraft] =
-        useState(() => getDisciplineDraft(character.disciplines, character.predatorType.pickedDiscipline))
+    const [
+        { clanPowers: disciplineDraft, predatorPower: predatorDisciplineDraft },
+        setDisciplinesDraft
+    ] = useState(() =>
+        getDisciplineDraft(character.disciplines, character.predatorType.pickedDiscipline)
+    )
 
     const clearClanDependentDrafts = () => {
         setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
@@ -75,6 +76,38 @@ const Generator = ({
 
     const clearPredatorTypeDisciplineDraft = () => {
         setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
+    }
+
+    const skipPredatorType = () => {
+        const skippedPredatorType = getEmptyCharacter().predatorType
+        const hadPredatorType =
+            character.predatorType.name !== "" || character.predatorType.pickedDiscipline !== ""
+        const adjustedPickedMeritsAndFlaws = adjustPickedMeritsAndFlawsForPredatorTypeChange(
+            character,
+            skippedPredatorType
+        )
+        const nextCharacter = {
+            ...character,
+            ...adjustedPickedMeritsAndFlaws,
+            predatorType: skippedPredatorType,
+            disciplines: hadPredatorType ? [] : character.disciplines,
+            disciplineLevels: hadPredatorType ? {} : character.disciplineLevels,
+            rituals: hadPredatorType ? [] : character.rituals,
+            ceremonies: hadPredatorType ? [] : character.ceremonies
+        }
+
+        updateHealthAndWillpowerAndBloodPotencyAndHumanity(nextCharacter)
+        setCharacter(nextCharacter)
+        clearPredatorTypeDisciplineDraft()
+        setPickedPredatorType("")
+        setPredatorTypeSpecialty("")
+        setPredatorTypeDiscipline("")
+        trackEvent({
+            action: "predatortype skipped",
+            category: "predator type",
+            label: "no predator type"
+        })
+        nextStep(nextCharacter)
     }
 
     // Fire a PostHog step-view event whenever a generator step is shown. Individual steps only
@@ -158,6 +191,7 @@ const Generator = ({
                         discipline={predatorTypeDiscipline}
                         setDiscipline={setPredatorTypeDiscipline}
                         onPredatorTypeChanged={clearPredatorTypeDisciplineDraft}
+                        skipPredatorType={skipPredatorType}
                     />
                 )
             case "basics":

@@ -791,8 +791,7 @@ const PredatorTypeModal = ({
                                     pickedPredatorType !== character.predatorType.name
                                 const shouldResetDisciplineProgress =
                                     changedPredatorType || changedPickedDiscipline
-                                updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-                                setCharacter({
+                                const nextCharacter = {
                                     ...character,
                                     ...adjustedPickedMeritsAndFlaws,
                                     predatorType: nextPredatorType,
@@ -806,7 +805,9 @@ const PredatorTypeModal = ({
                                     ceremonies: shouldResetDisciplineProgress
                                         ? []
                                         : character.ceremonies
-                                })
+                                }
+                                updateHealthAndWillpowerAndBloodPotencyAndHumanity(nextCharacter)
+                                setCharacter(nextCharacter)
 
                                 if (shouldResetDisciplineProgress) {
                                     onPredatorTypeChanged()

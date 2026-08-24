@@ -6,10 +6,7 @@ import {
     getPowerDisciplineIdentity
 } from "~/utils/homebrewOptions"
 import { Skills, SkillsKey } from "../data/Skills"
-import {
-    attributeNameTo_WoD5EVtt_Key,
-    skillNameTo_WoD5EVtt_Key
-} from "./foundryWoDJsonCreator"
+import { attributeNameTo_WoD5EVtt_Key, skillNameTo_WoD5EVtt_Key } from "./foundryWoDJsonCreator"
 import { calculateBloodPotency } from "~/data/BloodPotency"
 
 // The maximum is exclusive and the minimum is inclusive
@@ -46,7 +43,7 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     // Blood Potency
     const bloodPotency = calculateBloodPotency(character)
 
-    const humanity = 7 + PredatorTypes[character.predatorType.name].humanityChange
+    const humanity = 7 + (PredatorTypes[character.predatorType.name]?.humanityChange ?? 0)
 
     character.maxHealth = health
     character.willpower = willpower

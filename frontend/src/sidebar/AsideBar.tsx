@@ -31,9 +31,16 @@ const AsideBar = ({ selectedStep, setSelectedStep, character }: AsideBarProps) =
             return true
         }
 
-        const stepperKeys = steps
+        const progressKeys = steps
             .map((candidateStep) => candidateStep.progressKey)
             .filter((value): value is NonNullable<typeof value> => value !== undefined)
+        // A predator type is optional, so an empty selection must not prevent moving on to
+        // Basics or returning there after navigating back through the sidebar. Keep it in the
+        // predator-type step's own prerequisites so that step is still gated by Generation.
+        const stepperKeys =
+            step.id === "predator-type"
+                ? progressKeys
+                : progressKeys.filter((progressKey) => progressKey !== "predatorType")
         const index = Math.max(0, stepperKeys.indexOf(step.progressKey) - 1)
 
         for (let i = index; i < stepperKeys.length; i++) {

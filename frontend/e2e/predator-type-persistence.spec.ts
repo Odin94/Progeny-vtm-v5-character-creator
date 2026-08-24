@@ -95,6 +95,29 @@ test("in-progress predator type selection survives leaving and returning to the 
     await expect(page.locator('input[value="potence"]')).toBeChecked()
 })
 
+test("skipping a predator type keeps sidebar navigation to Basics available", async ({ page }) => {
+    await reachPredatorTypeAsBrujah(page)
+
+    await page.getByTestId("predator-type-skip-button").click()
+    await expect(page).toHaveURL(/#basics$/)
+
+    const savedPredatorType = await page.evaluate(
+        () => JSON.parse(localStorage.getItem("character") ?? "{}").predatorType
+    )
+    expect(savedPredatorType).toMatchObject({
+        name: "",
+        pickedDiscipline: "",
+        pickedSpecialties: [],
+        pickedMeritsAndFlaws: []
+    })
+
+    await page.getByTestId("generator-step-predator-type").click()
+    await expect(page).toHaveURL(/#predator-type$/)
+    await expect(page.getByTestId("generator-step-basics")).toBeEnabled()
+    await page.getByTestId("generator-step-basics").click()
+    await expect(page).toHaveURL(/#basics$/)
+})
+
 test("re-opening a confirmed predator type seeds the stored choices, not defaults", async ({
     page
 }) => {
