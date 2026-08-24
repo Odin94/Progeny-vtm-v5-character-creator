@@ -1,4 +1,5 @@
 import { Group, Stack, Text } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { memo, startTransition, useRef, useMemo, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import "./Pips.css"
@@ -23,6 +24,7 @@ type PipsProps = {
     field?: string
     readOnly?: boolean
     instant?: boolean
+    mobileColumns?: number
     onLevelChange?: (level: number) => void
 }
 
@@ -36,8 +38,10 @@ const Pips = ({
     field,
     readOnly = false,
     instant = false,
+    mobileColumns,
     onLevelChange
 }: PipsProps) => {
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const blockedWarningIdRef = useRef(0)
     // Keep callback-driven pips responsive while the parent character update renders the rest of
     // the sheet. The stored value catches up in a transition and then clears this local preview.
@@ -321,7 +325,17 @@ const Pips = ({
 
     return (
         <Stack gap={2} style={{ position: "relative", overflow: "visible" }}>
-            <Group gap={4}>
+            <Group
+                gap={4}
+                style={
+                    phoneScreen && mobileColumns
+                        ? {
+                              display: "grid",
+                              gridTemplateColumns: `repeat(${mobileColumns}, max-content)`
+                          }
+                        : undefined
+                }
+            >
                 {Array.from({ length: maxLevel }, (_, index) => (
                     <PipButton
                         key={index}
@@ -331,7 +345,9 @@ const Pips = ({
                         isFilling={isFilling}
                         onClick={readOnly ? undefined : () => handlePipClick(index)}
                         style={
-                            (index + 1) % 5 === 0 && index < maxLevel - 1
+                            !(phoneScreen && mobileColumns) &&
+                            (index + 1) % 5 === 0 &&
+                            index < maxLevel - 1
                                 ? { marginRight: 8 }
                                 : undefined
                         }
@@ -381,6 +397,7 @@ export default memo(Pips, (prev, next) => {
         prev.field === next.field &&
         prev.readOnly === next.readOnly &&
         prev.instant === next.instant &&
+        prev.mobileColumns === next.mobileColumns &&
         prev.onLevelChange === next.onLevelChange &&
         getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
     )

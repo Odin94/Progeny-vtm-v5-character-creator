@@ -55,6 +55,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                         level={character.bloodPotency}
                         maxLevel={10}
                         minLevel={0}
+                        mobileColumns={5}
                         options={options}
                         field="bloodPotency"
                     />
