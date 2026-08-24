@@ -88,9 +88,7 @@ const DisciplinesPicker = ({
 }: DisciplinesPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
     const [hoveredTakeButton, setHoveredTakeButton] = useState<string | null>(null)
-    const [blockedPowerAttempts, setBlockedPowerAttempts] = useState<Set<string>>(
-        () => new Set()
-    )
+    const [blockedPowerAttempts, setBlockedPowerAttempts] = useState<Set<string>>(() => new Set())
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
 
     let allPickedPowers = pickedPredatorTypePower
@@ -114,6 +112,7 @@ const DisciplinesPicker = ({
             )
             .map((item) => ({ item, collection }))
     )
+    const hasPredatorType = character.predatorType.name !== ""
     const predatorTypeDiscipline = disciplines[character.predatorType.pickedDiscipline]
 
     const isPicked = (power: Power) =>
@@ -135,7 +134,7 @@ const DisciplinesPicker = ({
     const confirmReason = (() => {
         if (pickedPowers.length < 2) return "Pick two clan disciplines"
         if (!allPowersPicked()) return "Pick another clan discipline"
-        if (!pickedPredatorTypePower) return "Pick predator type discipline"
+        if (hasPredatorType && !pickedPredatorTypePower) return "Pick predator type discipline"
         return undefined
     })()
     const confirmDisabled = Boolean(confirmReason)
@@ -254,8 +253,7 @@ const DisciplinesPicker = ({
         const showUndo = picked && !isPickedAsPredatorType && !isPickedAsClan
         const takeButtonHoverKey = `${isForPredatorType ? "predator" : "clan"}-${getPowerIdentity(power)}`
         const takeButtonHovered = hoveredTakeButton === takeButtonHoverKey
-        const showBlockedReasons =
-            takeDisabled && blockedPowerAttempts.has(takeButtonHoverKey)
+        const showBlockedReasons = takeDisabled && blockedPowerAttempts.has(takeButtonHoverKey)
 
         return (
             <div
@@ -723,8 +721,9 @@ const DisciplinesPicker = ({
                                 color: rgba(RAW_GREY, 0.5)
                             }}
                         >
-                            2 powers in one discipline · 1 in another · 1 from your predator type (
-                            {upcase(character.predatorType.pickedDiscipline)})
+                            {hasPredatorType
+                                ? `2 powers in one discipline · 1 in another · 1 from your predator type (${upcase(character.predatorType.pickedDiscipline)})`
+                                : "2 powers in one discipline · 1 in another"}
                         </Text>
                         <Group gap="sm" justify="center" mt={6}>
                             <Badge
@@ -734,13 +733,15 @@ const DisciplinesPicker = ({
                             >
                                 Clan powers {pickedPowers.length}/3
                             </Badge>
-                            <Badge
-                                color={pickedPredatorTypePower ? "green" : "red"}
-                                variant="light"
-                                size="lg"
-                            >
-                                Predator power {pickedPredatorTypePower ? 1 : 0}/1
-                            </Badge>
+                            {hasPredatorType ? (
+                                <Badge
+                                    color={pickedPredatorTypePower ? "green" : "red"}
+                                    variant="light"
+                                    size="lg"
+                                >
+                                    Predator power {pickedPredatorTypePower ? 1 : 0}/1
+                                </Badge>
+                            ) : null}
                         </Group>
                     </Stack>
 
@@ -802,33 +803,37 @@ const DisciplinesPicker = ({
                             </>
                         ) : null}
 
-                        <GeneratorSectionDivider
-                            label={`Predator Type · ${upcase(character.predatorType.pickedDiscipline)}`}
-                            lineHeight={1}
-                            accentAlpha={0.38}
-                            titleSize="0.88rem"
-                            marginY="sm"
-                        />
+                        {hasPredatorType ? (
+                            <>
+                                <GeneratorSectionDivider
+                                    label={`Predator Type · ${upcase(character.predatorType.pickedDiscipline)}`}
+                                    lineHeight={1}
+                                    accentAlpha={0.38}
+                                    titleSize="0.88rem"
+                                    marginY="sm"
+                                />
 
-                        <Accordion
-                            variant="separated"
-                            styles={{
-                                item: {
-                                    background: rgba(RAW_RED, 0.04),
-                                    border: `1px solid ${rgba(RAW_RED, 0.15)}`,
-                                    borderRadius: 10
-                                },
-                                panel: {
-                                    paddingTop: 4
-                                }
-                            }}
-                        >
-                            {renderDisciplineAccordionItem(
-                                character.predatorType.pickedDiscipline,
-                                predatorTypeDiscipline,
-                                true
-                            )}
-                        </Accordion>
+                                <Accordion
+                                    variant="separated"
+                                    styles={{
+                                        item: {
+                                            background: rgba(RAW_RED, 0.04),
+                                            border: `1px solid ${rgba(RAW_RED, 0.15)}`,
+                                            borderRadius: 10
+                                        },
+                                        panel: {
+                                            paddingTop: 4
+                                        }
+                                    }}
+                                >
+                                    {renderDisciplineAccordionItem(
+                                        character.predatorType.pickedDiscipline,
+                                        predatorTypeDiscipline,
+                                        true
+                                    )}
+                                </Accordion>
+                            </>
+                        ) : null}
 
                         <Stack gap="xs" align="center" mt="xl">
                             {confirmReason ? (
@@ -858,16 +863,12 @@ const DisciplinesPicker = ({
                                         boxShadow: confirmDisabled
                                             ? "none"
                                             : generatorConfirmButtonStyles.root.boxShadow,
-                                        color: confirmDisabled
-                                            ? rgba(RAW_GREY, 0.55)
-                                            : undefined,
+                                        color: confirmDisabled ? rgba(RAW_GREY, 0.55) : undefined,
                                         cursor: confirmDisabled ? "not-allowed" : undefined
                                     }
                                 }}
                                 onClick={() => {
-                                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(
-                                        character
-                                    )
+                                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                     const pickedDisciplineIdentities = new Set(
                                         allPickedPowers.map(getPowerDisciplineIdentity)
                                     )
@@ -877,13 +878,10 @@ const DisciplinesPicker = ({
                                     const pickedPowerIdentities = new Set(
                                         allPickedPowers.map(getPowerIdentity)
                                     )
-                                    const addedPowers = allPickedPowers
-                                        .filter(
-                                            (power) =>
-                                                !existingPowerIdentities.has(
-                                                    getPowerIdentity(power)
-                                                )
-                                        )
+                                    const addedPowers = allPickedPowers.filter(
+                                        (power) =>
+                                            !existingPowerIdentities.has(getPowerIdentity(power))
+                                    )
                                     const removedPowers = character.disciplines.filter(
                                         (power) =>
                                             !pickedPowerIdentities.has(getPowerIdentity(power))
@@ -917,35 +915,32 @@ const DisciplinesPicker = ({
                                     const retainedCustomDisciplines = Object.entries(
                                         character.customDisciplines
                                     ).filter(([, definition]) => !definition.homebrewSource)
-                                    const pickedHomebrewDisciplines =
-                                        homebrewDisciplineItems
-                                            .map(({ item, collection }) => {
-                                                const homebrewSource = getHomebrewSource(
-                                                    item,
-                                                    collection
-                                                )
-                                                const identity = `homebrew:${homebrewSource.collectionId}:${homebrewSource.itemId}`
-                                                return [
-                                                    identity,
-                                                    {
-                                                        name: item.name,
-                                                        summary: item.summary,
-                                                        logo: item.logo,
-                                                        homebrewSource
-                                                    }
-                                                ] as const
-                                            })
-                                            .filter(([identity]) =>
-                                                pickedDisciplineIdentities.has(identity)
+                                    const pickedHomebrewDisciplines = homebrewDisciplineItems
+                                        .map(({ item, collection }) => {
+                                            const homebrewSource = getHomebrewSource(
+                                                item,
+                                                collection
                                             )
+                                            const identity = `homebrew:${homebrewSource.collectionId}:${homebrewSource.itemId}`
+                                            return [
+                                                identity,
+                                                {
+                                                    name: item.name,
+                                                    summary: item.summary,
+                                                    logo: item.logo,
+                                                    homebrewSource
+                                                }
+                                            ] as const
+                                        })
+                                        .filter(([identity]) =>
+                                            pickedDisciplineIdentities.has(identity)
+                                        )
                                     const updatedCharacter = {
                                         ...character,
                                         disciplines: allPickedPowers,
                                         disciplineLevels,
                                         customDisciplines: {
-                                            ...Object.fromEntries(
-                                                retainedCustomDisciplines
-                                            ),
+                                            ...Object.fromEntries(retainedCustomDisciplines),
                                             ...Object.fromEntries(pickedHomebrewDisciplines)
                                         },
                                         rituals: containsBloodSorcery(allPickedPowers)

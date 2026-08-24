@@ -118,6 +118,25 @@ test("skipping a predator type keeps sidebar navigation to Basics available", as
     await expect(page).toHaveURL(/#basics$/)
 })
 
+test("a skipped predator type does not block discipline confirmation", async ({ page }) => {
+    await reachPredatorTypeAsBrujah(page)
+
+    await page.getByTestId("predator-type-skip-button").click()
+    await page.getByTestId("basics-confirm-button").click()
+    await expect(page).toHaveURL(/#disciplines$/)
+    await expect(page.getByText(/1 from your predator type/)).toHaveCount(0)
+
+    await page.getByTestId("discipline-celerity-accordion").click()
+    await page.getByTestId("take-power-cat's-grace-button").click()
+    await page.getByTestId("take-power-rapid-reflexes-button").click()
+    await page.getByTestId("discipline-presence-accordion").click()
+    await page.getByTestId("take-power-awe-button").click()
+    await expect(page.getByTestId("disciplines-confirm-button")).toBeEnabled()
+
+    await page.getByTestId("disciplines-confirm-button").click()
+    await expect(page).toHaveURL(/#touchstones$/)
+})
+
 test("re-opening a confirmed predator type seeds the stored choices, not defaults", async ({
     page
 }) => {

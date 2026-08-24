@@ -77,15 +77,30 @@ describe("Disciplines confirm reason", () => {
     })
 
     it("names the predator pick once the clan powers are complete", () => {
-        renderPicker([
-            power("A", "potence"),
-            power("B", "potence"),
-            power("C", "blood sorcery")
-        ])
+        renderPicker([power("A", "potence"), power("B", "potence"), power("C", "blood sorcery")])
 
         expect(screen.getByTestId("disciplines-confirm-reason")).toHaveTextContent(
             "Pick predator type discipline"
         )
+    })
+
+    it("does not require a predator power when the predator type was skipped", () => {
+        const character = getBasicTestCharacter()
+        character.predatorType = {
+            name: "",
+            pickedDiscipline: "",
+            pickedSpecialties: [],
+            pickedMeritsAndFlaws: []
+        }
+
+        renderPicker(
+            [power("A", "potence"), power("B", "potence"), power("C", "blood sorcery")],
+            undefined,
+            character
+        )
+
+        expect(screen.getByTestId("disciplines-confirm-button")).toBeEnabled()
+        expect(screen.queryByText(/Predator power/)).not.toBeInTheDocument()
     })
 
     it("drops the reason line once every pick is made", () => {

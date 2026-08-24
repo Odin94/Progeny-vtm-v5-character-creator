@@ -98,7 +98,11 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
 
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(nextCharacter)
         setCharacter(nextCharacter)
-        clearPredatorTypeDisciplineDraft()
+        if (hadPredatorType) {
+            clearPredatorTypeDisciplineDraft()
+        } else {
+            setDisciplinesDraft((current) => ({ ...current, predatorPower: undefined }))
+        }
         setPickedPredatorType("")
         setPredatorTypeSpecialty("")
         setPredatorTypeDiscipline("")

@@ -18,7 +18,7 @@ vi.mock("~/generator/components/DisciplinesPicker", () => ({
 }))
 
 vi.mock("~/generator/components/PredatorTypePicker", () => ({
-    default: (props: { onPredatorTypeChanged: () => void }) => {
+    default: (props: { onPredatorTypeChanged: () => void; skipPredatorType: () => void }) => {
         renderPredatorTypePicker(props)
         return null
     }
@@ -89,6 +89,41 @@ describe("Generator discipline draft", () => {
                 pickedPowers: [],
                 pickedPredatorTypePower: undefined
             })
+        )
+    })
+
+    it("preserves clan discipline picks when skipping an already-empty predator type", () => {
+        const character = getBasicTestCharacter()
+        character.predatorType = {
+            name: "",
+            pickedDiscipline: "",
+            pickedSpecialties: [],
+            pickedMeritsAndFlaws: []
+        }
+        const { rerender } = render(
+            <Generator
+                character={character}
+                setCharacter={vi.fn()}
+                selectedStep="predator-type"
+                setSelectedStep={vi.fn()}
+            />
+        )
+
+        act(() => {
+            renderPredatorTypePicker.mock.calls[0][0].skipPredatorType()
+        })
+
+        rerender(
+            <Generator
+                character={character}
+                setCharacter={vi.fn()}
+                selectedStep="disciplines"
+                setSelectedStep={vi.fn()}
+            />
+        )
+
+        expect(renderDisciplinesPicker).toHaveBeenLastCalledWith(
+            expect.objectContaining({ pickedPowers: character.disciplines })
         )
     })
 })
