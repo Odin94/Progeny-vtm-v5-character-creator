@@ -48,6 +48,12 @@ export default function CreatorPage() {
     globals.isPhoneScreen = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     globals.isSmallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
     const computedColorScheme = useComputedColorScheme("dark", { getInitialValueInEffect: true })
+    // Firefox mobile's browser chrome can cover the bottom of a 100vh layout. Dynamic viewport
+    // units follow the currently visible viewport, keeping the generator's action buttons usable.
+    const creatorViewportHeight = globals.isPhoneScreen ? "100dvh" : "100vh"
+    const creatorContentHeight = globals.isPhoneScreen
+        ? "calc(100dvh - 52px)"
+        : "calc(100vh - 52px)"
 
     useEffect(() => {
         globals.largeFontSize = globals.isPhoneScreen ? "21px" : "30px"
@@ -396,7 +402,7 @@ export default function CreatorPage() {
                 header={{ height: 52 }}
                 styles={(theme) => ({
                     root: {
-                        height: "100vh"
+                        height: creatorViewportHeight
                     },
                     header: {
                         background: "rgba(8, 7, 8, 0.7)",
@@ -407,7 +413,7 @@ export default function CreatorPage() {
                     },
                     navbar: {
                         top: 52,
-                        height: "calc(100vh - 52px)",
+                        height: creatorContentHeight,
                         background: "rgba(8, 7, 8, 0.72)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
@@ -415,7 +421,7 @@ export default function CreatorPage() {
                     },
                     aside: {
                         top: 52,
-                        height: "calc(100vh - 52px)",
+                        height: creatorContentHeight,
                         background: "rgba(8, 7, 8, 0.72)",
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
