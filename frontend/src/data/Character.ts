@@ -234,6 +234,39 @@ export const getEmptyCharacter = (): Character => {
     }
 }
 
+// Serialise with sorted keys so the comparison does not depend on key order.
+// A stored character can hold the same values in a different key order and must
+// still count as equal.
+const stableStringify = (value: unknown): string => {
+    if (Array.isArray(value)) {
+        return `[${value.map(stableStringify).join(",")}]`
+    }
+    if (value !== null && typeof value === "object") {
+        const record = value as Record<string, unknown>
+        const entries = Object.keys(record)
+            .sort()
+            .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`)
+        return `{${entries.join(",")}}`
+    }
+    return JSON.stringify(value) ?? "null"
+}
+
+// Reports whether the character holds no meaningful content. Identity fields
+// (id, name) and version fields are ignored, so an unnamed draft with no other
+// changes counts as empty.
+export const isCharacterEmpty = (character: Character): boolean => {
+    const emptyCharacter = getEmptyCharacter()
+    return (
+        stableStringify({
+            ...character,
+            id: "",
+            name: "",
+            version: emptyCharacter.version,
+            characterVersion: emptyCharacter.characterVersion
+        }) === stableStringify(emptyCharacter)
+    )
+}
+
 export const containsBloodSorcery = (powers: Power[]) =>
     powers.some((power) => getPowerDisciplineIdentity(power) === "official:blood sorcery")
 
