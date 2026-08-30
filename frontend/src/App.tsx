@@ -33,7 +33,11 @@ import batWoman from "./resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsp
 import alley from "./resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import { useCharacterLocalStorage } from "./hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
-import { getEmptyCharacter, type Character as CharacterType } from "./data/Character"
+import {
+    getEmptyCharacter,
+    isCharacterEmpty,
+    type Character as CharacterType
+} from "./data/Character"
 import { clearStoredAuthReturnTo, getSafeAuthReturnTo, useAuth } from "./hooks/useAuth"
 import { useCharacters } from "./hooks/useCharacters"
 import { api } from "./utils/api"
@@ -135,7 +139,6 @@ function App() {
     const userCharacters = (
         (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
     ).filter((candidate) => !candidate.shared)
-    const emptyCharacter = getEmptyCharacter()
 
     const [showAsideBar, setShowAsideBar] = useState(!globals.isSmallScreen)
     useEffect(() => {
@@ -220,14 +223,7 @@ function App() {
         await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
     }
 
-    const isCurrentCharacterEmpty = () =>
-        JSON.stringify({
-            ...character,
-            id: "",
-            name: "",
-            version: emptyCharacter.version,
-            characterVersion: emptyCharacter.characterVersion
-        }) === JSON.stringify(emptyCharacter)
+    const isCurrentCharacterEmpty = () => isCharacterEmpty(character)
 
     const completePendingSwitchAction = async (action: PendingSwitchAction) => {
         if (!action) {

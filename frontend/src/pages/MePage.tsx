@@ -44,11 +44,12 @@ import ConfirmActionModal, {
     confirmationModalCancelButtonStyles,
     confirmationModalWithHeaderStyles
 } from "~/components/ConfirmActionModal"
+import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
-import { Character as CharacterType, getEmptyCharacter } from "~/data/Character"
+import { Character as CharacterType, getEmptyCharacter, isCharacterEmpty } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import type { DisciplineName } from "~/data/NameSchemas"
 import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
@@ -106,7 +107,7 @@ import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
 import { getCharacterVitals, isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
-import { trackFeatureGuideOpened } from "~/utils/analytics"
+import { trackCharacterSwitchBlockedUnnamed, trackFeatureGuideOpened } from "~/utils/analytics"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 const topbarHeight = 52
@@ -350,6 +351,13 @@ const MePage = () => {
         name: string
         data: CharacterType
     } | null>(null)
+    const [pendingSwitchTarget, setPendingSwitchTarget] = useState<{
+        id: string
+        name: string
+        data: CharacterType
+    } | null>(null)
+    const [switchNameValue, setSwitchNameValue] = useState("")
+    const [isSavingBeforeSwitch, setIsSavingBeforeSwitch] = useState(false)
     const [newCharacterName, setNewCharacterName] = useState("")
     const [shareCharacterModalOpened, setShareCharacterModalOpened] = useState(false)
     const [characterToShare, setCharacterToShare] = useState<{
@@ -789,15 +797,7 @@ const MePage = () => {
     const handleLoadCharacter = async (char: Character) => {
         const charData = char.data as CharacterType | undefined
         if (!charData) return
-        const emptyCharacter = getEmptyCharacter()
-        const hasCurrentCharacterChanges =
-            JSON.stringify({
-                ...character,
-                id: "",
-                name: "",
-                version: emptyCharacter.version,
-                characterVersion: emptyCharacter.characterVersion
-            }) !== JSON.stringify(emptyCharacter)
+        const hasCurrentCharacterChanges = !isCharacterEmpty(character)
 
         // Check if we're loading the same character as the current one
         const isSameCharacter = char.id === character.id && char.id
@@ -846,52 +846,17 @@ const MePage = () => {
             !currentCharacter?.shared &&
             (character.name.trim() || hasCurrentCharacterChanges)
         ) {
+            // An unnamed draft with changes cannot be saved. Open a recoverable prompt so the
+            // user can name it or discard it, instead of blocking the load.
+            if (!character.name.trim()) {
+                trackCharacterSwitchBlockedUnnamed()
+                setSwitchNameValue(character.name)
+                setPendingSwitchTarget({ id: char.id, name: char.name, data: charData })
+                return
+            }
+
             try {
-                if (!character.name.trim()) {
-                    throw new Error("The current character needs a name before it can be saved")
-                }
-
-                if (currentCharacter) {
-                    const response = await api.getCharacter(currentCharacter.id)
-                    const savedCharacter = parseStoredCharacter((response as any).data)
-                    const localVersion = character.characterVersion ?? 0
-
-                    if (savedCharacter.characterVersion > localVersion) {
-                        throw new Error(
-                            `"${character.name}" has a newer version in the database. Resolve that conflict before switching characters.`
-                        )
-                    }
-                }
-
-                const savedCharacter = currentCharacter
-                    ? await updateCharacterMutation.mutateAsync({
-                          id: currentCharacter.id,
-                          data: {
-                              name: character.name,
-                              data: character,
-                              version: character.version
-                          }
-                      })
-                    : await createCharacterMutation.mutateAsync({
-                          name: character.name,
-                          data: character,
-                          version: character.version
-                      })
-                const saved = savedCharacter as {
-                    id: string
-                    data?: { characterVersion?: number }
-                    characterVersion?: number
-                }
-
-                setCharacter({
-                    ...character,
-                    id: saved.id,
-                    characterVersion:
-                        saved.characterVersion ??
-                        saved.data?.characterVersion ??
-                        character.characterVersion ??
-                        0
-                } as CharacterType & { id: string; characterVersion: number })
+                await saveCharacterBeforeSwitch(character, currentCharacter)
             } catch (error) {
                 console.warn("Failed to save current character before loading:", error)
                 const reason = error instanceof Error ? error.message : "Unknown save error"
@@ -910,6 +875,105 @@ const MePage = () => {
             name: char.name,
             data: charData
         })
+    }
+
+    // Saves the current in-memory draft before switching. Throws on a version conflict or a
+    // failed save so the caller can surface it. Shared by the direct load path and the
+    // name-before-switch prompt.
+    const saveCharacterBeforeSwitch = async (
+        characterToSave: CharacterType,
+        currentCharacter: Character | undefined
+    ) => {
+        if (currentCharacter) {
+            const response = await api.getCharacter(currentCharacter.id)
+            const savedCharacter = parseStoredCharacter((response as any).data)
+            const localVersion = characterToSave.characterVersion ?? 0
+
+            if (savedCharacter.characterVersion > localVersion) {
+                throw new Error(
+                    `"${characterToSave.name}" has a newer version in the database. Resolve that conflict before switching characters.`
+                )
+            }
+        }
+
+        const savedCharacter = currentCharacter
+            ? await updateCharacterMutation.mutateAsync({
+                  id: currentCharacter.id,
+                  data: {
+                      name: characterToSave.name,
+                      data: characterToSave,
+                      version: characterToSave.version
+                  }
+              })
+            : await createCharacterMutation.mutateAsync({
+                  name: characterToSave.name,
+                  data: characterToSave,
+                  version: characterToSave.version
+              })
+        const saved = savedCharacter as {
+            id: string
+            data?: { characterVersion?: number }
+            characterVersion?: number
+        }
+
+        setCharacter({
+            ...characterToSave,
+            id: saved.id,
+            characterVersion:
+                saved.characterVersion ??
+                saved.data?.characterVersion ??
+                characterToSave.characterVersion ??
+                0
+        } as CharacterType & { id: string; characterVersion: number })
+    }
+
+    const closePendingSwitch = () => {
+        setPendingSwitchTarget(null)
+        setSwitchNameValue("")
+        setIsSavingBeforeSwitch(false)
+    }
+
+    const handleSaveAndContinueSwitch = async () => {
+        if (!pendingSwitchTarget) return
+
+        if (!switchNameValue.trim()) {
+            notifications.show({
+                title: "Name required",
+                message: "Enter a character name before saving and switching.",
+                color: "red"
+            })
+            return
+        }
+
+        setIsSavingBeforeSwitch(true)
+
+        try {
+            const namedCharacter = { ...character, name: switchNameValue.trim() }
+            const currentCharacter = character.id
+                ? userCharacters.find((candidate) => candidate.id === character.id)
+                : undefined
+            await saveCharacterBeforeSwitch(namedCharacter, currentCharacter)
+
+            const target = pendingSwitchTarget
+            closePendingSwitch()
+            await performLoadCharacter(target)
+        } catch (error) {
+            const reason = error instanceof Error ? error.message : "Unknown save error"
+            notifications.show({
+                title: "Error saving character",
+                message: reason,
+                color: "red"
+            })
+            setIsSavingBeforeSwitch(false)
+        }
+    }
+
+    const handleDiscardAndContinueSwitch = async () => {
+        if (!pendingSwitchTarget) return
+
+        const target = pendingSwitchTarget
+        closePendingSwitch()
+        await performLoadCharacter(target)
     }
 
     const handleConfirmLoadSameCharacter = () => {
@@ -2276,6 +2340,17 @@ const MePage = () => {
                 title="Load Character?"
                 body="This will overwrite the current character with the selected file. This action cannot be undone."
                 confirmLabel="Load"
+            />
+
+            <NameCharacterBeforeSwitchModal
+                opened={pendingSwitchTarget !== null}
+                pendingActionLabel="switch characters"
+                nameValue={switchNameValue}
+                setNameValue={setSwitchNameValue}
+                onClose={closePendingSwitch}
+                onSaveAndContinue={handleSaveAndContinueSwitch}
+                onDiscardAndContinue={handleDiscardAndContinueSwitch}
+                isSaving={isSavingBeforeSwitch}
             />
 
             <ConfirmActionModal
