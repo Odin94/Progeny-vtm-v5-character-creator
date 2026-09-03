@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api } from "../utils/api"
+import { coterieHttp } from "../utils/http/coteries"
 
 export const useCoteries = (enabled = true) => {
     return useQuery({
         queryKey: ["coteries"],
-        queryFn: () => api.getCoteries(),
+        queryFn: coterieHttp.getAll,
         enabled
     })
 }
@@ -12,7 +12,7 @@ export const useCoteries = (enabled = true) => {
 export const useCoterieVitals = (enabled = true) => {
     return useQuery({
         queryKey: ["coterieVitals"],
-        queryFn: () => api.getCoterieVitals(),
+        queryFn: coterieHttp.getVitals,
         enabled,
         refetchInterval: enabled ? 2000 : false,
         refetchIntervalInBackground: false,
@@ -23,7 +23,7 @@ export const useCoterieVitals = (enabled = true) => {
 export const useCoterie = (id: string | null) => {
     return useQuery({
         queryKey: ["coteries", id],
-        queryFn: () => (id ? api.getCoterie(id) : null),
+        queryFn: () => (id ? coterieHttp.get(id) : null),
         enabled: !!id
     })
 }
@@ -31,7 +31,7 @@ export const useCoterie = (id: string | null) => {
 export const useCoterieInvites = (coterieId: string | null) => {
     return useQuery({
         queryKey: ["coteries", coterieId, "invites"],
-        queryFn: () => (coterieId ? api.getCoterieInvites(coterieId) : []),
+        queryFn: () => (coterieId ? coterieHttp.getInvites(coterieId) : []),
         enabled: !!coterieId
     })
 }
@@ -39,7 +39,7 @@ export const useCoterieInvites = (coterieId: string | null) => {
 export const useCoterieNotes = (coterieId: string | null) => {
     return useQuery({
         queryKey: ["coteries", coterieId, "notes"],
-        queryFn: () => (coterieId ? api.getCoterieNotes(coterieId) : null),
+        queryFn: () => (coterieId ? coterieHttp.getNotes(coterieId) : null),
         enabled: !!coterieId
     })
 }
@@ -48,7 +48,7 @@ export const useCreateCoterie = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: { name: string }) => api.createCoterie(data),
+        mutationFn: coterieHttp.create,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
@@ -61,7 +61,7 @@ export const useUpdateCoterie = () => {
 
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: { name?: string } }) =>
-            api.updateCoterie(id, data),
+            coterieHttp.update(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.id] })
@@ -74,7 +74,7 @@ export const useDeleteCoterie = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => api.deleteCoterie(id),
+        mutationFn: coterieHttp.remove,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
@@ -86,7 +86,7 @@ export const useCreateCoterieInvite = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (coterieId: string) => api.createCoterieInvite(coterieId),
+        mutationFn: coterieHttp.createInvite,
         onSuccess: (_, coterieId) => {
             queryClient.invalidateQueries({ queryKey: ["coteries", coterieId, "invites"] })
         }
@@ -98,7 +98,7 @@ export const useRevokeCoterieInvite = () => {
 
     return useMutation({
         mutationFn: ({ coterieId, inviteId }: { coterieId: string; inviteId: string }) =>
-            api.revokeCoterieInvite(coterieId, inviteId),
+            coterieHttp.revokeInvite(coterieId, inviteId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({
                 queryKey: ["coteries", variables.coterieId, "invites"]
@@ -111,7 +111,7 @@ export const useAcceptCoterieInvite = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (token: string) => api.acceptCoterieInvite(token),
+        mutationFn: coterieHttp.acceptInvite,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
         }
@@ -123,7 +123,7 @@ export const useRemoveCoteriePlayer = () => {
 
     return useMutation({
         mutationFn: ({ coterieId, membershipId }: { coterieId: string; membershipId: string }) =>
-            api.removeCoteriePlayer(coterieId, membershipId),
+            coterieHttp.removePlayer(coterieId, membershipId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
@@ -136,7 +136,7 @@ export const useSaveCoterieNotes = () => {
 
     return useMutation({
         mutationFn: ({ coterieId, content }: { coterieId: string; content: string }) =>
-            api.saveCoterieNotes(coterieId, { content }),
+            coterieHttp.saveNotes(coterieId, content),
         onSuccess: (data, variables) => {
             queryClient.setQueryData(["coteries", variables.coterieId, "notes"], data)
         }
@@ -148,7 +148,7 @@ export const useRestoreCoterieNoteVersion = () => {
 
     return useMutation({
         mutationFn: ({ coterieId, versionId }: { coterieId: string; versionId: string }) =>
-            api.restoreCoterieNoteVersion(coterieId, versionId),
+            coterieHttp.restoreNote(coterieId, versionId),
         onSuccess: (data, variables) => {
             queryClient.setQueryData(["coteries", variables.coterieId, "notes"], data)
         }
@@ -160,7 +160,7 @@ export const useAddCharacterToCoterie = () => {
 
     return useMutation({
         mutationFn: ({ coterieId, characterId }: { coterieId: string; characterId: string }) =>
-            api.addCharacterToCoterie(coterieId, { characterId }),
+            coterieHttp.addCharacter(coterieId, characterId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
@@ -174,7 +174,7 @@ export const useRemoveCharacterFromCoterie = () => {
 
     return useMutation({
         mutationFn: ({ coterieId, characterId }: { coterieId: string; characterId: string }) =>
-            api.removeCharacterFromCoterie(coterieId, characterId),
+            coterieHttp.removeCharacter(coterieId, characterId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })

@@ -6,9 +6,9 @@ Reference doc for implementation detail not covered in `frontend/AGENTS.md`.
 
 The generator is coordinated by `src/routes/index.tsx` → `src/generator/Generator.tsx`, with step navigation in `src/sidebar/AsideBar.tsx`.
 
-`Generator.tsx` maps a numeric `selectedStep` to a component via a switch statement. **The Blood Sorcery ritual step (index 8) is conditional.** When the character does not have Blood Sorcery disciplines, the step is hidden in the sidebar but the switch indices still assume it exists. `Generator.tsx` applies a `patchedSelectedStep` offset (+1 when `selectedStep >= 8` and Blood Sorcery is absent) to keep the switch aligned with the sidebar.
+`src/generator/steps.ts` is the generator-navigation module. It owns the stable step IDs, conditional visibility, normalization of unavailable steps, and next-step selection. `Generator.tsx` maps those IDs to picker implementations, while `AsideBar.tsx` renders the visible list from the same module.
 
-Adding or reordering steps near index 8 requires updating both the switch and the stepper, and verifying the behavior for characters with and without Blood Sorcery. See `containsBloodSorcery` in `src/data/Character.ts`.
+The Blood Sorcery ritual and Oblivion ceremony steps are conditional. When adding or reordering a step, update `allGeneratorSteps` and its visibility rule in `steps.ts`, then add coverage for the affected character states. Do not reintroduce numeric step offsets: callers should work exclusively with `GeneratorStepId`.
 
 ## Networking detail
 

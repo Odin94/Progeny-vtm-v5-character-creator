@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api } from "../utils/api"
+import { characterHttp } from "../utils/http/characters"
 import type { CreateCharacterPayload, UpdateCharacterPayload } from "../utils/characterApi"
 
 export const useCharacters = (enabled = true) => {
     return useQuery({
         queryKey: ["characters"],
-        queryFn: () => api.getCharacters(),
+        queryFn: characterHttp.getAll,
         enabled
     })
 }
@@ -13,14 +13,14 @@ export const useCharacters = (enabled = true) => {
 export const useCharacter = (id: string | null) => {
     return useQuery({
         queryKey: ["characters", id],
-        queryFn: () => (id ? api.getCharacter(id) : null)
+        queryFn: () => (id ? characterHttp.get(id) : null)
     })
 }
 
 export const useCharacterNotes = (characterId: string | null, enabled = true) => {
     return useQuery({
         queryKey: ["characters", characterId, "notes"],
-        queryFn: () => (characterId ? api.getCharacterNotes(characterId) : null),
+        queryFn: () => (characterId ? characterHttp.getNotes(characterId) : null),
         enabled: enabled && !!characterId
     })
 }
@@ -29,7 +29,7 @@ export const useCreateCharacter = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: CreateCharacterPayload) => api.createCharacter(data),
+        mutationFn: characterHttp.create,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
@@ -43,7 +43,7 @@ export const useUpdateCharacter = () => {
 
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: UpdateCharacterPayload }) =>
-            api.updateCharacter(id, data),
+            characterHttp.update(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["characters", variables.id] })
@@ -57,7 +57,7 @@ export const useDeleteCharacter = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: string) => api.deleteCharacter(id),
+        mutationFn: characterHttp.remove,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
@@ -71,7 +71,7 @@ export const useSaveCharacterNotes = () => {
 
     return useMutation({
         mutationFn: ({ characterId, content }: { characterId: string; content: string }) =>
-            api.saveCharacterNotes(characterId, { content }),
+            characterHttp.saveNotes(characterId, content),
         onSuccess: (data, variables) => {
             queryClient.setQueryData(["characters", variables.characterId, "notes"], data)
         }
@@ -83,7 +83,7 @@ export const useRestoreCharacterNoteVersion = () => {
 
     return useMutation({
         mutationFn: ({ characterId, versionId }: { characterId: string; versionId: string }) =>
-            api.restoreCharacterNoteVersion(characterId, versionId),
+            characterHttp.restoreNote(characterId, versionId),
         onSuccess: (data, variables) => {
             queryClient.setQueryData(["characters", variables.characterId, "notes"], data)
         }

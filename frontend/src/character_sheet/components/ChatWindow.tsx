@@ -1132,7 +1132,7 @@ const ChatWindow = ({
                                                             Error
                                                         </Text>
                                                         <Text size="xs" c="dimmed">
-                                                            {formatTimestamp(msg.timestamp)}
+                                                            {formatTimestamp(msg.timestamp ?? Date.now())}
                                                         </Text>
                                                     </Group>
                                                     <Text size="sm" c="red">
