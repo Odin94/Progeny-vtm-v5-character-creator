@@ -246,6 +246,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             )
             const previousLevel = existingMerit ? existingMerit.level : 0
             if (level <= previousLevel) return
+            const meritToSave = existingMerit ? { ...existingMerit, level } : newMeritFlaw
             const cost = getMeritCost(level, previousLevel)
             const availableXP = getAvailableXP(character)
             if (!canAffordUpgrade(availableXP, cost)) {
@@ -254,7 +255,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             if (existingMerit) {
                 setCharacter((current) => ({
                     ...current,
-                    merits: current.merits.map((m) => (m === existingMerit ? newMeritFlaw : m)),
+                    merits: current.merits.map((m) => (m === existingMerit ? meritToSave : m)),
                     ephemeral: {
                         ...current.ephemeral,
                         experienceSpent: current.ephemeral.experienceSpent + cost
@@ -277,9 +278,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 )
                 if (existingMerit) {
                     if (level <= existingMerit.level) return
+                    const meritToSave = { ...existingMerit, level }
                     setCharacter((current) => ({
                         ...current,
-                        merits: current.merits.map((m) => (m === existingMerit ? newMeritFlaw : m))
+                        merits: current.merits.map((m) => (m === existingMerit ? meritToSave : m))
                     }))
                 } else {
                     setCharacter((current) => ({
@@ -340,6 +342,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         if (mode === "xp" && type === "merit") {
             const existingMerit = character.merits.find((m) => m.name === customName.trim())
             const previousLevel = existingMerit ? existingMerit.level : 0
+            if (customLevel <= previousLevel) return
             const cost = getMeritCost(customLevel, previousLevel)
             const availableXP = getAvailableXP(character)
             if (!canAffordUpgrade(availableXP, cost)) {
@@ -368,6 +371,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             if (type === "merit") {
                 const existingMerit = character.merits.find((m) => m.name === customName.trim())
                 if (existingMerit) {
+                    if (customLevel <= existingMerit.level) return
                     setCharacter((current) => ({
                         ...current,
                         merits: current.merits.map((m) =>
@@ -418,6 +422,11 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         const existingMerit = character.merits.find((m) => m.name === customName.trim())
         const previousLevel = existingMerit ? existingMerit.level : 0
         return getMeritCost(level, previousLevel)
+    }
+
+    const getExistingCustomMeritLevel = (): number => {
+        if (type !== "merit") return 0
+        return character.merits.find((merit) => merit.name === customName.trim())?.level ?? 0
     }
 
     const getCostForItem = (item: DisplayMeritFlaw, level: number): number => {
@@ -1125,6 +1134,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             </Text>
                                             <Group gap="xs">
                                                 {[1, 2, 3, 4, 5].map((level) => {
+                                                    const existingLevel =
+                                                        getExistingCustomMeritLevel()
                                                     const cost = getCustomMeritCost(level)
                                                     const availableXP = getAvailableXP(character)
                                                     const canAfford =
@@ -1132,11 +1143,13 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                         mode !== "xp" ||
                                                         canAffordUpgrade(availableXP, cost)
                                                     const disabledReason =
-                                                        type === "flaw" || mode !== "xp"
-                                                            ? undefined
-                                                            : canAfford
+                                                        level <= existingLevel
+                                                            ? `Already at level ${existingLevel}`
+                                                            : type === "flaw" || mode !== "xp"
                                                               ? undefined
-                                                              : `Insufficient XP. Need ${cost}, have ${availableXP}`
+                                                              : canAfford
+                                                                ? undefined
+                                                                : `Insufficient XP. Need ${cost}, have ${availableXP}`
 
                                                     return (
                                                         <PipButton
@@ -1161,6 +1174,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                 color={primaryColor}
                                                 disabled={
                                                     !customName.trim() ||
+                                                    (type === "merit" &&
+                                                        customLevel <=
+                                                            getExistingCustomMeritLevel()) ||
                                                     (mode === "xp" &&
                                                         type === "merit" &&
                                                         !canAffordUpgrade(
