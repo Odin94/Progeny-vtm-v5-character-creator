@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Progeny architecture improvements</title>
+    <style>
+      :root { color-scheme: light dark; --ink: #1f2530; --muted: #596273; --paper: #fbfaf7; --line: #dcd8d0; --accent: #7048e8; --p0: #b42318; --p1: #b54708; --p2: #175cd3; --p3: #667085; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #efede8; color: var(--ink); font: 16px/1.55 Inter, ui-sans-serif, system-ui, sans-serif; }
+      main { max-width: 980px; margin: 40px auto; padding: 48px; background: var(--paper); box-shadow: 0 2px 18px #20202016; }
+      h1, h2, h3 { line-height: 1.2; color: #202124; }
+      h1 { margin: 0 0 8px; font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -.04em; }
+      h2 { margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--line); }
+      h3 { margin-bottom: 8px; }
+      p, li { max-width: 76ch; }
+      .lede { font-size: 1.18rem; color: var(--muted); margin-top: 0; }
+      .meta { color: var(--muted); font-size: .92rem; }
+      .callout { padding: 18px 20px; margin: 28px 0; border-left: 4px solid var(--accent); background: #7048e80d; }
+      table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: .94rem; }
+      th, td { text-align: left; vertical-align: top; padding: 13px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+      .priority { display: inline-block; padding: 2px 8px; border-radius: 999px; color: white; font-size: .75rem; font-weight: 800; letter-spacing: .05em; }
+      .p0 { background: var(--p0); } .p1 { background: var(--p1); } .p2 { background: var(--p2); } .p3 { background: var(--p3); }
+      code { padding: .1em .35em; border-radius: 4px; background: #0000000d; font: .9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+      a { color: #5136bf; text-decoration-thickness: 1px; }
+      .module { margin: 32px 0; padding: 0 0 8px; }
+      .module > p:first-of-type { font-weight: 600; }
+      .interface { padding: 14px 18px; background: #171a20; color: #f5f6f8; border-radius: 8px; overflow-x: auto; font: .88rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .foot { margin-top: 44px; color: var(--muted); font-size: .9rem; }
+      @media (max-width: 700px) { body { background: var(--paper); } main { margin: 0; padding: 26px 18px; box-shadow: none; } table { display: block; overflow-x: auto; } }
+      @media (prefers-color-scheme: dark) { :root { --ink: #e7e9ee; --muted: #aeb6c3; --paper: #17191d; --line: #363a43; } body { background: #101114; } h1, h2, h3 { color: #f5f6f8; } .callout { background: #7048e822; } code { background: #ffffff14; } a { color: #b8a8ff; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="meta">Static architecture assessment · 3 September 2026</p>
+        <h1>Progeny architecture improvements</h1>
+        <p class="lede">A codebase-design assessment focused on deep modules: small interfaces that hide meaningful behavior, improve locality, and provide a stable test surface.</p>
+      </header>
+
+      <aside class="callout">
+        <strong>Recommendation:</strong> strengthen shared contracts first. The largest risk is not file length; it is one character or realtime change needing coordinated edits across several independently maintained interfaces.
+      </aside>
+
+      <h2>Prioritized improvements</h2>
+      <table>
+        <thead><tr><th>Priority</th><th>Module</th><th>Improvement</th><th>Leverage</th></tr></thead>
+        <tbody>
+          <tr><td><span class="priority p0">P0</span></td><td>Character contract</td><td>Establish one canonical persisted-character schema and migration interface.</td><td>Prevents silent frontend/backend persistence drift.</td></tr>
+          <tr><td><span class="priority p1">P1</span></td><td>Realtime protocol</td><td>Share runtime schemas and inferred types for WebSocket messages.</td><td>One protocol change becomes one edit and one test surface.</td></tr>
+          <tr><td><span class="priority p1">P1</span></td><td>Versioned private notes</td><td>Unify duplicated note loading, writing, pruning, and restoration.</td><td>One implementation governs character and coterie notes.</td></tr>
+          <tr><td><span class="priority p2">P2</span></td><td>Coteries and Homebrew</td><td>Extract cohesive behavior modules from broad route-registration modules.</td><td>Changes and tests become local to memberships, invites, library, or moderation.</td></tr>
+          <tr><td><span class="priority p2">P2</span></td><td>Frontend HTTP transport</td><td>Keep one deep request module; replace the global façade with focused feature modules.</td><td>Callers learn only the interface they use.</td></tr>
+          <tr><td><span class="priority p3">P3</span></td><td>Generator documentation</td><td>Document the current step-id seam, rather than the retired numeric workaround.</td><td>Prevents future changes from recreating removed coupling.</td></tr>
+        </tbody>
+      </table>
+
+      <section class="module">
+        <h2>1. Character contract <span class="priority p0">P0</span></h2>
+        <p>The persisted character interface is duplicated in the <a href="../frontend/src/data/Character.ts">frontend model</a> and <a href="../backend/src/schemas/CharacterSchema.ts">backend schema</a>. The backend deliberately makes its version partial, while the frontend performs compatibility patches and strict parsing in <a href="../frontend/src/utils/characterData.ts">characterData.ts</a>.</p>
+        <p>This makes the storage seam shallow: callers need to know which side validates, which side repairs old data, and which code parses JSON. A concrete divergence already exists: the frontend includes <code>characterVersion</code>, while the backend schema does not. A partial top-level schema also accepts an empty character payload that the frontend cannot render as a valid character.</p>
+        <div class="interface">decodePersistedCharacter(raw): Result&lt;Character, ContractError&gt;
+encodeCharacter(character): PersistedCharacter
+migrateCharacter(raw): PersistedCharacter</div>
+        <p>Create a side-effect-free <code>character-contract</code> module containing the canonical Zod schemas, version metadata, and decode/encode behavior. Make the backend persist only current-format data. Test the interface end-to-end: a value written through the backend must decode through the frontend without repair.</p>
+      </section>
+
+      <section class="module">
+        <h2>2. Realtime protocol <span class="priority p1">P1</span></h2>
+        <p>The <a href="../frontend/src/character_sheet/stores/sessionChatStore.ts">client chat store</a> and <a href="../backend/src/websocket/sessionChatTypes.ts">server protocol module</a> separately maintain the same message family. The server uses runtime Zod validation, but the client casts parsed messages directly to a TypeScript union.</p>
+        <p>Extract a <code>realtime-contract</code> module that exports client-to-server and server-to-client Zod schemas plus inferred types. The client should parse received messages at that interface. This is an in-process dependency, so it does not need an adapter. The existing fake WebSocket remains an appropriate transport adapter for store tests.</p>
+      </section>
+
+      <section class="module">
+        <h2>3. Versioned private notes <span class="priority p1">P1</span></h2>
+        <p><a href="../backend/src/routes/characterNotes.ts">Character notes</a> and <a href="../backend/src/routes/coteries.ts">coterie notes</a> independently perform version queries, writes, duplicate cleanup, pruning, and restoration. <a href="../backend/src/utils/privateNotes.ts">privateNotes.ts</a> shares only the policy calculations.</p>
+        <div class="interface">load(scope, userId): NoteHistory
+save(scope, userId, content): SaveResult
+restore(scope, userId, versionId): SaveResult</div>
+        <p>Deepen this into a <code>VersionedPrivateNotes</code> module. Use character-note and coterie-note table adapters to satisfy one narrow note-store interface. Keep authorization, route parsing, and tracking at the route seam. Replace duplicated route-level behavior tests with tests at this module’s interface.</p>
+      </section>
+
+      <section class="module">
+        <h2>4. Coterie and Homebrew behavior <span class="priority p2">P2</span></h2>
+        <p><a href="../backend/src/routes/coteries.ts">coteries.ts</a> mixes membership, invitations, notes, live vitals, identity visibility, and chat lifecycle. <a href="../backend/src/routes/homebrew.ts">homebrew.ts</a> mixes authoring, coterie attachment, library reads, publication, moderation, ratings, and comments.</p>
+        <p>Do not replace either with a single wide facade. Extract behavior-focused modules with small interfaces: <code>CoterieReadModel</code>, <code>CoterieMembership</code>, <code>CoterieInvites</code>, <code>HomebrewCollections</code>, <code>HomebrewLibrary</code>, and <code>HomebrewModeration</code>. Each should own its authorization, persistence, and response shaping; route registration becomes transport-only.</p>
+      </section>
+
+      <section class="module">
+        <h2>5. Frontend HTTP transport <span class="priority p2">P2</span></h2>
+        <p><a href="../frontend/src/utils/api.ts">api.ts</a> usefully centralizes cookie credentials, CSRF, uploads, and error behavior. Its exported object, however, contains approximately 55 unrelated operations and response types.</p>
+        <p>Preserve the deep core transport—<code>request</code>, <code>requestBlob</code>, and <code>upload</code>—then expose feature modules for auth, characters, coteries, Homebrew, administration, and recent changes. This reduces the interface a caller must understand without duplicating security behavior.</p>
+      </section>
+
+      <section class="module">
+        <h2>6. Generator seam and documentation <span class="priority p3">P3</span></h2>
+        <p>The current <a href="../frontend/src/generator/steps.ts">generator step module</a> is already a strong deep module: it owns step visibility, normalization, ordering, and progression. The architecture documents still describe the retired numeric step-offset mechanism.</p>
+        <p>Update <a href="../docs/frontend-architecture.md">frontend architecture documentation</a> and <a href="../frontend/AGENTS.md">frontend guidance</a> to name <code>steps.ts</code> as the navigation seam. This is a low-cost change that preserves an important improvement already present in the implementation.</p>
+      </section>
+
+      <h2>Suggested sequence</h2>
+      <ol>
+        <li>Introduce the character-contract module with cross-application round-trip tests.</li>
+        <li>Introduce the realtime-contract module and validate client-side inbound messages.</li>
+        <li>Extract <code>VersionedPrivateNotes</code>, moving existing behavior tests to its interface.</li>
+        <li>Slice coterie and Homebrew behavior incrementally, one cohesive module at a time.</li>
+        <li>Split the frontend HTTP façade after its feature contracts are stable.</li>
+      </ol>
+
+      <p class="foot">Assessment method: static review of the frontend and backend source, architecture guides, and existing tests. No production behavior was changed by this report.</p>
+    </main>
+  </body>
+</html>
