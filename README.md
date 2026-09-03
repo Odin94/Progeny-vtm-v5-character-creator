@@ -41,19 +41,22 @@ pnpm run dev
 
 ### Backend production deployment
 
-Pushing changes under `backend/` to `main` deploys the backend to the Hetzner
-server through `.github/workflows/deploy-backend.yml`. The remote deployment
-uses the existing `backend/scripts/updateCode.sh` script, which backs up the
-database, pulls the pushed revision, installs locked dependencies, builds,
-migrates, restarts PM2, and checks the health endpoint.
+Pushing changes under `backend/` to `main` deploys the triggering commit to the
+Hetzner backend through `.github/workflows/deploy-backend.yml`. The remote
+deployment uses the existing `backend/scripts/updateCode.sh` script, which
+backs up the database, checks out that exact revision, installs locked
+dependencies, builds, migrates, restarts PM2, and checks the health endpoint.
 
 Configure these repository Action secrets before the first deployment:
 
 - `HETZNER_SSH_PRIVATE_KEY`: a dedicated private key authorized for the
   `progeny` user on the server.
 - `HETZNER_SSH_KNOWN_HOSTS`: the trusted host-key entry for `46.224.62.32`.
-  Obtain and verify it through a trusted connection, then save the output of
-  `ssh-keyscan -H 46.224.62.32` as the secret value.
+  The workflow pins the server's ED25519 key. Obtain its fingerprint from the
+  Hetzner console or an already-verified connection (for example,
+  `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` on the server). Compare it
+  with a candidate produced by `ssh-keyscan -t ed25519 -H 46.224.62.32`, and
+  only save that verified candidate as the secret value.
 
 The workflow intentionally uses strict host-key checking and does not accept a
 new host key during deployment.

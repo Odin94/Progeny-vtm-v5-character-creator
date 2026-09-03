@@ -39,12 +39,15 @@ jobs:
           chmod 600 "$HOME/.ssh/id_ed25519"
 
       - name: Update backend on Hetzner
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
         run: |
           ssh \
             -i "$HOME/.ssh/id_ed25519" \
             -o BatchMode=yes \
             -o ConnectTimeout=15 \
+            -o HostKeyAlgorithms=ssh-ed25519 \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$HETZNER_USER@$HETZNER_HOST" \
-            'bash /opt/progeny/backend/scripts/updateCode.sh'
+            "bash /opt/progeny/backend/scripts/updateCode.sh '$DEPLOY_SHA'"
