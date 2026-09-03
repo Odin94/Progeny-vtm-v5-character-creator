@@ -38,8 +38,10 @@ import {
     NOTE_MAX_BYTES
 } from "../utils/privateNotes.js"
 import {
-    buildCoterieResponse as buildCoterieReadModel,
-    parseCharacterVitals as parseCoterieVitals
+    buildCoterieResponse,
+    getCoterieAccess,
+    parseCharacterVitals,
+    requireOwnedCoterie
 } from "../modules/coterieReadModel.js"
 import {
     loadVersionedNotes,
@@ -200,7 +202,7 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
     return roster
 }
 
-const getCoterieAccess = async (coterieId: string, userId: string) => {
+const legacyGetCoterieAccess = async (coterieId: string, userId: string) => {
     const coterie = await db.query.coteries.findFirst({
         where: eq(schema.coteries.id, coterieId)
     })
@@ -226,7 +228,7 @@ const getCoterieAccess = async (coterieId: string, userId: string) => {
     }
 }
 
-const buildCoterieResponse = async (
+const legacyBuildCoterieResponse = async (
     coterie: typeof schema.coteries.$inferSelect,
     userId: string,
     isOwner: boolean
@@ -290,7 +292,7 @@ const buildCoterieResponse = async (
     }
 }
 
-const requireOwnedCoterie = async (coterieId: string, userId: string) => {
+const legacyRequireOwnedCoterie = async (coterieId: string, userId: string) => {
     const coterie = await db.query.coteries.findFirst({
         where: eq(schema.coteries.id, coterieId)
     })
@@ -418,7 +420,7 @@ const acceptCoterieInvite = async (
     })
 }
 
-const parseCharacterVitals = (data: string) => {
+const legacyParseCharacterVitals = (data: string) => {
     try {
         const character = JSON.parse(data) as {
             maxHealth?: unknown
@@ -588,7 +590,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     request
                 )
 
-                reply.code(201).send(await buildCoterieReadModel(coterie, userId, true))
+                reply.code(201).send(await buildCoterieResponse(coterie, userId, true))
             } catch (error) {
                 logger.error("Failed to create coterie", error, {
                     endpoint: "/coteries",
@@ -645,7 +647,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
 
             const allCoteries = await Promise.all(
                 Array.from(coteriesById.values()).map(({ coterie, isOwner }) =>
-                    buildCoterieReadModel(coterie, userId, isOwner)
+                    buildCoterieResponse(coterie, userId, isOwner)
                 )
             )
 
@@ -715,7 +717,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
 
             reply.send(
                 rows.flatMap((row) => {
-                    const vitals = parseCoterieVitals(row.data)
+                    const vitals = parseCharacterVitals(row.data)
                     if (!vitals) return []
 
                     return {
@@ -768,7 +770,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 request
             )
 
-            reply.send(await buildCoterieReadModel(access.coterie, userId, access.isOwner))
+            reply.send(await buildCoterieResponse(access.coterie, userId, access.isOwner))
         }
     )
 

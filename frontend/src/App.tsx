@@ -36,7 +36,7 @@ import posthog from "posthog-js"
 import { getEmptyCharacter, type Character as CharacterType } from "./data/Character"
 import { clearStoredAuthReturnTo, getSafeAuthReturnTo, useAuth } from "./hooks/useAuth"
 import { useCharacters } from "./hooks/useCharacters"
-import { api } from "./utils/api"
+import { characterHttp } from "./utils/http/characters"
 import { parseCharacterData } from "./utils/characterData"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
@@ -157,7 +157,7 @@ function App() {
     }
 
     const loadSavedCharacter = async (characterId: string) => {
-        const response = await api.getCharacter(characterId)
+        const response = await characterHttp.get(characterId)
         const loadedCharacter = parseCharacterData((response as { data: unknown }).data)
         if (!loadedCharacter) throw new Error("Unable to load character data")
 
@@ -196,8 +196,8 @@ function App() {
         }
 
         const savedCharacter = targetCharacter
-            ? await api.updateCharacter(targetCharacter.id, payload)
-            : await api.createCharacter(payload)
+            ? await characterHttp.update(targetCharacter.id, payload)
+            : await characterHttp.create(payload)
 
         const saved = savedCharacter as {
             id: string
@@ -326,8 +326,8 @@ function App() {
                 version: characterToSave.version
             }
             const savedCharacter = targetCharacter
-                ? await api.updateCharacter(targetCharacter.id, payload)
-                : await api.createCharacter(payload)
+                ? await characterHttp.update(targetCharacter.id, payload)
+                : await characterHttp.create(payload)
             const saved = savedCharacter as {
                 id: string
                 data?: { characterVersion?: number }

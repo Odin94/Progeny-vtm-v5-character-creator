@@ -2,8 +2,10 @@ import { create } from "zustand"
 import { API_URL } from "~/utils/api"
 import posthog from "posthog-js"
 import {
+    clientMessageSchema,
     serverMessageSchema,
     type ChatMessageReceived,
+    type ClientMessage,
     type DiceRollReceived,
     type ParticipantIdentity,
     type RemorseCheckReceived,
@@ -87,7 +89,7 @@ type SessionChatStore = {
     ws: WebSocket | null
     reconnectTimeout: ReturnType<typeof setTimeout> | null
     reconnectAttempts: number
-    messageQueue: Array<{ type: string; [key: string]: unknown }>
+    messageQueue: ClientMessage[]
     isManualDisconnect: boolean
     lastJoinOptions: JoinOptions | null
     connect: () => void
@@ -162,12 +164,17 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         }
     }
 
-    const sendMessage = (message: { type: string; [key: string]: unknown }) => {
+    const sendMessage = (message: ClientMessage) => {
+        const validated = clientMessageSchema.safeParse(message)
+        if (!validated.success) {
+            console.error("Invalid outgoing WebSocket message:", validated.error.issues)
+            return
+        }
         const state = get()
         if (state.ws?.readyState === WebSocket.OPEN) {
-            state.ws.send(JSON.stringify(message))
+            state.ws.send(JSON.stringify(validated.data))
         } else {
-            set((s) => ({ messageQueue: [...s.messageQueue, message] }))
+            set((s) => ({ messageQueue: [...s.messageQueue, validated.data] }))
             if (state.connectionStatus === "disconnected") {
                 connect()
             }
@@ -520,7 +527,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             console.warn("PostHog chat tracking failed:", error)
         }
 
-        const joinMessage = {
+        const joinMessage: ClientMessage = {
             type: "join_session",
             sessionId: options?.sessionId,
             coterieId: options?.coterieId,
