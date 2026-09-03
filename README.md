@@ -39,6 +39,25 @@ pnpm install
 pnpm run dev
 ```
 
+### Backend production deployment
+
+Pushing changes under `backend/` to `main` deploys the backend to the Hetzner
+server through `.github/workflows/deploy-backend.yml`. The remote deployment
+uses the existing `backend/scripts/updateCode.sh` script, which backs up the
+database, pulls the pushed revision, installs locked dependencies, builds,
+migrates, restarts PM2, and checks the health endpoint.
+
+Configure these repository Action secrets before the first deployment:
+
+- `HETZNER_SSH_PRIVATE_KEY`: a dedicated private key authorized for the
+  `progeny` user on the server.
+- `HETZNER_SSH_KNOWN_HOSTS`: the trusted host-key entry for `46.224.62.32`.
+  Obtain and verify it through a trusted connection, then save the output of
+  `ssh-keyscan -H 46.224.62.32` as the secret value.
+
+The workflow intentionally uses strict host-key checking and does not accept a
+new host key during deployment.
+
 You can optionally run both conveniently with `mprocs` (only tested on Windows):
 * `pnpm add -g mprocs`
 * `mprocs`
