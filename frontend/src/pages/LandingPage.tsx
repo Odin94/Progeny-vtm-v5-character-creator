@@ -29,7 +29,7 @@ import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters } from "~/hooks/useCharacters"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import fangs from "~/resources/icons/noun-fangs-5617700.svg"
-import { api } from "~/utils/api"
+import { characterHttp } from "~/utils/http/characters"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import "./LandingPage.css"
 
@@ -172,9 +172,9 @@ export default function LandingPage() {
             }
 
             if (targetCharacter) {
-                await api.updateCharacter(targetCharacter.id, payload)
+                await characterHttp.update(targetCharacter.id, payload)
             } else {
-                await api.createCharacter(payload)
+                await characterHttp.create(payload)
             }
 
             await queryClient.invalidateQueries({ queryKey: ["characters"] })

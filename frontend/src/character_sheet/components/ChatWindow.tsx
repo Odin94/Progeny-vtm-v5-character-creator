@@ -36,6 +36,7 @@ import { getAutoShareDiceRolls, setAutoShareDiceRolls } from "~/utils/chatSettin
 import { SheetOptions } from "../CharacterSheet"
 import { useAuth } from "~/hooks/useAuth"
 import { api, type RecentChatSessionResponse } from "~/utils/api"
+import { coterieHttp } from "~/utils/http/coteries"
 import { RollData } from "../stores/sessionChatStore"
 import NameTag from "~/components/NameTag"
 
@@ -134,7 +135,7 @@ const ChatWindow = ({
 
     const loadCoteries = useCallback(async () => {
         try {
-            const data = await api.getCoteries()
+            const data = await coterieHttp.getAll()
             setCoteries(data as Coterie[])
         } catch (error) {
             console.error("Failed to load coteries:", error)
