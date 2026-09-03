@@ -158,7 +158,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     }
     const canAddOrUpgrade = (item: DisplayMeritFlaw) =>
         !characterMeritFlawIdentities.has(getMeritFlawIdentity(item, type)) ||
-        (type === "merit" && item.cost.some((_, index) => index + 1 > getExistingLevel(item)))
+        (type === "merit" && item.cost.some((level) => level > getExistingLevel(item)))
 
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
@@ -206,7 +206,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     useEffect(() => {
         if (selectedMeritFlaw) {
             setSelectedLevel(
-                Math.min(getExistingLevel(selectedMeritFlaw) + 1, selectedMeritFlaw.cost.length)
+                selectedMeritFlaw.cost.find(
+                    (level) => level > getExistingLevel(selectedMeritFlaw)
+                ) ?? selectedMeritFlaw.cost[0]
             )
         }
     }, [selectedMeritFlaw])
@@ -747,8 +749,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     Select Level:
                                 </Text>
                                 <Group gap="xs">
-                                    {selectedMeritFlaw.cost.map((_, index) => {
-                                        const level = index + 1
+                                    {selectedMeritFlaw.cost.map((level) => {
                                         const existingLevel = getExistingLevel(selectedMeritFlaw)
                                         const cost = getCostForLevel(level)
                                         const availableXP = getAvailableXP(character)
@@ -760,10 +761,10 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             level <= existingLevel
                                                 ? `Already at level ${existingLevel}`
                                                 : type === "flaw" || mode !== "xp"
-                                                ? undefined
-                                                : canAfford
                                                   ? undefined
-                                                  : `Insufficient XP. Need ${cost}, have ${availableXP}`
+                                                  : canAfford
+                                                    ? undefined
+                                                    : `Insufficient XP. Need ${cost}, have ${availableXP}`
 
                                         return (
                                             <PipButton
