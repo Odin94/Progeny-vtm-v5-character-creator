@@ -28,7 +28,8 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            "~": resolve(__dirname, "./src")
+            "~": resolve(__dirname, "./src"),
+            "@contracts": resolve(__dirname, "../backend/src/contracts")
         }
     }
 })

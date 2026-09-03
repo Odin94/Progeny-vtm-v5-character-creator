@@ -37,6 +37,10 @@ import {
 import { zodToFastifySchema } from "../utils/schema.js"
 import { homebrewLibraryReadRateLimit } from "../utils/rateLimit.js"
 import { trackEvent } from "../utils/tracker.js"
+import {
+    getAccessibleHomebrewCoterie,
+    getOwnedHomebrewCollection
+} from "../modules/homebrewCollections.js"
 
 const MAX_COLLECTIONS = 50
 const MAX_WEEKLY_REQUESTS = 5
@@ -52,13 +56,6 @@ const sendHomebrewValidationError = (reply: FastifyReply, issues: ZodIssue[]) =>
         issues: issues.map(({ message, path }) => ({ message, path }))
     })
 
-const getOwnedCollection = async (collectionId: string, userId: string) => {
-    const collection = await db.query.homebrewCollections.findFirst({
-        where: eq(schema.homebrewCollections.id, collectionId)
-    })
-    return collection?.ownerId === userId ? collection : null
-}
-
 const getPublishedLibraryEntry = (entryId: string) =>
     db.query.homebrewLibraryEntries.findFirst({
         where: and(
@@ -66,22 +63,6 @@ const getPublishedLibraryEntry = (entryId: string) =>
             isNull(schema.homebrewLibraryEntries.unpublishedAt)
         )
     })
-
-const getAccessibleCoterie = async (coterieId: string, userId: string) => {
-    const coterie = await db.query.coteries.findFirst({
-        where: eq(schema.coteries.id, coterieId)
-    })
-    if (!coterie) return null
-    if (coterie.ownerId === userId) return { coterie, isOwner: true }
-
-    const membership = await db.query.coteriePlayerMemberships.findFirst({
-        where: and(
-            eq(schema.coteriePlayerMemberships.coterieId, coterieId),
-            eq(schema.coteriePlayerMemberships.userId, userId)
-        )
-    })
-    return membership ? { coterie, isOwner: false } : null
-}
 
 const parseSnapshot = (value: string): HomebrewCollectionSnapshot =>
     JSON.parse(value) as HomebrewCollectionSnapshot
@@ -366,7 +347,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
         },
         async (request, reply) => {
-            const collection = await getOwnedCollection(request.params.id, request.user!.id)
+            const collection = await getOwnedHomebrewCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
             reply.send(await getHomebrewCollectionSnapshot(collection.id))
         }
@@ -382,7 +363,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             }
         },
         async (request, reply) => {
-            const collection = await getOwnedCollection(request.params.id, request.user!.id)
+            const collection = await getOwnedHomebrewCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
 
             if (request.body.enabled) {
@@ -497,7 +478,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
         },
         async (request, reply) => {
-            const collection = await getOwnedCollection(request.params.id, request.user!.id)
+            const collection = await getOwnedHomebrewCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
             const parsedInput = homebrewCollectionInputSchema.safeParse(request.body)
             if (!parsedInput.success) {
@@ -536,7 +517,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { params: zodToFastifySchema(homebrewCollectionParamsSchema) }
         },
         async (request, reply) => {
-            const collection = await getOwnedCollection(request.params.id, request.user!.id)
+            const collection = await getOwnedHomebrewCollection(request.params.id, request.user!.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
             await db
                 .delete(schema.homebrewCollections)
@@ -552,7 +533,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             schema: { params: zodToFastifySchema(homebrewCoterieParamsSchema) }
         },
         async (request, reply) => {
-            const access = await getAccessibleCoterie(request.params.id, request.user!.id)
+            const access = await getAccessibleHomebrewCoterie(request.params.id, request.user!.id)
             if (!access) return reply.code(404).send({ error: "Coterie not found" })
             const attached = await db.query.coterieHomebrewCollections.findMany({
                 where: eq(schema.coterieHomebrewCollections.coterieId, request.params.id)
@@ -574,7 +555,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             }
         },
         async (request, reply) => {
-            const access = await getAccessibleCoterie(request.params.id, request.user!.id)
+            const access = await getAccessibleHomebrewCoterie(request.params.id, request.user!.id)
             if (!access) return reply.code(404).send({ error: "Coterie not found" })
             if (!access.isOwner)
                 return reply.code(403).send({ error: "Only the coterie owner can manage Homebrew" })
@@ -812,7 +793,7 @@ export async function homebrewRoutes(fastify: FastifyInstance) {
             const user = request.user!
             if (!user.nickname)
                 return reply.code(400).send({ error: "Set a nickname before publishing" })
-            const collection = await getOwnedCollection(request.body.collectionId, user.id)
+            const collection = await getOwnedHomebrewCollection(request.body.collectionId, user.id)
             if (!collection) return reply.code(404).send({ error: "Homebrew collection not found" })
 
             const pending = await db.query.homebrewPublishRequests.findFirst({

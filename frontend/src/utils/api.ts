@@ -88,7 +88,7 @@ const getCsrfToken = (): string | null => {
     return csrfTokenCache
 }
 
-const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
+export const request = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
     const { method = "GET", body, headers = {} } = options
 
     // Ensure CSRF token exists for state-changing operations
@@ -145,7 +145,7 @@ const apiRequest = async <T>(endpoint: string, options: RequestOptions = {}): Pr
     return response.json()
 }
 
-const apiRequestBlob = async (endpoint: string): Promise<Blob> => {
+export const requestBlob = async (endpoint: string): Promise<Blob> => {
     const response = await fetch(`${API_URL}${endpoint}`, { credentials: "include" })
 
     if (!response.ok) {
@@ -161,7 +161,7 @@ const apiRequestBlob = async (endpoint: string): Promise<Blob> => {
     return response.blob()
 }
 
-const uploadFile = async <T>(endpoint: string, file: File): Promise<T> => {
+export const upload = async <T>(endpoint: string, file: File): Promise<T> => {
     await ensureCsrfToken()
     const csrfToken = getCsrfToken()
     const formData = new FormData()
@@ -188,6 +188,11 @@ const uploadFile = async <T>(endpoint: string, file: File): Promise<T> => {
 
     return response.json()
 }
+
+// Compatibility aliases while feature modules migrate to the focused transport interface.
+const apiRequest = request
+const apiRequestBlob = requestBlob
+const uploadFile = upload
 
 type UserPreferences = {
     colorTheme: string | null
