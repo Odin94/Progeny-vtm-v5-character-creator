@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { SelectableMeritsAndFlaws } from "../data/PredatorType"
+import type { MeritFlaw } from "../data/Character"
 
 export type PointState = {
     subPointStates: {
@@ -17,7 +18,10 @@ export type PointStateReturnValue = {
         subPointStateIndex: number
     ) => void
     setExclusiveSelection: (pointStateIndex: number, subPointStateIndex: number) => void
-    setFromSelectableMeritsAndFlaws: (selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]) => void
+    setFromSelectableMeritsAndFlaws: (
+        selectableMeritsAndFlaws: SelectableMeritsAndFlaws[],
+        selectedMeritsAndFlaws?: MeritFlaw[]
+    ) => void
 }
 
 const usePointStates = (
@@ -69,15 +73,24 @@ const usePointStates = (
     }
 
     const setFromSelectableMeritsAndFlaws = (
-        selectableMeritsAndFlaws: SelectableMeritsAndFlaws[]
+        selectableMeritsAndFlaws: SelectableMeritsAndFlaws[],
+        selectedMeritsAndFlaws: MeritFlaw[] = []
     ) => {
         const initialPointStates: PointState[] = []
         for (const selectable of selectableMeritsAndFlaws) {
             initialPointStates.push({
-                subPointStates: selectable.options.map((option) => ({
-                    selectedPoints: 0,
-                    maxLevel: option.maxLevel
-                })),
+                subPointStates: selectable.options.map((option) => {
+                    const selected = selectedMeritsAndFlaws.find(
+                        (meritFlaw) =>
+                            meritFlaw.name === option.name &&
+                            meritFlaw.summary === option.summary &&
+                            meritFlaw.type === option.type
+                    )
+                    return {
+                        selectedPoints: selected?.level ?? 0,
+                        maxLevel: option.maxLevel
+                    }
+                }),
                 totalPoints: selectable.totalPoints
             })
         }

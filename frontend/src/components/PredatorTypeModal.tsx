@@ -186,7 +186,14 @@ const PredatorTypeModal = ({
         setFromSelectableMeritsAndFlaws
     } = usePointStates(predatorType.selectableMeritsAndFlaws)
     useEffect(() => {
-        setFromSelectableMeritsAndFlaws(predatorType.selectableMeritsAndFlaws)
+        if (!modalOpened) return
+
+        setFromSelectableMeritsAndFlaws(
+            predatorType.selectableMeritsAndFlaws,
+            character.predatorType.name === pickedPredatorType
+                ? character.predatorType.pickedMeritsAndFlaws
+                : []
+        )
 
         // Restore custom specialty text when reopening the already-confirmed type, so a
         // pre-filled "which scene?"-style input isn't silently blanked on the way back in.
@@ -206,7 +213,7 @@ const PredatorTypeModal = ({
                 ? storedSpecialty.name
                 : ""
         setCustomSpecialtyText(restoredCustomText)
-    }, [pickedPredatorType])
+    }, [modalOpened, pickedPredatorType])
 
     // Prevent crashing modal in render before useEffect-update goes through.
     // Guard against both wrong number of groups AND wrong number of options within a group.

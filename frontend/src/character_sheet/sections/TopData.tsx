@@ -301,14 +301,34 @@ const TopData = ({ options }: TopDataProps) => {
                                                 PredatorTypes[selectedPredatorType]
                                             const firstSpecialty =
                                                 selectedPredatorTypeData.specialtyOptions[0]
+                                            const storedSpecialty =
+                                                character.predatorType.name === selectedPredatorType
+                                                    ? character.predatorType.pickedSpecialties[0]
+                                                    : undefined
+                                            const storedSpecialtyOption = storedSpecialty
+                                                ? (selectedPredatorTypeData.specialtyOptions.find(
+                                                      (option) =>
+                                                          option.skill === storedSpecialty.skill &&
+                                                          option.name === storedSpecialty.name
+                                                  ) ??
+                                                  selectedPredatorTypeData.specialtyOptions.find(
+                                                      (option) =>
+                                                          option.skill === storedSpecialty.skill
+                                                  ))
+                                                : undefined
+                                            const initialSpecialty =
+                                                storedSpecialtyOption ?? firstSpecialty
                                             setPendingPredatorType(selectedPredatorType)
                                             setPendingPredatorSpecialty(
-                                                firstSpecialty
-                                                    ? `${firstSpecialty.skill}_${firstSpecialty.name}`
+                                                initialSpecialty
+                                                    ? `${initialSpecialty.skill}_${initialSpecialty.name}`
                                                     : ""
                                             )
                                             setPendingPredatorDiscipline(
-                                                selectedPredatorTypeData.disciplineOptions[0]?.name ?? ""
+                                                character.predatorType.name === selectedPredatorType
+                                                    ? character.predatorType.pickedDiscipline
+                                                    : (selectedPredatorTypeData.disciplineOptions[0]
+                                                          ?.name ?? "")
                                             )
                                             setPredatorTypeModalOpened(true)
                                         }
@@ -482,7 +502,10 @@ const TopData = ({ options }: TopDataProps) => {
                 <PredatorTypeModal
                     key={pendingPredatorType}
                     modalOpened={predatorTypeModalOpened}
-                    closeModal={() => setPredatorTypeModalOpened(false)}
+                    closeModal={() => {
+                        setPredatorTypeModalOpened(false)
+                        setPendingPredatorType("")
+                    }}
                     character={character}
                     pickedPredatorType={pendingPredatorType}
                     setCharacter={setCharacter}
