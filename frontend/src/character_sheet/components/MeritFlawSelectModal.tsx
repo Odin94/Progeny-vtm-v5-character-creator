@@ -148,6 +148,17 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
             getMeritFlawIdentity(item, type)
         )
     )
+    const getExistingLevel = (item: DisplayMeritFlaw) => {
+        if (type !== "merit") return 0
+        const identity = getMeritFlawIdentity(item, "merit")
+        return (
+            character.merits.find((merit) => getMeritFlawIdentity(merit, "merit") === identity)
+                ?.level ?? 0
+        )
+    }
+    const canAddOrUpgrade = (item: DisplayMeritFlaw) =>
+        !characterMeritFlawIdentities.has(getMeritFlawIdentity(item, type)) ||
+        (type === "merit" && item.cost.some((_, index) => index + 1 > getExistingLevel(item)))
 
     const exclusionMap = useMemo(() => {
         const map = new Map<string, string[]>()
@@ -194,7 +205,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
 
     useEffect(() => {
         if (selectedMeritFlaw) {
-            setSelectedLevel(1)
+            setSelectedLevel(
+                Math.min(getExistingLevel(selectedMeritFlaw) + 1, selectedMeritFlaw.cost.length)
+            )
         }
     }, [selectedMeritFlaw])
 
@@ -203,7 +216,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         allMeritsAndFlaws.forEach((category) => {
             const items = type === "merit" ? category.merits : category.flaws
             items.forEach((item) => {
-                if (!characterMeritFlawIdentities.has(getMeritFlawIdentity(item, type))) {
+                if (canAddOrUpgrade(item)) {
                     all.push(item)
                 }
             })
@@ -230,6 +243,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                 (item) => getMeritFlawIdentity(item, "merit") === meritFlawIdentity
             )
             const previousLevel = existingMerit ? existingMerit.level : 0
+            if (level <= previousLevel) return
             const cost = getMeritCost(level, previousLevel)
             const availableXP = getAvailableXP(character)
             if (!canAffordUpgrade(availableXP, cost)) {
@@ -260,6 +274,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     (item) => getMeritFlawIdentity(item, "merit") === meritFlawIdentity
                 )
                 if (existingMerit) {
+                    if (level <= existingMerit.level) return
                     setCharacter((current) => ({
                         ...current,
                         merits: current.merits.map((m) => (m === existingMerit ? newMeritFlaw : m))
@@ -734,6 +749,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                 <Group gap="xs">
                                     {selectedMeritFlaw.cost.map((_, index) => {
                                         const level = index + 1
+                                        const existingLevel = getExistingLevel(selectedMeritFlaw)
                                         const cost = getCostForLevel(level)
                                         const availableXP = getAvailableXP(character)
                                         const canAfford =
@@ -741,7 +757,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                             mode !== "xp" ||
                                             canAffordUpgrade(availableXP, cost)
                                         const disabledReason =
-                                            type === "flaw" || mode !== "xp"
+                                            level <= existingLevel
+                                                ? `Already at level ${existingLevel}`
+                                                : type === "flaw" || mode !== "xp"
                                                 ? undefined
                                                 : canAfford
                                                   ? undefined
@@ -784,7 +802,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                         )
                                     }
                                 >
-                                    Add
+                                    {getExistingLevel(selectedMeritFlaw) > 0 ? "Upgrade" : "Add"}
                                 </Button>
                             </Group>
                         </>
@@ -853,9 +871,8 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                                             : category.flaws
                                                     const availableCategoryItems = items.filter(
                                                         (item) =>
-                                                            !characterMeritFlawIdentities.has(
-                                                                getMeritFlawIdentity(item, type)
-                                                            ) && matchesQuery(item.name)
+                                                            canAddOrUpgrade(item) &&
+                                                            matchesQuery(item.name)
                                                     )
                                                     return { category, availableCategoryItems }
                                                 })

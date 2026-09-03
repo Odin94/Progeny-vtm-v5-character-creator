@@ -10,7 +10,8 @@ import {
     Center,
     ActionIcon,
     Button,
-    Tooltip
+    Tooltip,
+    Textarea
 } from "@mantine/core"
 import { memo, useState, useMemo } from "react"
 import type { SheetOptions } from "../CharacterSheet"
@@ -44,7 +45,6 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
 
-    // TODOdin: Make descriptions of merits and flaws editable
     const { merits: allMerits, flaws: allFlaws } = useMemo(
         () => getSheetMeritsAndFlaws(character),
         [character]
@@ -171,7 +171,27 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         {merit.level}
                                                     </Badge>
                                                 ) : null}
-                                                {merit.summary ? (
+                                                {isFreeMode && !isFromBonus ? (
+                                                    <Textarea
+                                                        aria-label={`${getMeritFlawDisplayName(merit)} description`}
+                                                        value={merit.summary}
+                                                        onChange={(event) => {
+                                                            const summary = event.currentTarget.value
+                                                            setCharacter((current) => ({
+                                                                ...current,
+                                                                merits: current.merits.map((item) =>
+                                                                    item === merit
+                                                                        ? { ...item, summary }
+                                                                        : item
+                                                                )
+                                                            }))
+                                                        }}
+                                                        placeholder="Description..."
+                                                        autosize
+                                                        minRows={2}
+                                                        mt="xs"
+                                                    />
+                                                ) : merit.summary ? (
                                                     <Text size="sm" c="dimmed" mt="xs">
                                                         {merit.summary.charAt(0).toUpperCase() +
                                                             merit.summary.slice(1)}
@@ -325,7 +345,27 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         {flaw.level}
                                                     </Badge>
                                                 ) : null}
-                                                {flaw.summary ? (
+                                                {isFreeMode && !isFromBonus ? (
+                                                    <Textarea
+                                                        aria-label={`${getMeritFlawDisplayName(flaw)} description`}
+                                                        value={flaw.summary}
+                                                        onChange={(event) => {
+                                                            const summary = event.currentTarget.value
+                                                            setCharacter((current) => ({
+                                                                ...current,
+                                                                flaws: current.flaws.map((item) =>
+                                                                    item === flaw
+                                                                        ? { ...item, summary }
+                                                                        : item
+                                                                )
+                                                            }))
+                                                        }}
+                                                        placeholder="Description..."
+                                                        autosize
+                                                        minRows={2}
+                                                        mt="xs"
+                                                    />
+                                                ) : flaw.summary ? (
                                                     <Text size="sm" c="dimmed" mt="xs">
                                                         {flaw.summary.charAt(0).toUpperCase() +
                                                             flaw.summary.slice(1)}
