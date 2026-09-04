@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router"
+import { createRootRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createTheme, MantineProvider } from "@mantine/core"
 import { generateColors } from "@mantine/colors-generator"
@@ -8,6 +8,7 @@ import posthog, { type PostHogConfig } from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
+import ErrorBoundary from "~/components/ErrorBoundary"
 import CharacterAutosave from "~/components/CharacterAutosave"
 import { CookiesBanner } from "~/components/CookiesBanner"
 import RenderProfiler from "~/components/RenderProfiler"
@@ -175,6 +176,22 @@ const AuthUnauthorizedHandler = () => {
     return null
 }
 
+// Catch render crashes from any route, not only the character generator, so a
+// failure shows a fallback and reports a component stack instead of a blank page.
+// The key resets the boundary on navigation, so a user can recover from a crashed
+// route by moving to another one.
+const RouteOutlet = () => {
+    const pathname = useRouterState({ select: (state) => state.location.pathname })
+
+    return (
+        <ErrorBoundary key={pathname}>
+            <RenderProfiler id="RouteOutlet">
+                <Outlet />
+            </RenderProfiler>
+        </ErrorBoundary>
+    )
+}
+
 export const Route = createRootRoute({
     component: () => (
         <QueryClientProvider client={queryClient}>
@@ -204,9 +221,7 @@ export const Route = createRootRoute({
                     <BrokenSaveModal />
                     <CookiesBanner />
                     <RecentChangesGate />
-                    <RenderProfiler id="RouteOutlet">
-                        <Outlet />
-                    </RenderProfiler>
+                    <RouteOutlet />
                 </MantineProvider>
             </PostHogProvider>
         </QueryClientProvider>
