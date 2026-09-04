@@ -44,3 +44,19 @@ export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
     candidates.some(
         (candidate) => typeof candidate === "string" && RESIZE_OBSERVER_LOOP_NOISE.test(candidate)
     )
+
+// A recursive stack overflow surfaces as "RangeError: Maximum call stack size exceeded". On
+// WebKit its trace is unstable: the top frame alternates between the two mutually recursive
+// functions and the tail depth changes on every capture, and the frames carry no chunk id
+// (WebKit attributes them to the document path), so they never symbolicate. PostHog fingerprints
+// on the frames, so one crash mints a fresh "first observed" issue each time it fires and floods
+// the inbox. Pin every occurrence to one fingerprint so a burst groups as a single issue. The
+// regex covers the WebKit trailing period and the V8 wording.
+const MAX_CALL_STACK_OVERFLOW = /Maximum call stack size exceeded/
+
+export const MAX_CALL_STACK_FINGERPRINT = "range-error-maximum-call-stack-size-exceeded"
+
+export const isMaxCallStackOverflow = (...candidates: unknown[]) =>
+    candidates.some(
+        (candidate) => typeof candidate === "string" && MAX_CALL_STACK_OVERFLOW.test(candidate)
+    )
