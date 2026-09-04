@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
     isFramelessSyntheticNoise,
+    isMaxCallStackOverflow,
     isResizeObserverLoopNoise,
     type ExceptionListEntry
 } from "~/utils/exceptionFilter"
@@ -106,5 +107,27 @@ describe("isResizeObserverLoopNoise", () => {
 
     it("ignores non-string candidates", () => {
         expect(isResizeObserverLoopNoise(undefined, null, 42, {})).toBe(false)
+    })
+})
+
+describe("isMaxCallStackOverflow", () => {
+    it("matches the WebKit wording with a trailing period", () => {
+        expect(isMaxCallStackOverflow("Maximum call stack size exceeded.")).toBe(true)
+    })
+
+    it("matches the V8 wording without a trailing period", () => {
+        expect(isMaxCallStackOverflow("Maximum call stack size exceeded")).toBe(true)
+    })
+
+    it("matches when only one of several candidates matches", () => {
+        expect(isMaxCallStackOverflow(undefined, "Maximum call stack size exceeded.")).toBe(true)
+    })
+
+    it("keeps unrelated exception messages", () => {
+        expect(isMaxCallStackOverflow("TypeError: cannot read property of undefined")).toBe(false)
+    })
+
+    it("ignores non-string candidates", () => {
+        expect(isMaxCallStackOverflow(undefined, null, 42, {})).toBe(false)
     })
 })

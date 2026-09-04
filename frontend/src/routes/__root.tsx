@@ -17,7 +17,9 @@ import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
     isFramelessSyntheticNoise,
+    isMaxCallStackOverflow,
     isResizeObserverLoopNoise,
+    MAX_CALL_STACK_FINGERPRINT,
     type ExceptionListEntry
 } from "~/utils/exceptionFilter"
 import {
@@ -122,6 +124,16 @@ const posthogOptions: Partial<PostHogConfig> = {
 
             if (isResizeObserverLoopNoise(exceptionValue, exceptionMessage)) {
                 return null
+            }
+
+            // Group every recursive stack overflow into one issue. Its WebKit trace refingerprints
+            // on each capture, so without a fixed fingerprint a single crash mints many issues.
+            if (isMaxCallStackOverflow(exceptionValue, exceptionMessage)) {
+                event.properties = event.properties || {}
+                event.properties.$exception_fingerprint = MAX_CALL_STACK_FINGERPRINT
+                event.properties.$issue_name = "RangeError: Maximum call stack size exceeded"
+                event.properties.$issue_description =
+                    "Recursive stack overflow in the character creator."
             }
 
             try {
