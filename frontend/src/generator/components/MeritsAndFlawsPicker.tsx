@@ -400,7 +400,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const theme = useMantineTheme()
     const phoneScreen = globals.isPhoneScreen
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
-    const [showAllMerits, setShowAllMerits] = useState(false)
+    const [showAllMerits, setShowAllMerits] = useState(true)
     const homebrewMerits = homebrewCollections.flatMap((collection) =>
         collection.items
             .filter(

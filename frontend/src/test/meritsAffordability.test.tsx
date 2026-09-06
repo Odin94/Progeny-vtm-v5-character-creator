@@ -62,20 +62,28 @@ const clickLevel = (name: string, level: string) => {
 }
 
 describe("Merits & Flaws affordability", () => {
-    it("reveals advanced merits and flaws when requested", () => {
-        renderPicker()
-
-        expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
+    // Advanced categories (Influence, Boons and Debts, advanced Haven, …) are shown by
+    // default so players discover them; the toggle now collapses the list to essentials.
+    const collapseToEssentials = () =>
         fireEvent.click(screen.getByTestId("toggle-all-merits-button"))
+
+    it("shows advanced merits by default and hides them when the toggle is turned off", () => {
+        renderPicker()
 
         expect(screen.getByText("Laboratory", { exact: true })).toBeInTheDocument()
         expect(
             screen.getByRole("button", { name: "Show essential merits" })
         ).toBeInTheDocument()
+
+        collapseToEssentials()
+
+        expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
+        expect(screen.getByRole("button", { name: "Show all merits" })).toBeInTheDocument()
     })
 
     it("filters by case-insensitive title, description, and category substrings", () => {
         renderPicker()
+        collapseToEssentials()
         const search = screen.getByRole("textbox", { name: "Search merits and flaws" })
 
         fireEvent.change(search, { target: { value: "LoOkS" } })
@@ -103,6 +111,7 @@ describe("Merits & Flaws affordability", () => {
 
     it("explains an unaffordable level only after the user tries to pick it", () => {
         renderPicker()
+        collapseToEssentials()
 
         // Spend 6 of 7 advantage points with non-excluding Haven merits (leaves 1).
         clickLevel("Haven", "3")

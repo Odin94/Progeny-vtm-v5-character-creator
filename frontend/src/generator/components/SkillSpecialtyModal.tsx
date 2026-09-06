@@ -2,6 +2,7 @@ import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/c
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconSparkles } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { Skills, SkillsKey, allSkills, skillsKeySchema } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
@@ -55,6 +56,11 @@ export const SpecialtyModal = ({
 
     useEffect(() => {
         if (!modalOpened) return
+        trackEvent({ action: "specialty step reached", category: "specialties" })
+    }, [modalOpened])
+
+    useEffect(() => {
+        if (!modalOpened) return
 
         // The one free specialty belongs to the character rather than a particular skill
         // allocation, so preserve its skill and text even when that skill was removed. Bonus
@@ -92,6 +98,11 @@ export const SpecialtyModal = ({
         setFreeEntries(next)
     }
 
+    const handleDismiss = () => {
+        trackEvent({ action: "specialty modal dismissed", category: "specialties" })
+        closeModal()
+    }
+
     const handleConfirm = () => {
         const result: Specialty[] = []
 
@@ -115,6 +126,13 @@ export const SpecialtyModal = ({
             }
         }
 
+        trackEvent({
+            action: "specialty confirm clicked",
+            category: "specialties",
+            label: result.map((specialty) => `${specialty.skill}: ${specialty.name}`).join(", "),
+            value: result.length
+        })
+
         closeModal()
         setCharacter({ ...character, skills, skillSpecialties: result })
         nextStep()
@@ -125,7 +143,8 @@ export const SpecialtyModal = ({
             withCloseButton={false}
             size="md"
             opened={modalOpened}
-            onClose={closeModal}
+            onClose={handleDismiss}
+            closeOnClickOutside={false}
             centered
             styles={{
                 content: {
@@ -255,7 +274,7 @@ export const SpecialtyModal = ({
 
                 {/* Footer */}
                 <Group justify="space-between" mt={4}>
-                    <Button variant="subtle" color="gray" onClick={closeModal}>
+                    <Button variant="subtle" color="gray" onClick={handleDismiss}>
                         Back
                     </Button>
                     <Button
