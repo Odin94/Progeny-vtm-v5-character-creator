@@ -57,14 +57,12 @@ Configure these repository Action secrets before the first deployment:
   `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` on the server). Compare it
   with a candidate produced by `ssh-keyscan -t ed25519 -H 46.224.62.32`, and
   only save that verified candidate as the secret value.
-- `DEPLOY_SMTP_HOST`, `DEPLOY_SMTP_PORT`, `DEPLOY_SMTP_USERNAME`,
-  `DEPLOY_SMTP_PASSWORD`, and `DEPLOY_SMTP_FROM`: TLS SMTP credentials used to
-  email `kammerloher.andreas@gmail.com` when a deployment fails. For Gmail,
-  use `smtp.gmail.com`, port `465`, and an app password rather than an account
-  password.
 
 The workflow intentionally uses strict host-key checking and does not accept a
-new host key during deployment.
+new host key during deployment. Configure GitHub's native failure-only Actions
+email notifications in [Notification settings](https://github.com/settings/notifications):
+under **System → Actions**, choose **Email** and **Only notify for failed
+workflows**. The repository must be watched for workflow notifications.
 
 You can optionally run both conveniently with `mprocs` (only tested on Windows):
 * `pnpm add -g mprocs`
