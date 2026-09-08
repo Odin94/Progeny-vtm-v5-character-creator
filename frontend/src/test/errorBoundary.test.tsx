@@ -1,7 +1,16 @@
 import { MantineProvider } from "@mantine/core"
-import { cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
+import {
+    createMemoryHistory,
+    createRootRoute,
+    createRoute,
+    createRouter,
+    Outlet,
+    RouterProvider
+} from "@tanstack/react-router"
+import RouteOutlet from "~/components/RouteOutlet"
 
 const mocks = vi.hoisted(() => ({
     captureException: vi.fn()
@@ -43,6 +52,7 @@ const renderWithProviders = (children: ReactNode) =>
 describe("ErrorBoundary", () => {
     afterEach(() => {
         cleanup()
+        vi.restoreAllMocks()
         vi.clearAllMocks()
     })
 
@@ -82,5 +92,65 @@ describe("ErrorBoundary", () => {
         )
 
         expect(screen.getByText("all good")).toBeInTheDocument()
+    })
+})
+
+describe("RouteOutlet", () => {
+    afterEach(() => {
+        cleanup()
+        vi.restoreAllMocks()
+        vi.clearAllMocks()
+    })
+
+    it("preserves healthy parent state and recovers when navigating away from a crashed route", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => {})
+        vi.spyOn(console, "warn").mockImplementation(() => {})
+        vi.spyOn(window, "scrollTo").mockImplementation(() => {})
+        function Layout() {
+            const [count, setCount] = useState(0)
+            return (
+                <>
+                    <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+                    <Outlet />
+                </>
+            )
+        }
+        const root = createRootRoute({ component: RouteOutlet })
+        const layout = createRoute({ getParentRoute: () => root, path: "pages", component: Layout })
+        const first = createRoute({
+            getParentRoute: () => layout,
+            path: "first",
+            component: () => <div>First page</div>
+        })
+        const second = createRoute({
+            getParentRoute: () => layout,
+            path: "second",
+            component: () => <div>Second page</div>
+        })
+        const broken = createRoute({ getParentRoute: () => root, path: "broken", component: Boom })
+        const router = createRouter({
+            routeTree: root.addChildren([layout.addChildren([first, second]), broken]),
+            history: createMemoryHistory({ initialEntries: ["/pages/first"] })
+        })
+        renderWithProviders(<RouterProvider router={router} />)
+        expect(await screen.findByText("First page")).toBeInTheDocument()
+        fireEvent.click(screen.getByRole("button", { name: "Count: 0" }))
+        await act(async () => {
+            await router.navigate({ href: "/pages/second" })
+        })
+        expect(await screen.findByText("Second page")).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: "Count: 1" })).toBeInTheDocument()
+
+        await act(async () => {
+            await router.navigate({ href: "/broken" })
+        })
+        expect(await screen.findByText("There was an error: route crashed")).toBeInTheDocument()
+        expect(mocks.captureException).toHaveBeenCalledOnce()
+        expect(mocks.captureException.mock.calls[0][1].react_component_stack).toContain("Boom")
+        await act(async () => {
+            await router.navigate({ href: "/pages/first" })
+        })
+        expect(await screen.findByText("First page")).toBeInTheDocument()
+        expect(screen.queryByText("There was an error: route crashed")).not.toBeInTheDocument()
     })
 })
