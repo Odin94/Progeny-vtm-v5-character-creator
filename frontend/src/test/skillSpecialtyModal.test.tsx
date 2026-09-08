@@ -36,6 +36,7 @@ describe("SkillSpecialtyModal", () => {
                 <SpecialtyModal
                     modalOpened
                     closeModal={vi.fn()}
+                    onBack={vi.fn()}
                     character={character}
                     pickedSkillNames={["academics", "performance"]}
                     skills={emptySkills}
@@ -68,6 +69,7 @@ describe("SkillSpecialtyModal", () => {
                 <SpecialtyModal
                     modalOpened
                     closeModal={closeModal}
+                    onBack={closeModal}
                     character={getBasicTestCharacter()}
                     pickedSkillNames={["athletics"]}
                     skills={emptySkills}
@@ -92,6 +94,7 @@ describe("SkillSpecialtyModal", () => {
                 <SpecialtyModal
                     modalOpened
                     closeModal={closeModal}
+                    onBack={closeModal}
                     character={getBasicTestCharacter()}
                     pickedSkillNames={["athletics"]}
                     skills={emptySkills}

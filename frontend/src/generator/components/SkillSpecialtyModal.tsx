@@ -12,6 +12,7 @@ import { lowcase, upcase } from "../utils"
 type SpecialtyModalProps = {
     modalOpened: boolean
     closeModal: () => void
+    onBack: () => void
     character: Character
     pickedSkillNames: SkillsKey[]
     skills: Skills
@@ -24,6 +25,7 @@ const BONUS_SPECIALTY_SKILLS = ["academics", "craft", "performance", "science"] 
 export const SpecialtyModal = ({
     modalOpened,
     closeModal,
+    onBack,
     setCharacter,
     nextStep,
     character,
@@ -100,7 +102,7 @@ export const SpecialtyModal = ({
 
     const handleDismiss = () => {
         trackEvent({ action: "specialty modal dismissed", category: "specialties" })
-        closeModal()
+        onBack()
     }
 
     const handleConfirm = () => {

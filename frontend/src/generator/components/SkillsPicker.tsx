@@ -504,7 +504,8 @@ const SkillsPicker = ({
 
             <SpecialtyModal
                 modalOpened={modalOpened}
-                closeModal={closeModalAndUndoLastPick}
+                closeModal={closeModal}
+                onBack={closeModalAndUndoLastPick}
                 setCharacter={setCharacter}
                 nextStep={nextStep}
                 character={character}
