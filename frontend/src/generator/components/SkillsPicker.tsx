@@ -19,11 +19,7 @@ import {
     GeneratorSectionDivider,
     GeneratorStepHero
 } from "./sharedGeneratorUi"
-import {
-    DistributionKey,
-    emptySkillsSetting,
-    SkillsSetting
-} from "../creatorDrafts"
+import { DistributionKey, emptySkillsSetting, SkillsSetting } from "../creatorDrafts"
 import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
     generatorScrollableAreaStyle,
@@ -437,53 +433,63 @@ const SkillsPicker = ({
                 <div style={generatorScrollableContentStyle}>
                     {!pickedDistribution ? (
                         <>
-                    <GeneratorStepHero
-                        leadText="Pick your"
-                        accentText="Skill Distribution"
-                        description="Balanced is the default choice"
-                        marginBottom={32}
-                    />
-                    <Grid grow m={0}>
-                        {(
-                            ["Jack of All Trades", "Balanced", "Specialist"] as DistributionKey[]
-                        ).map((distribution) => {
-                            return (
-                                <Grid.Col span={4} key={distribution}>
-                                    <Tooltip
-                                        disabled={pickedDistribution !== null}
-                                        label={distributionDescriptions[distribution]}
-                                        transitionProps={{ transition: "slide-up", duration: 200 }}
-                                        events={globals.tooltipTriggerEvents}
-                                    >
-                                        <Button
-                                            data-testid={`skill-distribution-${distribution
-                                                .toLowerCase()
-                                                .replace(/\s+/g, "-")}-button`}
-                                            p={phoneScreen ? "xs" : "default"}
-                                            disabled={pickedDistribution !== null}
-                                            color="red"
-                                            fullWidth={false}
-                                            style={{
-                                                width: "88%",
-                                                marginLeft: "auto",
-                                                marginRight: "auto",
-                                                display: "flex"
-                                            }}
-                                            onClick={() => {
-                                                setPickedDistribution(distribution)
-                                            }}
-                                        >
-                                            <Text fz={phoneScreen ? 12 : "inherit"} ta="left">
-                                                {distribution}
-                                            </Text>
-                                        </Button>
-                                    </Tooltip>
-                                </Grid.Col>
-                            )
-                        })}
-                    </Grid>
-                    <Space h="xl" />
-                    <Space h="xl" />
+                            <GeneratorStepHero
+                                leadText="Pick your"
+                                accentText="Skill Distribution"
+                                description="Balanced is the default choice"
+                                marginBottom={32}
+                            />
+                            <Grid grow m={0}>
+                                {(
+                                    [
+                                        "Jack of All Trades",
+                                        "Balanced",
+                                        "Specialist"
+                                    ] as DistributionKey[]
+                                ).map((distribution) => {
+                                    return (
+                                        <Grid.Col span={4} key={distribution}>
+                                            <Tooltip
+                                                disabled={pickedDistribution !== null}
+                                                label={distributionDescriptions[distribution]}
+                                                transitionProps={{
+                                                    transition: "slide-up",
+                                                    duration: 200
+                                                }}
+                                                events={globals.tooltipTriggerEvents}
+                                            >
+                                                <Button
+                                                    data-testid={`skill-distribution-${distribution
+                                                        .toLowerCase()
+                                                        .replace(/\s+/g, "-")}-button`}
+                                                    p={phoneScreen ? "xs" : "default"}
+                                                    disabled={pickedDistribution !== null}
+                                                    color="red"
+                                                    fullWidth={false}
+                                                    style={{
+                                                        width: "88%",
+                                                        marginLeft: "auto",
+                                                        marginRight: "auto",
+                                                        display: "flex"
+                                                    }}
+                                                    onClick={() => {
+                                                        setPickedDistribution(distribution)
+                                                    }}
+                                                >
+                                                    <Text
+                                                        fz={phoneScreen ? 12 : "inherit"}
+                                                        ta="left"
+                                                    >
+                                                        {distribution}
+                                                    </Text>
+                                                </Button>
+                                            </Tooltip>
+                                        </Grid.Col>
+                                    )
+                                })}
+                            </Grid>
+                            <Space h="xl" />
+                            <Space h="xl" />
                         </>
                     ) : (
                         <GeneratorPhasePrompt
@@ -514,11 +520,7 @@ const SkillsPicker = ({
             />
             {hasConfirmedSkills ? (
                 <Group justify="center" mt="md">
-                    <Button
-                        variant="outline"
-                        color="red"
-                        onClick={resetSkills}
-                    >
+                    <Button variant="outline" color="red" onClick={resetSkills}>
                         Reset skills
                     </Button>
                     <Button

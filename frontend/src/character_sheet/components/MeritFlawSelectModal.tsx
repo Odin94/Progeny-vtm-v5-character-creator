@@ -808,7 +808,9 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     fullWidth={phoneScreen}
                                     aria-pressed={showAdvancedMeritsAndFlaws}
                                     onClick={() =>
-                                        setShowAdvancedMeritsAndFlaws((showingAdvanced) => !showingAdvanced)
+                                        setShowAdvancedMeritsAndFlaws(
+                                            (showingAdvanced) => !showingAdvanced
+                                        )
                                     }
                                 >
                                     {showAdvancedMeritsAndFlaws

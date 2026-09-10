@@ -1,13 +1,4 @@
-import {
-    Box,
-    Button,
-    Divider,
-    Grid,
-    Group,
-    Paper,
-    Stack,
-    Text
-} from "@mantine/core"
+import { Box, Button, Divider, Grid, Group, Paper, Stack, Text } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { memo } from "react"
 import { getBloodPotencyEffectLevel, potencyEffects } from "~/data/BloodPotency"

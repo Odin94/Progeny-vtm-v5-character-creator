@@ -1,13 +1,4 @@
-import {
-    Box,
-    Grid,
-    Paper,
-    Text,
-    Center,
-    ActionIcon,
-    Group,
-    Button
-} from "@mantine/core"
+import { Box, Grid, Paper, Text, Center, ActionIcon, Group, Button } from "@mantine/core"
 import { memo, useState } from "react"
 import { SheetOptions } from "../CharacterSheet"
 import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"

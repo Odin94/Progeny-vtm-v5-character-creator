@@ -206,9 +206,7 @@ describe("debounced sheet fields", () => {
             const latestUpdate = setCharacter.mock.calls[1][0] as (
                 character: Character
             ) => Character
-            expect(latestUpdate({ ...initialCharacter, description: "A" }).description).toBe(
-                "AB"
-            )
+            expect(latestUpdate({ ...initialCharacter, description: "A" }).description).toBe("AB")
         } finally {
             vi.useRealTimers()
         }

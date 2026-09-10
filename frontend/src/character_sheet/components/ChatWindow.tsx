@@ -541,309 +541,321 @@ const ChatWindow = ({
                             }}
                             style={{ flex: 1, minHeight: 0, display: "flex" }}
                         >
-                        {view === "creating" ? (
-                            <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                                <Group gap="xs">
-                                    <ActionIcon
-                                        size="sm"
-                                        variant="subtle"
-                                        onClick={handleBack}
-                                        color={primaryColor}
-                                    >
-                                        <IconArrowLeft size={16} />
-                                    </ActionIcon>
-                                    <Text fw={600} size="lg" style={{ flex: 1 }}>
-                                        Create Session
-                                    </Text>
-                                </Group>
-                                {sessionId ? (
-                                    <>
-                                        <Text size="sm" c="dimmed">
-                                            Session created! Share this ID with others to join:
+                            {view === "creating" ? (
+                                <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                                    <Group gap="xs">
+                                        <ActionIcon
+                                            size="sm"
+                                            variant="subtle"
+                                            onClick={handleBack}
+                                            color={primaryColor}
+                                        >
+                                            <IconArrowLeft size={16} />
+                                        </ActionIcon>
+                                        <Text fw={600} size="lg" style={{ flex: 1 }}>
+                                            Create Session
                                         </Text>
-                                        <Group gap="xs">
-                                            <TextInput
-                                                value={sessionId}
-                                                readOnly
-                                                style={{ flex: 1 }}
-                                                styles={{
-                                                    input: {
-                                                        fontFamily: "monospace",
-                                                        fontSize: "0.875rem"
+                                    </Group>
+                                    {sessionId ? (
+                                        <>
+                                            <Text size="sm" c="dimmed">
+                                                Session created! Share this ID with others to join:
+                                            </Text>
+                                            <Group gap="xs">
+                                                <TextInput
+                                                    value={sessionId}
+                                                    readOnly
+                                                    style={{ flex: 1 }}
+                                                    styles={{
+                                                        input: {
+                                                            fontFamily: "monospace",
+                                                            fontSize: "0.875rem"
+                                                        }
+                                                    }}
+                                                />
+                                                <Tooltip
+                                                    label={
+                                                        copiedSessionId
+                                                            ? "Copied!"
+                                                            : "Copy to clipboard"
                                                     }
-                                                }}
-                                            />
-                                            <Tooltip
-                                                label={
-                                                    copiedSessionId
-                                                        ? "Copied!"
-                                                        : "Copy to clipboard"
-                                                }
-                                                withArrow
-                                                zIndex={2000}
-                                            >
-                                                <ActionIcon
-                                                    color={copiedSessionId ? "green" : primaryColor}
-                                                    variant="filled"
-                                                    onClick={handleCopySessionId}
+                                                    withArrow
+                                                    zIndex={2000}
                                                 >
-                                                    <span
-                                                        style={{
-                                                            position: "relative",
-                                                            display: "block",
-                                                            width: 16,
-                                                            height: 16
-                                                        }}
+                                                    <ActionIcon
+                                                        color={
+                                                            copiedSessionId ? "green" : primaryColor
+                                                        }
+                                                        variant="filled"
+                                                        onClick={handleCopySessionId}
                                                     >
-                                                        <AnimatePresence initial={false}>
-                                                            <motion.span
-                                                                key={
-                                                                    copiedSessionId
-                                                                        ? "copied"
-                                                                        : "copy"
-                                                                }
-                                                                initial={{
-                                                                    opacity: 0,
-                                                                    transform: shouldReduceMotion
-                                                                        ? "none"
-                                                                        : "scale(0.97)"
-                                                                }}
-                                                                animate={{
-                                                                    opacity: 1,
-                                                                    transform: "none"
-                                                                }}
-                                                                exit={{
-                                                                    opacity: 0,
-                                                                    transform: shouldReduceMotion
-                                                                        ? "none"
-                                                                        : "scale(0.97)"
-                                                                }}
-                                                                transition={{
-                                                                    duration: shouldReduceMotion
-                                                                        ? 0.12
-                                                                        : 0.14,
-                                                                    ease: [0.23, 1, 0.32, 1]
-                                                                }}
-                                                                style={{
-                                                                    position: "absolute",
-                                                                    inset: 0,
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center"
-                                                                }}
-                                                            >
-                                                                {copiedSessionId ? (
-                                                                    <IconCheck size={16} />
-                                                                ) : (
-                                                                    <IconCopy size={16} />
-                                                                )}
-                                                            </motion.span>
-                                                        </AnimatePresence>
-                                                    </span>
-                                                </ActionIcon>
-                                            </Tooltip>
-                                        </Group>
-                                        <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                            <Button
-                                                variant="subtle"
-                                                onClick={handleGoToChat}
-                                                color="yellow"
-                                            >
-                                                Go to chat
-                                            </Button>
-                                        </Group>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Text size="sm" c="dimmed">
-                                            Click the button below to create a new session. A unique
-                                            session ID will be generated for you to share.
+                                                        <span
+                                                            style={{
+                                                                position: "relative",
+                                                                display: "block",
+                                                                width: 16,
+                                                                height: 16
+                                                            }}
+                                                        >
+                                                            <AnimatePresence initial={false}>
+                                                                <motion.span
+                                                                    key={
+                                                                        copiedSessionId
+                                                                            ? "copied"
+                                                                            : "copy"
+                                                                    }
+                                                                    initial={{
+                                                                        opacity: 0,
+                                                                        transform:
+                                                                            shouldReduceMotion
+                                                                                ? "none"
+                                                                                : "scale(0.97)"
+                                                                    }}
+                                                                    animate={{
+                                                                        opacity: 1,
+                                                                        transform: "none"
+                                                                    }}
+                                                                    exit={{
+                                                                        opacity: 0,
+                                                                        transform:
+                                                                            shouldReduceMotion
+                                                                                ? "none"
+                                                                                : "scale(0.97)"
+                                                                    }}
+                                                                    transition={{
+                                                                        duration: shouldReduceMotion
+                                                                            ? 0.12
+                                                                            : 0.14,
+                                                                        ease: [0.23, 1, 0.32, 1]
+                                                                    }}
+                                                                    style={{
+                                                                        position: "absolute",
+                                                                        inset: 0,
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        justifyContent: "center"
+                                                                    }}
+                                                                >
+                                                                    {copiedSessionId ? (
+                                                                        <IconCheck size={16} />
+                                                                    ) : (
+                                                                        <IconCopy size={16} />
+                                                                    )}
+                                                                </motion.span>
+                                                            </AnimatePresence>
+                                                        </span>
+                                                    </ActionIcon>
+                                                </Tooltip>
+                                            </Group>
+                                            <Group justify="flex-end" style={{ marginTop: "auto" }}>
+                                                <Button
+                                                    variant="subtle"
+                                                    onClick={handleGoToChat}
+                                                    color="yellow"
+                                                >
+                                                    Go to chat
+                                                </Button>
+                                            </Group>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Text size="sm" c="dimmed">
+                                                Click the button below to create a new session. A
+                                                unique session ID will be generated for you to
+                                                share.
+                                            </Text>
+                                            <Group justify="flex-end" style={{ marginTop: "auto" }}>
+                                                <Button
+                                                    variant="subtle"
+                                                    onClick={handleBack}
+                                                    color="yellow"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    color={primaryColor}
+                                                    onClick={handleConnect}
+                                                >
+                                                    Create Session
+                                                </Button>
+                                            </Group>
+                                        </>
+                                    )}
+                                </Stack>
+                            ) : view === "joining" ? (
+                                <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                                    <Group gap="xs">
+                                        <ActionIcon
+                                            size="sm"
+                                            variant="subtle"
+                                            onClick={handleBack}
+                                            color={primaryColor}
+                                        >
+                                            <IconArrowLeft size={16} />
+                                        </ActionIcon>
+                                        <Text fw={600} size="lg" style={{ flex: 1 }}>
+                                            Join Session
                                         </Text>
-                                        <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                            <Button
-                                                variant="subtle"
-                                                onClick={handleBack}
-                                                color="yellow"
-                                            >
-                                                Cancel
-                                            </Button>
-                                            <Button color={primaryColor} onClick={handleConnect}>
-                                                Create Session
-                                            </Button>
-                                        </Group>
-                                    </>
-                                )}
-                            </Stack>
-                        ) : view === "joining" ? (
+                                    </Group>
+                                    <TextInput
+                                        placeholder="Session ID"
+                                        value={sessionInput}
+                                        onChange={(e) => {
+                                            setSessionInput(e.target.value)
+                                            setJoinError(null)
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                handleConnect()
+                                            }
+                                        }}
+                                        error={joinError || undefined}
+                                    />
+                                    {joinError ? (
+                                        <Text size="sm" c="red" style={{ marginTop: "-0.5rem" }}>
+                                            {joinError}
+                                        </Text>
+                                    ) : null}
+                                    <Group justify="flex-end" style={{ marginTop: "auto" }}>
+                                        <Button
+                                            variant="subtle"
+                                            onClick={handleBack}
+                                            color="yellow"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            color={primaryColor}
+                                            onClick={handleConnect}
+                                            disabled={
+                                                !sessionInput.trim() ||
+                                                connectionStatus === "connecting"
+                                            }
+                                            loading={connectionStatus === "connecting"}
+                                        >
+                                            Join
+                                        </Button>
+                                    </Group>
+                                </Stack>
+                            ) : view === "joiningCoterie" ? (
+                                <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
+                                    <Group gap="xs">
+                                        <ActionIcon
+                                            size="sm"
+                                            variant="subtle"
+                                            onClick={handleBack}
+                                            color={primaryColor}
+                                        >
+                                            <IconArrowLeft size={16} />
+                                        </ActionIcon>
+                                        <Text fw={600} size="lg" style={{ flex: 1 }}>
+                                            Join Coterie
+                                        </Text>
+                                    </Group>
+                                    <ScrollArea style={{ flex: 1, minHeight: 0 }}>
+                                        <Stack gap="xs">
+                                            {coteries.map((coterie) => (
+                                                <Button
+                                                    key={coterie.id}
+                                                    variant="light"
+                                                    color={primaryColor}
+                                                    fullWidth
+                                                    onClick={() => {
+                                                        connect()
+                                                        joinSession({
+                                                            coterieId: coterie.id,
+                                                            characterName
+                                                        })
+                                                        setView("disconnected")
+                                                    }}
+                                                >
+                                                    {coterie.name} {coterie.owned ? "(Owner)" : ""}
+                                                </Button>
+                                            ))}
+                                            {coteries.length === 0 ? (
+                                                <Text size="sm" c="dimmed" ta="center">
+                                                    No coteries available
+                                                </Text>
+                                            ) : null}
+                                        </Stack>
+                                    </ScrollArea>
+                                </Stack>
+                            ) : null}
+                        </motion.div>
+                    ) : connectionStatus === "disconnected" ||
+                      (view === "disconnected" && !sessionId) ? (
+                        <motion.div
+                            key="disconnected"
+                            initial={{
+                                opacity: 0,
+                                transform: shouldReduceMotion
+                                    ? "none"
+                                    : `translateX(${setupDirectionRef.current * 8}px)`
+                            }}
+                            animate={{ opacity: 1, transform: "none" }}
+                            exit={{
+                                opacity: 0,
+                                transform: shouldReduceMotion
+                                    ? "none"
+                                    : `translateX(${setupDirectionRef.current * -8}px)`
+                            }}
+                            transition={{
+                                duration: shouldReduceMotion ? 0.12 : 0.16,
+                                ease: [0.77, 0, 0.175, 1]
+                            }}
+                            style={{ flex: 1, minHeight: 0, display: "flex" }}
+                        >
                             <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                                <Group gap="xs">
-                                    <ActionIcon
-                                        size="sm"
-                                        variant="subtle"
-                                        onClick={handleBack}
-                                        color={primaryColor}
-                                    >
-                                        <IconArrowLeft size={16} />
-                                    </ActionIcon>
-                                    <Text fw={600} size="lg" style={{ flex: 1 }}>
-                                        Join Session
-                                    </Text>
-                                </Group>
-                                <TextInput
-                                    placeholder="Session ID"
-                                    value={sessionInput}
-                                    onChange={(e) => {
-                                        setSessionInput(e.target.value)
-                                        setJoinError(null)
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleConnect()
-                                        }
-                                    }}
-                                    error={joinError || undefined}
-                                />
-                                {joinError ? (
-                                    <Text size="sm" c="red" style={{ marginTop: "-0.5rem" }}>
-                                        {joinError}
-                                    </Text>
-                                ) : null}
-                                <Group justify="flex-end" style={{ marginTop: "auto" }}>
-                                    <Button variant="subtle" onClick={handleBack} color="yellow">
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        color={primaryColor}
-                                        onClick={handleConnect}
-                                        disabled={
-                                            !sessionInput.trim() ||
-                                            connectionStatus === "connecting"
-                                        }
-                                        loading={connectionStatus === "connecting"}
-                                    >
-                                        Join
-                                    </Button>
-                                </Group>
-                            </Stack>
-                        ) : view === "joiningCoterie" ? (
-                            <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                                <Group gap="xs">
-                                    <ActionIcon
-                                        size="sm"
-                                        variant="subtle"
-                                        onClick={handleBack}
-                                        color={primaryColor}
-                                    >
-                                        <IconArrowLeft size={16} />
-                                    </ActionIcon>
-                                    <Text fw={600} size="lg" style={{ flex: 1 }}>
-                                        Join Coterie
-                                    </Text>
-                                </Group>
-                                <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-                                    <Stack gap="xs">
-                                        {coteries.map((coterie) => (
+                                <Text
+                                    ta="center"
+                                    c="dimmed"
+                                    size="sm"
+                                    style={{ marginTop: "auto", marginBottom: "auto" }}
+                                >
+                                    {isAuthenticated ? (
+                                        "Join or create a session to start chatting"
+                                    ) : (
+                                        <Text
+                                            style={{ cursor: isSigningIn ? "default" : "pointer" }}
+                                            onClick={isSigningIn ? undefined : signIn}
+                                        >
+                                            {isSigningIn ? "Signing in…" : "Sign in to use chat"}
+                                        </Text>
+                                    )}
+                                </Text>
+                                {isAuthenticated ? (
+                                    <Stack gap="xs" style={{ marginTop: "auto" }}>
+                                        <Button
+                                            fullWidth
+                                            color={primaryColor}
+                                            onClick={handleCreateSession}
+                                            leftSection={<IconMessageCircle size={16} />}
+                                        >
+                                            Create Session
+                                        </Button>
+                                        {recentChatSession ? (
                                             <Button
-                                                key={coterie.id}
+                                                fullWidth
                                                 variant="light"
                                                 color={primaryColor}
-                                                fullWidth
-                                                onClick={() => {
-                                                    connect()
-                                                    joinSession({
-                                                        coterieId: coterie.id,
-                                                        characterName
-                                                    })
-                                                    setView("disconnected")
-                                                }}
+                                                onClick={handleRejoinRecentChat}
+                                                disabled={connectionStatus === "connecting"}
+                                                leftSection={<IconRefresh size={16} />}
                                             >
-                                                {coterie.name} {coterie.owned ? "(Owner)" : ""}
+                                                Rejoin Last Chat
                                             </Button>
-                                        ))}
-                                        {coteries.length === 0 ? (
-                                            <Text size="sm" c="dimmed" ta="center">
-                                                No coteries available
-                                            </Text>
                                         ) : null}
-                                    </Stack>
-                                </ScrollArea>
-                            </Stack>
-                        ) : null}
-                        </motion.div>
-                ) : connectionStatus === "disconnected" ||
-                  (view === "disconnected" && !sessionId) ? (
-                    <motion.div
-                        key="disconnected"
-                        initial={{
-                            opacity: 0,
-                            transform: shouldReduceMotion
-                                ? "none"
-                                : `translateX(${setupDirectionRef.current * 8}px)`
-                        }}
-                        animate={{ opacity: 1, transform: "none" }}
-                        exit={{
-                            opacity: 0,
-                            transform: shouldReduceMotion
-                                ? "none"
-                                : `translateX(${setupDirectionRef.current * -8}px)`
-                        }}
-                        transition={{
-                            duration: shouldReduceMotion ? 0.12 : 0.16,
-                            ease: [0.77, 0, 0.175, 1]
-                        }}
-                        style={{ flex: 1, minHeight: 0, display: "flex" }}
-                    >
-                        <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
-                            <Text
-                                ta="center"
-                                c="dimmed"
-                                size="sm"
-                                style={{ marginTop: "auto", marginBottom: "auto" }}
-                            >
-                                {isAuthenticated ? (
-                                    "Join or create a session to start chatting"
-                                ) : (
-                                    <Text
-                                        style={{ cursor: isSigningIn ? "default" : "pointer" }}
-                                        onClick={isSigningIn ? undefined : signIn}
-                                    >
-                                        {isSigningIn ? "Signing in…" : "Sign in to use chat"}
-                                    </Text>
-                                )}
-                            </Text>
-                            {isAuthenticated ? (
-                                <Stack gap="xs" style={{ marginTop: "auto" }}>
-                                <Button
-                                    fullWidth
-                                    color={primaryColor}
-                                    onClick={handleCreateSession}
-                                    leftSection={<IconMessageCircle size={16} />}
-                                >
-                                    Create Session
-                                </Button>
-                                {recentChatSession ? (
-                                    <Button
-                                        fullWidth
-                                        variant="light"
-                                        color={primaryColor}
-                                        onClick={handleRejoinRecentChat}
-                                        disabled={connectionStatus === "connecting"}
-                                        leftSection={<IconRefresh size={16} />}
-                                    >
-                                        Rejoin Last Chat
-                                    </Button>
-                                ) : null}
-                                <Button
-                                    fullWidth
-                                    variant="light"
-                                    color={primaryColor}
-                                    onClick={handleJoinSession}
-                                    leftSection={<IconMessageCircle size={16} />}
-                                >
-                                    Join Session
-                                </Button>
-                                {/* TODOdin: Uncomment once multi-account coteries are in */}
-                                {/* {coteries.length > 0 ? (
+                                        <Button
+                                            fullWidth
+                                            variant="light"
+                                            color={primaryColor}
+                                            onClick={handleJoinSession}
+                                            leftSection={<IconMessageCircle size={16} />}
+                                        >
+                                            Join Session
+                                        </Button>
+                                        {/* TODOdin: Uncomment once multi-account coteries are in */}
+                                        {/* {coteries.length > 0 ? (
                                     <Button
                                         fullWidth
                                         variant="light"
@@ -854,333 +866,345 @@ const ChatWindow = ({
                                         Join Coterie
                                     </Button>
                                 ) : null} */}
-                                </Stack>
-                            ) : null}
+                                    </Stack>
+                                ) : null}
+                            </Stack>
+                        </motion.div>
+                    ) : connectionStatus === "connecting" ? (
+                        <Stack
+                            key="connecting"
+                            gap="md"
+                            style={{ flex: 1, justifyContent: "center" }}
+                        >
+                            <Text ta="center" c="dimmed">
+                                Connecting...
+                            </Text>
                         </Stack>
-                    </motion.div>
-                ) : connectionStatus === "connecting" ? (
-                    <Stack
-                        key="connecting"
-                        gap="md"
-                        style={{ flex: 1, justifyContent: "center" }}
-                    >
-                        <Text ta="center" c="dimmed">
-                            Connecting...
-                        </Text>
-                    </Stack>
-                ) : (
-                    <div key="connected" style={{ display: "contents" }}>
-                        {participants.length > 0 ? (
-                            <Group
-                                gap="xs"
-                                mb="xs"
-                                p="xs"
-                                style={{
-                                    backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                    borderRadius: "4px"
-                                }}
-                            >
-                                <IconUsers size={14} />
-                                {participants.map((participant, index) => (
-                                    <Group key={participant.userId} gap={4} wrap="nowrap">
-                                        {index > 0 ? (
-                                            <Text size="xs" c="dimmed">
-                                                ·
-                                            </Text>
-                                        ) : null}
-                                        {participant.showNameTag ? (
-                                            <NameTag name={participant.userName} size="xs" />
-                                        ) : (
-                                            <Text size="xs" c="dimmed">
-                                                {participant.userName}
-                                            </Text>
-                                        )}
-                                    </Group>
-                                ))}
-                            </Group>
-                        ) : null}
+                    ) : (
+                        <div key="connected" style={{ display: "contents" }}>
+                            {participants.length > 0 ? (
+                                <Group
+                                    gap="xs"
+                                    mb="xs"
+                                    p="xs"
+                                    style={{
+                                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                        borderRadius: "4px"
+                                    }}
+                                >
+                                    <IconUsers size={14} />
+                                    {participants.map((participant, index) => (
+                                        <Group key={participant.userId} gap={4} wrap="nowrap">
+                                            {index > 0 ? (
+                                                <Text size="xs" c="dimmed">
+                                                    ·
+                                                </Text>
+                                            ) : null}
+                                            {participant.showNameTag ? (
+                                                <NameTag name={participant.userName} size="xs" />
+                                            ) : (
+                                                <Text size="xs" c="dimmed">
+                                                    {participant.userName}
+                                                </Text>
+                                            )}
+                                        </Group>
+                                    ))}
+                                </Group>
+                            ) : null}
 
-                        <ScrollArea style={{ flex: 1, minHeight: 0 }} mb="md">
-                            <Stack gap="xs">
-                                {messages.map((msg, idx) => {
-                                    if (msg.type === "chat_message") {
-                                        return (
-                                            <Box key={idx} style={getMessageRowStyle(msg)}>
-                                                <Box p="xs" style={getMessageBubbleStyle(msg)}>
-                                                    <Group gap="xs" mb={4}>
-                                                        {renderMessageName(msg)}
-                                                        <Text size="xs" c="dimmed">
-                                                            {formatTimestamp(msg.timestamp)}
-                                                        </Text>
-                                                    </Group>
-                                                    <Text size="sm">{msg.message}</Text>
+                            <ScrollArea style={{ flex: 1, minHeight: 0 }} mb="md">
+                                <Stack gap="xs">
+                                    {messages.map((msg, idx) => {
+                                        if (msg.type === "chat_message") {
+                                            return (
+                                                <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                    <Box p="xs" style={getMessageBubbleStyle(msg)}>
+                                                        <Group gap="xs" mb={4}>
+                                                            {renderMessageName(msg)}
+                                                            <Text size="xs" c="dimmed">
+                                                                {formatTimestamp(msg.timestamp)}
+                                                            </Text>
+                                                        </Group>
+                                                        <Text size="sm">{msg.message}</Text>
+                                                    </Box>
                                                 </Box>
-                                            </Box>
-                                        )
-                                    } else if (msg.type === "dice_roll") {
-                                        const criticalCount = msg.rollData.results.filter(
-                                            (r) =>
-                                                r.type === "critical" || r.type === "blood-critical"
-                                        ).length
-                                        const hasCriticals = criticalCount >= 2
-                                        const hasBestial = msg.rollData.results.some(
-                                            (r) => r.type === "bestial-failure"
-                                        )
-                                        function getDiceBonusStr(rollData: RollData) {
-                                            const bonuses: string[] = []
+                                            )
+                                        } else if (msg.type === "dice_roll") {
+                                            const criticalCount = msg.rollData.results.filter(
+                                                (r) =>
+                                                    r.type === "critical" ||
+                                                    r.type === "blood-critical"
+                                            ).length
+                                            const hasCriticals = criticalCount >= 2
+                                            const hasBestial = msg.rollData.results.some(
+                                                (r) => r.type === "bestial-failure"
+                                            )
+                                            function getDiceBonusStr(rollData: RollData) {
+                                                const bonuses: string[] = []
 
-                                            if (rollData.poolInfo?.bloodSurge) {
-                                                bonuses.push("Blood Surge")
+                                                if (rollData.poolInfo?.bloodSurge) {
+                                                    bonuses.push("Blood Surge")
+                                                }
+
+                                                if (
+                                                    rollData.poolInfo?.specialtyBonus &&
+                                                    rollData.poolInfo.specialtyBonus > 0
+                                                ) {
+                                                    bonuses.push(
+                                                        `${rollData.poolInfo.specialtyBonus} Specialty${rollData.poolInfo.specialtyBonus > 1 ? "ies" : ""}`
+                                                    )
+                                                }
+
+                                                if (
+                                                    rollData.poolInfo?.disciplinePowerBonus &&
+                                                    rollData.poolInfo.disciplinePowerBonus > 0
+                                                ) {
+                                                    bonuses.push(
+                                                        `${rollData.poolInfo.disciplinePowerBonus} from Discipline Powers`
+                                                    )
+                                                }
+
+                                                if (
+                                                    rollData.poolInfo?.meritFlawBonus &&
+                                                    rollData.poolInfo.meritFlawBonus !== 0
+                                                ) {
+                                                    bonuses.push(
+                                                        `${rollData.poolInfo.meritFlawBonus > 0 ? "+" : ""}${rollData.poolInfo.meritFlawBonus} from Merits/Flaws`
+                                                    )
+                                                }
+
+                                                if (bonuses.length === 0) {
+                                                    return ""
+                                                }
+
+                                                return ` (${bonuses.join(", ")})`
                                             }
 
-                                            if (
-                                                rollData.poolInfo?.specialtyBonus &&
-                                                rollData.poolInfo.specialtyBonus > 0
-                                            ) {
-                                                bonuses.push(
-                                                    `${rollData.poolInfo.specialtyBonus} Specialty${rollData.poolInfo.specialtyBonus > 1 ? "ies" : ""}`
-                                                )
-                                            }
-
-                                            if (
-                                                rollData.poolInfo?.disciplinePowerBonus &&
-                                                rollData.poolInfo.disciplinePowerBonus > 0
-                                            ) {
-                                                bonuses.push(
-                                                    `${rollData.poolInfo.disciplinePowerBonus} from Discipline Powers`
-                                                )
-                                            }
-
-                                            if (
-                                                rollData.poolInfo?.meritFlawBonus &&
-                                                rollData.poolInfo.meritFlawBonus !== 0
-                                            ) {
-                                                bonuses.push(
-                                                    `${rollData.poolInfo.meritFlawBonus > 0 ? "+" : ""}${rollData.poolInfo.meritFlawBonus} from Merits/Flaws`
-                                                )
-                                            }
-
-                                            if (bonuses.length === 0) {
-                                                return ""
-                                            }
-
-                                            return ` (${bonuses.join(", ")})`
-                                        }
-
-                                        return (
-                                            <Box key={idx} style={getMessageRowStyle(msg)}>
-                                                <Box
-                                                    p="xs"
-                                                    style={getMessageBubbleStyle(msg, "roll")}
-                                                >
-                                                    <Group gap="xs" mb={4}>
-                                                        <IconDice size={14} />
-                                                        {renderMessageName(msg)}
-                                                        <Text size="xs" c="dimmed">
-                                                            {formatTimestamp(msg.timestamp)}
+                                            return (
+                                                <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                    <Box
+                                                        p="xs"
+                                                        style={getMessageBubbleStyle(msg, "roll")}
+                                                    >
+                                                        <Group gap="xs" mb={4}>
+                                                            <IconDice size={14} />
+                                                            {renderMessageName(msg)}
+                                                            <Text size="xs" c="dimmed">
+                                                                {formatTimestamp(msg.timestamp)}
+                                                            </Text>
+                                                        </Group>
+                                                        <Text size="sm">
+                                                            Rolled{" "}
+                                                            {msg.rollData.poolInfo?.diceCount ||
+                                                                msg.rollData.dice.length}{" "}
+                                                            dice:{" "}
+                                                            <Text
+                                                                span
+                                                                fw={600}
+                                                                c={
+                                                                    msg.rollData.totalSuccesses > 0
+                                                                        ? "green"
+                                                                        : "red"
+                                                                }
+                                                            >
+                                                                {msg.rollData.totalSuccesses}{" "}
+                                                                {msg.rollData.totalSuccesses === 1
+                                                                    ? "success"
+                                                                    : "successes"}
+                                                            </Text>
+                                                            {hasCriticals ? (
+                                                                <Text span c="yellow" fw={600}>
+                                                                    {" "}
+                                                                    (crit!)
+                                                                </Text>
+                                                            ) : null}
+                                                            {hasBestial ? (
+                                                                <Text span c="red" fw={600}>
+                                                                    {" "}
+                                                                    (bestial failure!)
+                                                                </Text>
+                                                            ) : null}
                                                         </Text>
-                                                    </Group>
-                                                    <Text size="sm">
-                                                        Rolled{" "}
-                                                        {msg.rollData.poolInfo?.diceCount ||
-                                                            msg.rollData.dice.length}{" "}
-                                                        dice:{" "}
-                                                        <Text
-                                                            span
-                                                            fw={600}
-                                                            c={
-                                                                msg.rollData.totalSuccesses > 0
-                                                                    ? "green"
-                                                                    : "red"
-                                                            }
-                                                        >
-                                                            {msg.rollData.totalSuccesses}{" "}
-                                                            {msg.rollData.totalSuccesses === 1
+                                                        {msg.rollData.poolInfo ? (
+                                                            <Text size="xs" c="dimmed" mt={4}>
+                                                                {msg.rollData.poolInfo.attribute
+                                                                    ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
+                                                                    : "Custom pool"}
+                                                            </Text>
+                                                        ) : null}
+                                                        {msg.rollData.isReroll ? (
+                                                            <Text
+                                                                size="xs"
+                                                                c="yellow"
+                                                                mt={4}
+                                                                fw={600}
+                                                            >
+                                                                Willpower Reroll
+                                                            </Text>
+                                                        ) : null}
+                                                    </Box>
+                                                </Box>
+                                            )
+                                        } else if (msg.type === "rouse_check") {
+                                            return (
+                                                <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                    <Box
+                                                        p="xs"
+                                                        style={getMessageBubbleStyle(msg, "roll")}
+                                                    >
+                                                        <Group gap="xs" mb={4}>
+                                                            <IconDroplet size={14} />
+                                                            {renderMessageName(msg)}
+                                                            <Text size="xs" c="dimmed">
+                                                                {formatTimestamp(msg.timestamp)}
+                                                            </Text>
+                                                        </Group>
+                                                        <Text size="sm">
+                                                            Rouse Check:{" "}
+                                                            <Text
+                                                                span
+                                                                fw={600}
+                                                                c={msg.success ? "green" : "red"}
+                                                            >
+                                                                {msg.success
+                                                                    ? "✓ Passed"
+                                                                    : "✗ Failed"}
+                                                            </Text>
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed" mt={4}>
+                                                            Hunger: {msg.newHunger}/5
+                                                        </Text>
+                                                    </Box>
+                                                </Box>
+                                            )
+                                        } else if (msg.type === "remorse_check") {
+                                            return (
+                                                <Box key={idx} style={getMessageRowStyle(msg)}>
+                                                    <Box
+                                                        p="xs"
+                                                        style={getMessageBubbleStyle(msg, "roll")}
+                                                    >
+                                                        <Group gap="xs" mb={4}>
+                                                            <IconHeartHandshake size={14} />
+                                                            {renderMessageName(msg)}
+                                                            <Text size="xs" c="dimmed">
+                                                                {formatTimestamp(msg.timestamp)}
+                                                            </Text>
+                                                        </Group>
+                                                        <Text size="sm">
+                                                            Remorse Test: [{msg.rolls.join(", ")}] –{" "}
+                                                            {msg.successes}{" "}
+                                                            {msg.successes === 1
                                                                 ? "success"
                                                                 : "successes"}
+                                                            <Text
+                                                                span
+                                                                fw={600}
+                                                                c={msg.passed ? "green" : "red"}
+                                                            >
+                                                                {msg.passed
+                                                                    ? " ✓ Passed"
+                                                                    : " ✗ Failed"}
+                                                            </Text>
                                                         </Text>
-                                                        {hasCriticals ? (
-                                                            <Text span c="yellow" fw={600}>
-                                                                {" "}
-                                                                (crit!)
-                                                            </Text>
-                                                        ) : null}
-                                                        {hasBestial ? (
-                                                            <Text span c="red" fw={600}>
-                                                                {" "}
-                                                                (bestial failure!)
-                                                            </Text>
-                                                        ) : null}
-                                                    </Text>
-                                                    {msg.rollData.poolInfo ? (
                                                         <Text size="xs" c="dimmed" mt={4}>
-                                                            {msg.rollData.poolInfo.attribute
-                                                                ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
-                                                                : "Custom pool"}
+                                                            {msg.passed
+                                                                ? "Stains cleared."
+                                                                : `Humanity decreased to ${msg.newHumanity}.`}
                                                         </Text>
-                                                    ) : null}
-                                                    {msg.rollData.isReroll ? (
-                                                        <Text size="xs" c="yellow" mt={4} fw={600}>
-                                                            Willpower Reroll
-                                                        </Text>
-                                                    ) : null}
+                                                    </Box>
                                                 </Box>
-                                            </Box>
-                                        )
-                                    } else if (msg.type === "rouse_check") {
-                                        return (
-                                            <Box key={idx} style={getMessageRowStyle(msg)}>
+                                            )
+                                        } else if (msg.type === "error") {
+                                            return (
                                                 <Box
+                                                    key={idx}
                                                     p="xs"
-                                                    style={getMessageBubbleStyle(msg, "roll")}
+                                                    style={{
+                                                        backgroundColor: "rgba(255, 0, 0, 0.1)",
+                                                        borderRadius: "4px",
+                                                        border: "1px solid rgba(255, 0, 0, 0.3)"
+                                                    }}
                                                 >
                                                     <Group gap="xs" mb={4}>
-                                                        <IconDroplet size={14} />
-                                                        {renderMessageName(msg)}
+                                                        <IconAlertCircle size={14} color="red" />
+                                                        <Text size="sm" fw={600} c="red">
+                                                            Error
+                                                        </Text>
                                                         <Text size="xs" c="dimmed">
                                                             {formatTimestamp(msg.timestamp)}
                                                         </Text>
                                                     </Group>
-                                                    <Text size="sm">
-                                                        Rouse Check:{" "}
-                                                        <Text
-                                                            span
-                                                            fw={600}
-                                                            c={msg.success ? "green" : "red"}
-                                                        >
-                                                            {msg.success ? "✓ Passed" : "✗ Failed"}
-                                                        </Text>
-                                                    </Text>
-                                                    <Text size="xs" c="dimmed" mt={4}>
-                                                        Hunger: {msg.newHunger}/5
+                                                    <Text size="sm" c="red">
+                                                        {msg.message}
                                                     </Text>
                                                 </Box>
-                                            </Box>
-                                        )
-                                    } else if (msg.type === "remorse_check") {
-                                        return (
-                                            <Box key={idx} style={getMessageRowStyle(msg)}>
-                                                <Box
-                                                    p="xs"
-                                                    style={getMessageBubbleStyle(msg, "roll")}
-                                                >
-                                                    <Group gap="xs" mb={4}>
-                                                        <IconHeartHandshake size={14} />
-                                                        {renderMessageName(msg)}
-                                                        <Text size="xs" c="dimmed">
-                                                            {formatTimestamp(msg.timestamp)}
-                                                        </Text>
-                                                    </Group>
-                                                    <Text size="sm">
-                                                        Remorse Test: [{msg.rolls.join(", ")}] –{" "}
-                                                        {msg.successes}{" "}
-                                                        {msg.successes === 1
-                                                            ? "success"
-                                                            : "successes"}
-                                                        <Text
-                                                            span
-                                                            fw={600}
-                                                            c={msg.passed ? "green" : "red"}
-                                                        >
-                                                            {msg.passed ? " ✓ Passed" : " ✗ Failed"}
-                                                        </Text>
-                                                    </Text>
-                                                    <Text size="xs" c="dimmed" mt={4}>
-                                                        {msg.passed
-                                                            ? "Stains cleared."
-                                                            : `Humanity decreased to ${msg.newHumanity}.`}
-                                                    </Text>
-                                                </Box>
-                                            </Box>
-                                        )
-                                    } else if (msg.type === "error") {
-                                        return (
-                                            <Box
-                                                key={idx}
-                                                p="xs"
-                                                style={{
-                                                    backgroundColor: "rgba(255, 0, 0, 0.1)",
-                                                    borderRadius: "4px",
-                                                    border: "1px solid rgba(255, 0, 0, 0.3)"
-                                                }}
-                                            >
-                                                <Group gap="xs" mb={4}>
-                                                    <IconAlertCircle size={14} color="red" />
-                                                    <Text size="sm" fw={600} c="red">
-                                                        Error
-                                                    </Text>
-                                                    <Text size="xs" c="dimmed">
-                                                        {formatTimestamp(msg.timestamp)}
-                                                    </Text>
-                                                </Group>
-                                                <Text size="sm" c="red">
-                                                    {msg.message}
-                                                </Text>
-                                            </Box>
-                                        )
+                                            )
+                                        }
+                                        return null
+                                    })}
+                                    <div ref={messagesEndRef} />
+                                </Stack>
+                            </ScrollArea>
+
+                            <Group gap="xs" mb="xs">
+                                <Tooltip
+                                    label={getDisabledTooltipMessage()}
+                                    disabled={
+                                        connectionStatus === "connected" && sessionId !== null
                                     }
-                                    return null
-                                })}
-                                <div ref={messagesEndRef} />
-                            </Stack>
-                        </ScrollArea>
+                                    withArrow
+                                    zIndex={2000}
+                                >
+                                    <TextInput
+                                        placeholder="Type a message..."
+                                        value={messageInput}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            if (value.length <= 5000) {
+                                                setMessageInput(value)
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                e.preventDefault()
+                                                handleSendMessage()
+                                            }
+                                        }}
+                                        style={{ flex: 1 }}
+                                        disabled={connectionStatus !== "connected" || !sessionId}
+                                        maxLength={5000}
+                                    />
+                                </Tooltip>
+                                <ActionIcon
+                                    color={primaryColor}
+                                    variant="filled"
+                                    onClick={handleSendMessage}
+                                    disabled={
+                                        connectionStatus !== "connected" ||
+                                        !sessionId ||
+                                        !messageInput.trim()
+                                    }
+                                >
+                                    <IconMessageCircle size={18} />
+                                </ActionIcon>
+                            </Group>
 
-                        <Group gap="xs" mb="xs">
-                            <Tooltip
-                                label={getDisabledTooltipMessage()}
-                                disabled={connectionStatus === "connected" && sessionId !== null}
-                                withArrow
-                                zIndex={2000}
-                            >
-                                <TextInput
-                                    placeholder="Type a message..."
-                                    value={messageInput}
-                                    onChange={(e) => {
-                                        const value = e.target.value
-                                        if (value.length <= 5000) {
-                                            setMessageInput(value)
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" && !e.shiftKey) {
-                                            e.preventDefault()
-                                            handleSendMessage()
-                                        }
-                                    }}
-                                    style={{ flex: 1 }}
-                                    disabled={connectionStatus !== "connected" || !sessionId}
-                                    maxLength={5000}
-                                />
-                            </Tooltip>
-                            <ActionIcon
-                                color={primaryColor}
-                                variant="filled"
-                                onClick={handleSendMessage}
-                                disabled={
-                                    connectionStatus !== "connected" ||
-                                    !sessionId ||
-                                    !messageInput.trim()
-                                }
-                            >
-                                <IconMessageCircle size={18} />
-                            </ActionIcon>
-                        </Group>
-
-                        <Group gap="xs">
-                            <Text size="xs" c="dimmed">
-                                Auto-share dice rolls:
-                            </Text>
-                            <Button
-                                size="xs"
-                                variant={autoShare ? "filled" : "outline"}
-                                color={primaryColor}
-                                onClick={() => handleAutoShareToggle(!autoShare)}
-                            >
-                                {autoShare ? "On" : "Off"}
-                            </Button>
-                        </Group>
-                    </div>
-                )}
+                            <Group gap="xs">
+                                <Text size="xs" c="dimmed">
+                                    Auto-share dice rolls:
+                                </Text>
+                                <Button
+                                    size="xs"
+                                    variant={autoShare ? "filled" : "outline"}
+                                    color={primaryColor}
+                                    onClick={() => handleAutoShareToggle(!autoShare)}
+                                >
+                                    {autoShare ? "On" : "Off"}
+                                </Button>
+                            </Group>
+                        </div>
+                    )}
                 </AnimatePresence>
             </Paper>
         </>

@@ -110,11 +110,7 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
                                     : navLinkStyle
                             }
                         >
-                            {isAuthenticated
-                                ? "Account"
-                                : isSigningIn
-                                  ? "Signing in…"
-                                  : "Sign in"}
+                            {isAuthenticated ? "Account" : isSigningIn ? "Signing in…" : "Sign in"}
                         </Anchor>
                         {canUseAdminTools ? (
                             <Anchor

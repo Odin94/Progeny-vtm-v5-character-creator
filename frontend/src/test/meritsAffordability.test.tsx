@@ -49,7 +49,7 @@ const renderPicker = () => {
 
 // Walk up from a merit's name to the card <div> that also contains its level buttons.
 const cardFor = (name: string): HTMLElement => {
-    let el: HTMLElement | null = screen.getByText(name, { exact: true })
+    let el: HTMLElement | null = screen.getByText(name, { exact: true, selector: "span" })
     while (el && !el.querySelector("button")) {
         el = el.parentElement
     }
@@ -62,28 +62,37 @@ const clickLevel = (name: string, level: string) => {
 }
 
 describe("Merits & Flaws affordability", () => {
-    // Advanced categories (Influence, Boons and Debts, advanced Haven, …) are shown by
-    // default so players discover them; the toggle now collapses the list to essentials.
-    const collapseToEssentials = () =>
-        fireEvent.click(screen.getByTestId("toggle-all-merits-button"))
-
-    it("shows advanced merits by default and hides them when the toggle is turned off", () => {
+    it("shows essential merits by default and reveals advanced merits only when requested", () => {
         renderPicker()
 
-        expect(screen.getByText("Laboratory", { exact: true })).toBeInTheDocument()
-        expect(
-            screen.getByRole("button", { name: "Show essential merits" })
-        ).toBeInTheDocument()
+        expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole("button", { name: "Show all merits" }))
 
-        collapseToEssentials()
+        expect(screen.getByText("Laboratory", { exact: true })).toBeInTheDocument()
+        fireEvent.click(screen.getByRole("button", { name: "Show essential merits" }))
 
         expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
         expect(screen.getByRole("button", { name: "Show all merits" })).toBeInTheDocument()
     })
 
+    it("finds and selects Influence after enabling the advanced catalog", () => {
+        renderPicker()
+        fireEvent.change(screen.getByRole("textbox", { name: "Search merits and flaws" }), {
+            target: { value: "Influence" }
+        })
+        expect(
+            screen.queryByText("Influence", { exact: true, selector: "span" })
+        ).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole("button", { name: "Show all merits" }))
+        clickLevel("Influence", "2")
+        expect(screen.getByText("5/7", { exact: true })).toBeInTheDocument()
+        expect(
+            within(cardFor("Influence")).getByRole("button", { name: "Unpick" })
+        ).toBeInTheDocument()
+    })
+
     it("filters by case-insensitive title, description, and category substrings", () => {
         renderPicker()
-        collapseToEssentials()
         const search = screen.getByRole("textbox", { name: "Search merits and flaws" })
 
         fireEvent.change(search, { target: { value: "LoOkS" } })
@@ -111,7 +120,6 @@ describe("Merits & Flaws affordability", () => {
 
     it("explains an unaffordable level only after the user tries to pick it", () => {
         renderPicker()
-        collapseToEssentials()
 
         // Spend 6 of 7 advantage points with non-excluding Haven merits (leaves 1).
         clickLevel("Haven", "3")

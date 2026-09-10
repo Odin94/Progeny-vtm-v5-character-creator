@@ -78,22 +78,26 @@ const assertHomebrewStorageLimit = (
     items: HomebrewItemWithId[],
     isNewCollection = false
 ) => {
-    const storedCollectionSize = tx
-        .select({
-            size: sql<number>`coalesce(sum(length(cast(${schema.homebrewCollections.name} as blob)) + length(cast(${schema.homebrewCollections.shortDescription} as blob)) + length(cast(${schema.homebrewCollections.description} as blob)) + length(cast(${schema.homebrewCollections.tags} as blob)) + length(cast(${schema.homebrewCollections.contentWarning} as blob))), 0)`
-        })
-        .from(schema.homebrewCollections)
-        .where(eq(schema.homebrewCollections.ownerId, ownerId))
-        .get()?.size ?? 0
-    const storedItemSize = tx
-        .select({ size: sql<number>`coalesce(sum(length(cast(${schema.homebrewItems.data} as blob))), 0)` })
-        .from(schema.homebrewItems)
-        .innerJoin(
-            schema.homebrewCollections,
-            eq(schema.homebrewItems.collectionId, schema.homebrewCollections.id)
-        )
-        .where(eq(schema.homebrewCollections.ownerId, ownerId))
-        .get()?.size ?? 0
+    const storedCollectionSize =
+        tx
+            .select({
+                size: sql<number>`coalesce(sum(length(cast(${schema.homebrewCollections.name} as blob)) + length(cast(${schema.homebrewCollections.shortDescription} as blob)) + length(cast(${schema.homebrewCollections.description} as blob)) + length(cast(${schema.homebrewCollections.tags} as blob)) + length(cast(${schema.homebrewCollections.contentWarning} as blob))), 0)`
+            })
+            .from(schema.homebrewCollections)
+            .where(eq(schema.homebrewCollections.ownerId, ownerId))
+            .get()?.size ?? 0
+    const storedItemSize =
+        tx
+            .select({
+                size: sql<number>`coalesce(sum(length(cast(${schema.homebrewItems.data} as blob))), 0)`
+            })
+            .from(schema.homebrewItems)
+            .innerJoin(
+                schema.homebrewCollections,
+                eq(schema.homebrewItems.collectionId, schema.homebrewCollections.id)
+            )
+            .where(eq(schema.homebrewCollections.ownerId, ownerId))
+            .get()?.size ?? 0
     let existingCollectionSize = 0
     if (existingCollectionId) {
         const storedExistingCollectionSize =
@@ -106,15 +110,19 @@ const assertHomebrewStorageLimit = (
                 .get()?.size ?? 0
         const storedExistingItemSize =
             tx
-                .select({ size: sql<number>`coalesce(sum(length(cast(${schema.homebrewItems.data} as blob))), 0)` })
+                .select({
+                    size: sql<number>`coalesce(sum(length(cast(${schema.homebrewItems.data} as blob))), 0)`
+                })
                 .from(schema.homebrewItems)
                 .where(eq(schema.homebrewItems.collectionId, existingCollectionId))
                 .get()?.size ?? 0
-        existingCollectionSize = Number(storedExistingCollectionSize) + Number(storedExistingItemSize)
+        existingCollectionSize =
+            Number(storedExistingCollectionSize) + Number(storedExistingItemSize)
     }
     const currentSize = Number(storedCollectionSize) + Number(storedItemSize)
     const sizeBeforeSave = currentSize - existingCollectionSize
-    const projectedSize = sizeBeforeSave + collectionStorageSize(collection) + itemsStorageSize(items)
+    const projectedSize =
+        sizeBeforeSave + collectionStorageSize(collection) + itemsStorageSize(items)
     const sizeToCompareAgainst = isNewCollection ? sizeBeforeSave : currentSize
 
     // Existing accounts that predate the limit can still save changes that do not grow their data.

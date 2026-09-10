@@ -43,8 +43,7 @@ export const SpecialtyModal = ({
     const freeSkills = useMemo(
         () =>
             pickedSkillNames.filter(
-                (s) =>
-                    !(BONUS_SPECIALTY_SKILLS as readonly string[]).includes(s)
+                (s) => !(BONUS_SPECIALTY_SKILLS as readonly string[]).includes(s)
             ),
         [pickedSkillNames]
     )
@@ -84,8 +83,8 @@ export const SpecialtyModal = ({
                 BONUS_SPECIALTY_SKILLS.map((skill) => [
                     skill,
                     bonusSkills.includes(skill)
-                        ? character.skillSpecialties.find((specialty) => specialty.skill === skill)
-                              ?.name ?? ""
+                        ? (character.skillSpecialties.find((specialty) => specialty.skill === skill)
+                              ?.name ?? "")
                         : ""
                 ])
             )
@@ -131,7 +130,6 @@ export const SpecialtyModal = ({
         trackEvent({
             action: "specialty confirm clicked",
             category: "specialties",
-            label: result.map((specialty) => `${specialty.skill}: ${specialty.name}`).join(", "),
             value: result.length
         })
 
@@ -142,6 +140,7 @@ export const SpecialtyModal = ({
 
     return (
         <Modal
+            title="Skill Specialties"
             withCloseButton={false}
             size="md"
             opened={modalOpened}
@@ -149,6 +148,7 @@ export const SpecialtyModal = ({
             closeOnClickOutside={false}
             centered
             styles={{
+                header: { display: "none" },
                 content: {
                     background: "rgba(18, 15, 14, 0.97)",
                     border: "1px solid rgba(255,255,255,0.08)",
@@ -212,8 +212,7 @@ export const SpecialtyModal = ({
                                 data={Array.from(new Set([...freeSkills, entry.skill]))
                                     .filter(
                                         (s) =>
-                                            s &&
-                                            (s === entry.skill || !usedFreeSkills.includes(s))
+                                            s && (s === entry.skill || !usedFreeSkills.includes(s))
                                     )
                                     .map((s) => ({ value: s, label: upcase(s) }))}
                                 color={RED}

@@ -42,7 +42,9 @@ test("blocked pip click surfaces the reason inline without hovering", async ({ p
 
 test("adding a skill specialty drops straight into naming it", async ({ page }) => {
     // Free mode has no XP gate, so the add always succeeds.
-    await page.addInitScript(() => localStorage.setItem("characterSheetMode", JSON.stringify("free")))
+    await page.addInitScript(() =>
+        localStorage.setItem("characterSheetMode", JSON.stringify("free"))
+    )
     await page.goto("/sheet")
 
     const athleticsRow = page

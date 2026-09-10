@@ -80,18 +80,23 @@ describe("SkillsPicker specialties", () => {
         expect(saved.skillSpecialties).toContainEqual({ skill: "athletics", name: "climbing" })
     })
 
-    it("undoes only the last pick on Back without saving or advancing", async () => {
-        const nextStep = vi.fn()
-        render(<Harness nextStep={nextStep} />)
-        fireEvent.click(screen.getByTestId("skill-animal-ken-button"))
-        fireEvent.click(await screen.findByRole("button", { name: "Back" }))
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
-        expect(JSON.parse(screen.getByTestId("draft-selection").textContent!)).toEqual(
-            initialSelection
-        )
-        expect(
-            JSON.parse(screen.getByTestId("saved-character").textContent!).skills["animal ken"]
-        ).toBe(0)
-        expect(nextStep).not.toHaveBeenCalled()
-    })
+    it.each(["Back", "Escape"])(
+        "undoes only the last pick on %s without saving or advancing",
+        async (dismissal) => {
+            const nextStep = vi.fn()
+            render(<Harness nextStep={nextStep} />)
+            fireEvent.click(screen.getByTestId("skill-animal-ken-button"))
+            const backButton = await screen.findByRole("button", { name: "Back" })
+            if (dismissal === "Back") fireEvent.click(backButton)
+            else await userEvent.setup().keyboard("{Escape}")
+            await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+            expect(JSON.parse(screen.getByTestId("draft-selection").textContent!)).toEqual(
+                initialSelection
+            )
+            expect(
+                JSON.parse(screen.getByTestId("saved-character").textContent!).skills["animal ken"]
+            ).toBe(0)
+            expect(nextStep).not.toHaveBeenCalled()
+        }
+    )
 })

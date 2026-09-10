@@ -90,7 +90,8 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             if (!errors[field]) errors[field] = message
         }
         const validateLength = (field: string, value: string, maximum: number) => {
-            if (value.trim().length > maximum) addError(field, `Use ${maximum} characters or fewer.`)
+            if (value.trim().length > maximum)
+                addError(field, `Use ${maximum} characters or fewer.`)
         }
         const validLogo = (value: string) => {
             if (!value.trim()) return true
@@ -107,7 +108,8 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
 
         if ("summary" in draft) validateLength("summary", draft.summary, 500)
         if ("description" in draft) validateLength("description", draft.description, 20_000)
-        if ("logo" in draft && !validLogo(draft.logo)) addError("logo", "Enter a valid URL or leave this empty.")
+        if ("logo" in draft && !validLogo(draft.logo))
+            addError("logo", "Enter a valid URL or leave this empty.")
         if ("logo" in draft) validateLength("logo", draft.logo, 2_000)
 
         if (["power", "ritual", "ceremony", "formula"].includes(draft.kind)) {
@@ -117,7 +119,11 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             if (!Number.isInteger(power.level) || power.level < 1 || power.level > 5) {
                 addError("level", "Choose a level from 1 to 5.")
             }
-            if (!Number.isInteger(power.rouseChecks) || power.rouseChecks < 0 || power.rouseChecks > 5) {
+            if (
+                !Number.isInteger(power.rouseChecks) ||
+                power.rouseChecks < 0 ||
+                power.rouseChecks > 5
+            ) {
                 addError("rouseChecks", "Use a value from 0 to 5.")
             }
             validateLength("dicePool", power.dicePool, 250)
@@ -128,7 +134,11 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                 if (!prerequisite.discipline.trim()) {
                     addError(`amalgamPrerequisites.${index}.discipline`, "Choose a Discipline.")
                 }
-                if (!Number.isInteger(prerequisite.level) || prerequisite.level < 1 || prerequisite.level > 5) {
+                if (
+                    !Number.isInteger(prerequisite.level) ||
+                    prerequisite.level < 1 ||
+                    prerequisite.level > 5
+                ) {
                     addError(`amalgamPrerequisites.${index}.level`, "Use a level from 1 to 5.")
                 }
             })
@@ -154,10 +164,16 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
 
         if (draft.kind === "merit" || draft.kind === "flaw") {
             if (!draft.costs.length) addError("costs", "Add at least one dot cost.")
-            if (draft.costs.length > 5 || draft.costs.some((cost) => !Number.isInteger(cost) || cost < 1 || cost > 5)) {
+            if (
+                draft.costs.length > 5 ||
+                draft.costs.some((cost) => !Number.isInteger(cost) || cost < 1 || cost > 5)
+            ) {
                 addError("costs", "Use up to five whole-number costs from 1 to 5.")
             }
-            if (draft.excludes.length > 20 || draft.excludes.some((value) => !value.trim() || value.trim().length > 100)) {
+            if (
+                draft.excludes.length > 20 ||
+                draft.excludes.some((value) => !value.trim() || value.trim().length > 100)
+            ) {
                 addError("excludes", "Use up to twenty names of 100 characters or fewer.")
             }
         }
@@ -165,13 +181,17 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
         if (draft.kind === "loresheet") {
             validateLength("source", draft.source, 200)
             validateLength("requirements", draft.requirements, 2_000)
-            if (draft.tiers.length !== 5 || new Set(draft.tiers.map((tier) => tier.level)).size !== 5) {
+            if (
+                draft.tiers.length !== 5 ||
+                new Set(draft.tiers.map((tier) => tier.level)).size !== 5
+            ) {
                 addError("tiers", "Add one unique tier for each level from 1 to 5.")
             }
             draft.tiers.forEach((tier, index) => {
                 if (!tier.name.trim()) addError(`tiers.${index}.name`, "A level name is required.")
                 validateLength(`tiers.${index}.name`, tier.name, 100)
-                if (!tier.summary.trim()) addError(`tiers.${index}.summary`, "Describe this benefit.")
+                if (!tier.summary.trim())
+                    addError(`tiers.${index}.summary`, "Describe this benefit.")
                 validateLength(`tiers.${index}.summary`, tier.summary, 2_000)
             })
         }
@@ -181,13 +201,19 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             if (!draft.compulsion.trim()) addError("compulsion", "A compulsion is required.")
             validateLength("bane", draft.bane, 5_000)
             validateLength("compulsion", draft.compulsion, 5_000)
-            if (!draft.nativeDisciplines.length) addError("nativeDisciplines", "Choose at least one native Discipline.")
-            if (draft.nativeDisciplines.length > 5) addError("nativeDisciplines", "Choose at most five native Disciplines.")
-            if (draft.nativeDisciplineRefs?.some(
-                (reference) =>
-                    reference.type === "homebrew" &&
-                    !homebrewDisciplines.some((discipline) => discipline.id === reference.itemId)
-            )) {
+            if (!draft.nativeDisciplines.length)
+                addError("nativeDisciplines", "Choose at least one native Discipline.")
+            if (draft.nativeDisciplines.length > 5)
+                addError("nativeDisciplines", "Choose at most five native Disciplines.")
+            if (
+                draft.nativeDisciplineRefs?.some(
+                    (reference) =>
+                        reference.type === "homebrew" &&
+                        !homebrewDisciplines.some(
+                            (discipline) => discipline.id === reference.itemId
+                        )
+                )
+            ) {
                 addError(
                     "nativeDisciplines",
                     "Each Homebrew Discipline must target an item in this collection."
@@ -708,7 +734,11 @@ const LoresheetEditor = ({
                     ))}
                 </section>
 
-                {errors.tiers ? <Text c="red" size="sm">{errors.tiers}</Text> : null}
+                {errors.tiers ? (
+                    <Text c="red" size="sm">
+                        {errors.tiers}
+                    </Text>
+                ) : null}
                 <footer className="homebrew-loresheet__footer">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel

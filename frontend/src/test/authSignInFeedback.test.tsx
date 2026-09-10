@@ -253,7 +253,9 @@ describe("useAuth sign-in pending state", () => {
             result.current.signIn()
         })
 
-        const startedCalls = mocks.capture.mock.calls.filter((call) => call[0] === "sign_in_started")
+        const startedCalls = mocks.capture.mock.calls.filter(
+            (call) => call[0] === "sign_in_started"
+        )
         expect(startedCalls).toHaveLength(1)
     })
 

@@ -54,9 +54,7 @@ describe("SkillSpecialtyModal", () => {
         expect(screen.getByRole("combobox", { name: "Free specialty skill" })).toHaveValue(
             "Athletics"
         )
-        expect(screen.getByRole("textbox", { name: "Academics specialty" })).toHaveValue(
-            "history"
-        )
+        expect(screen.getByRole("textbox", { name: "Academics specialty" })).toHaveValue("history")
         expect(screen.getByRole("textbox", { name: "Performance specialty" })).toHaveValue("")
         expect(screen.queryByRole("textbox", { name: "Craft specialty" })).not.toBeInTheDocument()
     })

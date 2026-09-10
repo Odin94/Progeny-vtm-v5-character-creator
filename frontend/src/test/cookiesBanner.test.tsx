@@ -3,10 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import { CookiesBanner } from "~/components/CookiesBanner"
-import {
-    COOKIE_PREFERENCES_CHANGED_EVENT,
-    openCookiePreferences
-} from "~/utils/cookiePreferences"
+import { COOKIE_PREFERENCES_CHANGED_EVENT, openCookiePreferences } from "~/utils/cookiePreferences"
 
 const mockUseAuth = vi.fn(() => ({ isAuthenticated: false, isLoading: false }))
 const mockOpenSupportConversation = vi.fn()
@@ -19,7 +16,7 @@ vi.mock("posthog-js", () => ({
     default: {
         get_explicit_consent_status: vi.fn(),
         opt_in_capturing: vi.fn(),
-        opt_out_capturing: vi.fn(),
+        opt_out_capturing: vi.fn()
     }
 }))
 

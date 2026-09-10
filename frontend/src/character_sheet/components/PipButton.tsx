@@ -46,9 +46,10 @@ const PipButton = ({
         cursor: isInteractive ? "pointer" : "default",
         opacity: isDisabled ? 0.55 : 1,
         transform: "scale(1)",
-        transition: instant || shouldReduceMotion
-            ? "none"
-            : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+        transition:
+            instant || shouldReduceMotion
+                ? "none"
+                : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
         overflow: "visible",
         ...style
@@ -84,11 +85,12 @@ const PipButton = ({
                     backgroundColor: baseColor,
                     borderRadius: "50%",
                     opacity: filled ? 1 : 0,
-                    transform: instant || shouldReduceMotion
-                        ? "scale(1)"
-                        : filled
-                          ? "scale(1)"
-                          : "scale(0.95)",
+                    transform:
+                        instant || shouldReduceMotion
+                            ? "scale(1)"
+                            : filled
+                              ? "scale(1)"
+                              : "scale(0.95)",
                     transition:
                         instant || shouldReduceMotion
                             ? "none"

@@ -139,7 +139,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         <Text
                                                             fw={700}
                                                             style={{
-                                                                paddingRight: isFreeMode ? "60px" : "0"
+                                                                paddingRight: isFreeMode
+                                                                    ? "60px"
+                                                                    : "0"
                                                             }}
                                                         >
                                                             {getMeritFlawDisplayName(merit)}
@@ -291,7 +293,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         <Text
                                                             fw={700}
                                                             style={{
-                                                                paddingRight: isFreeMode ? "60px" : "0"
+                                                                paddingRight: isFreeMode
+                                                                    ? "60px"
+                                                                    : "0"
                                                             }}
                                                         >
                                                             {getMeritFlawDisplayName(flaw)}
