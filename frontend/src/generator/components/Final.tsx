@@ -43,6 +43,7 @@ type FinalProps = {
     character: Character
     setCharacter: (character: Character) => void
     setSelectedStep: (step: GeneratorStepId) => void
+    onCharacterReset: () => void
 }
 
 const COLORS = {
@@ -67,7 +68,7 @@ const FONT_DISPLAY = "Cinzel, Georgia, serif"
 const FONT_BODY = "Crimson Text, Georgia, serif"
 const FONT_UI = "Inter, Segoe UI, sans-serif"
 
-const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
+const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: FinalProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] =
         useDisclosure(false)
@@ -681,6 +682,7 @@ const Final = ({ character, setCharacter, setSelectedStep }: FinalProps) => {
             </div>
 
             <ResetModal
+                onCharacterReset={onCharacterReset}
                 setCharacter={setCharacter}
                 setSelectedStep={setSelectedStep}
                 resetModalOpened={resetModalOpened}

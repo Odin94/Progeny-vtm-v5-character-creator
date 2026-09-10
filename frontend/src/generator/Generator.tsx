@@ -8,6 +8,8 @@ import { PredatorTypeName } from "../data/NameSchemas"
 import {
     AttributeSetting,
     DistributionKey,
+    emptyAttributeSetting,
+    emptySkillsSetting,
     getAttributeSetting,
     getDisciplineDraft,
     getSkillDistribution,
@@ -76,6 +78,14 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
 
     const clearPredatorTypeDisciplineDraft = () => {
         setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
+    }
+
+    const clearCharacterDrafts = () => {
+        setAttributeDraft(emptyAttributeSetting)
+        setSkillsDraft(emptySkillsSetting)
+        setSkillsDistribution(null)
+        setGenerationDraft(null)
+        clearClanDependentDrafts()
     }
 
     const skipPredatorType = () => {
@@ -257,6 +267,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
             case "final":
                 return (
                     <Final
+                        onCharacterReset={clearCharacterDrafts}
                         character={character}
                         setCharacter={setCharacter}
                         setSelectedStep={setSelectedStep}

@@ -7,13 +7,15 @@ export type ResetModalProps = {
     setSelectedStep: (step: GeneratorStepId) => void
     resetModalOpened: boolean
     closeResetModal: () => void
+    onCharacterReset?: () => void
 }
 
 const ResetModal = ({
     resetModalOpened,
     closeResetModal,
     setCharacter,
-    setSelectedStep
+    setSelectedStep,
+    onCharacterReset
 }: ResetModalProps) => {
     return (
         <ConfirmActionModal
@@ -21,6 +23,7 @@ const ResetModal = ({
             onClose={closeResetModal}
             onConfirm={() => {
                 setCharacter(getEmptyCharacter())
+                onCharacterReset?.()
                 setSelectedStep(defaultGeneratorStepId)
                 closeResetModal()
             }}
