@@ -397,7 +397,8 @@ const AdminImpersonationPage = () => {
                                                                 <Table.Tbody>{rows}</Table.Tbody>
                                                             </Table>
                                                         </Table.ScrollContainer>
-                                                        {!usersData ? null : usersData.total === 0 ? (
+                                                        {!usersData ? null : usersData.total ===
+                                                          0 ? (
                                                             <Text c="dimmed" ta="center">
                                                                 No users found.
                                                             </Text>
@@ -410,17 +411,13 @@ const AdminImpersonationPage = () => {
                                                                         1}
                                                                     –
                                                                     {Math.min(
-                                                                        page *
-                                                                            usersData
-                                                                                .pageSize,
+                                                                        page * usersData.pageSize,
                                                                         usersData.total
                                                                     )}{" "}
                                                                     of {usersData.total} users
                                                                 </Text>
                                                                 <Pagination
-                                                                    total={
-                                                                        usersData.totalPages
-                                                                    }
+                                                                    total={usersData.totalPages}
                                                                     value={page}
                                                                     onChange={setPage}
                                                                     color="yellow"

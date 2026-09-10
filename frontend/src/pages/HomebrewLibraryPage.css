@@ -46,7 +46,10 @@
     align-items: center;
     display: grid;
     gap: 1.25rem;
-    grid-template-columns: minmax(15rem, 1.4fr) minmax(7rem, 0.45fr) minmax(15rem, 1.25fr) minmax(7rem, 0.55fr) minmax(8rem, 0.5fr);
+    grid-template-columns: minmax(15rem, 1.4fr) minmax(7rem, 0.45fr) minmax(15rem, 1.25fr) minmax(
+            7rem,
+            0.55fr
+        ) minmax(8rem, 0.5fr);
 }
 
 .homebrew-library-card__collection {
@@ -65,7 +68,10 @@
 
 @media (max-width: 76rem) {
     .homebrew-library-card__grid {
-        grid-template-columns: minmax(15rem, 1.4fr) minmax(12rem, 1fr) repeat(2, minmax(8rem, 0.55fr));
+        grid-template-columns: minmax(15rem, 1.4fr) minmax(12rem, 1fr) repeat(
+                2,
+                minmax(8rem, 0.55fr)
+            );
     }
 
     .homebrew-library-card__collection {

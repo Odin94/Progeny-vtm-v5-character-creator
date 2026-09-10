@@ -15,12 +15,7 @@ import {
     Text,
     Title
 } from "@mantine/core"
-import {
-    IconBook2,
-    IconPlus,
-    IconTrash,
-    IconBooks
-} from "@tabler/icons-react"
+import { IconBook2, IconPlus, IconTrash, IconBooks } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import type { HomebrewCollection } from "~/data/Homebrew"
@@ -40,8 +35,7 @@ const HomebrewPage = () => {
         data: collections = [],
         isLoading: collectionsLoading,
         error: collectionsError
-    } =
-        useHomebrewCollections(isAuthenticated)
+    } = useHomebrewCollections(isAuthenticated)
     const deleteMutation = useDeleteHomebrewCollection()
     const setAccountEnabledMutation = useSetHomebrewCollectionAccountEnabled()
     const [deleteTarget, setDeleteTarget] = useState<HomebrewCollection | null>(null)
@@ -211,8 +205,12 @@ const HomebrewPage = () => {
                                                     <Switch
                                                         size="sm"
                                                         label="Enable for all my characters"
-                                                        checked={collection.enabledForAccount ?? false}
-                                                        disabled={setAccountEnabledMutation.isPending}
+                                                        checked={
+                                                            collection.enabledForAccount ?? false
+                                                        }
+                                                        disabled={
+                                                            setAccountEnabledMutation.isPending
+                                                        }
                                                         onChange={(event) =>
                                                             setAccountEnabledMutation.mutate({
                                                                 collectionId: collection.id,

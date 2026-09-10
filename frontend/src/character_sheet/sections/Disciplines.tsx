@@ -309,8 +309,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     )
                 )
                 const remainingDisciplines = current.disciplines.filter(
-                    (power) =>
-                        getPowerDisciplineIdentity(power) !== itemToDelete.disciplineIdentity
+                    (power) => getPowerDisciplineIdentity(power) !== itemToDelete.disciplineIdentity
                 )
                 Object.entries(updatedCustomDisciplines).forEach(([key, definition]) => {
                     if (
@@ -442,34 +441,41 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             level={disciplineLevel}
                                                             minLevel={1}
                                                             options={options}
-                                                            readOnly={!isFreeMode || !options.canEdit}
+                                                            readOnly={
+                                                                !isFreeMode || !options.canEdit
+                                                            }
                                                             instant
                                                             onLevelChange={
                                                                 isFreeMode && options.canEdit
                                                                     ? (level) => {
-                                                                          setCharacter((current) => {
-                                                                              const updatedCharacter = {
-                                                                                  ...current,
-                                                                                  disciplineLevels: {
-                                                                                      ...current.disciplineLevels,
-                                                                                      [identity]: level
+                                                                          setCharacter(
+                                                                              (current) => {
+                                                                                  const updatedCharacter =
+                                                                                      {
+                                                                                          ...current,
+                                                                                          disciplineLevels:
+                                                                                              {
+                                                                                                  ...current.disciplineLevels,
+                                                                                                  [identity]:
+                                                                                                      level
+                                                                                              }
+                                                                                      }
+                                                                                  if (
+                                                                                      identity ===
+                                                                                          "official:fortitude" &&
+                                                                                      current.disciplines.some(
+                                                                                          (power) =>
+                                                                                              power.name ===
+                                                                                              "Resilience"
+                                                                                      )
+                                                                                  ) {
+                                                                                      updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                                                                          updatedCharacter
+                                                                                      )
                                                                                   }
+                                                                                  return updatedCharacter
                                                                               }
-                                                                              if (
-                                                                                  identity ===
-                                                                                      "official:fortitude" &&
-                                                                                  current.disciplines.some(
-                                                                                      (power) =>
-                                                                                          power.name ===
-                                                                                          "Resilience"
-                                                                                  )
-                                                                              ) {
-                                                                                  updateHealthAndWillpowerAndBloodPotencyAndHumanity(
-                                                                                      updatedCharacter
-                                                                                  )
-                                                                              }
-                                                                              return updatedCharacter
-                                                                          })
+                                                                          )
                                                                       }
                                                                     : undefined
                                                             }
@@ -628,7 +634,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                     radius="md"
                                                                     variant="light"
                                                                     color={primaryColor}
-                                                                    leftSection={<IconPlus size={16} />}
+                                                                    leftSection={
+                                                                        <IconPlus size={16} />
+                                                                    }
                                                                     onClick={(e) => {
                                                                         e.stopPropagation()
                                                                         setInitialDiscipline(

@@ -42,13 +42,8 @@ export const useUpdateCharacter = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({
-            id,
-            data
-        }: {
-            id: string
-            data: UpdateCharacterPayload
-        }) => api.updateCharacter(id, data),
+        mutationFn: ({ id, data }: { id: string; data: UpdateCharacterPayload }) =>
+            api.updateCharacter(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["characters", variables.id] })

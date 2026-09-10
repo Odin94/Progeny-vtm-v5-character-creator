@@ -40,7 +40,9 @@ const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) =
                         </Text>
                         <Title order={1}>{collection.name || "Untitled collection"}</Title>
                     </div>
-                    {collection.shortDescription ? <Text>{collection.shortDescription}</Text> : null}
+                    {collection.shortDescription ? (
+                        <Text>{collection.shortDescription}</Text>
+                    ) : null}
                     {collection.description ? (
                         <Text c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
                             {collection.description}

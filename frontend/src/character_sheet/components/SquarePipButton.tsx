@@ -49,9 +49,7 @@ const SquarePipButton = ({
         backgroundColor: "transparent",
         cursor: isInteractive ? "pointer" : "default",
         transform: "scale(1)",
-        transition: shouldReduceMotion
-            ? "none"
-            : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+        transition: shouldReduceMotion ? "none" : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
         overflow: "visible",
         ...style

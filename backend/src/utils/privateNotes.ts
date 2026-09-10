@@ -133,11 +133,15 @@ export const getPrivateNoteWriteAction = ({
         : "update"
 }
 
-export const getPrivateNoteDuplicateVersionIdAfterUpdate = <T extends {
-    id: string
-    content: string
-}>(nextContent: string, previousHistoricalVersion?: T) =>
-    previousHistoricalVersion?.content === nextContent ? previousHistoricalVersion.id : undefined
+export const getPrivateNoteDuplicateVersionIdAfterUpdate = <
+    T extends {
+        id: string
+        content: string
+    }
+>(
+    nextContent: string,
+    previousHistoricalVersion?: T
+) => (previousHistoricalVersion?.content === nextContent ? previousHistoricalVersion.id : undefined)
 
 export const getPrivateNoteVersionIdsToPrune = <T extends { id: string }>(
     versionsOldestFirst: T[]

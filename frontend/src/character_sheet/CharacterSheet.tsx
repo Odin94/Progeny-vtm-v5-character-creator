@@ -316,7 +316,9 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 <Skills options={sheetOptions} />
 
                                 {character.disciplines.length > 0 ||
-                                Object.values(character.disciplineLevels).some((level) => level > 0) ||
+                                Object.values(character.disciplineLevels).some(
+                                    (level) => level > 0
+                                ) ||
                                 character.rituals.length > 0 ||
                                 character.ceremonies.length > 0 ||
                                 mode !== "play" ? (

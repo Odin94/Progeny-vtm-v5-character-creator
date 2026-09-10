@@ -60,9 +60,7 @@ test("the topbar Sign in link shows a pending label while the redirect is in fli
 
     const topbar = page.getByRole("banner")
     // noWaitAfter: the click starts a navigation we cancel, so do not block on it.
-    await topbar
-        .getByRole("link", { name: "Sign in", exact: true })
-        .click({ noWaitAfter: true })
+    await topbar.getByRole("link", { name: "Sign in", exact: true }).click({ noWaitAfter: true })
 
     // The click is now acknowledged: the label flips to a pending state instead
     // of sitting silent, and the plain "Sign in" link is gone.

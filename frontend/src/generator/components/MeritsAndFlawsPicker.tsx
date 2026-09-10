@@ -732,48 +732,50 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                 }}
                             >
                                 <Group gap="sm" align="center" wrap="wrap">
-                                <Tabs.List style={{ flex: 1, minWidth: 0 }}>
-                                    <Tabs.Tab
-                                        value="merits"
-                                        style={
-                                            activeTab === "merits"
-                                                ? {
-                                                      background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
-                                                      border: `1px solid ${rgba(RAW_RED, 0.6)}`,
-                                                      color: "rgba(248, 240, 235, 0.96)",
-                                                      boxShadow:
-                                                          "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                                      transform: "translateY(-1px)"
-                                                  }
-                                                : undefined
-                                        }
-                                    >
-                                        Merits & Flaws
-                                    </Tabs.Tab>
-                                    <Tabs.Tab
-                                        value="loresheets"
-                                        style={
-                                            activeTab === "loresheets"
-                                                ? {
-                                                      background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
-                                                      border: `1px solid ${rgba(RAW_RED, 0.6)}`,
-                                                      color: "rgba(248, 240, 235, 0.96)",
-                                                      boxShadow:
-                                                          "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                                      transform: "translateY(-1px)"
-                                                  }
-                                                : undefined
-                                        }
-                                    >
-                                        Loresheets
-                                    </Tabs.Tab>
-                                </Tabs.List>
+                                    <Tabs.List style={{ flex: 1, minWidth: 0 }}>
+                                        <Tabs.Tab
+                                            value="merits"
+                                            style={
+                                                activeTab === "merits"
+                                                    ? {
+                                                          background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
+                                                          border: `1px solid ${rgba(RAW_RED, 0.6)}`,
+                                                          color: "rgba(248, 240, 235, 0.96)",
+                                                          boxShadow:
+                                                              "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                                          transform: "translateY(-1px)"
+                                                      }
+                                                    : undefined
+                                            }
+                                        >
+                                            Merits & Flaws
+                                        </Tabs.Tab>
+                                        <Tabs.Tab
+                                            value="loresheets"
+                                            style={
+                                                activeTab === "loresheets"
+                                                    ? {
+                                                          background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.4)}, ${rgba(RAW_RED, 0.35)})`,
+                                                          border: `1px solid ${rgba(RAW_RED, 0.6)}`,
+                                                          color: "rgba(248, 240, 235, 0.96)",
+                                                          boxShadow:
+                                                              "0 4px 20px rgba(180, 60, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                                          transform: "translateY(-1px)"
+                                                      }
+                                                    : undefined
+                                            }
+                                        >
+                                            Loresheets
+                                        </Tabs.Tab>
+                                    </Tabs.List>
                                     <Button
                                         data-testid="toggle-all-merits-button"
                                         variant="outline"
                                         color="red"
                                         size="xs"
-                                        onClick={() => setShowAllMerits((showingAll) => !showingAll)}
+                                        onClick={() =>
+                                            setShowAllMerits((showingAll) => !showingAll)
+                                        }
                                         styles={{
                                             root: {
                                                 whiteSpace: "nowrap",
@@ -861,7 +863,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         <Grid m={0} gap="lg">
                                             {isThinBlood
                                                 ? thinBloodMeritsAndFlawsComponent(
-                                                    getMeritOrFlawLine,
+                                                      getMeritOrFlawLine,
                                                       phoneScreen,
                                                       filteredThinbloodMerits,
                                                       filteredThinbloodFlaws
@@ -903,7 +905,8 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                                 })}
                                         </Grid>
                                         {!showEveryFilteredCategory &&
-                                        visibleCategoryCount < filteredMeritFlawCategories.length ? (
+                                        visibleCategoryCount <
+                                            filteredMeritFlawCategories.length ? (
                                             <div ref={categorySentinelRef} aria-hidden="true" />
                                         ) : null}
                                     </Box>
@@ -1098,34 +1101,34 @@ function thinBloodMeritsAndFlawsComponent(
 
     return (
         <>
-            {hasMerits ? <Grid.Col span={phoneScreen ? 12 : 6}>
-                <Stack gap={"sm"}>
-                    <GeneratorSectionDivider
-                        label="Thin-blood merits"
-                        accentAlpha={0.32}
-                        titleSize="0.96rem"
-                        lineHeight={1}
-                        marginY="xs"
-                    />
-                    {merits.map((merit) =>
-                        getMeritOrFlawLine(merit, "merit")
-                    )}
-                </Stack>
-            </Grid.Col> : null}
-            {hasFlaws ? <Grid.Col span={phoneScreen ? 12 : 6}>
-                <Stack gap={"sm"}>
-                    <GeneratorSectionDivider
-                        label="Thin-blood flaws"
-                        accentAlpha={0.32}
-                        titleSize="0.96rem"
-                        lineHeight={1}
-                        marginY="xs"
-                    />
-                    {flaws.map((flaw) =>
-                        getMeritOrFlawLine(flaw, "flaw")
-                    )}
-                </Stack>
-            </Grid.Col> : null}
+            {hasMerits ? (
+                <Grid.Col span={phoneScreen ? 12 : 6}>
+                    <Stack gap={"sm"}>
+                        <GeneratorSectionDivider
+                            label="Thin-blood merits"
+                            accentAlpha={0.32}
+                            titleSize="0.96rem"
+                            lineHeight={1}
+                            marginY="xs"
+                        />
+                        {merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+                    </Stack>
+                </Grid.Col>
+            ) : null}
+            {hasFlaws ? (
+                <Grid.Col span={phoneScreen ? 12 : 6}>
+                    <Stack gap={"sm"}>
+                        <GeneratorSectionDivider
+                            label="Thin-blood flaws"
+                            accentAlpha={0.32}
+                            titleSize="0.96rem"
+                            lineHeight={1}
+                            marginY="xs"
+                        />
+                        {flaws.map((flaw) => getMeritOrFlawLine(flaw, "flaw"))}
+                    </Stack>
+                </Grid.Col>
+            ) : null}
 
             <Grid.Col span={12}>
                 <Divider mt={0} w={"100%"} my={"sm"} color="rgba(255, 255, 255, 0.1)" />

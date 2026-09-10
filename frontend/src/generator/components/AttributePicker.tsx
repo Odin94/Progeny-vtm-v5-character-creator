@@ -362,11 +362,7 @@ const AttributePicker = ({
 
             {hasConfirmedAttributes ? (
                 <Group justify="center" mt="xl">
-                    <Button
-                        variant="outline"
-                        color="red"
-                        onClick={resetAttributes}
-                    >
+                    <Button variant="outline" color="red" onClick={resetAttributes}>
                         Reset attributes
                     </Button>
                     <Button

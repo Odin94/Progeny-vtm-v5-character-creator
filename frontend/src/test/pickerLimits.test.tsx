@@ -230,7 +230,12 @@ describe("creator picker limits", () => {
                     character={character}
                     setCharacter={setCharacter}
                     nextStep={vi.fn()}
-                    pickedSkills={{ special: [], strongest: ["athletics"], decent: [], acceptable: [] }}
+                    pickedSkills={{
+                        special: [],
+                        strongest: ["athletics"],
+                        decent: [],
+                        acceptable: []
+                    }}
                     setPickedSkills={setPickedSkills}
                     pickedDistribution="Balanced"
                     setPickedDistribution={setPickedDistribution}

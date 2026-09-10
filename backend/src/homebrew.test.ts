@@ -747,7 +747,8 @@ describe("Homebrew collections and library", () => {
             error: "Homebrew Discipline references must target an item in this collection",
             issues: [
                 {
-                    message: "Homebrew Discipline references must target an item in this collection",
+                    message:
+                        "Homebrew Discipline references must target an item in this collection",
                     path: ["items", 1, "disciplineRef"]
                 }
             ]

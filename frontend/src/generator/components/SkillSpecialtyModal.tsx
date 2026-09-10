@@ -2,6 +2,7 @@ import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/c
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconSparkles } from "@tabler/icons-react"
 import { useEffect, useMemo, useState } from "react"
+import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { Skills, SkillsKey, allSkills, skillsKeySchema } from "../../data/Skills"
 import { Specialty } from "../../data/Specialties"
@@ -11,6 +12,7 @@ import { lowcase, upcase } from "../utils"
 type SpecialtyModalProps = {
     modalOpened: boolean
     closeModal: () => void
+    onBack: () => void
     character: Character
     pickedSkillNames: SkillsKey[]
     skills: Skills
@@ -23,6 +25,7 @@ const BONUS_SPECIALTY_SKILLS = ["academics", "craft", "performance", "science"] 
 export const SpecialtyModal = ({
     modalOpened,
     closeModal,
+    onBack,
     setCharacter,
     nextStep,
     character,
@@ -40,8 +43,7 @@ export const SpecialtyModal = ({
     const freeSkills = useMemo(
         () =>
             pickedSkillNames.filter(
-                (s) =>
-                    !(BONUS_SPECIALTY_SKILLS as readonly string[]).includes(s)
+                (s) => !(BONUS_SPECIALTY_SKILLS as readonly string[]).includes(s)
             ),
         [pickedSkillNames]
     )
@@ -52,6 +54,11 @@ export const SpecialtyModal = ({
     const [bonusTexts, setBonusTexts] = useState<Record<string, string>>(() =>
         Object.fromEntries(BONUS_SPECIALTY_SKILLS.map((s) => [s, ""]))
     )
+
+    useEffect(() => {
+        if (!modalOpened) return
+        trackEvent({ action: "specialty step reached", category: "specialties" })
+    }, [modalOpened])
 
     useEffect(() => {
         if (!modalOpened) return
@@ -76,8 +83,8 @@ export const SpecialtyModal = ({
                 BONUS_SPECIALTY_SKILLS.map((skill) => [
                     skill,
                     bonusSkills.includes(skill)
-                        ? character.skillSpecialties.find((specialty) => specialty.skill === skill)
-                              ?.name ?? ""
+                        ? (character.skillSpecialties.find((specialty) => specialty.skill === skill)
+                              ?.name ?? "")
                         : ""
                 ])
             )
@@ -90,6 +97,11 @@ export const SpecialtyModal = ({
         const next = [...freeEntries]
         next[i] = { ...next[i], [field]: value }
         setFreeEntries(next)
+    }
+
+    const handleDismiss = () => {
+        trackEvent({ action: "specialty modal dismissed", category: "specialties" })
+        onBack()
     }
 
     const handleConfirm = () => {
@@ -115,6 +127,12 @@ export const SpecialtyModal = ({
             }
         }
 
+        trackEvent({
+            action: "specialty confirm clicked",
+            category: "specialties",
+            value: result.length
+        })
+
         closeModal()
         setCharacter({ ...character, skills, skillSpecialties: result })
         nextStep()
@@ -122,12 +140,15 @@ export const SpecialtyModal = ({
 
     return (
         <Modal
+            title="Skill Specialties"
             withCloseButton={false}
             size="md"
             opened={modalOpened}
-            onClose={closeModal}
+            onClose={handleDismiss}
+            closeOnClickOutside={false}
             centered
             styles={{
+                header: { display: "none" },
                 content: {
                     background: "rgba(18, 15, 14, 0.97)",
                     border: "1px solid rgba(255,255,255,0.08)",
@@ -191,8 +212,7 @@ export const SpecialtyModal = ({
                                 data={Array.from(new Set([...freeSkills, entry.skill]))
                                     .filter(
                                         (s) =>
-                                            s &&
-                                            (s === entry.skill || !usedFreeSkills.includes(s))
+                                            s && (s === entry.skill || !usedFreeSkills.includes(s))
                                     )
                                     .map((s) => ({ value: s, label: upcase(s) }))}
                                 color={RED}
@@ -255,7 +275,7 @@ export const SpecialtyModal = ({
 
                 {/* Footer */}
                 <Group justify="space-between" mt={4}>
-                    <Button variant="subtle" color="gray" onClick={closeModal}>
+                    <Button variant="subtle" color="gray" onClick={handleDismiss}>
                         Back
                     </Button>
                     <Button

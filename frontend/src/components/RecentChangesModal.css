@@ -161,12 +161,18 @@
     margin: 1.25rem 0 0.5rem;
 }
 
-.recent-changes__markdown h1 { font-size: 1.45rem; }
-.recent-changes__markdown h2 { font-size: 1.25rem; }
+.recent-changes__markdown h1 {
+    font-size: 1.45rem;
+}
+.recent-changes__markdown h2 {
+    font-size: 1.25rem;
+}
 .recent-changes__markdown h3,
 .recent-changes__markdown h4,
 .recent-changes__markdown h5,
-.recent-changes__markdown h6 { font-size: 1.08rem; }
+.recent-changes__markdown h6 {
+    font-size: 1.08rem;
+}
 
 .recent-changes__markdown p,
 .recent-changes__markdown ul,
@@ -175,10 +181,16 @@
 }
 
 .recent-changes__markdown ul,
-.recent-changes__markdown ol { padding-left: 1.4rem; }
+.recent-changes__markdown ol {
+    padding-left: 1.4rem;
+}
 
-.recent-changes__markdown a { color: #d95a65; }
-.recent-changes__markdown code { font-family: var(--mantine-font-family-monospace); }
+.recent-changes__markdown a {
+    color: #d95a65;
+}
+.recent-changes__markdown code {
+    font-family: var(--mantine-font-family-monospace);
+}
 
 .recent-changes__announcement-link {
     color: #d95a65;
@@ -215,21 +227,31 @@
 }
 
 @media (max-width: 40rem) {
-    .recent-changes__sheet { padding: 1.5rem; }
-    .recent-changes__intro--with-image { grid-template-columns: 1fr; }
-    .recent-changes__details { grid-template-columns: 1fr !important; }
+    .recent-changes__sheet {
+        padding: 1.5rem;
+    }
+    .recent-changes__intro--with-image {
+        grid-template-columns: 1fr;
+    }
+    .recent-changes__details {
+        grid-template-columns: 1fr !important;
+    }
     .recent-changes__column + .recent-changes__column {
         border-left: 0;
         border-top: 1px solid rgba(178, 72, 80, 0.42);
         padding-left: 0;
         padding-top: 1.25rem;
     }
-    .recent-changes__divider img { width: 30%; }
+    .recent-changes__divider img {
+        width: 30%;
+    }
     .recent-changes__footer {
         gap: 0.85rem;
         grid-template-columns: 1fr auto;
     }
-    .recent-changes__support-link { grid-column: 1; }
+    .recent-changes__support-link {
+        grid-column: 1;
+    }
     .recent-changes__navigation {
         grid-column: 1 / -1;
         grid-row: 2;
