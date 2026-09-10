@@ -848,16 +848,28 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         />
 
                                         {!hasSearchResults ? (
-                                            <Text
-                                                ta="center"
-                                                style={{
-                                                    fontFamily: "Inter, Segoe UI, sans-serif",
-                                                    fontSize: "0.85rem",
-                                                    color: rgba(RAW_GREY, 0.66)
-                                                }}
-                                            >
-                                                No merits or flaws match “{meritFlawQuery.trim()}”.
-                                            </Text>
+                                            <Group justify="center" gap="xs" wrap="wrap">
+                                                <Text
+                                                    ta="center"
+                                                    style={{
+                                                        fontFamily: "Inter, Segoe UI, sans-serif",
+                                                        fontSize: "0.85rem",
+                                                        color: rgba(RAW_GREY, 0.66)
+                                                    }}
+                                                >
+                                                    No merits or flaws match “
+                                                    {meritFlawQuery.trim()}”.
+                                                </Text>
+                                                <Button
+                                                    type="button"
+                                                    variant="subtle"
+                                                    color="gray"
+                                                    size="compact-xs"
+                                                    onClick={() => setMeritFlawQuery("")}
+                                                >
+                                                    Reset search
+                                                </Button>
+                                            </Group>
                                         ) : null}
 
                                         <Grid m={0} gap="lg">
