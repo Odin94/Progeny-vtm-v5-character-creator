@@ -400,7 +400,10 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const theme = useMantineTheme()
     const phoneScreen = globals.isPhoneScreen
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
-    const [showAllMerits, setShowAllMerits] = useState(false)
+    // The advanced catalog (Influence, Boons and Debts, and more) is shown by default so no
+    // category is hidden. Users mistook the earlier off-by-default toggle for a view preference
+    // and reported the missing categories as absent data. The toggle now only narrows the list.
+    const [showAllMerits, setShowAllMerits] = useState(true)
     const homebrewMerits = homebrewCollections.flatMap((collection) =>
         collection.items
             .filter(
@@ -520,7 +523,9 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
     const hasSearchResults =
         filteredMeritFlawCategories.length > 0 ||
         (isThinBlood && (filteredThinbloodMerits.length > 0 || filteredThinbloodFlaws.length > 0))
-    const showEveryFilteredCategory = showAllMerits || normalizedMeritFlawQuery.length > 0
+    // Progressive rendering stays active for the full catalog too, so the default view does not
+    // mount every category at once. A search still forces all matches to render.
+    const showEveryFilteredCategory = normalizedMeritFlawQuery.length > 0
     const displayedCategoryCount = showEveryFilteredCategory
         ? filteredMeritFlawCategories.length
         : visibleCategoryCount
@@ -773,9 +778,15 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         variant="outline"
                                         color="red"
                                         size="xs"
-                                        onClick={() =>
-                                            setShowAllMerits((showingAll) => !showingAll)
-                                        }
+                                        onClick={() => {
+                                            const nextShowAllMerits = !showAllMerits
+                                            setShowAllMerits(nextShowAllMerits)
+                                            trackEvent({
+                                                action: "merits catalog toggled",
+                                                category: "merits",
+                                                label: nextShowAllMerits ? "all" : "essential"
+                                            })
+                                        }}
                                         styles={{
                                             root: {
                                                 whiteSpace: "nowrap",
