@@ -467,9 +467,7 @@ const DiceRollModal = ({
             const oldValuesMap = new Map(rerolledDice.map((d) => [d.id, d.value]))
             setDice((prev) =>
                 prev.map((die) =>
-                    diceIdsToReroll.has(die.id)
-                        ? { ...die, value: 0, isRolling: true }
-                        : die
+                    diceIdsToReroll.has(die.id) ? { ...die, value: 0, isRolling: true } : die
                 )
             )
 

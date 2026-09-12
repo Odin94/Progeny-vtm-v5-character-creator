@@ -16,7 +16,8 @@ export const modalTheme = {
                 border: "1px solid rgba(125, 91, 72, 0.38)",
                 background:
                     "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
-                boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
+                boxShadow:
+                    "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
             },
             body: {
                 padding: "1.35rem",

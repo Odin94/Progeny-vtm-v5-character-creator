@@ -121,9 +121,7 @@ export const getApplicableMeritFlawModifiers = (
 
     const modifiers: ApplicableMeritFlawModifier[] = []
     const characterMeritsAndFlaws = getCharacterMeritsAndFlaws(character)
-    const hasStunning = characterMeritsAndFlaws.some(
-        (meritFlaw) => meritFlaw.name === "Stunning"
-    )
+    const hasStunning = characterMeritsAndFlaws.some((meritFlaw) => meritFlaw.name === "Stunning")
 
     for (const meritFlaw of characterMeritsAndFlaws) {
         if (hasStunning && meritFlaw.name === "Beautiful") continue

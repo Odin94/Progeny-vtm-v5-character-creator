@@ -97,9 +97,7 @@ describe("DiceRollModal willpower rerolls", () => {
         expect(useDiceRollModalStore.getState().dice).toEqual([
             expect.objectContaining({ value: 6, isRolling: false })
         ])
-        expect(
-            screen.getByRole("button", { name: "Regular die 1 showing 6" })
-        ).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: "Regular die 1 showing 6" })).toBeInTheDocument()
     })
 
     it("lets mobile players choose and reroll at most three regular dice", async () => {

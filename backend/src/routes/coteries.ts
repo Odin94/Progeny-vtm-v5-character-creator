@@ -35,12 +35,20 @@ import {
 import z from "zod"
 import {
     getUtf8ByteLength,
-    getNextNoteVersionCreatedAt,
-    getPrivateNoteDuplicateVersionIdAfterUpdate,
-    getPrivateNoteWriteAction,
-    getPrivateNoteVersionIdsToPrune,
     NOTE_MAX_BYTES
 } from "../utils/privateNotes.js"
+import {
+    buildCoterieResponse,
+    getCoterieAccess,
+    parseCharacterVitals,
+    requireOwnedCoterie
+} from "../modules/coterieReadModel.js"
+import {
+    loadVersionedNotes,
+    restoreVersionedNotes,
+    saveVersionedNotes,
+    type VersionedNotesStore
+} from "../modules/versionedPrivateNotes.js"
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const createInviteToken = customAlphabet(
@@ -96,30 +104,46 @@ const getPrivateNoteVersions = (coterieId: string, userId: string) =>
         orderBy: [desc(schema.coterieNoteVersions.createdAt)]
     })
 
-const prunePrivateNoteVersions = (
-    tx: Pick<typeof db, "select" | "delete">,
-    coterieId: string,
-    userId: string
-) => {
-    const prunableVersions = tx
-        .select({ id: schema.coterieNoteVersions.id })
-        .from(schema.coterieNoteVersions)
-        .where(
-            and(
+type CoterieNoteScope = { coterieId: string }
+type CoterieNoteVersion = typeof schema.coterieNoteVersions.$inferSelect
+
+const coterieNotesStore: VersionedNotesStore<CoterieNoteScope, CoterieNoteVersion> = {
+    list: ({ coterieId }, userId) => getPrivateNoteVersions(coterieId, userId),
+    find: async ({ coterieId }, userId, versionId) =>
+        (await db.query.coterieNoteVersions.findFirst({
+            where: and(
+                eq(schema.coterieNoteVersions.id, versionId),
                 eq(schema.coterieNoteVersions.coterieId, coterieId),
                 eq(schema.coterieNoteVersions.userId, userId)
             )
+        })) ?? null,
+    transaction: (work) =>
+        db.transaction((tx) =>
+            work({
+                create: ({ id, coterieId, userId, content, createdAt }) =>
+                    tx.insert(schema.coterieNoteVersions)
+                        .values({ id, coterieId, userId, content, createdAt })
+                        .returning()
+                        .get(),
+                update: (id, content) =>
+                    tx.update(schema.coterieNoteVersions)
+                        .set({ content })
+                        .where(eq(schema.coterieNoteVersions.id, id))
+                        .returning()
+                        .get(),
+                remove: (id) => {
+                    tx.delete(schema.coterieNoteVersions)
+                        .where(eq(schema.coterieNoteVersions.id, id))
+                        .run()
+                },
+                listOldest: ({ coterieId }, userId) =>
+                    tx.select({ id: schema.coterieNoteVersions.id })
+                        .from(schema.coterieNoteVersions)
+                        .where(and(eq(schema.coterieNoteVersions.coterieId, coterieId), eq(schema.coterieNoteVersions.userId, userId)))
+                        .orderBy(asc(schema.coterieNoteVersions.createdAt))
+                        .all()
+            })
         )
-        .orderBy(asc(schema.coterieNoteVersions.createdAt))
-        .all()
-
-    const versionIdsToDelete = getPrivateNoteVersionIdsToPrune(prunableVersions)
-
-    for (const versionId of versionIdsToDelete) {
-        tx.delete(schema.coterieNoteVersions)
-            .where(eq(schema.coterieNoteVersions.id, versionId))
-            .run()
-    }
 }
 
 const withoutOwnerId = <T extends { ownerId: string }>(coterie: T) => {
@@ -178,7 +202,7 @@ const getPlayerRoster = async (coterie: typeof schema.coteries.$inferSelect) => 
     return roster
 }
 
-const getCoterieAccess = async (coterieId: string, userId: string) => {
+const legacyGetCoterieAccess = async (coterieId: string, userId: string) => {
     const coterie = await db.query.coteries.findFirst({
         where: eq(schema.coteries.id, coterieId)
     })
@@ -204,7 +228,7 @@ const getCoterieAccess = async (coterieId: string, userId: string) => {
     }
 }
 
-const buildCoterieResponse = async (
+const legacyBuildCoterieResponse = async (
     coterie: typeof schema.coteries.$inferSelect,
     userId: string,
     isOwner: boolean
@@ -268,7 +292,7 @@ const buildCoterieResponse = async (
     }
 }
 
-const requireOwnedCoterie = async (coterieId: string, userId: string) => {
+const legacyRequireOwnedCoterie = async (coterieId: string, userId: string) => {
     const coterie = await db.query.coteries.findFirst({
         where: eq(schema.coteries.id, coterieId)
     })
@@ -396,7 +420,7 @@ const acceptCoterieInvite = async (
     })
 }
 
-const parseCharacterVitals = (data: string) => {
+const legacyParseCharacterVitals = (data: string) => {
     try {
         const character = JSON.parse(data) as {
             maxHealth?: unknown
@@ -775,7 +799,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const versions = await getPrivateNoteVersions(coterieId, userId)
+            const versions = await loadVersionedNotes(coterieNotesStore, { coterieId }, userId)
 
             await trackEvent(
                 "coterie_private_notes_loaded",
@@ -852,65 +876,7 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const existingVersions = await getPrivateNoteVersions(coterieId, userId)
-            const latestVersion = existingVersions[0]
-            const writeAction = getPrivateNoteWriteAction({
-                previousContent: latestVersion?.content,
-                nextContent: content,
-                latestCreatedAt: latestVersion?.createdAt
-            })
-
-            if (writeAction === "unchanged") {
-                reply.send({
-                    current: latestVersion ? serializeNoteVersion(latestVersion) : null,
-                    versions: existingVersions.map(serializeNoteVersion),
-                    createdNewVersion: false
-                })
-                return
-            }
-
-            const shouldCreateNewVersion = writeAction === "create"
-            const duplicateVersionId =
-                writeAction === "update"
-                    ? getPrivateNoteDuplicateVersionIdAfterUpdate(content, existingVersions[1])
-                    : undefined
-
-            const currentVersion = db.transaction((tx) => {
-                if (shouldCreateNewVersion) {
-                    const inserted = tx
-                        .insert(schema.coterieNoteVersions)
-                        .values({
-                            id: nanoid(),
-                            coterieId,
-                            userId,
-                            content,
-                            createdAt: getNextNoteVersionCreatedAt(latestVersion?.createdAt)
-                        })
-                        .returning()
-                        .get()
-
-                    prunePrivateNoteVersions(tx, coterieId, userId)
-
-                    return inserted
-                }
-
-                const updated = tx
-                    .update(schema.coterieNoteVersions)
-                    .set({ content })
-                    .where(eq(schema.coterieNoteVersions.id, latestVersion!.id))
-                    .returning()
-                    .get()
-
-                if (duplicateVersionId) {
-                    tx.delete(schema.coterieNoteVersions)
-                        .where(eq(schema.coterieNoteVersions.id, duplicateVersionId))
-                        .run()
-                }
-
-                return updated
-            })
-
-            const versions = await getPrivateNoteVersions(coterieId, userId)
+            const result = await saveVersionedNotes(coterieNotesStore, { coterieId }, userId, content)
 
             await trackEvent(
                 "coterie_private_notes_saved",
@@ -920,17 +886,17 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     userId,
                     coterieId,
                     contentBytes,
-                    createdNewVersion: shouldCreateNewVersion,
-                    versionCount: versions.length
+                    createdNewVersion: result.createdNewVersion,
+                    versionCount: result.versions.length
                 },
                 userId,
                 request
             )
 
             reply.send({
-                current: serializeNoteVersion(currentVersion),
-                versions: versions.map(serializeNoteVersion),
-                createdNewVersion: shouldCreateNewVersion
+                current: result.current ? serializeNoteVersion(result.current) : null,
+                versions: result.versions.map(serializeNoteVersion),
+                createdNewVersion: result.createdNewVersion
             })
         }
     )
@@ -960,50 +926,11 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const versionToRestore = await db.query.coterieNoteVersions.findFirst({
-                where: and(
-                    eq(schema.coterieNoteVersions.id, versionId),
-                    eq(schema.coterieNoteVersions.coterieId, coterieId),
-                    eq(schema.coterieNoteVersions.userId, userId)
-                )
-            })
-
-            if (!versionToRestore) {
+            const result = await restoreVersionedNotes(coterieNotesStore, { coterieId }, userId, versionId)
+            if (!result) {
                 reply.code(404).send({ error: "Note version not found" })
                 return
             }
-
-            const existingVersions = await getPrivateNoteVersions(coterieId, userId)
-            const latestVersion = existingVersions[0]
-
-            if (latestVersion?.content === versionToRestore.content) {
-                reply.send({
-                    current: serializeNoteVersion(latestVersion),
-                    versions: existingVersions.map(serializeNoteVersion),
-                    createdNewVersion: false
-                })
-                return
-            }
-
-            const restoredVersion = db.transaction((tx) => {
-                const inserted = tx
-                    .insert(schema.coterieNoteVersions)
-                    .values({
-                        id: nanoid(),
-                        coterieId,
-                        userId,
-                        content: versionToRestore.content,
-                        createdAt: getNextNoteVersionCreatedAt(latestVersion?.createdAt)
-                    })
-                    .returning()
-                    .get()
-
-                prunePrivateNoteVersions(tx, coterieId, userId)
-
-                return inserted
-            })
-
-            const versions = await getPrivateNoteVersions(coterieId, userId)
 
             await trackEvent(
                 "coterie_private_notes_version_restored",
@@ -1013,17 +940,17 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                     userId,
                     coterieId,
                     restoredVersionId: versionId,
-                    newVersionId: restoredVersion.id,
-                    versionCount: versions.length
+                    newVersionId: result.current.id,
+                    versionCount: result.versions.length
                 },
                 userId,
                 request
             )
 
             reply.send({
-                current: serializeNoteVersion(restoredVersion),
-                versions: versions.map(serializeNoteVersion),
-                createdNewVersion: true
+                current: serializeNoteVersion(result.current),
+                versions: result.versions.map(serializeNoteVersion),
+                createdNewVersion: result.createdNewVersion
             })
         }
     )

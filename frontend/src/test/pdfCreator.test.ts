@@ -220,9 +220,7 @@ describe("createPdf_nerdbert", () => {
             const fontFileKeys = ["FontFile", "FontFile2", "FontFile3"]
             // Composite (Type0) fonts carry the descriptor on their descendant font.
             const descendantFonts = dict.lookupMaybe(PDFName.of("DescendantFonts"), PDFArray)
-            const fontWithDescriptor = descendantFonts
-                ? descendantFonts.lookup(0, PDFDict)
-                : dict
+            const fontWithDescriptor = descendantFonts ? descendantFonts.lookup(0, PDFDict) : dict
             const descriptor = fontWithDescriptor.lookupMaybe(PDFName.of("FontDescriptor"), PDFDict)
             return (
                 !!descriptor &&

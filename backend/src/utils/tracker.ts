@@ -13,6 +13,8 @@ let posthogClient: PostHog | null = null
 
 const POSTHOG_SESSION_ID_HEADER = "x-posthog-session-id"
 const POSTHOG_TRACING_HEADER_MAX_LENGTH = 1_000
+// Strip control characters from the untrusted tracing header intentionally.
+// eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\x00-\x1f\x7f-\x9f]/g
 
 const getPostHogSessionId = (request: FastifyRequest): string | undefined => {

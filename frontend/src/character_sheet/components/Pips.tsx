@@ -46,8 +46,7 @@ const Pips = ({
     // Keep callback-driven pips responsive while the parent character update renders the rest of
     // the sheet. The stored value catches up in a transition and then clears this local preview.
     const [optimisticLevel, setOptimisticLevel] = useState<number | undefined>()
-    const displayedLevel =
-        onLevelChange && optimisticLevel !== undefined ? optimisticLevel : level
+    const displayedLevel = onLevelChange && optimisticLevel !== undefined ? optimisticLevel : level
     const prevLevelRef = useRef(displayedLevel)
     // A click that cannot be applied gets brief visible feedback without changing the pip row's
     // layout. The id makes repeat clicks restart the warning's lifetime and animation.

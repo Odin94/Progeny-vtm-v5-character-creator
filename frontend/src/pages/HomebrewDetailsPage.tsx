@@ -503,7 +503,10 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                             aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
                                                             aria-expanded={!isCollapsed}
                                                             onClick={(event) =>
-                                                                toggleItemKind(kind, event.detail !== 0)
+                                                                toggleItemKind(
+                                                                    kind,
+                                                                    event.detail !== 0
+                                                                )
                                                             }
                                                         >
                                                             <IconChevronDown
@@ -519,7 +522,9 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                     </Group>
                                                     <AnimatedCollapse
                                                         opened={!isCollapsed}
-                                                        motionEnabled={!motionlessItemKinds.has(kind)}
+                                                        motionEnabled={
+                                                            !motionlessItemKinds.has(kind)
+                                                        }
                                                     >
                                                         <>
                                                             <SimpleGrid
@@ -552,85 +557,98 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                                                                     align="flex-start"
                                                                                     wrap="nowrap"
                                                                                 >
-                                                                                <div>
-                                                                                    <Text fw={600}>
-                                                                                        {item.name ||
-                                                                                            "Untitled rule"}
-                                                                                    </Text>
-                                                                                    {item.kind ===
-                                                                                    "power" ? (
-                                                                                        <Badge
-                                                                                            mt={4}
-                                                                                            size="sm"
-                                                                                            variant="light"
-                                                                                            color="grape"
+                                                                                    <div>
+                                                                                        <Text
+                                                                                            fw={600}
                                                                                         >
-                                                                                            {item.discipline ||
-                                                                                                "No discipline"}
-                                                                                        </Badge>
-                                                                                    ) : null}
-                                                                                    <Text
-                                                                                        size="sm"
-                                                                                        c="dimmed"
-                                                                                        lineClamp={
-                                                                                            2
-                                                                                        }
-                                                                                    >
-                                                                                        {item.summary ||
-                                                                                            item.description ||
-                                                                                            "No summary yet."}
-                                                                                    </Text>
-                                                                                </div>
-                                                                                <Group
-                                                                                    gap={4}
-                                                                                    wrap="nowrap"
-                                                                                >
-                                                                                    <ActionIcon
-                                                                                        variant="subtle"
-                                                                                        color="grape"
-                                                                                        aria-label={`Edit ${item.name || "rule"}`}
-                                                                                        onClick={() =>
-                                                                                            setItemEditor(
-                                                                                                {
-                                                                                                    item,
-                                                                                                    index
+                                                                                            {item.name ||
+                                                                                                "Untitled rule"}
+                                                                                        </Text>
+                                                                                        {item.kind ===
+                                                                                        "power" ? (
+                                                                                            <Badge
+                                                                                                mt={
+                                                                                                    4
                                                                                                 }
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <IconEdit
-                                                                                            size={
-                                                                                                16
+                                                                                                size="sm"
+                                                                                                variant="light"
+                                                                                                color="grape"
+                                                                                            >
+                                                                                                {item.discipline ||
+                                                                                                    "No discipline"}
+                                                                                            </Badge>
+                                                                                        ) : null}
+                                                                                        <Text
+                                                                                            size="sm"
+                                                                                            c="dimmed"
+                                                                                            lineClamp={
+                                                                                                2
                                                                                             }
-                                                                                        />
-                                                                                    </ActionIcon>
-                                                                                    <ActionIcon
-                                                                                        variant="subtle"
-                                                                                        color="red"
-                                                                                        aria-label={`Delete ${item.name || "rule"}`}
-                                                                                        onClick={() =>
-                                                                                            setItemToDelete({
-                                                                                                item,
-                                                                                                index
-                                                                                            })
-                                                                                        }
+                                                                                        >
+                                                                                            {item.summary ||
+                                                                                                item.description ||
+                                                                                                "No summary yet."}
+                                                                                        </Text>
+                                                                                    </div>
+                                                                                    <Group
+                                                                                        gap={4}
+                                                                                        wrap="nowrap"
                                                                                     >
-                                                                                        <IconTrash
-                                                                                            size={
-                                                                                                16
+                                                                                        <ActionIcon
+                                                                                            variant="subtle"
+                                                                                            color="grape"
+                                                                                            aria-label={`Edit ${item.name || "rule"}`}
+                                                                                            onClick={() =>
+                                                                                                setItemEditor(
+                                                                                                    {
+                                                                                                        item,
+                                                                                                        index
+                                                                                                    }
+                                                                                                )
                                                                                             }
-                                                                                        />
-                                                                                    </ActionIcon>
+                                                                                        >
+                                                                                            <IconEdit
+                                                                                                size={
+                                                                                                    16
+                                                                                                }
+                                                                                            />
+                                                                                        </ActionIcon>
+                                                                                        <ActionIcon
+                                                                                            variant="subtle"
+                                                                                            color="red"
+                                                                                            aria-label={`Delete ${item.name || "rule"}`}
+                                                                                            onClick={() =>
+                                                                                                setItemToDelete(
+                                                                                                    {
+                                                                                                        item,
+                                                                                                        index
+                                                                                                    }
+                                                                                                )
+                                                                                            }
+                                                                                        >
+                                                                                            <IconTrash
+                                                                                                size={
+                                                                                                    16
+                                                                                                }
+                                                                                            />
+                                                                                        </ActionIcon>
+                                                                                    </Group>
                                                                                 </Group>
-                                                                                </Group>
-                                                                                {itemValidationErrors[index]?.map(
-                                                                                    (message, messageIndex) => (
+                                                                                {itemValidationErrors[
+                                                                                    index
+                                                                                ]?.map(
+                                                                                    (
+                                                                                        message,
+                                                                                        messageIndex
+                                                                                    ) => (
                                                                                         <Alert
                                                                                             key={`${message}-${messageIndex}`}
                                                                                             color="red"
                                                                                             variant="light"
                                                                                         >
-                                                                                            {message}
+                                                                                            {
+                                                                                                message
+                                                                                            }
                                                                                         </Alert>
                                                                                     )
                                                                                 )}

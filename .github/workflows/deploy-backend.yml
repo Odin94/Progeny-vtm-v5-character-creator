@@ -1,0 +1,53 @@
+name: Deploy backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+  workflow_dispatch:
+
+# Keep deployments ordered: the update script runs migrations and restarts the
+# process, so two deploys must never operate on the server concurrently.
+concurrency:
+  group: backend-production-deploy
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: Update Hetzner backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HETZNER_HOST: 46.224.62.32
+      HETZNER_USER: progeny
+
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HETZNER_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+
+      - name: Update backend on Hetzner
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh \
+            -i "$HOME/.ssh/id_ed25519" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$HETZNER_USER@$HETZNER_HOST" \
+            "bash /opt/progeny/backend/scripts/updateCode.sh '$DEPLOY_SHA'"

@@ -42,11 +42,11 @@
 - `applyCharacterCompatibilityPatches` in `src/data/Character.ts` must be updated alongside any such schema change. Add a new `patchVnToVn+1Compatibility` function and call it from `applyCharacterCompatibilityPatches` so that characters saved under old versions are silently upgraded on load.
 - Every new patch function needs a corresponding test in `src/test/` that constructs a minimal old-version character object, runs it through `applyCharacterCompatibilityPatches`, and asserts the upgraded fields are correct. These tests are the safety net for production data that predates the change.
 
-## Generator Step Footgun
+## Generator Step Navigation
 
-The Blood Sorcery ritual step (step 8) is **conditional** — it only appears when the character has Blood Sorcery disciplines. `Generator.tsx` compensates with a `patchedSelectedStep` offset: when Blood Sorcery is absent and `selectedStep >= 8`, it adds 1 to align the switch case.
+`src/generator/steps.ts` owns generator step IDs, ordering, conditional visibility, normalization, and progression. `Generator.tsx` renders the selected ID and `src/sidebar/AsideBar.tsx` uses the same visible-step list.
 
-**Impact:** adding, removing, or reordering steps near index 8 requires updating both the switch in `src/generator/Generator.tsx` and the stepper in `src/sidebar/AsideBar.tsx`. A step added at index 8 without accounting for this offset will silently render the wrong component for non-Blood-Sorcery characters.
+The Blood Sorcery ritual and Oblivion ceremony steps are conditional. When adding, removing, or reordering a step, update `allGeneratorSteps` and its availability rule in `steps.ts`, then verify the affected character states. Do not use numeric offsets: callers should use `GeneratorStepId` exclusively.
 
 ## UI and Validation Conventions
 

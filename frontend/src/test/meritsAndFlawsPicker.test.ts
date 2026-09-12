@@ -37,7 +37,9 @@ describe("MeritsAndFlawsPicker predator type merits and flaws", () => {
         addMeritFlawExclusions(exclusionMap, beautiful, true)
 
         expect(exclusionMap.get("Stunning")).toBeUndefined()
-        expect(getMeritFlawPointCost(character.merits[0], getPredatorTypeMeritsByName(character))).toBe(4)
+        expect(
+            getMeritFlawPointCost(character.merits[0], getPredatorTypeMeritsByName(character))
+        ).toBe(4)
     })
 
     it("keeps Stunning excluded when Beautiful was purchased normally", () => {
@@ -77,10 +79,7 @@ describe("MeritsAndFlawsPicker predator type merits and flaws", () => {
         addMeritFlawExclusions(
             exclusionMap,
             beautiful,
-            isMeritFlawCoveredByPredatorTypeGrant(
-                beautiful,
-                getPredatorTypeMeritsByName(character)
-            )
+            isMeritFlawCoveredByPredatorTypeGrant(beautiful, getPredatorTypeMeritsByName(character))
         )
 
         expect(exclusionMap.get("Stunning")).toBeUndefined()

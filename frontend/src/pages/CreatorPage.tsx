@@ -34,7 +34,7 @@ import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import AsideBar from "~/sidebar/AsideBar"
 import Sidebar from "~/sidebar/Sidebar"
 import Topbar from "~/topbar/Topbar"
-import { api } from "~/utils/api"
+import { characterHttp } from "~/utils/http/characters"
 import { parseCharacterData } from "~/utils/characterData"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
@@ -129,7 +129,7 @@ export default function CreatorPage() {
     }
 
     const loadSavedCharacter = async (characterId: string) => {
-        const response = await api.getCharacter(characterId)
+        const response = await characterHttp.get(characterId)
         const loadedCharacter = parseCharacterData((response as { data: unknown }).data)
         if (!loadedCharacter) throw new Error("Unable to load character data")
 
@@ -169,8 +169,8 @@ export default function CreatorPage() {
         }
 
         const savedCharacter = targetCharacter
-            ? await api.updateCharacter(targetCharacter.id, payload)
-            : await api.createCharacter(payload)
+            ? await characterHttp.update(targetCharacter.id, payload)
+            : await characterHttp.create(payload)
 
         const saved = savedCharacter as {
             id: string
@@ -299,8 +299,8 @@ export default function CreatorPage() {
                 version: characterToSave.version
             }
             const savedCharacter = targetCharacter
-                ? await api.updateCharacter(targetCharacter.id, payload)
-                : await api.createCharacter(payload)
+                ? await characterHttp.update(targetCharacter.id, payload)
+                : await characterHttp.create(payload)
             const saved = savedCharacter as {
                 id: string
                 data?: { characterVersion?: number }

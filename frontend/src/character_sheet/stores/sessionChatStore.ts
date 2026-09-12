@@ -1,23 +1,20 @@
 import { create } from "zustand"
 import { API_URL } from "~/utils/api"
 import posthog from "posthog-js"
+import {
+    clientMessageSchema,
+    serverMessageSchema,
+    type ChatMessageReceived,
+    type ClientMessage,
+    type DiceRollReceived,
+    type ParticipantIdentity,
+    type RemorseCheckReceived,
+    type RouseCheckReceived,
+    type ServerMessage
+} from "@contracts/realtimeProtocol"
 
-type Participant = {
-    userId: string
-    userName: string
-    showNameTag: boolean
-    characterName?: string
-}
-
-type ChatMessage = {
-    type: "chat_message"
-    userId: string
-    userName: string
-    showNameTag: boolean
-    characterName?: string
-    message: string
-    timestamp: number
-}
+type Participant = ParticipantIdentity
+type ChatMessage = ChatMessageReceived
 
 export type RollData = {
     dice: Array<{ id: number; value: number; isBloodDie: boolean }>
@@ -38,93 +35,10 @@ export type RollData = {
     isReroll?: boolean
 }
 
-export type DiceRollMessage = {
-    type: "dice_roll"
-    userId: string
-    userName: string
-    showNameTag: boolean
-    characterName?: string
-    rollData: RollData
-    timestamp: number
-}
-
-type RouseCheckMessage = {
-    type: "rouse_check"
-    userId: string
-    userName: string
-    showNameTag: boolean
-    characterName?: string
-    roll: number
-    success: boolean
-    newHunger: number
-    timestamp: number
-}
-
-type RemorseCheckMessage = {
-    type: "remorse_check"
-    userId: string
-    userName: string
-    showNameTag: boolean
-    characterName?: string
-    rolls: number[]
-    successes: number
-    passed: boolean
-    newHumanity: number
-    timestamp: number
-}
-
-type SessionJoinedMessage = {
-    type: "session_joined"
-    sessionId: string
-    sessionType: "temporary" | "coterie"
-    coterieId?: string
-    participants: Participant[]
-    history?: Array<ChatMessage | DiceRollMessage | RouseCheckMessage | RemorseCheckMessage>
-}
-
-type UserJoinedMessage = {
-    type: "user_joined"
-    userId: string
-    userName: string
-    showNameTag: boolean
-    characterName?: string
-}
-
-type UserLeftMessage = {
-    type: "user_left"
-    userId: string
-}
-
-type UserIdentityUpdatedMessage = {
-    type: "user_identity_updated"
-    userId: string
-    showNameTag: boolean
-    userName?: string
-}
-
-type SessionClosedMessage = {
-    type: "session_closed"
-    reason: "coterie_deleted" | "removed_from_coterie"
-    message: string
-}
-
-type ErrorMessage = {
-    type: "error"
-    message: string
-    timestamp: number
-}
-
-type ServerMessage =
-    | SessionJoinedMessage
-    | UserJoinedMessage
-    | UserLeftMessage
-    | UserIdentityUpdatedMessage
-    | SessionClosedMessage
-    | ChatMessage
-    | DiceRollMessage
-    | RouseCheckMessage
-    | RemorseCheckMessage
-    | ErrorMessage
+export type DiceRollMessage = DiceRollReceived
+type RouseCheckMessage = RouseCheckReceived
+type RemorseCheckMessage = RemorseCheckReceived
+type ErrorMessage = Extract<ServerMessage, { type: "error" }>
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error"
 
@@ -175,7 +89,7 @@ type SessionChatStore = {
     ws: WebSocket | null
     reconnectTimeout: ReturnType<typeof setTimeout> | null
     reconnectAttempts: number
-    messageQueue: Array<{ type: string; [key: string]: unknown }>
+    messageQueue: ClientMessage[]
     isManualDisconnect: boolean
     lastJoinOptions: JoinOptions | null
     connect: () => void
@@ -250,12 +164,17 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         }
     }
 
-    const sendMessage = (message: { type: string; [key: string]: unknown }) => {
+    const sendMessage = (message: ClientMessage) => {
+        const validated = clientMessageSchema.safeParse(message)
+        if (!validated.success) {
+            console.error("Invalid outgoing WebSocket message:", validated.error.issues)
+            return
+        }
         const state = get()
         if (state.ws?.readyState === WebSocket.OPEN) {
-            state.ws.send(JSON.stringify(message))
+            state.ws.send(JSON.stringify(validated.data))
         } else {
-            set((s) => ({ messageQueue: [...s.messageQueue, message] }))
+            set((s) => ({ messageQueue: [...s.messageQueue, validated.data] }))
             if (state.connectionStatus === "disconnected") {
                 connect()
             }
@@ -314,7 +233,12 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
 
         ws.onmessage = (event) => {
             try {
-                const data: ServerMessage = JSON.parse(event.data)
+                const parsed = serverMessageSchema.safeParse(JSON.parse(event.data))
+                if (!parsed.success) {
+                    console.error("Invalid WebSocket message:", parsed.error.issues)
+                    return
+                }
+                const data = parsed.data
                 const currentState = get()
 
                 switch (data.type) {
@@ -603,7 +527,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             console.warn("PostHog chat tracking failed:", error)
         }
 
-        const joinMessage = {
+        const joinMessage: ClientMessage = {
             type: "join_session",
             sessionId: options?.sessionId,
             coterieId: options?.coterieId,

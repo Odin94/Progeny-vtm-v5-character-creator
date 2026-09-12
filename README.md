@@ -39,6 +39,31 @@ pnpm install
 pnpm run dev
 ```
 
+### Backend production deployment
+
+Pushing changes under `backend/` to `main` deploys the triggering commit to the
+Hetzner backend through `.github/workflows/deploy-backend.yml`. The remote
+deployment uses the existing `backend/scripts/updateCode.sh` script, which
+backs up the database, checks out that exact revision, installs locked
+dependencies, builds, migrates, restarts PM2, and checks the health endpoint.
+
+Configure these repository Action secrets before the first deployment:
+
+- `HETZNER_SSH_PRIVATE_KEY`: a dedicated private key authorized for the
+  `progeny` user on the server.
+- `HETZNER_SSH_KNOWN_HOSTS`: the trusted host-key entry for `46.224.62.32`.
+  The workflow pins the server's ED25519 key. Obtain its fingerprint from the
+  Hetzner console or an already-verified connection (for example,
+  `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` on the server). Compare it
+  with a candidate produced by `ssh-keyscan -t ed25519 -H 46.224.62.32`, and
+  only save that verified candidate as the secret value.
+
+The workflow intentionally uses strict host-key checking and does not accept a
+new host key during deployment. Configure GitHub's native failure-only Actions
+email notifications in [Notification settings](https://github.com/settings/notifications):
+under **System → Actions**, choose **Email** and **Only notify for failed
+workflows**. The repository must be watched for workflow notifications.
+
 You can optionally run both conveniently with `mprocs` (only tested on Windows):
 * `pnpm add -g mprocs`
 * `mprocs`

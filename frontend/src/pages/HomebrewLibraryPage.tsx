@@ -242,7 +242,10 @@ const HomebrewLibraryPage = () => {
                                         >
                                             <div className="homebrew-library-card__body">
                                                 <div className="homebrew-library-card__grid">
-                                                    <Stack gap={4} className="homebrew-library-card__collection">
+                                                    <Stack
+                                                        gap={4}
+                                                        className="homebrew-library-card__collection"
+                                                    >
                                                         <Text fw={600}>{entry.name}</Text>
                                                         <Text size="sm" c="dimmed" lineClamp={2}>
                                                             {entry.shortDescription}
@@ -307,8 +310,12 @@ const HomebrewLibraryPage = () => {
                                                         <Text className="homebrew-library-card__label">
                                                             Community
                                                         </Text>
-                                                        <Text size="sm">{entry.copyCount} copies</Text>
-                                                        <Text size="sm">{entry.commentCount} comments</Text>
+                                                        <Text size="sm">
+                                                            {entry.copyCount} copies
+                                                        </Text>
+                                                        <Text size="sm">
+                                                            {entry.commentCount} comments
+                                                        </Text>
                                                     </div>
                                                 </div>
                                             </div>
@@ -335,7 +342,8 @@ const HomebrewLibraryPage = () => {
                                             <div>
                                                 <Text fw={500}>{request.snapshot.name}</Text>
                                                 <Text size="sm" c="dimmed">
-                                                    Opened {formatRequestOpenedDate(request.createdAt)}
+                                                    Opened{" "}
+                                                    {formatRequestOpenedDate(request.createdAt)}
                                                 </Text>
                                                 {request.denialMessage ? (
                                                     <Text size="sm" c="red">
@@ -363,7 +371,9 @@ const HomebrewLibraryPage = () => {
                                                         variant="subtle"
                                                         color="gray"
                                                         loading={withdrawMutation.isPending}
-                                                        onClick={() => setWithdrawRequestId(request.id)}
+                                                        onClick={() =>
+                                                            setWithdrawRequestId(request.id)
+                                                        }
                                                     >
                                                         Withdraw
                                                     </Button>

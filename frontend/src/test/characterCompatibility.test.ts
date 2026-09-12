@@ -86,9 +86,9 @@ describe("character compatibility patches", () => {
         const character = getEmptyCharacter()
         character.disciplineLevels = { "official:celerity": 2 }
 
-        expect(
-            increaseDisciplineLevelForPower(character, disciplines.celerity.powers[4])
-        ).toEqual({ "official:celerity": 3 })
+        expect(increaseDisciplineLevelForPower(character, disciplines.celerity.powers[4])).toEqual({
+            "official:celerity": 3
+        })
         expect(
             getDisciplineLevelsFromPowers([
                 disciplines.celerity.powers[0],

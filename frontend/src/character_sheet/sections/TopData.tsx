@@ -11,9 +11,8 @@ import {
     useMantineTheme,
     Select
 } from "@mantine/core"
-import { memo } from "react"
+import { memo, useState } from "react"
 import { clans } from "~/data/Clans"
-import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAndFlawsResolution"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
 import { PredatorTypes } from "~/data/PredatorType"
 import { SheetOptions } from "../CharacterSheet"
@@ -26,6 +25,7 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewClan } from "~/data/Homebrew"
 import { getHomebrewSource } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import PredatorTypeModal from "~/components/PredatorTypeModal"
 
 type TopDataProps = {
     options: SheetOptions
@@ -90,6 +90,10 @@ const TopData = ({ options }: TopDataProps) => {
     const isFreeMode = mode === "free"
     const isExperienceEditable = mode === "xp" || isFreeMode
     const isExperienceSpentEditable = isFreeMode
+    const [predatorTypeModalOpened, setPredatorTypeModalOpened] = useState(false)
+    const [pendingPredatorType, setPendingPredatorType] = useState<PredatorTypeName>("")
+    const [pendingPredatorSpecialty, setPendingPredatorSpecialty] = useState("")
+    const [pendingPredatorDiscipline, setPendingPredatorDiscipline] = useState("")
 
     const nameField = useDebouncedUncontrolledStringField({
         character,
@@ -295,22 +299,38 @@ const TopData = ({ options }: TopDataProps) => {
                                             const selectedPredatorType = value as PredatorTypeName
                                             const selectedPredatorTypeData =
                                                 PredatorTypes[selectedPredatorType]
-                                            const nextPredatorType = {
-                                                name: selectedPredatorType,
-                                                pickedDiscipline:
-                                                    selectedPredatorTypeData.disciplineOptions[0]
-                                                        ?.name ?? "",
-                                                pickedSpecialties: [],
-                                                pickedMeritsAndFlaws: []
-                                            }
-                                            setCharacter((current) => ({
-                                                ...current,
-                                                ...adjustPickedMeritsAndFlawsForPredatorTypeChange(
-                                                    current,
-                                                    nextPredatorType
-                                                ),
-                                                predatorType: nextPredatorType
-                                            }))
+                                            const firstSpecialty =
+                                                selectedPredatorTypeData.specialtyOptions[0]
+                                            const storedSpecialty =
+                                                character.predatorType.name === selectedPredatorType
+                                                    ? character.predatorType.pickedSpecialties[0]
+                                                    : undefined
+                                            const storedSpecialtyOption = storedSpecialty
+                                                ? (selectedPredatorTypeData.specialtyOptions.find(
+                                                      (option) =>
+                                                          option.skill === storedSpecialty.skill &&
+                                                          option.name === storedSpecialty.name
+                                                  ) ??
+                                                  selectedPredatorTypeData.specialtyOptions.find(
+                                                      (option) =>
+                                                          option.skill === storedSpecialty.skill
+                                                  ))
+                                                : undefined
+                                            const initialSpecialty =
+                                                storedSpecialtyOption ?? firstSpecialty
+                                            setPendingPredatorType(selectedPredatorType)
+                                            setPendingPredatorSpecialty(
+                                                initialSpecialty
+                                                    ? `${initialSpecialty.skill}_${initialSpecialty.name}`
+                                                    : ""
+                                            )
+                                            setPendingPredatorDiscipline(
+                                                character.predatorType.name === selectedPredatorType
+                                                    ? character.predatorType.pickedDiscipline
+                                                    : (selectedPredatorTypeData.disciplineOptions[0]
+                                                          ?.name ?? "")
+                                            )
+                                            setPredatorTypeModalOpened(true)
                                         }
                                     }}
                                     size="sm"
@@ -478,6 +498,25 @@ const TopData = ({ options }: TopDataProps) => {
                     </Stack>
                 </Grid.Col>
             </Grid>
+            {pendingPredatorType ? (
+                <PredatorTypeModal
+                    key={pendingPredatorType}
+                    modalOpened={predatorTypeModalOpened}
+                    closeModal={() => {
+                        setPredatorTypeModalOpened(false)
+                        setPendingPredatorType("")
+                    }}
+                    character={character}
+                    pickedPredatorType={pendingPredatorType}
+                    setCharacter={setCharacter}
+                    nextStep={() => undefined}
+                    specialty={pendingPredatorSpecialty}
+                    setSpecialty={setPendingPredatorSpecialty}
+                    discipline={pendingPredatorDiscipline}
+                    setDiscipline={setPendingPredatorDiscipline}
+                    onPredatorTypeChanged={() => undefined}
+                />
+            ) : null}
         </>
     )
 }

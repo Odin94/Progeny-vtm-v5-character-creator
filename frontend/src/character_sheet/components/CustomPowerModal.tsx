@@ -2,10 +2,7 @@ import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } 
 import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Power } from "~/data/Disciplines"
-import {
-    getDisciplineLevel,
-    increaseDisciplineLevelForPower
-} from "~/data/Character"
+import { getDisciplineLevel, increaseDisciplineLevelForPower } from "~/data/Character"
 import { DisciplineName } from "~/data/NameSchemas"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import {
@@ -132,13 +129,7 @@ const CustomPowerModal = ({
                 setDicePoolWarning(null)
             }
         }
-    }, [
-        opened,
-        editingPower,
-        disciplineName,
-        disciplineHomebrewSource,
-        character.disciplineLevels
-    ])
+    }, [opened, editingPower, disciplineName, disciplineHomebrewSource, character.disciplineLevels])
 
     const handleSave = () => {
         if (!name.trim()) {

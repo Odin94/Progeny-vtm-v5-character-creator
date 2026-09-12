@@ -52,13 +52,28 @@ export const getSkillsSetting = (skills: Skills): SkillsSetting => {
 }
 
 export const getSkillDistribution = (setting: SkillsSetting): DistributionKey | null => {
-    if (setting.special.length === 1 && setting.strongest.length === 3 && setting.decent.length === 3 && setting.acceptable.length === 3) {
+    if (
+        setting.special.length === 1 &&
+        setting.strongest.length === 3 &&
+        setting.decent.length === 3 &&
+        setting.acceptable.length === 3
+    ) {
         return "Specialist"
     }
-    if (setting.special.length === 0 && setting.strongest.length === 3 && setting.decent.length === 5 && setting.acceptable.length === 7) {
+    if (
+        setting.special.length === 0 &&
+        setting.strongest.length === 3 &&
+        setting.decent.length === 5 &&
+        setting.acceptable.length === 7
+    ) {
         return "Balanced"
     }
-    if (setting.special.length === 0 && setting.strongest.length === 1 && setting.decent.length === 8 && setting.acceptable.length === 10) {
+    if (
+        setting.special.length === 0 &&
+        setting.strongest.length === 1 &&
+        setting.decent.length === 8 &&
+        setting.acceptable.length === 10
+    ) {
         return "Jack of All Trades"
     }
     return null

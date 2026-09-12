@@ -365,11 +365,11 @@ const LibraryDetail = ({
 
                             <Paper withBorder p="xl" bg="rgba(0,0,0,.28)">
                                 <Stack gap="lg">
-                                <Group
-                                    justify="space-between"
-                                    align="flex-start"
-                                    className="homebrew-page__header"
-                                >
+                                    <Group
+                                        justify="space-between"
+                                        align="flex-start"
+                                        className="homebrew-page__header"
+                                    >
                                         <div>
                                             <Text size="sm" c="dimmed">
                                                 Community collection · Version {detail.version}
@@ -478,7 +478,10 @@ const LibraryDetail = ({
                                                         aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
                                                         aria-expanded={!isCollapsed}
                                                         onClick={(event) =>
-                                                            onToggleItemKind(kind, event.detail !== 0)
+                                                            onToggleItemKind(
+                                                                kind,
+                                                                event.detail !== 0
+                                                            )
                                                         }
                                                     >
                                                         <IconChevronDown
@@ -497,7 +500,9 @@ const LibraryDetail = ({
                                                     motionEnabled={!motionlessItemKinds.has(kind)}
                                                 >
                                                     {kind === "merit" || kind === "flaw" ? (
-                                                        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+                                                        <SimpleGrid
+                                                            cols={{ base: 1, sm: 2, md: 3 }}
+                                                        >
                                                             {items.map((item) => (
                                                                 <HomebrewItemPreview
                                                                     key={
@@ -571,8 +576,7 @@ const LibraryDetail = ({
                                             }
                                             placeholder="Add to the discussion"
                                             classNames={{
-                                                input:
-                                                    "homebrew-library-detail__comment-composer-input"
+                                                input: "homebrew-library-detail__comment-composer-input"
                                             }}
                                         />
                                         <ActionIcon
@@ -646,9 +650,7 @@ const LibraryDetail = ({
                                                             </Group>
                                                         </Stack>
                                                     ) : (
-                                                        <Text
-                                                            className="homebrew-library-detail__comment-body"
-                                                        >
+                                                        <Text className="homebrew-library-detail__comment-body">
                                                             {entryComment.body}
                                                         </Text>
                                                     )}

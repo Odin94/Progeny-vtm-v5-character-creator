@@ -12,7 +12,7 @@ describe("createInconnuCommandExport", () => {
         )
         expect(result).toContain("/character wizard")
         expect(result).toContain(
-            'only fill the dropdowns: Health 5, Willpower 4, Template Vampire.'
+            "only fill the dropdowns: Health 5, Willpower 4, Template Vampire."
         )
         expect(result).toContain(
             "/character update parameters:health=5 willpower=4 humanity=7 potency=1 character:Test Vampire"
@@ -21,7 +21,9 @@ describe("createInconnuCommandExport", () => {
         expect(result).toContain("/disciplines add disciplines:Potence=1 BloodSorcery=1")
         expect(result).toContain("/traits add traits:Direct_Merit=3 Direct_Flaw=2 Resources=1")
         expect(result).toContain("/specialties add specialties:Intimidation=Direct_Specialty")
-        expect(result).toContain("/powers add powers:Potence=Prowess BloodSorcery=Corrosive_Vitae,Test_Ritual")
+        expect(result).toContain(
+            "/powers add powers:Potence=Prowess BloodSorcery=Corrosive_Vitae,Test_Ritual"
+        )
         expect(result).toContain("/character profile edit:Test Vampire")
         expect(result).toContain("Description:\nA test vampire character")
         expect(result).toContain("/character convictions edit:Test Vampire")

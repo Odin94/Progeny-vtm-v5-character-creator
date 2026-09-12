@@ -36,8 +36,7 @@ const SimpleSquarePipButton = ({
         backgroundColor: filled ? baseColor : "transparent",
         cursor: isInteractive ? "pointer" : "default",
         transform: "scale(1)",
-        transition:
-            "background-color 140ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
+        transition: "background-color 140ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
         position: "relative",
         overflow: "hidden",
         ...style

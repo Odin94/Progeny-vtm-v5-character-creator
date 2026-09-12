@@ -56,7 +56,10 @@ export const CookiesBanner = () => {
         window.addEventListener(COOKIE_PREFERENCES_REQUEST_EVENT, handleCookiePreferencesRequest)
         return () => {
             window.removeEventListener(SUPPORT_CONSENT_REQUEST_EVENT, handleSupportConsentRequest)
-            window.removeEventListener(COOKIE_PREFERENCES_REQUEST_EVENT, handleCookiePreferencesRequest)
+            window.removeEventListener(
+                COOKIE_PREFERENCES_REQUEST_EVENT,
+                handleCookiePreferencesRequest
+            )
         }
     }, [])
 

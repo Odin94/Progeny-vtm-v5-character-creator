@@ -102,6 +102,7 @@ import {
     type CoteriePlayerResponse,
     type CoterieResponse
 } from "~/utils/api"
+import { characterHttp } from "~/utils/http/characters"
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
@@ -563,7 +564,7 @@ const MePage = () => {
         if (targetCharacter && !targetCharacter.shared) {
             // Fetch current character from backend to check version
             try {
-                const response = await api.getCharacter(targetCharacter.id)
+                const response = await characterHttp.get(targetCharacter.id)
                 const beCharacter = parseStoredCharacter((response as any).data)
                 const feVersion = character.characterVersion ?? 0
 
@@ -760,7 +761,7 @@ const MePage = () => {
 
         // Check version conflict before loading the character
         try {
-            const response = await api.getCharacter(char.id)
+            const response = await characterHttp.get(char.id)
             const beCharacter = parseStoredCharacter((response as any).data)
             const feVersion = char.data.characterVersion ?? 0
 
@@ -806,7 +807,7 @@ const MePage = () => {
         if (isSameCharacter) {
             try {
                 // Fetch current character from backend to compare
-                const response = await api.getCharacter(char.id)
+                const response = await characterHttp.get(char.id)
                 const beCharacter = parseStoredCharacter((response as any).data)
 
                 // Compare current character with backend version to detect unsaved changes
@@ -885,7 +886,7 @@ const MePage = () => {
         currentCharacter: Character | undefined
     ) => {
         if (currentCharacter) {
-            const response = await api.getCharacter(currentCharacter.id)
+            const response = await characterHttp.get(currentCharacter.id)
             const savedCharacter = parseStoredCharacter((response as any).data)
             const localVersion = characterToSave.characterVersion ?? 0
 
@@ -1012,7 +1013,7 @@ const MePage = () => {
             if (currentCharacterExists && !currentCharacterExists.shared) {
                 try {
                     // Check version before saving
-                    const response = await api.getCharacter(character.id)
+                    const response = await characterHttp.get(character.id)
                     const beCharacter = parseStoredCharacter((response as any).data)
                     const feVersion = character.characterVersion ?? 0
 

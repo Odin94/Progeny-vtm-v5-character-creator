@@ -19,11 +19,7 @@ import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
 import { clans } from "~/data/Clans"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import {
-    Character,
-    getDisciplineLevel,
-    increaseDisciplineLevelForPower
-} from "~/data/Character"
+import { Character, getDisciplineLevel, increaseDisciplineLevelForPower } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplinePowerCard from "./DisciplinePowerCard"
 import CustomDisciplineModal from "./CustomDisciplineModal"
@@ -141,9 +137,7 @@ const DisciplineSelectModal = ({
 
         const characterPowerIds = new Set(character.disciplines.map(getPowerIdentity))
 
-        return discipline.powers.filter(
-            (power) => !characterPowerIds.has(getPowerIdentity(power))
-        )
+        return discipline.powers.filter((power) => !characterPowerIds.has(getPowerIdentity(power)))
     }
 
     // Powers the character cannot take yet stay on screen but disabled, with the reason spelled
@@ -387,7 +381,9 @@ const DisciplineSelectModal = ({
                                                                     {discipline.logo ? (
                                                                         <img
                                                                             src={discipline.logo}
-                                                                            alt={upcase(disciplineName)}
+                                                                            alt={upcase(
+                                                                                disciplineName
+                                                                            )}
                                                                             style={{
                                                                                 width: "60px",
                                                                                 height: "60px"
@@ -395,7 +391,10 @@ const DisciplineSelectModal = ({
                                                                         />
                                                                     ) : null}
                                                                 </Box>
-                                                                <Title order={4} style={{ margin: 0 }}>
+                                                                <Title
+                                                                    order={4}
+                                                                    style={{ margin: 0 }}
+                                                                >
                                                                     {upcase(discipline.name)}
                                                                 </Title>
                                                                 <Box
@@ -408,7 +407,9 @@ const DisciplineSelectModal = ({
                                                                 >
                                                                     {discipline.summary ? (
                                                                         <Tooltip
-                                                                            label={discipline.summary}
+                                                                            label={
+                                                                                discipline.summary
+                                                                            }
                                                                             multiline
                                                                             w={260}
                                                                             withArrow
@@ -426,9 +427,15 @@ const DisciplineSelectModal = ({
                                                                 </Box>
                                                             </Stack>
                                                             {discipline.homebrewSource ? (
-                                                                <Box pos="absolute" top={0} right={0}>
+                                                                <Box
+                                                                    pos="absolute"
+                                                                    top={0}
+                                                                    right={0}
+                                                                >
                                                                     <HomebrewBadge
-                                                                        source={discipline.homebrewSource}
+                                                                        source={
+                                                                            discipline.homebrewSource
+                                                                        }
                                                                     />
                                                                 </Box>
                                                             ) : null}
@@ -576,8 +583,7 @@ const PowerPicker = ({
                                 <Grid gap="md">
                                     {powers.map((power) => {
                                         const disabledReasons = getPowerDisabledReasons(power)
-                                        const disabledTooltip =
-                                            disabledReasons.join(" · ") || null
+                                        const disabledTooltip = disabledReasons.join(" · ") || null
                                         const disabled = disabledTooltip !== null
                                         const xpCost = getPowerXpCost(power)
                                         return (

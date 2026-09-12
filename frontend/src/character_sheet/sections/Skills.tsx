@@ -1,14 +1,4 @@
-import {
-    Box,
-    Grid,
-    Group,
-    Text,
-    Title,
-    Badge,
-    TextInput,
-    Tooltip,
-    Paper
-} from "@mantine/core"
+import { Box, Grid, Group, Text, Title, Badge, TextInput, Tooltip, Paper } from "@mantine/core"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import posthog from "posthog-js"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
@@ -116,9 +106,7 @@ const SkillRow = ({
         checkOverflow()
         window.addEventListener("resize", checkOverflow)
         const resizeObserver =
-            typeof ResizeObserver === "undefined"
-                ? undefined
-                : new ResizeObserver(checkOverflow)
+            typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(checkOverflow)
         if (containerRef.current && resizeObserver) {
             resizeObserver.observe(containerRef.current)
         }
