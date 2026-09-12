@@ -1,17 +1,27 @@
+import type { ButtonProps } from "@mantine/core"
 import { RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 
-export const generatorConfirmButtonStyles = {
+export const generatorConfirmButtonStyles: ButtonProps["styles"] = (_theme, props) => ({
     root: {
         minWidth: 180,
         background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.92)}, ${rgba(RAW_RED, 0.88)})`,
-        boxShadow: `0 16px 32px ${rgba(RAW_GRAPE, 0.3)}`
+        boxShadow: `0 16px 32px ${rgba(RAW_GRAPE, 0.3)}`,
+        ...(props.disabled || props["data-disabled"]
+            ? {
+                  background: "linear-gradient(135deg, #4a4053, #514045)",
+                  borderColor: "#625363",
+                  color: "#c2bbc6",
+                  boxShadow: "none",
+                  cursor: "not-allowed"
+              }
+            : {})
     },
     label: {
         fontFamily: "Cinzel, Georgia, serif",
         letterSpacing: "0.08em",
         textTransform: "uppercase" as const
     }
-}
+})
 
 export const generatorOutlineActionButtonStyles = {
     root: {
