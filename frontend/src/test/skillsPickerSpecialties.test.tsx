@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import SkillsPicker from "~/generator/components/SkillsPicker"
-import type { SkillsSetting } from "~/generator/creatorDrafts"
+import type { DistributionKey, SkillsSetting } from "~/generator/creatorDrafts"
 import { getEmptyCharacter } from "~/data/Character"
 
 vi.mock("~/utils/analytics", () => ({ trackEvent: vi.fn() }))
@@ -55,7 +55,61 @@ function Harness({ nextStep }: { nextStep: () => void }) {
     )
 }
 
+function RestoredSkillsHarness() {
+    const [character, setCharacter] = useState(() => {
+        const restored = getEmptyCharacter()
+        restored.skills.athletics = 4
+        restored.skills.brawl = 2
+        return restored
+    })
+    const [pickedSkills, setPickedSkills] = useState<SkillsSetting>({
+        special: ["athletics"],
+        strongest: ["brawl", "craft", "drive"],
+        decent: ["firearms", "larceny", "melee", "insight"],
+        acceptable: ["stealth", "survival", "animal ken", "etiquette"]
+    })
+    const [distribution, setDistribution] = useState<DistributionKey | null>(null)
+    return (
+        <MantineProvider env="test">
+            <SkillsPicker
+                character={character}
+                setCharacter={setCharacter}
+                nextStep={vi.fn()}
+                pickedSkills={pickedSkills}
+                setPickedSkills={setPickedSkills}
+                pickedDistribution={distribution}
+                setPickedDistribution={setDistribution}
+            />
+            <output data-testid="draft-selection">{JSON.stringify(pickedSkills)}</output>
+            <output data-testid="saved-character">{JSON.stringify(character)}</output>
+        </MantineProvider>
+    )
+}
+
 describe("SkillsPicker specialties", () => {
+    it.each(["specialist", "balanced", "jack-of-all-trades"])(
+        "starts a fresh %s allocation when restored skills have no matching distribution",
+        (distribution) => {
+            render(<RestoredSkillsHarness />)
+            const saved = screen.getByTestId("saved-character").textContent
+            fireEvent.click(screen.getByTestId(`skill-distribution-${distribution}-button`))
+            expect(JSON.parse(screen.getByTestId("draft-selection").textContent!)).toEqual({
+                special: [],
+                strongest: [],
+                decent: [],
+                acceptable: []
+            })
+            expect(screen.getByTestId("saved-character").textContent).toBe(saved)
+            expect(screen.getByTestId("skills-confirm-button")).toBeDisabled()
+            expect(screen.queryByText(/-\d/)).not.toBeInTheDocument()
+            fireEvent.click(screen.getByTestId("skill-athletics-button"))
+            const draft = JSON.parse(screen.getByTestId("draft-selection").textContent!)
+            expect(draft[distribution === "specialist" ? "special" : "strongest"]).toEqual([
+                "athletics"
+            ])
+        }
+    )
+
     it("keeps the final pick on outside taps and Confirm, and saves the selected specialty", async () => {
         const user = userEvent.setup()
         const nextStep = vi.fn()
