@@ -473,6 +473,7 @@ const SkillsPicker = ({
                                                         display: "flex"
                                                     }}
                                                     onClick={() => {
+                                                        setPickedSkills(emptySkillsSetting)
                                                         setPickedDistribution(distribution)
                                                     }}
                                                 >
