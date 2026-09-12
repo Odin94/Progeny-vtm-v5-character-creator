@@ -853,20 +853,7 @@ const DisciplinesPicker = ({
                                 data-testid="disciplines-confirm-button"
                                 disabled={confirmDisabled}
                                 color="grape"
-                                styles={{
-                                    ...generatorConfirmButtonStyles,
-                                    root: {
-                                        ...generatorConfirmButtonStyles.root,
-                                        background: confirmDisabled
-                                            ? "rgba(80, 80, 80, 0.75)"
-                                            : generatorConfirmButtonStyles.root.background,
-                                        boxShadow: confirmDisabled
-                                            ? "none"
-                                            : generatorConfirmButtonStyles.root.boxShadow,
-                                        color: confirmDisabled ? rgba(RAW_GREY, 0.55) : undefined,
-                                        cursor: confirmDisabled ? "not-allowed" : undefined
-                                    }
-                                }}
+                                styles={generatorConfirmButtonStyles}
                                 onClick={() => {
                                     updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                     const pickedDisciplineIdentities = new Set(
