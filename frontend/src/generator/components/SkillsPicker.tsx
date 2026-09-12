@@ -1,7 +1,7 @@
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import {
@@ -71,6 +71,134 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
     return Object.values(skillSetting).reduce((acc, s) => [...acc, ...s], [])
 }
 
+const SkillButton = memo(function SkillButton({
+    skill,
+    i,
+    assignedLevel,
+    hasDistribution,
+    skillAllocationIsFull,
+    phoneScreen
+}: {
+    skill: SkillsKey
+    i: number
+    assignedLevel: number | null
+    hasDistribution: boolean
+    skillAllocationIsFull: boolean
+    phoneScreen: boolean
+}) {
+    const alreadyPicked = assignedLevel !== null
+    return (
+        <Grid.Col span={4}>
+            <Tooltip
+                disabled={alreadyPicked}
+                label={skillsDescriptions[skill]}
+                transitionProps={{ transition: "slide-up", duration: 200 }}
+                events={globals.tooltipTriggerEvents}
+            >
+                <Button
+                    data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
+                    p={phoneScreen ? "xs" : "default"}
+                    variant={alreadyPicked ? "outline" : "filled"}
+                    disabled={!hasDistribution || (!alreadyPicked && skillAllocationIsFull)}
+                    color="grape"
+                    fullWidth={false}
+                    style={{
+                        width: "88%",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        display: "flex",
+                        minHeight: phoneScreen ? 36 : 40
+                    }}
+                    styles={{
+                        inner: {
+                            alignItems: "center",
+                            justifyContent: phoneScreen ? "flex-start" : "space-between",
+                            paddingTop: 2,
+                            paddingBottom: 3
+                        },
+                        label: {
+                            lineHeight: 1.3,
+                            overflow: "visible",
+                            flex: 1
+                        },
+                        section: {
+                            overflow: "visible"
+                        },
+                        root: {
+                            justifyContent: "space-between",
+                            background:
+                                assignedLevel === 4
+                                    ? rgba(RAW_RED, 0.38)
+                                    : assignedLevel === 3
+                                      ? rgba(RAW_RED, 0.2)
+                                      : assignedLevel === 2
+                                        ? "rgba(204, 166, 51, 0.4)"
+                                        : assignedLevel === 1
+                                          ? "rgba(43, 43, 43, 0.5)"
+                                          : !hasDistribution
+                                            ? "rgba(43, 43, 43, 0.3)"
+                                            : rgba(RAW_GRAPE, 0.8),
+                            borderColor:
+                                assignedLevel === 4
+                                    ? rgba(RAW_RED, 1)
+                                    : assignedLevel === 3
+                                      ? rgba(RAW_RED, 0.95)
+                                      : assignedLevel === 2
+                                        ? rgba(RAW_GOLD, 0.9)
+                                        : assignedLevel === 1
+                                          ? "rgba(180, 180, 180, 0.42)"
+                                          : !hasDistribution
+                                            ? "rgba(180, 180, 180, 0.24)"
+                                            : rgba(RAW_GRAPE, 0.45),
+                            color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
+                        }
+                    }}
+                    rightSection={
+                        !phoneScreen && assignedLevel ? (
+                            <Group gap={4} wrap="nowrap">
+                                {Array.from({ length: 5 }).map((_, dotIndex) => (
+                                    <div
+                                        key={`${skill}-dot-${dotIndex}`}
+                                        style={{
+                                            width: 6,
+                                            height: 6,
+                                            borderRadius: "999px",
+                                            background:
+                                                dotIndex < assignedLevel
+                                                    ? assignedLevel === 4 || assignedLevel === 3
+                                                        ? rgba(RAW_RED, 1)
+                                                        : assignedLevel === 2
+                                                          ? "rgba(232, 204, 92, 0.98)"
+                                                          : "rgba(210, 210, 210, 0.85)"
+                                                    : "rgba(255, 255, 255, 0.14)",
+                                            boxShadow:
+                                                dotIndex < assignedLevel &&
+                                                (assignedLevel === 4 || assignedLevel === 3)
+                                                    ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
+                                                    : "none"
+                                        }}
+                                    />
+                                ))}
+                            </Group>
+                        ) : undefined
+                    }
+                    data-skill={skill}
+                >
+                    <Text
+                        fz={phoneScreen ? 12 : "inherit"}
+                        lh={1.3}
+                        ta="left"
+                        style={{ width: "100%" }}
+                    >
+                        {upcase(skill)}
+                    </Text>
+                </Button>
+            </Tooltip>
+            {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
+        </Grid.Col>
+    )
+})
+
 const SkillsPicker = ({
     character,
     setCharacter,
@@ -111,20 +239,13 @@ const SkillsPicker = ({
         pickedSkills.decent.length >= distr.decent &&
         pickedSkills.acceptable.length >= distr.acceptable
 
-    const createButton = (skill: SkillsKey, i: number) => {
+    const pickSkill = (skill: SkillsKey) => {
         const alreadyPicked = [
             ...pickedSkills.special,
             ...pickedSkills.strongest,
             ...pickedSkills.decent,
             ...pickedSkills.acceptable
         ].includes(skill)
-        const assignedLevel = (() => {
-            if (pickedSkills.special.includes(skill)) return 4
-            if (pickedSkills.strongest.includes(skill)) return 3
-            if (pickedSkills.decent.includes(skill)) return 2
-            if (pickedSkills.acceptable.includes(skill)) return 1
-            return null
-        })()
 
         let onClick: () => void
         if (alreadyPicked) {
@@ -175,121 +296,8 @@ const SkillsPicker = ({
             })
         }
 
-        return (
-            <Grid.Col key={skill} span={4}>
-                <Tooltip
-                    disabled={alreadyPicked}
-                    label={skillsDescriptions[skill]}
-                    transitionProps={{ transition: "slide-up", duration: 200 }}
-                    events={globals.tooltipTriggerEvents}
-                >
-                    <Button
-                        data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
-                        p={phoneScreen ? "xs" : "default"}
-                        variant={alreadyPicked ? "outline" : "filled"}
-                        disabled={
-                            pickedDistribution === null || (!alreadyPicked && skillAllocationIsFull)
-                        }
-                        color="grape"
-                        fullWidth={false}
-                        style={{
-                            width: "88%",
-                            marginLeft: "auto",
-                            marginRight: "auto",
-                            display: "flex",
-                            minHeight: phoneScreen ? 36 : 40
-                        }}
-                        styles={{
-                            inner: {
-                                alignItems: "center",
-                                justifyContent: phoneScreen ? "flex-start" : "space-between",
-                                paddingTop: 2,
-                                paddingBottom: 3
-                            },
-                            label: {
-                                lineHeight: 1.3,
-                                overflow: "visible",
-                                flex: 1
-                            },
-                            section: {
-                                overflow: "visible"
-                            },
-                            root: {
-                                justifyContent: "space-between",
-                                background:
-                                    assignedLevel === 4
-                                        ? rgba(RAW_RED, 0.38)
-                                        : assignedLevel === 3
-                                          ? rgba(RAW_RED, 0.2)
-                                          : assignedLevel === 2
-                                            ? "rgba(204, 166, 51, 0.4)"
-                                            : assignedLevel === 1
-                                              ? "rgba(43, 43, 43, 0.5)"
-                                              : pickedDistribution === null
-                                                ? "rgba(43, 43, 43, 0.3)"
-                                                : rgba(RAW_GRAPE, 0.8),
-                                borderColor:
-                                    assignedLevel === 4
-                                        ? rgba(RAW_RED, 1)
-                                        : assignedLevel === 3
-                                          ? rgba(RAW_RED, 0.95)
-                                          : assignedLevel === 2
-                                            ? rgba(RAW_GOLD, 0.9)
-                                            : assignedLevel === 1
-                                              ? "rgba(180, 180, 180, 0.42)"
-                                              : pickedDistribution === null
-                                                ? "rgba(180, 180, 180, 0.24)"
-                                                : rgba(RAW_GRAPE, 0.45),
-                                color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
-                            }
-                        }}
-                        rightSection={
-                            !phoneScreen && assignedLevel ? (
-                                <Group gap={4} wrap="nowrap">
-                                    {Array.from({ length: 5 }).map((_, dotIndex) => (
-                                        <div
-                                            key={`${skill}-dot-${dotIndex}`}
-                                            style={{
-                                                width: 6,
-                                                height: 6,
-                                                borderRadius: "999px",
-                                                background:
-                                                    dotIndex < assignedLevel
-                                                        ? assignedLevel === 4 || assignedLevel === 3
-                                                            ? rgba(RAW_RED, 1)
-                                                            : assignedLevel === 2
-                                                              ? "rgba(232, 204, 92, 0.98)"
-                                                              : "rgba(210, 210, 210, 0.85)"
-                                                        : "rgba(255, 255, 255, 0.14)",
-                                                boxShadow:
-                                                    dotIndex < assignedLevel &&
-                                                    (assignedLevel === 4 || assignedLevel === 3)
-                                                        ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
-                                                        : "none"
-                                            }}
-                                        />
-                                    ))}
-                                </Group>
-                            ) : undefined
-                        }
-                        onClick={() => {
-                            trackClick()
-                            onClick()
-                        }}
-                    >
-                        <Text
-                            fz={phoneScreen ? 12 : "inherit"}
-                            lh={1.3}
-                            ta="left"
-                            style={{ width: "100%" }}
-                        >
-                            {upcase(skill)}
-                        </Text>
-                    </Button>
-                </Tooltip>
-                {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
-            </Grid.Col>
-        )
+        trackClick()
+        onClick()
     }
 
     const toPick = (() => {
@@ -321,9 +329,21 @@ const SkillsPicker = ({
         })
     }
 
+    // Delegate native button clicks so each memoized button only receives visual props.
+    // Passing a selection-dependent callback to every button would invalidate all 27.
     const createSkillButtons = () => (
         <Group>
-            <Grid grow m={0}>
+            <Grid
+                grow
+                m={0}
+                onClick={(event) => {
+                    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+                        "button[data-skill]"
+                    )
+                    if (button && !button.disabled)
+                        pickSkill(skillsKeySchema.parse(button.dataset.skill))
+                }}
+            >
                 <Grid.Col span={4}>
                     <Text fs="italic" fw={700} ta="center">
                         Physical
@@ -369,7 +389,27 @@ const SkillsPicker = ({
                     "technology"
                 ]
                     .map((s) => skillsKeySchema.parse(s))
-                    .map((clan, i) => createButton(clan, i))}
+                    .map((skill, i) => (
+                        <SkillButton
+                            key={skill}
+                            skill={skill}
+                            i={i}
+                            assignedLevel={
+                                pickedSkills.special.includes(skill)
+                                    ? 4
+                                    : pickedSkills.strongest.includes(skill)
+                                      ? 3
+                                      : pickedSkills.decent.includes(skill)
+                                        ? 2
+                                        : pickedSkills.acceptable.includes(skill)
+                                          ? 1
+                                          : null
+                            }
+                            hasDistribution={pickedDistribution !== null}
+                            skillAllocationIsFull={skillAllocationIsFull}
+                            phoneScreen={phoneScreen}
+                        />
+                    ))}
             </Grid>
         </Group>
     )

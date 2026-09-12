@@ -60,7 +60,9 @@ export const isRenderProfilerEnabled = () => {
         return envPreference
     }
 
-    return getBrowserProfilerPreference() ?? import.meta.env.DEV
+    // Nested page profilers are diagnostic work, including a console entry per commit.
+    // Keep normal local interactions free of that overhead unless explicitly enabled.
+    return getBrowserProfilerPreference() ?? false
 }
 
 const recordProfileSample = (sample: RenderProfileSample) => {
