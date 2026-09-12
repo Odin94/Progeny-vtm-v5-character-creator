@@ -1,0 +1,101 @@
+diff --git a/cjs/components/ScrollArea/ScrollArea.cjs b/cjs/components/ScrollArea/ScrollArea.cjs
+index b86f7dab3fac57d14cfc287118b89d98aaafe37b..b6fcc45b31247a7ff6d7cbe7042ed897452bd4dc 100644
+--- a/cjs/components/ScrollArea/ScrollArea.cjs
++++ b/cjs/components/ScrollArea/ScrollArea.cjs
+@@ -157,7 +157,7 @@ const ScrollAreaAutosize = require_factory.factory((props) => {
+ 	]);
+ 	const overflowingRef = (0, react.useRef)(false);
+ 	const didMountRef = (0, react.useRef)(false);
+-	const handleOverflowCheck = (0, react.useEffectEvent)(() => {
++	const handleOverflowCheck = (0, _mantine_hooks.useCallbackRef)(() => {
+ 		const el = viewportObserverRef.current;
+ 		if (!el || !onOverflowChange) return;
+ 		const isOverflowing = el.scrollHeight > el.clientHeight;
+diff --git a/cjs/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.cjs b/cjs/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.cjs
+index d4cbd242bad5f0ecfa4ac764e408c8c28d14c5e1..38dc9a2f65ef5bfbaa48934f1996814768633638 100644
+--- a/cjs/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.cjs
++++ b/cjs/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.cjs
+@@ -17,7 +17,7 @@ function Scrollbar(props) {
+ 	const prevWebkitUserSelectRef = (0, react.useRef)("");
+ 	const { viewport } = context;
+ 	const maxScrollPos = sizes.content - sizes.viewport;
+-	const handleWheelScroll = (0, react.useEffectEvent)(onWheelScroll);
++	const handleWheelScroll = (0, _mantine_hooks.useCallbackRef)(onWheelScroll);
+ 	const handleThumbPositionChange = (0, _mantine_hooks.useCallbackRef)(onThumbPositionChange);
+ 	const handleResize = (0, _mantine_hooks.useDebouncedCallback)(onResize, 10);
+ 	const handleDragScroll = (event) => {
+diff --git a/cjs/components/ScrollArea/use-resize-observer.cjs b/cjs/components/ScrollArea/use-resize-observer.cjs
+index 0a799c348323ab9fa6046d838e00a498be4a5758..d9ae9cdb859852e218ba1467001633eb55a50b51 100644
+--- a/cjs/components/ScrollArea/use-resize-observer.cjs
++++ b/cjs/components/ScrollArea/use-resize-observer.cjs
+@@ -4,7 +4,7 @@ let react = require("react");
+ let _mantine_hooks = require("@mantine/hooks");
+ //#region packages/@mantine/core/src/components/ScrollArea/use-resize-observer.ts
+ function useResizeObserver(element, onResize) {
+-	const handleResize = (0, react.useEffectEvent)(onResize);
++	const handleResize = (0, _mantine_hooks.useCallbackRef)(onResize);
+ 	(0, _mantine_hooks.useIsomorphicEffect)(() => {
+ 		let rAF = 0;
+ 		if (element) {
+diff --git a/esm/components/ScrollArea/ScrollArea.mjs b/esm/components/ScrollArea/ScrollArea.mjs
+index 60cb8d8cf13228023a79da858c236a902f54fa49..3f9b85d7f7bff6ba65227621d03e9027f7b3cf17 100644
+--- a/esm/components/ScrollArea/ScrollArea.mjs
++++ b/esm/components/ScrollArea/ScrollArea.mjs
+@@ -12,8 +12,8 @@ import { ScrollAreaScrollbar } from "./ScrollAreaScrollbar/ScrollAreaScrollbar.m
+ import { ScrollAreaThumb } from "./ScrollAreaThumb/ScrollAreaThumb.mjs";
+ import { ScrollAreaViewport } from "./ScrollAreaViewport/ScrollAreaViewport.mjs";
+ import ScrollArea_module_default from "./ScrollArea.module.mjs";
+-import { useCallback, useEffectEvent, useRef, useState } from "react";
+-import { useIsomorphicEffect } from "@mantine/hooks";
++import { useCallback, useRef, useState } from "react";
++import { useCallbackRef, useIsomorphicEffect } from "@mantine/hooks";
+ import { jsx, jsxs } from "react/jsx-runtime";
+ import { useMergeRefs } from "@floating-ui/react";
+ //#region packages/@mantine/core/src/components/ScrollArea/ScrollArea.tsx
+@@ -156,7 +156,7 @@ const ScrollAreaAutosize = factory((props) => {
+ 	]);
+ 	const overflowingRef = useRef(false);
+ 	const didMountRef = useRef(false);
+-	const handleOverflowCheck = useEffectEvent(() => {
++	const handleOverflowCheck = useCallbackRef(() => {
+ 		const el = viewportObserverRef.current;
+ 		if (!el || !onOverflowChange) return;
+ 		const isOverflowing = el.scrollHeight > el.clientHeight;
+diff --git a/esm/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.mjs b/esm/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.mjs
+index cbb1d9f8d8e4acb0c1a4f67edd35779ecf5761df..6c309ed986d97c51004e4d59a8fdeec13c28a679 100644
+--- a/esm/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.mjs
++++ b/esm/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.mjs
+@@ -3,7 +3,7 @@ import { useScrollAreaContext } from "../ScrollArea.context.mjs";
+ import { useResizeObserver } from "../use-resize-observer.mjs";
+ import { composeEventHandlers } from "../utils/compose-event-handlers.mjs";
+ import { ScrollbarProvider } from "./Scrollbar.context.mjs";
+-import { useEffect, useEffectEvent, useRef, useState } from "react";
++import { useEffect, useRef, useState } from "react";
+ import { useCallbackRef, useDebouncedCallback, useMergedRef } from "@mantine/hooks";
+ import { jsx } from "react/jsx-runtime";
+ //#region packages/@mantine/core/src/components/ScrollArea/ScrollAreaScrollbar/Scrollbar.tsx
+@@ -16,7 +16,7 @@ function Scrollbar(props) {
+ 	const prevWebkitUserSelectRef = useRef("");
+ 	const { viewport } = context;
+ 	const maxScrollPos = sizes.content - sizes.viewport;
+-	const handleWheelScroll = useEffectEvent(onWheelScroll);
++	const handleWheelScroll = useCallbackRef(onWheelScroll);
+ 	const handleThumbPositionChange = useCallbackRef(onThumbPositionChange);
+ 	const handleResize = useDebouncedCallback(onResize, 10);
+ 	const handleDragScroll = (event) => {
+diff --git a/esm/components/ScrollArea/use-resize-observer.mjs b/esm/components/ScrollArea/use-resize-observer.mjs
+index b2b64bdf4791ab0fff14c5d9d90901aaffb349e5..a5fa90e58e76e5a7d807ddcf404a84dc49078ca8 100644
+--- a/esm/components/ScrollArea/use-resize-observer.mjs
++++ b/esm/components/ScrollArea/use-resize-observer.mjs
+@@ -1,9 +1,8 @@
+ "use client";
+-import { useEffectEvent } from "react";
+-import { useIsomorphicEffect } from "@mantine/hooks";
++import { useCallbackRef, useIsomorphicEffect } from "@mantine/hooks";
+ //#region packages/@mantine/core/src/components/ScrollArea/use-resize-observer.ts
+ function useResizeObserver(element, onResize) {
+-	const handleResize = useEffectEvent(onResize);
++	const handleResize = useCallbackRef(onResize);
+ 	useIsomorphicEffect(() => {
+ 		let rAF = 0;
+ 		if (element) {

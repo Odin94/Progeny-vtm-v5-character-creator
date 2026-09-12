@@ -107,6 +107,9 @@
             "core-js",
             "esbuild",
             "protobufjs"
-        ]
+        ],
+        "patchedDependencies": {
+            "@mantine/core@9.2.1": "patches/@mantine__core@9.2.1.patch"
+        }
     }
 }
