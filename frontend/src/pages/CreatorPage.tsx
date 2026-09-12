@@ -9,7 +9,11 @@ import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import RenderProfiler from "~/components/RenderProfiler"
 import SharedCharacterCreatorModal from "~/components/SharedCharacterCreatorModal"
-import { getEmptyCharacter, type Character as CharacterType } from "~/data/Character"
+import {
+    getEmptyCharacter,
+    isCharacterEmpty,
+    type Character as CharacterType
+} from "~/data/Character"
 import Generator from "~/generator/Generator"
 import {
     defaultGeneratorStepId,
@@ -82,7 +86,6 @@ export default function CreatorPage() {
             (candidate) => candidate.id === character.id && candidate.shared
         )
     )
-    const emptyCharacter = getEmptyCharacter()
     const resetGeneratorSession = () => setCharacterSessionKey((key) => key + 1)
 
     const routeHash = location.hash.replace(/^#/, "")
@@ -190,14 +193,7 @@ export default function CreatorPage() {
         await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
     }
 
-    const isCurrentCharacterEmpty = () =>
-        JSON.stringify({
-            ...character,
-            id: "",
-            name: "",
-            version: emptyCharacter.version,
-            characterVersion: emptyCharacter.characterVersion
-        }) === JSON.stringify(emptyCharacter)
+    const isCurrentCharacterEmpty = () => isCharacterEmpty(character)
 
     const completePendingSwitchAction = async (action: PendingSwitchAction) => {
         if (!action) {

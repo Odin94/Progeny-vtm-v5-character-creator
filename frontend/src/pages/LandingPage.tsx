@@ -22,7 +22,7 @@ import { useState } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
-import { getEmptyCharacter, type Character } from "~/data/Character"
+import { getEmptyCharacter, isCharacterEmpty, type Character } from "~/data/Character"
 import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
@@ -101,19 +101,11 @@ export default function LandingPage() {
     ] = useDisclosure(false)
     const [currentCharacterName, setCurrentCharacterName] = useState(character.name)
     const [isSavingCurrentCharacter, setIsSavingCurrentCharacter] = useState(false)
-    const emptyCharacter = getEmptyCharacter()
     const userCharacters = (
         (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
     ).filter((candidate) => !candidate.shared)
 
-    const isCurrentCharacterEmpty = () =>
-        JSON.stringify({
-            ...character,
-            id: "",
-            name: "",
-            version: emptyCharacter.version,
-            characterVersion: emptyCharacter.characterVersion
-        }) === JSON.stringify(emptyCharacter)
+    const isCurrentCharacterEmpty = () => isCharacterEmpty(character)
 
     const openAccountArea = () => {
         if (isAuthenticated) {
