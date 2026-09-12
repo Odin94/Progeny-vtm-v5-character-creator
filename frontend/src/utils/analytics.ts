@@ -77,6 +77,17 @@ export const trackFeatureGuideNavigationSelected = ({
     }
 }
 
+// Records when the profile page holds back a character switch because the
+// current draft has unsaved changes but no name. The failure path was
+// previously invisible in analytics.
+export const trackCharacterSwitchBlockedUnnamed = () => {
+    try {
+        posthog.capture("character_switch_blocked_unnamed", { surface: "profile" })
+    } catch (error) {
+        console.warn("Character switch blocked tracking failed:", error)
+    }
+}
+
 export const resetPostHogIdentity = () => {
     let consentStatus: PostHogConsentStatus = "pending"
 

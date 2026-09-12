@@ -39,6 +39,8 @@ const NameCharacterBeforeSwitchModal = ({
         <Modal
             opened={opened}
             onClose={onClose}
+            closeOnClickOutside={!isSaving}
+            closeOnEscape={!isSaving}
             title=""
             centered
             size="lg"
@@ -57,6 +59,7 @@ const NameCharacterBeforeSwitchModal = ({
                     </Text>
                 </Stack>
                 <TextInput
+                    disabled={isSaving}
                     value={nameValue}
                     onChange={(event) => setNameValue(event.currentTarget.value)}
                     label="Character Name"
