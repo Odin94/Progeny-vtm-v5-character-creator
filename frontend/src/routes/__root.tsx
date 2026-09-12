@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router"
+import { createRootRoute } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createTheme, MantineProvider } from "@mantine/core"
 import { generateColors } from "@mantine/colors-generator"
@@ -8,9 +8,9 @@ import posthog, { type PostHogConfig } from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
+import RouteOutlet from "~/components/RouteOutlet"
 import CharacterAutosave from "~/components/CharacterAutosave"
 import { CookiesBanner } from "~/components/CookiesBanner"
-import RenderProfiler from "~/components/RenderProfiler"
 import { inputFocusTheme } from "~/theme/inputFocus"
 import { modalTheme } from "~/theme/modal"
 import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils/analytics"
@@ -204,9 +204,7 @@ export const Route = createRootRoute({
                     <BrokenSaveModal />
                     <CookiesBanner />
                     <RecentChangesGate />
-                    <RenderProfiler id="RouteOutlet">
-                        <Outlet />
-                    </RenderProfiler>
+                    <RouteOutlet />
                 </MantineProvider>
             </PostHogProvider>
         </QueryClientProvider>

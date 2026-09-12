@@ -6,11 +6,13 @@ import ErrorDetails from "./ErrorDetails"
 
 type Props = {
     children?: ReactNode
+    resetKey?: string
 }
 
 type State = {
     hasError: boolean
     error?: Error
+    resetKey?: string
 }
 
 const getCharacterFromStorage = () => {
@@ -30,6 +32,13 @@ class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
         error: undefined
+    }
+
+    public static getDerivedStateFromProps(props: Props, state: State): Partial<State> | null {
+        if (props.resetKey !== state.resetKey) {
+            return { resetKey: props.resetKey, hasError: false, error: undefined }
+        }
+        return null
     }
 
     public static getDerivedStateFromError(e: Error): State {
