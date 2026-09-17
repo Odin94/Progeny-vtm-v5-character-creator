@@ -1,5 +1,6 @@
 import {
     ActionIcon,
+    Alert,
     Badge,
     Button,
     Card,
@@ -33,6 +34,9 @@ type Character = {
 }
 
 type CharactersSectionProps = {
+    isLoading: boolean
+    hasLoadError: boolean
+    onRetry: () => void
     userCharacters: Character[]
     character: CharacterType & { id?: string }
     showSaveCurrentButton: boolean
@@ -52,6 +56,9 @@ type CharactersSectionProps = {
 }
 
 const CharactersSection = ({
+    isLoading,
+    hasLoadError,
+    onRetry,
     userCharacters,
     character,
     showSaveCurrentButton,
@@ -69,6 +76,30 @@ const CharactersSection = ({
     handleDeleteCharacter,
     handleUnshareCharacter
 }: CharactersSectionProps) => {
+    if (isLoading || hasLoadError) {
+        return (
+            <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
+                <Title order={2} mb="md">
+                    Characters
+                </Title>
+                {hasLoadError ? (
+                    <Alert color="red" title="Could not load saved characters">
+                        <Text size="sm">
+                            A loading error does not mean your characters were deleted. Your current
+                            draft is still in this browser. Reload the list before saving to avoid
+                            creating duplicates.
+                        </Text>
+                        <Button onClick={onRetry} mt="sm" variant="light" color="red">
+                            Retry loading characters
+                        </Button>
+                    </Alert>
+                ) : (
+                    <Text role="status">Loading saved characters…</Text>
+                )}
+            </Card>
+        )
+    }
+
     return (
         <Card p="xl" withBorder style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}>
             <Group gap="md" mb="md" justify="space-between">
