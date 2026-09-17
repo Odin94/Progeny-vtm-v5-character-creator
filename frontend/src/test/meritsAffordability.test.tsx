@@ -62,28 +62,27 @@ const clickLevel = (name: string, level: string) => {
 }
 
 describe("Merits & Flaws affordability", () => {
-    it("shows essential merits by default and reveals advanced merits only when requested", () => {
+    it("shows advanced merits by default and hides them only when narrowed to essentials", () => {
         renderPicker()
+        const search = screen.getByRole("textbox", { name: "Search merits and flaws" })
 
-        expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
-        fireEvent.click(screen.getByRole("button", { name: "Show all merits" }))
-
+        // A search forces every matching category to render, so it can confirm whether the
+        // advanced-only "Laboratory" merit is part of the catalog.
+        fireEvent.change(search, { target: { value: "Laboratory" } })
         expect(screen.getByText("Laboratory", { exact: true })).toBeInTheDocument()
-        fireEvent.click(screen.getByRole("button", { name: "Show essential merits" }))
 
+        fireEvent.click(screen.getByRole("button", { name: "Show essential merits" }))
         expect(screen.queryByText("Laboratory", { exact: true })).not.toBeInTheDocument()
-        expect(screen.getByRole("button", { name: "Show all merits" })).toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole("button", { name: "Show all merits" }))
+        expect(screen.getByText("Laboratory", { exact: true })).toBeInTheDocument()
     })
 
-    it("finds and selects Influence after enabling the advanced catalog", () => {
+    it("finds and selects Influence from the default catalog", () => {
         renderPicker()
         fireEvent.change(screen.getByRole("textbox", { name: "Search merits and flaws" }), {
             target: { value: "Influence" }
         })
-        expect(
-            screen.queryByText("Influence", { exact: true, selector: "span" })
-        ).not.toBeInTheDocument()
-        fireEvent.click(screen.getByRole("button", { name: "Show all merits" }))
         clickLevel("Influence", "2")
         expect(screen.getByText("5/7", { exact: true })).toBeInTheDocument()
         expect(
@@ -93,6 +92,8 @@ describe("Merits & Flaws affordability", () => {
 
     it("filters by case-insensitive title, description, and category substrings", () => {
         renderPicker()
+        // Narrow to the essential catalog so each search term maps to a single card.
+        fireEvent.click(screen.getByRole("button", { name: "Show essential merits" }))
         const search = screen.getByRole("textbox", { name: "Search merits and flaws" })
 
         fireEvent.change(search, { target: { value: "LoOkS" } })
