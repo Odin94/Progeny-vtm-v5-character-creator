@@ -20,7 +20,8 @@ export type ClanBane = z.infer<typeof clanBaneSchema>
 
 export const meritFlawSchema = z.object({
     name: z.string(),
-    level: z.number().min(1).int(),
+    // Some official flaws, including Ingrained Discipline, cost zero dots.
+    level: z.number().int().min(0),
     summary: z.string(),
     excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
@@ -38,7 +39,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 9
+export const schemaVersion = 10
 
 export const disciplineLevelsSchema = z.record(z.string(), z.number().int().min(0).max(5))
 
@@ -377,8 +378,17 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV6ToV7Compatibility(parsed)
     patchV7ToV8Compatibility(parsed)
     patchV8ToV9Compatibility(parsed)
+    patchV9ToV10Compatibility(parsed)
 
     parsed["version"] = schemaVersion
+}
+
+export const patchV9ToV10Compatibility = (parsed: Record<string, unknown>): void => {
+    // Zero-dot merits/flaws were already selectable and persisted by older clients.
+    // Their data is valid: upgrade the version without removing or changing them.
+    if (typeof parsed["version"] !== "number" || parsed["version"] < 10) {
+        parsed["version"] = 10
+    }
 }
 
 export const patchV7ToV8Compatibility = (parsed: Record<string, unknown>): void => {

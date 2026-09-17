@@ -13,7 +13,8 @@ import { specialtySchema } from "./Specialties.js"
 
 export const meritFlawSchema = z.object({
     name: z.string(),
-    level: z.number().min(1).int(),
+    // Some official flaws, including Ingrained Discipline, cost zero dots.
+    level: z.number().int().min(0),
     summary: z.string(),
     excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
@@ -34,7 +35,7 @@ export type Touchstone = z.infer<typeof touchstoneSchema>
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
 
-export const schemaVersion = 9
+export const schemaVersion = 10
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
