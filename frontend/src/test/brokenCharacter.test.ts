@@ -6,9 +6,10 @@ import { resolve } from "path"
 import React, { act } from "react"
 import { fileURLToPath } from "url"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import CharacterRecoveryDownloads from "~/components/CharacterRecoveryDownloads"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { getEmptyCharacter } from "~/data/Character"
-import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
+import { CHARACTER_RECOVERY_KEY, useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 
 const __filename = fileURLToPath(import.meta.url)
@@ -31,6 +32,7 @@ Object.defineProperty(window, "matchMedia", {
 describe("Broken Character Logic", () => {
     beforeEach(() => {
         localStorage.clear()
+        vi.mocked(URL.createObjectURL).mockClear()
     })
 
     describe("useCharacterLocalStorage with broken data", () => {
@@ -89,6 +91,75 @@ describe("Broken Character Logic", () => {
             expect(brokenHook.current.brokenError).toBe("")
             expect(brokenHook.current.hasBrokenCharacter).toBe(false)
         })
+    })
+
+    it("retains separate recovery copies across multiple resets", () => {
+        for (const data of ["first broken save", "second broken save", "first broken save"]) {
+            localStorage.setItem("character_broken_save", JSON.stringify(data))
+            localStorage.setItem("character_broken_save_error", JSON.stringify("parse error"))
+            const { result, unmount } = renderHook(() => useBrokenCharacter())
+            act(() => result.current.clearBrokenCharacter())
+            unmount()
+        }
+        expect(
+            JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!).map(
+                (save: { data: string }) => save.data
+            )
+        ).toEqual(["first broken save", "second broken save"])
+    })
+
+    it("keeps the broken save if browser storage cannot preserve the recovery copy", () => {
+        localStorage.setItem("character_broken_save", JSON.stringify("original save"))
+        localStorage.setItem("character_broken_save_error", JSON.stringify("parse error"))
+        const { result } = renderHook(() => useBrokenCharacter())
+        const setItem = Storage.prototype.setItem
+        const storageSpy = vi
+            .spyOn(Storage.prototype, "setItem")
+            .mockImplementation(function (this: Storage, key, value) {
+                if (key === CHARACTER_RECOVERY_KEY)
+                    throw new DOMException("Storage full", "QuotaExceededError")
+                setItem.call(this, key, value)
+            })
+        try {
+            expect(() => act(() => result.current.clearBrokenCharacter())).toThrow("Storage full")
+            expect(result.current.hasBrokenCharacter).toBe(true)
+            expect(JSON.parse(localStorage.getItem("character_broken_save")!)).toBe("original save")
+        } finally {
+            storageSpy.mockRestore()
+        }
+    })
+
+    it("downloads an archived recovery copy from the account page without modifying it", async () => {
+        const original = '{"name":"Recovery draft","unexpected":"keep this too"}'
+        localStorage.setItem(
+            CHARACTER_RECOVERY_KEY,
+            JSON.stringify([
+                { savedAt: "2026-09-17T12:00:00.000Z", data: original, error: "validation error" }
+            ])
+        )
+        const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
+        const { unmount } = render(
+            React.createElement(
+                MantineProvider,
+                {},
+                React.createElement(CharacterRecoveryDownloads)
+            )
+        )
+        try {
+            await userEvent.click(screen.getByRole("button", { name: /Download recovery copy/ }))
+            const blob = vi.mocked(URL.createObjectURL).mock.lastCall![0] as Blob
+            const content = await new Promise<string>((resolve) => {
+                const reader = new FileReader()
+                reader.onload = () => resolve(reader.result as string)
+                reader.readAsText(blob)
+            })
+            expect(content).toBe(original)
+            expect(clickSpy).toHaveBeenCalledOnce()
+            expect(JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!)[0].data).toBe(original)
+        } finally {
+            clickSpy.mockRestore()
+            unmount()
+        }
     })
 
     describe("Full flow: broken character to modal", () => {
@@ -165,6 +236,9 @@ describe("Broken Character Logic", () => {
             expect(brokenHookAfterReset.current.hasBrokenCharacter).toBe(false)
             expect(brokenHookAfterReset.current.brokenData).toBe("")
             expect(brokenHookAfterReset.current.brokenError).toBe("")
+            expect(JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!)).toEqual([
+                { savedAt: expect.any(String), data: brokenData, error: expect.any(String) }
+            ])
         })
     })
 })

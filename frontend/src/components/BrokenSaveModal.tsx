@@ -6,8 +6,10 @@ import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { getEmptyCharacter } from "~/data/Character"
+import { useState } from "react"
 
 const BrokenSaveModal = () => {
+    const [recoveryError, setRecoveryError] = useState("")
     const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
         useBrokenCharacter()
     const [, setCharacter] = useCharacterLocalStorage()
@@ -30,7 +32,14 @@ const BrokenSaveModal = () => {
     }
 
     const onReset = () => {
-        clearBrokenCharacter()
+        try {
+            clearBrokenCharacter()
+        } catch {
+            setRecoveryError(
+                "Could not preserve a recovery copy. Download your saved data before freeing browser storage and trying again."
+            )
+            return
+        }
         setCharacter(getEmptyCharacter())
         setSelectedStep(defaultGeneratorStepId)
     }
@@ -56,6 +65,16 @@ const BrokenSaveModal = () => {
                 <Text size="sm" c="dimmed">
                     {`(You can safely refresh this page if download isn't working)`}
                 </Text>
+                <Text size="sm">
+                    Starting over replaces only the character in this browser. Characters saved to
+                    your account are unaffected. A recovery copy will remain in this browser and can
+                    be downloaded from your account page.
+                </Text>
+                {recoveryError && (
+                    <Text c="red" role="alert">
+                        {recoveryError}
+                    </Text>
+                )}
                 <Divider my="sm" />
                 <Text fw={700} size="sm">
                     Error details:

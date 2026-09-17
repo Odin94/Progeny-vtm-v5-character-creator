@@ -45,6 +45,7 @@ import ConfirmActionModal, {
     confirmationModalWithHeaderStyles
 } from "~/components/ConfirmActionModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
+import CharacterRecoveryDownloads from "~/components/CharacterRecoveryDownloads"
 import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
@@ -271,7 +272,12 @@ const MePage = () => {
         isSigningIn,
         signOut
     } = useAuth()
-    const { data: characters } = useCharacters(isAuthenticated)
+    const {
+        data: characters,
+        isPending: charactersLoading,
+        isError: charactersLoadError,
+        refetch: reloadCharacters
+    } = useCharacters(isAuthenticated)
     const { data: coteries } = useCoteries(isAuthenticated)
     const { data: coterieVitals } = useCoterieVitals(isAuthenticated)
     const vitalsByCharacterId = useMemo(() => {
@@ -505,7 +511,21 @@ const MePage = () => {
         )
     }
 
+    const requireLoadedCharacters = () => {
+        if (characters === undefined || charactersLoadError) {
+            notifications.show({
+                title: "Characters unavailable",
+                message:
+                    "Reload your saved characters before saving. Your current draft is still in this browser.",
+                color: "red"
+            })
+            return false
+        }
+        return true
+    }
+
     const handleCreateEmptyCharacter = () => {
+        if (!requireLoadedCharacters()) return
         if (!newCharacterName.trim()) {
             notifications.show({
                 title: "Error",
@@ -547,6 +567,7 @@ const MePage = () => {
     }
 
     const handleSaveCurrentCharacter = async () => {
+        if (!requireLoadedCharacters()) return
         if (!character.name.trim()) {
             notifications.show({
                 title: "Error",
@@ -885,6 +906,9 @@ const MePage = () => {
         characterToSave: CharacterType,
         currentCharacter: Character | undefined
     ) => {
+        if (characters === undefined || charactersLoadError) {
+            throw new Error("Reload your saved characters before saving or switching characters.")
+        }
         if (currentCharacter) {
             const response = await characterHttp.get(currentCharacter.id)
             const savedCharacter = parseStoredCharacter((response as any).data)
@@ -997,6 +1021,7 @@ const MePage = () => {
     }
 
     const handleConfirmLoadJson = async () => {
+        if (!requireLoadedCharacters()) return
         console.log("handleConfirmLoadJson", loadedFile)
         if (!loadedFile) {
             notifications.show({
@@ -1804,6 +1829,9 @@ const MePage = () => {
                                 />
 
                                 <CharactersSection
+                                    isLoading={charactersLoading}
+                                    hasLoadError={charactersLoadError}
+                                    onRetry={() => void reloadCharacters()}
                                     userCharacters={userCharacters}
                                     character={character}
                                     showSaveCurrentButton={showSaveCurrentButton}
@@ -1821,6 +1849,8 @@ const MePage = () => {
                                     handleDeleteCharacter={handleDeleteCharacter}
                                     handleUnshareCharacter={handleUnshareCharacter}
                                 />
+
+                                <CharacterRecoveryDownloads />
 
                                 <CoteriesSection
                                     userCoteries={userCoteries}
