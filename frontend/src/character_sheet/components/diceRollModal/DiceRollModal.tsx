@@ -45,6 +45,7 @@ type RollShareContext = {
     selectedPoolDiceCount: number
     selectedDicePool: {
         attribute?: string
+        secondAttribute?: string
         skill?: string
         discipline?: string
         bloodSurge?: boolean
@@ -175,18 +176,20 @@ const DiceRollModal = ({
     const selectedPoolDiceCount = useMemo(() => {
         if (!character || !selectedDicePool.attribute) return 0
         const attributeValue = character.attributes[selectedDicePool.attribute] || 0
-        let skillOrDisciplineValue = 0
+        let companionValue = 0
 
         if (selectedDicePool.skill) {
-            skillOrDisciplineValue = character.skills[selectedDicePool.skill] || 0
+            companionValue = character.skills[selectedDicePool.skill] || 0
         } else if (selectedDicePool.discipline) {
-            skillOrDisciplineValue = getDisciplineRating(selectedDicePool.discipline, character)
+            companionValue = getDisciplineRating(selectedDicePool.discipline, character)
+        } else if (selectedDicePool.secondAttribute) {
+            companionValue = character.attributes[selectedDicePool.secondAttribute] || 0
         }
 
         const bloodSurgeBonus = selectedDicePool.bloodSurge ? 2 : 0
         const totalDice =
             attributeValue +
-            skillOrDisciplineValue +
+            companionValue +
             selectedPoolBonuses.specialtyBonus +
             selectedPoolBonuses.bloodPotencyDisciplineBonus +
             bloodSurgeBonus +
@@ -254,6 +257,9 @@ const DiceRollModal = ({
                 attribute: selectedDicePool.attribute
                     ? String(selectedDicePool.attribute)
                     : undefined,
+                secondAttribute: selectedDicePool.secondAttribute
+                    ? String(selectedDicePool.secondAttribute)
+                    : undefined,
                 skill: selectedDicePool.skill ? String(selectedDicePool.skill) : undefined,
                 discipline: selectedDicePool.discipline
                     ? String(selectedDicePool.discipline)
@@ -275,6 +281,7 @@ const DiceRollModal = ({
         if (context?.mode === "selected" && context.selectedDicePool.attribute) {
             return {
                 attribute: context.selectedDicePool.attribute,
+                secondAttribute: context.selectedDicePool.secondAttribute,
                 skill: context.selectedDicePool.skill,
                 discipline: context.selectedDicePool.discipline,
                 diceCount: context.selectedPoolDiceCount,
@@ -788,6 +795,7 @@ const DiceRollModal = ({
                     } else {
                         const poolData: Record<string, string | number | boolean | string[]> = {
                             attribute: selectedDicePool.attribute || "",
+                            second_attribute: selectedDicePool.secondAttribute || "",
                             skill: selectedDicePool.skill || "",
                             discipline: selectedDicePool.discipline || "",
                             blood_surge: selectedDicePool.bloodSurge,
