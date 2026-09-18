@@ -29,21 +29,45 @@ const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
     const { character } = options
     const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            isSelected: state.selectedDicePool.attribute === attribute,
+            isSelected:
+                state.selectedDicePool.attribute === attribute ||
+                state.selectedDicePool.secondAttribute === attribute,
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
 
     const handleAttributeClick = (attribute: AttributesKey) => {
         const diceModalOpened = useDiceRollModalStore.getState().opened
-        updateSelectedDicePool({
-            attribute: diceModalOpened && isSelected ? null : attribute,
-            selectedDisciplinePowers: [],
-            selectedMeritFlaws: []
-        })
+
         if (!diceModalOpened) {
+            updateSelectedDicePool({
+                attribute,
+                secondAttribute: null,
+                selectedDisciplinePowers: [],
+                selectedMeritFlaws: []
+            })
             useDiceRollModalStore.getState().openSelectedPool()
+            return
         }
+
+        const pool = useCharacterSheetStore.getState().selectedDicePool
+
+        // While no companion attribute is in play, an attribute click sets (or
+        // toggles off) the primary slot. Once the primary is set and the
+        // companion slot is free, the next attribute click fills it instead,
+        // so the same attribute can fill both slots (e.g. Strength + Strength).
+        if (!pool.attribute || pool.skill || pool.discipline) {
+            updateSelectedDicePool({
+                attribute: pool.attribute === attribute ? null : attribute,
+                selectedDisciplinePowers: [],
+                selectedMeritFlaws: []
+            })
+            return
+        }
+
+        updateSelectedDicePool({
+            secondAttribute: pool.secondAttribute === attribute ? null : attribute
+        })
     }
 
     return (

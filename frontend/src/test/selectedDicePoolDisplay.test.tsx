@@ -55,6 +55,48 @@ describe("SelectedDicePoolDisplay", () => {
         expect(screen.getByLabelText("Blood Surge (+2 dice)")).toBeInTheDocument()
     })
 
+    it("shows both attribute badges when the pool pairs two attributes", () => {
+        const character = getBasicTestCharacter()
+        useCharacterSheetStore.getState().updateSelectedDicePool({
+            attribute: "wits",
+            secondAttribute: "resolve"
+        })
+
+        render(
+            <MantineProvider>
+                <SelectedDicePoolDisplay
+                    character={character}
+                    primaryColor="red"
+                    skillSpecialties={[]}
+                />
+            </MantineProvider>
+        )
+
+        expect(
+            screen.getAllByText((_, element) => element?.textContent === "Wits: 2").length
+        ).toBeGreaterThan(0)
+        expect(
+            screen.getAllByText((_, element) => element?.textContent === "Resolve: 2").length
+        ).toBeGreaterThan(0)
+    })
+
+    it("adds both attribute ratings to the roll count, including the same attribute twice", () => {
+        const character = getBasicTestCharacter()
+        useCharacterSheetStore.getState().updateSelectedDicePool({
+            attribute: "strength",
+            secondAttribute: "strength"
+        })
+        useDiceRollModalStore.getState().openSelectedPool()
+
+        render(
+            <MantineProvider>
+                <DiceRollModal primaryColor="red" character={character} />
+            </MantineProvider>
+        )
+
+        expect(screen.getByRole("button", { name: "Roll 6 dice" })).toBeInTheDocument()
+    })
+
     it("opens the dice-pool guidance tooltip when its info button is tapped", async () => {
         const user = userEvent.setup()
 
