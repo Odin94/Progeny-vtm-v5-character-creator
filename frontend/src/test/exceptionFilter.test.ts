@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+    isExpectedSessionExpiryNoise,
     isFramelessSyntheticNoise,
     isResizeObserverLoopNoise,
     type ExceptionListEntry
@@ -106,5 +107,41 @@ describe("isResizeObserverLoopNoise", () => {
 
     it("ignores non-string candidates", () => {
         expect(isResizeObserverLoopNoise(undefined, null, 42, {})).toBe(false)
+    })
+})
+
+describe("isExpectedSessionExpiryNoise", () => {
+    it("drops the backend's no-valid-session 401 message", () => {
+        expect(isExpectedSessionExpiryNoise("Unauthorized: No valid session")).toBe(true)
+    })
+
+    it("matches when the message is wrapped by PostHog's captured-as-exception prefix", () => {
+        expect(
+            isExpectedSessionExpiryNoise(
+                "'Error' captured as exception with message: 'Unauthorized: No valid session'"
+            )
+        ).toBe(true)
+    })
+
+    it("drops when only one of several candidates matches", () => {
+        expect(isExpectedSessionExpiryNoise(undefined, "Unauthorized: No valid session")).toBe(
+            true
+        )
+    })
+
+    it("keeps other unauthorized messages that may signal a real fault", () => {
+        expect(isExpectedSessionExpiryNoise("Unauthorized: Failed to authenticate session")).toBe(
+            false
+        )
+    })
+
+    it("keeps unrelated exception messages", () => {
+        expect(isExpectedSessionExpiryNoise("TypeError: cannot read property of undefined")).toBe(
+            false
+        )
+    })
+
+    it("ignores non-string candidates", () => {
+        expect(isExpectedSessionExpiryNoise(undefined, null, 42, {})).toBe(false)
     })
 })
