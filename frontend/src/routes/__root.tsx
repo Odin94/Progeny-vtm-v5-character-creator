@@ -16,6 +16,7 @@ import { modalTheme } from "~/theme/modal"
 import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
+    isExpectedSessionExpiryNoise,
     isFramelessSyntheticNoise,
     isResizeObserverLoopNoise,
     type ExceptionListEntry
@@ -121,6 +122,10 @@ const posthogOptions: Partial<PostHogConfig> = {
             }
 
             if (isResizeObserverLoopNoise(exceptionValue, exceptionMessage)) {
+                return null
+            }
+
+            if (isExpectedSessionExpiryNoise(exceptionValue, exceptionMessage)) {
                 return null
             }
 

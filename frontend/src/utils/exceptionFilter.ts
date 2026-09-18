@@ -44,3 +44,17 @@ export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
     candidates.some(
         (candidate) => typeof candidate === "string" && RESIZE_OBSERVER_LOOP_NOISE.test(candidate)
     )
+
+// The backend answers a request that carries no valid WorkOS session with a 401 and this
+// exact message. It is an expected, expired session, not an app fault. `request()` in
+// utils/api.ts already recovers: it fires the unauthorized event, and the root handler clears
+// the cached user and the sign-in seed. The rejection still escapes as an unhandled,
+// high-severity exception, so every session expiry opens an error-tracking issue and buries
+// real auth faults. Drop it here; the recovery path stays intact.
+const EXPECTED_SESSION_EXPIRY_NOISE = /Unauthorized: No valid session/
+
+export const isExpectedSessionExpiryNoise = (...candidates: unknown[]) =>
+    candidates.some(
+        (candidate) =>
+            typeof candidate === "string" && EXPECTED_SESSION_EXPIRY_NOISE.test(candidate)
+    )
