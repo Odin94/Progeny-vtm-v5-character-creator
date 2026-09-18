@@ -3,6 +3,7 @@ import { useCallback, useRef } from "react"
 import { z } from "zod"
 import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
 import { applyCharacterCompatibilityPatches } from "~/data/Character"
+import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
 import { recordBrokenCharacter } from "./useBrokenCharacter"
 
 export type SetCharacter = (character: Character | ((character: Character) => Character)) => void
@@ -36,6 +37,12 @@ export const useCharacterLocalStorage = () => {
                             patchError instanceof z.ZodError
                                 ? JSON.stringify(patchError.issues, null, 2)
                                 : errorMessage
+                        reportCharacterValidationError(
+                            patchError,
+                            "local-storage",
+                            patchError instanceof z.ZodError ? "schema" : "compatibility",
+                            parsed
+                        )
                         recordBrokenCharacter(originalValue, zodError)
                         return getEmptyCharacter()
                     }
@@ -43,6 +50,7 @@ export const useCharacterLocalStorage = () => {
             } catch (parseError) {
                 const errorMessage =
                     parseError instanceof Error ? parseError.message : String(parseError)
+                reportCharacterValidationError(parseError, "local-storage", "json")
                 recordBrokenCharacter(originalValue, errorMessage)
                 return getEmptyCharacter()
             }
