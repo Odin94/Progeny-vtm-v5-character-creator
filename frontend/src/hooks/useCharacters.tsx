@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { characterHttp } from "../utils/http/characters"
-import type { CreateCharacterPayload, UpdateCharacterPayload } from "../utils/characterApi"
+import type { CharacterApiResponse, CreateCharacterPayload, UpdateCharacterPayload } from "../utils/characterApi"
 
 export const useCharacters = (enabled = true) => {
     return useQuery({
@@ -10,10 +10,11 @@ export const useCharacters = (enabled = true) => {
     })
 }
 
-export const useCharacter = (id: string | null) => {
+export const useCharacter = (id: string | null, enabled = true) => {
     return useQuery({
         queryKey: ["characters", id],
-        queryFn: () => (id ? characterHttp.get(id) : null)
+        queryFn: () => (id ? characterHttp.get(id) : null),
+        enabled: enabled && !!id
     })
 }
 
@@ -30,7 +31,13 @@ export const useCreateCharacter = () => {
 
     return useMutation({
         mutationFn: characterHttp.create,
-        onSuccess: () => {
+        onSuccess: (saved) => {
+            // Confirm ownership immediately, before list revalidation can finish or fail.
+            const owned = { ...saved, shared: false, canEdit: true }
+            queryClient.setQueryData(["characters", saved.id], owned)
+            queryClient.setQueryData<CharacterApiResponse[]>(["characters"], (previous) =>
+                previous ? [...previous.filter((entry) => entry.id !== saved.id), owned] : undefined
+            )
             queryClient.invalidateQueries({ queryKey: ["characters"] })
             queryClient.invalidateQueries({ queryKey: ["coteries"] })
             queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
