@@ -65,6 +65,8 @@ export default defineConfig({
     ],
     base: "/",
     resolve: {
+        // Shared backend contracts are bundled with the frontend installation on Netlify.
+        dedupe: ["zod"],
         alias: {
             "~": path.resolve(__dirname, "src"),
             "@contracts": path.resolve(__dirname, "../backend/src/contracts")

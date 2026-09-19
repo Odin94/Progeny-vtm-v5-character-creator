@@ -1,17 +1,38 @@
 import { faDownload, faTrash } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Code, Divider, Group, Modal, Stack, Text } from "@mantine/core"
+import {
+    Alert,
+    Button,
+    Code,
+    Divider,
+    Group,
+    List,
+    Modal,
+    ScrollArea,
+    Stack,
+    Text
+} from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { getEmptyCharacter } from "~/data/Character"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { trackCharacterRepair } from "~/utils/characterRecoveryAnalytics"
+import { previewCharacterRepair } from "~/utils/repairCharacter"
 
 const BrokenSaveModal = () => {
     const [recoveryError, setRecoveryError] = useState("")
-    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
-        useBrokenCharacter()
+    const [reviewedSave, setReviewedSave] = useState<{ data: string; id: string } | null>(null)
+    const {
+        brokenData,
+        brokenError,
+        hasBrokenCharacter,
+        clearBrokenCharacter,
+        archiveBrokenCharacter
+    } = useBrokenCharacter()
+    const repair = useMemo(() => previewCharacterRepair(brokenData), [brokenData])
+    const reviewingRepair = reviewedSave?.data === brokenData && repair.success
     const [, setCharacter] = useCharacterLocalStorage()
     const [, setSelectedStep] = useLocalStorage<GeneratorStepId>({
         key: "selectedGeneratorStep",
@@ -42,6 +63,26 @@ const BrokenSaveModal = () => {
         }
         setCharacter(getEmptyCharacter())
         setSelectedStep(defaultGeneratorStepId)
+    }
+
+    const onRepair = () => {
+        if (!repair.success || reviewedSave?.data !== brokenData) return
+        try {
+            archiveBrokenCharacter()
+            // Mantine's storage hook catches write failures. Verify the repaired save can
+            // be persisted before dismissing the recovery UI or changing React state.
+            localStorage.setItem("character", JSON.stringify(repair.character))
+        } catch {
+            setRecoveryError(
+                "Could not save the repair and its recovery copy. Download your original save before freeing browser storage and trying again."
+            )
+            return
+        }
+        setCharacter(repair.character)
+        clearBrokenCharacter()
+        trackCharacterRepair("applied", reviewedSave.id, repair.changes, repair.character)
+        setReviewedSave(null)
+        setRecoveryError("")
     }
 
     return (
@@ -82,6 +123,66 @@ const BrokenSaveModal = () => {
                 <Code block style={{ maxHeight: "200px", overflow: "auto" }}>
                     {brokenError}
                 </Code>
+                <Divider my="sm" />
+                {reviewingRepair && repair.success ? (
+                    <Stack>
+                        <Alert color="yellow" title="Automatic repair may cause partial data loss">
+                            Invalid values will be reset and invalid entries removed as listed
+                            below. Valid entries will be kept. The original save will be preserved
+                            as a recovery copy. Confirm only if you accept these changes.
+                        </Alert>
+                        <ScrollArea.Autosize mah={300}>
+                            <List size="sm" spacing="xs">
+                                {repair.changes.map((change, index) => (
+                                    <List.Item key={index}>{change.description}</List.Item>
+                                ))}
+                            </List>
+                        </ScrollArea.Autosize>
+                        {repair.changes.length === 0 && (
+                            <Text size="sm">
+                                This save now passes validation. No data needs to be removed.
+                            </Text>
+                        )}
+                        <Text size="sm" c="dimmed">
+                            The repaired character will be loaded in this browser. Normal account
+                            saving applies when you edit it.
+                        </Text>
+                        <Group justify="space-between">
+                            <Button variant="default" onClick={() => setReviewedSave(null)}>
+                                Cancel repair
+                            </Button>
+                            <Button color="orange" onClick={onRepair}>
+                                Confirm repair and load character
+                            </Button>
+                        </Group>
+                    </Stack>
+                ) : (
+                    <Stack gap="xs">
+                        <Button
+                            color="orange"
+                            disabled={!repair.success}
+                            onClick={() => {
+                                setRecoveryError("")
+                                if (!repair.success) return
+                                const id = crypto.randomUUID()
+                                setReviewedSave({ data: brokenData, id })
+                                trackCharacterRepair(
+                                    "suggested",
+                                    id,
+                                    repair.changes,
+                                    repair.character
+                                )
+                            }}
+                        >
+                            Preview automatic repair
+                        </Button>
+                        {!repair.success && (
+                            <Text size="sm" c="dimmed">
+                                {repair.error}
+                            </Text>
+                        )}
+                    </Stack>
+                )}
                 <Divider my="sm" />
                 <Group justify="space-between">
                     <Button

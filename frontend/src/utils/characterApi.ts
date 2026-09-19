@@ -5,7 +5,7 @@ import { parseCharacterData } from "./characterData"
 const apiTimestampSchema = z.string().min(1)
 
 const characterDataResponseSchema = z.unknown().transform((data, context): Character => {
-    const character = parseCharacterData(data)
+    const character = parseCharacterData(data, "api")
 
     if (!character) {
         context.addIssue({
@@ -26,6 +26,7 @@ export const characterApiResponseSchema = z.object({
     characterVersion: z.number().int().min(0),
     createdAt: apiTimestampSchema,
     updatedAt: apiTimestampSchema,
+    ownerId: z.string().optional(),
     shared: z.boolean().optional(),
     sharedBy: z.string().nullable().optional(),
     canEdit: z.boolean().optional()

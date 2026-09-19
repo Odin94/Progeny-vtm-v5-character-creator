@@ -126,7 +126,7 @@ const posthogOptions: Partial<PostHogConfig> = {
 
             try {
                 const characterData = localStorage.getItem("character")
-                if (characterData) {
+                if (characterData && !event.properties?.validation_source) {
                     const parsed = JSON.parse(characterData)
                     event.properties = event.properties || {}
                     event.properties.character = parsed
