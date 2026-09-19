@@ -123,17 +123,6 @@ const posthogOptions: Partial<PostHogConfig> = {
             if (isResizeObserverLoopNoise(exceptionValue, exceptionMessage)) {
                 return null
             }
-
-            try {
-                const characterData = localStorage.getItem("character")
-                if (characterData && !event.properties?.validation_source) {
-                    const parsed = JSON.parse(characterData)
-                    event.properties = event.properties || {}
-                    event.properties.character = parsed
-                }
-            } catch (_error) {
-                // Silently fail
-            }
         }
         return event
     }

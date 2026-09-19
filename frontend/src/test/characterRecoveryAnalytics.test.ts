@@ -43,6 +43,25 @@ describe("character recovery telemetry", () => {
         expect(JSON.stringify(properties)).not.toContain(character.notes)
     })
 
+    it("names the underlying fault and fingerprints it stably on compatibility failures", () => {
+        const cause = new Error("primitive predator type")
+        const underlying = new TypeError("Cannot create property 'x' on string 'y'", { cause })
+        reportCharacterValidationError(underlying, "local-storage", "compatibility", {
+            id: "compat-1",
+            version: 5
+        })
+        expect(posthog.captureException).toHaveBeenCalledOnce()
+        const [exception, properties] = vi.mocked(posthog.captureException).mock.calls[0]
+        expect((exception as Error).cause).toBe(underlying)
+        expect(properties).toMatchObject({
+            validation_phase: "compatibility",
+            error_name: "TypeError",
+            error_message: underlying.message,
+            error_cause: "Error: primitive predator type",
+            $exception_fingerprint: "CharacterValidationError:local-storage:compatibility:TypeError"
+        })
+    })
+
     it("reports API character validation errors", () => {
         const character = invalid()
         expect(
