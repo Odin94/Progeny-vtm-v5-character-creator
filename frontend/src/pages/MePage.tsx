@@ -46,6 +46,7 @@ import ConfirmActionModal, {
 } from "~/components/ConfirmActionModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import CharacterRecoveryDownloads from "~/components/CharacterRecoveryDownloads"
+import SaveCharacterCopyModal, { type CharacterCopySource } from "~/components/SaveCharacterCopyModal"
 import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
@@ -323,6 +324,7 @@ const MePage = () => {
     const unshareCharacterMutation = useUnshareCharacter()
 
     // Modals
+    const [copySource, setCopySource] = useState<CharacterCopySource | null>(null)
     const [createCharacterModalOpened, setCreateCharacterModalOpened] = useState(false)
     const [createCoterieModalOpened, setCreateCoterieModalOpened] = useState(false)
     const [editCoterieModalOpened, setEditCoterieModalOpened] = useState(false)
@@ -567,6 +569,17 @@ const MePage = () => {
     }
 
     const handleSaveCurrentCharacter = async () => {
+        const source = characters?.find((candidate) => candidate.id === character.id)
+        if (character.id && (!source || source.shared)) {
+            setCopySource({
+                character: structuredClone(character),
+                ownerId: source?.ownerId,
+                sharedBy: source?.sharedBy,
+                classification: source?.shared ? "shared" : "unknown",
+                viewerId: user?.id
+            })
+            return
+        }
         if (!requireLoadedCharacters()) return
         if (!character.name.trim()) {
             notifications.show({
@@ -1874,6 +1887,8 @@ const MePage = () => {
                     </div>
                 </BackgroundImage>
             </AppShell>
+
+            <SaveCharacterCopyModal source={copySource} onClose={() => setCopySource(null)} setCharacter={setCharacter} />
 
             {/* Create Character Modal */}
             <Modal

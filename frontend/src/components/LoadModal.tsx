@@ -4,6 +4,7 @@ import { z } from "zod"
 import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
 import { GeneratorStepId } from "../generator/steps"
 import { getUploadFile } from "../generator/utils"
+import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
 import ConfirmActionModal from "./ConfirmActionModal"
 
 export type LoadModalProps = {
@@ -16,11 +17,18 @@ export type LoadModalProps = {
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
-    const parsed = JSON.parse(json)
-
-    applyCharacterCompatibilityPatches(parsed)
-    const loadedCharacter = characterSchema.parse(parsed)
-    return loadedCharacter
+    let parsed: unknown
+    let phase: "json" | "compatibility" | "schema" = "json"
+    try {
+        parsed = JSON.parse(json)
+        phase = "compatibility"
+        applyCharacterCompatibilityPatches(parsed as Record<string, unknown>)
+        phase = "schema"
+        return characterSchema.parse(parsed)
+    } catch (error) {
+        reportCharacterValidationError(error, "json-import", phase, parsed)
+        throw error
+    }
 }
 
 const LoadModal = ({
