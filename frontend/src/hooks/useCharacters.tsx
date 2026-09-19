@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { characterHttp } from "../utils/http/characters"
-import type { CharacterApiResponse, CreateCharacterPayload, UpdateCharacterPayload } from "../utils/characterApi"
+import type {
+    CharacterApiResponse,
+    CreateCharacterPayload,
+    UpdateCharacterPayload
+} from "../utils/characterApi"
 
 export const useCharacters = (enabled = true) => {
     return useQuery({

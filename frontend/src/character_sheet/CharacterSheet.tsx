@@ -89,16 +89,20 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         isAuthenticated && !!character.id && !loadedCharacter
     )
     const ownershipLoading =
-        !!character.id && (authLoading || (isAuthenticated && (charactersLoading || ownershipQueryLoading)))
+        !!character.id &&
+        (authLoading || (isAuthenticated && (charactersLoading || ownershipQueryLoading)))
     const canEdit =
         !character.id ||
         (!authLoading && !isAuthenticated) ||
-        (!ownershipLoading && (loadedCharacter ? !loadedCharacter.shared : authoritativeCharacter?.canEdit === true))
-    const editDisabledReason = canEdit ? undefined
-        : ownershipLoading ? "Checking character ownership…"
-        : loadedCharacter?.shared || authoritativeCharacter?.canEdit === false
-          ? CHARACTER_OWNERSHIP_EDIT_REASON
-          : "Unable to verify character ownership. Retry loading your characters, or save a copy from your account."
+        (!ownershipLoading &&
+            (loadedCharacter ? !loadedCharacter.shared : authoritativeCharacter?.canEdit === true))
+    const editDisabledReason = canEdit
+        ? undefined
+        : ownershipLoading
+          ? "Checking character ownership…"
+          : loadedCharacter?.shared || authoritativeCharacter?.canEdit === false
+            ? CHARACTER_OWNERSHIP_EDIT_REASON
+            : "Unable to verify character ownership. Retry loading your characters, or save a copy from your account."
     const editableSetCharacter = useCallback<SetCharacter>(
         (update) => {
             if (canEdit) {

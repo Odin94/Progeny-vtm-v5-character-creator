@@ -13,14 +13,23 @@ export type CharacterCopySource = {
     viewerId?: string
 }
 
-export default function SaveCharacterCopyModal({ source, onClose, setCharacter }: {
+export default function SaveCharacterCopyModal({
+    source,
+    onClose,
+    setCharacter
+}: {
     source: CharacterCopySource | null
     onClose: () => void
     setCharacter: SetCharacter
 }) {
     const create = useCreateCharacter()
     const [error, setError] = useState<string | null>(null)
-    const close = () => { if (!create.isPending) { setError(null); onClose() } }
+    const close = () => {
+        if (!create.isPending) {
+            setError(null)
+            onClose()
+        }
+    }
     const saveCopy = async () => {
         if (!source || create.isPending) return
         const properties = {
@@ -31,30 +40,55 @@ export default function SaveCharacterCopyModal({ source, onClose, setCharacter }
             viewer_user_id: source.viewerId ?? null
         }
         const track = (event: string, extra = {}) => {
-            try { posthog.capture(event, { ...properties, ...extra }) } catch { /* Analytics must not block recovery. */ }
+            try {
+                posthog.capture(event, { ...properties, ...extra })
+            } catch {
+                /* Analytics must not block recovery. */
+            }
         }
         track("character_save_as_copy_requested")
         setError(null)
         try {
             const data = { ...source.character, id: "", characterVersion: 0 }
-            const saved = await create.mutateAsync({ name: data.name.trim() || "Unnamed character", data, version: data.version })
+            const saved = await create.mutateAsync({
+                name: data.name.trim() || "Unnamed character",
+                data,
+                version: data.version
+            })
             setCharacter({ ...saved.data, id: saved.id, characterVersion: saved.characterVersion })
             track("character_save_as_copy_applied", { new_character_id: saved.id })
             onClose()
         } catch (cause) {
-            setError(cause instanceof Error ? cause.message : "Unable to save a copy. Please try again.")
+            setError(
+                cause instanceof Error ? cause.message : "Unable to save a copy. Please try again."
+            )
             track("character_save_as_copy_failed")
         }
     }
-    return <Modal opened={!!source} onClose={close} title="Save character" closeOnClickOutside={!create.isPending} closeOnEscape={!create.isPending} withCloseButton={!create.isPending}>
-        <Stack>
-            <Text>You're viewing somebody elses character and you can't save it.</Text>
-            <Text size="sm">Save as copy creates a character in your account and opens it for editing.</Text>
-            {error && <Alert color="red">{error}</Alert>}
-            <Group justify="flex-end">
-                <Button variant="default" onClick={close} disabled={create.isPending}>OK</Button>
-                <Button onClick={saveCopy} loading={create.isPending}>Save as copy</Button>
-            </Group>
-        </Stack>
-    </Modal>
+    return (
+        <Modal
+            opened={!!source}
+            onClose={close}
+            title="Save character"
+            closeOnClickOutside={!create.isPending}
+            closeOnEscape={!create.isPending}
+            withCloseButton={!create.isPending}
+        >
+            <Stack>
+                <Text>You're viewing somebody elses character and you can't save it.</Text>
+                <Text size="sm">
+                    Save as copy creates a character in your account and opens it for editing.
+                </Text>
+                {error && <Alert color="red">{error}</Alert>}
+                <Group justify="flex-end">
+                    <Button variant="default" onClick={close} disabled={create.isPending}>
+                        OK
+                    </Button>
+                    <Button onClick={saveCopy} loading={create.isPending}>
+                        Save as copy
+                    </Button>
+                </Group>
+            </Stack>
+        </Modal>
+    )
 }

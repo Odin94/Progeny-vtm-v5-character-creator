@@ -87,12 +87,22 @@ const CharactersSection = ({
                         <Text size="sm">
                             A loading error does not mean your characters were deleted. Your current
                             draft is still in this browser. Reload the list before saving to avoid
-                            creating duplicates. You can also explicitly save your current character as a copy.
+                            creating duplicates. You can also explicitly save your current character
+                            as a copy.
                         </Text>
                         <Button onClick={onRetry} mt="sm" variant="light" color="red">
                             Retry loading characters
                         </Button>
-                        {character.id && <Button onClick={handleSaveCurrentCharacter} mt="sm" ml="sm" variant="light">Save Current Character</Button>}
+                        {character.id && (
+                            <Button
+                                onClick={handleSaveCurrentCharacter}
+                                mt="sm"
+                                ml="sm"
+                                variant="light"
+                            >
+                                Save Current Character
+                            </Button>
+                        )}
                     </Alert>
                 ) : (
                     <Text role="status">Loading saved characters…</Text>
