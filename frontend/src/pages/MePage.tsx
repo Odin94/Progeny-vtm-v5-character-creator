@@ -46,7 +46,9 @@ import ConfirmActionModal, {
 } from "~/components/ConfirmActionModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import CharacterRecoveryDownloads from "~/components/CharacterRecoveryDownloads"
-import SaveCharacterCopyModal, { type CharacterCopySource } from "~/components/SaveCharacterCopyModal"
+import SaveCharacterCopyModal, {
+    type CharacterCopySource
+} from "~/components/SaveCharacterCopyModal"
 import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromJson } from "~/components/LoadModal"
@@ -569,7 +571,15 @@ const MePage = () => {
     }
 
     const handleSaveCurrentCharacter = async () => {
-        const source = characters?.find((candidate) => candidate.id === character.id)
+        let source = characters?.find((candidate) => candidate.id === character.id)
+        if (character.id && !source) {
+            try {
+                const saved = await characterHttp.get(character.id)
+                source = { ...saved, shared: saved.canEdit !== true }
+            } catch {
+                // Keep the local draft available for an explicitly confirmed copy.
+            }
+        }
         if (character.id && (!source || source.shared)) {
             setCopySource({
                 character: structuredClone(character),
@@ -580,7 +590,7 @@ const MePage = () => {
             })
             return
         }
-        if (!requireLoadedCharacters()) return
+        if (!source && !requireLoadedCharacters()) return
         if (!character.name.trim()) {
             notifications.show({
                 title: "Error",
@@ -591,9 +601,7 @@ const MePage = () => {
         }
 
         // Find character by ID if available
-        const targetCharacter = character.id
-            ? userCharacters.find((c) => c.id === character.id)
-            : null
+        const targetCharacter = source
 
         if (targetCharacter && !targetCharacter.shared) {
             // Fetch current character from backend to check version
@@ -607,7 +615,7 @@ const MePage = () => {
                     setVersionConflictInfo({
                         beVersion: beCharacter.characterVersion,
                         feVersion,
-                        message: `(Saving ${beCharacter.name}): Character version in database (${beCharacter.characterVersion}) is lower than in browser (${feVersion}) - saving might overwrite changes you made on another device.`
+                        message: `(Saving ${beCharacter.name}): Character version in database (${beCharacter.characterVersion}) is higher than in browser (${feVersion}) - saving might overwrite changes you made on another device.`
                     })
                     setVersionConflictModalOpened(true)
                     return
@@ -704,7 +712,7 @@ const MePage = () => {
         }
     }
 
-    const handleConfirmOverwriteVersion = () => {
+    const handleConfirmOverwriteVersion = async () => {
         if (!versionConflictInfo) return
 
         // If characterToLoad is set, we're in a loading scenario
@@ -728,8 +736,32 @@ const MePage = () => {
         // Otherwise, we're in a saving scenario
         if (!character.id) return
 
-        const targetCharacter = userCharacters.find((c) => c.id === character.id)
-        if (!targetCharacter || targetCharacter.shared) return
+        let targetCharacter = characters?.find((c) => c.id === character.id)
+        if (!targetCharacter) {
+            try {
+                const saved = await characterHttp.get(character.id)
+                targetCharacter = { ...saved, shared: saved.canEdit !== true }
+            } catch {
+                notifications.show({
+                    title: "Could not verify ownership",
+                    message: "Please retry or save your character as a copy.",
+                    color: "red"
+                })
+                return
+            }
+        }
+        if (targetCharacter.shared) {
+            setVersionConflictModalOpened(false)
+            setVersionConflictInfo(null)
+            setCopySource({
+                character: structuredClone(character),
+                ownerId: targetCharacter.ownerId,
+                sharedBy: targetCharacter.sharedBy,
+                classification: "shared",
+                viewerId: user?.id
+            })
+            return
+        }
 
         // Proceed with save (overwrite)
         updateCharacterMutation.mutate(
@@ -1888,7 +1920,11 @@ const MePage = () => {
                 </BackgroundImage>
             </AppShell>
 
-            <SaveCharacterCopyModal source={copySource} onClose={() => setCopySource(null)} setCharacter={setCharacter} />
+            <SaveCharacterCopyModal
+                source={copySource}
+                onClose={() => setCopySource(null)}
+                setCharacter={setCharacter}
+            />
 
             {/* Create Character Modal */}
             <Modal

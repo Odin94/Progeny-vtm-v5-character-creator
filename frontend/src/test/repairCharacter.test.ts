@@ -181,7 +181,7 @@ describe("character repair preview", () => {
         expect(result.changes.some((c) => c.path.join(".") === "attributes")).toBe(true)
     })
 
-    it.each(["not json", "null", "[]", '\"text\"', "42"])(
+    it.each(["not json", "null", "[]", '"text"', "42"])(
         "does not replace unreadable input %s with an empty character",
         (raw) => {
             expect(previewCharacterRepair(raw).success).toBe(false)
