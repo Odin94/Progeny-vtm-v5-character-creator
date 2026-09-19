@@ -27,19 +27,42 @@ export const reportCharacterValidationError = (
                       code: issue.code
                   }))
                 : []
+        // A compatibility-phase failure is a plain error (e.g. a TypeError), not a Zod
+        // error. Keep its name, message, and cause so the capture names the real fault
+        // instead of pointing at this helper.
+        const underlyingName = error instanceof Error ? error.name : typeof error
+        const underlyingMessage = error instanceof Error ? error.message : String(error)
+        const underlyingCause =
+            error instanceof Error && error.cause !== undefined
+                ? error.cause instanceof Error
+                    ? `${error.cause.name}: ${error.cause.message}`
+                    : String(error.cause)
+                : undefined
+        // Group one fault as one issue regardless of which mounted consumer raised it, so
+        // differing React frames above the deserializer do not split it across issues.
+        const issueSignature = issues.map((i) => `${i.path}:${i.code}`).join("|")
+        const fingerprint = `CharacterValidationError:${source}:${phase}:${issueSignature || underlyingName}`
+        const meta = metadata(data)
         const properties = {
-            ...metadata(data),
+            ...meta,
             validation_source: source,
             validation_phase: phase,
-            validation_issues: issues
+            validation_issues: issues,
+            error_name: underlyingName,
+            error_message: underlyingMessage,
+            error_cause: underlyingCause,
+            $exception_fingerprint: fingerprint
         }
-        const key = JSON.stringify(properties)
+        // Throttle on the stable fingerprint (plus character id), not the serialized payload:
+        // instance-specific error text must not split one fault across the window.
+        const key = `${fingerprint}:${meta.character_id ?? ""}`
         const now = Date.now()
         // Local-storage deserializers run in multiple mounted consumers. Report a failure
         // once per minute rather than creating an exception for every render/query retry.
         if (recentErrors.has(key) && now - recentErrors.get(key)! < 60_000) return
         const exception = new Error(
-            `Character validation failed (${source}, ${phase})${issues.length ? `: ${issues.map((i) => `${i.path}: ${i.code}`).join(", ")}` : ""}`
+            `Character validation failed (${source}, ${phase}): ${underlyingName}: ${underlyingMessage}`,
+            error instanceof Error ? { cause: error } : undefined
         )
         exception.name = "CharacterValidationError"
         posthog.captureException(exception, properties)

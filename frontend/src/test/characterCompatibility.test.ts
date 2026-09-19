@@ -29,6 +29,21 @@ describe("character compatibility patches", () => {
         expect(parsed.version).toBe(schemaVersion)
     })
 
+    it("does not throw when a legacy primitive sits in an object slot", () => {
+        for (const slot of ["predatorType", "ephemeral"] as const) {
+            const parsed: Record<string, unknown> = {
+                version: 6,
+                rituals: [],
+                ceremonies: [],
+                availableDisciplineNames: [],
+                predatorType: { pickedMeritsAndFlaws: [] },
+                [slot]: "legacy"
+            }
+
+            expect(() => applyCharacterCompatibilityPatches(parsed)).not.toThrow()
+        }
+    })
+
     it("sets the default clan bane on pre-v7 characters", () => {
         const parsed: Record<string, unknown> = {
             version: 6,
