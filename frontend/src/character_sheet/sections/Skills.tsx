@@ -197,7 +197,7 @@ const SkillRow = ({
                     }
                     onMouseDown={(event) => event.preventDefault()}
                 >
-                    {specialty.name}
+                    {[specialty.name, customText.trim()].filter(Boolean).join(" ")}
                 </Badge>
                 {isEditing ? (
                     <Textarea
@@ -228,10 +228,6 @@ const SkillRow = ({
                             }
                         }}
                     />
-                ) : customText ? (
-                    <Text size="xs" c="dimmed">
-                        {customText}
-                    </Text>
                 ) : null}
             </Stack>
         )
