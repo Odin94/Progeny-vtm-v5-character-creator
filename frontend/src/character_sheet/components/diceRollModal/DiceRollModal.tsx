@@ -223,11 +223,17 @@ const DiceRollModal = ({
     }, [opened, resetModal, x, y])
 
     useEffect(() => {
-        if (selectedDicePool.attribute || selectedDicePool.skill || selectedDicePool.discipline) {
+        if (
+            selectedDicePool.attribute ||
+            selectedDicePool.secondAttribute ||
+            selectedDicePool.skill ||
+            selectedDicePool.discipline
+        ) {
             setActiveTab("selected")
         }
     }, [
         selectedDicePool.attribute,
+        selectedDicePool.secondAttribute,
         selectedDicePool.skill,
         selectedDicePool.discipline,
         setActiveTab

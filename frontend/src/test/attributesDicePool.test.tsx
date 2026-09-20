@@ -74,4 +74,17 @@ describe("Attributes dice pool selection", () => {
         fireEvent.click(screen.getByText("Resolve"))
         expect(useCharacterSheetStore.getState().selectedDicePool.secondAttribute).toBeNull()
     })
+
+    it("keeps the companion when removing the primary from an attribute pair", () => {
+        renderAttributes()
+
+        fireEvent.click(screen.getByText("Wits"))
+        fireEvent.click(screen.getByText("Resolve"))
+        fireEvent.click(screen.getByText("Wits"))
+
+        expect(useCharacterSheetStore.getState().selectedDicePool).toMatchObject({
+            attribute: "resolve",
+            secondAttribute: null
+        })
+    })
 })
