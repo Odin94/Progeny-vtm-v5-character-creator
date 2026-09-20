@@ -143,6 +143,11 @@ export const getBasicTestCharacter = (): Character => {
                 excludes: []
             }
         ],
+        customText: {
+            meritFlaws: {},
+            skillSpecialties: {},
+            disciplinePowers: {}
+        },
         notes: "",
         ephemeral: {
             hunger: 0,
