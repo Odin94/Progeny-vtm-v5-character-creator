@@ -52,15 +52,27 @@ const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
 
         const pool = useCharacterSheetStore.getState().selectedDicePool
 
-        // While no companion attribute is in play, an attribute click sets (or
-        // toggles off) the primary slot. Once the primary is set and the
-        // companion slot is free, the next attribute click fills it instead,
-        // so the same attribute can fill both slots (e.g. Strength + Strength).
+        // While the companion slot is occupied by a skill or discipline, an
+        // attribute click selects the primary attribute. Otherwise, the next
+        // click fills or replaces the attribute companion, so the same
+        // attribute can fill both slots (e.g. Strength + Strength).
         if (!pool.attribute || pool.skill || pool.discipline) {
             updateSelectedDicePool({
                 attribute: pool.attribute === attribute ? null : attribute,
+                secondAttribute: null,
                 selectedDisciplinePowers: [],
                 selectedMeritFlaws: []
+            })
+            return
+        }
+
+        // Removing the primary from a two-attribute pool promotes its
+        // companion. That keeps the pool valid and makes changing either
+        // member of a pair possible without resetting the whole roll.
+        if (pool.attribute === attribute && pool.secondAttribute) {
+            updateSelectedDicePool({
+                attribute: pool.secondAttribute,
+                secondAttribute: null
             })
             return
         }

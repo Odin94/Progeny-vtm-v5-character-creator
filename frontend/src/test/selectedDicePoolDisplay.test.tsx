@@ -114,7 +114,7 @@ describe("SelectedDicePoolDisplay", () => {
 
         expect(
             await screen.findByText(
-                "You can click Attributes, Skills, or Disciplines on the character sheet to determine your dice pool"
+                "Click an Attribute, then a Skill, Discipline, or second Attribute on the character sheet to determine your dice pool"
             )
         ).toBeInTheDocument()
     })

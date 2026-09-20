@@ -135,7 +135,7 @@ const SelectedDicePoolDisplay = ({
                             Selected Dice Pool:
                         </Text>
                         <Tooltip
-                            label="You can click Attributes, Skills, or Disciplines on the character sheet to determine your dice pool"
+                            label="Click an Attribute, then a Skill, Discipline, or second Attribute on the character sheet to determine your dice pool"
                             position="top"
                             withArrow
                             multiline
@@ -155,6 +155,7 @@ const SelectedDicePoolDisplay = ({
                         </Tooltip>
                     </Group>
                     {selectedDicePool.attribute ||
+                    selectedDicePool.secondAttribute ||
                     selectedDicePool.skill ||
                     selectedDicePool.discipline ? (
                         <ActionIcon
