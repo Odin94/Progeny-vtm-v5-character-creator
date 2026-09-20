@@ -23,6 +23,7 @@ import { IconPlus, IconX } from "@tabler/icons-react"
 import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
 import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import { getMeritFlawCustomTextKey, updateCustomText } from "~/utils/customText"
 
 const meritFlawCardStyle = {
     ...sheetSurfaceStyle,
@@ -102,6 +103,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         index
                                     ) => {
                                         const isFromBonus = isFromPredatorType || isFromLoresheet
+                                        const customTextKey = getMeritFlawCustomTextKey(merit)
+                                        const customText =
+                                            character.customText.meritFlaws[customTextKey] ?? ""
                                         const badgeText = isFromLoresheet
                                             ? isUpgradedFromLoresheet
                                                 ? "Upgraded from loresheet"
@@ -197,6 +201,31 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             merit.summary.slice(1)}
                                                     </Text>
                                                 ) : null}
+                                                {isFreeMode && isFromBonus ? (
+                                                    <Textarea
+                                                        aria-label={`${getMeritFlawDisplayName(merit)} custom note`}
+                                                        value={customText}
+                                                        onChange={(event) => {
+                                                            const value = event.currentTarget.value
+                                                            setCharacter((current) => ({
+                                                                ...current,
+                                                                customText: updateCustomText(
+                                                                    current,
+                                                                    "meritFlaws",
+                                                                    customTextKey,
+                                                                    value
+                                                                )
+                                                            }))
+                                                        }}
+                                                        placeholder="Add a custom note..."
+                                                        minRows={2}
+                                                        mt="xs"
+                                                    />
+                                                ) : customText ? (
+                                                    <Text size="sm" c="dimmed" mt="xs">
+                                                        {customText}
+                                                    </Text>
+                                                ) : null}
                                                 {isFromBonus ? (
                                                     <Badge
                                                         size="xs"
@@ -276,6 +305,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         index
                                     ) => {
                                         const isFromBonus = isFromPredatorType || isFromLoresheet
+                                        const customTextKey = getMeritFlawCustomTextKey(flaw)
+                                        const customText =
+                                            character.customText.meritFlaws[customTextKey] ?? ""
                                         const badgeText = isFromLoresheet
                                             ? isUpgradedFromLoresheet
                                                 ? "Upgraded from loresheet"
@@ -369,6 +401,31 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     <Text size="sm" c="dimmed" mt="xs">
                                                         {flaw.summary.charAt(0).toUpperCase() +
                                                             flaw.summary.slice(1)}
+                                                    </Text>
+                                                ) : null}
+                                                {isFreeMode && isFromBonus ? (
+                                                    <Textarea
+                                                        aria-label={`${getMeritFlawDisplayName(flaw)} custom note`}
+                                                        value={customText}
+                                                        onChange={(event) => {
+                                                            const value = event.currentTarget.value
+                                                            setCharacter((current) => ({
+                                                                ...current,
+                                                                customText: updateCustomText(
+                                                                    current,
+                                                                    "meritFlaws",
+                                                                    customTextKey,
+                                                                    value
+                                                                )
+                                                            }))
+                                                        }}
+                                                        placeholder="Add a custom note..."
+                                                        minRows={2}
+                                                        mt="xs"
+                                                    />
+                                                ) : customText ? (
+                                                    <Text size="sm" c="dimmed" mt="xs">
+                                                        {customText}
                                                     </Text>
                                                 ) : null}
                                                 {isFromBonus ? (
@@ -481,6 +538,7 @@ export default memo(MeritsAndFlaws, (prev, next) => {
         p.setCharacter === n.setCharacter &&
         p.character.merits === n.character.merits &&
         p.character.flaws === n.character.flaws &&
+        p.character.customText === n.character.customText &&
         p.character.clan === n.character.clan &&
         p.character.predatorType === n.character.predatorType &&
         p.character.availableDisciplineNames === n.character.availableDisciplineNames &&
