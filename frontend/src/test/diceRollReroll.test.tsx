@@ -153,6 +153,32 @@ describe("DiceRollModal willpower rerolls", () => {
         })
     })
 
+    it("keeps an overflowing desktop dice board scrollable for reroll selection", () => {
+        mocks.isMobile = false
+        const dice: DieResult[] = Array.from({ length: 12 }, (_, index) => ({
+            id: index + 1,
+            value: (index % 10) + 1,
+            isRolling: false,
+            isBloodDie: false
+        }))
+
+        renderModalWithDice(dice)
+
+        const diceBoard = screen.getByTestId("dice-results-scroll-area")
+        expect(diceBoard).toHaveStyle({
+            overflowY: "auto",
+            overflowX: "hidden",
+            touchAction: "pan-y"
+        })
+        expect(diceBoard).not.toHaveClass("dice-results-scroll-area--scrolling")
+
+        fireEvent.scroll(diceBoard)
+        expect(diceBoard).toHaveClass("dice-results-scroll-area--scrolling")
+
+        fireEvent.click(screen.getByRole("button", { name: "Regular die 12 showing 2" }))
+        expect(screen.getByText("1/3")).toBeInTheDocument()
+    })
+
     it("shows the player when no willpower remains", async () => {
         const character = getBasicTestCharacter()
         character.ephemeral.superficialWillpowerDamage = character.willpower

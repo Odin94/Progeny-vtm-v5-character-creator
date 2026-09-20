@@ -14,13 +14,11 @@ vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }))
 vi.mock("~/utils/http/characters", () => ({ characterHttp: { create: vi.fn() } }))
 Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: vi
-        .fn()
-        .mockImplementation(() => ({
-            matches: false,
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn()
-        }))
+    value: vi.fn().mockImplementation(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+    }))
 })
 const source: CharacterCopySource = {
     character: {
@@ -57,12 +55,34 @@ describe("save a character as an owned copy", () => {
     it("requires confirmation and leaves the original unchanged on OK", async () => {
         const { user, onClose, setCharacter } = setup()
         expect(
-            screen.getByText("You're viewing somebody elses character and you can't save it.")
+            screen.getByText(
+                "You're viewing somebody else's character and can't save changes to the original."
+            )
         ).toBeInTheDocument()
         await user.click(screen.getByRole("button", { name: /^OK$/ }))
         expect(onClose).toHaveBeenCalledOnce()
         expect(characterHttp.create).not.toHaveBeenCalled()
         expect(setCharacter).not.toHaveBeenCalled()
+    })
+    it("explains that an unverified character will become an owned copy", () => {
+        const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+        render(
+            <QueryClientProvider client={client}>
+                <MantineProvider>
+                    <SaveCharacterCopyModal
+                        source={{ ...structuredClone(source), classification: "unknown" }}
+                        setCharacter={vi.fn()}
+                        onClose={vi.fn()}
+                    />
+                </MantineProvider>
+            </QueryClientProvider>
+        )
+
+        expect(
+            screen.getByText(
+                "We couldn't verify this character's saved copy, so your changes will be saved as a new character."
+            )
+        ).toBeInTheDocument()
     })
     it("creates a fresh identity, activates it, caches ownership and correlates source and copy", async () => {
         const saved = {

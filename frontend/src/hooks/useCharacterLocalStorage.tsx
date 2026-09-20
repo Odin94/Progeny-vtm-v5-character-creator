@@ -22,30 +22,27 @@ export const useCharacterLocalStorage = () => {
 
             try {
                 const parsed = typeof value === "string" ? JSON.parse(value) : value
-                const validated = characterSchema.safeParse(parsed)
-                if (validated.success) {
-                    return validated.data
-                } else {
-                    try {
-                        applyCharacterCompatibilityPatches(parsed)
-                        const patched = characterSchema.parse(parsed)
-                        return patched
-                    } catch (patchError) {
-                        const errorMessage =
-                            patchError instanceof Error ? patchError.message : String(patchError)
-                        const zodError =
-                            patchError instanceof z.ZodError
-                                ? JSON.stringify(patchError.issues, null, 2)
-                                : errorMessage
-                        reportCharacterValidationError(
-                            patchError,
-                            "local-storage",
-                            patchError instanceof z.ZodError ? "schema" : "compatibility",
-                            parsed
-                        )
-                        recordBrokenCharacter(originalValue, zodError)
-                        return getEmptyCharacter()
-                    }
+                try {
+                    // Migrate every loaded character, including ones that still happen to satisfy
+                    // the current schema through Zod defaults. This keeps the stored version and
+                    // newly introduced character-owned fields in sync.
+                    applyCharacterCompatibilityPatches(parsed)
+                    return characterSchema.parse(parsed)
+                } catch (patchError) {
+                    const errorMessage =
+                        patchError instanceof Error ? patchError.message : String(patchError)
+                    const zodError =
+                        patchError instanceof z.ZodError
+                            ? JSON.stringify(patchError.issues, null, 2)
+                            : errorMessage
+                    reportCharacterValidationError(
+                        patchError,
+                        "local-storage",
+                        patchError instanceof z.ZodError ? "schema" : "compatibility",
+                        parsed
+                    )
+                    recordBrokenCharacter(originalValue, zodError)
+                    return getEmptyCharacter()
                 }
             } catch (parseError) {
                 const errorMessage =
