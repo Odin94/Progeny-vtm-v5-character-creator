@@ -25,6 +25,7 @@ import {
     IconUpload
 } from "@tabler/icons-react"
 import { Character as CharacterType } from "~/data/Character"
+import "./CharactersSection.css"
 
 type Character = {
     id: string
@@ -299,6 +300,7 @@ const CharactersSection = ({
                                                         <Menu.Item
                                                             leftSection={<IconTrash size={14} />}
                                                             color="red"
+                                                            className="account-character-menu-danger"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleDeleteCharacter(
@@ -374,6 +376,7 @@ const CharactersSection = ({
                                                         <Menu.Item
                                                             leftSection={<IconShare size={14} />}
                                                             color="red"
+                                                            className="account-character-menu-danger"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleUnshareCharacter(char)

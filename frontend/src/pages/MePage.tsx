@@ -45,7 +45,6 @@ import ConfirmActionModal, {
     confirmationModalWithHeaderStyles
 } from "~/components/ConfirmActionModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
-import CharacterRecoveryDownloads from "~/components/CharacterRecoveryDownloads"
 import SaveCharacterCopyModal, {
     type CharacterCopySource
 } from "~/components/SaveCharacterCopyModal"
@@ -1894,8 +1893,6 @@ const MePage = () => {
                                     handleDeleteCharacter={handleDeleteCharacter}
                                     handleUnshareCharacter={handleUnshareCharacter}
                                 />
-
-                                <CharacterRecoveryDownloads />
 
                                 <CoteriesSection
                                     userCoteries={userCoteries}
