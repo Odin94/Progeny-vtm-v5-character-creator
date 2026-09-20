@@ -44,7 +44,7 @@ const freeOptions = (character: ReturnType<typeof getBasicTestCharacter>, setCha
 })
 
 describe("static text notes", () => {
-    it("adds a custom note to a predator-type specialty without renaming it", async () => {
+    it("adds custom text to a predator-type specialty pill without renaming it", async () => {
         let character = getBasicTestCharacter()
         const specialty = character.predatorType.pickedSpecialties[0]
         const setCharacter = (update: typeof character | ((current: typeof character) => typeof character)) => {
@@ -68,9 +68,9 @@ describe("static text notes", () => {
                 <Skills options={freeOptions(character, setCharacter)} />
             </MantineProvider>
         )
-        fireEvent.click(screen.getByText("Anesthetics"))
+        fireEvent.click(screen.getByText("Anesthetics Only works in a prepared clinic"))
         expect(screen.queryByLabelText("Medicine Anesthetics custom note")).not.toBeInTheDocument()
-        fireEvent.click(screen.getByText("Anesthetics"))
+        fireEvent.click(screen.getByText("Anesthetics Only works in a prepared clinic"))
         expect(screen.getByLabelText("Medicine Anesthetics custom note")).toBeInTheDocument()
         fireEvent.keyDown(screen.getByLabelText("Medicine Anesthetics custom note"), {
             key: "Enter"
@@ -81,6 +81,7 @@ describe("static text notes", () => {
             character.customText.skillSpecialties[getSkillSpecialtyCustomTextKey(specialty)]
         ).toBe("Only works in a prepared clinic")
         expect(screen.queryByLabelText("Medicine Anesthetics custom note")).not.toBeInTheDocument()
+        expect(screen.getByText("Anesthetics Only works in a prepared clinic")).toBeInTheDocument()
     })
 
     it("adds a custom note to an official discipline power without changing its summary", async () => {
