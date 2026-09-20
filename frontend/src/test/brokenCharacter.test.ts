@@ -13,7 +13,13 @@ import { getEmptyCharacter } from "~/data/Character"
 import { CHARACTER_RECOVERY_KEY, useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 
-vi.mock("posthog-js", () => ({ default: { capture: vi.fn(), captureException: vi.fn() } }))
+vi.mock("posthog-js", () => ({
+    default: {
+        capture: vi.fn(),
+        captureException: vi.fn(),
+        get_explicit_consent_status: vi.fn(() => "denied")
+    }
+}))
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
@@ -198,11 +204,10 @@ describe("Broken Character Logic", () => {
             render(React.createElement(MantineProvider, {}, React.createElement(BrokenSaveModal)))
         }
 
-        it("previews each change and leaves data untouched until explicit confirmation", async () => {
+        it("shows each repair change immediately and leaves data untouched until auto-repair", async () => {
             const original = makeBrokenSave()
             openBrokenSave(original)
             const before = localStorage.getItem("character")
-            await userEvent.click(screen.getByRole("button", { name: "Preview automatic repair" }))
             expect(
                 screen.getByText("Automatic repair may cause partial data loss")
             ).toBeInTheDocument()
@@ -224,16 +229,7 @@ describe("Broken Character Logic", () => {
             ).toBe(false)
             expect(JSON.parse(localStorage.getItem("character_broken_save")!)).toBe(original)
 
-            await userEvent.click(screen.getByRole("button", { name: "Cancel repair" }))
-            expect(
-                screen.queryByRole("button", { name: "Confirm repair and load character" })
-            ).not.toBeInTheDocument()
-            expect(localStorage.getItem("character")).toBe(before)
-
-            await userEvent.click(screen.getByRole("button", { name: "Preview automatic repair" }))
-            await userEvent.click(
-                screen.getByRole("button", { name: "Confirm repair and load character" })
-            )
+            await userEvent.click(screen.getByRole("button", { name: "Auto-repair" }))
             const repaired = JSON.parse(localStorage.getItem("character")!)
             const suggestions = vi
                 .mocked(posthog.capture)
@@ -259,7 +255,6 @@ describe("Broken Character Logic", () => {
         it("keeps the recovery dialog open if the repaired character cannot be persisted", async () => {
             const original = makeBrokenSave()
             openBrokenSave(original)
-            await userEvent.click(screen.getByRole("button", { name: "Preview automatic repair" }))
             const setItem = Storage.prototype.setItem
             const spy = vi
                 .spyOn(Storage.prototype, "setItem")
@@ -269,9 +264,7 @@ describe("Broken Character Logic", () => {
                     setItem.call(this, key, value)
                 })
             try {
-                await userEvent.click(
-                    screen.getByRole("button", { name: "Confirm repair and load character" })
-                )
+                await userEvent.click(screen.getByRole("button", { name: "Auto-repair" }))
                 expect(
                     screen.getByText(/Could not save the repair and its recovery copy/)
                 ).toBeInTheDocument()
@@ -289,31 +282,27 @@ describe("Broken Character Logic", () => {
             }
         })
 
-        it("requires a new preview if the broken save changes", async () => {
+        it("updates the automatic repair preview if the broken save changes", async () => {
             openBrokenSave(makeBrokenSave())
             const { result } = renderHook(() => useBrokenCharacter())
-            await userEvent.click(screen.getByRole("button", { name: "Preview automatic repair" }))
             act(() =>
                 result.current.setBrokenCharacter(
                     JSON.stringify({ ...getEmptyCharacter(), name: 42 }),
                     "new error"
                 )
             )
-            expect(
-                screen.queryByRole("button", { name: "Confirm repair and load character" })
-            ).not.toBeInTheDocument()
-            expect(screen.getByRole("button", { name: "Preview automatic repair" })).toBeEnabled()
+            expect(screen.getByRole("button", { name: "Auto-repair" })).toBeEnabled()
         })
 
-        it("offers download but disables repair for unreadable JSON", () => {
+        it("offers download without auto-repair for unreadable JSON", () => {
             openBrokenSave("invalid JSON{")
-            expect(screen.getByRole("button", { name: "Preview automatic repair" })).toBeDisabled()
+            expect(screen.queryByRole("button", { name: "Auto-repair" })).not.toBeInTheDocument()
             expect(screen.getByRole("button", { name: "Download Broken Save Data" })).toBeEnabled()
         })
     })
 
     describe("Full flow: broken character to modal", () => {
-        it("should open modal when broken character is set, allow download, and close on reset", async () => {
+        it("should open modal when broken character is set and allow download", async () => {
             const brokenData = '{"invalid": "character data"}'
 
             localStorage.setItem("character", brokenData)
@@ -376,19 +365,10 @@ describe("Broken Character Logic", () => {
             expect(blobContent).toBe(brokenData)
 
             linkClickSpy.mockRestore()
-
-            const resetButton = screen.getByRole("button", { name: /reset to empty character/i })
-            await act(async () => {
-                await userEvent.click(resetButton)
-            })
-
-            const { result: brokenHookAfterReset } = renderHook(() => useBrokenCharacter())
-            expect(brokenHookAfterReset.current.hasBrokenCharacter).toBe(false)
-            expect(brokenHookAfterReset.current.brokenData).toBe("")
-            expect(brokenHookAfterReset.current.brokenError).toBe("")
-            expect(JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!)).toEqual([
-                { savedAt: expect.any(String), data: brokenData, error: expect.any(String) }
-            ])
+            expect(
+                screen.queryByRole("button", { name: /reset to empty character/i })
+            ).not.toBeInTheDocument()
+            expect(screen.getByRole("button", { name: "Cookie preferences" })).toBeEnabled()
         })
     })
 })

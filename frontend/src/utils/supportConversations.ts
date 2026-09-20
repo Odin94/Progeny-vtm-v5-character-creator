@@ -22,6 +22,7 @@ export type SupportConversationSource =
     | "landing-page"
     | "features-page"
     | "account-page"
+    | "broken-save-modal"
     | "character-sheet-menu"
     | "character-creation-complete"
 
