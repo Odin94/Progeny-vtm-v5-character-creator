@@ -16,6 +16,18 @@ const RELOAD_TIMESTAMP_KEY = "asset-preload-reload-at"
 
 const originalLocation = window.location
 
+// This follows Vite's preload helper: it only rethrows the failed import when
+// no listener has cancelled its event.
+const dispatchVitePreloadError = (error: Error) => {
+    const event = Object.assign(new Event("vite:preloadError", { cancelable: true }), {
+        payload: error
+    })
+    window.dispatchEvent(event)
+    if (!event.defaultPrevented) {
+        throw error
+    }
+}
+
 describe("handleAssetPreloadError", () => {
     let reload: ReturnType<typeof vi.fn>
 
@@ -31,6 +43,7 @@ describe("handleAssetPreloadError", () => {
     })
 
     afterEach(() => {
+        window.removeEventListener("vite:preloadError", handleAssetPreloadError)
         delete (window as { location?: Location }).location
         ;(window as unknown as { location: Location }).location = originalLocation
     })
@@ -58,16 +71,13 @@ describe("handleAssetPreloadError", () => {
         expect(reload).toHaveBeenCalledOnce()
     })
 
-    it("leaves the preload error uncancelled so it reaches the error boundary", () => {
+    it("reloads while leaving the preload failure for the error boundary", () => {
         installAssetPreloadRecovery()
-        const event = new Event("vite:preloadError", { cancelable: true })
+        const error = new Error("Failed to fetch dynamically imported module")
 
-        window.dispatchEvent(event)
+        expect(() => dispatchVitePreloadError(error)).toThrow(error)
 
         expect(reload).toHaveBeenCalledOnce()
-        expect(event.defaultPrevented).toBe(false)
-
-        window.removeEventListener("vite:preloadError", handleAssetPreloadError)
     })
 })
 
