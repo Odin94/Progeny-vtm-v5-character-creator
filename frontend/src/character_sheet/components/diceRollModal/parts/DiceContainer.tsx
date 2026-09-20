@@ -1,6 +1,6 @@
 import { Group } from "@mantine/core"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { memo } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import Die from "./Die"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -27,12 +27,26 @@ const DiceContainer = ({
     isMobile = false
 }: DiceContainerProps) => {
     const shouldReduceMotion = useReducedMotion()
+    const [isDiceBoardScrolling, setIsDiceBoardScrolling] = useState(false)
+    const scrollIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     const { dice, activeTab } = useDiceRollModalStore(
         useShallow((state) => ({
             dice: state.dice,
             activeTab: state.activeTab
         }))
     )
+
+    useEffect(() => {
+        return () => {
+            if (scrollIdleTimeoutRef.current) clearTimeout(scrollIdleTimeoutRef.current)
+        }
+    }, [])
+
+    const handleDiceBoardScroll = () => {
+        setIsDiceBoardScrolling(true)
+        if (scrollIdleTimeoutRef.current) clearTimeout(scrollIdleTimeoutRef.current)
+        scrollIdleTimeoutRef.current = setTimeout(() => setIsDiceBoardScrolling(false), 700)
+    }
 
     if (isMobile) {
         return (
@@ -66,6 +80,9 @@ const DiceContainer = ({
 
     return (
         <Group
+            data-testid="dice-results-scroll-area"
+            className={`dice-results-scroll-area${isDiceBoardScrolling ? " dice-results-scroll-area--scrolling" : ""}`}
+            onScroll={handleDiceBoardScroll}
             justify="center"
             gap="md"
             style={{
@@ -74,7 +91,15 @@ const DiceContainer = ({
                 minHeight: activeTab === "selected" ? "80px" : "270px",
                 flexWrap: "wrap",
                 position: "relative",
-                overflow: "hidden",
+                // Dice are positioned absolutely for their entrance animation, so a large
+                // pool can extend beyond this intentionally compact board. Keep that
+                // overflow reachable for reroll selection on both mouse and touch devices.
+                overflowX: "hidden",
+                overflowY: "auto",
+                overscrollBehavior: "contain",
+                touchAction: "pan-y",
+                WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "thin",
                 alignItems: "center"
             }}
         >

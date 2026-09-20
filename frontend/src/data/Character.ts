@@ -39,9 +39,15 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 10
+export const schemaVersion = 11
 
 export const disciplineLevelsSchema = z.record(z.string(), z.number().int().min(0).max(5))
+
+export const customTextSchema = z.object({
+    meritFlaws: z.record(z.string(), z.string()).default({}),
+    skillSpecialties: z.record(z.string(), z.string()).default({}),
+    disciplinePowers: z.record(z.string(), z.string()).default({})
+})
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -110,6 +116,9 @@ export const characterSchema = z.object({
 
     merits: meritFlawSchema.array(),
     flaws: meritFlawSchema.array(),
+    customText: customTextSchema
+        .optional()
+        .default({ meritFlaws: {}, skillSpecialties: {}, disciplinePowers: {} }),
 
     notes: z.string().optional().default(""),
 
@@ -218,6 +227,11 @@ export const getEmptyCharacter = (): Character => {
 
         merits: [],
         flaws: [],
+        customText: {
+            meritFlaws: {},
+            skillSpecialties: {},
+            disciplinePowers: {}
+        },
 
         notes: "",
 
@@ -379,6 +393,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV7ToV8Compatibility(parsed)
     patchV8ToV9Compatibility(parsed)
     patchV9ToV10Compatibility(parsed)
+    patchV10ToV11Compatibility(parsed)
 
     parsed["version"] = schemaVersion
 }
@@ -388,6 +403,21 @@ export const patchV9ToV10Compatibility = (parsed: Record<string, unknown>): void
     // Their data is valid: upgrade the version without removing or changing them.
     if (typeof parsed["version"] !== "number" || parsed["version"] < 10) {
         parsed["version"] = 10
+    }
+}
+
+export const patchV10ToV11Compatibility = (parsed: Record<string, unknown>): void => {
+    if (typeof parsed["version"] !== "number" || parsed["version"] < 11) {
+        const customText =
+            parsed["customText"] && typeof parsed["customText"] === "object"
+                ? (parsed["customText"] as Record<string, unknown>)
+                : {}
+        parsed["customText"] = {
+            meritFlaws: customText["meritFlaws"] ?? {},
+            skillSpecialties: customText["skillSpecialties"] ?? {},
+            disciplinePowers: customText["disciplinePowers"] ?? {}
+        }
+        parsed["version"] = 11
     }
 }
 

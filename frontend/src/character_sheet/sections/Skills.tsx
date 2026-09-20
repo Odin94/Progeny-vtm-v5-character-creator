@@ -1,4 +1,16 @@
-import { Box, Grid, Group, Text, Title, Badge, TextInput, Tooltip, Paper } from "@mantine/core"
+import {
+    Box,
+    Grid,
+    Group,
+    Text,
+    Title,
+    Badge,
+    TextInput,
+    Textarea,
+    Tooltip,
+    Paper,
+    Stack
+} from "@mantine/core"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import posthog from "posthog-js"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
@@ -11,14 +23,14 @@ import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
 import { removeSkillSpecialty } from "../utils/specialties"
 import { sheetSurfaceStyle } from "../utils/style"
+import type { Specialty } from "~/data/Specialties"
+import { getSkillSpecialtyCustomTextKey, updateCustomText } from "~/utils/customText"
 
 type SkillsProps = {
     options: SheetOptions
 }
 
-type SpecialtyEntry = {
-    skill: string
-    name: string
+type SpecialtyEntry = Specialty & {
     fromPredatorType?: boolean
 }
 
@@ -59,6 +71,9 @@ const SkillRow = ({
         index: number
     } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
+    const [editingPredatorTypeSpecialty, setEditingPredatorTypeSpecialty] = useState<number | null>(
+        null
+    )
     // Reason shown inline (not just on hover) after a blocked "+" click.
     const [addBlockedReason, setAddBlockedReason] = useState<string | undefined>(undefined)
     // Drop a stale inline reason once the mode or affordability that caused it changes.
@@ -151,6 +166,73 @@ const SkillRow = ({
         }
     }
 
+    const renderPredatorTypeSpecialty = (specialty: SpecialtyEntry, index: number) => {
+        const customTextKey = getSkillSpecialtyCustomTextKey(specialty)
+        const customText = character.customText.skillSpecialties[customTextKey] ?? ""
+        const isEditing = editingPredatorTypeSpecialty === index
+
+        return (
+            <Stack
+                key={`${skill}-bonus-${specialty.name}-${index}`}
+                gap={2}
+                style={{ flexShrink: 0, minWidth: 0 }}
+            >
+                <Badge
+                    variant="outline"
+                    size="xs"
+                    color={primaryColor}
+                    style={{
+                        width: "fit-content",
+                        cursor: options.mode === "free" ? "pointer" : undefined
+                    }}
+                    onClick={
+                        options.mode === "free"
+                            ? (event) => {
+                                  event.stopPropagation()
+                                  setEditingPredatorTypeSpecialty((current) =>
+                                      current === index ? null : index
+                                  )
+                              }
+                            : undefined
+                    }
+                    onMouseDown={(event) => event.preventDefault()}
+                >
+                    {[specialty.name, customText.trim()].filter(Boolean).join(" ")}
+                </Badge>
+                {isEditing ? (
+                    <Textarea
+                        aria-label={`${upcase(skill)} ${specialty.name} custom note`}
+                        value={customText}
+                        onChange={(event) => {
+                            const value = event.currentTarget.value
+                            options.setCharacter((current) => ({
+                                ...current,
+                                customText: updateCustomText(
+                                    current,
+                                    "skillSpecialties",
+                                    customTextKey,
+                                    value
+                                )
+                            }))
+                        }}
+                        placeholder="Add a custom note..."
+                        minRows={1}
+                        size="xs"
+                        style={{ minWidth: 160 }}
+                        autoFocus
+                        onBlur={() => setEditingPredatorTypeSpecialty(null)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                event.preventDefault()
+                                setEditingPredatorTypeSpecialty(null)
+                            }
+                        }}
+                    />
+                ) : null}
+            </Stack>
+        )
+    }
+
     const renderAddSpecialtyBadge = () => {
         const cost = options.mode === "xp" ? getSpecialtyCost() : undefined
         const tooltipLabel =
@@ -232,16 +314,7 @@ const SkillRow = ({
                         >
                             {specialties.map((specialty, index) => {
                                 if (specialty.fromPredatorType) {
-                                    return (
-                                        <Badge
-                                            key={`${skill}-bonus-${specialty.name}-${index}`}
-                                            variant="outline"
-                                            size="xs"
-                                            color={primaryColor}
-                                        >
-                                            {specialty.name}
-                                        </Badge>
-                                    )
+                                    return renderPredatorTypeSpecialty(specialty, index)
                                 }
                                 const isEditing =
                                     editingSpecialty?.skill === skill &&
@@ -329,16 +402,7 @@ const SkillRow = ({
                     {isEditable && renderAddSpecialtyBadge()}
                     {specialties.map((specialty, index) => {
                         if (specialty.fromPredatorType) {
-                            return (
-                                <Badge
-                                    key={`${skill}-bonus-${specialty.name}-${index}`}
-                                    variant="outline"
-                                    size="xs"
-                                    color={primaryColor}
-                                >
-                                    {specialty.name}
-                                </Badge>
-                            )
+                            return renderPredatorTypeSpecialty(specialty, index)
                         }
                         const isEditing =
                             editingSpecialty?.skill === skill && editingSpecialty?.index === index
@@ -427,7 +491,8 @@ const MemoizedSkillRow = memo(SkillRow, (prev, next) => {
         previous.character.generation === following.character.generation &&
         previous.character.experience === following.character.experience &&
         previous.character.ephemeral.experienceSpent ===
-            following.character.ephemeral.experienceSpent
+            following.character.ephemeral.experienceSpent &&
+        previous.character.customText === following.character.customText
     )
 })
 
@@ -636,6 +701,7 @@ export default memo(Skills, (prev, next) => {
         prev.options.character.skillSpecialties === next.options.character.skillSpecialties &&
         prev.options.character.predatorType.pickedSpecialties ===
             next.options.character.predatorType.pickedSpecialties &&
+        prev.options.character.customText === next.options.character.customText &&
         prev.options.character.experience === next.options.character.experience &&
         prev.options.character.ephemeral.experienceSpent ===
             next.options.character.ephemeral.experienceSpent

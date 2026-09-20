@@ -95,11 +95,17 @@ for (const scenario of [
             localStorage.setItem("character", JSON.stringify(data))
             return data
         })
+        if (scenario === "unknown") {
+            await page.goto("/sheet")
+            await expect(page.getByRole("radio", { name: "Free", exact: true })).toBeEnabled()
+        }
         await page.goto("/me")
         await page.getByRole("button", { name: "Save Current Character", exact: true }).click()
         if (scenario.startsWith("owned-")) {
             if (scenario === "owned-with-conflict") {
-                await expect(page.getByRole("dialog").getByText("Version Conflict", { exact: true })).toBeVisible()
+                await expect(
+                    page.getByRole("dialog").getByText("Version Conflict", { exact: true })
+                ).toBeVisible()
                 expect(updates).toHaveLength(0)
                 await page.getByRole("button", { name: "Overwrite DB version" }).click()
             }

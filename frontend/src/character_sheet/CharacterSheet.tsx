@@ -95,7 +95,10 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         !character.id ||
         (!authLoading && !isAuthenticated) ||
         (!ownershipLoading &&
-            (loadedCharacter ? !loadedCharacter.shared : authoritativeCharacter?.canEdit === true))
+            // Validation or transport failures must not make the local draft read-only.
+            // The backend remains authoritative for writes; saving an unverified draft
+            // offers an owned copy instead of updating the original.
+            (loadedCharacter ? !loadedCharacter.shared : authoritativeCharacter?.canEdit !== false))
     const editDisabledReason = canEdit
         ? undefined
         : ownershipLoading

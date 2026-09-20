@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { Character } from "~/data/Character"
 import { getBasicTestCharacter } from "./testUtils"
+import { getDisciplinePowerCustomTextKey, getMeritFlawCustomTextKey } from "~/utils/customText"
 
 describe("createWoD5EVttJson", () => {
     it("exports a level-only discipline", () => {
@@ -13,6 +14,34 @@ describe("createWoD5EVttJson", () => {
 
         expect(validationErrors).toEqual([])
         expect(json.system.disciplines.celerity).toEqual({ value: 3, powers: [] })
+    })
+
+    it("appends custom notes to exported power and merit descriptions", () => {
+        const character = getBasicTestCharacter()
+        character.customText = {
+            meritFlaws: {
+                [getMeritFlawCustomTextKey(character.merits[0])]: "Custom merit context"
+            },
+            skillSpecialties: {},
+            disciplinePowers: {
+                [getDisciplinePowerCustomTextKey(character.disciplines[0])]:
+                    "Custom power context"
+            }
+        }
+
+        const { json, validationErrors } = createWoD5EVttJson(character)
+        const power = json.items.find((item: any) => item.type === "power" && item.name === "Prowess")
+        const merit = json.items.find(
+            (item: any) => item.type === "feature" && item.name === "Direct Merit"
+        )
+
+        expect(validationErrors).toEqual([])
+        expect((power!.system as any).description).toBe(
+            "Test prowess power\n\nCustom power context"
+        )
+        expect((merit!.system as any).description).toBe(
+            "A direct merit\n\nCustom merit context"
+        )
     })
 
     it("should create a valid WoD5E VTT JSON for a basic character (happy path)", () => {
