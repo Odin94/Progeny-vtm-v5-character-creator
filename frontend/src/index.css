@@ -34,3 +34,32 @@ body {
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+
+/* The dice tray stays visually clean at rest, then reveals a blood-red scroll thumb while
+   a large dice pool is being explored. */
+.dice-results-scroll-area {
+    scrollbar-color: transparent transparent;
+}
+
+.dice-results-scroll-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dice-results-scroll-area::-webkit-scrollbar-track,
+.dice-results-scroll-area::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+.dice-results-scroll-area--scrolling {
+    scrollbar-color: rgba(224, 49, 49, 0.72) transparent;
+}
+
+.dice-results-scroll-area--scrolling::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dice-results-scroll-area--scrolling::-webkit-scrollbar-thumb {
+    background: rgba(224, 49, 49, 0.72);
+    border: 2px solid rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+}
