@@ -5,6 +5,7 @@ import { DisciplineName } from "~/data/NameSchemas"
 
 export type SelectedDicePool = {
     attribute: AttributesKey | null
+    secondAttribute: AttributesKey | null
     skill: SkillsKey | null
     discipline: DisciplineName | null
     selectedSpecialties: string[]
@@ -22,6 +23,7 @@ type CharacterSheetStore = {
 
 const defaultDicePool: SelectedDicePool = {
     attribute: null,
+    secondAttribute: null,
     skill: null,
     discipline: null,
     selectedSpecialties: [],

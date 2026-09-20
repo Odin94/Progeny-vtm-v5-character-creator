@@ -20,7 +20,7 @@ import { trackCharacterRepair } from "~/utils/characterRecoveryAnalytics"
 import { previewCharacterRepair } from "~/utils/repairCharacter"
 
 const describeBrokenAttribute = (error: string) => {
-    const property = error.match(/(?:property|field)\s+['\"`]([^'\"`]+)['\"`]/i)?.[1]
+    const property = error.match(/(?:property|field)\s+['"`]([^'"`]+)['"`]/i)?.[1]
     if (property) return `can't load ${property}`
 
     try {

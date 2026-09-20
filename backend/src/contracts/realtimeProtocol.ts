@@ -11,6 +11,7 @@ const dieSchema = z.object({
 
 const diceRollPoolInfoSchema = z.object({
     attribute: z.string().optional(),
+    secondAttribute: z.string().optional(),
     skill: z.string().optional(),
     discipline: z.string().optional(),
     diceCount: z.number().int().min(0),

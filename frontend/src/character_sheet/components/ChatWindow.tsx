@@ -1029,7 +1029,7 @@ const ChatWindow = ({
                                                         {msg.rollData.poolInfo ? (
                                                             <Text size="xs" c="dimmed" mt={4}>
                                                                 {msg.rollData.poolInfo.attribute
-                                                                    ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
+                                                                    ? `${msg.rollData.poolInfo.attribute}${msg.rollData.poolInfo.secondAttribute ? ` + ${msg.rollData.poolInfo.secondAttribute}` : ""}${msg.rollData.poolInfo.skill ? ` + ${msg.rollData.poolInfo.skill}` : ""}${msg.rollData.poolInfo.discipline ? ` + ${msg.rollData.poolInfo.discipline}` : ""}${getDiceBonusStr(msg.rollData)}`
                                                                     : "Custom pool"}
                                                             </Text>
                                                         ) : null}

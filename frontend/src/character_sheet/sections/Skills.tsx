@@ -93,6 +93,7 @@ const SkillRow = ({
         updateSelectedDicePool({
             skill: newSkill,
             discipline: null,
+            secondAttribute: null,
             selectedSpecialties: [],
             selectedDisciplinePowers: [],
             selectedMeritFlaws: []
