@@ -88,6 +88,17 @@ export const trackCharacterSwitchBlockedUnnamed = () => {
     }
 }
 
+// Records when a stale asset preload failed after a deploy and a one-time
+// reload recovered the client onto the current bundle, so recovered reloads
+// stay measurable against preload failures.
+export const trackAssetPreloadRecovered = (page: string) => {
+    try {
+        posthog.capture("asset-preload-recovered", { page })
+    } catch (error) {
+        console.warn("PostHog asset preload recovery tracking failed:", error)
+    }
+}
+
 export const resetPostHogIdentity = () => {
     let consentStatus: PostHogConsentStatus = "pending"
 

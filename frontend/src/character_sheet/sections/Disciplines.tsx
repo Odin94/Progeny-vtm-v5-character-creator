@@ -50,6 +50,7 @@ import {
     getPowerDisciplineIdentity,
     getPowerIdentity
 } from "~/utils/homebrewOptions"
+import { getDisciplinePowerCustomTextKey, updateCustomText } from "~/utils/customText"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 
@@ -155,6 +156,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [customCeremonyModalOpened, setCustomCeremonyModalOpened] = useState(false)
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
+    const [editingPowerCustomText, setEditingPowerCustomText] = useState<string | null>(null)
     const [editingDisciplineSource, setEditingDisciplineSource] = useState<
         HomebrewSource | undefined
     >()
@@ -531,17 +533,85 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             >
                                                 {powers
                                                     .sort((a, b) => a.level - b.level)
-                                                    .map((power) => (
-                                                        <DisciplinePowerCard
-                                                            key={getPowerIdentity(power)}
-                                                            power={power}
-                                                            primaryColor={primaryColor}
-                                                            inModal={false}
-                                                            character={character}
-                                                            renderActions={
-                                                                isFreeMode
-                                                                    ? () => (
+                                                    .map((power) => {
+                                                        const customTextKey =
+                                                            getDisciplinePowerCustomTextKey(power)
+                                                        const isStaticPower = !power.isCustom
+                                                        return (
+                                                            <DisciplinePowerCard
+                                                                key={getPowerIdentity(power)}
+                                                                power={power}
+                                                                primaryColor={primaryColor}
+                                                                inModal={false}
+                                                                character={character}
+                                                                customText={
+                                                                    isStaticPower
+                                                                        ? character.customText
+                                                                              .disciplinePowers[
+                                                                              customTextKey
+                                                                          ] ?? ""
+                                                                        : undefined
+                                                                }
+                                                                onCustomTextChange={
+                                                                    isFreeMode && isStaticPower
+                                                                        ? (value) => {
+                                                                              setCharacter(
+                                                                                  (current) => ({
+                                                                                      ...current,
+                                                                                      customText:
+                                                                                          updateCustomText(
+                                                                                              current,
+                                                                                              "disciplinePowers",
+                                                                                              customTextKey,
+                                                                                              value
+                                                                                          )
+                                                                                  })
+                                                                              )
+                                                                          }
+                                                                        : undefined
+                                                                }
+                                                                isEditingCustomText={
+                                                                    editingPowerCustomText ===
+                                                                    customTextKey
+                                                                }
+                                                                onFinishCustomTextEditing={() =>
+                                                                    setEditingPowerCustomText(null)
+                                                                }
+                                                                renderActions={
+                                                                    isFreeMode
+                                                                        ? () => (
                                                                           <Group gap="xs">
+                                                                              {isStaticPower ? (
+                                                                                  <ActionIcon
+                                                                                      size="sm"
+                                                                                      variant="subtle"
+                                                                                      color={
+                                                                                          primaryColor
+                                                                                      }
+                                                                                      aria-label={`Edit ${power.name} custom note`}
+                                                                                      onClick={(
+                                                                                          event
+                                                                                      ) => {
+                                                                                          event.stopPropagation()
+                                                                                          setEditingPowerCustomText(
+                                                                                              (
+                                                                                                  current
+                                                                                              ) =>
+                                                                                                  current ===
+                                                                                                  customTextKey
+                                                                                                      ? null
+                                                                                                      : customTextKey
+                                                                                          )
+                                                                                      }}
+                                                                                      onMouseDown={(
+                                                                                          event
+                                                                                      ) => event.preventDefault()}
+                                                                                  >
+                                                                                      <IconEdit
+                                                                                          size={16}
+                                                                                      />
+                                                                                  </ActionIcon>
+                                                                              ) : null}
                                                                               {power.isCustom ? (
                                                                                   <ActionIcon
                                                                                       size="sm"
@@ -588,11 +658,12 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                                   />
                                                                               </ActionIcon>
                                                                           </Group>
-                                                                      )
-                                                                    : undefined
-                                                            }
-                                                        />
-                                                    ))}
+                                                                          )
+                                                                        : undefined
+                                                                }
+                                                            />
+                                                        )
+                                                    })}
                                                 {isEditable ? (
                                                     <Center
                                                         mt="xs"
@@ -1114,6 +1185,7 @@ export default memo(Disciplines, (prev, next) => {
         p.character.rituals === n.character.rituals &&
         p.character.ceremonies === n.character.ceremonies &&
         p.character.customDisciplines === n.character.customDisciplines &&
+        p.character.customText === n.character.customText &&
         p.character.availableDisciplineNames === n.character.availableDisciplineNames &&
         p.character.clan === n.character.clan &&
         p.character.predatorType === n.character.predatorType &&

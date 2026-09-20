@@ -35,7 +35,7 @@ import CharacterNotesControl from "./components/CharacterNotesControl"
 import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 import { useAuth } from "~/hooks/useAuth"
-import { useCharacters } from "~/hooks/useCharacters"
+import { useCharacter, useCharacters } from "~/hooks/useCharacters"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
@@ -84,13 +84,28 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     const loadedCharacter = (
         (userCharacters as Array<{ id: string; shared?: boolean }> | undefined) ?? []
     ).find((candidate) => candidate.id === character.id)
+    const { data: authoritativeCharacter, isLoading: ownershipQueryLoading } = useCharacter(
+        character.id || null,
+        isAuthenticated && !!character.id && !loadedCharacter
+    )
     const ownershipLoading =
-        !!character.id && (authLoading || (isAuthenticated && charactersLoading))
+        !!character.id &&
+        (authLoading || (isAuthenticated && (charactersLoading || ownershipQueryLoading)))
     const canEdit =
         !character.id ||
         (!authLoading && !isAuthenticated) ||
-        (!ownershipLoading && !!loadedCharacter && !loadedCharacter.shared)
-    const editDisabledReason = canEdit ? undefined : CHARACTER_OWNERSHIP_EDIT_REASON
+        (!ownershipLoading &&
+            // Validation or transport failures must not make the local draft read-only.
+            // The backend remains authoritative for writes; saving an unverified draft
+            // offers an owned copy instead of updating the original.
+            (loadedCharacter ? !loadedCharacter.shared : authoritativeCharacter?.canEdit !== false))
+    const editDisabledReason = canEdit
+        ? undefined
+        : ownershipLoading
+          ? "Checking character ownership…"
+          : loadedCharacter?.shared || authoritativeCharacter?.canEdit === false
+            ? CHARACTER_OWNERSHIP_EDIT_REASON
+            : "Unable to verify character ownership. Retry loading your characters, or save a copy from your account."
     const editableSetCharacter = useCallback<SetCharacter>(
         (update) => {
             if (canEdit) {

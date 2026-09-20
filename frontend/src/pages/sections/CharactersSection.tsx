@@ -25,6 +25,7 @@ import {
     IconUpload
 } from "@tabler/icons-react"
 import { Character as CharacterType } from "~/data/Character"
+import "./CharactersSection.css"
 
 type Character = {
     id: string
@@ -87,11 +88,22 @@ const CharactersSection = ({
                         <Text size="sm">
                             A loading error does not mean your characters were deleted. Your current
                             draft is still in this browser. Reload the list before saving to avoid
-                            creating duplicates.
+                            creating duplicates. You can also explicitly save your current character
+                            as a copy.
                         </Text>
                         <Button onClick={onRetry} mt="sm" variant="light" color="red">
                             Retry loading characters
                         </Button>
+                        {character.id && (
+                            <Button
+                                onClick={handleSaveCurrentCharacter}
+                                mt="sm"
+                                ml="sm"
+                                variant="light"
+                            >
+                                Save Current Character
+                            </Button>
+                        )}
                     </Alert>
                 ) : (
                     <Text role="status">Loading saved characters…</Text>
@@ -288,6 +300,7 @@ const CharactersSection = ({
                                                         <Menu.Item
                                                             leftSection={<IconTrash size={14} />}
                                                             color="red"
+                                                            className="account-character-menu-danger"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleDeleteCharacter(
@@ -363,6 +376,7 @@ const CharactersSection = ({
                                                         <Menu.Item
                                                             leftSection={<IconShare size={14} />}
                                                             color="red"
+                                                            className="account-character-menu-danger"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 handleUnshareCharacter(char)

@@ -1,22 +1,58 @@
-import { faDownload, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Code, Divider, Group, Modal, Stack, Text } from "@mantine/core"
-import { useLocalStorage } from "@mantine/hooks"
-import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
+import {
+    Alert,
+    Anchor,
+    Button,
+    Divider,
+    List,
+    Modal,
+    ScrollArea,
+    Stack,
+    Text
+} from "@mantine/core"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
-import { getEmptyCharacter } from "~/data/Character"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { CONTACT_LINKS } from "~/constants/contactLinks"
+import SupportConversationButton from "~/components/SupportConversationButton"
+import { trackCharacterRepair } from "~/utils/characterRecoveryAnalytics"
+import { previewCharacterRepair } from "~/utils/repairCharacter"
+
+const describeBrokenAttribute = (error: string) => {
+    const property = error.match(/(?:property|field)\s+['\"`]([^'\"`]+)['\"`]/i)?.[1]
+    if (property) return `can't load ${property}`
+
+    try {
+        const issues = JSON.parse(error) as { path?: unknown[] }[]
+        const attribute = issues[0]?.path?.at(-1)
+        if (typeof attribute === "string") return `can't load ${attribute}`
+    } catch {
+        // The error is not a Zod issue list. Use the concise fallback below.
+    }
+
+    return "can't load this saved character data"
+}
 
 const BrokenSaveModal = () => {
     const [recoveryError, setRecoveryError] = useState("")
-    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
-        useBrokenCharacter()
+    const {
+        brokenData,
+        brokenError,
+        hasBrokenCharacter,
+        clearBrokenCharacter,
+        archiveBrokenCharacter
+    } = useBrokenCharacter()
+    const repair = useMemo(() => previewCharacterRepair(brokenData), [brokenData])
+    const repairId = useMemo(() => crypto.randomUUID(), [brokenData])
     const [, setCharacter] = useCharacterLocalStorage()
-    const [, setSelectedStep] = useLocalStorage<GeneratorStepId>({
-        key: "selectedGeneratorStep",
-        defaultValue: defaultGeneratorStepId
-    })
+
+    useEffect(() => {
+        if (!hasBrokenCharacter) return
+        console.error("Full character save error:", brokenError)
+        if (repair.success)
+            trackCharacterRepair("suggested", repairId, repair.changes, repair.character)
+    }, [brokenError, hasBrokenCharacter, repair, repairId])
 
     const onDownload = () => {
         if (brokenData) {
@@ -31,17 +67,23 @@ const BrokenSaveModal = () => {
         }
     }
 
-    const onReset = () => {
+    const onRepair = () => {
+        if (!repair.success) return
         try {
-            clearBrokenCharacter()
+            archiveBrokenCharacter()
+            // Mantine's storage hook catches write failures. Verify the repaired save can
+            // be persisted before dismissing the recovery UI or changing React state.
+            localStorage.setItem("character", JSON.stringify(repair.character))
         } catch {
             setRecoveryError(
-                "Could not preserve a recovery copy. Download your saved data before freeing browser storage and trying again."
+                "Could not save the repair and its recovery copy. Download your original save before freeing browser storage and trying again."
             )
             return
         }
-        setCharacter(getEmptyCharacter())
-        setSelectedStep(defaultGeneratorStepId)
+        setCharacter(repair.character)
+        clearBrokenCharacter()
+        trackCharacterRepair("applied", repairId, repair.changes, repair.character)
+        setRecoveryError("")
     }
 
     return (
@@ -50,6 +92,7 @@ const BrokenSaveModal = () => {
             onClose={() => {}}
             title="Character Data Error"
             centered
+            size="xl"
             withCloseButton={false}
             closeOnClickOutside={false}
             closeOnEscape={false}
@@ -58,49 +101,66 @@ const BrokenSaveModal = () => {
                 <Text fz="lg" fw={700}>
                     Failed to load character from saved data
                 </Text>
-                <Text size="sm" c="dimmed">
-                    The saved character data could not be parsed, even after applying compatibility
-                    patches. This may happen if the data format has changed significantly.
-                </Text>
-                <Text size="sm" c="dimmed">
-                    {`(You can safely refresh this page if download isn't working)`}
-                </Text>
-                <Text size="sm">
-                    Starting over replaces only the character in this browser. Characters saved to
-                    your account are unaffected. A recovery copy will remain in this browser and can
-                    be downloaded from your account page.
-                </Text>
                 {recoveryError && (
                     <Text c="red" role="alert">
                         {recoveryError}
                     </Text>
                 )}
                 <Divider my="sm" />
-                <Text fw={700} size="sm">
-                    Error details:
+                <Text size="sm">
+                    <strong>Error details:</strong> {describeBrokenAttribute(brokenError)}
                 </Text>
-                <Code block style={{ maxHeight: "200px", overflow: "auto" }}>
-                    {brokenError}
-                </Code>
                 <Divider my="sm" />
-                <Group justify="space-between">
+                {repair.success ? (
+                    <Stack>
+                        <Alert color="yellow" title="Automatic repair may cause partial data loss" />
+                        <ScrollArea.Autosize mah={300}>
+                            <List size="sm" spacing="xs">
+                                {repair.changes.map((change, index) => (
+                                    <List.Item key={index}>{change.description}</List.Item>
+                                ))}
+                            </List>
+                        </ScrollArea.Autosize>
+                        {repair.changes.length === 0 && (
+                            <Text size="sm">
+                                This save now passes validation. No data needs to be removed.
+                            </Text>
+                        )}
+                        <Button color="orange" onClick={onRepair}>
+                            Auto-repair
+                        </Button>
+                    </Stack>
+                ) : (
+                    <Stack gap="xs">
+                        <Text size="sm" c="dimmed">
+                            {repair.error}
+                        </Text>
+                    </Stack>
+                )}
+                <Divider my="sm" />
+                <Stack gap="sm">
+                    <SupportConversationButton source="broken-save-modal" color="orange" fullWidth>
+                        Get help in support chat
+                    </SupportConversationButton>
                     <Button
-                        color="grape"
+                        color="gray"
+                        variant="subtle"
                         leftSection={<FontAwesomeIcon icon={faDownload} />}
                         onClick={onDownload}
                     >
                         Download Broken Save Data
                     </Button>
-                    <Group>
-                        <Button
-                            color="red"
-                            leftSection={<FontAwesomeIcon icon={faTrash} />}
-                            onClick={onReset}
-                        >
-                            Reset to Empty Character
-                        </Button>
-                    </Group>
-                </Group>
+                    <Text size="xs" c="dimmed" ta="center">
+                        Find Odin on{" "}
+                        <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer">
+                            {CONTACT_LINKS.reddit.label}
+                        </Anchor>{" "}
+                        or{" "}
+                        <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer">
+                            {CONTACT_LINKS.bluesky.label}
+                        </Anchor>
+                    </Text>
+                </Stack>
             </Stack>
         </Modal>
     )

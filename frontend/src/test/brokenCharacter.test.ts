@@ -7,13 +7,31 @@ import React, { act } from "react"
 import { fileURLToPath } from "url"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import CharacterRecoveryDownloads from "~/components/CharacterRecoveryDownloads"
+import posthog from "posthog-js"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import { getEmptyCharacter } from "~/data/Character"
 import { CHARACTER_RECOVERY_KEY, useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 
+vi.mock("posthog-js", () => ({
+    default: {
+        capture: vi.fn(),
+        captureException: vi.fn(),
+        get_explicit_consent_status: vi.fn(() => "denied")
+    }
+}))
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
+
+vi.stubGlobal(
+    "ResizeObserver",
+    class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    }
+)
 
 Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -32,6 +50,7 @@ Object.defineProperty(window, "matchMedia", {
 describe("Broken Character Logic", () => {
     beforeEach(() => {
         localStorage.clear()
+        vi.mocked(posthog.capture).mockClear()
         vi.mocked(URL.createObjectURL).mockClear()
     })
 
@@ -162,8 +181,128 @@ describe("Broken Character Logic", () => {
         }
     })
 
+    describe("automatic repair", () => {
+        const makeBrokenSave = () => {
+            const valid = {
+                name: "Keep this flaw",
+                level: 1,
+                type: "flaw",
+                summary: "Keep",
+                excludes: []
+            }
+            return JSON.stringify({
+                ...getEmptyCharacter(),
+                name: "Repair me",
+                id: "saved-character-id",
+                attributes: { ...getEmptyCharacter().attributes, strength: "bad", dexterity: 4 },
+                flaws: [valid, { ...valid, name: "Ingrained Discipline", level: -1 }]
+            })
+        }
+        const openBrokenSave = (raw: string) => {
+            localStorage.setItem("character", raw)
+            renderHook(() => useCharacterLocalStorage())
+            render(React.createElement(MantineProvider, {}, React.createElement(BrokenSaveModal)))
+        }
+
+        it("shows each repair change immediately and leaves data untouched until auto-repair", async () => {
+            const original = makeBrokenSave()
+            openBrokenSave(original)
+            const before = localStorage.getItem("character")
+            expect(
+                screen.getByText("Automatic repair may cause partial data loss")
+            ).toBeInTheDocument()
+            expect(
+                screen.getByText("Flaw: Ingrained Discipline will be removed")
+            ).toBeInTheDocument()
+            expect(
+                screen.getByText('Attributes → Strength will be reset from "bad" to 1')
+            ).toBeInTheDocument()
+            expect(localStorage.getItem("character")).toBe(before)
+            expect(posthog.capture).toHaveBeenCalledWith(
+                "character_repair_suggested",
+                expect.objectContaining({ change_count: 2 })
+            )
+            expect(
+                vi
+                    .mocked(posthog.capture)
+                    .mock.calls.some(([event]) => event === "character_repair_applied")
+            ).toBe(false)
+            expect(JSON.parse(localStorage.getItem("character_broken_save")!)).toBe(original)
+
+            await userEvent.click(screen.getByRole("button", { name: "Auto-repair" }))
+            const repaired = JSON.parse(localStorage.getItem("character")!)
+            const suggestions = vi
+                .mocked(posthog.capture)
+                .mock.calls.filter(([event]) => event === "character_repair_suggested")
+            expect(posthog.capture).toHaveBeenCalledWith(
+                "character_repair_applied",
+                expect.objectContaining({
+                    repair_id: suggestions.at(-1)![1]!.repair_id,
+                    change_count: 2
+                })
+            )
+            expect(repaired.name).toBe("Repair me")
+            expect(repaired.id).toBe("saved-character-id")
+            expect(repaired.attributes.strength).toBe(1)
+            expect(repaired.attributes.dexterity).toBe(4)
+            expect(repaired.flaws.map((flaw: { name: string }) => flaw.name)).toEqual([
+                "Keep this flaw"
+            ])
+            expect(JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!)[0].data).toBe(original)
+            expect(JSON.parse(localStorage.getItem("character_broken_save")!)).toBe("")
+        })
+
+        it("keeps the recovery dialog open if the repaired character cannot be persisted", async () => {
+            const original = makeBrokenSave()
+            openBrokenSave(original)
+            const setItem = Storage.prototype.setItem
+            const spy = vi
+                .spyOn(Storage.prototype, "setItem")
+                .mockImplementation(function (this: Storage, key, value) {
+                    if (key === "character")
+                        throw new DOMException("Storage full", "QuotaExceededError")
+                    setItem.call(this, key, value)
+                })
+            try {
+                await userEvent.click(screen.getByRole("button", { name: "Auto-repair" }))
+                expect(
+                    screen.getByText(/Could not save the repair and its recovery copy/)
+                ).toBeInTheDocument()
+                expect(
+                    vi
+                        .mocked(posthog.capture)
+                        .mock.calls.some(([event]) => event === "character_repair_applied")
+                ).toBe(false)
+                expect(JSON.parse(localStorage.getItem("character_broken_save")!)).toBe(original)
+                expect(JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!)[0].data).toBe(
+                    original
+                )
+            } finally {
+                spy.mockRestore()
+            }
+        })
+
+        it("updates the automatic repair preview if the broken save changes", async () => {
+            openBrokenSave(makeBrokenSave())
+            const { result } = renderHook(() => useBrokenCharacter())
+            act(() =>
+                result.current.setBrokenCharacter(
+                    JSON.stringify({ ...getEmptyCharacter(), name: 42 }),
+                    "new error"
+                )
+            )
+            expect(screen.getByRole("button", { name: "Auto-repair" })).toBeEnabled()
+        })
+
+        it("offers download without auto-repair for unreadable JSON", () => {
+            openBrokenSave("invalid JSON{")
+            expect(screen.queryByRole("button", { name: "Auto-repair" })).not.toBeInTheDocument()
+            expect(screen.getByRole("button", { name: "Download Broken Save Data" })).toBeEnabled()
+        })
+    })
+
     describe("Full flow: broken character to modal", () => {
-        it("should open modal when broken character is set, allow download, and close on reset", async () => {
+        it("should open modal when broken character is set and allow download", async () => {
             const brokenData = '{"invalid": "character data"}'
 
             localStorage.setItem("character", brokenData)
@@ -226,19 +365,10 @@ describe("Broken Character Logic", () => {
             expect(blobContent).toBe(brokenData)
 
             linkClickSpy.mockRestore()
-
-            const resetButton = screen.getByRole("button", { name: /reset to empty character/i })
-            await act(async () => {
-                await userEvent.click(resetButton)
-            })
-
-            const { result: brokenHookAfterReset } = renderHook(() => useBrokenCharacter())
-            expect(brokenHookAfterReset.current.hasBrokenCharacter).toBe(false)
-            expect(brokenHookAfterReset.current.brokenData).toBe("")
-            expect(brokenHookAfterReset.current.brokenError).toBe("")
-            expect(JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY)!)).toEqual([
-                { savedAt: expect.any(String), data: brokenData, error: expect.any(String) }
-            ])
+            expect(
+                screen.queryByRole("button", { name: /reset to empty character/i })
+            ).not.toBeInTheDocument()
+            expect(screen.getByRole("button", { name: "Cookie preferences" })).toBeEnabled()
         })
     })
 })

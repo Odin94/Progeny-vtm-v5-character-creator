@@ -82,6 +82,23 @@ describe("character compatibility patches", () => {
         expect(parsed.version).toBe(schemaVersion)
     })
 
+    it("adds empty custom-text maps to pre-v11 characters", () => {
+        const parsed: Record<string, unknown> = {
+            ...getEmptyCharacter(),
+            version: 10
+        }
+        delete parsed.customText
+
+        applyCharacterCompatibilityPatches(parsed)
+
+        expect(parsed.customText).toEqual({
+            meritFlaws: {},
+            skillSpecialties: {},
+            disciplinePowers: {}
+        })
+        expect(parsed.version).toBe(schemaVersion)
+    })
+
     it("raises a stored discipline rating by one when a power is added", () => {
         const character = getEmptyCharacter()
         character.disciplineLevels = { "official:celerity": 2 }

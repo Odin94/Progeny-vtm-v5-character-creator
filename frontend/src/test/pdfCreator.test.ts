@@ -11,6 +11,7 @@ import { fileURLToPath } from "url"
 import { PDFArray, PDFDict, PDFDocument, PDFName, PDFTextField } from "pdf-lib"
 import type { Power } from "~/data/Disciplines"
 import type { DisciplineName } from "~/data/NameSchemas"
+import { getDisciplinePowerCustomTextKey, getMeritFlawCustomTextKey } from "~/utils/customText"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, "..")
@@ -96,6 +97,16 @@ Object.defineProperty(window, "atob", {
 describe("createPdf_nerdbert", () => {
     it("should create a PDF with correct character data", async () => {
         const character = getBasicTestCharacter()
+        character.customText = {
+            meritFlaws: {
+                [getMeritFlawCustomTextKey(character.merits[0])]: "Custom merit context"
+            },
+            skillSpecialties: {},
+            disciplinePowers: {
+                [getDisciplinePowerCustomTextKey(character.disciplines[0])]:
+                    "Custom power context"
+            }
+        }
         character.disciplines.push({
             name: "Ashes to Ashes",
             description: "",
@@ -155,6 +166,7 @@ describe("createPdf_nerdbert", () => {
 
         const disc1Ability1Text = form.getTextField("Disc1_Ability1").getText() || ""
         expect(disc1Ability1Text).toContain(character.disciplines[0].name) // Prowess
+        expect(disc1Ability1Text).toContain("Custom power context")
 
         const disc2Field = form.getTextField("Disc2")
         const disc2Text = disc2Field.getText() || ""
@@ -190,6 +202,7 @@ describe("createPdf_nerdbert", () => {
         const meritTexts = allMeritFields.map((field) => field.getText()).join(" ")
         expect(meritTexts).toContain(character.merits[0].name)
         expect(meritTexts).toContain(character.flaws[0].name)
+        expect(meritTexts).toContain("Custom merit context")
     })
 
     it("registers the embedded font in the AcroForm default resources so viewers don't prompt to install fonts", async () => {

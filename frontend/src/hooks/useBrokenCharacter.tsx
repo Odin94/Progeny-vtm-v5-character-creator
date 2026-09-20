@@ -36,7 +36,7 @@ export const useBrokenCharacter = () => {
         defaultValue: ""
     })
 
-    const clearBrokenCharacter = () => {
+    const archiveBrokenCharacter = () => {
         if (brokenData) {
             const recoverySaves = recoverySavesSchema.parse(
                 JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY) || "[]")
@@ -53,6 +53,10 @@ export const useBrokenCharacter = () => {
             localStorage.setItem(CHARACTER_RECOVERY_KEY, JSON.stringify(recoverySaves))
             setRecoverySaves(recoverySaves)
         }
+    }
+
+    const clearBrokenCharacter = () => {
+        archiveBrokenCharacter()
         setBrokenData("")
         setBrokenError("")
     }
@@ -69,6 +73,7 @@ export const useBrokenCharacter = () => {
         brokenError,
         hasBrokenCharacter,
         setBrokenCharacter,
+        archiveBrokenCharacter,
         clearBrokenCharacter
     }
 }
