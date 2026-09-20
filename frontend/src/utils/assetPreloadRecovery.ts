@@ -20,7 +20,7 @@ const reloadedWithinGuard = () => {
     return Date.now() - timestamp < RELOAD_GUARD_MS
 }
 
-export const handleAssetPreloadError = (event: Event) => {
+export const handleAssetPreloadError = () => {
     if (reloadedWithinGuard()) {
         return
     }
@@ -32,7 +32,12 @@ export const handleAssetPreloadError = (event: Event) => {
         return
     }
 
-    event.preventDefault()
+    // The reload is asynchronous, so React still renders once before the page
+    // navigates. The event must stay uncancelled: Vite's preload helper only
+    // rethrows the fetch error when the event is not cancelled. Cancelling it
+    // makes the failed import() resolve empty, so React's lazy reads `.default`
+    // off nothing and crashes. Left thrown, the error reaches the boundary,
+    // which shows a retry until the reload lands.
     window.location.reload()
 }
 
