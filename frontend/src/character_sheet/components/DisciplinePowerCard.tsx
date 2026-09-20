@@ -1,4 +1,4 @@
-import { Box, Group, Stack, Text, Tooltip } from "@mantine/core"
+import { Box, Group, Stack, Text, Textarea, Tooltip } from "@mantine/core"
 import { Power } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import Tally from "~/components/Tally"
@@ -16,6 +16,10 @@ type DisciplinePowerCardProps = {
     disabled?: boolean
     disabledTooltip?: string | null
     onDisabledClick?: () => void
+    customText?: string
+    onCustomTextChange?: (value: string) => void
+    isEditingCustomText?: boolean
+    onFinishCustomTextEditing?: () => void
 }
 
 export const calculateDicePoolValues = (
@@ -60,7 +64,11 @@ const DisciplinePowerCard = ({
     character,
     disabled = false,
     disabledTooltip,
-    onDisabledClick
+    onDisabledClick,
+    customText = "",
+    onCustomTextChange,
+    isEditingCustomText = false,
+    onFinishCustomTextEditing
 }: DisciplinePowerCardProps) => {
     const content = (
         <Stack gap="xs" style={{ height: "100%", minHeight: "135px" }}>
@@ -75,6 +83,28 @@ const DisciplinePowerCard = ({
             {power.summary ? (
                 <Text size="xs" c="dimmed" lineClamp={4}>
                     {power.summary}
+                </Text>
+            ) : null}
+            {onCustomTextChange && isEditingCustomText ? (
+                <Textarea
+                    aria-label={`${power.name} custom note`}
+                    value={customText}
+                    onChange={(event) => onCustomTextChange(event.currentTarget.value)}
+                    placeholder="Add a custom note..."
+                    minRows={2}
+                    size="xs"
+                    autoFocus
+                    onBlur={onFinishCustomTextEditing}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                            event.preventDefault()
+                            onFinishCustomTextEditing?.()
+                        }
+                    }}
+                />
+            ) : customText ? (
+                <Text size="xs" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
+                    {customText}
                 </Text>
             ) : null}
             {power.requiredTime ? (

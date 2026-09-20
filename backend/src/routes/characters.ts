@@ -177,13 +177,14 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 const { userId: _, ...characterWithoutUserId } = share.character
                 return {
                     ...characterWithoutUserId,
+                    ownerId: share.character.userId,
                     shared: true,
                     sharedBy: share.sharedBy?.nickname || null
                 }
             })
 
             const allCharacters = [
-                ...ownedCharacters.map((c) => ({ ...c, shared: false })),
+                ...ownedCharacters.map((c) => ({ ...c, ownerId: c.userId, shared: false })),
                 ...sharedCharacters
             ].map((c) => ({
                 ...c,
@@ -252,6 +253,7 @@ export async function characterRoutes(fastify: FastifyInstance) {
             reply.send({
                 ...characterWithoutUserId,
                 data: JSON.parse(access.character.data),
+                ownerId: access.character.userId,
                 canEdit: access.isOwner
             })
         }

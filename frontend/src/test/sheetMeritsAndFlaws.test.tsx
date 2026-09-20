@@ -1,9 +1,11 @@
 import { MantineProvider } from "@mantine/core"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import MeritsAndFlaws from "~/character_sheet/sections/MeritsAndFlaws"
 import { getSheetMeritsAndFlaws } from "~/character_sheet/utils/meritsAndFlaws"
 import { getBasicTestCharacter } from "./testUtils"
+import { getMeritFlawCustomTextKey } from "~/utils/customText"
+import type { Character } from "~/data/Character"
 
 Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -17,6 +19,19 @@ Object.defineProperty(window, "matchMedia", {
         removeEventListener: vi.fn(),
         dispatchEvent: vi.fn()
     }))
+})
+
+Object.defineProperty(window, "visualViewport", {
+    writable: true,
+    value: {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+    }
+})
+
+Object.defineProperty(document, "fonts", {
+    writable: true,
+    value: { addEventListener: vi.fn(), removeEventListener: vi.fn() }
 })
 
 describe("sheet merits and flaws", () => {
@@ -199,5 +214,58 @@ describe("sheet merits and flaws", () => {
 
         expect(screen.getByText("Dark Secret (Heresy)")).toBeInTheDocument()
         expect(screen.getByText("From loresheet")).toBeInTheDocument()
+    })
+
+    it("adds a custom note to a predator-type merit without changing its rules text", async () => {
+        let character: Character = {
+            ...getBasicTestCharacter(),
+            predatorType: {
+                name: "Osiris" as const,
+                pickedDiscipline: "presence",
+                pickedSpecialties: [],
+                pickedMeritsAndFlaws: [
+                    {
+                        name: "Fame",
+                        level: 3,
+                        summary: "Known by a select subculture",
+                        type: "merit" as const,
+                        excludes: []
+                    }
+                ]
+            },
+            merits: [],
+            flaws: []
+        }
+        const merit = character.predatorType.pickedMeritsAndFlaws[0]
+        const setCharacter = (update: Character | ((current: Character) => Character)) => {
+            character = typeof update === "function" ? update(character) : update
+        }
+
+        render(
+            <MantineProvider>
+                <MeritsAndFlaws
+                    options={{
+                        mode: "free",
+                        primaryColor: "red",
+                        character,
+                        setCharacter,
+                        canEdit: true,
+                        preferences: { colorTheme: null, backgroundImage: null },
+                        onUpdatePreferences: vi.fn()
+                    }}
+                />
+            </MantineProvider>
+        )
+
+        expect(screen.queryByLabelText("Fame custom note")).not.toBeInTheDocument()
+        fireEvent.click(screen.getByLabelText("Edit Fame custom note"))
+        fireEvent.change(screen.getByLabelText("Fame custom note"), {
+            target: { value: "Known across Berlin" }
+        })
+
+        expect(merit.summary).toBe("Known by a select subculture")
+        expect(character.customText.meritFlaws[getMeritFlawCustomTextKey(merit)]).toBe(
+            "Known across Berlin"
+        )
     })
 })

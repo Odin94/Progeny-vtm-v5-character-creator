@@ -14,6 +14,11 @@ import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import {
+    appendCustomText,
+    getDisciplinePowerCustomTextKey,
+    getMeritFlawCustomTextKey
+} from "~/utils/customText"
 
 let customFont: PDFFont
 let nerdbertTemplatePromise: Promise<string> | null = null
@@ -336,7 +341,11 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 
     // Disciplines
     const getDisciplineText = (power: Power | Ritual | Ceremony) => {
-        let text = power.name + ": " + power.summary
+        const customText =
+            "amalgamPrerequisites" in power
+                ? character.customText.disciplinePowers[getDisciplinePowerCustomTextKey(power)] ?? ""
+                : ""
+        let text = power.name + ": " + appendCustomText(power.summary, customText)
         if (power.dicePool !== "") {
             text += ` // ${power.dicePool}`
         }
@@ -487,7 +496,12 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
         const { level, summary } = meritFlaw
         const fieldNum = i + 1
         form.getTextField(`Merit${fieldNum}`).setText(
-            getMeritFlawDisplayName(meritFlaw) + ": " + summary
+            getMeritFlawDisplayName(meritFlaw) +
+                ": " +
+                appendCustomText(
+                    summary,
+                    character.customText.meritFlaws[getMeritFlawCustomTextKey(meritFlaw)] ?? ""
+                )
         )
         for (let l = 1; l <= level; l++) {
             form.getCheckBox(`Merit${fieldNum}-${l}`).check()

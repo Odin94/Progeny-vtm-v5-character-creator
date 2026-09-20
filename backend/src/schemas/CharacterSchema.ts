@@ -35,7 +35,7 @@ export type Touchstone = z.infer<typeof touchstoneSchema>
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
 
-export const schemaVersion = 10
+export const schemaVersion = 11
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -104,6 +104,14 @@ export const characterSchema = z.object({
 
     merits: meritFlawSchema.array(),
     flaws: meritFlawSchema.array(),
+    customText: z
+        .object({
+            meritFlaws: z.record(z.string(), z.string()).default({}),
+            skillSpecialties: z.record(z.string(), z.string()).default({}),
+            disciplinePowers: z.record(z.string(), z.string()).default({})
+        })
+        .optional()
+        .default({ meritFlaws: {}, skillSpecialties: {}, disciplinePowers: {} }),
 
     notes: z.string().optional().default(""),
 
