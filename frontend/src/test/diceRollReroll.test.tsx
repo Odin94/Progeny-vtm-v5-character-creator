@@ -165,6 +165,7 @@ describe("DiceRollModal willpower rerolls", () => {
         renderModalWithDice(dice)
 
         const diceBoard = screen.getByTestId("dice-results-scroll-area")
+        expect(screen.getByTestId("dice-results-content")).toHaveStyle({ height: "360px" })
         expect(diceBoard).toHaveStyle({
             overflowY: "auto",
             overflowX: "hidden",
