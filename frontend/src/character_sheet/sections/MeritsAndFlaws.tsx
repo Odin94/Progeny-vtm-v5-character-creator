@@ -19,7 +19,7 @@ import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import { MeritFlaw } from "~/data/Character"
-import { IconPlus, IconX } from "@tabler/icons-react"
+import { IconEdit, IconPlus, IconX } from "@tabler/icons-react"
 import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
 import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -43,6 +43,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
         type: "merit" | "flaw"
         item: MeritFlaw
     } | null>(null)
+    const [editingCustomText, setEditingCustomText] = useState<string | null>(null)
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
 
@@ -103,9 +104,12 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         index
                                     ) => {
                                         const isFromBonus = isFromPredatorType || isFromLoresheet
-                                        const customTextKey = getMeritFlawCustomTextKey(merit)
-                                        const customText =
-                                            character.customText.meritFlaws[customTextKey] ?? ""
+                                            const customTextKey = getMeritFlawCustomTextKey(merit)
+                                            const customText =
+                                                character.customText.meritFlaws[customTextKey] ?? ""
+                                        const customTextEditorKey = `merit:${customTextKey}`
+                                        const isEditingCustomText =
+                                            editingCustomText === customTextEditorKey
                                         const badgeText = isFromLoresheet
                                             ? isUpgradedFromLoresheet
                                                 ? "Upgraded from loresheet"
@@ -132,6 +136,29 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         }}
                                                     >
                                                         <IconX size={16} />
+                                                    </ActionIcon>
+                                                ) : null}
+                                                {isFreeMode && isFromBonus ? (
+                                                    <ActionIcon
+                                                        size="sm"
+                                                        variant="subtle"
+                                                        color={primaryColor}
+                                                        aria-label={`Edit ${getMeritFlawDisplayName(merit)} custom note`}
+                                                        onClick={() =>
+                                                            setEditingCustomText((current) =>
+                                                                current === customTextEditorKey
+                                                                    ? null
+                                                                    : customTextEditorKey
+                                                            )
+                                                        }
+                                                        onMouseDown={(event) => event.preventDefault()}
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "8px"
+                                                        }}
+                                                    >
+                                                        <IconEdit size={16} />
                                                     </ActionIcon>
                                                 ) : null}
                                                 <Group
@@ -201,7 +228,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             merit.summary.slice(1)}
                                                     </Text>
                                                 ) : null}
-                                                {isFreeMode && isFromBonus ? (
+                                                {isEditingCustomText ? (
                                                     <Textarea
                                                         aria-label={`${getMeritFlawDisplayName(merit)} custom note`}
                                                         value={customText}
@@ -220,6 +247,14 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         placeholder="Add a custom note..."
                                                         minRows={2}
                                                         mt="xs"
+                                                        autoFocus
+                                                        onBlur={() => setEditingCustomText(null)}
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === "Enter") {
+                                                                event.preventDefault()
+                                                                setEditingCustomText(null)
+                                                            }
+                                                        }}
                                                     />
                                                 ) : customText ? (
                                                     <Text size="sm" c="dimmed" mt="xs">
@@ -305,9 +340,12 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         index
                                     ) => {
                                         const isFromBonus = isFromPredatorType || isFromLoresheet
-                                        const customTextKey = getMeritFlawCustomTextKey(flaw)
-                                        const customText =
-                                            character.customText.meritFlaws[customTextKey] ?? ""
+                                            const customTextKey = getMeritFlawCustomTextKey(flaw)
+                                            const customText =
+                                                character.customText.meritFlaws[customTextKey] ?? ""
+                                        const customTextEditorKey = `flaw:${customTextKey}`
+                                        const isEditingCustomText =
+                                            editingCustomText === customTextEditorKey
                                         const badgeText = isFromLoresheet
                                             ? isUpgradedFromLoresheet
                                                 ? "Upgraded from loresheet"
@@ -334,6 +372,29 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         }}
                                                     >
                                                         <IconX size={16} />
+                                                    </ActionIcon>
+                                                ) : null}
+                                                {isFreeMode && isFromBonus ? (
+                                                    <ActionIcon
+                                                        size="sm"
+                                                        variant="subtle"
+                                                        color="red"
+                                                        aria-label={`Edit ${getMeritFlawDisplayName(flaw)} custom note`}
+                                                        onClick={() =>
+                                                            setEditingCustomText((current) =>
+                                                                current === customTextEditorKey
+                                                                    ? null
+                                                                    : customTextEditorKey
+                                                            )
+                                                        }
+                                                        onMouseDown={(event) => event.preventDefault()}
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: "8px",
+                                                            right: "8px"
+                                                        }}
+                                                    >
+                                                        <IconEdit size={16} />
                                                     </ActionIcon>
                                                 ) : null}
                                                 <Group
@@ -403,7 +464,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                             flaw.summary.slice(1)}
                                                     </Text>
                                                 ) : null}
-                                                {isFreeMode && isFromBonus ? (
+                                                {isEditingCustomText ? (
                                                     <Textarea
                                                         aria-label={`${getMeritFlawDisplayName(flaw)} custom note`}
                                                         value={customText}
@@ -422,6 +483,14 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         placeholder="Add a custom note..."
                                                         minRows={2}
                                                         mt="xs"
+                                                        autoFocus
+                                                        onBlur={() => setEditingCustomText(null)}
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === "Enter") {
+                                                                event.preventDefault()
+                                                                setEditingCustomText(null)
+                                                            }
+                                                        }}
                                                     />
                                                 ) : customText ? (
                                                     <Text size="sm" c="dimmed" mt="xs">

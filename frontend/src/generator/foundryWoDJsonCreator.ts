@@ -12,6 +12,11 @@ import {
 } from "../data/meritsAndFlawsResolution"
 import { PredatorTypes } from "../data/PredatorType"
 import { getDisciplineRating, getValueForKey } from "./utils"
+import {
+    appendCustomText,
+    getDisciplinePowerCustomTextKey,
+    getMeritFlawCustomTextKey
+} from "~/utils/customText"
 
 const WoD5EVttDicePoolSchema = z.record(z.string(), z.object({ path: z.string() }))
 
@@ -477,7 +482,10 @@ export const createWoD5EVttJson = (
             name: p.name,
             type: "power",
             system: {
-                description: p.summary || p.description || "",
+                description: appendCustomText(
+                    p.summary || p.description || "",
+                    character.customText.disciplinePowers[getDisciplinePowerCustomTextKey(p)] ?? ""
+                ),
                 discipline: key,
                 level: p.level,
                 cost: p.rouseChecks,
@@ -495,7 +503,10 @@ export const createWoD5EVttJson = (
             name: getMeritFlawDisplayName(merit),
             type: "feature",
             system: {
-                description: merit.summary || "",
+                description: appendCustomText(
+                    merit.summary || "",
+                    character.customText.meritFlaws[getMeritFlawCustomTextKey(merit)] ?? ""
+                ),
                 featuretype: "merit",
                 points: merit.level,
                 bonuses: [],
@@ -510,7 +521,10 @@ export const createWoD5EVttJson = (
             name: getMeritFlawDisplayName(flaw),
             type: "feature",
             system: {
-                description: flaw.summary || "",
+                description: appendCustomText(
+                    flaw.summary || "",
+                    character.customText.meritFlaws[getMeritFlawCustomTextKey(flaw)] ?? ""
+                ),
                 featuretype: "flaw",
                 points: flaw.level,
                 bonuses: [],

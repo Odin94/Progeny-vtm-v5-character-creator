@@ -11,6 +11,9 @@ export const getSkillSpecialtyCustomTextKey = (specialty: Specialty): string =>
 
 export const getDisciplinePowerCustomTextKey = (power: Power): string => getPowerIdentity(power)
 
+export const appendCustomText = (text: string, customText: string): string =>
+    [text, customText].filter(Boolean).join("\n\n")
+
 type CustomTextKind = keyof Character["customText"]
 
 // Keep empty notes out of persisted data while allowing every caller to treat a

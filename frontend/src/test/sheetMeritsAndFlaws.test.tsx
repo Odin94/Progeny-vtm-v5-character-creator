@@ -257,6 +257,8 @@ describe("sheet merits and flaws", () => {
             </MantineProvider>
         )
 
+        expect(screen.queryByLabelText("Fame custom note")).not.toBeInTheDocument()
+        fireEvent.click(screen.getByLabelText("Edit Fame custom note"))
         fireEvent.change(screen.getByLabelText("Fame custom note"), {
             target: { value: "Known across Berlin" }
         })

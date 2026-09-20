@@ -18,6 +18,8 @@ type DisciplinePowerCardProps = {
     onDisabledClick?: () => void
     customText?: string
     onCustomTextChange?: (value: string) => void
+    isEditingCustomText?: boolean
+    onFinishCustomTextEditing?: () => void
 }
 
 export const calculateDicePoolValues = (
@@ -64,7 +66,9 @@ const DisciplinePowerCard = ({
     disabledTooltip,
     onDisabledClick,
     customText = "",
-    onCustomTextChange
+    onCustomTextChange,
+    isEditingCustomText = false,
+    onFinishCustomTextEditing
 }: DisciplinePowerCardProps) => {
     const content = (
         <Stack gap="xs" style={{ height: "100%", minHeight: "135px" }}>
@@ -81,7 +85,7 @@ const DisciplinePowerCard = ({
                     {power.summary}
                 </Text>
             ) : null}
-            {onCustomTextChange ? (
+            {onCustomTextChange && isEditingCustomText ? (
                 <Textarea
                     aria-label={`${power.name} custom note`}
                     value={customText}
@@ -89,6 +93,14 @@ const DisciplinePowerCard = ({
                     placeholder="Add a custom note..."
                     minRows={2}
                     size="xs"
+                    autoFocus
+                    onBlur={onFinishCustomTextEditing}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                            event.preventDefault()
+                            onFinishCustomTextEditing?.()
+                        }
+                    }}
                 />
             ) : customText ? (
                 <Text size="xs" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
