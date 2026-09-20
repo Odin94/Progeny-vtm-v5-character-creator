@@ -187,6 +187,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             discipline:
                 diceModalOpened && selectedDiscipline === disciplineName ? null : disciplineName,
             skill: null,
+            secondAttribute: null,
             selectedMeritFlaws: []
         })
         if (!diceModalOpened) {

@@ -29,21 +29,57 @@ const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
     const { character } = options
     const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
-            isSelected: state.selectedDicePool.attribute === attribute,
+            isSelected:
+                state.selectedDicePool.attribute === attribute ||
+                state.selectedDicePool.secondAttribute === attribute,
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
 
     const handleAttributeClick = (attribute: AttributesKey) => {
         const diceModalOpened = useDiceRollModalStore.getState().opened
-        updateSelectedDicePool({
-            attribute: diceModalOpened && isSelected ? null : attribute,
-            selectedDisciplinePowers: [],
-            selectedMeritFlaws: []
-        })
+
         if (!diceModalOpened) {
+            updateSelectedDicePool({
+                attribute,
+                secondAttribute: null,
+                selectedDisciplinePowers: [],
+                selectedMeritFlaws: []
+            })
             useDiceRollModalStore.getState().openSelectedPool()
+            return
         }
+
+        const pool = useCharacterSheetStore.getState().selectedDicePool
+
+        // While the companion slot is occupied by a skill or discipline, an
+        // attribute click selects the primary attribute. Otherwise, the next
+        // click fills or replaces the attribute companion, so the same
+        // attribute can fill both slots (e.g. Strength + Strength).
+        if (!pool.attribute || pool.skill || pool.discipline) {
+            updateSelectedDicePool({
+                attribute: pool.attribute === attribute ? null : attribute,
+                secondAttribute: null,
+                selectedDisciplinePowers: [],
+                selectedMeritFlaws: []
+            })
+            return
+        }
+
+        // Removing the primary from a two-attribute pool promotes its
+        // companion. That keeps the pool valid and makes changing either
+        // member of a pair possible without resetting the whole roll.
+        if (pool.attribute === attribute && pool.secondAttribute) {
+            updateSelectedDicePool({
+                attribute: pool.secondAttribute,
+                secondAttribute: null
+            })
+            return
+        }
+
+        updateSelectedDicePool({
+            secondAttribute: pool.secondAttribute === attribute ? null : attribute
+        })
     }
 
     return (

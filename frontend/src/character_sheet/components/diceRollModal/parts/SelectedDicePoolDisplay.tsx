@@ -13,6 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks"
 import { IconChevronDown, IconInfoCircle, IconRotateClockwise } from "@tabler/icons-react"
 import { Character } from "~/data/Character"
+import { AttributesKey } from "~/data/Attributes"
 import { useCharacterSheetStore } from "../../../stores/characterSheetStore"
 import { getDisciplineRating, upcase } from "~/generator/utils"
 import { useShallow } from "zustand/react/shallow"
@@ -81,6 +82,11 @@ const SelectedDicePoolDisplay = ({
         selectedDicePool.discipline && character
             ? getBloodPotencyDisciplineBonus(character.bloodPotency)
             : 0
+    const attributeBadge = (attribute: AttributesKey) => (
+        <Badge variant="light" color={primaryColor} size="lg">
+            {upcase(attribute)}: {character?.attributes[attribute] || 0}
+        </Badge>
+    )
     const selectedDisciplineBadge = selectedDicePool.discipline ? (
         <Badge variant="light" color={primaryColor} size="lg">
             {upcase(selectedDicePool.discipline)}: {selectedDisciplineRating}
@@ -129,7 +135,7 @@ const SelectedDicePoolDisplay = ({
                             Selected Dice Pool:
                         </Text>
                         <Tooltip
-                            label="You can click Attributes, Skills, or Disciplines on the character sheet to determine your dice pool"
+                            label="Click an Attribute, then a Skill, Discipline, or second Attribute on the character sheet to determine your dice pool"
                             position="top"
                             withArrow
                             multiline
@@ -149,6 +155,7 @@ const SelectedDicePoolDisplay = ({
                         </Tooltip>
                     </Group>
                     {selectedDicePool.attribute ||
+                    selectedDicePool.secondAttribute ||
                     selectedDicePool.skill ||
                     selectedDicePool.discipline ? (
                         <ActionIcon
@@ -165,10 +172,7 @@ const SelectedDicePoolDisplay = ({
                     <Stack gap="xs">
                         <Group gap="xs">
                             {selectedDicePool.attribute ? (
-                                <Badge variant="light" color={primaryColor} size="lg">
-                                    {upcase(selectedDicePool.attribute)}:{" "}
-                                    {character?.attributes[selectedDicePool.attribute] || 0}
-                                </Badge>
+                                attributeBadge(selectedDicePool.attribute)
                             ) : (
                                 <Text c="dimmed" size="sm">
                                     No attribute selected
@@ -192,6 +196,8 @@ const SelectedDicePoolDisplay = ({
                                 ) : (
                                     selectedDisciplineBadge
                                 )
+                            ) : selectedDicePool.secondAttribute ? (
+                                attributeBadge(selectedDicePool.secondAttribute)
                             ) : (
                                 <Text c="dimmed" size="sm">
                                     No skill/discipline selected

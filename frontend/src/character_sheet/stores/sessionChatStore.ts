@@ -22,6 +22,7 @@ export type RollData = {
     results: Array<{ type: string; value: number }>
     poolInfo?: {
         attribute?: string | null
+        secondAttribute?: string | null
         skill?: string | null
         discipline?: string | null
         diceCount: number
@@ -105,6 +106,7 @@ type SessionChatStore = {
             results: Array<{ type: string; value: number }>
             poolInfo?: {
                 attribute?: string | null
+                secondAttribute?: string | null
                 skill?: string | null
                 discipline?: string | null
                 diceCount: number
@@ -602,6 +604,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
             results: Array<{ type: string; value: number }>
             poolInfo?: {
                 attribute?: string | null
+                secondAttribute?: string | null
                 skill?: string | null
                 discipline?: string | null
                 diceCount: number
@@ -625,6 +628,7 @@ export const useSessionChatStore = create<SessionChatStore>((set, get) => {
         const poolInfo = rollData.poolInfo
             ? {
                   attribute: optionalString(rollData.poolInfo.attribute),
+                  secondAttribute: optionalString(rollData.poolInfo.secondAttribute),
                   skill: optionalString(rollData.poolInfo.skill),
                   discipline: optionalString(rollData.poolInfo.discipline),
                   diceCount: rollData.poolInfo.diceCount,
