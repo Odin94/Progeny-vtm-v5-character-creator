@@ -51,20 +51,36 @@ describe("static text notes", () => {
             character = typeof update === "function" ? update(character) : update
         }
 
-        render(
+        const { rerender } = render(
             <MantineProvider>
                 <Skills options={freeOptions(character, setCharacter)} />
             </MantineProvider>
         )
 
+        expect(screen.queryByLabelText("Medicine Anesthetics custom note")).not.toBeInTheDocument()
+        fireEvent.click(screen.getByText("Anesthetics"))
+        expect(screen.getByLabelText("Medicine Anesthetics custom note")).toBeInTheDocument()
         fireEvent.change(screen.getByLabelText("Medicine Anesthetics custom note"), {
             target: { value: "Only works in a prepared clinic" }
+        })
+        rerender(
+            <MantineProvider>
+                <Skills options={freeOptions(character, setCharacter)} />
+            </MantineProvider>
+        )
+        fireEvent.click(screen.getByText("Anesthetics"))
+        expect(screen.queryByLabelText("Medicine Anesthetics custom note")).not.toBeInTheDocument()
+        fireEvent.click(screen.getByText("Anesthetics"))
+        expect(screen.getByLabelText("Medicine Anesthetics custom note")).toBeInTheDocument()
+        fireEvent.keyDown(screen.getByLabelText("Medicine Anesthetics custom note"), {
+            key: "Enter"
         })
 
         expect(specialty.name).toBe("Anesthetics")
         expect(
             character.customText.skillSpecialties[getSkillSpecialtyCustomTextKey(specialty)]
         ).toBe("Only works in a prepared clinic")
+        expect(screen.queryByLabelText("Medicine Anesthetics custom note")).not.toBeInTheDocument()
     })
 
     it("adds a custom note to an official discipline power without changing its summary", async () => {
@@ -80,6 +96,8 @@ describe("static text notes", () => {
             </MantineProvider>
         )
 
+        expect(screen.queryByLabelText("Prowess custom note")).not.toBeInTheDocument()
+        fireEvent.click(screen.getByLabelText("Edit Prowess custom note"))
         fireEvent.change(screen.getByLabelText("Prowess custom note"), {
             target: { value: "Applies while enraged" }
         })

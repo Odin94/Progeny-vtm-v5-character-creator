@@ -71,6 +71,9 @@ const SkillRow = ({
         index: number
     } | null>(null)
     const [editingValue, setEditingValue] = useState<string>("")
+    const [editingPredatorTypeSpecialty, setEditingPredatorTypeSpecialty] = useState<number | null>(
+        null
+    )
     // Reason shown inline (not just on hover) after a blocked "+" click.
     const [addBlockedReason, setAddBlockedReason] = useState<string | undefined>(undefined)
     // Drop a stale inline reason once the mode or affordability that caused it changes.
@@ -166,6 +169,7 @@ const SkillRow = ({
     const renderPredatorTypeSpecialty = (specialty: SpecialtyEntry, index: number) => {
         const customTextKey = getSkillSpecialtyCustomTextKey(specialty)
         const customText = character.customText.skillSpecialties[customTextKey] ?? ""
+        const isEditing = editingPredatorTypeSpecialty === index
 
         return (
             <Stack
@@ -177,11 +181,25 @@ const SkillRow = ({
                     variant="outline"
                     size="xs"
                     color={primaryColor}
-                    style={{ width: "fit-content" }}
+                    style={{
+                        width: "fit-content",
+                        cursor: options.mode === "free" ? "pointer" : undefined
+                    }}
+                    onClick={
+                        options.mode === "free"
+                            ? (event) => {
+                                  event.stopPropagation()
+                                  setEditingPredatorTypeSpecialty((current) =>
+                                      current === index ? null : index
+                                  )
+                              }
+                            : undefined
+                    }
+                    onMouseDown={(event) => event.preventDefault()}
                 >
                     {specialty.name}
                 </Badge>
-                {options.mode === "free" ? (
+                {isEditing ? (
                     <Textarea
                         aria-label={`${upcase(skill)} ${specialty.name} custom note`}
                         value={customText}
@@ -201,6 +219,14 @@ const SkillRow = ({
                         minRows={1}
                         size="xs"
                         style={{ minWidth: 160 }}
+                        autoFocus
+                        onBlur={() => setEditingPredatorTypeSpecialty(null)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                event.preventDefault()
+                                setEditingPredatorTypeSpecialty(null)
+                            }
+                        }}
                     />
                 ) : customText ? (
                     <Text size="xs" c="dimmed">

@@ -156,6 +156,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
     const [customCeremonyModalOpened, setCustomCeremonyModalOpened] = useState(false)
     const [editingDisciplineName, setEditingDisciplineName] = useState<DisciplineName | null>(null)
     const [editingPower, setEditingPower] = useState<Power | null>(null)
+    const [editingPowerCustomText, setEditingPowerCustomText] = useState<string | null>(null)
     const [editingDisciplineSource, setEditingDisciplineSource] = useState<
         HomebrewSource | undefined
     >()
@@ -568,10 +569,48 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                           }
                                                                         : undefined
                                                                 }
+                                                                isEditingCustomText={
+                                                                    editingPowerCustomText ===
+                                                                    customTextKey
+                                                                }
+                                                                onFinishCustomTextEditing={() =>
+                                                                    setEditingPowerCustomText(null)
+                                                                }
                                                                 renderActions={
                                                                     isFreeMode
                                                                         ? () => (
                                                                           <Group gap="xs">
+                                                                              {isStaticPower ? (
+                                                                                  <ActionIcon
+                                                                                      size="sm"
+                                                                                      variant="subtle"
+                                                                                      color={
+                                                                                          primaryColor
+                                                                                      }
+                                                                                      aria-label={`Edit ${power.name} custom note`}
+                                                                                      onClick={(
+                                                                                          event
+                                                                                      ) => {
+                                                                                          event.stopPropagation()
+                                                                                          setEditingPowerCustomText(
+                                                                                              (
+                                                                                                  current
+                                                                                              ) =>
+                                                                                                  current ===
+                                                                                                  customTextKey
+                                                                                                      ? null
+                                                                                                      : customTextKey
+                                                                                          )
+                                                                                      }}
+                                                                                      onMouseDown={(
+                                                                                          event
+                                                                                      ) => event.preventDefault()}
+                                                                                  >
+                                                                                      <IconEdit
+                                                                                          size={16}
+                                                                                      />
+                                                                                  </ActionIcon>
+                                                                              ) : null}
                                                                               {power.isCustom ? (
                                                                                   <ActionIcon
                                                                                       size="sm"
