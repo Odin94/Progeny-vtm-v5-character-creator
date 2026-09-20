@@ -75,7 +75,11 @@ export default function SaveCharacterCopyModal({
             withCloseButton={!create.isPending}
         >
             <Stack>
-                <Text>You're viewing somebody elses character and you can't save it.</Text>
+                <Text>
+                    {source?.classification === "shared"
+                        ? "You're viewing somebody else's character and can't save changes to the original."
+                        : "We couldn't verify this character's saved copy, so your changes will be saved as a new character."}
+                </Text>
                 <Text size="sm">
                     Save as copy creates a character in your account and opens it for editing.
                 </Text>
