@@ -8,6 +8,9 @@ import "./index.css"
 import "./components/HomebrewFormControls.css"
 import RenderProfiler from "./components/RenderProfiler"
 import reportWebVitals from "./reportWebVitals"
+import { installAssetPreloadRecovery } from "./utils/assetPreloadRecovery"
+
+installAssetPreloadRecovery()
 
 const router = createRouter({ routeTree })
 

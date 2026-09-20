@@ -4,6 +4,16 @@ for = "/assets/*"
 [headers.values]
 Access-Control-Allow-Origin = "*"
 
+# A deploy replaces the hashed asset filenames. Without this rule the catch-all
+# below serves index.html for a missing asset with status 200, so the browser
+# gets an HTML document where it expects JavaScript or CSS. Return 404 instead,
+# so a stale asset fails honestly and the client can reload onto the current
+# bundle. Existing asset files still take precedence over this rule.
+[[redirects]]
+from = "/assets/*"
+to = "/index.html"
+status = 404
+
 [[redirects]]
 from = "/*"
 to = "/index.html"
