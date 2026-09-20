@@ -81,15 +81,17 @@ const DiceContainer = ({
     const dieSize = 100
     const diceGap = 10
     const maxDicePerRow = 4
-    const boardPadding = 40
+    // The 3D faces extend past the Die component's 100px layout box. Reserve room so
+    // the top and bottom faces are entirely inside the scrollable board.
+    const boardInset = 60
     const totalRows = Math.max(1, Math.ceil(dice.length / maxDicePerRow))
-    const boardWidth =
-        Math.min(Math.max(dice.length, 1), maxDicePerRow) * (dieSize + diceGap) -
-        diceGap +
-        boardPadding
+    const diceGridWidth =
+        Math.min(Math.max(dice.length, 1), maxDicePerRow) * (dieSize + diceGap) - diceGap
+    const diceGridHeight = totalRows * (dieSize + diceGap) - diceGap
+    const boardWidth = diceGridWidth + boardInset * 2
     // This must grow with the number of rows. Previously the dice were centered in a
     // fixed-height absolute-positioning board, which put the first row above scrollTop 0.
-    const boardHeight = Math.max(250, totalRows * (dieSize + diceGap) - diceGap + boardPadding)
+    const boardHeight = Math.max(250, diceGridHeight + boardInset * 2)
 
     return (
         <Group
@@ -135,9 +137,8 @@ const DiceContainer = ({
 
                         const row = Math.floor(index / maxDicePerRow)
                         const col = index % maxDicePerRow
-                        const finalX = col * (dieSize + diceGap) + dieSize / 2 - boardWidth / 2 - 30
-                        const finalY =
-                            row * (dieSize + diceGap) + dieSize / 2 - boardHeight / 2 - 30
+                        const finalX = col * (dieSize + diceGap) + boardInset - boardWidth / 2
+                        const finalY = row * (dieSize + diceGap) + boardInset - boardHeight / 2
 
                         const randomOffset = random() > 0.5 ? 800 : -800
                         const randomOffsetX = (random() - 0.5) * 2000 + randomOffset
