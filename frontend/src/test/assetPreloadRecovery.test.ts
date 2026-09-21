@@ -3,6 +3,7 @@ import posthog from "posthog-js"
 import {
     handleAssetPreloadError,
     installAssetPreloadRecovery,
+    isPostAssetReloadLoad,
     reportAssetPreloadRecovery
 } from "~/utils/assetPreloadRecovery"
 
@@ -94,6 +95,7 @@ describe("reportAssetPreloadRecovery", () => {
         reportAssetPreloadRecovery()
 
         expect(posthog.capture).toHaveBeenCalledWith("asset-preload-recovered", { page: "/sheet" })
+        expect(isPostAssetReloadLoad()).toBe(true)
     })
 
     it("does not capture a recovery event on a normal load", () => {
