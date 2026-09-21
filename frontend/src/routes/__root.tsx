@@ -18,8 +18,12 @@ import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
     isFramelessSyntheticNoise,
     isResizeObserverLoopNoise,
+    isStaleAssetError,
+    STALE_ASSET_FINGERPRINT_RECOVERED,
+    STALE_ASSET_FINGERPRINT_UNRECOVERED,
     type ExceptionListEntry
 } from "~/utils/exceptionFilter"
+import { isPostAssetReloadLoad } from "~/utils/assetPreloadRecovery"
 import {
     monitorSupportConversationResources,
     warmSupportConversation
@@ -122,6 +126,18 @@ const posthogOptions: Partial<PostHogConfig> = {
 
             if (isResizeObserverLoopNoise(exceptionValue, exceptionMessage)) {
                 return null
+            }
+
+            // A stale-asset preload failure recovers by reloading, but Vite must
+            // rethrow it, so it still reaches error tracking under a frame that
+            // moves each deploy. Group every wording and deploy into one issue
+            // instead of one per deploy, and keep a reload that failed to recover
+            // the tab as a separate, visible failure.
+            if (isStaleAssetError(exceptionValue, exceptionMessage)) {
+                event.properties = event.properties || {}
+                event.properties.$exception_fingerprint = isPostAssetReloadLoad()
+                    ? STALE_ASSET_FINGERPRINT_UNRECOVERED
+                    : STALE_ASSET_FINGERPRINT_RECOVERED
             }
 
             try {

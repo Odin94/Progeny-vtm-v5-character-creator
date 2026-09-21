@@ -41,6 +41,13 @@ export const handleAssetPreloadError = () => {
     window.location.reload()
 }
 
+// Set once when this page load follows a preload-triggered reload. The exception
+// filter reads it to tell a genuine post-reload failure (the reload did not fix the
+// tab) from a first, still-recoverable failure.
+let loadedAfterAssetReload = false
+
+export const isPostAssetReloadLoad = () => loadedAfterAssetReload
+
 // Records the recovery when this load follows a preload-triggered reload, so
 // recovered reloads become measurable against preload failures.
 export const reportAssetPreloadRecovery = () => {
@@ -48,6 +55,7 @@ export const reportAssetPreloadRecovery = () => {
         return
     }
 
+    loadedAfterAssetReload = true
     trackAssetPreloadRecovered(window.location.pathname)
 }
 
