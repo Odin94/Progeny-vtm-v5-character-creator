@@ -43,23 +43,43 @@ describe("character recovery telemetry", () => {
         expect(JSON.stringify(properties)).not.toContain(character.notes)
     })
 
-    it("names the underlying fault and fingerprints it stably on compatibility failures", () => {
-        const cause = new Error("primitive predator type")
-        const underlying = new TypeError("Cannot create property 'x' on string 'y'", { cause })
+    it("names and groups compatibility faults without uploading raw messages or causes", () => {
+        const underlying = new TypeError("Cannot create property on private save text", {
+            cause: new Error("private nested cause")
+        })
         reportCharacterValidationError(underlying, "local-storage", "compatibility", {
             id: "compat-1",
             version: 5
         })
-        expect(posthog.captureException).toHaveBeenCalledOnce()
         const [exception, properties] = vi.mocked(posthog.captureException).mock.calls[0]
-        expect((exception as Error).cause).toBe(underlying)
         expect(properties).toMatchObject({
-            validation_phase: "compatibility",
             error_name: "TypeError",
-            error_message: underlying.message,
-            error_cause: "Error: primitive predator type",
             $exception_fingerprint: "CharacterValidationError:local-storage:compatibility:TypeError"
         })
+        expect((exception as Error).cause).toBeUndefined()
+        expect((exception as Error).message).not.toContain("private")
+        expect(JSON.stringify(properties)).not.toContain("private")
+    })
+
+    it("does not upload JSON parser excerpts or invalid record keys through Zod messages", () => {
+        reportCharacterValidationError(
+            new SyntaxError('Unexpected token in "private excerpt"'),
+            "json-import",
+            "json"
+        )
+        const result = characterSchema.safeParse({
+            ...getEmptyCharacter(),
+            disciplineLevels: { "private key": -1 }
+        })
+        if (result.success) throw new Error("Expected invalid fixture")
+        reportCharacterValidationError(result.error, "api", "schema", { id: "private-test" })
+        for (const [exception, properties] of vi.mocked(posthog.captureException).mock.calls) {
+            expect((exception as Error).cause).toBeUndefined()
+            expect((exception as Error).message).not.toContain("private excerpt")
+            expect(JSON.stringify(properties)).not.toContain("private excerpt")
+            expect((exception as Error).message).not.toContain("private key")
+            expect(JSON.stringify(properties)).not.toContain("private key")
+        }
     })
 
     it("reports API character validation errors", () => {

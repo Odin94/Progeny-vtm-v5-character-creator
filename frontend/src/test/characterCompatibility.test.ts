@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
     applyCharacterCompatibilityPatches,
+    characterSchema,
     getDisciplineLevelsFromPowers,
     decreaseDisciplineLevelForPower,
     getCharacterExcludedMeritsAndFlaws,
@@ -41,6 +42,17 @@ describe("character compatibility patches", () => {
             }
 
             expect(() => applyCharacterCompatibilityPatches(parsed)).not.toThrow()
+        }
+    })
+
+    it("leaves malformed object slots for validation instead of silently resetting them", () => {
+        for (const slot of ["predatorType", "ephemeral"] as const) {
+            for (const value of [25, "legacy", true, []]) {
+                const parsed = { ...getEmptyCharacter(), [slot]: value }
+                expect(() => applyCharacterCompatibilityPatches(parsed)).not.toThrow()
+                expect(parsed[slot]).toEqual(value)
+                expect(characterSchema.safeParse(parsed).success).toBe(false)
+            }
         }
     })
 
