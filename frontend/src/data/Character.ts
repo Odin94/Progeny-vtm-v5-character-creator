@@ -353,7 +353,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     if (!parsed["chronicle"]) parsed["chronicle"] = ""
     if (!parsed["sect"]) parsed["sect"] = ""
     if (!parsed["customDisciplines"]) parsed["customDisciplines"] = {}
-    if (!isRecord(parsed["ephemeral"])) {
+    if (parsed["ephemeral"] == null) {
         // backwards compatibility for characters that were saved before ephemeral was added
         parsed["ephemeral"] = {
             hunger: 0,
@@ -364,7 +364,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
             humanityStains: 0,
             experienceSpent: 0
         }
-    } else {
+    } else if (isRecord(parsed["ephemeral"])) {
         // Ensure all ephemeral fields exist, defaulting to 0 if missing
         const ephemeral = parsed["ephemeral"]
         parsed["ephemeral"] = {

@@ -23,21 +23,26 @@ export const reportCharacterValidationError = (
         const issues =
             error instanceof z.ZodError
                 ? error.issues.map((issue) => ({
-                      path: issue.path.map(String).join("."),
+                      path: issue.path
+                          .map((part, index) =>
+                              (index === 1 &&
+                                  ["disciplineLevels", "customDisciplines"].includes(
+                                      String(issue.path[0])
+                                  )) ||
+                              (issue.code === "invalid_key" && index === issue.path.length - 1)
+                                  ? "[entry]"
+                                  : String(part)
+                          )
+                          .join("."),
                       code: issue.code
                   }))
                 : []
-        // A compatibility-phase failure is a plain error (e.g. a TypeError), not a Zod
-        // error. Keep its name, message, and cause so the capture names the real fault
-        // instead of pointing at this helper.
+        // Parser/Zod/TypeError messages and causes can contain save contents. Keep
+        // structured issue codes and the error class, never the raw diagnostic text.
         const underlyingName = error instanceof Error ? error.name : typeof error
-        const underlyingMessage = error instanceof Error ? error.message : String(error)
-        const underlyingCause =
-            error instanceof Error && error.cause !== undefined
-                ? error.cause instanceof Error
-                    ? `${error.cause.name}: ${error.cause.message}`
-                    : String(error.cause)
-                : undefined
+        const safeMessage = issues.length
+            ? issues.map((issue) => `${issue.path}: ${issue.code}`).join(", ")
+            : `${underlyingName} during ${phase}`
         // Group one fault as one issue regardless of which mounted consumer raised it, so
         // differing React frames above the deserializer do not split it across issues.
         const issueSignature = issues.map((i) => `${i.path}:${i.code}`).join("|")
@@ -49,8 +54,6 @@ export const reportCharacterValidationError = (
             validation_phase: phase,
             validation_issues: issues,
             error_name: underlyingName,
-            error_message: underlyingMessage,
-            error_cause: underlyingCause,
             $exception_fingerprint: fingerprint
         }
         // Throttle on the stable fingerprint (plus character id), not the serialized payload:
@@ -61,8 +64,7 @@ export const reportCharacterValidationError = (
         // once per minute rather than creating an exception for every render/query retry.
         if (recentErrors.has(key) && now - recentErrors.get(key)! < 60_000) return
         const exception = new Error(
-            `Character validation failed (${source}, ${phase}): ${underlyingName}: ${underlyingMessage}`,
-            error instanceof Error ? { cause: error } : undefined
+            `Character validation failed (${source}, ${phase}): ${safeMessage}`
         )
         exception.name = "CharacterValidationError"
         posthog.captureException(exception, properties)
