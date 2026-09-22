@@ -106,7 +106,6 @@ const BrokenSaveModal = () => {
                         {recoveryError}
                     </Text>
                 )}
-                <Divider my="sm" />
                 <Text size="sm">
                     <strong>Error details:</strong> {describeBrokenAttribute(brokenError)}
                 </Text>
