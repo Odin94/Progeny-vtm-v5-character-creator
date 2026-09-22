@@ -44,3 +44,14 @@ export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
     candidates.some(
         (candidate) => typeof candidate === "string" && RESIZE_OBSERVER_LOOP_NOISE.test(candidate)
     )
+
+// Asset-load failures have several browser wordings. They may come from stale
+// bundles, network failures, or hosting errors; the message alone cannot prove
+// the cause or successful recovery. Group them without dropping occurrences.
+const STALE_ASSET_NOISE =
+    /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS|is not a valid JavaScript MIME type/
+
+export const isStaleAssetError = (...candidates: unknown[]) =>
+    candidates.some(
+        (candidate) => typeof candidate === "string" && STALE_ASSET_NOISE.test(candidate)
+    )

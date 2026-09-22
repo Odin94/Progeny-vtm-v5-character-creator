@@ -18,8 +18,10 @@ import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
     isFramelessSyntheticNoise,
     isResizeObserverLoopNoise,
+    isStaleAssetError,
     type ExceptionListEntry
 } from "~/utils/exceptionFilter"
+import { getAssetReloadState } from "~/utils/assetPreloadRecovery"
 import {
     monitorSupportConversationResources,
     warmSupportConversation
@@ -114,6 +116,15 @@ const posthogOptions: Partial<PostHogConfig> = {
                 exceptionMessage.includes("not a child of this node")
             ) {
                 return null
+            }
+
+            // Keep asset-load failures visible and group them by the recovery
+            // action actually taken. Requesting a reload does not prove recovery.
+            if (isStaleAssetError(exceptionValue, exceptionMessage)) {
+                event.properties = event.properties || {}
+                const state = getAssetReloadState()
+                event.properties.$exception_fingerprint = `asset-preload:${state}`
+                event.properties.asset_reload_state = state
             }
 
             if (isFramelessSyntheticNoise(exceptionListEntry)) {

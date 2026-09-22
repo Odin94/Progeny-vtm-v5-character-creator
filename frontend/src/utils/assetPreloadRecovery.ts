@@ -20,8 +20,19 @@ const reloadedWithinGuard = () => {
     return Date.now() - timestamp < RELOAD_GUARD_MS
 }
 
+type AssetReloadState = "reload-requested" | "reload-blocked" | "unattempted"
+let lastAttempt: { at: number; state: AssetReloadState } | undefined
+
+// A reload request is not proof that the next page successfully loads. Only
+// describe what this page's handler actually did, and expire old attempts.
+export const getAssetReloadState = (): AssetReloadState =>
+    lastAttempt && Date.now() - lastAttempt.at < RELOAD_GUARD_MS ? lastAttempt.state : "unattempted"
+
 export const handleAssetPreloadError = () => {
     if (reloadedWithinGuard()) {
+        if (getAssetReloadState() !== "reload-requested") {
+            lastAttempt = { at: Date.now(), state: "reload-blocked" }
+        }
         return
     }
 
@@ -29,6 +40,7 @@ export const handleAssetPreloadError = () => {
         window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()))
     } catch {
         // Without the guard a reload could loop, so leave the error to surface.
+        lastAttempt = { at: Date.now(), state: "reload-blocked" }
         return
     }
 
@@ -38,6 +50,7 @@ export const handleAssetPreloadError = () => {
     // makes the failed import() resolve empty, so React's lazy reads `.default`
     // off nothing and crashes. Left thrown, the error reaches the boundary,
     // which shows a retry until the reload lands.
+    lastAttempt = { at: Date.now(), state: "reload-requested" }
     window.location.reload()
 }
 
