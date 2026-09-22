@@ -10,6 +10,13 @@ const RELOAD_TIMESTAMP_KEY = "asset-preload-reload-at"
 // longer serves, so a repeated failure must surface instead of looping.
 const RELOAD_GUARD_MS = 30_000
 
+// The reload timestamp already reported as recovered. The reload timestamp stays
+// in sessionStorage for the whole guard window so the loop guard keeps working,
+// so a plain manual reload in that window would otherwise report the same
+// recovery again. This marker records the one reload that was counted, so each
+// reload the handler requested is measured exactly once.
+const RECOVERY_REPORTED_KEY = "asset-preload-recovery-reported-at"
+
 const reloadedWithinGuard = () => {
     let timestamp = 0
     try {
@@ -54,11 +61,25 @@ export const handleAssetPreloadError = () => {
     window.location.reload()
 }
 
-// Records the recovery when this load follows a preload-triggered reload, so
-// recovered reloads become measurable against preload failures.
+// Records the recovery when this load follows a reload the handler requested, so
+// recovered reloads become measurable against preload failures. Reports once per
+// requested reload: a later manual reload in the same guard window does not add a
+// second recovery for the one reload the handler asked for.
 export const reportAssetPreloadRecovery = () => {
     if (!reloadedWithinGuard()) {
         return
+    }
+
+    try {
+        const requestedAt = window.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY) ?? ""
+        if (window.sessionStorage.getItem(RECOVERY_REPORTED_KEY) === requestedAt) {
+            return
+        }
+        window.sessionStorage.setItem(RECOVERY_REPORTED_KEY, requestedAt)
+    } catch {
+        // sessionStorage can throw in private modes. The guard window still
+        // expires the reload timestamp, so at worst one reload is miscounted,
+        // never a reload loop.
     }
 
     trackAssetPreloadRecovered(window.location.pathname)

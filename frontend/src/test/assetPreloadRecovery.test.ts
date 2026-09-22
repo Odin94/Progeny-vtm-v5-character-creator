@@ -144,4 +144,24 @@ describe("reportAssetPreloadRecovery", () => {
 
         expect(posthog.capture).not.toHaveBeenCalled()
     })
+
+    it("captures only once when a manual reload repeats within the guard window", () => {
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()))
+
+        reportAssetPreloadRecovery()
+        reportAssetPreloadRecovery()
+
+        expect(posthog.capture).toHaveBeenCalledTimes(1)
+    })
+
+    it("captures again after the handler requests a fresh reload", () => {
+        const now = Date.now()
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(now))
+        reportAssetPreloadRecovery()
+
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(now + 1))
+        reportAssetPreloadRecovery()
+
+        expect(posthog.capture).toHaveBeenCalledTimes(2)
+    })
 })
