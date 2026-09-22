@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
     isFramelessSyntheticNoise,
     isResizeObserverLoopNoise,
+    isStaleAssetError,
     type ExceptionListEntry
 } from "~/utils/exceptionFilter"
 
@@ -106,5 +107,49 @@ describe("isResizeObserverLoopNoise", () => {
 
     it("ignores non-string candidates", () => {
         expect(isResizeObserverLoopNoise(undefined, null, 42, {})).toBe(false)
+    })
+})
+
+describe("isStaleAssetError", () => {
+    it("matches the Chrome dynamic-import wording", () => {
+        expect(
+            isStaleAssetError(
+                "Failed to fetch dynamically imported module: https://example.com/assets/MePage-B_HkY_2N.js"
+            )
+        ).toBe(true)
+    })
+
+    it("matches the Firefox dynamic-import wording", () => {
+        expect(
+            isStaleAssetError(
+                "error loading dynamically imported module: https://example.com/assets/MePage-B_HkY_2N.js"
+            )
+        ).toBe(true)
+    })
+
+    it("matches the Safari dynamic-import wording", () => {
+        expect(isStaleAssetError("Importing a module script failed.")).toBe(true)
+    })
+
+    it("matches the CSS preload wording", () => {
+        expect(
+            isStaleAssetError("Unable to preload CSS for /assets/OrnamentalDivider-CoDzv7nW.css")
+        ).toBe(true)
+    })
+
+    it("matches the SPA-fallback MIME wording", () => {
+        expect(isStaleAssetError("'text/html' is not a valid JavaScript MIME type.")).toBe(true)
+    })
+
+    it("matches across several candidates", () => {
+        expect(isStaleAssetError(undefined, "Importing a module script failed.")).toBe(true)
+    })
+
+    it("keeps unrelated exception messages", () => {
+        expect(isStaleAssetError("TypeError: cannot read property of undefined")).toBe(false)
+    })
+
+    it("ignores non-string candidates", () => {
+        expect(isStaleAssetError(undefined, null, 42, {})).toBe(false)
     })
 })
