@@ -339,11 +339,17 @@ export const decreaseDisciplineLevelForPower = (
     }
 }
 
+// A legacy save can hold a primitive where an object is expected. Patching such a
+// slot as an object throws a raw TypeError; guard the casts so validation raises a
+// readable Zod error and the recovery flow can act on it instead.
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+    value !== null && typeof value === "object" && !Array.isArray(value)
+
 export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknown>): void => {
     if (!parsed["rituals"]) parsed["rituals"] = []
     if (!parsed["ceremonies"]) parsed["ceremonies"] = []
-    if (parsed["predatorType"]) {
-        const predatorType = parsed["predatorType"] as Record<string, unknown>
+    if (isRecord(parsed["predatorType"])) {
+        const predatorType = parsed["predatorType"]
         if (!predatorType["pickedMeritsAndFlaws"]) {
             predatorType["pickedMeritsAndFlaws"] = []
         }
@@ -361,7 +367,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     if (!parsed["chronicle"]) parsed["chronicle"] = ""
     if (!parsed["sect"]) parsed["sect"] = ""
     if (!parsed["customDisciplines"]) parsed["customDisciplines"] = {}
-    if (!parsed["ephemeral"]) {
+    if (parsed["ephemeral"] == null) {
         // backwards compatibility for characters that were saved before ephemeral was added
         parsed["ephemeral"] = {
             hunger: 0,
@@ -372,9 +378,9 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
             humanityStains: 0,
             experienceSpent: 0
         }
-    } else {
+    } else if (isRecord(parsed["ephemeral"])) {
         // Ensure all ephemeral fields exist, defaulting to 0 if missing
-        const ephemeral = parsed["ephemeral"] as Record<string, unknown>
+        const ephemeral = parsed["ephemeral"]
         parsed["ephemeral"] = {
             hunger: ephemeral["hunger"] ?? 0,
             superficialDamage: ephemeral["superficialDamage"] ?? 0,
@@ -469,8 +475,8 @@ export const patchV2ToV3Compatibility = (parsed: Record<string, unknown>): void 
         })
     }
 
-    if (parsed["predatorType"]) {
-        const predatorType = parsed["predatorType"] as Record<string, unknown>
+    if (isRecord(parsed["predatorType"])) {
+        const predatorType = parsed["predatorType"]
         if (Array.isArray(predatorType["pickedMeritsAndFlaws"])) {
             predatorType["pickedMeritsAndFlaws"].forEach((meritFlaw: unknown) => {
                 if (meritFlaw && typeof meritFlaw === "object") {
