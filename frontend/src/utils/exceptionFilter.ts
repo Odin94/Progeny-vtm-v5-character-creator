@@ -45,14 +45,9 @@ export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
         (candidate) => typeof candidate === "string" && RESIZE_OBSERVER_LOOP_NOISE.test(candidate)
     )
 
-// A deploy replaces the hashed asset filenames. A tab still on the old bundle then
-// requests assets the host no longer serves; the SPA rewrite returns index.html in
-// their place, so a lazy import() or CSS preload fails. Browsers word this failure
-// several ways across /sheet, /me, and /. The minified frame moves each release and
-// no source maps are uploaded, so each deploy would otherwise open a fresh issue id
-// for one already-handled fault. assetPreloadRecovery.ts reloads the tab onto the
-// current bundle, but Vite must rethrow for the reload to work, so the error still
-// reaches error tracking. The regex covers the known wordings.
+// Asset-load failures have several browser wordings. They may come from stale
+// bundles, network failures, or hosting errors; the message alone cannot prove
+// the cause or successful recovery. Group them without dropping occurrences.
 const STALE_ASSET_NOISE =
     /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS|is not a valid JavaScript MIME type/
 
@@ -60,9 +55,3 @@ export const isStaleAssetError = (...candidates: unknown[]) =>
     candidates.some(
         (candidate) => typeof candidate === "string" && STALE_ASSET_NOISE.test(candidate)
     )
-
-// A stable fingerprint groups every wording and deploy into one issue instead of one
-// per deploy. The recovered class collapses the handled reload; the unrecovered class
-// stays separate so a reload that failed to fix the tab remains a visible failure.
-export const STALE_ASSET_FINGERPRINT_RECOVERED = "stale-asset-preload-recovered"
-export const STALE_ASSET_FINGERPRINT_UNRECOVERED = "stale-asset-preload-unrecovered"
