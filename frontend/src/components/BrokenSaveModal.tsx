@@ -114,8 +114,15 @@ const BrokenSaveModal = () => {
                 {repair.success ? (
                     <Stack>
                         <Alert color="yellow" title="Automatic repair may cause partial data loss" />
-                        <ScrollArea.Autosize mah={300}>
-                            <List size="sm" spacing="xs">
+                        <ScrollArea.Autosize mah={300} offsetScrollbars>
+                            <List
+                                size="sm"
+                                spacing="xs"
+                                styles={{
+                                    itemWrapper: { maxWidth: "100%" },
+                                    itemLabel: { overflowWrap: "anywhere" }
+                                }}
+                            >
                                 {repair.changes.map((change, index) => (
                                     <List.Item key={index}>{change.description}</List.Item>
                                 ))}
