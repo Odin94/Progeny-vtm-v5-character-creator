@@ -3,6 +3,7 @@ import {
     applyCharacterCompatibilityPatches,
     characterSchema,
     getEmptyCharacter,
+    isRecord as isObject,
     type Character
 } from "~/data/Character"
 
@@ -19,8 +20,6 @@ export type CharacterRepairPreview =
     | { success: false; error: string }
 
 type Repair = { value: unknown; changes: CharacterRepairChange[] }
-const isObject = (value: unknown): value is Record<string, unknown> =>
-    value !== null && typeof value === "object" && !Array.isArray(value)
 const clone = <T>(value: T): T => structuredClone(value)
 const humanize = (key: string) =>
     key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase())
