@@ -3,7 +3,7 @@ import posthog from "posthog-js"
 import {
     handleAssetPreloadError,
     installAssetPreloadRecovery,
-    isPostAssetReloadLoad,
+    getAssetReloadState,
     reportAssetPreloadRecovery
 } from "~/utils/assetPreloadRecovery"
 
@@ -31,9 +31,13 @@ const dispatchVitePreloadError = (error: Error) => {
 
 describe("handleAssetPreloadError", () => {
     let reload: ReturnType<typeof vi.fn>
+    let now = Date.now()
 
     beforeEach(() => {
         vi.clearAllMocks()
+        vi.useFakeTimers()
+        now += 60_000
+        vi.setSystemTime(now)
         window.sessionStorage.clear()
         reload = vi.fn()
         delete (window as { location?: Location }).location
@@ -44,6 +48,8 @@ describe("handleAssetPreloadError", () => {
     })
 
     afterEach(() => {
+        vi.useRealTimers()
+        vi.restoreAllMocks()
         window.removeEventListener("vite:preloadError", handleAssetPreloadError)
         delete (window as { location?: Location }).location
         ;(window as unknown as { location: Location }).location = originalLocation
@@ -52,6 +58,7 @@ describe("handleAssetPreloadError", () => {
     it("records a reload timestamp and reloads on the first preload failure", () => {
         handleAssetPreloadError()
 
+        expect(getAssetReloadState()).toBe("reload-requested")
         expect(reload).toHaveBeenCalledOnce()
         expect(window.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).not.toBeNull()
     })
@@ -61,6 +68,7 @@ describe("handleAssetPreloadError", () => {
 
         handleAssetPreloadError()
 
+        expect(getAssetReloadState()).toBe("reload-blocked")
         expect(reload).not.toHaveBeenCalled()
     })
 
@@ -69,7 +77,32 @@ describe("handleAssetPreloadError", () => {
 
         handleAssetPreloadError()
 
+        expect(getAssetReloadState()).toBe("reload-requested")
         expect(reload).toHaveBeenCalledOnce()
+    })
+
+    it("marks storage failures as blocked instead of recovered", () => {
+        vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+            throw new Error("denied")
+        })
+        handleAssetPreloadError()
+        expect(reload).not.toHaveBeenCalled()
+        expect(getAssetReloadState()).toBe("reload-blocked")
+    })
+
+    it("does not classify an unrelated later failure using an old reload attempt", () => {
+        handleAssetPreloadError()
+        vi.advanceTimersByTime(30_001)
+        expect(getAssetReloadState()).toBe("unattempted")
+        handleAssetPreloadError()
+        expect(getAssetReloadState()).toBe("reload-requested")
+    })
+
+    it("keeps duplicate failures during an in-flight reload in the same group", () => {
+        handleAssetPreloadError()
+        handleAssetPreloadError()
+        expect(reload).toHaveBeenCalledOnce()
+        expect(getAssetReloadState()).toBe("reload-requested")
     })
 
     it("reloads while leaving the preload failure for the error boundary", () => {
@@ -78,6 +111,7 @@ describe("handleAssetPreloadError", () => {
 
         expect(() => dispatchVitePreloadError(error)).toThrow(error)
 
+        expect(getAssetReloadState()).toBe("reload-requested")
         expect(reload).toHaveBeenCalledOnce()
     })
 })
@@ -95,7 +129,6 @@ describe("reportAssetPreloadRecovery", () => {
         reportAssetPreloadRecovery()
 
         expect(posthog.capture).toHaveBeenCalledWith("asset-preload-recovered", { page: "/sheet" })
-        expect(isPostAssetReloadLoad()).toBe(true)
     })
 
     it("does not capture a recovery event on a normal load", () => {
