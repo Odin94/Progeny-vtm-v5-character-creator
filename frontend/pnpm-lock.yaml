@@ -100,8 +100,8 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
       posthog-js:
-        specifier: ^1.406.2
-        version: 1.406.2
+        specifier: ^1.434.18
+        version: 1.434.18(@types/react@19.2.15)(react@19.2.6)
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -932,19 +932,19 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
-  '@posthog/browser-common@0.2.0':
-    resolution: {integrity: sha512-w+/0/Be/x48uNM7d/M37ZimSGwhuh8WBSvx61xzKzFnuoV5HqmH7GNDhaM3E3exXoBZmWNPS8hM/Ufy8zoOQSg==}
+  '@posthog/browser-common@0.9.0':
+    resolution: {integrity: sha512-EWoVzs1vVY7ihpn8yOjj3jyjriHUEEMVSBNL/TW3hk09fTriWRe76vJXrRg0G0yjTYxHmtlSkNn4mOV24ZEzzA==}
 
   '@posthog/cli@0.7.34':
     resolution: {integrity: sha512-wrRwj0FhbypW01TLpFRo1HkPBrwZHKP2tFE9xI4NTb84yMKZnXy49ibBdbImktJ5NbW7ndeWidOCZx+2Lkk7/Q==}
     engines: {node: '>=14.14', npm: '>=6'}
     hasBin: true
 
-  '@posthog/core@1.44.0':
-    resolution: {integrity: sha512-uE+mdKvetxNQC6gWQf4MHIH8bGt+JN6z7ho0A4G3t9G1VGQTx9wHYHNwkKf3gzi+1oAXS9ej2VVY4pjWUU2PWg==}
+  '@posthog/core@1.55.2':
+    resolution: {integrity: sha512-2mYxGbDmTLUs096VbcZqSWo0lrI48/BrX65r54NynxxFq409BOx9w73HxOAtOKZ1vblkdV6/GxQTe7KDcIQidg==}
 
-  '@posthog/types@1.397.1':
-    resolution: {integrity: sha512-W/LpWbKVaaUnfZKuFuHa+Dg03D+fC87cM+PQbG+59JcSPW8F0JcBtSoXmpfrqbpuxUToMo+gktutrUkAb/KQBw==}
+  '@posthog/types@1.412.4':
+    resolution: {integrity: sha512-Q7lV9O9TbLngjOYw1ucm3bS3tn48xb1B4ZQdDy8gv7yfKe99hCTeWYG4xZ36nJM80VxpTF9TriiJt5hngDOkBg==}
 
   '@rolldown/binding-android-arm64@1.0.3':
     resolution: {integrity: sha512-454rs7jHngixp/NMxd5srYD57OnzSlZ/eFTETjORQHLwJG1lRtmNOJcBerZlfu4GjKqeq8aCCIQrMdHyhI51Hw==}
@@ -1470,8 +1470,8 @@ packages:
   cookie-es@3.1.1:
     resolution: {integrity: sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==}
 
-  core-js@3.49.0:
-    resolution: {integrity: sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==}
+  core-js@3.50.0:
+    resolution: {integrity: sha512-BRWgOLKkFeCgRudR6zrs8p9XJZcE14grzKMMssoYrk6krtuEZ7MTKPIY5RzOnqsEKIR9kst7wNzphttraT+Yqw==}
 
   cosmiconfig@7.1.0:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
@@ -2103,11 +2103,19 @@ packages:
     resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.406.2:
-    resolution: {integrity: sha512-HNJO6Llro79s3x/ScxGY7i+Tf/o+ctJkOc79vrnS6R1I3TzucfzfwgAip1JVnQHnkBPV4JE8hI6nUXMJdU113Q==}
+  posthog-js@1.434.18:
+    resolution: {integrity: sha512-GK2ueRSwD1BBwIBm/HgjJBhHWxL46TRIEwxVJYde5GOk6lq1gaklBSfMBdEBHgqIcFG5BgMmN3M0NqGZ+sDULw==}
+    peerDependencies:
+      '@types/react': '>=16.8.0'
+      react: '>=16.8.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
-  preact@10.29.7:
-    resolution: {integrity: sha512-DCHYrK/B10yUD3ZjLfhZ3WIE/9Vf9VFUODcRE2dRomTYDpJk6z6L9wecSfhfE6M9ZTHUdyQkoC46arIDhEV84Q==}
+  preact@10.29.8:
+    resolution: {integrity: sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==}
     peerDependencies:
       preact-render-to-string: '>=5'
     peerDependenciesMeta:
@@ -2580,8 +2588,11 @@ packages:
   web-vitals@5.2.0:
     resolution: {integrity: sha512-i2z98bEmaCqSDiHEDu+gHl/dmR4Q+TxFmG3/13KkMO+o8UxQzCqWaDRCiLgEa41nlO4VpXSI0ASa1xWmO9sBlA==}
 
-  web-vitals@5.3.0:
-    resolution: {integrity: sha512-q6LWsLatGYZp5VGBIOvbTj6JBV2nOmC8KvWztXBmwJcfFAzhwKwbOxhUH306XY3CcaZDUlSmSuNPBsCn0bFu+g==}
+  web-vitals@6.2.1:
+    resolution: {integrity: sha512-rLcLXA2sx6+9dE88NHFubwTtGxpK4yYBLj6qHPdFoCaLr0cXGb4efOqtKLlm4loGA4OEKHIQKMKzZkKyOh5ctw==}
+
+  web-vitals@6.2.2:
+    resolution: {integrity: sha512-oto5x6dLEgrRqfcWed+pZEUb2q6ikbFmqF54CRDhI/QGbn+qxC49b4C4OkbH+kb9C3a8shpFD3SgR9kRcs80ZQ==}
 
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
@@ -3275,20 +3286,20 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@posthog/browser-common@0.2.0':
+  '@posthog/browser-common@0.9.0':
     dependencies:
-      '@posthog/core': 1.44.0
-      '@posthog/types': 1.397.1
+      '@posthog/core': 1.55.2
+      '@posthog/types': 1.412.4
 
   '@posthog/cli@0.7.34':
     dependencies:
       detect-libc: 2.1.2
 
-  '@posthog/core@1.44.0':
+  '@posthog/core@1.55.2':
     dependencies:
-      '@posthog/types': 1.397.1
+      '@posthog/types': 1.412.4
 
-  '@posthog/types@1.397.1': {}
+  '@posthog/types@1.412.4': {}
 
   '@rolldown/binding-android-arm64@1.0.3':
     optional: true
@@ -3742,7 +3753,7 @@ snapshots:
 
   cookie-es@3.1.1: {}
 
-  core-js@3.49.0: {}
+  core-js@3.50.0: {}
 
   cosmiconfig@7.1.0:
     dependencies:
@@ -4493,21 +4504,25 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.406.2:
+  posthog-js@1.434.18(@types/react@19.2.15)(react@19.2.6):
     dependencies:
-      '@posthog/browser-common': 0.2.0
-      '@posthog/core': 1.44.0
-      '@posthog/types': 1.397.1
-      core-js: 3.49.0
+      '@posthog/browser-common': 0.9.0
+      '@posthog/core': 1.55.2
+      '@posthog/types': 1.412.4
+      core-js: 3.50.0
       dompurify: 3.4.13
       fflate: 0.4.9
-      preact: 10.29.7
+      preact: 10.29.8
       query-selector-shadow-dom: 1.0.1
-      web-vitals: 5.3.0
+      web-vitals: 6.2.2
+      web-vitals-soft-navs: web-vitals@6.2.1
+    optionalDependencies:
+      '@types/react': 19.2.15
+      react: 19.2.6
     transitivePeerDependencies:
       - preact-render-to-string
 
-  preact@10.29.7: {}
+  preact@10.29.8: {}
 
   pretty-format@27.5.1:
     dependencies:
@@ -4973,7 +4988,9 @@ snapshots:
 
   web-vitals@5.2.0: {}
 
-  web-vitals@5.3.0: {}
+  web-vitals@6.2.1: {}
+
+  web-vitals@6.2.2: {}
 
   webidl-conversions@8.0.1: {}
 
