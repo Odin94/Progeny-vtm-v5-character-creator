@@ -1,10 +1,10 @@
 # Progeny deep bug review — 2026-10-03
 
-**5 confirmed open findings: 4 high and 1 medium.** Each report includes reproduction, observed impact, cause, a suggested fix, and a regression check.
+**All 5 findings fixed and verified: 4 high and 1 medium.** The original reproductions, causes and fix suggestions remain below as historical audit evidence. Each report records its implemented fix.
 
-Initial committed snapshot: `4a93b19`. Final revalidation: `1598820` plus documentation-only review commits. The separate worktree is on `chore/odin/deep-bug-review`. The primary checkout's uncommitted architecture work was not reviewed or changed. Nothing was pushed and no PR was created.
+Original audit snapshots: `4a93b19`, then revalidation at `1598820` with documentation-only review commits. Fixes are committed as `c0d5d89` and `df8b153` on the separate worktree branch `fix/odin/review-bug-fixes`. The primary checkout's uncommitted architecture work was not reviewed or changed. Nothing was pushed and no PR was created.
 
-## Findings
+## Original findings — now fixed
 
 | ID                                                | Severity | Observed bug                                            |
 | ------------------------------------------------- | -------- | ------------------------------------------------------- |
@@ -16,9 +16,9 @@ Initial committed snapshot: `4a93b19`. Final revalidation: `1598820` plus docume
 
 ## Verification and scope
 
-Frontend: 370 tests; backend: 71 tests. Frontend typecheck and backend TypeScript build pass. Frontend production bundling was run with `pnpm exec vite build`; the normal build script additionally uploads PostHog sourcemaps, which was intentionally not invoked.
+Final fix verification: frontend **382 passing tests across 76 files**; backend **75 passing tests across 14 files**. The initial audit baseline had 370 frontend tests and 71 backend tests. Formatting and lint pass. Frontend typecheck and backend TypeScript build pass. Frontend production bundling was run with `pnpm exec vite build`; the normal build script additionally uploads PostHog sourcemaps, which was intentionally not invoked.
 
-All three apps were launched locally against disposable SQLite databases. Browser/API probes cover anonymous persistence, cross-tab editing, import/export, authenticated sync, conflicts, reload/recovery, character switching, and the reported interaction bugs. Default sheets were inspected at 390 × 844 with no horizontal overflow or page errors. Passing existing tests did not prevent the reported bugs.
+All three apps were launched locally against disposable SQLite databases. Browser/API probes cover anonymous persistence, cross-tab editing, import/export, authenticated sync, conflicts, reload/recovery, character switching, and the reported interaction bugs. Default sheets were inspected at 390 × 844 with no horizontal overflow or page errors. The original failing browser/API paths were rerun after implementation and now pass.
 
 Progeny authentication verification uses fixture users at the WorkOS boundary; Hiveborn and CozyCrowns use their built-in local sign-in. Live WorkOS login, real multi-device networks, production data, and production latency were not tested. Fixtures and failure injection are identified in the individual reports. They do not change app source or reset any limits.
 
@@ -31,4 +31,10 @@ Shared [browser results](../../../evidence/browser-results.json), [screenshots](
 
 ## Fix status
 
-All five findings have implementations and regression coverage on `fix/odin/review-bug-fixes`. Independent review and running-app verification are performed before handoff. Recovery drafts can be downloaded from the character sheet menu.
+All five findings are fixed on `fix/odin/review-bug-fixes`. Expected save revisions prevent stale REST and WebSocket writes. Unicode imports preserve exact text. Pending edits remain attached to their source draft, and recovered downloads open as separate unsaved characters. Restored dirty drafts resume cloud saving; divergent drafts are retained with a visible warning.
+
+Independent review round 1 identified three actionable issues: preserve buffered edits during same-character cloud field replacement; reset input identity before acknowledgement shortcuts; and clear original cloud identity when downloading a recovery copy. Those changes and permanent regressions were committed in `df8b153`. Independent review round 2 found **no further actionable feedback**.
+
+The 10-test adversarial review suite passes. Native browser checks confirm P01–P05, including actual UTF-8 file selection/import, real REST/WebSocket concurrency protection, cross-tab textarea switching, restored autosave and cloud-conflict recovery. The recovery dialog was also opened and inspected in the running app. See [fix evidence](../../../evidence/fixes/) and [recovery screenshot](../../../evidence/fixes/progeny-recovery.png).
+
+Regression tests include `characterConcurrency.test.ts`, `characterAutosave.test.tsx`, `debouncedFieldIdentity.test.tsx`, `jsonImport.test.ts`, and `recoveredCharacterCopy.test.ts`. No database schema change was required. Nothing was pushed and no PR was created.

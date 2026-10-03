@@ -1,5 +1,7 @@
 # P03 — Generator import silently corrupts non-ASCII text
 
+**Status: Fixed and verified** on `fix/odin/review-bug-fixes` (`c0d5d89`, with review follow-ups in `df8b153`). Original reproduction and cause below are historical; the implemented fix is recorded at the end.
+
 Severity: **High**. Confirmed through the actual file picker and overwrite confirmation at `4a93b19`; screenshot: `../../../evidence/progeny-unicode-import.png`.
 
 Revalidated on committed revision `1598820` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
