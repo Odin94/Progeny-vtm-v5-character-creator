@@ -25,3 +25,7 @@ Regression: switch between two characters with identical initial values during a
 Implemented local draft identities, identity checks in functional delayed writes, identity-aware memoization and cancellation on document replacement. Interrupted text/number edits are preserved as full JSON recovery drafts using the latest source snapshot; the sheet menu offers recovery downloads.
 
 Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.
+
+### Review round 1 follow-up
+
+Preserve pending string and number edits before same-character cloud field replacements, using the latest known pre-replacement source snapshot. Reset identity and input state before processing acknowledgement shortcuts. Added adversarial regression tests for both paths.

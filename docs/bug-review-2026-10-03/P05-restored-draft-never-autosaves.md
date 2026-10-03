@@ -27,3 +27,7 @@ Regression: edit offline, reload, reconnect without another edit; verify eventua
 Implemented comparison with the fetched owned cloud document rather than assuming the restored local document is saved. Confirmed bases are stored separately and advance only after acknowledged saves. Dirty drafts with matching cloud revisions resume saving; clean old bases adopt remote changes. Divergent drafts are kept locally, backed up and paused with a visible conflict notice.
 
 Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.
+
+### Review round 1 follow-up
+
+Recovery downloads now clear the cloud ID and save revision, so importing them opens a separate unsaved draft. Stored recovery entries retain the original source ID/revision as provenance. Added export/import regression coverage.

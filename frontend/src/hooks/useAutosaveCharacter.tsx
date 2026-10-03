@@ -54,7 +54,7 @@ const notifyConflict = () =>
         id: "character-save-conflict",
         title: "Newer cloud changes found",
         message:
-            "Your local draft is kept on this device. Export it or save a copy from your account before loading the cloud version.",
+            "Your local draft is kept on this device. Use Recover interrupted drafts in the sheet menu to download a separate copy before loading the cloud version.",
         color: "yellow",
         autoClose: false
     })

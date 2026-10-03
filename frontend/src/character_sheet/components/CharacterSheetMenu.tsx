@@ -1,4 +1,4 @@
-import { readRecoveredCharacterDrafts } from "~/utils/characterDraft"
+import { createRecoveredCharacterCopy, readRecoveredCharacterDrafts } from "~/utils/characterDraft"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
@@ -303,7 +303,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             </Text>
                             <Button
                                 variant="light"
-                                onClick={() => void downloadJson(draft.character)}
+                                onClick={() =>
+                                    void downloadJson(createRecoveredCharacterCopy(draft.character))
+                                }
                             >
                                 Download recovered draft {index + 1}
                             </Button>

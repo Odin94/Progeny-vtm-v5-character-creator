@@ -17,11 +17,27 @@ export const retainCharacterDraftIdentity = (previous: Character, next: Characte
 }
 
 const latestDrafts = new Map<string, Character>()
+const previousDrafts = new Map<string, Character>()
 export const rememberCharacterDraft = (character: Character) => {
-    latestDrafts.set(getCharacterDraftIdentity(character), character)
+    const identity = getCharacterDraftIdentity(character)
+    const previous = latestDrafts.get(identity)
+    if (previous && previous !== character) previousDrafts.set(identity, previous)
+    latestDrafts.set(identity, character)
 }
 export const getLatestCharacterDraft = (identity: string, fallback: Character) =>
     latestDrafts.get(identity) ?? fallback
+
+export const getCharacterDraftBeforeReplacement = (identity: string, fallback: Character) => {
+    const latest = latestDrafts.get(identity)
+    if (latest?.characterVersion === fallback.characterVersion) return latest
+    const previous = previousDrafts.get(identity)
+    return previous?.characterVersion === fallback.characterVersion ? previous : fallback
+}
+export const createRecoveredCharacterCopy = (character: Character): Character => ({
+    ...character,
+    id: "",
+    characterVersion: 0
+})
 
 // Keep interrupted edits available without writing them into the newly selected
 // document. Each entry is a full importable JSON character with a recovery reason.
@@ -33,7 +49,13 @@ export const preserveCharacterDraft = (character: Character, reason: string) => 
         if (
             !entries.some((entry) => JSON.stringify(entry.character) === JSON.stringify(character))
         ) {
-            entries.push({ character, reason, recoveredAt: new Date().toISOString() })
+            entries.push({
+                character,
+                sourceCharacterId: character.id || null,
+                sourceCharacterVersion: character.characterVersion,
+                reason,
+                recoveredAt: new Date().toISOString()
+            })
             localStorage.setItem(key, JSON.stringify(entries))
         }
     } catch {
