@@ -13,7 +13,7 @@ import type { CoterieMemberResponse } from "~/utils/api"
 import NameTag from "~/components/NameTag"
 import { getCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
-import type { ReactNode } from "react"
+import { memo, useMemo, type ReactNode } from "react"
 import {
     getDisciplineDefinitionIdentity,
     getPowerDisciplineIdentity,
@@ -274,15 +274,19 @@ const CoterieCharacterSummaryGrid = ({
     members,
     vitalsByCharacterId
 }: CoterieCharacterSummaryGridProps) => {
-    const parsedMembers = members
-        .map((member) => ({
-            member,
-            character: parseCharacterData(member.character?.data)
-        }))
-        .filter(
-            (entry): entry is { member: CoterieMemberResponse; character: Character } =>
-                !!entry.character
-        )
+    const parsedMembers = useMemo(
+        () =>
+            members
+                .map((member) => ({
+                    member,
+                    character: parseCharacterData(member.character?.data)
+                }))
+                .filter(
+                    (entry): entry is { member: CoterieMemberResponse; character: Character } =>
+                        !!entry.character
+                ),
+        [members]
+    )
 
     if (parsedMembers.length === 0) {
         return (
@@ -725,4 +729,4 @@ const CoterieCharacterSummaryGrid = ({
     )
 }
 
-export default CoterieCharacterSummaryGrid
+export default memo(CoterieCharacterSummaryGrid)

@@ -1,0 +1,729 @@
+{
+    "methodology": "Native collaborative preview tab_o; actual production builds; full navigations with 500ms settle; synthetic authenticated HTTP fixtures; chat intentionally offline.",
+    "rows": [
+        {
+            "phase": "before",
+            "route": "/",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nVAMPIRE: THE MASQUERADE V5\n\nPROGENY\n\nGuided and simplified character creation\n\nCreate your character here and use it anywhere - Export to PDF, Virtual Tabletops or use the Progeny Online Character Sheet\n\nEMBRACE A NEW CHARACTER\n\nFeedback, requests or questions? Reach out to Odin on Reddit, Bluesky or Ko-fi\n\nFind source code on GitHub\n\nSTAY A WHILE AND LISTEN\n\nEVERYTHING PROGENY HAS TO OFFER\n\nThe creator is the first step. Progeny also gives you a dedicated sheet for",
+            "fixture": true,
+            "headings": [
+                "Progeny",
+                "Everything Progeny has to offer",
+                "Guided character creation",
+                "Character sheet",
+                "Play online",
+                "Move from creation into play",
+                "Keep your chronicles organized online",
+                "Explore Progeny at your own pace"
+            ],
+            "jsBytes": 1984833,
+            "url": "http://127.0.0.1:5351/"
+        },
+        {
+            "phase": "before",
+            "route": "/create",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nPick your Clan\n\nYour clan defines your lineage, your powers, and your curse.\n\nRULERS & COMMANDERS\n\nVentrue\n\nHigh and mighty rulers, continually grasping for more power\n\nDOMINATE\nFORTITUDE\nPRESENCE\nTzimisce\n\nTerritorial, greedy flesh shapers\n\nANIMALISM\nDOMINATE\nPROTEAN\nLasombra\n\nShadowy predators and ruthless social climbers\n\nDOMINATE\nPOTENCE\nOBLIVION\n\nFIGHTERS & PROTECTORS\n\nBrujah\n\nRebels who always fight against the power, easy to anger\n\nCELERITY\nPOTENCE\nPRESENCE\nGa",
+            "fixture": true,
+            "headings": [
+                "Pick your Clan",
+                "Ventrue",
+                "Tzimisce",
+                "Lasombra",
+                "Brujah",
+                "Gangrel",
+                "Banu Haqim",
+                "Toreador",
+                "Ravnos",
+                "Ministry",
+                "Malkavian",
+                "Tremere",
+                "Hecata",
+                "Nosferatu",
+                "Salubri",
+                "Caitiff",
+                "Thin-blood"
+            ],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#clan"
+        },
+        {
+            "phase": "before",
+            "route": "/sheet",
+            "body": "PROGENY\n\nGENERATOR\nACCOUNT\nADMIN\nPlay\nXP\nFree\nPerformance Fixture\n\nClan:\n\nTremere\n\nPredator Type:\n\n—\n\nAmbition:\n\n—\n\nDesire:\n\n—\n\nPlayer:\n\n—\n\nGeneration:\n\n12\n\nSire:\n\n—\n\nXP:\n\n0\n\n/\n\n0\n\nATTRIBUTES\n\nPHYSICAL\n\nStrength\n\nDexterity\n\nStamina\n\nSOCIAL\n\nCharisma\n\nManipulation\n\nComposure\n\nMENTAL\n\nIntelligence\n\nWits\n\nResolve\n\nSKILLS\n\nPHYSICAL\n\nAthletics\n\nBrawl\n\nCraft\n\nDrive\n\nFirearms\n\nMelee\n\nLarceny\n\nStealth\n\nSurvival\n\nSOCIAL\n\nAnimal ken\n\nEtiquette\n\nInsight\n\nIntimidation\n\nLeadership\n\nPerformance\n\nPersuasion\n\nS",
+            "fixture": true,
+            "headings": ["Performance Fixture"],
+            "jsBytes": 2217541,
+            "url": "http://127.0.0.1:5351/sheet"
+        },
+        {
+            "phase": "before",
+            "route": "/me",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nFeature guide\nHomebrew\nCookie preferences\nSign Out\nUser Profile\n\nEmail:\n\nHidden\n\nNickname:\n\nSaved fixture draft\n\nCharacters\n60\nCreate Empty\nSave Current Character\n\nVampire 0\n\nLoad\nShare\n\nVampire 1\n\nLoad\nShare\n\nVampire 2\n\nLoad\nShare\n\nVampire 3\n\nLoad\nShare\n\nVampire 4\n\nLoad\nShare\n\nVampire 5\n\nLoad\nShare\n\nVampire 6\n\nLoad\nShare\n\nVampire 7\n\nLoad\nShare\n\nVampire 8\n\nLoad\nShare\n\nVampire 9\n\nLoad\nShare\n\nVampire 10\n\nLoad\nShare\n\nVampire 11\n\nLoad\nShare\n\nVampire 12\n\nLoad\nShare\n\nVampi",
+            "fixture": true,
+            "headings": ["User Profile", "Characters", "Coteries"],
+            "jsBytes": 3229105,
+            "url": "http://127.0.0.1:5351/me"
+        },
+        {
+            "phase": "before",
+            "route": "/coteries/fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nAccount\n\nCOTERIE\n\nPerformance Coterie\nOWNED\n6 MEMBERS\nPrivate Notes\n\nVampire 0\n\nFixture Player\n\nHUNGER\n\nHEALTH\n\nWILLPOWER\n\nTREMERE\nGEN 12\n\nIDENTITY\n\nAmbition:\n\nDesire:\n\nHumanity: 0 / 10\n\nTOUCHSTONES\n\nNone recorded\n\nPHYSICAL ATTRIBUTES\n\nStrength\n\n●●●○○\n\nDexterity\n\n●○○○○\n\nStamina\n\n●○○○○\n\nSOCIAL ATTRIBUTES\n\nCharisma\n\n●○○○○\n\nManipulation\n\n●○○○○\n\nComposure\n\n●○○○○\n\nMENTAL ATTRIBUTES\n\nIntelligence\n\n●○○○○\n\nWits\n\n●○○○○\n\nResolve\n\n●○○○○\n\nPHYSICAL SKILLS\n\nAthletics\n\n●●○○○\n\nSOCIA",
+            "fixture": true,
+            "headings": ["Performance Coterie"],
+            "jsBytes": 2025413,
+            "url": "http://127.0.0.1:5351/coteries/fixture"
+        },
+        {
+            "phase": "before",
+            "route": "/homebrew",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nHomebrew\n\nBuild original rules collections and enable them for your coteries.\n\nCommunity Library\nNew collection\nPerformance Collection\n60 ITEMS\n\nLocal benchmark fixture\n\nFIXTURE\nEnable for all my characters",
+            "fixture": true,
+            "headings": ["Homebrew", "Performance Collection"],
+            "jsBytes": 1976850,
+            "url": "http://127.0.0.1:5351/homebrew"
+        },
+        {
+            "phase": "before",
+            "route": "/homebrew/new",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nAll collections\nNew Homebrew Collection\n\nSet up your collection, then add the rules that belong in it.\n\nCreate collection\nCollection name *\n\n \n\nShort description\n\nUsed on collection cards and in the Community Library.\n\nDescription\n\n \n\nTags\n\nUp to eight discovery tags.\n\nContent warning\nRules\n\nAdd each rule to its own entry. Merits and Flaws appear under the Homebrew category in character creation.\n\nItem type\nAdd rule\n\nThis collection has no rules yet.\n\nChoose an item ",
+            "fixture": true,
+            "headings": ["New Homebrew Collection", "Rules"],
+            "jsBytes": 2043181,
+            "url": "http://127.0.0.1:5351/homebrew/new"
+        },
+        {
+            "phase": "before",
+            "route": "/homebrew/fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nAll collections\nPerformance Collection\n\nShape the collection and its homebrew rules in one place.\n\nSave changes\nCollection name *\n\n \n\nShort description\n\nUsed on collection cards and in the Community Library.\n\nDescription\n\n \n\nTags\n\nUp to eight discovery tags.\n\nfixture\nContent warning\nRules\n\nAdd each rule to its own entry. Merits and Flaws appear under the Homebrew category in character creation.\n\nItem type\nAdd rule\nMERIT\n\n60 entries\n\nRule 0\n\nA representative rule\n\nRul",
+            "fixture": true,
+            "headings": ["Performance Collection", "Rules"],
+            "jsBytes": 2043181,
+            "url": "http://127.0.0.1:5351/homebrew/fixture"
+        },
+        {
+            "phase": "before",
+            "route": "/homebrew/library",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nHomebrew Community Library\n\nDiscover community-built rules, ranked by reputation and proven ratings.\n\nMy Homebrew\nRequest to publish\nSearch\nContains\nSort by\n\nPerformance Collection\n\nLocal benchmark fixture\n\nFIXTURE\n\nAUTHOR\n\nFixture Author\n\nCONTENTS\n\n60 Merit\n\nRATING\n\n10 ratings\n\nCOMMUNITY\n\n5 copies\n\n0 comments",
+            "fixture": true,
+            "headings": ["Homebrew Community Library"],
+            "jsBytes": 1984714,
+            "url": "http://127.0.0.1:5351/homebrew/library"
+        },
+        {
+            "phase": "before",
+            "route": "/homebrew/library/fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nCommunity Library\n\nCommunity collection · Version 1\n\nPerformance Collection\n\nby Fixture Author\n\nCopy to my account\n\nLocal benchmark fixture\n\nA synthetic collection for interface checks\n\nFIXTURE\nRules\n\nRead-only details for this published snapshot.\n\nMERIT\n\n60 entries\n\nRule 0\n1\n\nA representative rule\n\nRule 1\n1\n\nA representative rule\n\nRule 2\n1\n\nA representative rule\n\nRule 3\n1\n\nA representative rule\n\nRule 4\n1\n\nA representative rule\n\nRule 5\n1\n\nA representative rule\n\nRule ",
+            "fixture": true,
+            "headings": ["Performance Collection", "Rules", "Comments"],
+            "jsBytes": 1988995,
+            "url": "http://127.0.0.1:5351/homebrew/library/fixture"
+        },
+        {
+            "phase": "before",
+            "route": "/admin",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nUsers\nRecent changes\nHomebrew review\nUser administration\n\nManage name tags, superadmins, and 10 minute impersonation sessions.\n\nUser\tSuperadmin\tName tag\tImpersonation\n\n\nSaved fixture draft\n\nSUPERADMIN\n\nfixture@example.invalid\n\n\t\n\t\n\t\nImpersonate\n\nShowing 1–1 of 1 users\n\n1",
+            "fixture": true,
+            "headings": ["User administration"],
+            "jsBytes": 2012105,
+            "url": "http://127.0.0.1:5351/admin?tab=users"
+        },
+        {
+            "phase": "before",
+            "route": "/admin?tab=homebrew-review",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nUsers\nRecent changes\nHomebrew review\nHomebrew publication review\n\nReview immutable snapshots before they enter the Community Library.\n\n0 PENDING\nCollection\tRequester\tItems\tStatus\t\n\nNo requests yet.",
+            "fixture": true,
+            "headings": ["Homebrew publication review"],
+            "jsBytes": 2012105,
+            "url": "http://127.0.0.1:5351/admin?tab=homebrew-review"
+        },
+        {
+            "phase": "before",
+            "route": "/admin?tab=recent-changes",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nUsers\nRecent changes\nHomebrew review\nRecent changes\n\nDraft and publish the update dialog shown to signed-in users.\n\nNew draft\n\nDraft editor\n\nTitle *\nTop section *\n\nShown above the ornamental divider, beside the optional image. Markdown is supported.\n\nBottom columns\n\nEach field maps directly to its column below the divider. Leave fields empty to use fewer columns.\n\nLeft column\nCenter column\nRight column\n\nOptional link\n\nDisplayed below the update content and above the ",
+            "fixture": true,
+            "headings": ["Recent changes", "All updates"],
+            "jsBytes": 2012105,
+            "url": "http://127.0.0.1:5351/admin?tab=recent-changes"
+        },
+        {
+            "phase": "before",
+            "route": "/features",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nCREATE A CHARACTER\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n01\n\nCharacter creation\nGuided creation\n\nThe character generator is purpose-bu",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Character creation",
+                "Guided creation",
+                "Saving and exporting"
+            ],
+            "jsBytes": 1986457,
+            "url": "http://127.0.0.1:5351/features/character-creation"
+        },
+        {
+            "phase": "before",
+            "route": "/features/character-creation",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nCREATE A CHARACTER\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n01\n\nCharacter creation\nGuided creation\n\nThe character generator is purpose-bu",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Character creation",
+                "Guided creation",
+                "Saving and exporting"
+            ],
+            "jsBytes": 1986457,
+            "url": "http://127.0.0.1:5351/features/character-creation"
+        },
+        {
+            "phase": "before",
+            "route": "/features/character-sheet",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nOPEN CHARACTER SHEET\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n02\n\nCharacter sheet\n\nThe character sheet allows you to play online, roll di",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Character sheet",
+                "Rolling dice",
+                "Editing your character",
+                "Managing your character",
+                "Playing online"
+            ],
+            "jsBytes": 1986457,
+            "url": "http://127.0.0.1:5351/features/character-sheet"
+        },
+        {
+            "phase": "before",
+            "route": "/features/account-and-multiple-characters",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nYOUR ACCOUNT\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n03\n\nAccount & Multiple Characters\nAccount\n\nYou can create a free account either via",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Account & Multiple Characters",
+                "Account",
+                "Managing your account",
+                "Managing characters",
+                "Coteries"
+            ],
+            "jsBytes": 1986457,
+            "url": "http://127.0.0.1:5351/features/account-and-multiple-characters"
+        },
+        {
+            "phase": "before",
+            "route": "/features/coteries",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nYOUR ACCOUNT\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n04\n\nCoteries & Playing Together\nCoteries\n\nYou can create and manage coteries on you",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Coteries & Playing Together",
+                "Coteries",
+                "Coterie details view"
+            ],
+            "jsBytes": 1986457,
+            "url": "http://127.0.0.1:5351/features/coteries"
+        },
+        {
+            "phase": "before",
+            "route": "/features/credits-and-contact",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nCREATE A CHARACTER\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n05\n\nCredits & Contact\nContact Odin\n\nYou can contact me with feedback, support",
+            "fixture": true,
+            "headings": ["Features", "Credits & Contact", "Contact Odin", "Credits"],
+            "jsBytes": 1986457,
+            "url": "http://127.0.0.1:5351/features/credits-and-contact"
+        },
+        {
+            "phase": "before",
+            "route": "/auth/callback?code=fixture&state=fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nFeature guide\nHomebrew\nCookie preferences\nSign Out\nUser Profile\n\nEmail:\n\nHidden\n\nNickname:\n\nSaved fixture draft\n\nCharacters\n60\nCreate Empty\nSave Current Character\n\nVampire 0\n\nLoad\nShare\n\nVampire 1\n\nLoad\nShare\n\nVampire 2\n\nLoad\nShare\n\nVampire 3\n\nLoad\nShare\n\nVampire 4\n\nLoad\nShare\n\nVampire 5\n\nLoad\nShare\n\nVampire 6\n\nLoad\nShare\n\nVampire 7\n\nLoad\nShare\n\nVampire 8\n\nLoad\nShare\n\nVampire 9\n\nLoad\nShare\n\nVampire 10\n\nLoad\nShare\n\nVampire 11\n\nLoad\nShare\n\nVampire 12\n\nLoad\nShare\n\nVampi",
+            "fixture": true,
+            "headings": ["User Profile", "Characters", "Coteries"],
+            "jsBytes": 3229105,
+            "url": "http://127.0.0.1:5351/me"
+        },
+        {
+            "phase": "before",
+            "route": "/create#clan",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nPick your Clan\n\nYour clan defines your lineage, your powers, and your curse.\n\nRULERS & COMMANDERS\n\nVentrue\n\nHigh and mighty rulers, continually grasping for more power\n\nDOMINATE\nFORTITUDE\nPRESENCE\nTzimisce\n\nTerritorial, greedy flesh shapers\n\nANIMALISM\nDOMINATE\nPROTEAN\nLasombra\n\nShadowy predators and ruthless social climbers\n\nDOMINATE\nPOTENCE\nOBLIVION\n\nFIGHTERS & PROTECTORS\n\nBrujah\n\nRebels who always fight against the power, easy to anger\n\nCELERITY\nPOTENCE\nPRESENCE\nGa",
+            "fixture": true,
+            "headings": [
+                "Pick your Clan",
+                "Ventrue",
+                "Tzimisce",
+                "Lasombra",
+                "Brujah",
+                "Gangrel",
+                "Banu Haqim",
+                "Toreador",
+                "Ravnos",
+                "Ministry",
+                "Malkavian",
+                "Tremere",
+                "Hecata",
+                "Nosferatu",
+                "Salubri",
+                "Caitiff",
+                "Thin-blood"
+            ],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#clan"
+        },
+        {
+            "phase": "before",
+            "route": "/create#attributes",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\n›Pick your strongest attributeLVL 4\n\nPick your weakest attributeLVL 1\n\nPick 2 medium attributesLVL 3\n\nRemaining attributes will be lvl 2\n\nATTRIBUTES\n\nPhysical\n\nSocial\n\nMental\n\nStrength\n\nCharisma\n\nIntelligence\n\nDexterity\n\nManipulation\n\nWits\n\nStamina\n\nComposure\n\nResolve\n\nReset attributes\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#attributes"
+        },
+        {
+            "phase": "before",
+            "route": "/create#skills",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Skill Distribution\n\nBalanced is the default choice\n\nJack of All Trades\n\nBalanced\n\nSpecialist\n\nSKILLS\n\nPhysical\n\nSocial\n\nMental\n\nAthletics\n\nAnimal ken\n\nAcademics\n\nBrawl\n\nEtiquette\n\nAwareness\n\nCraft\n\nInsight\n\nFinance\n\nDrive\n\nIntimidation\n\nInvestigation\n\nFirearms\n\nLeadership\n\nMedicine\n\nMelee\n\nPerformance\n\nOccult\n\nLarceny\n\nPersuasion\n\nPolitics\n\nStealth\n\nStreetwise\n\nScience\n\nSurvival\n\nSubterfuge\n\nTechnology\n\nReset skills\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#skills"
+        },
+        {
+            "phase": "before",
+            "route": "/create#generation",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Generation\n\nDefault choice is '13th Gen - Neonate'\n\nGENERATION\n\n12th Gen - Neonate\n\nNEONATE\n\nBlood Potency:\n1\n\nBonus XP:\n15\n\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#generation"
+        },
+        {
+            "phase": "before",
+            "route": "/create#predator-type",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Predator Type\n\nChoose a predator type that defines your feeding habits\n\nVIOLENT\n\nAlleycat\n\nAmbush prey in alleys\n\nCelerity\n\nPotence\n\nExtortionist\n\nStrong-arm prey into giving you their blood\n\nDominate\n\nPotence\n\nRoadside Killer\n\nHunt prey on desolate roads\n\nFortitude\n\nProtean\n\nMontero\n\nUse your retainers to herd prey into your maw for the kill\n\nDominate\n\nObfuscate\n\nSOCIABLE\n\nCleaver\n\nFeed on friends and family\n\nDominate\n\nAnimalism\n\nConsensualist\n\nTake blood",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#predator-type"
+        },
+        {
+            "phase": "before",
+            "route": "/create#basics",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nCome up with the Basics\n\nFULL NAME\nSIRE\n\nThe vampire that turned you\n\nLONG TERM AMBITION\nSHORT TERM DESIRE\nDESCRIPTION & APPEARANCE\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#basics"
+        },
+        {
+            "phase": "before",
+            "route": "/create#disciplines",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Disciplines\n\n2 powers in one discipline · 1 in another\n\nCLAN POWERS 2/3\n\nCLAN DISCIPLINES\n\nPick another clan discipline\n\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#disciplines"
+        },
+        {
+            "phase": "before",
+            "route": "/create#rituals",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your free Ritual\n\nBlood Sorcerers begin with one free Level 1 ritual\n\nLEVEL 1 RITUALS\n\nBlood Walk\n\nLV 1\n\nUse blood to learn about a subjects generation, name, sire and - on a crit - any active Blood Bonds.\n\nDICE POOL\n\nIntelligence + Blood Sorcery\n\nTIME\n\n1 hour\n\nINGREDIENTS\n\nBlood of the subject\n\nROUSE CHECKS\n\n1\n\nTAKE BLOOD WALK\n\nClinging of the Insect\n\nLV 1\n\nDrink blood mixed with a freshly crushed spider to cling to walls like an insect.\n\nDICE POOL\n\nIntelligen",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#rituals"
+        },
+        {
+            "phase": "before",
+            "route": "/create#ceremonies",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your free Ceremony\n\nYou begin with one free Level 1 ceremony when you know its prerequisite Oblivion power\n\nLEVEL 1 CEREMONIES\n\nThe Gift of False Life\n\nLV 1\n\nAnimate prepared corpses to carry out one simple command until they finish the task or are destroyed.\n\nRequires 'Ashes to Ashes'\n\nDICE POOL\n\nResolve + Oblivion\n\nTIME\n\n5min\n\nREQUIRES\n\nAshes to Ashes\n\nROUSE CHECKS\n\n1\n\nTAKE THE GIFT OF FALSE LIFE\n\nSummon Spirit\n\nLV 1\n\nCall a named wraith through the Shroud by",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#ceremonies"
+        },
+        {
+            "phase": "before",
+            "route": "/create#touchstones",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Touchstones & Convictions\n\nTouchstones are humans in your life that tie you to your humanity\n\nConnect a conviction to each relationship\n\nTOUCHSTONES\n\nTOUCHSTONE NAME\nCONVICTION\nDESCRIPTION\nRemove\nADD TOUCHSTONE\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#touchstones"
+        },
+        {
+            "phase": "before",
+            "route": "/create#merits",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nShape your Merits & Flaws\n\nDefine what empowers you, what complicates your unlife, and which loresheets still fit your story.\n\nADVANTAGE POINTS\n\n7/7\n\nRESET\n\nFLAW POINTS\n\n2/2\n\nRESET\nMERITS & FLAWS\nLORESHEETS\nShow all merits\n\n💄 LOOKS\n\n  Beautiful\n\n+1 die in Social rolls\n\n2\n\nCosts 2 pts · 7 advantage points left\n\n  Stunning\n\n+2 dice in Social rolls\n\n4\n\nCosts 4 pts · 7 advantage points left\n\n  Ugly\n\n-1 die in Social rolls\n\n1\n\nCosts 1 pt · 2 flaw points left\n\n  Repulsiv",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#merits"
+        },
+        {
+            "phase": "before",
+            "route": "/create#final",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nPerformance Fixture\n\nCharacter creation complete. Your character is saved in the browser. Export for your favourite tools, or jump straight into play.\n\nDownload PDF\n\nPrint-ready character sheet\n\nSave File\n\nJSON save file to load later\n\nExport\n\nFoundry VTT, Inconnu & more\n\nCharacter Sheet\n\nUse this character right away\n\nFeature Guide\n\nLearn what else you can do with Progeny\n\nCookie preferences\n\nEnable analytics to use support chat\n\nReset character\n\nSupport on Ko-Fi\n\nH",
+            "fixture": true,
+            "headings": ["Performance Fixture"],
+            "jsBytes": 1968300,
+            "url": "http://127.0.0.1:5351/create#final"
+        },
+        {
+            "phase": "after",
+            "route": "/",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nVAMPIRE: THE MASQUERADE V5\n\nPROGENY\n\nGuided and simplified character creation\n\nCreate your character here and use it anywhere - Export to PDF, Virtual Tabletops or use the Progeny Online Character Sheet\n\nEMBRACE A NEW CHARACTER\n\nFeedback, requests or questions? Reach out to Odin on Reddit, Bluesky or Ko-fi\n\nFind source code on GitHub\n\nSTAY A WHILE AND LISTEN\n\nEVERYTHING PROGENY HAS TO OFFER\n\nThe creator is the first step. Progeny also gives you a dedicated sheet for",
+            "fixture": true,
+            "headings": [
+                "Progeny",
+                "Everything Progeny has to offer",
+                "Guided character creation",
+                "Character sheet",
+                "Play online",
+                "Move from creation into play",
+                "Keep your chronicles organized online",
+                "Explore Progeny at your own pace"
+            ],
+            "jsBytes": 1681481,
+            "url": "http://127.0.0.1:5341/"
+        },
+        {
+            "phase": "after",
+            "route": "/create",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nPick your Clan\n\nYour clan defines your lineage, your powers, and your curse.\n\nRULERS & COMMANDERS\n\nVentrue\n\nHigh and mighty rulers, continually grasping for more power\n\nDOMINATE\nFORTITUDE\nPRESENCE\nTzimisce\n\nTerritorial, greedy flesh shapers\n\nANIMALISM\nDOMINATE\nPROTEAN\nLasombra\n\nShadowy predators and ruthless social climbers\n\nDOMINATE\nPOTENCE\nOBLIVION\n\nFIGHTERS & PROTECTORS\n\nBrujah\n\nRebels who always fight against the power, easy to anger\n\nCELERITY\nPOTENCE\nPRESENCE\nGa",
+            "fixture": true,
+            "headings": [
+                "Pick your Clan",
+                "Ventrue",
+                "Tzimisce",
+                "Lasombra",
+                "Brujah",
+                "Gangrel",
+                "Banu Haqim",
+                "Toreador",
+                "Ravnos",
+                "Ministry",
+                "Malkavian",
+                "Tremere",
+                "Hecata",
+                "Nosferatu",
+                "Salubri",
+                "Caitiff",
+                "Thin-blood"
+            ],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#clan"
+        },
+        {
+            "phase": "after",
+            "route": "/sheet",
+            "body": "PROGENY\n\nGENERATOR\nACCOUNT\nADMIN\nPlay\nXP\nFree\nPerformance Fixture\n\nClan:\n\nTremere\n\nPredator Type:\n\n—\n\nAmbition:\n\n—\n\nDesire:\n\n—\n\nPlayer:\n\n—\n\nGeneration:\n\n12\n\nSire:\n\n—\n\nXP:\n\n0\n\n/\n\n0\n\nATTRIBUTES\n\nPHYSICAL\n\nStrength\n\nDexterity\n\nStamina\n\nSOCIAL\n\nCharisma\n\nManipulation\n\nComposure\n\nMENTAL\n\nIntelligence\n\nWits\n\nResolve\n\nSKILLS\n\nPHYSICAL\n\nAthletics\n\nBrawl\n\nCraft\n\nDrive\n\nFirearms\n\nMelee\n\nLarceny\n\nStealth\n\nSurvival\n\nSOCIAL\n\nAnimal ken\n\nEtiquette\n\nInsight\n\nIntimidation\n\nLeadership\n\nPerformance\n\nPersuasion\n\nS",
+            "fixture": true,
+            "headings": ["Performance Fixture"],
+            "jsBytes": 2085346,
+            "url": "http://127.0.0.1:5341/sheet"
+        },
+        {
+            "phase": "after",
+            "route": "/me",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nFeature guide\nHomebrew\nCookie preferences\nSign Out\nUser Profile\n\nEmail:\n\nHidden\n\nNickname:\n\nSaved fixture draft\n\nCharacters\n60\nCreate Empty\nSave Current Character\n\nVampire 0\n\nLoad\nShare\n\nVampire 1\n\nLoad\nShare\n\nVampire 2\n\nLoad\nShare\n\nVampire 3\n\nLoad\nShare\n\nVampire 4\n\nLoad\nShare\n\nVampire 5\n\nLoad\nShare\n\nVampire 6\n\nLoad\nShare\n\nVampire 7\n\nLoad\nShare\n\nVampire 8\n\nLoad\nShare\n\nVampire 9\n\nLoad\nShare\n\nVampire 10\n\nLoad\nShare\n\nVampire 11\n\nLoad\nShare\n\nVampire 12\n\nLoad\nShare\n\nVampi",
+            "fixture": true,
+            "headings": ["User Profile", "Characters", "Coteries"],
+            "jsBytes": 1904526,
+            "url": "http://127.0.0.1:5341/me"
+        },
+        {
+            "phase": "after",
+            "route": "/coteries/fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nAccount\n\nCOTERIE\n\nPerformance Coterie\nOWNED\n6 MEMBERS\nPrivate Notes\n\nVampire 0\n\nFixture Player\n\nHUNGER\n\nHEALTH\n\nWILLPOWER\n\nTREMERE\nGEN 12\n\nIDENTITY\n\nAmbition:\n\nDesire:\n\nHumanity: 0 / 10\n\nTOUCHSTONES\n\nNone recorded\n\nPHYSICAL ATTRIBUTES\n\nStrength\n\n●●●○○\n\nDexterity\n\n●○○○○\n\nStamina\n\n●○○○○\n\nSOCIAL ATTRIBUTES\n\nCharisma\n\n●○○○○\n\nManipulation\n\n●○○○○\n\nComposure\n\n●○○○○\n\nMENTAL ATTRIBUTES\n\nIntelligence\n\n●○○○○\n\nWits\n\n●○○○○\n\nResolve\n\n●○○○○\n\nPHYSICAL SKILLS\n\nAthletics\n\n●●○○○\n\nSOCIA",
+            "fixture": true,
+            "headings": ["Performance Coterie"],
+            "jsBytes": 1763813,
+            "url": "http://127.0.0.1:5341/coteries/fixture"
+        },
+        {
+            "phase": "after",
+            "route": "/homebrew",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nHomebrew\n\nBuild original rules collections and enable them for your coteries.\n\nCommunity Library\nNew collection\nPerformance Collection\n60 ITEMS\n\nLocal benchmark fixture\n\nFIXTURE\nEnable for all my characters",
+            "fixture": true,
+            "headings": ["Homebrew", "Performance Collection"],
+            "jsBytes": 1675765,
+            "url": "http://127.0.0.1:5341/homebrew"
+        },
+        {
+            "phase": "after",
+            "route": "/homebrew/new",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nAll collections\nNew Homebrew Collection\n\nSet up your collection, then add the rules that belong in it.\n\nCreate collection\nCollection name *\n\n \n\nShort description\n\nUsed on collection cards and in the Community Library.\n\nDescription\n\n \n\nTags\n\nUp to eight discovery tags.\n\nContent warning\nRules\n\nAdd each rule to its own entry. Merits and Flaws appear under the Homebrew category in character creation.\n\nItem type\nAdd rule\n\nThis collection has no rules yet.\n\nChoose an item ",
+            "fixture": true,
+            "headings": ["New Homebrew Collection", "Rules"],
+            "jsBytes": 1779424,
+            "url": "http://127.0.0.1:5341/homebrew/new"
+        },
+        {
+            "phase": "after",
+            "route": "/homebrew/fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nAll collections\nPerformance Collection\n\nShape the collection and its homebrew rules in one place.\n\nSave changes\nCollection name *\n\n \n\nShort description\n\nUsed on collection cards and in the Community Library.\n\nDescription\n\n \n\nTags\n\nUp to eight discovery tags.\n\nfixture\nContent warning\nRules\n\nAdd each rule to its own entry. Merits and Flaws appear under the Homebrew category in character creation.\n\nItem type\nAdd rule\nMERIT\n\n60 entries\n\nRule 0\n\nA representative rule\n\nRul",
+            "fixture": true,
+            "headings": ["Performance Collection", "Rules"],
+            "jsBytes": 1779424,
+            "url": "http://127.0.0.1:5341/homebrew/fixture"
+        },
+        {
+            "phase": "after",
+            "route": "/homebrew/library",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nHomebrew Community Library\n\nDiscover community-built rules, ranked by reputation and proven ratings.\n\nMy Homebrew\nRequest to publish\nSearch\nContains\nSort by\n\nPerformance Collection\n\nLocal benchmark fixture\n\nFIXTURE\n\nAUTHOR\n\nFixture Author\n\nCONTENTS\n\n60 Merit\n\nRATING\n\n10 ratings\n\nCOMMUNITY\n\n5 copies\n\n0 comments",
+            "fixture": true,
+            "headings": ["Homebrew Community Library"],
+            "jsBytes": 1714848,
+            "url": "http://127.0.0.1:5341/homebrew/library"
+        },
+        {
+            "phase": "after",
+            "route": "/homebrew/library/fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nCommunity Library\n\nCommunity collection · Version 1\n\nPerformance Collection\n\nby Fixture Author\n\nCopy to my account\n\nLocal benchmark fixture\n\nA synthetic collection for interface checks\n\nFIXTURE\nRules\n\nRead-only details for this published snapshot.\n\nMERIT\n\n60 entries\n\nRule 0\n1\n\nA representative rule\n\nRule 1\n1\n\nA representative rule\n\nRule 2\n1\n\nA representative rule\n\nRule 3\n1\n\nA representative rule\n\nRule 4\n1\n\nA representative rule\n\nRule 5\n1\n\nA representative rule\n\nRule ",
+            "fixture": true,
+            "headings": ["Performance Collection", "Rules", "Comments"],
+            "jsBytes": 1699105,
+            "url": "http://127.0.0.1:5341/homebrew/library/fixture"
+        },
+        {
+            "phase": "after",
+            "route": "/admin",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nUsers\nRecent changes\nHomebrew review\nUser administration\n\nManage name tags, superadmins, and 10 minute impersonation sessions.\n\nUser\tSuperadmin\tName tag\tImpersonation\n\n\nSaved fixture draft\n\nSUPERADMIN\n\nfixture@example.invalid\n\n\t\n\t\n\t\nImpersonate\n\nShowing 1–1 of 1 users\n\n1",
+            "fixture": true,
+            "headings": ["User administration"],
+            "jsBytes": 1721376,
+            "url": "http://127.0.0.1:5341/admin?tab=users"
+        },
+        {
+            "phase": "after",
+            "route": "/admin?tab=homebrew-review",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nUsers\nRecent changes\nHomebrew review\nHomebrew publication review\n\nReview immutable snapshots before they enter the Community Library.\n\n0 PENDING\nCollection\tRequester\tItems\tStatus\t\n\nNo requests yet.",
+            "fixture": true,
+            "headings": ["Homebrew publication review"],
+            "jsBytes": 1721376,
+            "url": "http://127.0.0.1:5341/admin?tab=homebrew-review"
+        },
+        {
+            "phase": "after",
+            "route": "/admin?tab=recent-changes",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nUsers\nRecent changes\nHomebrew review\nRecent changes\n\nDraft and publish the update dialog shown to signed-in users.\n\nNew draft\n\nDraft editor\n\nTitle *\nTop section *\n\nShown above the ornamental divider, beside the optional image. Markdown is supported.\n\nBottom columns\n\nEach field maps directly to its column below the divider. Leave fields empty to use fewer columns.\n\nLeft column\nCenter column\nRight column\n\nOptional link\n\nDisplayed below the update content and above the ",
+            "fixture": true,
+            "headings": ["Recent changes", "All updates"],
+            "jsBytes": 1721376,
+            "url": "http://127.0.0.1:5341/admin?tab=recent-changes"
+        },
+        {
+            "phase": "after",
+            "route": "/features",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nCREATE A CHARACTER\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n01\n\nCharacter creation\nGuided creation\n\nThe character generator is purpose-bu",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Character creation",
+                "Guided creation",
+                "Saving and exporting"
+            ],
+            "jsBytes": 1672593,
+            "url": "http://127.0.0.1:5341/features/character-creation"
+        },
+        {
+            "phase": "after",
+            "route": "/features/character-creation",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nCREATE A CHARACTER\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n01\n\nCharacter creation\nGuided creation\n\nThe character generator is purpose-bu",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Character creation",
+                "Guided creation",
+                "Saving and exporting"
+            ],
+            "jsBytes": 1672593,
+            "url": "http://127.0.0.1:5341/features/character-creation"
+        },
+        {
+            "phase": "after",
+            "route": "/features/character-sheet",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nOPEN CHARACTER SHEET\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n02\n\nCharacter sheet\n\nThe character sheet allows you to play online, roll di",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Character sheet",
+                "Rolling dice",
+                "Editing your character",
+                "Managing your character",
+                "Playing online"
+            ],
+            "jsBytes": 1672593,
+            "url": "http://127.0.0.1:5341/features/character-sheet"
+        },
+        {
+            "phase": "after",
+            "route": "/features/account-and-multiple-characters",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nYOUR ACCOUNT\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n03\n\nAccount & Multiple Characters\nAccount\n\nYou can create a free account either via",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Account & Multiple Characters",
+                "Account",
+                "Managing your account",
+                "Managing characters",
+                "Coteries"
+            ],
+            "jsBytes": 1672593,
+            "url": "http://127.0.0.1:5341/features/account-and-multiple-characters"
+        },
+        {
+            "phase": "after",
+            "route": "/features/coteries",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nYOUR ACCOUNT\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n04\n\nCoteries & Playing Together\nCoteries\n\nYou can create and manage coteries on you",
+            "fixture": true,
+            "headings": [
+                "Features",
+                "Coteries & Playing Together",
+                "Coteries",
+                "Coterie details view"
+            ],
+            "jsBytes": 1672593,
+            "url": "http://127.0.0.1:5341/features/coteries"
+        },
+        {
+            "phase": "after",
+            "route": "/features/credits-and-contact",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPROGENY GUIDE\n\nFEATURES\nCREATE A CHARACTER\n\nFEATURE GUIDE\n\nCharacter creation\nGuided creation\nSaving and exporting\nCharacter sheet\nRolling dice\nEditing your character\nManaging your character\nPlaying online\nAccount & Multiple Characters\nAccount\nManaging your account\nManaging characters\nCoteries\nCoteries & Playing Together\nCoteries\nCoterie details view\nCredits & Contact\nContact Odin\nCredits\n\n05\n\nCredits & Contact\nContact Odin\n\nYou can contact me with feedback, support",
+            "fixture": true,
+            "headings": ["Features", "Credits & Contact", "Contact Odin", "Credits"],
+            "jsBytes": 1672593,
+            "url": "http://127.0.0.1:5341/features/credits-and-contact"
+        },
+        {
+            "phase": "after",
+            "route": "/auth/callback?code=fixture&state=fixture",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nFeature guide\nHomebrew\nCookie preferences\nSign Out\nUser Profile\n\nEmail:\n\nHidden\n\nNickname:\n\nSaved fixture draft\n\nCharacters\n60\nCreate Empty\nSave Current Character\n\nVampire 0\n\nLoad\nShare\n\nVampire 1\n\nLoad\nShare\n\nVampire 2\n\nLoad\nShare\n\nVampire 3\n\nLoad\nShare\n\nVampire 4\n\nLoad\nShare\n\nVampire 5\n\nLoad\nShare\n\nVampire 6\n\nLoad\nShare\n\nVampire 7\n\nLoad\nShare\n\nVampire 8\n\nLoad\nShare\n\nVampire 9\n\nLoad\nShare\n\nVampire 10\n\nLoad\nShare\n\nVampire 11\n\nLoad\nShare\n\nVampire 12\n\nLoad\nShare\n\nVampi",
+            "fixture": true,
+            "headings": ["User Profile", "Characters", "Coteries"],
+            "jsBytes": 1904526,
+            "url": "http://127.0.0.1:5341/me"
+        },
+        {
+            "phase": "after",
+            "route": "/create#clan",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nPick your Clan\n\nYour clan defines your lineage, your powers, and your curse.\n\nRULERS & COMMANDERS\n\nVentrue\n\nHigh and mighty rulers, continually grasping for more power\n\nDOMINATE\nFORTITUDE\nPRESENCE\nTzimisce\n\nTerritorial, greedy flesh shapers\n\nANIMALISM\nDOMINATE\nPROTEAN\nLasombra\n\nShadowy predators and ruthless social climbers\n\nDOMINATE\nPOTENCE\nOBLIVION\n\nFIGHTERS & PROTECTORS\n\nBrujah\n\nRebels who always fight against the power, easy to anger\n\nCELERITY\nPOTENCE\nPRESENCE\nGa",
+            "fixture": true,
+            "headings": [
+                "Pick your Clan",
+                "Ventrue",
+                "Tzimisce",
+                "Lasombra",
+                "Brujah",
+                "Gangrel",
+                "Banu Haqim",
+                "Toreador",
+                "Ravnos",
+                "Ministry",
+                "Malkavian",
+                "Tremere",
+                "Hecata",
+                "Nosferatu",
+                "Salubri",
+                "Caitiff",
+                "Thin-blood"
+            ],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#clan"
+        },
+        {
+            "phase": "after",
+            "route": "/create#attributes",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\n›Pick your strongest attributeLVL 4\n\nPick your weakest attributeLVL 1\n\nPick 2 medium attributesLVL 3\n\nRemaining attributes will be lvl 2\n\nATTRIBUTES\n\nPhysical\n\nSocial\n\nMental\n\nStrength\n\nCharisma\n\nIntelligence\n\nDexterity\n\nManipulation\n\nWits\n\nStamina\n\nComposure\n\nResolve\n\nReset attributes\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#attributes"
+        },
+        {
+            "phase": "after",
+            "route": "/create#skills",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Skill Distribution\n\nBalanced is the default choice\n\nJack of All Trades\n\nBalanced\n\nSpecialist\n\nSKILLS\n\nPhysical\n\nSocial\n\nMental\n\nAthletics\n\nAnimal ken\n\nAcademics\n\nBrawl\n\nEtiquette\n\nAwareness\n\nCraft\n\nInsight\n\nFinance\n\nDrive\n\nIntimidation\n\nInvestigation\n\nFirearms\n\nLeadership\n\nMedicine\n\nMelee\n\nPerformance\n\nOccult\n\nLarceny\n\nPersuasion\n\nPolitics\n\nStealth\n\nStreetwise\n\nScience\n\nSurvival\n\nSubterfuge\n\nTechnology\n\nReset skills\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#skills"
+        },
+        {
+            "phase": "after",
+            "route": "/create#generation",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Generation\n\nDefault choice is '13th Gen - Neonate'\n\nGENERATION\n\n12th Gen - Neonate\n\nNEONATE\n\nBlood Potency:\n1\n\nBonus XP:\n15\n\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#generation"
+        },
+        {
+            "phase": "after",
+            "route": "/create#predator-type",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Predator Type\n\nChoose a predator type that defines your feeding habits\n\nVIOLENT\n\nAlleycat\n\nAmbush prey in alleys\n\nCelerity\n\nPotence\n\nExtortionist\n\nStrong-arm prey into giving you their blood\n\nDominate\n\nPotence\n\nRoadside Killer\n\nHunt prey on desolate roads\n\nFortitude\n\nProtean\n\nMontero\n\nUse your retainers to herd prey into your maw for the kill\n\nDominate\n\nObfuscate\n\nSOCIABLE\n\nCleaver\n\nFeed on friends and family\n\nDominate\n\nAnimalism\n\nConsensualist\n\nTake blood",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#predator-type"
+        },
+        {
+            "phase": "after",
+            "route": "/create#basics",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nCome up with the Basics\n\nFULL NAME\nSIRE\n\nThe vampire that turned you\n\nLONG TERM AMBITION\nSHORT TERM DESIRE\nDESCRIPTION & APPEARANCE\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#basics"
+        },
+        {
+            "phase": "after",
+            "route": "/create#disciplines",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Disciplines\n\n2 powers in one discipline · 1 in another\n\nCLAN POWERS 2/3\n\nCLAN DISCIPLINES\n\nPick another clan discipline\n\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#disciplines"
+        },
+        {
+            "phase": "after",
+            "route": "/create#rituals",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your free Ritual\n\nBlood Sorcerers begin with one free Level 1 ritual\n\nLEVEL 1 RITUALS\n\nBlood Walk\n\nLV 1\n\nUse blood to learn about a subjects generation, name, sire and - on a crit - any active Blood Bonds.\n\nDICE POOL\n\nIntelligence + Blood Sorcery\n\nTIME\n\n1 hour\n\nINGREDIENTS\n\nBlood of the subject\n\nROUSE CHECKS\n\n1\n\nTAKE BLOOD WALK\n\nClinging of the Insect\n\nLV 1\n\nDrink blood mixed with a freshly crushed spider to cling to walls like an insect.\n\nDICE POOL\n\nIntelligen",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#rituals"
+        },
+        {
+            "phase": "after",
+            "route": "/create#ceremonies",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your free Ceremony\n\nYou begin with one free Level 1 ceremony when you know its prerequisite Oblivion power\n\nLEVEL 1 CEREMONIES\n\nThe Gift of False Life\n\nLV 1\n\nAnimate prepared corpses to carry out one simple command until they finish the task or are destroyed.\n\nRequires 'Ashes to Ashes'\n\nDICE POOL\n\nResolve + Oblivion\n\nTIME\n\n5min\n\nREQUIRES\n\nAshes to Ashes\n\nROUSE CHECKS\n\n1\n\nTAKE THE GIFT OF FALSE LIFE\n\nSummon Spirit\n\nLV 1\n\nCall a named wraith through the Shroud by",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#ceremonies"
+        },
+        {
+            "phase": "after",
+            "route": "/create#touchstones",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nPick your Touchstones & Convictions\n\nTouchstones are humans in your life that tie you to your humanity\n\nConnect a conviction to each relationship\n\nTOUCHSTONES\n\nTOUCHSTONE NAME\nCONVICTION\nDESCRIPTION\nRemove\nADD TOUCHSTONE\nCONFIRM",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#touchstones"
+        },
+        {
+            "phase": "after",
+            "route": "/create#merits",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\n\nShape your Merits & Flaws\n\nDefine what empowers you, what complicates your unlife, and which loresheets still fit your story.\n\nADVANTAGE POINTS\n\n7/7\n\nRESET\n\nFLAW POINTS\n\n2/2\n\nRESET\nMERITS & FLAWS\nLORESHEETS\nShow all merits\n\n💄 LOOKS\n\n  Beautiful\n\n+1 die in Social rolls\n\n2\n\nCosts 2 pts · 7 advantage points left\n\n  Stunning\n\n+2 dice in Social rolls\n\n4\n\nCosts 4 pts · 7 advantage points left\n\n  Ugly\n\n-1 die in Social rolls\n\n1\n\nCosts 1 pt · 2 flaw points left\n\n  Repulsiv",
+            "fixture": true,
+            "headings": [],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#merits"
+        },
+        {
+            "phase": "after",
+            "route": "/create#final",
+            "body": "PROGENY\n\nSHEET\nACCOUNT\nADMIN\nPerformance Fixture\n\nCharacter creation complete. Your character is saved in the browser. Export for your favourite tools, or jump straight into play.\n\nDownload PDF\n\nPrint-ready character sheet\n\nSave File\n\nJSON save file to load later\n\nExport\n\nFoundry VTT, Inconnu & more\n\nCharacter Sheet\n\nUse this character right away\n\nFeature Guide\n\nLearn what else you can do with Progeny\n\nCookie preferences\n\nEnable analytics to use support chat\n\nReset character\n\nSupport on Ko-Fi\n\nH",
+            "fixture": true,
+            "headings": ["Performance Fixture"],
+            "jsBytes": 1978571,
+            "url": "http://127.0.0.1:5341/create#final"
+        }
+    ]
+}

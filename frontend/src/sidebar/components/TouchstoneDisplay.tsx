@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { List, Stack, Text, Title } from "@mantine/core"
 import { Touchstone } from "../../data/Character"
 
@@ -25,4 +26,4 @@ const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => {
     )
 }
 
-export default TouchstoneDisplay
+export default memo(TouchstoneDisplay)

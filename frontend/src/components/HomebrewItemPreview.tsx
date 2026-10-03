@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Badge, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 import type { HomebrewItem, HomebrewPower } from "~/data/Homebrew"
 import { homebrewKindLabel } from "~/data/Homebrew"
@@ -146,4 +147,4 @@ const HomebrewItemPreview = ({ item }: { item: HomebrewItem }) => {
     )
 }
 
-export default HomebrewItemPreview
+export default memo(HomebrewItemPreview)

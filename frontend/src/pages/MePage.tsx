@@ -57,7 +57,6 @@ import { clans } from "~/data/Clans"
 import type { DisciplineName } from "~/data/NameSchemas"
 import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
 import { skillsKeySchema } from "~/data/Skills"
-import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 import {
     downloadJson,
@@ -410,13 +409,6 @@ const MePage = () => {
 
     // Nickname editing
     const [isEditingNickname, setIsEditingNickname] = useState(false)
-    const [nicknameValue, setNicknameValue] = useState("")
-
-    useEffect(() => {
-        if (user?.nickname !== undefined) {
-            setNicknameValue(user.nickname || "")
-        }
-    }, [user?.nickname])
 
     useEffect(() => {
         const inviteToken = new URLSearchParams(window.location.search).get("coterieInvite")
@@ -459,7 +451,7 @@ const MePage = () => {
         })
     }, [acceptCoterieInviteMutation, authLoading, isAuthenticated, signIn])
 
-    const handleSaveNickname = () => {
+    const handleSaveNickname = (nicknameValue: string) => {
         updateProfile(
             { nickname: nicknameValue.trim() || null },
             {
@@ -489,7 +481,6 @@ const MePage = () => {
     }
 
     const handleCancelNickname = () => {
-        setNicknameValue(user?.nickname || "")
         setIsEditingNickname(false)
     }
 
@@ -1234,14 +1225,16 @@ const MePage = () => {
         const charData = char.data as CharacterType | undefined
         if (!charData) return
 
-        downloadCharacterSheet(charData).catch((e) => {
-            console.error(e)
-            notifications.show({
-                title: "Error",
-                message: "Failed to download PDF",
-                color: "red"
+        import("~/generator/pdfCreator")
+            .then(({ downloadCharacterSheet }) => downloadCharacterSheet(charData))
+            .catch((e) => {
+                console.error(e)
+                notifications.show({
+                    title: "Error",
+                    message: "Failed to download PDF",
+                    color: "red"
+                })
             })
-        })
     }
 
     const handleUnshareCharacter = (char: Character) => {
@@ -1865,8 +1858,6 @@ const MePage = () => {
                                 <UserProfileSection
                                     user={user}
                                     isEditingNickname={isEditingNickname}
-                                    nicknameValue={nicknameValue}
-                                    setNicknameValue={setNicknameValue}
                                     setIsEditingNickname={setIsEditingNickname}
                                     isUpdatingProfile={isUpdatingProfile}
                                     redColorValue={redColorValue}

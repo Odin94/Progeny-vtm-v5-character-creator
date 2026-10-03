@@ -10,7 +10,7 @@ import {
     Title
 } from "@mantine/core"
 import { IconEdit, IconEye, IconEyeOff, IconUser } from "@tabler/icons-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import NameTag from "~/components/NameTag"
 
 type UserProfileSectionProps = {
@@ -23,12 +23,10 @@ type UserProfileSectionProps = {
         nameTagVisible: boolean
     } | null
     isEditingNickname: boolean
-    nicknameValue: string
-    setNicknameValue: (value: string) => void
     setIsEditingNickname: (value: boolean) => void
     isUpdatingProfile: boolean
     redColorValue: string
-    handleSaveNickname: () => void
+    handleSaveNickname: (nickname: string) => void
     handleCancelNickname: () => void
     handleNameTagToggle: (visible: boolean) => void
 }
@@ -36,8 +34,6 @@ type UserProfileSectionProps = {
 const UserProfileSection = ({
     user,
     isEditingNickname,
-    nicknameValue,
-    setNicknameValue,
     setIsEditingNickname,
     isUpdatingProfile,
     redColorValue,
@@ -45,6 +41,10 @@ const UserProfileSection = ({
     handleCancelNickname,
     handleNameTagToggle
 }: UserProfileSectionProps) => {
+    const [nicknameValue, setNicknameValue] = useState(user?.nickname || "")
+    useEffect(() => {
+        setNicknameValue(user?.nickname || "")
+    }, [user?.nickname, isEditingNickname])
     const [emailVisible, setEmailVisible] = useState(false)
     const nameTagLabel =
         user?.nickname || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Player"
@@ -92,7 +92,7 @@ const UserProfileSection = ({
                                 <Button
                                     size="xs"
                                     color="red"
-                                    onClick={handleSaveNickname}
+                                    onClick={() => handleSaveNickname(nicknameValue)}
                                     loading={isUpdatingProfile}
                                 >
                                     Save

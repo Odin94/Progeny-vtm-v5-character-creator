@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Grid, Stack, Text, Title } from "@mantine/core"
 import { upcase } from "../../generator/utils"
 import Tally from "../../components/Tally"
@@ -90,4 +91,4 @@ const SkillDisplay = ({ skills }: SkillsProps) => {
     )
 }
 
-export default SkillDisplay
+export default memo(SkillDisplay)

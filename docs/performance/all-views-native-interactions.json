@@ -1,0 +1,76 @@
+{
+    "methodology": "Native preview tab_o, production fixture HTTP server; search burst uses native input setter and bubbling input events at10ms interval. Local synthetic auth/backend writes only.",
+    "search": [
+        {
+            "phase": "before",
+            "route": "/homebrew/library",
+            "keystrokes": 7,
+            "requests": [
+                "/api/homebrew/library?query=p&sort=top",
+                "/api/homebrew/library?query=pe&sort=top",
+                "/api/homebrew/library?query=per&sort=top",
+                "/api/homebrew/library?query=perf&sort=top",
+                "/api/homebrew/library?query=perfo&sort=top",
+                "/api/homebrew/library?query=perfor&sort=top",
+                "/api/homebrew/library?query=perform&sort=top"
+            ],
+            "value": "perform"
+        },
+        {
+            "phase": "before",
+            "route": "/admin",
+            "keystrokes": 7,
+            "requests": [
+                "/api/admin/users?page=1&pageSize=25&query=p",
+                "/api/admin/users?page=1&pageSize=25&query=pe",
+                "/api/admin/users?page=1&pageSize=25&query=per",
+                "/api/admin/users?page=1&pageSize=25&query=perf",
+                "/api/admin/users?page=1&pageSize=25&query=perfo",
+                "/api/admin/users?page=1&pageSize=25&query=perfor",
+                "/api/admin/users?page=1&pageSize=25&query=perform"
+            ],
+            "value": "perform"
+        },
+        {
+            "phase": "after",
+            "route": "/homebrew/library",
+            "keystrokes": 7,
+            "requests": ["/api/homebrew/library?query=perform&sort=top"],
+            "value": "perform"
+        },
+        {
+            "phase": "after",
+            "route": "/admin",
+            "keystrokes": 7,
+            "requests": ["/api/admin/users?page=1&pageSize=25&query=perform"],
+            "value": "perform"
+        }
+    ],
+    "checks": [
+        {
+            "view": "Creator basics",
+            "result": "Native text input persisted in localStorage after700ms",
+            "screenshot": "/Users/odin/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mus4dbfg-e709a8fa.png"
+        },
+        {
+            "view": "Account profile",
+            "result": "Native local nickname draft submitted and editor closed after success",
+            "screenshot": "/Users/odin/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mus4flmj-a1c8cff2.png"
+        },
+        {
+            "view": "Homebrew editor",
+            "result": "Changed metadata and edited first rule; both remain in draft after closing item editor",
+            "screenshot": "/Users/odin/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mus4fjao-1a974f80.png"
+        },
+        {
+            "view": "Published library",
+            "result": "Native comment submitted; input cleared and posted comment appears",
+            "screenshot": "/Users/odin/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mus4gb96-7d0220b9.png"
+        },
+        {
+            "view": "Coterie notes",
+            "result": "Native note input retained and SAVED status after existing900ms debounce",
+            "screenshot": "/Users/odin/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mus4gx7u-533aa99b.png"
+        }
+    ]
+}

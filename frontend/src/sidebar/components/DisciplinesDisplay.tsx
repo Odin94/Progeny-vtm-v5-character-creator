@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Grid, List, Stack, Title } from "@mantine/core"
 import { Power, Ritual } from "../../data/Disciplines"
 import { Ceremony } from "../../data/Ceremonies"
@@ -77,4 +78,4 @@ const DisciplineDisplay = ({ powers, rituals, ceremonies = [] }: DisciplinesProp
     )
 }
 
-export default DisciplineDisplay
+export default memo(DisciplineDisplay)

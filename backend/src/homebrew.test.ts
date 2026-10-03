@@ -407,6 +407,112 @@ describe("Homebrew collections and library", () => {
         expect(detail.json().snapshot.name).toBe("Night Arts")
     })
 
+    it("aggregates independent publication statistics and preserves ranking and filters", async () => {
+        const snapshot = (name: string) =>
+            JSON.stringify({
+                name,
+                shortDescription: "Fixture",
+                description: "",
+                tags: ["fixture"],
+                contentWarning: "",
+                items: [
+                    {
+                        kind: "merit",
+                        name: "Rule",
+                        summary: "",
+                        description: "",
+                        costs: [1],
+                        excludes: []
+                    }
+                ]
+            })
+        for (const [index, id] of [
+            "aggregate-a",
+            "aggregate-b",
+            "aggregate-c",
+            "aggregate-hidden"
+        ].entries()) {
+            await db
+                .insert(schema.homebrewLibraryEntries)
+                .values({
+                    id,
+                    authorId: AUTHOR_ID,
+                    authorNickname: "Snapshot author",
+                    activePublicationId: `${id}-publication`,
+                    unpublishedAt: id.endsWith("hidden") ? new Date() : null
+                })
+            await db
+                .insert(schema.homebrewPublications)
+                .values({
+                    id: `${id}-publication`,
+                    libraryEntryId: id,
+                    version: 1,
+                    snapshot: snapshot(id),
+                    approvedAt: new Date(Date.UTC(2026, 8, index + 1))
+                })
+        }
+        await db.insert(schema.homebrewRatings).values([
+            { id: "rating-a1", libraryEntryId: "aggregate-a", userId: ADMIN_ID, rating: 5 },
+            { id: "rating-a2", libraryEntryId: "aggregate-a", userId: RATER_ID, rating: 3 },
+            { id: "rating-b", libraryEntryId: "aggregate-b", userId: RATER_ID, rating: 1 },
+            { id: "rating-hidden", libraryEntryId: "aggregate-hidden", userId: RATER_ID, rating: 5 }
+        ])
+        await db.insert(schema.homebrewCollections).values([
+            {
+                id: "copy-a1",
+                ownerId: RATER_ID,
+                name: "A copy",
+                sourceLibraryEntryId: "aggregate-a"
+            },
+            {
+                id: "copy-a2",
+                ownerId: ADMIN_ID,
+                name: "Another copy",
+                sourceLibraryEntryId: "aggregate-a"
+            },
+            { id: "copy-b", ownerId: RATER_ID, name: "B copy", sourceLibraryEntryId: "aggregate-b" }
+        ])
+        await db.insert(schema.homebrewComments).values([
+            { id: "comment-a1", libraryEntryId: "aggregate-a", userId: RATER_ID, body: "A" },
+            { id: "comment-a2", libraryEntryId: "aggregate-a", userId: ADMIN_ID, body: "A2" },
+            { id: "comment-c", libraryEntryId: "aggregate-c", userId: RATER_ID, body: "C" }
+        ])
+        const response = await app.inject({ method: "GET", url: "/homebrew/library?sort=top" })
+        expect(response.statusCode).toBe(200)
+        const summaries = response.json()
+        expect(summaries.map((entry: { id: string }) => entry.id)).toEqual([
+            "aggregate-a",
+            "aggregate-c",
+            "aggregate-b"
+        ])
+        expect(summaries[0]).toMatchObject({
+            ratingCount: 2,
+            averageRating: 4,
+            weightedRating: 3.2,
+            copyCount: 2,
+            commentCount: 2
+        })
+        expect(summaries[1]).toMatchObject({
+            ratingCount: 0,
+            averageRating: 0,
+            weightedRating: 3,
+            copyCount: 0,
+            commentCount: 1
+        })
+        expect(summaries[2].weightedRating).toBeCloseTo(25 / 9)
+        const copied = await app.inject({ method: "GET", url: "/homebrew/library?sort=copied" })
+        expect(copied.json().map((entry: { id: string }) => entry.id)).toEqual([
+            "aggregate-a",
+            "aggregate-b",
+            "aggregate-c"
+        ])
+        const newest = await app.inject({
+            method: "GET",
+            url: "/homebrew/library?sort=newest&query=AGGREGATE-C&type=merit&tag=FIXTURE"
+        })
+        expect(newest.json().map((entry: { id: string }) => entry.id)).toEqual(["aggregate-c"])
+    })
+
     it("resolves the author name from the users table so nickname changes are reflected", async () => {
         const libraryEntryId = await publishCollection()
 
