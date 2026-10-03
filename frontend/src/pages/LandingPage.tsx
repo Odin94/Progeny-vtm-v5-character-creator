@@ -431,7 +431,7 @@ export default function LandingPage() {
                                 share read-only versions with your friends.
                             </Text>
                             <Text size="lg" className="landing-page__body">
-                                Accont features, like all of Progeny, are completely free.
+                                Account features, like all of Progeny, are completely free.
                             </Text>
                             <Group gap="lg" mt="xs">
                                 <Anchor

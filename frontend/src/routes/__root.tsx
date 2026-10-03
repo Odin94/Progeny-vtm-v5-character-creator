@@ -141,7 +141,9 @@ const posthogOptions: Partial<PostHogConfig> = {
 
 // Restore persisted consent before children such as CookiesBanner read the PostHog client.
 monitorSupportConversationResources()
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, posthogOptions)
+if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY) {
+    posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, posthogOptions)
+}
 removeUtmParametersFromCurrentUrl()
 warmSupportConversation()
 
