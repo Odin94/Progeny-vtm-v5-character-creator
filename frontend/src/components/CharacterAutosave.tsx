@@ -18,7 +18,8 @@ const CharacterAutosave = () => {
     useAutosaveCharacter(
         character,
         setCharacter,
-        isAuthenticated && !authLoading && !charactersLoading && ownsCurrentCharacter
+        isAuthenticated && !authLoading && !charactersLoading && ownsCurrentCharacter,
+        characters?.find((candidate) => candidate.id === character.id && candidate.shared !== true)
     )
 
     return null

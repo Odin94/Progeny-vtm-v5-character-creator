@@ -35,7 +35,6 @@ import {
 } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { Buffer } from "buffer"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
@@ -50,7 +49,7 @@ import SaveCharacterCopyModal, {
 } from "~/components/SaveCharacterCopyModal"
 import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
-import { loadCharacterFromJson } from "~/components/LoadModal"
+import { loadCharacterFromFile } from "~/components/LoadModal"
 import { attributesKeySchema } from "~/data/Attributes"
 import { Character as CharacterType, getEmptyCharacter, isCharacterEmpty } from "~/data/Character"
 import { clans } from "~/data/Clans"
@@ -60,7 +59,6 @@ import { skillsKeySchema } from "~/data/Skills"
 import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
 import {
     downloadJson,
-    getUploadFile,
     rndInt,
     upcase,
     updateHealthAndWillpowerAndBloodPotencyAndHumanity
@@ -625,6 +623,7 @@ const MePage = () => {
                     data: {
                         name: character.name,
                         data: character,
+                        characterVersion: character.characterVersion ?? 0,
                         version: character.version
                     }
                 },
@@ -763,6 +762,8 @@ const MePage = () => {
                 data: {
                     name: character.name,
                     data: character,
+                    characterVersion:
+                        versionConflictInfo?.beVersion ?? targetCharacter.characterVersion ?? 0,
                     version: character.version
                 }
             },
@@ -963,6 +964,7 @@ const MePage = () => {
             ? await updateCharacterMutation.mutateAsync({
                   id: currentCharacter.id,
                   data: {
+                      characterVersion: characterToSave.characterVersion ?? 0,
                       name: characterToSave.name,
                       data: characterToSave,
                       version: characterToSave.version
@@ -1098,6 +1100,7 @@ const MePage = () => {
                                     data: {
                                         name: character.name,
                                         data: character,
+                                        characterVersion: character.characterVersion ?? 0,
                                         version: character.version
                                     }
                                 },
@@ -1142,25 +1145,7 @@ const MePage = () => {
         }
 
         try {
-            const fileData = await getUploadFile(loadedFile)
-            if (!fileData || typeof fileData !== "string") {
-                throw new Error("Failed to read file")
-            }
-            const base64 = fileData.split(",")[1]
-            if (!base64) {
-                throw new Error("Invalid file format")
-            }
-
-            // Use atob for browser compatibility instead of Buffer
-            let json: string
-            try {
-                json = atob(base64)
-            } catch (decodeError) {
-                // Fallback to Buffer if atob fails
-                json = Buffer.from(base64, "base64").toString()
-            }
-
-            const loadedCharacter = await loadCharacterFromJson(json)
+            const loadedCharacter = await loadCharacterFromFile(loadedFile)
             console.log("Loaded character from JSON:", loadedCharacter)
 
             // Set id to empty string since this is a new character from JSON

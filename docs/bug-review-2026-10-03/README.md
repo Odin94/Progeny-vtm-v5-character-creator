@@ -28,3 +28,7 @@ Shared [browser results](../../../evidence/browser-results.json), [screenshots](
 
 - [Screenshot: primary reproduction](../../../evidence/progeny-unicode-import.png)
 - [Screenshot: second reproduction](../../../evidence/progeny-pending-description-wrong-sheet.png)
+
+## Fix status
+
+All five findings have implementations and regression coverage on `fix/odin/review-bug-fixes`. Independent review and running-app verification are performed before handoff. Recovery drafts can be downloaded from the character sheet menu.

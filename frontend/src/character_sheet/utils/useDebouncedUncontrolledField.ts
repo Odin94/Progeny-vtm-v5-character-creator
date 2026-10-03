@@ -1,5 +1,10 @@
 import { useRef, useCallback, useEffect, useMemo, useState } from "react"
 import { Character } from "~/data/Character"
+import {
+    getCharacterDraftIdentity,
+    getLatestCharacterDraft,
+    preserveCharacterDraft
+} from "~/utils/characterDraft"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 
 type UseDebouncedUncontrolledStringFieldOptions = {
@@ -30,6 +35,9 @@ export const useDebouncedUncontrolledStringField = ({
     field,
     delay = 150
 }: UseDebouncedUncontrolledStringFieldOptions) => {
+    const identity = getCharacterDraftIdentity(character)
+    const draftSnapshot = useMemo(() => ({ current: character }), [identity])
+    draftSnapshot.current = character
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const pendingValueRef = useRef<string | undefined>(undefined)
     const lastCommittedValueRef = useRef<string | undefined>(undefined)
@@ -64,7 +72,7 @@ export const useDebouncedUncontrolledStringField = ({
         }
 
         setValue(externalValue)
-    }, [externalValue])
+    }, [externalValue, identity])
 
     const handleChange = useCallback(
         (nextValue: string) => {
@@ -81,23 +89,41 @@ export const useDebouncedUncontrolledStringField = ({
                 // debounced edit safe even when this field's component is memoized and
                 // has not re-rendered since another field changed elsewhere.
                 lastCommittedValueRef.current = nextValue
-                setCharacter((currentCharacter) => ({
-                    ...currentCharacter,
-                    [field]: nextValue
-                }))
+                setCharacter((currentCharacter) => {
+                    if (getCharacterDraftIdentity(currentCharacter) !== identity) {
+                        preserveCharacterDraft(
+                            {
+                                ...getLatestCharacterDraft(identity, draftSnapshot.current),
+                                [field]: nextValue
+                            },
+                            "Interrupted field edit"
+                        )
+                        return currentCharacter
+                    }
+                    return { ...currentCharacter, [field]: nextValue }
+                })
                 timeoutRef.current = null
             }, delay)
         },
-        [setCharacter, field, delay]
+        [setCharacter, field, delay, identity, character]
     )
 
     useEffect(() => {
         return () => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
+                if (pendingValueRef.current !== undefined) {
+                    preserveCharacterDraft(
+                        {
+                            ...getLatestCharacterDraft(identity, draftSnapshot.current),
+                            [field]: pendingValueRef.current
+                        },
+                        "Interrupted field edit"
+                    )
+                }
             }
         }
-    }, [])
+    }, [identity])
 
     return {
         value,
@@ -113,6 +139,9 @@ export const useDebouncedUncontrolledNumberField = ({
     getValue,
     updateFn
 }: UseDebouncedUncontrolledNumberFieldOptions) => {
+    const identity = getCharacterDraftIdentity(character)
+    const draftSnapshot = useMemo(() => ({ current: character }), [identity])
+    draftSnapshot.current = character
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const pendingValueRef = useRef<number | undefined>(undefined)
 
@@ -144,7 +173,7 @@ export const useDebouncedUncontrolledNumberField = ({
         }
 
         setValue(externalValue)
-    }, [externalValue])
+    }, [externalValue, identity])
 
     const handleChange = useCallback(
         (nextValue: string | number) => {
@@ -163,27 +192,47 @@ export const useDebouncedUncontrolledNumberField = ({
                 // character rather than a possibly-stale closure/ref. This keeps the
                 // debounced edit safe even when this field's component is memoized and
                 // has not re-rendered since another field changed elsewhere.
-                if (updateFn) {
-                    setCharacter((currentCharacter) => updateFn(currentCharacter, transformedValue))
-                } else {
-                    setCharacter((currentCharacter) => ({
-                        ...currentCharacter,
-                        [field as keyof Character]: transformedValue
-                    }))
-                }
+                setCharacter((currentCharacter) => {
+                    const apply = (target: Character) =>
+                        updateFn
+                            ? updateFn(target, transformedValue)
+                            : { ...target, [field]: transformedValue }
+                    if (getCharacterDraftIdentity(currentCharacter) !== identity) {
+                        preserveCharacterDraft(
+                            apply(getLatestCharacterDraft(identity, draftSnapshot.current)),
+                            "Interrupted field edit"
+                        )
+                        return currentCharacter
+                    }
+                    return apply(currentCharacter)
+                })
                 timeoutRef.current = null
             }, delay)
         },
-        [setCharacter, field, delay, updateFn]
+        [setCharacter, field, delay, updateFn, identity, character]
     )
 
     useEffect(() => {
         return () => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
+                if (pendingValueRef.current !== undefined) {
+                    preserveCharacterDraft(
+                        updateFn
+                            ? updateFn(
+                                  getLatestCharacterDraft(identity, draftSnapshot.current),
+                                  pendingValueRef.current
+                              )
+                            : {
+                                  ...getLatestCharacterDraft(identity, draftSnapshot.current),
+                                  [field]: pendingValueRef.current
+                              },
+                        "Interrupted field edit"
+                    )
+                }
             }
         }
-    }, [])
+    }, [identity])
 
     return {
         value,

@@ -64,3 +64,7 @@ Copied collection detail responses resolve the immediate source entry and public
 - **Route payloads**: inspect the corresponding frontend API helper in `frontend/src/utils/api.ts` and the consumer hook.
 - **DB schema**: generate a migration (`pnpm run db:generate`) and inspect affected routes for JSON parse/stringify logic.
 - **WebSocket messages**: inspect the paired frontend Zustand store before finalizing — both sides must agree on the payload shape.
+
+### Character save revision preconditions
+
+`PUT /characters/:id` and `character_update` socket messages require a nonnegative `characterVersion` representing the last acknowledged save. The database update atomically matches ID, owner, and that revision, returning 409 on divergence. The document `version` remains its schema version. Successful writes increment the save revision in both stored JSON and the character row. Socket updates apply the REST schema and cookie-based ownership rules.

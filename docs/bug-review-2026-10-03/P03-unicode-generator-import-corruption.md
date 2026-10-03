@@ -19,3 +19,9 @@ The character-sheet import path uses UTF-8 decoding and does not have this bug.
 Read the file with `await loadedFile.text()`, or decode the bytes with `TextDecoder('utf-8')`. Share one import decoding function between generator and sheet.
 
 Regression: export/import accented Latin text, CJK, emoji, and combining marks through both visible import flows, asserting exact string equality after reload.
+
+## Implemented fix
+
+Implemented a shared `loadCharacterFromFile` helper using `File.text()` for generator, sheet and account-page imports. UTF-8 text remains exact through parsing and compatibility migration.
+
+Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.

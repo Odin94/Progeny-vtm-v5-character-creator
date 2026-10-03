@@ -19,3 +19,9 @@ The reproduction uses the browser's actual storage event, textarea, and characte
 Give every draft a stable identity. Capture that identity when scheduling an edit, and apply it only to that document. Cancel or deliberately flush pending changes during a character replacement; include identity in effect dependencies and memo comparisons. Preserve unsaved edits to A through the replacement flow instead of silently applying them to B.
 
 Regression: switch between two characters with identical initial values during a pending string or number edit; B must stay unchanged. Also cover an external same-field change and component unmount.
+
+## Implemented fix
+
+Implemented local draft identities, identity checks in functional delayed writes, identity-aware memoization and cancellation on document replacement. Interrupted text/number edits are preserved as full JSON recovery drafts using the latest source snapshot; the sheet menu offers recovery downloads.
+
+Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.

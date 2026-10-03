@@ -21,3 +21,9 @@ Evidence: `progeny-restored-unsaved.js`, `browser-results.json:P05`, and `progen
 Persist a server-confirmed content signature/base separately from the editable document. On reload and reconnect, compare the two and resume the dirty save queue. Reconcile against the current remote revision using the conflict protection proposed in P01; uploading an old local draft unconditionally would create another overwrite path.
 
 Regression: edit offline, reload, reconnect without another edit; verify eventual cloud persistence. Repeat with a newer remote version and require a preserved conflict rather than an overwrite.
+
+## Implemented fix
+
+Implemented comparison with the fetched owned cloud document rather than assuming the restored local document is saved. Confirmed bases are stored separately and advance only after acknowledged saves. Dirty drafts with matching cloud revisions resume saving; clean old bases adopt remote changes. Divergent drafts are kept locally, backed up and paused with a visible conflict notice.
+
+Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.

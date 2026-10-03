@@ -17,3 +17,9 @@ Set an authenticated fixture session cookie, connect to `/ws/characters`, then s
 Use the socket argument directly throughout the character handler and add an authenticated network-level subscription test. Before enabling the update path, apply the REST character schema, ownership, and save-revision checks there too: the existing path accepts arbitrary data and a caller-supplied schema version without incrementing `characterVersion`.
 
 Regression: authorized subscribe/update/unsubscribe succeeds; unauthorized connections close with 1008; shared readers cannot update; malformed and stale updates cannot alter storage.
+
+## Implemented fix
+
+Implemented the direct Fastify v11 socket handler. Listeners attach before async cookie authentication resolves. Socket messages use the REST update Zod schema, owner checks and atomic expected-revision writes, return the new save revision, and re-check sharing before broadcasts.
+
+Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.

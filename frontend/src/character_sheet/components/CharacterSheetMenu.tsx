@@ -1,3 +1,4 @@
+import { readRecoveredCharacterDrafts } from "~/utils/characterDraft"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
@@ -18,7 +19,6 @@ import {
     IconMessageCircle,
     IconHistory
 } from "@tabler/icons-react"
-import { Buffer } from "buffer"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -31,15 +31,11 @@ import RecentChangesModal from "~/components/RecentChangesModal"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
-import { loadCharacterFromJson } from "~/components/LoadModal"
+import { loadCharacterFromFile } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
-import {
-    downloadJson,
-    getUploadFile,
-    updateHealthAndWillpowerAndBloodPotencyAndHumanity
-} from "~/generator/utils"
+import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { trackEvent, trackFeatureGuideOpened } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
@@ -53,6 +49,8 @@ type CharacterSheetMenuProps = {
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const shouldReduceMotion = useReducedMotion()
+    const [recoveryOpened, setRecoveryOpened] = useState(false)
+    const recoveredDrafts = readRecoveredCharacterDrafts()
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
@@ -218,10 +216,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             return
         }
         try {
-            const fileData = await getUploadFile(loadedFile)
-            const base64 = fileData.split(",")[1]
-            const json = Buffer.from(base64, "base64").toString()
-            const loadedCharacter = await loadCharacterFromJson(json)
+            const loadedCharacter = await loadCharacterFromFile(loadedFile)
             setCharacter(loadedCharacter)
             closeLoadModal()
             handleMenuClose()
@@ -287,6 +282,35 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 <IconMenu2 size={24} />
             </ActionIcon>
 
+            <Modal
+                opened={recoveryOpened}
+                onClose={() => setRecoveryOpened(false)}
+                title="Recovered character drafts"
+                centered
+                zIndex={2100}
+            >
+                <Stack>
+                    <Text size="sm">
+                        These backups preserve edits interrupted by switching characters or a cloud
+                        conflict. Download a draft and use Load file to open it as a separate
+                        character.
+                    </Text>
+                    {recoveredDrafts.map((draft, index) => (
+                        <Stack gap="xs" key={`${draft.recoveredAt}:${index}`}>
+                            <Text fw={600}>{draft.character.name || "Unnamed character"}</Text>
+                            <Text size="xs" c="dimmed">
+                                {draft.reason}
+                            </Text>
+                            <Button
+                                variant="light"
+                                onClick={() => void downloadJson(draft.character)}
+                            >
+                                Download recovered draft {index + 1}
+                            </Button>
+                        </Stack>
+                    ))}
+                </Stack>
+            </Modal>
             {menuOpened ? (
                 <Modal
                     opened={menuOpened}
@@ -386,6 +410,17 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                     </div>
                                                 </Button>
                                             </div>
+                                            {recoveredDrafts.length > 0 && (
+                                                <Button
+                                                    variant="light"
+                                                    color="yellow"
+                                                    mt="md"
+                                                    onClick={() => setRecoveryOpened(true)}
+                                                >
+                                                    Recover interrupted drafts (
+                                                    {recoveredDrafts.length})
+                                                </Button>
+                                            )}
                                         </section>
 
                                         <div

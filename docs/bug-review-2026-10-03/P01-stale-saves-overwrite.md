@@ -22,3 +22,9 @@ Both PUT requests succeed. `characterVersion` advances from 0 to 1 to 2, but the
 Require an expected `characterVersion`, perform an atomic update with ID, owner, and expected revision in the WHERE clause, and return 409 on a mismatch. Preserve the local draft and offer reload, fork, or a field-level three-way merge. Make manual saves and autosaves use the same contract.
 
 Regression: two clients editing different and identical fields from the same base; the second save must preserve both edits or explicitly report conflict.
+
+## Implemented fix
+
+Implemented required `characterVersion` preconditions and atomic owner/ID/revision updates. All autosave and manual save requests now send the expected revision; explicit overwrite uses the revision shown in the confirmation. Stale saves return 409 without changing data. Vitals writes also guard against intervening updates.
+
+Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.

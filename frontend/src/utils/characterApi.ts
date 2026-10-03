@@ -43,6 +43,7 @@ export type CreateCharacterPayload = {
 }
 
 export type UpdateCharacterPayload = {
+    characterVersion: number
     name?: string
     data?: Character
     version?: number

@@ -252,13 +252,14 @@ export const getEmptyCharacter = (): Character => {
 // Serialise with sorted keys so the comparison does not depend on key order.
 // A stored character can hold the same values in a different key order and must
 // still count as equal.
-const stableStringify = (value: unknown): string => {
+export const stableStringify = (value: unknown): string => {
     if (Array.isArray(value)) {
         return `[${value.map(stableStringify).join(",")}]`
     }
     if (value !== null && typeof value === "object") {
         const record = value as Record<string, unknown>
         const entries = Object.keys(record)
+            .filter((key) => record[key] !== undefined)
             .sort()
             .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`)
         return `{${entries.join(",")}}`
