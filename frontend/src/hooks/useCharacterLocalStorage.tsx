@@ -14,6 +14,12 @@ export type SetCharacter = (character: Character | ((character: Character) => Ch
 let cachedSerializedCharacter: string | undefined
 let cachedCharacter: Character | undefined
 
+const resetCachedCharacter = () => {
+    cachedSerializedCharacter = undefined
+    cachedCharacter = getEmptyCharacter()
+    return cachedCharacter
+}
+
 export const useCharacterLocalStorage = () => {
     const [emptyCharacter] = useState(getEmptyCharacter)
     const [character, setCharacterInternal] = useLocalStorage<Character>({
@@ -22,7 +28,7 @@ export const useCharacterLocalStorage = () => {
         getInitialValueInEffect: false,
         deserialize: (value) => {
             if (!value) {
-                return getEmptyCharacter()
+                return resetCachedCharacter()
             }
 
             const originalValue = typeof value === "string" ? value : JSON.stringify(value)
@@ -55,14 +61,14 @@ export const useCharacterLocalStorage = () => {
                         parsed
                     )
                     recordBrokenCharacter(originalValue, zodError)
-                    return getEmptyCharacter()
+                    return resetCachedCharacter()
                 }
             } catch (parseError) {
                 const errorMessage =
                     parseError instanceof Error ? parseError.message : String(parseError)
                 reportCharacterValidationError(parseError, "local-storage", "json")
                 recordBrokenCharacter(originalValue, errorMessage)
-                return getEmptyCharacter()
+                return resetCachedCharacter()
             }
         },
         serialize: (value) => {
@@ -79,7 +85,9 @@ export const useCharacterLocalStorage = () => {
         (characterOrUpdater) => {
             const updatedCharacter =
                 typeof characterOrUpdater === "function"
-                    ? characterOrUpdater(latestCharacterRef.current)
+                    ? // Another mounted consumer or storage event can update the snapshot
+                      // before React renders this hook again. Merge into that freshest value.
+                      characterOrUpdater(cachedCharacter ?? latestCharacterRef.current)
                     : characterOrUpdater
             const characterWithVersion = { ...updatedCharacter, version: schemaVersion }
 

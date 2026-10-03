@@ -35,8 +35,6 @@ it("shares the latest snapshot between mounted consumers and merges sequential u
     const second = renderHook(() => useCharacterLocalStorage())
     act(() => {
         first.result.current[1]((character) => ({ ...character, name: "Latest name" }))
-    })
-    act(() => {
         second.result.current[1]((character) => ({ ...character, experience: 42 }))
     })
     expect(first.result.current[0]).toMatchObject({ name: "Latest name", experience: 42 })
@@ -45,4 +43,41 @@ it("shares the latest snapshot between mounted consumers and merges sequential u
         name: "Latest name",
         experience: 42
     })
+})
+
+it("merges an external storage change and a local updater in the same batch", () => {
+    const { result } = renderHook(() => useCharacterLocalStorage())
+    const serialized = JSON.stringify({ ...getEmptyCharacter(), name: "External name" })
+    act(() => {
+        localStorage.setItem("character", serialized)
+        window.dispatchEvent(
+            new StorageEvent("storage", {
+                key: "character",
+                newValue: serialized,
+                storageArea: localStorage
+            })
+        )
+        result.current[1]((character) => ({ ...character, experience: 12 }))
+    })
+    expect(result.current[0]).toMatchObject({ name: "External name", experience: 12 })
+})
+
+it("does not resurrect the previous snapshot after external deletion or invalid data", () => {
+    const { result } = renderHook(() => useCharacterLocalStorage())
+    for (const newValue of [null, "invalid JSON"]) {
+        act(() => result.current[1]((character) => ({ ...character, name: "Previous name" })))
+        act(() => {
+            if (newValue === null) localStorage.removeItem("character")
+            else localStorage.setItem("character", newValue)
+            window.dispatchEvent(
+                new StorageEvent("storage", {
+                    key: "character",
+                    newValue,
+                    storageArea: localStorage
+                })
+            )
+            result.current[1]((character) => ({ ...character, experience: 21 }))
+        })
+        expect(result.current[0]).toMatchObject({ name: getEmptyCharacter().name, experience: 21 })
+    }
 })
