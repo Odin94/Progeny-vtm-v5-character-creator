@@ -1,8 +1,8 @@
-import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { Button, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
+import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
@@ -31,8 +31,18 @@ import {
 } from "~/utils/feedbackSurveys"
 import { getDisciplineRating } from "~/generator/utils"
 
+import ThrowControls from "./threeDice/ThrowControls"
+import {
+    DEFAULT_VAMPIRE_THROW,
+    readThrowSettings,
+    type VampireDiceStyle,
+    type VampireThrowSettings
+} from "./threeDice/settings"
+const ThreeDice = lazy(() => import("./threeDice/ThreeDice"))
+
 type DiceRollModalProps = {
     primaryColor: string
+    use3dDice?: boolean
     character?: Character
     setCharacter?: SetCharacter
     editDisabledReason?: string
@@ -66,10 +76,32 @@ type RollShareContext = {
 
 const DiceRollModal = ({
     primaryColor,
+    use3dDice = false,
     character,
     setCharacter,
     editDisabledReason
 }: DiceRollModalProps) => {
+    const [threeDiceUnavailable, setThreeDiceUnavailable] = useState(false)
+    const useThreeDice = use3dDice && !threeDiceUnavailable
+    const controlsRef = useRef<HTMLDivElement>(null)
+    const [diceStyle, setDiceStyle] = useLocalStorage<VampireDiceStyle>({
+        key: "vampire-dice-style",
+        defaultValue: "vtm",
+        deserialize: (raw) => (raw === '"crystal-vtm"' ? "crystal-vtm" : "vtm")
+    })
+    const [throwSettings, setThrowSettings] = useLocalStorage<VampireThrowSettings>({
+        key: "vampire-dice-throw",
+        defaultValue: DEFAULT_VAMPIRE_THROW,
+        deserialize: readThrowSettings
+    })
+    const pendingThreeReroll = useRef<((dice: DieResult[]) => void) | null>(null)
+    const onThreeComplete = useCallback((landed: DieResult[]) => {
+        if (pendingThreeReroll.current) {
+            const complete = pendingThreeReroll.current
+            pendingThreeReroll.current = null
+            complete(landed)
+        } else useDiceRollModalStore.getState().setDice(landed)
+    }, [])
     const theme = useMantineTheme()
     const shouldReduceMotion = useReducedMotion()
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
@@ -110,8 +142,31 @@ const DiceRollModal = ({
     const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat()
     const handleClose = useCallback(() => {
         closeModal()
+        if (use3dDice) resetModal()
         resetSelectedDicePool()
-    }, [closeModal, resetSelectedDicePool])
+    }, [closeModal, resetModal, resetSelectedDicePool, use3dDice])
+
+    // Closing or leaving the sheet during preparation/flight must not leave a
+    // pool marked as rolling and block the next hotkey roll.
+    const mountedRef = useRef(false)
+    useEffect(() => {
+        mountedRef.current = true
+        return () => {
+            mountedRef.current = false
+            const diceAtClose = useDiceRollModalStore.getState().dice
+            queueMicrotask(() => {
+                // StrictMode replays setup immediately. Only clear an actual
+                // unmount, and never clear a newer roll started elsewhere.
+                if (
+                    use3dDice &&
+                    !mountedRef.current &&
+                    useDiceRollModalStore.getState().dice === diceAtClose
+                ) {
+                    useDiceRollModalStore.getState().reset()
+                }
+            })
+        }
+    }, [use3dDice])
 
     const hunger = character?.ephemeral?.hunger ?? 0
 
@@ -314,11 +369,26 @@ const DiceRollModal = ({
         }
     }
 
-    const rollDice = () => {
-        const countToUse = activeTab === "selected" ? selectedPoolDiceCount : diceCount
+    const rollDice = (quickCount?: number) => {
+        if (dice.some((die) => die.isRolling)) return
+        const countToUse =
+            quickCount ?? (activeTab === "selected" ? selectedPoolDiceCount : diceCount)
+        if (countToUse < 1) return
         const bloodDiceCount = Math.min(hunger, countToUse)
         setSelectedDiceIds(new Set())
 
+        if (useThreeDice) {
+            startRoll()
+            setDice(
+                Array.from({ length: countToUse }, (_, i) => ({
+                    id: Date.now() + i,
+                    value: 0,
+                    isRolling: true,
+                    isBloodDie: i < bloodDiceCount
+                }))
+            )
+            return
+        }
         if (isMobile) {
             startRoll()
             const newDice: DieResult[] = Array.from({ length: countToUse }, (_, i) => ({
@@ -393,6 +463,17 @@ const DiceRollModal = ({
             new Set(nonBloodDice.filter((die) => selectedDiceIds.has(die.id)).map((die) => die.id)),
         [nonBloodDice, selectedDiceIds]
     )
+
+    const quickRollSequence = useDiceRollModalStore((state) => state.quickRollSequence)
+    const lastQuickRoll = useRef(0)
+    const rollRef = useRef(rollDice)
+    rollRef.current = rollDice
+    useEffect(() => {
+        if (use3dDice && opened && quickRollSequence > lastQuickRoll.current) {
+            lastQuickRoll.current = quickRollSequence
+            rollRef.current(useDiceRollModalStore.getState().diceCount)
+        }
+    }, [use3dDice, opened, quickRollSequence])
 
     const availableWillpower = useMemo(() => {
         if (!character) return 0
@@ -475,7 +556,7 @@ const DiceRollModal = ({
             console.warn("PostHog dice reroll tracking failed:", error)
         }
 
-        if (isMobile) {
+        if (isMobile || useThreeDice) {
             const rerolledDice = dice.filter((d) => diceIdsToReroll.has(d.id))
             const oldValuesMap = new Map(rerolledDice.map((d) => [d.id, d.value]))
             setDice((prev) =>
@@ -484,13 +565,7 @@ const DiceRollModal = ({
                 )
             )
 
-            setTimeout(() => {
-                const newDice = dice.map((die) =>
-                    diceIdsToReroll.has(die.id)
-                        ? { ...die, value: rollDie(), isRolling: false }
-                        : die
-                )
-
+            const finishReroll = (newDice: DieResult[]) => {
                 const resultsText = rerolledDice
                     .map((die) => {
                         const oldVal = oldValuesMap.get(die.id) ?? 0
@@ -603,7 +678,20 @@ const DiceRollModal = ({
                     color: primaryColor,
                     autoClose: 4000
                 })
-            }, 1500)
+            }
+            if (useThreeDice) pendingThreeReroll.current = finishReroll
+            else
+                setTimeout(
+                    () =>
+                        finishReroll(
+                            dice.map((die) =>
+                                diceIdsToReroll.has(die.id)
+                                    ? { ...die, value: rollDie(), isRolling: false }
+                                    : die
+                            )
+                        ),
+                    1500
+                )
         } else {
             setDice((prev) =>
                 prev.map((die) => {
@@ -892,7 +980,7 @@ const DiceRollModal = ({
             <ModalHeader primaryColor={primaryColor} onClose={handleClose} />
 
             <Stack
-                gap="lg"
+                gap={useThreeDice ? "sm" : "lg"}
                 style={{
                     display: "flex",
                     flexDirection: "column",
@@ -920,7 +1008,7 @@ const DiceRollModal = ({
                     <Button
                         size="md"
                         color={primaryColor}
-                        onClick={rollDice}
+                        onClick={() => rollDice()}
                         disabled={
                             dice.some((d) => d.isRolling) ||
                             (activeTab === "selected" && selectedPoolDiceCount === 0)
@@ -948,17 +1036,71 @@ const DiceRollModal = ({
                     )}
                 </Group>
 
-                <DiceContainer
-                    primaryColor={primaryColor}
-                    onDieClick={handleDieClick}
-                    selectedDiceIds={selectedDiceIds}
-                    isMobile={isMobile}
-                />
+                {useThreeDice ? (
+                    <>
+                        <ThrowControls
+                            style={diceStyle}
+                            onStyleChange={setDiceStyle}
+                            settings={throwSettings}
+                            onSettingsChange={setThrowSettings}
+                            disabled={dice.some((die) => die.isRolling)}
+                        />
+                        {!isMobile ? (
+                            <Text size="xs" c="dimmed">
+                                Press R, enter a count, then Enter. Select up to 3 regular dice to
+                                reroll.
+                            </Text>
+                        ) : null}
+                        <Suspense fallback={<Text size="xs">Preparing 3D dice…</Text>}>
+                            <ThreeDice
+                                dice={dice}
+                                style={diceStyle}
+                                settings={throwSettings}
+                                controls={controlsRef}
+                                isMobile={!!isMobile}
+                                selectedDiceIds={selectedDiceIds}
+                                canSelect={
+                                    !!character &&
+                                    !!setCharacter &&
+                                    !editDisabledReason &&
+                                    availableWillpower > 0
+                                }
+                                onDieClick={handleDieClick}
+                                onComplete={onThreeComplete}
+                                onUnavailable={() => {
+                                    setThreeDiceUnavailable(true)
+                                    const resolved = useDiceRollModalStore
+                                        .getState()
+                                        .dice.map((die) =>
+                                            die.isRolling
+                                                ? { ...die, value: rollDie(), isRolling: false }
+                                                : die
+                                        )
+                                    onThreeComplete(resolved)
+                                    notifications.show({
+                                        title: "3D dice unavailable",
+                                        message:
+                                            "Using the standard dice roller. Close and reopen to retry.",
+                                        color: "yellow"
+                                    })
+                                }}
+                            />
+                        </Suspense>
+                    </>
+                ) : (
+                    <DiceContainer
+                        primaryColor={primaryColor}
+                        onDieClick={handleDieClick}
+                        selectedDiceIds={selectedDiceIds}
+                        isMobile={isMobile}
+                    />
+                )}
 
                 <AnimatePresence>
                     {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
                         <SuccessResults
                             key="success-results"
+                            compact={useThreeDice && !!isMobile}
                             results={calculateSuccesses.results}
                             totalSuccesses={calculateSuccesses.totalSuccesses}
                             primaryColor={primaryColor}
@@ -972,6 +1114,34 @@ const DiceRollModal = ({
             </Stack>
         </>
     )
+
+    if (useThreeDice) {
+        return (
+            <Paper
+                ref={controlsRef}
+                role="region"
+                aria-label="Dice roll controls"
+                data-testid="vampire-dice-controls"
+                style={{
+                    position: "fixed",
+                    bottom: 12,
+                    right: isMobile ? 8 : 20,
+                    left: isMobile ? 8 : undefined,
+                    width: isMobile ? undefined : 380,
+                    maxHeight: isMobile ? "50dvh" : "90dvh",
+                    overflowY: "auto",
+                    padding: isMobile ? 12 : 16,
+                    borderRadius: 12,
+                    border: `1px solid ${colorValue}`,
+                    background: "rgba(12, 10, 17, 0.96)",
+                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+                    zIndex: 2000
+                }}
+            >
+                {modalContent}
+            </Paper>
+        )
+    }
 
     if (isMobile) {
         return (
