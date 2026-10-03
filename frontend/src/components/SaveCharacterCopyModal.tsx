@@ -1,5 +1,7 @@
 import { Alert, Button, Group, Modal, Stack, Text } from "@mantine/core"
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { characterPersistence } from "~/modules/characterPersistence"
 import posthog from "posthog-js"
 import type { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
@@ -23,6 +25,7 @@ export default function SaveCharacterCopyModal({
     setCharacter: SetCharacter
 }) {
     const create = useCreateCharacter()
+    const persistence = characterPersistence(useQueryClient())
     const [error, setError] = useState<string | null>(null)
     const close = () => {
         if (!create.isPending) {
@@ -32,6 +35,7 @@ export default function SaveCharacterCopyModal({
     }
     const saveCopy = async () => {
         if (!source || create.isPending) return
+        const isCurrent = persistence.replacementGuard()
         const properties = {
             source_character_id: source.character.id,
             source_owner_id: source.ownerId ?? null,
@@ -53,8 +57,11 @@ export default function SaveCharacterCopyModal({
             const saved = await create.mutateAsync({
                 name: data.name.trim() || "Unnamed character",
                 data,
-                version: data.version
+                version: data.version,
+                newDocument: true
             })
+            if (!isCurrent()) return
+            persistence.startDraft()
             setCharacter({ ...saved.data, id: saved.id, characterVersion: saved.characterVersion })
             track("character_save_as_copy_applied", { new_character_id: saved.id })
             onClose()

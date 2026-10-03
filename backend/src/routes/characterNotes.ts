@@ -157,12 +157,10 @@ export async function characterNoteRoutes(fastify: FastifyInstance) {
                     userId,
                     request
                 )
-                return reply
-                    .code(413)
-                    .send({
-                        error: "Notes too large",
-                        message: "Private notes must be 200 KB or less."
-                    })
+                return reply.code(413).send({
+                    error: "Notes too large",
+                    message: "Private notes must be 200 KB or less."
+                })
             }
             const result = await saveVersionedNotes(characterNotesStore, scope, userId, content)
             await trackEvent(

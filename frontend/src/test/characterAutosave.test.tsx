@@ -130,12 +130,16 @@ describe("useAutosaveCharacter", () => {
         })
 
         expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(1)
-        expect(apiMocks.updateCharacter).toHaveBeenCalledWith("character-1", {
-            name: latestCharacter.name,
-            data: latestCharacter,
-            version: latestCharacter.version,
-            characterVersion: 0
-        })
+        expect(apiMocks.updateCharacter).toHaveBeenCalledWith(
+            "character-1",
+            {
+                name: latestCharacter.name,
+                data: latestCharacter,
+                version: latestCharacter.version,
+                characterVersion: 0
+            },
+            expect.any(Function)
+        )
         expect(setCharacter).toHaveBeenCalledWith(expect.any(Function))
 
         const applySavedVersion = setCharacter.mock.calls[0][0] as (
@@ -196,7 +200,10 @@ describe("useAutosaveCharacter", () => {
         })
 
         expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(2)
-        expect(apiMocks.updateCharacter.mock.calls[1][1].data).toEqual(latestCharacter)
+        expect(apiMocks.updateCharacter.mock.calls[1][1].data).toEqual({
+            ...latestCharacter,
+            characterVersion: 2
+        })
     })
 
     it("cancels a pending save when a different character is loaded", () => {
@@ -234,7 +241,8 @@ describe("useAutosaveCharacter", () => {
         })
         expect(apiMocks.updateCharacter).toHaveBeenCalledWith(
             server.id,
-            expect.objectContaining({ characterVersion: 0, data: draft })
+            expect.objectContaining({ characterVersion: 0, data: draft }),
+            expect.any(Function)
         )
     })
 

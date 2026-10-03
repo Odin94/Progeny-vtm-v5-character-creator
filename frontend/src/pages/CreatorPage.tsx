@@ -4,16 +4,12 @@ import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useSyncExternalStore } from "react"
 import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import RenderProfiler from "~/components/RenderProfiler"
 import SharedCharacterCreatorModal from "~/components/SharedCharacterCreatorModal"
-import {
-    getEmptyCharacter,
-    isCharacterEmpty,
-    type Character as CharacterType
-} from "~/data/Character"
+import { getEmptyCharacter, type Character as CharacterType } from "~/data/Character"
 import Generator from "~/generator/Generator"
 import {
     defaultGeneratorStepId,
@@ -36,6 +32,7 @@ import Sidebar from "~/sidebar/Sidebar"
 import Topbar from "~/topbar/Topbar"
 import { characterHttp } from "~/utils/http/characters"
 import { parseCharacterData } from "~/utils/characterData"
+import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 type PendingSwitchAction = { type: "load"; characterId: string } | { type: "create" } | null
@@ -128,11 +125,18 @@ export default function CreatorPage() {
         setLoadedFile(null)
     }
 
-    const loadSavedCharacter = async (characterId: string) => {
+    const loadSavedCharacter = async (
+        characterId: string,
+        isCurrent = persistence.replacementGuard()
+    ) => {
+        await characterPersistence(queryClient).settle(character.id)
+        if (!isCurrent()) return
         const response = await characterHttp.get(characterId)
+        if (!isCurrent()) return
         const loadedCharacter = parseCharacterData((response as { data: unknown }).data)
         if (!loadedCharacter) throw new Error("Unable to load character data")
 
+        persistence.startDraft()
         setCharacter({
             ...loadedCharacter,
             id: characterId
@@ -148,64 +152,50 @@ export default function CreatorPage() {
         })
     }
 
-    const saveCurrentCharacter = async () => {
-        const isEmptyCharacter = isCurrentCharacterEmpty()
-
-        if (isEmptyCharacter) {
-            return
-        }
-
-        if (!character.name.trim()) {
-            throw new Error("Please give the current character a name before switching.")
-        }
-
-        const targetCharacter = character.id
-            ? userCharacters.find((candidate) => candidate.id === character.id)
-            : null
-        const payload = {
-            name: character.name,
-            data: character,
-            characterVersion: character.characterVersion ?? 0,
-            version: character.version
-        }
-
-        const savedCharacter = targetCharacter
-            ? await characterHttp.update(targetCharacter.id, payload)
-            : await characterHttp.create(payload)
-
-        const saved = savedCharacter as {
-            id: string
-            data?: { characterVersion?: number }
-            characterVersion?: number
-        }
-
-        setCharacter({
-            ...character,
-            id: saved.id,
-            characterVersion:
-                saved.characterVersion ??
-                saved.data?.characterVersion ??
-                character.characterVersion ??
-                0
-        } as CharacterType & { id: string; characterVersion: number })
-
-        await queryClient.invalidateQueries({ queryKey: ["characters"] })
-        await queryClient.invalidateQueries({ queryKey: ["coteries"] })
-        await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
+    const persistence = characterPersistence(queryClient)
+    const isTransitioningCharacter = useSyncExternalStore(
+        persistence.subscribeTransitions,
+        persistence.transitionSnapshot,
+        persistence.transitionSnapshot
+    )
+    const switchDecision = (targetId?: string) =>
+        persistence.decision(character, characters, targetId)
+    const saveCurrentCharacter = async (
+        draft = character,
+        isCurrent = persistence.replacementGuard()
+    ) => {
+        if (switchDecision() === "continue") return
+        const saved = await persistence.save(draft, {
+            owned: isOwnedSavedCharacter(draft.id, characters),
+            beforeSwitch: true,
+            ownershipLoaded: characters !== undefined
+        })
+        if (!isCurrent()) return
+        setCharacter((current) =>
+            current.id === draft.id
+                ? {
+                      ...current,
+                      id: saved.id,
+                      characterVersion: saved.characterVersion
+                  }
+                : current
+        )
     }
 
-    const isCurrentCharacterEmpty = () => isCharacterEmpty(character)
-
-    const completePendingSwitchAction = async (action: PendingSwitchAction) => {
-        if (!action) {
+    const completePendingSwitchAction = async (
+        action: PendingSwitchAction,
+        isCurrent = persistence.replacementGuard()
+    ) => {
+        if (!action || !isCurrent()) {
             return
         }
 
         if (action.type === "load") {
-            await loadSavedCharacter(action.characterId)
+            await loadSavedCharacter(action.characterId, isCurrent)
             return
         }
 
+        persistence.startDraft()
         setCharacter(getEmptyCharacter())
         resetGeneratorSession()
         setSelectedStep("clan")
@@ -222,127 +212,115 @@ export default function CreatorPage() {
         setIsSavingBeforeSwitch(false)
     }
 
-    const handleLoadSavedCharacter = async (characterId: string) => {
-        if (characterId !== character.id) {
-            if (!character.name.trim() && !isCurrentCharacterEmpty()) {
-                openNameBeforeSwitchModal({ type: "load", characterId })
-                return
-            }
+    const handleLoadSavedCharacter = (characterId: string) =>
+        persistence
+            .transition(async (isCurrent) => {
+                if (characterId !== character.id) {
+                    if (switchDecision() === "name") {
+                        openNameBeforeSwitchModal({ type: "load", characterId })
+                        return
+                    }
 
-            try {
-                await saveCurrentCharacter()
-            } catch (error) {
-                const notifiedError =
-                    error instanceof Error ? error : new Error("Failed to save current character")
-                notifications.show({
-                    title: "Error saving character",
-                    message: notifiedError.message,
-                    color: "red"
-                })
-                ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
-                throw notifiedError
-            }
-        }
+                    try {
+                        await saveCurrentCharacter(character, isCurrent)
+                    } catch (error) {
+                        const notifiedError =
+                            error instanceof Error
+                                ? error
+                                : new Error("Failed to save current character")
+                        notifications.show({
+                            title: "Error saving character",
+                            message: notifiedError.message,
+                            color: "red"
+                        })
+                        ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified =
+                            true
+                        throw notifiedError
+                    }
+                }
 
-        await loadSavedCharacter(characterId)
-    }
-
-    const handleCreateCharacter = async () => {
-        if (!character.name.trim() && !isCurrentCharacterEmpty()) {
-            openNameBeforeSwitchModal({ type: "create" })
-            return
-        }
-
-        try {
-            await saveCurrentCharacter()
-        } catch (error) {
-            const notifiedError =
-                error instanceof Error ? error : new Error("Failed to save current character")
-            notifications.show({
-                title: "Error saving character",
-                message: notifiedError.message,
-                color: "red"
+                if (isCurrent()) await loadSavedCharacter(characterId, isCurrent)
             })
-            ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
-            throw notifiedError
-        }
+            .then(() => undefined)
 
-        await completePendingSwitchAction({ type: "create" })
-    }
+    const handleCreateCharacter = () =>
+        persistence
+            .transition(async (isCurrent) => {
+                if (switchDecision() === "name") {
+                    openNameBeforeSwitchModal({ type: "create" })
+                    return
+                }
+
+                try {
+                    await saveCurrentCharacter(character, isCurrent)
+                } catch (error) {
+                    const notifiedError =
+                        error instanceof Error
+                            ? error
+                            : new Error("Failed to save current character")
+                    notifications.show({
+                        title: "Error saving character",
+                        message: notifiedError.message,
+                        color: "red"
+                    })
+                    ;(notifiedError as Error & { alreadyNotified?: boolean }).alreadyNotified = true
+                    throw notifiedError
+                }
+
+                await completePendingSwitchAction({ type: "create" }, isCurrent)
+            })
+            .then(() => undefined)
 
     const handleCreateNewFromSharedCharacter = () => {
+        persistence.startDraft()
         setCharacter(getEmptyCharacter())
         resetGeneratorSession()
         setSelectedStep(defaultGeneratorStepId)
     }
 
-    const handleSaveAndContinueSwitch = async () => {
-        if (!switchNameValue.trim()) {
-            notifications.show({
-                title: "Name required",
-                message: "Enter a character name before saving and switching.",
-                color: "red"
-            })
-            return
-        }
-
-        setIsSavingBeforeSwitch(true)
-
-        try {
-            setCharacter({ ...character, name: switchNameValue })
-            const characterToSave = { ...character, name: switchNameValue }
-            const targetCharacter = characterToSave.id
-                ? userCharacters.find((candidate) => candidate.id === characterToSave.id)
-                : null
-            const payload = {
-                name: characterToSave.name,
-                data: characterToSave,
-                characterVersion: characterToSave.characterVersion ?? 0,
-                version: characterToSave.version
-            }
-            const savedCharacter = targetCharacter
-                ? await characterHttp.update(targetCharacter.id, payload)
-                : await characterHttp.create(payload)
-            const saved = savedCharacter as {
-                id: string
-                data?: { characterVersion?: number }
-                characterVersion?: number
+    const handleSaveAndContinueSwitch = () =>
+        persistence.transition(async (isCurrent) => {
+            if (!switchNameValue.trim()) {
+                notifications.show({
+                    title: "Name required",
+                    message: "Enter a character name before saving and switching.",
+                    color: "red"
+                })
+                return
             }
 
-            setCharacter({
-                ...characterToSave,
-                id: saved.id,
-                characterVersion:
-                    saved.characterVersion ??
-                    saved.data?.characterVersion ??
-                    characterToSave.characterVersion ??
-                    0
-            } as CharacterType & { id: string; characterVersion: number })
-            await queryClient.invalidateQueries({ queryKey: ["characters"] })
-            await queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
+            setIsSavingBeforeSwitch(true)
 
+            try {
+                setCharacter({ ...character, name: switchNameValue })
+                await saveCurrentCharacter({ ...character, name: switchNameValue }, isCurrent)
+                if (!isCurrent()) return
+
+                const action = pendingSwitchAction
+                closeNameBeforeSwitchModal()
+                await completePendingSwitchAction(action, isCurrent)
+            } catch (error) {
+                notifications.show({
+                    title: "Error saving character",
+                    message:
+                        error instanceof Error ? error.message : "Failed to save current character",
+                    color: "red"
+                })
+                setIsSavingBeforeSwitch(false)
+            }
+        })
+
+    const handleDeleteAndContinueSwitch = () =>
+        persistence.transition(async (isCurrent) => {
             const action = pendingSwitchAction
+            await persistence.settle(character.id)
+            if (!isCurrent()) return
             closeNameBeforeSwitchModal()
+            persistence.startDraft()
+            setCharacter(getEmptyCharacter())
+            resetGeneratorSession()
             await completePendingSwitchAction(action)
-        } catch (error) {
-            notifications.show({
-                title: "Error saving character",
-                message:
-                    error instanceof Error ? error.message : "Failed to save current character",
-                color: "red"
-            })
-            setIsSavingBeforeSwitch(false)
-        }
-    }
-
-    const handleDeleteAndContinueSwitch = async () => {
-        const action = pendingSwitchAction
-        closeNameBeforeSwitchModal()
-        setCharacter(getEmptyCharacter())
-        resetGeneratorSession()
-        await completePendingSwitchAction(action)
-    }
+        })
 
     useEffect(() => {
         if (storedSelectedStep !== selectedStep) {
@@ -369,7 +347,7 @@ export default function CreatorPage() {
             <LoadModal
                 loadModalOpened={loadModalOpened}
                 closeLoadModal={closeLoadModal}
-                setCharacter={setCharacter}
+                setCharacter={(imported) => setCharacter(persistence.replaceDraft(imported))}
                 loadedFile={loadedFile}
                 setSelectedStep={setSelectedStep}
                 onCharacterReplaced={resetGeneratorSession}
@@ -494,6 +472,7 @@ export default function CreatorPage() {
                         }}
                     >
                         <div
+                            inert={isTransitioningCharacter}
                             style={
                                 {
                                     width: "100%",
@@ -515,7 +494,9 @@ export default function CreatorPage() {
                                 <Generator
                                     key={characterSessionKey}
                                     character={character}
-                                    setCharacter={setCharacter}
+                                    setCharacter={(next) => {
+                                        if (!persistence.transitionSnapshot()) setCharacter(next)
+                                    }}
                                     selectedStep={selectedStep}
                                     setSelectedStep={setSelectedStep}
                                 />

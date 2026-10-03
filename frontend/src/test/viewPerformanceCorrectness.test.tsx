@@ -78,7 +78,7 @@ it("refreshes coterie live vitals without reparsing unchanged members and refres
         </MantineProvider>
     )
     const { rerender } = render(view())
-    const parse = vi.spyOn(characterSchema, "safeParse")
+    const parse = vi.spyOn(characterSchema, "parse")
     rerender(view(members, 4))
     expect(screen.getByLabelText("Hunger 4")).toBeInTheDocument()
     expect(parse).not.toHaveBeenCalled()

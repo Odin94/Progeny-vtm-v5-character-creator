@@ -1,6 +1,8 @@
 import { Character, getEmptyCharacter } from "../data/Character"
 import { defaultGeneratorStepId, GeneratorStepId } from "../generator/steps"
 import ConfirmActionModal from "./ConfirmActionModal"
+import { useQueryClient } from "@tanstack/react-query"
+import { characterPersistence } from "~/modules/characterPersistence"
 
 export type ResetModalProps = {
     setCharacter: (character: Character) => void
@@ -17,12 +19,13 @@ const ResetModal = ({
     setSelectedStep,
     onCharacterReset
 }: ResetModalProps) => {
+    const client = useQueryClient()
     return (
         <ConfirmActionModal
             opened={resetModalOpened}
             onClose={closeResetModal}
             onConfirm={() => {
-                setCharacter(getEmptyCharacter())
+                setCharacter(characterPersistence(client).replaceDraft(getEmptyCharacter()))
                 onCharacterReset?.()
                 setSelectedStep(defaultGeneratorStepId)
                 closeResetModal()

@@ -33,3 +33,13 @@ The sheet route (`src/routes/sheet.tsx`) renders `src/character_sheet/CharacterS
 `/homebrew` is the collection authoring surface and `/homebrew/library` is the public community library. Shared item and collection types live in `src/data/Homebrew.ts`; REST calls stay in `src/utils/api.ts`; query state is coordinated by `src/hooks/useHomebrew.ts`.
 
 Character picker integration resolves `/characters/:id/homebrew`, so a collection is offered only while that character belongs to a coterie where the collection is enabled. `src/utils/homebrewOptions.ts` maps collection items into the existing generator and sheet models. When selected, the complete item data and a `homebrewSource` reference are embedded in the character payload. Keep that snapshot behavior when extending pickers: removing a collection from a coterie must remove future options without breaking content already saved on a character.
+
+## Character persistence and recovery
+
+`src/modules/characterIntake.ts` owns compatibility patches, validation, preservation of rejected originals and approved repairs. Local storage, imports and remote/API parsing use its `read` operation. A failed intake never applies a lossy repair. `persist` and `applyApprovedRepair` write the recovery archive synchronously before replacing character storage; quota errors propagate to the caller. The recovery dialog retains the original confirmation and repair preview.
+
+`src/modules/characterPersistence.ts` owns save ordering for autosave, manual updates and save-before-switch in Creator, Landing and Account. Its queue snapshots each submitted draft, reconciles create acknowledgements and character versions, and checks newer remote versions after preceding saves settle. Queues and acknowledgements are scoped to the authenticated account. Views render their existing name/save/discard prompts from its switch decision. Discard/new-character paths settle active writes and start a fresh draft identity.
+
+`src/modules/coterieMembership.ts` owns invite links, invitation consumption, membership operation pending/errors, duplicate-submit coordination and refresh of affected coterie, vitals and character reads. `useCoteries` adapts those operations to the existing React Query mutation interface. Permissions and the backend coterie read model remain authoritative.
+
+The contract tests in `src/test/characterIntakeContract.test.ts`, `characterPersistenceContract.test.ts` and `coterieMembershipContract.test.ts` exercise the same module interfaces with local storage and transport adapters, including write failures and overlapping requests.

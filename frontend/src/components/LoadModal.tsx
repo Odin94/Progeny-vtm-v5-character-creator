@@ -1,8 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { notifications } from "@mantine/notifications"
 import { z } from "zod"
-import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
+import type { Character } from "../data/Character"
 import { GeneratorStepId } from "../generator/steps"
-import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
+import { characterIntake } from "~/modules/characterIntake"
 import ConfirmActionModal from "./ConfirmActionModal"
 
 export type LoadModalProps = {
@@ -15,18 +17,9 @@ export type LoadModalProps = {
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
-    let parsed: unknown
-    let phase: "json" | "compatibility" | "schema" = "json"
-    try {
-        parsed = JSON.parse(json)
-        phase = "compatibility"
-        applyCharacterCompatibilityPatches(parsed as Record<string, unknown>)
-        phase = "schema"
-        return characterSchema.parse(parsed)
-    } catch (error) {
-        reportCharacterValidationError(error, "json-import", phase, parsed)
-        throw error
-    }
+    const result = characterIntake.read(json, "json-import")
+    if (!result.success) throw result.error
+    return result.character
 }
 
 export const loadCharacterFromFile = async (file: File): Promise<Character> =>
@@ -40,16 +33,19 @@ const LoadModal = ({
     setSelectedStep,
     onCharacterReplaced
 }: LoadModalProps) => {
+    const persistence = characterPersistence(useQueryClient())
     return (
         <ConfirmActionModal
             opened={loadModalOpened}
             onClose={closeLoadModal}
             onConfirm={async () => {
+                const isCurrent = persistence.replacementGuard()
                 if (!loadedFile) {
                     return
                 }
                 try {
                     const loadedCharacter = await loadCharacterFromFile(loadedFile)
+                    if (!isCurrent()) return
                     setCharacter({ ...loadedCharacter, id: "" })
                     onCharacterReplaced?.()
                     setSelectedStep("final")

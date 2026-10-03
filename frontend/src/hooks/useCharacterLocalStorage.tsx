@@ -1,11 +1,8 @@
 import { useLocalStorage } from "@mantine/hooks"
 import { useCallback, useRef, useState } from "react"
-import { z } from "zod"
-import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
-import { applyCharacterCompatibilityPatches } from "~/data/Character"
-import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
+import { Character, getEmptyCharacter, schemaVersion } from "~/data/Character"
 import { rememberCharacterDraft, retainCharacterDraftIdentity } from "~/utils/characterDraft"
-import { recordBrokenCharacter } from "./useBrokenCharacter"
+import { characterIntake } from "~/modules/characterIntake"
 
 export type SetCharacter = (character: Character | ((character: Character) => Character)) => void
 
@@ -33,45 +30,14 @@ export const useCharacterLocalStorage = () => {
             }
 
             const originalValue = typeof value === "string" ? value : JSON.stringify(value)
-            if (originalValue === cachedSerializedCharacter && cachedCharacter) {
+            if (originalValue === cachedSerializedCharacter && cachedCharacter)
                 return cachedCharacter
-            }
-
-            try {
-                const parsed = typeof value === "string" ? JSON.parse(value) : value
-                try {
-                    // Migrate every loaded character, including ones that still happen to satisfy
-                    // the current schema through Zod defaults. This keeps the stored version and
-                    // newly introduced character-owned fields in sync.
-                    applyCharacterCompatibilityPatches(parsed)
-                    const validatedCharacter = characterSchema.parse(parsed)
-                    cachedSerializedCharacter = originalValue
-                    cachedCharacter = validatedCharacter
-                    rememberCharacterDraft(validatedCharacter)
-                    return validatedCharacter
-                } catch (patchError) {
-                    const errorMessage =
-                        patchError instanceof Error ? patchError.message : String(patchError)
-                    const zodError =
-                        patchError instanceof z.ZodError
-                            ? JSON.stringify(patchError.issues, null, 2)
-                            : errorMessage
-                    reportCharacterValidationError(
-                        patchError,
-                        "local-storage",
-                        patchError instanceof z.ZodError ? "schema" : "compatibility",
-                        parsed
-                    )
-                    recordBrokenCharacter(originalValue, zodError)
-                    return resetCachedCharacter()
-                }
-            } catch (parseError) {
-                const errorMessage =
-                    parseError instanceof Error ? parseError.message : String(parseError)
-                reportCharacterValidationError(parseError, "local-storage", "json")
-                recordBrokenCharacter(originalValue, errorMessage)
-                return resetCachedCharacter()
-            }
+            const result = characterIntake.read(value, "local-storage")
+            if (!result.success) return resetCachedCharacter()
+            cachedSerializedCharacter = originalValue
+            cachedCharacter = result.character
+            rememberCharacterDraft(result.character)
+            return result.character
         },
         serialize: (value) => {
             const serialized = JSON.stringify(value)
@@ -104,6 +70,7 @@ export const useCharacterLocalStorage = () => {
             // Calculate updater results outside Mantine's state updater. React can invoke state
             // updaters more than once in Strict Mode, while Mantine writes storage from inside
             // that updater, causing duplicate storage events and duplicate sheet commits.
+            characterIntake.persist(characterWithVersion)
             latestCharacterRef.current = characterWithVersion
             setCharacterInternal(characterWithVersion)
         },

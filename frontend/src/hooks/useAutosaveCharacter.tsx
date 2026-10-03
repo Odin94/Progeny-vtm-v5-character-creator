@@ -3,31 +3,20 @@ import { preserveCharacterDraft } from "~/utils/characterDraft"
 import type { CharacterApiResponse } from "~/utils/characterApi"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
-import { stableStringify, type Character } from "~/data/Character"
+import { type Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
-import { api, type ApiError } from "~/utils/api"
+import { type ApiError } from "~/utils/api"
+import {
+    characterPersistence,
+    getCharacterSaveKey as getAutosaveKey
+} from "~/modules/characterPersistence"
+export {
+    getCharacterSaveKey as getAutosaveKey,
+    isOwnedSavedCharacter
+} from "~/modules/characterPersistence"
 
 export const CHARACTER_AUTOSAVE_DELAY_MS = 900
 export const CHARACTER_AUTOSAVE_RETRY_DELAY_MS = 3000
-
-type CharacterOwnershipSummary = {
-    id: string
-    shared?: boolean
-}
-
-export const isOwnedSavedCharacter = (
-    characterId: string | undefined,
-    characters: CharacterOwnershipSummary[] | undefined
-) =>
-    !!characterId &&
-    (characters ?? []).some(
-        (candidate) => candidate.id === characterId && candidate.shared !== true
-    )
-
-export const getAutosaveKey = (character: Character) => {
-    const { characterVersion: _characterVersion, id: _id, ...persistedCharacter } = character
-    return stableStringify(persistedCharacter)
-}
 
 const shouldRetry = (error: unknown) => {
     const status = (error as ApiError)?.status
@@ -138,16 +127,9 @@ export const useAutosaveCharacter = (
         let followupSuppressed = false
 
         try {
-            const response = await api.updateCharacter(characterId, {
-                characterVersion: savedVersionRef.current,
-                name: characterToSave.name,
-                data: characterToSave,
-                version: characterToSave.version
+            const savedCharacter = await characterPersistence(queryClient).save(characterToSave, {
+                owned: true
             })
-            const savedCharacter = response as {
-                characterVersion?: number
-                data?: { characterVersion?: number }
-            }
 
             if (
                 !mountedRef.current ||
@@ -159,10 +141,7 @@ export const useAutosaveCharacter = (
 
             lastSavedKeyRef.current = savedKey
             const savedVersion =
-                savedCharacter.characterVersion ??
-                savedCharacter.data?.characterVersion ??
-                characterToSave.characterVersion ??
-                0
+                savedCharacter.characterVersion ?? characterToSave.characterVersion ?? 0
 
             savedVersionRef.current = savedVersion
             writeConfirmedBase(characterId, { ...characterToSave, characterVersion: savedVersion })
@@ -171,10 +150,6 @@ export const useAutosaveCharacter = (
                     ? { ...currentCharacter, characterVersion: savedVersion }
                     : currentCharacter
             )
-
-            void queryClient.invalidateQueries({ queryKey: ["characters"] })
-            void queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            void queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         } catch (error) {
             if (
                 mountedRef.current &&

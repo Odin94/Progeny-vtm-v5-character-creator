@@ -1,17 +1,13 @@
 import { useLocalStorage } from "@mantine/hooks"
 import { z } from "zod"
-
-const BROKEN_SAVE_KEY = "character_broken_save"
-const BROKEN_SAVE_ERROR_KEY = "character_broken_save_error"
-export const CHARACTER_RECOVERY_KEY = "character_recovery_saves"
-
-const recoverySavesSchema = z.array(
-    z.object({
-        savedAt: z.string(),
-        data: z.string(),
-        error: z.string()
-    })
-)
+import {
+    characterIntake,
+    BROKEN_SAVE_KEY,
+    BROKEN_SAVE_ERROR_KEY,
+    CHARACTER_RECOVERY_KEY,
+    recoverySavesSchema
+} from "~/modules/characterIntake"
+export { CHARACTER_RECOVERY_KEY }
 
 export const useCharacterRecoverySaves = () =>
     useLocalStorage<z.infer<typeof recoverySavesSchema>>({
@@ -20,8 +16,7 @@ export const useCharacterRecoverySaves = () =>
     })
 
 export const recordBrokenCharacter = (data: string, error: string) => {
-    localStorage.setItem(BROKEN_SAVE_KEY, JSON.stringify(data))
-    localStorage.setItem(BROKEN_SAVE_ERROR_KEY, JSON.stringify(error))
+    characterIntake.preserve(data, error)
 }
 
 export const useBrokenCharacter = () => {
@@ -37,31 +32,17 @@ export const useBrokenCharacter = () => {
     })
 
     const archiveBrokenCharacter = () => {
-        if (brokenData) {
-            const recoverySaves = recoverySavesSchema.parse(
-                JSON.parse(localStorage.getItem(CHARACTER_RECOVERY_KEY) || "[]")
-            )
-            if (!recoverySaves.some((save) => save.data === brokenData)) {
-                recoverySaves.push({
-                    savedAt: new Date().toISOString(),
-                    data: brokenData,
-                    error: brokenError
-                })
-            }
-            // Write synchronously first: Mantine swallows storage quota errors. Never clear
-            // the only recovery copy unless the archive has actually been persisted.
-            localStorage.setItem(CHARACTER_RECOVERY_KEY, JSON.stringify(recoverySaves))
-            setRecoverySaves(recoverySaves)
-        }
+        if (brokenData) setRecoverySaves(characterIntake.archive(brokenData, brokenError))
     }
 
     const clearBrokenCharacter = () => {
-        archiveBrokenCharacter()
+        characterIntake.clear(brokenData, brokenError)
         setBrokenData("")
         setBrokenError("")
     }
 
     const setBrokenCharacter = (data: string, error: string) => {
+        characterIntake.preserve(data, error)
         setBrokenData(data)
         setBrokenError(error)
     }

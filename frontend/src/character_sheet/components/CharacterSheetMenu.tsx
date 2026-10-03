@@ -21,7 +21,7 @@ import {
 } from "@tabler/icons-react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
@@ -32,6 +32,7 @@ import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
 import { loadCharacterFromFile } from "~/components/LoadModal"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
@@ -48,6 +49,7 @@ type CharacterSheetMenuProps = {
 }
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
+    const persistence = characterPersistence(useQueryClient())
     const shouldReduceMotion = useReducedMotion()
     const [recoveryOpened, setRecoveryOpened] = useState(false)
     const recoveredDrafts = readRecoveredCharacterDrafts()
@@ -211,13 +213,15 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     }
 
     const handleConfirmLoad = async () => {
+        const isCurrent = persistence.replacementGuard()
         if (!loadedFile) {
             console.log("Error: No file loaded!")
             return
         }
         try {
             const loadedCharacter = await loadCharacterFromFile(loadedFile)
-            setCharacter(loadedCharacter)
+            if (!isCurrent()) return
+            setCharacter(persistence.replaceDraft(loadedCharacter))
             closeLoadModal()
             handleMenuClose()
             notifications.show({
