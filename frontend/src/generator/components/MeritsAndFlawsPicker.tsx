@@ -462,16 +462,14 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
         ...character.merits,
         ...character.flaws
     ])
-    const hasMounted = useRef(false)
+    const persistedSelection = useRef(pickedMeritsAndFlaws)
 
     // A merits pick used to remain only in this component until Confirm. Persisting each edit
     // means the draft survives sidebar navigation while the explicit Confirm button still
     // represents advancing to the next generator step.
     useEffect(() => {
-        if (!hasMounted.current) {
-            hasMounted.current = true
-            return
-        }
+        if (persistedSelection.current === pickedMeritsAndFlaws) return
+        persistedSelection.current = pickedMeritsAndFlaws
 
         setCharacter((current) => ({
             ...current,

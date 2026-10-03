@@ -4,7 +4,7 @@ import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import React, { useEffect, useState, useSyncExternalStore } from "react"
+import React, { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import LoadModal from "~/components/LoadModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import RenderProfiler from "~/components/RenderProfiler"
@@ -153,6 +153,12 @@ export default function CreatorPage() {
     }
 
     const persistence = characterPersistence(queryClient)
+    const updateGeneratorCharacter = useCallback<typeof setCharacter>(
+        (next) => {
+            if (!persistence.transitionSnapshot()) setCharacter(next)
+        },
+        [persistence, setCharacter]
+    )
     const isTransitioningCharacter = useSyncExternalStore(
         persistence.subscribeTransitions,
         persistence.transitionSnapshot,
@@ -494,9 +500,7 @@ export default function CreatorPage() {
                                 <Generator
                                     key={characterSessionKey}
                                     character={character}
-                                    setCharacter={(next) => {
-                                        if (!persistence.transitionSnapshot()) setCharacter(next)
-                                    }}
+                                    setCharacter={updateGeneratorCharacter}
                                     selectedStep={selectedStep}
                                     setSelectedStep={setSelectedStep}
                                 />
