@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { eq, sql } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
 import { authenticateUser, AuthenticatedRequest } from "../middleware/auth.js"
 import {
@@ -307,16 +307,11 @@ export async function characterRoutes(fastify: FastifyInstance) {
                     return
                 }
 
-                // Increment characterVersion on update
-                const currentCharacter = await db.query.characters.findFirst({
-                    where: eq(schema.characters.id, characterId)
-                })
-                const newCharacterVersion = (currentCharacter?.characterVersion ?? 0) + 1
-
-                // Update character data to include characterVersion
-                const characterData = updateData.data
-                    ? { ...updateData.data, characterVersion: newCharacterVersion }
-                    : undefined
+                const newCharacterVersion = updateData.characterVersion + 1
+                const characterData = {
+                    ...(updateData.data ?? JSON.parse(character.data)),
+                    characterVersion: newCharacterVersion
+                }
                 const previousHomebrewUsage = getHomebrewCharacterUsage(JSON.parse(character.data))
                 const homebrewUsage = characterData
                     ? getHomebrewCharacterUsage(characterData)
@@ -331,8 +326,23 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         characterVersion: newCharacterVersion,
                         updatedAt: new Date()
                     })
-                    .where(eq(schema.characters.id, characterId))
+                    .where(
+                        and(
+                            eq(schema.characters.id, characterId),
+                            eq(schema.characters.userId, userId),
+                            eq(schema.characters.characterVersion, updateData.characterVersion)
+                        )
+                    )
                     .returning()
+
+                if (!updated) {
+                    reply.code(409).send({
+                        error: "Character version conflict",
+                        message:
+                            "This character has newer saved changes. Your local draft has not been overwritten."
+                    })
+                    return
+                }
 
                 logger.info("Character updated", {
                     endpoint: "/characters/:id",
@@ -441,8 +451,19 @@ export async function characterRoutes(fastify: FastifyInstance) {
                         characterVersion: newCharacterVersion,
                         updatedAt: new Date()
                     })
-                    .where(eq(schema.characters.id, characterId))
+                    .where(
+                        and(
+                            eq(schema.characters.id, characterId),
+                            eq(schema.characters.userId, userId),
+                            eq(schema.characters.characterVersion, character.characterVersion)
+                        )
+                    )
                     .returning()
+
+                if (!updated) {
+                    reply.code(409).send({ error: "Character version conflict" })
+                    return
+                }
 
                 reply.send({
                     id: updated.id,

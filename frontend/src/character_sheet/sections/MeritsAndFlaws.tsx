@@ -104,9 +104,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         index
                                     ) => {
                                         const isFromBonus = isFromPredatorType || isFromLoresheet
-                                            const customTextKey = getMeritFlawCustomTextKey(merit)
-                                            const customText =
-                                                character.customText.meritFlaws[customTextKey] ?? ""
+                                        const customTextKey = getMeritFlawCustomTextKey(merit)
+                                        const customText =
+                                            character.customText.meritFlaws[customTextKey] ?? ""
                                         const customTextEditorKey = `merit:${customTextKey}`
                                         const isEditingCustomText =
                                             editingCustomText === customTextEditorKey
@@ -151,7 +151,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                                     : customTextEditorKey
                                                             )
                                                         }
-                                                        onMouseDown={(event) => event.preventDefault()}
+                                                        onMouseDown={(event) =>
+                                                            event.preventDefault()
+                                                        }
                                                         style={{
                                                             position: "absolute",
                                                             top: "8px",
@@ -207,7 +209,8 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         aria-label={`${getMeritFlawDisplayName(merit)} description`}
                                                         value={merit.summary}
                                                         onChange={(event) => {
-                                                            const summary = event.currentTarget.value
+                                                            const summary =
+                                                                event.currentTarget.value
                                                             setCharacter((current) => ({
                                                                 ...current,
                                                                 merits: current.merits.map((item) =>
@@ -340,9 +343,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                         index
                                     ) => {
                                         const isFromBonus = isFromPredatorType || isFromLoresheet
-                                            const customTextKey = getMeritFlawCustomTextKey(flaw)
-                                            const customText =
-                                                character.customText.meritFlaws[customTextKey] ?? ""
+                                        const customTextKey = getMeritFlawCustomTextKey(flaw)
+                                        const customText =
+                                            character.customText.meritFlaws[customTextKey] ?? ""
                                         const customTextEditorKey = `flaw:${customTextKey}`
                                         const isEditingCustomText =
                                             editingCustomText === customTextEditorKey
@@ -387,7 +390,9 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                                     : customTextEditorKey
                                                             )
                                                         }
-                                                        onMouseDown={(event) => event.preventDefault()}
+                                                        onMouseDown={(event) =>
+                                                            event.preventDefault()
+                                                        }
                                                         style={{
                                                             position: "absolute",
                                                             top: "8px",
@@ -443,7 +448,8 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                         aria-label={`${getMeritFlawDisplayName(flaw)} description`}
                                                         value={flaw.summary}
                                                         onChange={(event) => {
-                                                            const summary = event.currentTarget.value
+                                                            const summary =
+                                                                event.currentTarget.value
                                                             setCharacter((current) => ({
                                                                 ...current,
                                                                 flaws: current.flaws.map((item) =>

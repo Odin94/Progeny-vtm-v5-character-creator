@@ -1,16 +1,6 @@
 import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import {
-    Alert,
-    Anchor,
-    Button,
-    Divider,
-    List,
-    Modal,
-    ScrollArea,
-    Stack,
-    Text
-} from "@mantine/core"
+import { Alert, Anchor, Button, Divider, List, Modal, ScrollArea, Stack, Text } from "@mantine/core"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useEffect, useMemo, useState } from "react"
@@ -112,7 +102,10 @@ const BrokenSaveModal = () => {
                 <Divider my="sm" />
                 {repair.success ? (
                     <Stack>
-                        <Alert color="yellow" title="Automatic repair may cause partial data loss" />
+                        <Alert
+                            color="yellow"
+                            title="Automatic repair may cause partial data loss"
+                        />
                         <ScrollArea.Autosize mah={300} offsetScrollbars>
                             <List
                                 size="sm"

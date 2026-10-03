@@ -88,15 +88,13 @@ const coterie = {
     canManagePlayers: true,
     playerCount: 1,
     players: [],
-    members: characters
-        .slice(0, 6)
-        .map((c, i) => ({
-            id: `member-${i}`,
-            characterId: c.id,
-            character: { ...c, ownedByCurrentUser: true },
-            createdAt: now,
-            playerNickname: user.nickname
-        }))
+    members: characters.slice(0, 6).map((c, i) => ({
+        id: `member-${i}`,
+        characterId: c.id,
+        character: { ...c, ownedByCurrentUser: true },
+        createdAt: now,
+        playerNickname: user.nickname
+    }))
 }
 const requests = [],
     comments = [],

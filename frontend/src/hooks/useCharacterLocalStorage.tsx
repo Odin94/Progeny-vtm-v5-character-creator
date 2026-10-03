@@ -4,6 +4,7 @@ import { z } from "zod"
 import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
 import { applyCharacterCompatibilityPatches } from "~/data/Character"
 import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
+import { rememberCharacterDraft, retainCharacterDraftIdentity } from "~/utils/characterDraft"
 import { recordBrokenCharacter } from "./useBrokenCharacter"
 
 export type SetCharacter = (character: Character | ((character: Character) => Character)) => void
@@ -46,6 +47,7 @@ export const useCharacterLocalStorage = () => {
                     const validatedCharacter = characterSchema.parse(parsed)
                     cachedSerializedCharacter = originalValue
                     cachedCharacter = validatedCharacter
+                    rememberCharacterDraft(validatedCharacter)
                     return validatedCharacter
                 } catch (patchError) {
                     const errorMessage =
@@ -75,6 +77,7 @@ export const useCharacterLocalStorage = () => {
             const serialized = JSON.stringify(value)
             cachedSerializedCharacter = serialized
             cachedCharacter = value
+            rememberCharacterDraft(value)
             return serialized
         }
     })
@@ -90,6 +93,13 @@ export const useCharacterLocalStorage = () => {
                       characterOrUpdater(cachedCharacter ?? latestCharacterRef.current)
                     : characterOrUpdater
             const characterWithVersion = { ...updatedCharacter, version: schemaVersion }
+
+            if (typeof characterOrUpdater === "function") {
+                retainCharacterDraftIdentity(
+                    cachedCharacter ?? latestCharacterRef.current,
+                    characterWithVersion
+                )
+            }
 
             // Calculate updater results outside Mantine's state updater. React can invoke state
             // updaters more than once in Strict Mode, while Mantine writes storage from inside

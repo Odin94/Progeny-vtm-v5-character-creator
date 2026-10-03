@@ -103,8 +103,7 @@ describe("createPdf_nerdbert", () => {
             },
             skillSpecialties: {},
             disciplinePowers: {
-                [getDisciplinePowerCustomTextKey(character.disciplines[0])]:
-                    "Custom power context"
+                [getDisciplinePowerCustomTextKey(character.disciplines[0])]: "Custom power context"
             }
         }
         character.disciplines.push({

@@ -343,7 +343,8 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     const getDisciplineText = (power: Power | Ritual | Ceremony) => {
         const customText =
             "amalgamPrerequisites" in power
-                ? character.customText.disciplinePowers[getDisciplinePowerCustomTextKey(power)] ?? ""
+                ? (character.customText.disciplinePowers[getDisciplinePowerCustomTextKey(power)] ??
+                  "")
                 : ""
         let text = power.name + ": " + appendCustomText(power.summary, customText)
         if (power.dicePool !== "") {

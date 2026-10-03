@@ -160,6 +160,7 @@ export default function LandingPage() {
             const payload = {
                 name: characterToSave.name,
                 data: characterToSave,
+                characterVersion: characterToSave.characterVersion ?? 0,
                 version: characterToSave.version
             }
 

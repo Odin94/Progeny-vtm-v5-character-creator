@@ -47,7 +47,9 @@ describe("static text notes", () => {
     it("adds custom text to a predator-type specialty pill without renaming it", async () => {
         let character = getBasicTestCharacter()
         const specialty = character.predatorType.pickedSpecialties[0]
-        const setCharacter = (update: typeof character | ((current: typeof character) => typeof character)) => {
+        const setCharacter = (
+            update: typeof character | ((current: typeof character) => typeof character)
+        ) => {
             character = typeof update === "function" ? update(character) : update
         }
 
@@ -87,7 +89,9 @@ describe("static text notes", () => {
     it("adds a custom note to an official discipline power without changing its summary", async () => {
         let character = getBasicTestCharacter()
         const power = character.disciplines[0]
-        const setCharacter = (update: typeof character | ((current: typeof character) => typeof character)) => {
+        const setCharacter = (
+            update: typeof character | ((current: typeof character) => typeof character)
+        ) => {
             character = typeof update === "function" ? update(character) : update
         }
 

@@ -1,9 +1,7 @@
 import { notifications } from "@mantine/notifications"
-import { Buffer } from "buffer"
 import { z } from "zod"
 import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
 import { GeneratorStepId } from "../generator/steps"
-import { getUploadFile } from "../generator/utils"
 import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
 import ConfirmActionModal from "./ConfirmActionModal"
 
@@ -31,6 +29,9 @@ export const loadCharacterFromJson = async (json: string): Promise<Character> =>
     }
 }
 
+export const loadCharacterFromFile = async (file: File): Promise<Character> =>
+    loadCharacterFromJson(await file.text())
+
 const LoadModal = ({
     loadModalOpened,
     closeLoadModal,
@@ -48,20 +49,7 @@ const LoadModal = ({
                     return
                 }
                 try {
-                    const fileData = await getUploadFile(loadedFile)
-                    const base64 = fileData.split(",")[1]
-                    if (!base64) {
-                        throw new Error("Invalid file format")
-                    }
-
-                    let json: string
-                    try {
-                        json = atob(base64)
-                    } catch (_decodeError) {
-                        json = Buffer.from(base64, "base64").toString()
-                    }
-
-                    const loadedCharacter = await loadCharacterFromJson(json)
+                    const loadedCharacter = await loadCharacterFromFile(loadedFile)
                     setCharacter({ ...loadedCharacter, id: "" })
                     onCharacterReplaced?.()
                     setSelectedStep("final")

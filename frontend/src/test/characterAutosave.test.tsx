@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook } from "@testing-library/react"
+import type { CharacterApiResponse } from "~/utils/characterApi"
 import type { PropsWithChildren } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getEmptyCharacter, type Character } from "~/data/Character"
@@ -27,6 +28,16 @@ const makeCharacter = (overrides: Partial<Character> = {}): Character => ({
     ...overrides
 })
 
+const remoteFor = (character: Character): CharacterApiResponse => ({
+    id: character.id,
+    name: character.name,
+    data: character,
+    version: character.version,
+    characterVersion: character.characterVersion,
+    createdAt: "2026-10-03",
+    updatedAt: "2026-10-03"
+})
+
 const makeWrapper = () => {
     const queryClient = new QueryClient({
         defaultOptions: {
@@ -47,6 +58,7 @@ const finishPendingPromises = async () => {
 
 describe("useAutosaveCharacter", () => {
     beforeEach(() => {
+        localStorage.clear()
         vi.useFakeTimers()
         apiMocks.updateCharacter.mockReset()
         apiMocks.updateCharacter.mockResolvedValue({
@@ -63,7 +75,7 @@ describe("useAutosaveCharacter", () => {
     it("treats the initially loaded character as the saved baseline", () => {
         const character = makeCharacter()
 
-        renderHook(() => useAutosaveCharacter(character, vi.fn(), true), {
+        renderHook(() => useAutosaveCharacter(character, vi.fn(), true, remoteFor(character)), {
             wrapper: makeWrapper()
         })
 
@@ -78,7 +90,8 @@ describe("useAutosaveCharacter", () => {
     ])("does not save when $label", ({ enabled, id }) => {
         const initialCharacter = makeCharacter({ id })
         const { rerender } = renderHook(
-            ({ character }) => useAutosaveCharacter(character, vi.fn(), enabled),
+            ({ character }) =>
+                useAutosaveCharacter(character, vi.fn(), enabled, remoteFor(initialCharacter)),
             {
                 initialProps: { character: initialCharacter },
                 wrapper: makeWrapper()
@@ -95,7 +108,8 @@ describe("useAutosaveCharacter", () => {
         const setCharacter = vi.fn()
         const initialCharacter = makeCharacter()
         const { rerender } = renderHook(
-            ({ character }) => useAutosaveCharacter(character, setCharacter, true),
+            ({ character }) =>
+                useAutosaveCharacter(character, setCharacter, true, remoteFor(initialCharacter)),
             {
                 initialProps: { character: initialCharacter },
                 wrapper: makeWrapper()
@@ -119,7 +133,8 @@ describe("useAutosaveCharacter", () => {
         expect(apiMocks.updateCharacter).toHaveBeenCalledWith("character-1", {
             name: latestCharacter.name,
             data: latestCharacter,
-            version: latestCharacter.version
+            version: latestCharacter.version,
+            characterVersion: 0
         })
         expect(setCharacter).toHaveBeenCalledWith(expect.any(Function))
 
@@ -146,7 +161,8 @@ describe("useAutosaveCharacter", () => {
 
         const initialCharacter = makeCharacter()
         const { rerender } = renderHook(
-            ({ character }) => useAutosaveCharacter(character, vi.fn(), true),
+            ({ character }) =>
+                useAutosaveCharacter(character, vi.fn(), true, remoteFor(initialCharacter)),
             {
                 initialProps: { character: initialCharacter },
                 wrapper: makeWrapper()
@@ -186,7 +202,8 @@ describe("useAutosaveCharacter", () => {
     it("cancels a pending save when a different character is loaded", () => {
         const initialCharacter = makeCharacter()
         const { rerender } = renderHook(
-            ({ character }) => useAutosaveCharacter(character, vi.fn(), true),
+            ({ character }) =>
+                useAutosaveCharacter(character, vi.fn(), true, remoteFor(initialCharacter)),
             {
                 initialProps: { character: initialCharacter },
                 wrapper: makeWrapper()
@@ -200,6 +217,43 @@ describe("useAutosaveCharacter", () => {
         expect(apiMocks.updateCharacter).not.toHaveBeenCalled()
     })
 
+    it("saves a restored dirty draft after ownership loading without another edit", async () => {
+        const server = makeCharacter({ description: "Server base" })
+        const draft = { ...server, description: "Recovered offline edit" }
+        const { rerender } = renderHook(
+            ({ enabled }) => useAutosaveCharacter(draft, vi.fn(), enabled, remoteFor(server)),
+            {
+                initialProps: { enabled: false },
+                wrapper: makeWrapper()
+            }
+        )
+        rerender({ enabled: true })
+        await act(async () => {
+            vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+            await finishPendingPromises()
+        })
+        expect(apiMocks.updateCharacter).toHaveBeenCalledWith(
+            server.id,
+            expect.objectContaining({ characterVersion: 0, data: draft })
+        )
+    })
+
+    it("preserves a restored draft when the cloud revision has changed", async () => {
+        const server = makeCharacter({ description: "Other device edit", characterVersion: 2 })
+        const draft = makeCharacter({ description: "Offline draft", characterVersion: 1 })
+        renderHook(() => useAutosaveCharacter(draft, vi.fn(), true, remoteFor(server)), {
+            wrapper: makeWrapper()
+        })
+        await act(async () => {
+            vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS * 3)
+            await finishPendingPromises()
+        })
+        expect(apiMocks.updateCharacter).not.toHaveBeenCalled()
+        expect(
+            JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character
+        ).toEqual(draft)
+    })
+
     it("retries transient failures after the retry delay", async () => {
         const transientError = Object.assign(new Error("Unavailable"), { status: 503 })
         apiMocks.updateCharacter.mockRejectedValueOnce(transientError).mockResolvedValueOnce({
@@ -210,7 +264,8 @@ describe("useAutosaveCharacter", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
         const initialCharacter = makeCharacter()
         const { rerender } = renderHook(
-            ({ character }) => useAutosaveCharacter(character, vi.fn(), true),
+            ({ character }) =>
+                useAutosaveCharacter(character, vi.fn(), true, remoteFor(initialCharacter)),
             {
                 initialProps: { character: initialCharacter },
                 wrapper: makeWrapper()

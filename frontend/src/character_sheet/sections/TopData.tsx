@@ -1,3 +1,4 @@
+import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import {
     Grid,
     Group,
@@ -71,6 +72,7 @@ const DescriptionField = memo(
         )
     },
     (prev, next) =>
+        getCharacterDraftIdentity(prev.character) === getCharacterDraftIdentity(next.character) &&
         prev.character.description === next.character.description &&
         prev.setCharacter === next.setCharacter &&
         prev.primaryColor === next.primaryColor
@@ -525,6 +527,7 @@ export default memo(TopData, (prev, next) => {
     const p = prev.options
     const n = next.options
     return (
+        getCharacterDraftIdentity(p.character) === getCharacterDraftIdentity(n.character) &&
         p.mode === n.mode &&
         p.primaryColor === n.primaryColor &&
         p.canEdit === n.canEdit &&

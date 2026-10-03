@@ -83,9 +83,10 @@ describe("zero-dot merits and flaws", () => {
                             createCharacterSchema.safeParse({ name: "Test", data }).success,
                             option.name
                         ).toBe(true)
-                        expect(updateCharacterSchema.safeParse({ data }).success, option.name).toBe(
-                            true
-                        )
+                        expect(
+                            updateCharacterSchema.safeParse({ data, characterVersion: 0 }).success,
+                            option.name
+                        ).toBe(true)
                     }
                 }
             }

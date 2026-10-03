@@ -432,24 +432,20 @@ describe("Homebrew collections and library", () => {
             "aggregate-c",
             "aggregate-hidden"
         ].entries()) {
-            await db
-                .insert(schema.homebrewLibraryEntries)
-                .values({
-                    id,
-                    authorId: AUTHOR_ID,
-                    authorNickname: "Snapshot author",
-                    activePublicationId: `${id}-publication`,
-                    unpublishedAt: id.endsWith("hidden") ? new Date() : null
-                })
-            await db
-                .insert(schema.homebrewPublications)
-                .values({
-                    id: `${id}-publication`,
-                    libraryEntryId: id,
-                    version: 1,
-                    snapshot: snapshot(id),
-                    approvedAt: new Date(Date.UTC(2026, 8, index + 1))
-                })
+            await db.insert(schema.homebrewLibraryEntries).values({
+                id,
+                authorId: AUTHOR_ID,
+                authorNickname: "Snapshot author",
+                activePublicationId: `${id}-publication`,
+                unpublishedAt: id.endsWith("hidden") ? new Date() : null
+            })
+            await db.insert(schema.homebrewPublications).values({
+                id: `${id}-publication`,
+                libraryEntryId: id,
+                version: 1,
+                snapshot: snapshot(id),
+                approvedAt: new Date(Date.UTC(2026, 8, index + 1))
+            })
         }
         await db.insert(schema.homebrewRatings).values([
             { id: "rating-a1", libraryEntryId: "aggregate-a", userId: ADMIN_ID, rating: 5 },

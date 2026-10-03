@@ -1,0 +1,32 @@
+# P01 — Stale saves overwrite newer character edits
+
+**Status: Fixed and verified** on `fix/odin/review-bug-fixes` (`c0d5d89`, with review follow-ups in `df8b153`). Original reproduction and cause below are historical; the implemented fix is recorded at the end.
+
+Severity: **High**. Confirmed with the running API at revision `4a93b19`.
+
+Revalidated on committed revision `1598820` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+
+## Reproduction and evidence
+
+1. Create a character and retain its original data in two clients.
+2. Client A saves `notes: "newer tab note"`.
+3. Client B saves its original data with only `sire: "stale tab sire"` changed.
+4. Fetch the character again.
+
+Both PUT requests succeed. `characterVersion` advances from 0 to 1 to 2, but the final notes are empty. The API discards A's newer note without a conflict response. The same whole-document payload is sent by the frontend autosave hook.
+
+## Cause
+
+`backend/src/routes/characters.ts` reads and increments the revision, then updates by ID alone. The submitted `version` is the document schema version, not an expected save revision. `frontend/src/hooks/useAutosaveCharacter.tsx` supplies no concurrency precondition.
+
+## Suggested fix
+
+Require an expected `characterVersion`, perform an atomic update with ID, owner, and expected revision in the WHERE clause, and return 409 on a mismatch. Preserve the local draft and offer reload, fork, or a field-level three-way merge. Make manual saves and autosaves use the same contract.
+
+Regression: two clients editing different and identical fields from the same base; the second save must preserve both edits or explicitly report conflict.
+
+## Implemented fix
+
+Implemented required `characterVersion` preconditions and atomic owner/ID/revision updates. All autosave and manual save requests now send the expected revision; explicit overwrite uses the revision shown in the confirmation. Stale saves return 409 without changing data. Vitals writes also guard against intervening updates.
+
+Regression coverage: `backend/src/characterConcurrency.test.ts`, `frontend/src/test/characterAutosave.test.tsx`, `frontend/src/test/debouncedFieldIdentity.test.tsx`, and `frontend/src/test/jsonImport.test.ts`. Browser validation and screenshots are recorded in the shared `evidence/fixes` directory.

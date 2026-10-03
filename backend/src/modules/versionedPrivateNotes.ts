@@ -52,7 +52,11 @@ export const saveVersionedNotes = async <Scope, Version extends NoteVersion>(
     })
 
     if (writeAction === "unchanged") {
-        return { current: latestVersion ?? null, versions: existingVersions, createdNewVersion: false }
+        return {
+            current: latestVersion ?? null,
+            versions: existingVersions,
+            createdNewVersion: false
+        }
     }
 
     const createdNewVersion = writeAction === "create"

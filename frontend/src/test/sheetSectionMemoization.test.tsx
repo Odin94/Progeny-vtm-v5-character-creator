@@ -171,7 +171,7 @@ describe("debounced sheet fields", () => {
         vi.useFakeTimers()
 
         try {
-            const initialCharacter = getEmptyCharacter()
+            const initialCharacter = { ...getEmptyCharacter(), id: "typing-acknowledgement" }
             const setCharacter = vi.fn<SetCharacter>()
             const { result, rerender } = renderHook(
                 ({ character }: { character: Character }) =>
