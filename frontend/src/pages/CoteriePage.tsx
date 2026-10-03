@@ -125,7 +125,15 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
     const initializedNotesIdRef = useRef<string | null>(null)
     const feedbackVisitCoterieIdRef = useRef<string | null>(null)
-    const { connect, joinSession, sessionId, sessionType, connectionStatus } = useSessionChat()
+    const { connect, joinSession, sessionId, sessionType, connectionStatus } = useSessionChat(
+        (state) => ({
+            connect: state.connect,
+            joinSession: state.joinSession,
+            sessionId: state.sessionId,
+            sessionType: state.sessionType,
+            connectionStatus: state.connectionStatus
+        })
+    )
     const noteBytes = useMemo(() => getUtf8ByteLength(draftNotes), [draftNotes])
     const versions = notes?.versions ?? []
     const currentNote = notes?.current ?? null

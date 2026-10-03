@@ -35,7 +35,6 @@ import { loadCharacterFromJson } from "~/components/LoadModal"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
-import { downloadCharacterSheet } from "~/generator/pdfCreator"
 import {
     downloadJson,
     getUploadFile,
@@ -92,12 +91,15 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         setFoundryHelpOpen(false)
     }
 
-    const handleDownloadPDF = () => {
-        downloadCharacterSheet(character).catch((e) => {
+    const handleDownloadPDF = async () => {
+        handleMenuClose()
+        try {
+            const { downloadCharacterSheet } = await import("~/generator/pdfCreator")
+            await downloadCharacterSheet(character)
+        } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
-        })
-        handleMenuClose()
+        }
     }
 
     const handleDownloadJSON = () => {

@@ -8,6 +8,7 @@ import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
 import { sheetSurfaceStyle } from "../utils/style"
+import { getAvailableXP } from "../utils/xp"
 
 type AttributesProps = {
     options: SheetOptions
@@ -134,10 +135,8 @@ const MemoizedAttributeRow = memo(AttributeRow, (prev, next) => {
         previous.setCharacter === following.setCharacter &&
         previous.character.attributes[prev.attribute] ===
             following.character.attributes[next.attribute] &&
-        previous.character.generation === following.character.generation &&
-        previous.character.experience === following.character.experience &&
-        previous.character.ephemeral.experienceSpent ===
-            following.character.ephemeral.experienceSpent
+        (previous.mode !== "xp" ||
+            getAvailableXP(previous.character) === getAvailableXP(following.character))
     )
 })
 
@@ -195,10 +194,11 @@ export default memo(Attributes, (prev, next) => {
     return (
         prev.options.mode === next.options.mode &&
         prev.options.primaryColor === next.options.primaryColor &&
+        prev.options.canEdit === next.options.canEdit &&
+        prev.options.editDisabledReason === next.options.editDisabledReason &&
+        prev.options.setCharacter === next.options.setCharacter &&
         prev.options.character.attributes === next.options.character.attributes &&
-        prev.options.character.generation === next.options.character.generation &&
-        prev.options.character.experience === next.options.character.experience &&
-        prev.options.character.ephemeral.experienceSpent ===
-            next.options.character.ephemeral.experienceSpent
+        (prev.options.mode !== "xp" ||
+            getAvailableXP(prev.options.character) === getAvailableXP(next.options.character))
     )
 })

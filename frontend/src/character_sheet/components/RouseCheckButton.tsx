@@ -35,7 +35,11 @@ const RouseCheckButton = ({
 }: RouseCheckButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
-    const { sendRouseCheck, sessionId, connectionStatus } = useSessionChat()
+    const { sendRouseCheck, sessionId, connectionStatus } = useSessionChat((state) => ({
+        sendRouseCheck: state.sendRouseCheck,
+        sessionId: state.sessionId,
+        connectionStatus: state.connectionStatus
+    }))
 
     const handleRouseCheck = () => {
         if (!character || !setCharacter || disabledReason) return

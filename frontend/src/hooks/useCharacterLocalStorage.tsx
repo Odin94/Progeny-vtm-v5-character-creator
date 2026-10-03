@@ -1,5 +1,5 @@
 import { useLocalStorage } from "@mantine/hooks"
-import { useCallback, useRef } from "react"
+import { useCallback, useRef, useState } from "react"
 import { z } from "zod"
 import { Character, characterSchema, getEmptyCharacter, schemaVersion } from "~/data/Character"
 import { applyCharacterCompatibilityPatches } from "~/data/Character"
@@ -8,10 +8,17 @@ import { recordBrokenCharacter } from "./useBrokenCharacter"
 
 export type SetCharacter = (character: Character | ((character: Character) => Character)) => void
 
+// Mantine reads storage while evaluating its useState argument on every render.
+// Reuse the latest validated snapshot across subscribers instead of reparsing and
+// migrating an unchanged character. External changes still go through validation.
+let cachedSerializedCharacter: string | undefined
+let cachedCharacter: Character | undefined
+
 export const useCharacterLocalStorage = () => {
+    const [emptyCharacter] = useState(getEmptyCharacter)
     const [character, setCharacterInternal] = useLocalStorage<Character>({
         key: "character",
-        defaultValue: getEmptyCharacter(),
+        defaultValue: emptyCharacter,
         getInitialValueInEffect: false,
         deserialize: (value) => {
             if (!value) {
@@ -19,6 +26,9 @@ export const useCharacterLocalStorage = () => {
             }
 
             const originalValue = typeof value === "string" ? value : JSON.stringify(value)
+            if (originalValue === cachedSerializedCharacter && cachedCharacter) {
+                return cachedCharacter
+            }
 
             try {
                 const parsed = typeof value === "string" ? JSON.parse(value) : value
@@ -27,7 +37,10 @@ export const useCharacterLocalStorage = () => {
                     // the current schema through Zod defaults. This keeps the stored version and
                     // newly introduced character-owned fields in sync.
                     applyCharacterCompatibilityPatches(parsed)
-                    return characterSchema.parse(parsed)
+                    const validatedCharacter = characterSchema.parse(parsed)
+                    cachedSerializedCharacter = originalValue
+                    cachedCharacter = validatedCharacter
+                    return validatedCharacter
                 } catch (patchError) {
                     const errorMessage =
                         patchError instanceof Error ? patchError.message : String(patchError)
@@ -53,7 +66,10 @@ export const useCharacterLocalStorage = () => {
             }
         },
         serialize: (value) => {
-            return JSON.stringify(value)
+            const serialized = JSON.stringify(value)
+            cachedSerializedCharacter = serialized
+            cachedCharacter = value
+            return serialized
         }
     })
     const latestCharacterRef = useRef(character)

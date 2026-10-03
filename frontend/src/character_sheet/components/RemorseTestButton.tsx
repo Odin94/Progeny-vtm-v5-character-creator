@@ -33,7 +33,11 @@ const RemorseTestButton = ({
 }: RemorseTestButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
     const [isSuccess, setIsSuccess] = useState(true)
-    const { sendRemorseCheck, sessionId, connectionStatus } = useSessionChat()
+    const { sendRemorseCheck, sessionId, connectionStatus } = useSessionChat((state) => ({
+        sendRemorseCheck: state.sendRemorseCheck,
+        sessionId: state.sessionId,
+        connectionStatus: state.connectionStatus
+    }))
 
     const handleRemorseTest = () => {
         if (!character || !setCharacter || disabledReason) return

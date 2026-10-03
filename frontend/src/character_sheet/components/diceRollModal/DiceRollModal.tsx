@@ -107,7 +107,11 @@ const DiceRollModal = ({
     const currentRollIdRef = useRef<string | null>(null)
     const currentRollContextRef = useRef<RollShareContext | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
-    const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat()
+    const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat((state) => ({
+        sendDiceRoll: state.sendDiceRoll,
+        connectionStatus: state.connectionStatus,
+        sessionId: state.sessionId
+    }))
     const handleClose = useCallback(() => {
         closeModal()
         resetSelectedDicePool()

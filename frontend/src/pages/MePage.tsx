@@ -302,7 +302,10 @@ const MePage = () => {
     const theme = useMantineTheme()
     const redColorValue = theme.colors.red[6]
     const queryClient = useQueryClient()
-    const { connect: connectChat, joinSession: joinChatSession } = useSessionChat()
+    const { connect: connectChat, joinSession: joinChatSession } = useSessionChat((state) => ({
+        connect: state.connect,
+        joinSession: state.joinSession
+    }))
 
     // Character CRUD
     // TODOdin: Load character after creation; but don't use onSuccess, but instead use query state (onSuccess is deprecated)
