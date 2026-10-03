@@ -19,6 +19,7 @@
         "test:e2e": "playwright test"
     },
     "dependencies": {
+        "@dimforge/rapier3d-compat": "0.20.0",
         "@emotion/babel-plugin": "^11.13.5",
         "@emotion/react": "^11.14.0",
         "@fortawesome/fontawesome-svg-core": "^7.2.0",
@@ -50,6 +51,7 @@
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
         "react-markdown": "^10.1.0",
+        "three": "0.186.0",
         "typescript": "^6.0.3",
         "web-vitals": "^5.2.0",
         "zod": "^4.4.3",
@@ -59,6 +61,7 @@
         "@playwright/test": "^1.60.0",
         "@posthog/cli": "^0.7.34",
         "@testing-library/dom": "^10.4.1",
+        "@types/three": "0.186.0",
         "@vitejs/plugin-react": "^6.0.2",
         "@vitest/ui": "^4.1.9",
         "baseline-browser-mapping": "^2.10.31",

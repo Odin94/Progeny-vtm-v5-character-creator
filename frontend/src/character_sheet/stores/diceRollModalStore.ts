@@ -9,6 +9,8 @@ type SetDiceFunction = {
 type DiceRollModalStore = {
     opened: boolean
     dice: DieResult[]
+    quickRollSequence: number
+    requestQuickRoll: (count: number) => void
     diceCount: number
     activeTab: string | null
     open: () => void
@@ -21,6 +23,7 @@ type DiceRollModalStore = {
 }
 
 const initialState = {
+    quickRollSequence: 0,
     opened: false,
     dice: [] as DieResult[],
     diceCount: 1,
@@ -29,6 +32,17 @@ const initialState = {
 
 export const useDiceRollModalStore = create<DiceRollModalStore>((set) => ({
     ...initialState,
+    requestQuickRoll: (count) =>
+        set((state) =>
+            state.dice.some((die) => die.isRolling)
+                ? state
+                : {
+                      opened: true,
+                      activeTab: "custom",
+                      diceCount: count,
+                      quickRollSequence: state.quickRollSequence + 1
+                  }
+        ),
     open: () => set((state) => (state.opened ? state : { opened: true })),
     openSelectedPool: () =>
         set((state) =>

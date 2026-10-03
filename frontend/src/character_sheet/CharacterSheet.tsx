@@ -11,7 +11,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
 import posthog from "posthog-js"
@@ -35,6 +35,8 @@ import CharacterNotesControl from "./components/CharacterNotesControl"
 import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 import { useAuth } from "~/hooks/useAuth"
+import { useVampireDiceFeatureFlag } from "~/hooks/useVampireDiceFeatureFlag"
+import QuickRollHotkeys from "./components/diceRollModal/threeDice/QuickRollHotkeys"
 import { useCharacter, useCharacters } from "~/hooks/useCharacters"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 
@@ -77,7 +79,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         defaultValue: isEmptyCharacter ? "free" : "play",
         getInitialValueInEffect: false
     })
-    const { isAuthenticated, isLoading: authLoading } = useAuth()
+    const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+    const use3dDice = useVampireDiceFeatureFlag(user?.id)
+    const previousDiceFlag = useRef(use3dDice)
+    useEffect(() => {
+        if (previousDiceFlag.current && !use3dDice) useDiceRollModalStore.getState().reset()
+        previousDiceFlag.current = use3dDice
+    }, [use3dDice])
     const { data: userCharacters, isLoading: charactersLoading } = useCharacters(
         isAuthenticated && !!character.id
     )
@@ -384,9 +392,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             </Box>
             <CharacterSheetMenu options={characterMenuOptions} />
             <ChatWindow options={sheetOptions} />
+            {use3dDice ? <QuickRollHotkeys /> : null}
             {diceModalOpened ? (
                 <DiceRollModal
                     primaryColor={primaryColor}
+                    use3dDice={use3dDice}
                     character={character}
                     setCharacter={editableSetCharacter}
                     editDisabledReason={editDisabledReason}

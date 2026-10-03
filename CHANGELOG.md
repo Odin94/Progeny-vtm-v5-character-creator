@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add opt-in 3D vampire dice with adjustable throws, landed-face results and willpower rerolls, while keeping the standard roller for users outside the feature flag.
 - Stop the Merits and Flaws creator step from repeatedly saving unchanged selections and freezing the page.
 - Give the recovered-draft dialog more room and pad its title and content for readability.
 - Apply shared modal spacing correctly on mobile and avoid analytics initialization errors when analytics is not configured.
