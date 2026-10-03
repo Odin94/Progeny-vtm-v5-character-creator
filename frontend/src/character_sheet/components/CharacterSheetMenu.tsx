@@ -290,6 +290,17 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 opened={recoveryOpened}
                 onClose={() => setRecoveryOpened(false)}
                 title="Recovered character drafts"
+                size="lg"
+                padding="lg"
+                styles={{
+                    header: {
+                        paddingTop: "1.5rem",
+                        paddingBottom: "1.5rem",
+                        alignItems: "flex-start"
+                    },
+                    title: { lineHeight: 1.3, paddingRight: "1rem" },
+                    body: { paddingTop: "1.5rem" }
+                }}
                 centered
                 zIndex={2100}
             >
