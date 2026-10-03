@@ -2,6 +2,8 @@
 
 Severity: **High**. Confirmed in two real browser tabs at `4a93b19`.
 
+Revalidated on committed revision `3d9ee75` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+
 ## Reproduction and evidence
 
 Open character A with an empty description. Type `PRIVATE DESCRIPTION FOR SHEET A`. Before the 150 ms debounce fires, replace the current character from another tab with character B, also with an empty description. After the storage event and timer, the stored document has B's ID and name but A's private description.

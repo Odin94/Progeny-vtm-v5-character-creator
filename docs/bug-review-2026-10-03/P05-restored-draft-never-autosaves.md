@@ -2,6 +2,8 @@
 
 Severity: **High**. Confirmed against the running sheet and API at `4a93b19`.
 
+Revalidated on committed revision `3d9ee75` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+
 ## Reproduction and evidence
 
 Create an owned cloud character with description `SERVER BASE`. Leave an unsaved local document for the same ID with description `UNSAVED LOCAL DESCRIPTION`, as happens after an offline edit or closing before the 900 ms save timer. Reload the authenticated sheet and wait 3.8 seconds.

@@ -2,6 +2,8 @@
 
 Severity: **High**. Confirmed with the running API at revision `4a93b19`.
 
+Revalidated on committed revision `3d9ee75` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+
 ## Reproduction and evidence
 
 1. Create a character and retain its original data in two clients.

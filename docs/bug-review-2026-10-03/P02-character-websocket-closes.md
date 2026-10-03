@@ -2,6 +2,8 @@
 
 Severity: **Medium**. Confirmed with a real browser connection to the running API at `4a93b19`.
 
+Revalidated on committed revision `3d9ee75` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+
 ## Reproduction and evidence
 
 Set an authenticated fixture session cookie, connect to `/ws/characters`, then send a subscribe message for an owned character. Observed sequence: `open`, then abnormal `close` with code **1006**, with no subscription acknowledgement. REST authentication and character reads succeed for the same session.

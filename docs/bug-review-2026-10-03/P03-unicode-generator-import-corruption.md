@@ -2,6 +2,8 @@
 
 Severity: **High**. Confirmed through the actual file picker and overwrite confirmation at `4a93b19`; screenshot: `../../../evidence/progeny-unicode-import.png`.
 
+Revalidated on committed revision `3d9ee75` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+
 ## Reproduction and evidence
 
 Import a valid UTF-8 character JSON with name `Élodie 李华 🦇` and description `Grüße aus Köln` through the generator's **Load From File** control. Confirm overwrite. The imported name starts with `Ã` instead of `É`, and the description becomes `GrÃ¼Ãe aus KÃ¶ln`. These corrupted strings are persisted to localStorage. Validation succeeds because they are still strings.
