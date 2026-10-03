@@ -2,29 +2,15 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import type { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
-import { api, type ApiError } from "~/utils/api"
+import { type ApiError } from "~/utils/api"
+import {
+    characterPersistence,
+    getCharacterSaveKey as getAutosaveKey
+} from "~/modules/characterPersistence"
+export { isOwnedSavedCharacter } from "~/modules/characterPersistence"
 
 export const CHARACTER_AUTOSAVE_DELAY_MS = 900
 export const CHARACTER_AUTOSAVE_RETRY_DELAY_MS = 3000
-
-type CharacterOwnershipSummary = {
-    id: string
-    shared?: boolean
-}
-
-export const isOwnedSavedCharacter = (
-    characterId: string | undefined,
-    characters: CharacterOwnershipSummary[] | undefined
-) =>
-    !!characterId &&
-    (characters ?? []).some(
-        (candidate) => candidate.id === characterId && candidate.shared !== true
-    )
-
-const getAutosaveKey = (character: Character) => {
-    const { characterVersion: _characterVersion, ...persistedCharacter } = character
-    return JSON.stringify(persistedCharacter)
-}
 
 const shouldRetry = (error: unknown) => {
     const status = (error as ApiError)?.status
@@ -105,15 +91,9 @@ export const useAutosaveCharacter = (
         let followupSuppressed = false
 
         try {
-            const response = await api.updateCharacter(characterId, {
-                name: characterToSave.name,
-                data: characterToSave,
-                version: characterToSave.version
+            const savedCharacter = await characterPersistence(queryClient).save(characterToSave, {
+                owned: true
             })
-            const savedCharacter = response as {
-                characterVersion?: number
-                data?: { characterVersion?: number }
-            }
 
             if (
                 !mountedRef.current ||
@@ -125,20 +105,13 @@ export const useAutosaveCharacter = (
 
             lastSavedKeyRef.current = savedKey
             const savedVersion =
-                savedCharacter.characterVersion ??
-                savedCharacter.data?.characterVersion ??
-                characterToSave.characterVersion ??
-                0
+                savedCharacter.characterVersion ?? characterToSave.characterVersion ?? 0
 
             setCharacterRef.current((currentCharacter) =>
                 currentCharacter.id === characterId
                     ? { ...currentCharacter, characterVersion: savedVersion }
                     : currentCharacter
             )
-
-            void queryClient.invalidateQueries({ queryKey: ["characters"] })
-            void queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            void queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
         } catch (error) {
             if (
                 mountedRef.current &&

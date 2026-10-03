@@ -33,10 +33,7 @@ import {
     removeCoterieSessionParticipant
 } from "../websocket/sessionChat.js"
 import z from "zod"
-import {
-    getUtf8ByteLength,
-    NOTE_MAX_BYTES
-} from "../utils/privateNotes.js"
+import { getUtf8ByteLength, NOTE_MAX_BYTES } from "../utils/privateNotes.js"
 import {
     buildCoterieResponse,
     getCoterieAccess,
@@ -121,12 +118,14 @@ const coterieNotesStore: VersionedNotesStore<CoterieNoteScope, CoterieNoteVersio
         db.transaction((tx) =>
             work({
                 create: ({ id, coterieId, userId, content, createdAt }) =>
-                    tx.insert(schema.coterieNoteVersions)
+                    tx
+                        .insert(schema.coterieNoteVersions)
                         .values({ id, coterieId, userId, content, createdAt })
                         .returning()
                         .get(),
                 update: (id, content) =>
-                    tx.update(schema.coterieNoteVersions)
+                    tx
+                        .update(schema.coterieNoteVersions)
                         .set({ content })
                         .where(eq(schema.coterieNoteVersions.id, id))
                         .returning()
@@ -137,9 +136,15 @@ const coterieNotesStore: VersionedNotesStore<CoterieNoteScope, CoterieNoteVersio
                         .run()
                 },
                 listOldest: ({ coterieId }, userId) =>
-                    tx.select({ id: schema.coterieNoteVersions.id })
+                    tx
+                        .select({ id: schema.coterieNoteVersions.id })
                         .from(schema.coterieNoteVersions)
-                        .where(and(eq(schema.coterieNoteVersions.coterieId, coterieId), eq(schema.coterieNoteVersions.userId, userId)))
+                        .where(
+                            and(
+                                eq(schema.coterieNoteVersions.coterieId, coterieId),
+                                eq(schema.coterieNoteVersions.userId, userId)
+                            )
+                        )
                         .orderBy(asc(schema.coterieNoteVersions.createdAt))
                         .all()
             })
@@ -876,7 +881,12 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const result = await saveVersionedNotes(coterieNotesStore, { coterieId }, userId, content)
+            const result = await saveVersionedNotes(
+                coterieNotesStore,
+                { coterieId },
+                userId,
+                content
+            )
 
             await trackEvent(
                 "coterie_private_notes_saved",
@@ -926,7 +936,12 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 return
             }
 
-            const result = await restoreVersionedNotes(coterieNotesStore, { coterieId }, userId, versionId)
+            const result = await restoreVersionedNotes(
+                coterieNotesStore,
+                { coterieId },
+                userId,
+                versionId
+            )
             if (!result) {
                 reply.code(404).send({ error: "Note version not found" })
                 return

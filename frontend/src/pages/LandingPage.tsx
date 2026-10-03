@@ -29,7 +29,7 @@ import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters } from "~/hooks/useCharacters"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import fangs from "~/resources/icons/noun-fangs-5617700.svg"
-import { characterHttp } from "~/utils/http/characters"
+import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import "./LandingPage.css"
 
@@ -87,6 +87,7 @@ export default function LandingPage() {
     const shouldReduceMotion = useReducedMotion()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+    const persistence = characterPersistence(queryClient)
     const { isAuthenticated, signIn, isSigningIn } = useAuth()
     const [character, setCharacter] = useCharacterLocalStorage()
     const [, setStoredSelectedStep] = useLocalStorage<GeneratorStepId>({
@@ -101,10 +102,6 @@ export default function LandingPage() {
     ] = useDisclosure(false)
     const [currentCharacterName, setCurrentCharacterName] = useState(character.name)
     const [isSavingCurrentCharacter, setIsSavingCurrentCharacter] = useState(false)
-    const userCharacters = (
-        (characters as Array<{ id: string; name: string; shared?: boolean }>) || []
-    ).filter((candidate) => !candidate.shared)
-
     const isCurrentCharacterEmpty = () => isCharacterEmpty(character)
 
     const openAccountArea = () => {
@@ -121,8 +118,11 @@ export default function LandingPage() {
         navigate({ to: "/create" })
     }
 
-    const startNewCharacter = () => {
+    const startNewCharacter = async (isCurrent: () => boolean) => {
+        await persistence.settle(character.id)
+        if (!isCurrent()) return
         closeStartNewCharacterModal()
+        characterPersistence(queryClient).startDraft()
         setCharacter(getEmptyCharacter())
         setStoredSelectedStep(defaultGeneratorStepId)
         navigate({ to: "/create", hash: defaultGeneratorStepId })
@@ -138,60 +138,70 @@ export default function LandingPage() {
         openStartNewCharacterModal()
     }
 
-    const saveCurrentCharacterAndStartNew = async () => {
-        const trimmedName = currentCharacterName.trim()
+    const saveCurrentCharacterAndStartNew = () =>
+        persistence
+            .transition(async (isCurrent) => {
+                const trimmedName = currentCharacterName.trim()
 
-        if (!trimmedName) {
-            notifications.show({
-                title: "Name required",
-                message: "Give the current character a name before saving it to your account.",
-                color: "red"
+                if (!trimmedName) {
+                    notifications.show({
+                        title: "Name required",
+                        message:
+                            "Give the current character a name before saving it to your account.",
+                        color: "red"
+                    })
+                    return
+                }
+
+                setIsSavingCurrentCharacter(true)
+
+                try {
+                    const characterToSave: Character = { ...character, name: trimmedName }
+                    const saved = await characterPersistence(queryClient).save(characterToSave, {
+                        owned: isOwnedSavedCharacter(characterToSave.id, characters),
+                        ownershipLoaded: characters !== undefined,
+                        beforeSwitch: true,
+                        allowCopy: characters?.some(
+                            (candidate) =>
+                                candidate.id === character.id &&
+                                (candidate.shared || candidate.canEdit === false)
+                        )
+                    })
+                    if (!isCurrent()) return
+                    setCharacter((current) =>
+                        current.id === characterToSave.id
+                            ? {
+                                  ...current,
+                                  id: saved.id,
+                                  name:
+                                      current.name === character.name ? trimmedName : current.name,
+                                  characterVersion: saved.characterVersion
+                              }
+                            : current
+                    )
+
+                    notifications.show({
+                        title: "Character saved",
+                        message: `"${trimmedName}" was saved to your account.`,
+                        color: "green",
+                        autoClose: 3000
+                    })
+
+                    await startNewCharacter(isCurrent)
+                } catch (error) {
+                    notifications.show({
+                        title: "Error saving character",
+                        message:
+                            error instanceof Error
+                                ? error.message
+                                : "Failed to save current character",
+                        color: "red"
+                    })
+                } finally {
+                    setIsSavingCurrentCharacter(false)
+                }
             })
-            return
-        }
-
-        setIsSavingCurrentCharacter(true)
-
-        try {
-            const characterToSave: Character = { ...character, name: trimmedName }
-            const targetCharacter = characterToSave.id
-                ? userCharacters.find((candidate) => candidate.id === characterToSave.id)
-                : null
-            const payload = {
-                name: characterToSave.name,
-                data: characterToSave,
-                version: characterToSave.version
-            }
-
-            if (targetCharacter) {
-                await characterHttp.update(targetCharacter.id, payload)
-            } else {
-                await characterHttp.create(payload)
-            }
-
-            await queryClient.invalidateQueries({ queryKey: ["characters"] })
-            await queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            await queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
-
-            notifications.show({
-                title: "Character saved",
-                message: `"${trimmedName}" was saved to your account.`,
-                color: "green",
-                autoClose: 3000
-            })
-
-            startNewCharacter()
-        } catch (error) {
-            notifications.show({
-                title: "Error saving character",
-                message:
-                    error instanceof Error ? error.message : "Failed to save current character",
-                color: "red"
-            })
-        } finally {
-            setIsSavingCurrentCharacter(false)
-        }
-    }
+            .then(() => undefined)
 
     return (
         <Box className="landing-page">

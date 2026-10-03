@@ -36,7 +36,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { Buffer } from "buffer"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
@@ -80,6 +80,7 @@ import {
     useAddCharacterToCoterie,
     useCoteries,
     useCoterieInvites,
+    useCoterieMembership,
     useCoterieVitals,
     useCreateCoterie,
     useCreateCoterieInvite,
@@ -106,6 +107,7 @@ import {
     type CoterieResponse
 } from "~/utils/api"
 import { characterHttp } from "~/utils/http/characters"
+import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
@@ -244,12 +246,6 @@ const getRemovedFromCoterieMessage = (
 
 const formatCoterieDate = (value: string | Date) => new Date(value).toLocaleString()
 
-const clearInviteTokenFromUrl = () => {
-    const cleanedUrl = new URL(window.location.href)
-    cleanedUrl.searchParams.delete("coterieInvite")
-    window.history.replaceState(null, "", `${cleanedUrl.pathname}${cleanedUrl.search}`)
-}
-
 const parseStoredCharacter = (data: unknown): CharacterType => {
     const character = parseCharacterData(data)
     if (!character) throw new Error("Unable to load character data")
@@ -293,7 +289,14 @@ const MePage = () => {
 
         return vitalsMap
     }, [coterieVitals])
+    const queryClient = useQueryClient()
     const [character, setCharacter] = useCharacterLocalStorage()
+    const persistence = characterPersistence(queryClient)
+    const isTransitioningCharacter = useSyncExternalStore(
+        persistence.subscribeTransitions,
+        persistence.transitionSnapshot,
+        persistence.transitionSnapshot
+    )
     const computedColorScheme = useComputedColorScheme("dark", {
         getInitialValueInEffect: true
     })
@@ -301,7 +304,6 @@ const MePage = () => {
     const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
     const theme = useMantineTheme()
     const redColorValue = theme.colors.red[6]
-    const queryClient = useQueryClient()
     const { connect: connectChat, joinSession: joinChatSession } = useSessionChat()
 
     // Character CRUD
@@ -381,7 +383,11 @@ const MePage = () => {
     const [selectedCoterieForAdd, setSelectedCoterieForAdd] = useState<Coterie | null>(null)
     const [selectedCharacterForCoterie, setSelectedCharacterForCoterie] = useState<string>("")
     const [coterieForInvites, setCoterieForInvites] = useState<Coterie | null>(null)
-    const [generatedInviteUrl, setGeneratedInviteUrl] = useState("")
+    const membership = useCoterieMembership(coterieForInvites?.id || null)
+    const generatedInviteUrl = membership.generatedInviteUrl
+    const setGeneratedInviteUrl = (_empty: string) => {
+        if (coterieForInvites) membership.forgetInvite(coterieForInvites.id)
+    }
     const [inviteToRevoke, setInviteToRevoke] = useState<CoterieInvite | null>(null)
     const [characterToRemoveFromCoterie, setCharacterToRemoveFromCoterie] = useState<{
         coterieId: string
@@ -403,7 +409,6 @@ const MePage = () => {
     const { data: coterieInvites } = useCoterieInvites(
         coterieInvitesModalOpened ? coterieForInvites?.id || null : null
     )
-    const handledInviteTokenRef = useRef<string | null>(null)
 
     // Nickname editing
     const [isEditingNickname, setIsEditingNickname] = useState(false)
@@ -427,15 +432,10 @@ const MePage = () => {
             return
         }
 
-        if (handledInviteTokenRef.current === inviteToken) {
-            return
-        }
-
-        handledInviteTokenRef.current = inviteToken
+        if (!membership.claimInvite(inviteToken)) return
 
         acceptCoterieInviteMutation.mutate(inviteToken, {
             onSuccess: () => {
-                clearInviteTokenFromUrl()
                 notifications.show({
                     title: "Coterie joined",
                     message: "You can now add your characters to this coterie.",
@@ -443,7 +443,6 @@ const MePage = () => {
                 })
             },
             onError: (error) => {
-                clearInviteTokenFromUrl()
                 notifications.show({
                     title: "Invite not accepted",
                     message:
@@ -545,7 +544,8 @@ const MePage = () => {
             {
                 name: emptyChar.name,
                 data: emptyChar,
-                version: emptyChar.version
+                version: emptyChar.version,
+                newDocument: true
             },
             {
                 onSuccess: () => {
@@ -570,6 +570,7 @@ const MePage = () => {
     }
 
     const handleSaveCurrentCharacter = async () => {
+        const isCurrent = persistence.replacementGuard()
         let source = characters?.find((candidate) => candidate.id === character.id)
         if (character.id && !source) {
             try {
@@ -579,6 +580,7 @@ const MePage = () => {
                 // Keep the local draft available for an explicitly confirmed copy.
             }
         }
+        if (!isCurrent()) return
         if (character.id && (!source || source.shared)) {
             setCopySource({
                 character: structuredClone(character),
@@ -606,6 +608,7 @@ const MePage = () => {
             // Fetch current character from backend to check version
             try {
                 const response = await characterHttp.get(targetCharacter.id)
+                if (!isCurrent()) return
                 const beCharacter = parseStoredCharacter((response as any).data)
                 const feVersion = character.characterVersion ?? 0
 
@@ -624,6 +627,7 @@ const MePage = () => {
                 console.warn("Failed to fetch character for version check:", error)
             }
 
+            if (!isCurrent()) return
             // Update existing character
             updateCharacterMutation.mutate(
                 {
@@ -636,6 +640,7 @@ const MePage = () => {
                 },
                 {
                     onSuccess: (savedCharacter) => {
+                        if (!isCurrent()) return
                         // Update character in memory with the ID and characterVersion from backend
                         const saved = savedCharacter as {
                             id: string
@@ -645,12 +650,16 @@ const MePage = () => {
                             characterVersion?: number
                         }
                         const savedData = saved.data as { characterVersion?: number } | undefined
-                        setCharacter({
-                            ...character,
-                            id: saved.id,
-                            characterVersion:
-                                saved.characterVersion ?? savedData?.characterVersion ?? 0
-                        } as CharacterType & { characterVersion: number })
+                        setCharacter((current) =>
+                            isCurrent() && current.id === character.id
+                                ? {
+                                      ...current,
+                                      id: saved.id,
+                                      characterVersion:
+                                          saved.characterVersion ?? savedData?.characterVersion ?? 0
+                                  }
+                                : current
+                        )
                         notifications.show({
                             title: "Success",
                             message: `Character "${character.name}" saved`,
@@ -677,6 +686,7 @@ const MePage = () => {
                 },
                 {
                     onSuccess: (savedCharacter) => {
+                        if (!isCurrent()) return
                         // Update character in memory with the ID and characterVersion from backend
                         const saved = savedCharacter as {
                             id: string
@@ -686,12 +696,16 @@ const MePage = () => {
                             characterVersion?: number
                         }
                         const savedData = saved.data as { characterVersion?: number } | undefined
-                        setCharacter({
-                            ...character,
-                            id: saved.id,
-                            characterVersion:
-                                saved.characterVersion ?? savedData?.characterVersion ?? 0
-                        } as CharacterType & { characterVersion: number })
+                        setCharacter((current) =>
+                            isCurrent() && current.id === character.id
+                                ? {
+                                      ...current,
+                                      id: saved.id,
+                                      characterVersion:
+                                          saved.characterVersion ?? savedData?.characterVersion ?? 0
+                                  }
+                                : current
+                        )
                         notifications.show({
                             title: "Success",
                             message: `Character "${character.name}" saved`,
@@ -712,11 +726,13 @@ const MePage = () => {
     }
 
     const handleConfirmOverwriteVersion = async () => {
+        const isCurrent = persistence.replacementGuard()
         if (!versionConflictInfo) return
 
         // If characterToLoad is set, we're in a loading scenario
         if (characterToLoad) {
             // Load the character (overwriting current with older version)
+            persistence.startDraft()
             setCharacter({
                 ...characterToLoad.data,
                 id: characterToLoad.id
@@ -749,6 +765,7 @@ const MePage = () => {
                 return
             }
         }
+        if (!isCurrent()) return
         if (targetCharacter.shared) {
             setVersionConflictModalOpened(false)
             setVersionConflictInfo(null)
@@ -774,6 +791,7 @@ const MePage = () => {
             },
             {
                 onSuccess: (savedCharacter) => {
+                    if (!isCurrent()) return
                     // Update character in memory with the ID and characterVersion from backend
                     const saved = savedCharacter as {
                         id: string
@@ -783,11 +801,16 @@ const MePage = () => {
                         characterVersion?: number
                     }
                     const savedData = saved.data as { characterVersion?: number } | undefined
-                    setCharacter({
-                        ...character,
-                        id: saved.id,
-                        characterVersion: saved.characterVersion ?? savedData?.characterVersion ?? 0
-                    } as CharacterType & { characterVersion: number })
+                    setCharacter((current) =>
+                        isCurrent() && current.id === character.id
+                            ? {
+                                  ...current,
+                                  id: saved.id,
+                                  characterVersion:
+                                      saved.characterVersion ?? savedData?.characterVersion ?? 0
+                              }
+                            : current
+                    )
                     setVersionConflictModalOpened(false)
                     setVersionConflictInfo(null)
                     notifications.show({
@@ -810,23 +833,36 @@ const MePage = () => {
 
     const isSavingCharacter = createCharacterMutation.isPending || updateCharacterMutation.isPending
     const isLoadingCharacter = loadingCharacterId !== null
-    const isAnyOperationInFlight = isSavingCharacter || isLoadingCharacter
+    const isAnyOperationInFlight =
+        isSavingCharacter || isLoadingCharacter || isTransitioningCharacter
 
     const handleDeleteCharacter = (characterId: string, characterName: string) => {
         setCharacterToDelete({ id: characterId, name: characterName })
         setDeleteCharacterModalOpened(true)
     }
 
-    const performLoadCharacter = async (char: {
-        id: string
-        name: string
-        data: CharacterType
-    }) => {
+    const performLoadCharacter = async (
+        char: {
+            id: string
+            name: string
+            data: CharacterType
+        },
+        isCurrent = persistence.replacementGuard()
+    ) => {
         setLoadingCharacterId(char.id)
+        await characterPersistence(queryClient).settle(character.id)
+        if (!isCurrent()) {
+            setLoadingCharacterId(null)
+            return
+        }
 
         // Check version conflict before loading the character
         try {
             const response = await characterHttp.get(char.id)
+            if (!isCurrent()) {
+                setLoadingCharacterId(null)
+                return
+            }
             const beCharacter = parseStoredCharacter((response as any).data)
             const feVersion = char.data.characterVersion ?? 0
 
@@ -848,6 +884,11 @@ const MePage = () => {
         }
 
         // Load the character
+        if (!isCurrent()) {
+            setLoadingCharacterId(null)
+            return
+        }
+        persistence.startDraft()
         setCharacter({
             ...char.data,
             id: char.id
@@ -860,140 +901,114 @@ const MePage = () => {
         })
     }
 
-    const handleLoadCharacter = async (char: Character) => {
-        const charData = char.data as CharacterType | undefined
-        if (!charData) return
-        const hasCurrentCharacterChanges = !isCharacterEmpty(character)
+    const handleLoadCharacter = (char: Character) =>
+        persistence.transition(async (isCurrent) => {
+            const charData = char.data as CharacterType | undefined
+            if (!charData) return
+            const switchDecision = characterPersistence(queryClient).decision(
+                character,
+                charactersLoadError ? undefined : characters,
+                char.id
+            )
 
-        // Check if we're loading the same character as the current one
-        const isSameCharacter = char.id === character.id && char.id
+            // Check if we're loading the same character as the current one
+            const isSameCharacter = char.id === character.id && char.id
 
-        // If loading the same character, check for unsaved changes
-        if (isSameCharacter) {
-            try {
-                // Fetch current character from backend to compare
-                const response = await characterHttp.get(char.id)
-                const beCharacter = parseStoredCharacter((response as any).data)
+            // If loading the same character, check for unsaved changes
+            if (isSameCharacter) {
+                try {
+                    // Fetch current character from backend to compare
+                    const response = await characterHttp.get(char.id)
+                    if (!isCurrent()) return
+                    const beCharacter = parseStoredCharacter((response as any).data)
 
-                // Compare current character with backend version to detect unsaved changes
-                // Simple comparison: check if characterVersion matches and do a basic equality check
-                const feVersion = character.characterVersion ?? 0
-                const beVersion = beCharacter.characterVersion ?? 0
+                    // Compare current character with backend version to detect unsaved changes
+                    // Simple comparison: check if characterVersion matches and do a basic equality check
+                    const feVersion = character.characterVersion ?? 0
+                    const beVersion = beCharacter.characterVersion ?? 0
 
-                // If versions differ or if we can't easily compare, assume there might be changes
-                // We'll show the warning to be safe
-                const hasUnsavedChanges =
-                    feVersion !== beVersion ||
-                    JSON.stringify(character) !== JSON.stringify(beCharacter)
+                    // If versions differ or if we can't easily compare, assume there might be changes
+                    // We'll show the warning to be safe
+                    const hasUnsavedChanges =
+                        feVersion !== beVersion ||
+                        JSON.stringify(character) !== JSON.stringify(beCharacter)
 
-                if (hasUnsavedChanges) {
-                    // Show warning modal for unsaved changes
+                    if (hasUnsavedChanges) {
+                        // Show warning modal for unsaved changes
+                        setCharacterToLoad({ id: char.id, name: char.name, data: charData })
+                        setLoadSameCharacterWarningModalOpened(true)
+                        return
+                    }
+                } catch (error) {
+                    // If fetch fails, assume there might be changes and show warning
+                    console.warn("Failed to fetch character for unsaved changes check:", error)
                     setCharacterToLoad({ id: char.id, name: char.name, data: charData })
                     setLoadSameCharacterWarningModalOpened(true)
                     return
                 }
-            } catch (error) {
-                // If fetch fails, assume there might be changes and show warning
-                console.warn("Failed to fetch character for unsaved changes check:", error)
-                setCharacterToLoad({ id: char.id, name: char.name, data: charData })
-                setLoadSameCharacterWarningModalOpened(true)
-                return
-            }
-        }
-
-        const currentCharacter = character.id
-            ? userCharacters.find((candidate) => candidate.id === character.id)
-            : undefined
-
-        // Shared characters are read-only, so switching away from one must discard its local
-        // state rather than trying to save it. Owned and unsaved characters are saved first.
-        if (
-            char.id !== character.id &&
-            !currentCharacter?.shared &&
-            (character.name.trim() || hasCurrentCharacterChanges)
-        ) {
-            // An unnamed draft with changes cannot be saved. Open a recoverable prompt so the
-            // user can name it or discard it, instead of blocking the load.
-            if (!character.name.trim()) {
-                trackCharacterSwitchBlockedUnnamed()
-                setSwitchNameValue(character.name)
-                setPendingSwitchTarget({ id: char.id, name: char.name, data: charData })
-                return
             }
 
-            try {
-                await saveCharacterBeforeSwitch(character, currentCharacter)
-            } catch (error) {
-                console.warn("Failed to save current character before loading:", error)
-                const reason = error instanceof Error ? error.message : "Unknown save error"
-                notifications.show({
-                    title: "Unable to load character",
-                    message: `Couldn't load "${char.name}" because saving the current character failed: ${reason}`,
-                    color: "red"
-                })
-                return
-            }
-        }
+            const currentCharacter = character.id
+                ? userCharacters.find((candidate) => candidate.id === character.id)
+                : undefined
 
-        // Load the character (using helper function)
-        await performLoadCharacter({
-            id: char.id,
-            name: char.name,
-            data: charData
+            // Shared characters are read-only, so switching away from one must discard its local
+            // state rather than trying to save it. Owned and unsaved characters are saved first.
+            if (switchDecision !== "continue") {
+                // An unnamed draft with changes cannot be saved. Open a recoverable prompt so the
+                // user can name it or discard it, instead of blocking the load.
+                if (switchDecision === "name") {
+                    trackCharacterSwitchBlockedUnnamed()
+                    setSwitchNameValue(character.name)
+                    setPendingSwitchTarget({ id: char.id, name: char.name, data: charData })
+                    return
+                }
+
+                try {
+                    await saveCharacterBeforeSwitch(character, currentCharacter, isCurrent)
+                } catch (error) {
+                    console.warn("Failed to save current character before loading:", error)
+                    const reason = error instanceof Error ? error.message : "Unknown save error"
+                    notifications.show({
+                        title: "Unable to load character",
+                        message: `Couldn't load "${char.name}" because saving the current character failed: ${reason}`,
+                        color: "red"
+                    })
+                    return
+                }
+            }
+
+            // Load the character (using helper function)
+            await performLoadCharacter(
+                {
+                    id: char.id,
+                    name: char.name,
+                    data: charData
+                },
+                isCurrent
+            )
         })
-    }
-
-    // Saves the current in-memory draft before switching. Throws on a version conflict or a
-    // failed save so the caller can surface it. Shared by the direct load path and the
-    // name-before-switch prompt.
     const saveCharacterBeforeSwitch = async (
         characterToSave: CharacterType,
-        currentCharacter: Character | undefined
+        _currentCharacter?: Character,
+        isCurrent = persistence.replacementGuard()
     ) => {
-        if (characters === undefined || charactersLoadError) {
-            throw new Error("Reload your saved characters before saving or switching characters.")
-        }
-        if (currentCharacter) {
-            const response = await characterHttp.get(currentCharacter.id)
-            const savedCharacter = parseStoredCharacter((response as any).data)
-            const localVersion = characterToSave.characterVersion ?? 0
-
-            if (savedCharacter.characterVersion > localVersion) {
-                throw new Error(
-                    `"${characterToSave.name}" has a newer version in the database. Resolve that conflict before switching characters.`
-                )
-            }
-        }
-
-        const savedCharacter = currentCharacter
-            ? await updateCharacterMutation.mutateAsync({
-                  id: currentCharacter.id,
-                  data: {
-                      name: characterToSave.name,
-                      data: characterToSave,
-                      version: characterToSave.version
+        const saved = await persistence.save(characterToSave, {
+            owned: isOwnedSavedCharacter(characterToSave.id, characters),
+            ownershipLoaded: characters !== undefined && !charactersLoadError,
+            beforeSwitch: true
+        })
+        if (!isCurrent()) return
+        setCharacter((current) =>
+            current.id === characterToSave.id
+                ? {
+                      ...current,
+                      id: saved.id,
+                      name: current.name === character.name ? characterToSave.name : current.name,
+                      characterVersion: saved.characterVersion
                   }
-              })
-            : await createCharacterMutation.mutateAsync({
-                  name: characterToSave.name,
-                  data: characterToSave,
-                  version: characterToSave.version
-              })
-        const saved = savedCharacter as {
-            id: string
-            data?: { characterVersion?: number }
-            characterVersion?: number
-        }
-
-        setCharacter({
-            ...characterToSave,
-            id: saved.id,
-            characterVersion:
-                saved.characterVersion ??
-                saved.data?.characterVersion ??
-                characterToSave.characterVersion ??
-                0
-        } as CharacterType & { id: string; characterVersion: number })
+                : current
+        )
     }
 
     const closePendingSwitch = () => {
@@ -1002,53 +1017,58 @@ const MePage = () => {
         setIsSavingBeforeSwitch(false)
     }
 
-    const handleSaveAndContinueSwitch = async () => {
-        if (!pendingSwitchTarget) return
+    const handleSaveAndContinueSwitch = () =>
+        persistence.transition(async (isCurrent) => {
+            if (!pendingSwitchTarget) return
 
-        if (!switchNameValue.trim()) {
-            notifications.show({
-                title: "Name required",
-                message: "Enter a character name before saving and switching.",
-                color: "red"
-            })
-            return
-        }
+            if (!switchNameValue.trim()) {
+                notifications.show({
+                    title: "Name required",
+                    message: "Enter a character name before saving and switching.",
+                    color: "red"
+                })
+                return
+            }
 
-        setIsSavingBeforeSwitch(true)
+            setIsSavingBeforeSwitch(true)
 
-        try {
-            const namedCharacter = { ...character, name: switchNameValue.trim() }
-            const currentCharacter = character.id
-                ? userCharacters.find((candidate) => candidate.id === character.id)
-                : undefined
-            await saveCharacterBeforeSwitch(namedCharacter, currentCharacter)
+            try {
+                const namedCharacter = { ...character, name: switchNameValue.trim() }
+                const currentCharacter = character.id
+                    ? userCharacters.find((candidate) => candidate.id === character.id)
+                    : undefined
+                await saveCharacterBeforeSwitch(namedCharacter, currentCharacter, isCurrent)
+                if (!isCurrent()) return
+
+                const target = pendingSwitchTarget
+                closePendingSwitch()
+                await performLoadCharacter(target, isCurrent)
+            } catch (error) {
+                const reason = error instanceof Error ? error.message : "Unknown save error"
+                notifications.show({
+                    title: "Error saving character",
+                    message: reason,
+                    color: "red"
+                })
+                setIsSavingBeforeSwitch(false)
+            }
+        })
+
+    const handleDiscardAndContinueSwitch = () =>
+        persistence.transition(async (isCurrent) => {
+            if (!pendingSwitchTarget) return
 
             const target = pendingSwitchTarget
+            await persistence.settle(character.id)
+            if (!isCurrent()) return
             closePendingSwitch()
-            await performLoadCharacter(target)
-        } catch (error) {
-            const reason = error instanceof Error ? error.message : "Unknown save error"
-            notifications.show({
-                title: "Error saving character",
-                message: reason,
-                color: "red"
-            })
-            setIsSavingBeforeSwitch(false)
-        }
-    }
-
-    const handleDiscardAndContinueSwitch = async () => {
-        if (!pendingSwitchTarget) return
-
-        const target = pendingSwitchTarget
-        closePendingSwitch()
-        await performLoadCharacter(target)
-    }
+            await performLoadCharacter(target, isCurrent)
+        })
 
     const handleConfirmLoadSameCharacter = () => {
         if (!characterToLoad) return
 
-        performLoadCharacter(characterToLoad)
+        void persistence.transition((isCurrent) => performLoadCharacter(characterToLoad, isCurrent))
         setLoadSameCharacterWarningModalOpened(false)
         setCharacterToLoad(null)
     }
@@ -1065,6 +1085,7 @@ const MePage = () => {
     }
 
     const handleConfirmLoadJson = async () => {
+        const isCurrent = persistence.replacementGuard()
         if (!requireLoadedCharacters()) return
         console.log("handleConfirmLoadJson", loadedFile)
         if (!loadedFile) {
@@ -1083,6 +1104,7 @@ const MePage = () => {
                 try {
                     // Check version before saving
                     const response = await characterHttp.get(character.id)
+                    if (!isCurrent()) return
                     const beCharacter = parseStoredCharacter((response as any).data)
                     const feVersion = character.characterVersion ?? 0
 
@@ -1119,14 +1141,18 @@ const MePage = () => {
                                         const savedData = saved.data as
                                             | { characterVersion?: number }
                                             | undefined
-                                        setCharacter({
-                                            ...character,
-                                            id: saved.id,
-                                            characterVersion:
-                                                saved.characterVersion ??
-                                                savedData?.characterVersion ??
-                                                0
-                                        } as CharacterType & { characterVersion: number })
+                                        setCharacter((current) =>
+                                            isCurrent() && current.id === character.id
+                                                ? {
+                                                      ...current,
+                                                      id: saved.id,
+                                                      characterVersion:
+                                                          saved.characterVersion ??
+                                                          savedData?.characterVersion ??
+                                                          0
+                                                  }
+                                                : current
+                                        )
                                         resolve()
                                     },
                                     onError: (error) => {
@@ -1148,7 +1174,9 @@ const MePage = () => {
         }
 
         try {
+            if (!isCurrent()) return
             const fileData = await getUploadFile(loadedFile)
+            if (!isCurrent()) return
             if (!fileData || typeof fileData !== "string") {
                 throw new Error("Failed to read file")
             }
@@ -1167,10 +1195,11 @@ const MePage = () => {
             }
 
             const loadedCharacter = await loadCharacterFromJson(json)
+            if (!isCurrent()) return
             console.log("Loaded character from JSON:", loadedCharacter)
 
             // Set id to empty string since this is a new character from JSON
-            const characterToSet = { ...loadedCharacter, id: "" }
+            const characterToSet = persistence.replaceDraft(loadedCharacter)
 
             setCharacter(characterToSet)
             console.log("Character set in state")
@@ -1558,9 +1587,6 @@ const MePage = () => {
                     return
                 }
 
-                const url = new URL("/me", window.location.origin)
-                url.searchParams.set("coterieInvite", createdInvite.token)
-                setGeneratedInviteUrl(url.toString())
                 notifications.show({
                     title: "Invite link created",
                     message: "Share this link with the player you want to invite.",

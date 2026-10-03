@@ -1,23 +1,15 @@
 import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import {
-    Alert,
-    Anchor,
-    Button,
-    Divider,
-    List,
-    Modal,
-    ScrollArea,
-    Stack,
-    Text
-} from "@mantine/core"
+import { Alert, Anchor, Button, Divider, List, Modal, ScrollArea, Stack, Text } from "@mantine/core"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useEffect, useMemo, useState } from "react"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { trackCharacterRepair } from "~/utils/characterRecoveryAnalytics"
-import { previewCharacterRepair } from "~/utils/repairCharacter"
+import { characterIntake } from "~/modules/characterIntake"
+import { useQueryClient } from "@tanstack/react-query"
+import { characterPersistence } from "~/modules/characterPersistence"
 
 const describeBrokenAttribute = (error: string) => {
     const property = error.match(/(?:property|field)\s+['"`]([^'"`]+)['"`]/i)?.[1]
@@ -35,15 +27,11 @@ const describeBrokenAttribute = (error: string) => {
 }
 
 const BrokenSaveModal = () => {
+    const queryClient = useQueryClient()
     const [recoveryError, setRecoveryError] = useState("")
-    const {
-        brokenData,
-        brokenError,
-        hasBrokenCharacter,
-        clearBrokenCharacter,
-        archiveBrokenCharacter
-    } = useBrokenCharacter()
-    const repair = useMemo(() => previewCharacterRepair(brokenData), [brokenData])
+    const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
+        useBrokenCharacter()
+    const repair = useMemo(() => characterIntake.preview(brokenData), [brokenData])
     const repairId = useMemo(() => crypto.randomUUID(), [brokenData])
     const [, setCharacter] = useCharacterLocalStorage()
 
@@ -70,16 +58,14 @@ const BrokenSaveModal = () => {
     const onRepair = () => {
         if (!repair.success) return
         try {
-            archiveBrokenCharacter()
-            // Mantine's storage hook catches write failures. Verify the repaired save can
-            // be persisted before dismissing the recovery UI or changing React state.
-            localStorage.setItem("character", JSON.stringify(repair.character))
+            characterIntake.applyApprovedRepair(brokenData, brokenError)
         } catch {
             setRecoveryError(
                 "Could not save the repair and its recovery copy. Download your original save before freeing browser storage and trying again."
             )
             return
         }
+        characterPersistence(queryClient).startDraft()
         setCharacter(repair.character)
         clearBrokenCharacter()
         trackCharacterRepair("applied", repairId, repair.changes, repair.character)
@@ -112,7 +98,10 @@ const BrokenSaveModal = () => {
                 <Divider my="sm" />
                 {repair.success ? (
                     <Stack>
-                        <Alert color="yellow" title="Automatic repair may cause partial data loss" />
+                        <Alert
+                            color="yellow"
+                            title="Automatic repair may cause partial data loss"
+                        />
                         <ScrollArea.Autosize mah={300} offsetScrollbars>
                             <List
                                 size="sm"

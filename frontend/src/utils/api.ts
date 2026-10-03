@@ -35,6 +35,7 @@ type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
     body?: unknown
     headers?: Record<string, string>
+    isCurrentSession?: () => boolean
 }
 
 export const AUTH_UNAUTHORIZED_EVENT = "progeny:auth-unauthorized"
@@ -69,12 +70,15 @@ const notifyAuthUnauthorized = () => {
 
 // Ensure CSRF token is available before making requests
 // TODOdin: This is not pretty, find an established best practice for initializing CSRF for SPAs
-const ensureCsrfToken = async (): Promise<void> => {
+const ensureCsrfToken = async (
+    assertCurrentSession: () => void = () => undefined
+): Promise<void> => {
     if (!getCsrfToken()) {
         // Make a GET request to trigger CSRF token generation
         const response = await fetch(`${API_URL}/health`, {
             credentials: "include"
         })
+        assertCurrentSession()
         const csrfFromHeader = response.headers.get("X-CSRF-Token")
         if (csrfFromHeader) {
             csrfTokenCache = csrfFromHeader
@@ -90,10 +94,15 @@ const getCsrfToken = (): string | null => {
 
 export const request = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
     const { method = "GET", body, headers = {} } = options
+    const assertCurrentSession = () => {
+        if (options.isCurrentSession && !options.isCurrentSession())
+            throw new Error("Your account changed. Your draft is still in this browser.")
+    }
+    assertCurrentSession()
 
     // Ensure CSRF token exists for state-changing operations
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-        await ensureCsrfToken()
+        await ensureCsrfToken(assertCurrentSession)
     }
 
     const requestHeaders: Record<string, string> = {
@@ -113,12 +122,14 @@ export const request = async <T>(endpoint: string, options: RequestOptions = {})
         }
     }
 
+    assertCurrentSession()
     const response = await fetch(`${API_URL}${endpoint}`, {
         method,
         headers: requestHeaders,
         credentials: "include",
         ...(body ? { body: JSON.stringify(body) } : {})
     })
+    assertCurrentSession()
 
     const csrfFromHeader = response.headers.get("X-CSRF-Token")
     if (csrfFromHeader) {
@@ -520,18 +531,20 @@ export const api = {
         apiRequest<unknown>("/characters").then((response) =>
             characterApiResponseListSchema.parse(response)
         ),
-    getCharacter: (id: string) =>
-        apiRequest<unknown>(`/characters/${id}`).then((response) =>
+    getCharacter: (id: string, isCurrentSession?: () => boolean) =>
+        apiRequest<unknown>(`/characters/${id}`, { isCurrentSession }).then((response) =>
             characterApiResponseSchema.parse(response)
         ),
-    createCharacter: (data: CreateCharacterPayload) =>
-        apiRequest<unknown>("/characters", { method: "POST", body: data }).then((response) =>
-            characterApiResponseSchema.parse(response)
+    createCharacter: (data: CreateCharacterPayload, isCurrentSession?: () => boolean) =>
+        apiRequest<unknown>("/characters", { method: "POST", body: data, isCurrentSession }).then(
+            (response) => characterApiResponseSchema.parse(response)
         ),
-    updateCharacter: (id: string, data: UpdateCharacterPayload) =>
-        apiRequest<unknown>(`/characters/${id}`, { method: "PUT", body: data }).then((response) =>
-            characterApiResponseSchema.parse(response)
-        ),
+    updateCharacter: (id: string, data: UpdateCharacterPayload, isCurrentSession?: () => boolean) =>
+        apiRequest<unknown>(`/characters/${id}`, {
+            method: "PUT",
+            body: data,
+            isCurrentSession
+        }).then((response) => characterApiResponseSchema.parse(response)),
     updateCharacterVitals: (id: string, data: UpdateCharacterVitalsPayload) =>
         apiRequest<UpdateCharacterVitalsResponse>(`/characters/${id}/vitals`, {
             method: "PATCH",

@@ -1,4 +1,6 @@
 import { MantineProvider } from "@mantine/core"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { render, renderHook, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { readFileSync } from "fs"
@@ -201,12 +203,21 @@ describe("Broken Character Logic", () => {
         const openBrokenSave = (raw: string) => {
             localStorage.setItem("character", raw)
             renderHook(() => useCharacterLocalStorage())
-            render(React.createElement(MantineProvider, {}, React.createElement(BrokenSaveModal)))
+            const client = new QueryClient()
+            render(
+                React.createElement(
+                    QueryClientProvider,
+                    { client },
+                    React.createElement(MantineProvider, {}, React.createElement(BrokenSaveModal))
+                )
+            )
+            return client
         }
 
         it("shows each repair change immediately and leaves data untouched until auto-repair", async () => {
             const original = makeBrokenSave()
-            openBrokenSave(original)
+            const client = openBrokenSave(original)
+            const previousDraft = characterPersistence(client).replacementGuard()
             const before = localStorage.getItem("character")
             expect(
                 screen.getByText("Automatic repair may cause partial data loss")
@@ -230,6 +241,7 @@ describe("Broken Character Logic", () => {
             expect(JSON.parse(localStorage.getItem("character_broken_save")!)).toBe(original)
 
             await userEvent.click(screen.getByRole("button", { name: "Auto-repair" }))
+            expect(previousDraft()).toBe(false)
             const repaired = JSON.parse(localStorage.getItem("character")!)
             const suggestions = vi
                 .mocked(posthog.capture)
@@ -326,7 +338,13 @@ describe("Broken Character Logic", () => {
             expect(brokenHook.current.brokenData).toBe(brokenData)
             expect(brokenHook.current.brokenError).toBeTruthy()
 
-            render(React.createElement(MantineProvider, {}, React.createElement(BrokenSaveModal)))
+            render(
+                React.createElement(
+                    QueryClientProvider,
+                    { client: new QueryClient() },
+                    React.createElement(MantineProvider, {}, React.createElement(BrokenSaveModal))
+                )
+            )
 
             await act(async () => {
                 await new Promise((resolve) => setTimeout(resolve, 0))

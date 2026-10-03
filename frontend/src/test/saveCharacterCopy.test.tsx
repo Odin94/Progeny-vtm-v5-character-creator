@@ -1,6 +1,6 @@
 import { MantineProvider } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
@@ -8,10 +8,11 @@ import SaveCharacterCopyModal, {
     type CharacterCopySource
 } from "~/components/SaveCharacterCopyModal"
 import { getEmptyCharacter } from "~/data/Character"
-import { characterHttp } from "~/utils/http/characters"
+import { api } from "~/utils/api"
+import { characterPersistence } from "~/modules/characterPersistence"
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }))
-vi.mock("~/utils/http/characters", () => ({ characterHttp: { create: vi.fn() } }))
+vi.mock("~/utils/api", () => ({ api: { createCharacter: vi.fn() } }))
 Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation(() => ({
@@ -61,7 +62,7 @@ describe("save a character as an owned copy", () => {
         ).toBeInTheDocument()
         await user.click(screen.getByRole("button", { name: /^OK$/ }))
         expect(onClose).toHaveBeenCalledOnce()
-        expect(characterHttp.create).not.toHaveBeenCalled()
+        expect(api.createCharacter).not.toHaveBeenCalled()
         expect(setCharacter).not.toHaveBeenCalled()
     })
     it("explains that an unverified character will become an owned copy", () => {
@@ -94,11 +95,11 @@ describe("save a character as an owned copy", () => {
             createdAt: "today",
             updatedAt: "today"
         }
-        vi.mocked(characterHttp.create).mockResolvedValue(saved)
+        vi.mocked(api.createCharacter).mockResolvedValue(saved)
         const { user, client, setCharacter, onClose } = setup()
         await user.click(screen.getByRole("button", { name: "Save as copy" }))
         await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
-        expect(characterHttp.create).toHaveBeenCalledWith(
+        expect(api.createCharacter).toHaveBeenCalledWith(
             expect.objectContaining({ data: { ...source.character, id: "", characterVersion: 0 } }),
             expect.anything()
         )
@@ -129,8 +130,27 @@ describe("save a character as an owned copy", () => {
         )
         expect(source.character.id).toBe("original")
     })
+    it("does not activate a delayed copy after another draft replaces the active character", async () => {
+        let finish!: (value: any) => void
+        vi.mocked(api.createCharacter).mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    finish = resolve
+                })
+        )
+        const { user, client, setCharacter, onClose } = setup()
+        await user.click(screen.getByRole("button", { name: "Save as copy" }))
+        await waitFor(() => expect(api.createCharacter).toHaveBeenCalledOnce())
+        characterPersistence(client).replaceDraft({ ...getEmptyCharacter(), name: "Later import" })
+        await act(async () => {
+            finish({ id: "copy", characterVersion: 1 })
+            await new Promise((resolve) => setTimeout(resolve, 0))
+        })
+        expect(setCharacter).not.toHaveBeenCalled()
+        expect(onClose).not.toHaveBeenCalled()
+    })
     it("keeps the source active and allows retry after a rejected save", async () => {
-        vi.mocked(characterHttp.create).mockRejectedValue(new Error("Connection interrupted"))
+        vi.mocked(api.createCharacter).mockRejectedValue(new Error("Connection interrupted"))
         const { user, onClose, setCharacter } = setup()
         await user.click(screen.getByRole("button", { name: "Save as copy" }))
         expect(await screen.findByText("Connection interrupted")).toBeInTheDocument()

@@ -21,7 +21,7 @@ import {
 import { Buffer } from "buffer"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
@@ -32,6 +32,7 @@ import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
 import { loadCharacterFromJson } from "~/components/LoadModal"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
@@ -53,6 +54,7 @@ type CharacterSheetMenuProps = {
 }
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
+    const persistence = characterPersistence(useQueryClient())
     const shouldReduceMotion = useReducedMotion()
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
@@ -211,6 +213,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     }
 
     const handleConfirmLoad = async () => {
+        const isCurrent = persistence.replacementGuard()
         if (!loadedFile) {
             console.log("Error: No file loaded!")
             return
@@ -220,7 +223,8 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
             const base64 = fileData.split(",")[1]
             const json = Buffer.from(base64, "base64").toString()
             const loadedCharacter = await loadCharacterFromJson(json)
-            setCharacter(loadedCharacter)
+            if (!isCurrent()) return
+            setCharacter(persistence.replaceDraft(loadedCharacter))
             closeLoadModal()
             handleMenuClose()
             notifications.show({

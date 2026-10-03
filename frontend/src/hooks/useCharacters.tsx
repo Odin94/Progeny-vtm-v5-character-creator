@@ -1,10 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { characterHttp } from "../utils/http/characters"
-import type {
-    CharacterApiResponse,
-    CreateCharacterPayload,
-    UpdateCharacterPayload
-} from "../utils/characterApi"
+import { characterPersistence } from "~/modules/characterPersistence"
+import { api } from "~/utils/api"
+import { useBoundMutation } from "./useBoundMutation"
+import type { CreateCharacterPayload, UpdateCharacterPayload } from "../utils/characterApi"
 
 export const useCharacters = (enabled = true) => {
     return useQuery({
@@ -31,37 +30,43 @@ export const useCharacterNotes = (characterId: string | null, enabled = true) =>
 }
 
 export const useCreateCharacter = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: characterHttp.create,
-        onSuccess: (saved) => {
-            // Confirm ownership immediately, before list revalidation can finish or fail.
-            const owned = { ...saved, shared: false, canEdit: true }
-            queryClient.setQueryData(["characters", saved.id], owned)
-            queryClient.setQueryData<CharacterApiResponse[]>(["characters"], (previous) =>
-                previous ? [...previous.filter((entry) => entry.id !== saved.id), owned] : undefined
+    const client = useQueryClient()
+    return useBoundMutation(
+        () => characterPersistence(client),
+        async (persistence, data: CreateCharacterPayload & { newDocument?: boolean }) => {
+            const saved = await persistence.save(
+                { ...data.data, name: data.name },
+                { owned: false, newDocument: data.newDocument }
             )
-            queryClient.invalidateQueries({ queryKey: ["characters"] })
-            queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
+            return {
+                id: saved.id,
+                name: saved.name,
+                data: saved,
+                characterVersion: saved.characterVersion
+            }
         }
-    })
+    )
 }
 
 export const useUpdateCharacter = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateCharacterPayload }) =>
-            characterHttp.update(id, data),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["characters"] })
-            queryClient.invalidateQueries({ queryKey: ["characters", variables.id] })
-            queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
+    const client = useQueryClient()
+    return useBoundMutation(
+        () => characterPersistence(client),
+        async (persistence, { id, data }: { id: string; data: UpdateCharacterPayload }) => {
+            const draft =
+                data.data ?? (await api.getCharacter(id, persistence.isCurrentSession)).data
+            const saved = await persistence.save(
+                { ...draft, id, name: data.name ?? draft.name },
+                { owned: true, force: true }
+            )
+            return {
+                id: saved.id,
+                name: saved.name,
+                data: saved,
+                characterVersion: saved.characterVersion
+            }
         }
-    })
+    )
 }
 
 export const useDeleteCharacter = () => {
