@@ -2,7 +2,7 @@
 
 **5 confirmed open findings: 4 high and 1 medium.** Each report includes reproduction, observed impact, cause, a suggested fix, and a regression check.
 
-Initial committed snapshot: `4a93b19`. Final revalidation: `3d9ee75` plus documentation-only review commits. The separate worktree is on `chore/odin/deep-bug-review`. The primary checkout's uncommitted architecture work was not reviewed or changed. Nothing was pushed and no PR was created.
+Initial committed snapshot: `4a93b19`. Final revalidation: `1598820` plus documentation-only review commits. The separate worktree is on `chore/odin/deep-bug-review`. The primary checkout's uncommitted architecture work was not reviewed or changed. Nothing was pushed and no PR was created.
 
 ## Findings
 
@@ -16,7 +16,7 @@ Initial committed snapshot: `4a93b19`. Final revalidation: `3d9ee75` plus docume
 
 ## Verification and scope
 
-Frontend: 361 tests; backend: 70 tests. Frontend typecheck and backend TypeScript build pass. Frontend production bundling was run with `pnpm exec vite build`; the normal build script additionally uploads PostHog sourcemaps, which was intentionally not invoked.
+Frontend: 370 tests; backend: 71 tests. Frontend typecheck and backend TypeScript build pass. Frontend production bundling was run with `pnpm exec vite build`; the normal build script additionally uploads PostHog sourcemaps, which was intentionally not invoked.
 
 All three apps were launched locally against disposable SQLite databases. Browser/API probes cover anonymous persistence, cross-tab editing, import/export, authenticated sync, conflicts, reload/recovery, character switching, and the reported interaction bugs. Default sheets were inspected at 390 × 844 with no horizontal overflow or page errors. Passing existing tests did not prevent the reported bugs.
 

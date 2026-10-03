@@ -2,7 +2,7 @@
 
 Severity: **Medium**. Confirmed with a real browser connection to the running API at `4a93b19`.
 
-Revalidated on committed revision `3d9ee75` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
+Revalidated on committed revision `1598820` after incorporating the newer local performance work. Uncommitted architecture changes in the primary checkout were outside this review.
 
 ## Reproduction and evidence
 
