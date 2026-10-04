@@ -73,6 +73,7 @@ export function createLiquidRenderer(renderer, scene, camera) {
                         bindings.push([object, original])
                         shells.push(object)
                         object.material.onBeforeCompile = (shader) => {
+                            original.onBeforeCompile(shader, renderer)
                             shader.uniforms.liquidInteriorMap = map
                             shader.uniforms.liquidInteriorSize = dimensions
                             shader.fragmentShader = shader.fragmentShader.replace(
@@ -82,7 +83,8 @@ export function createLiquidRenderer(renderer, scene, camera) {
                                     .replaceAll("transmissionSamplerSize", "liquidInteriorSize")
                             )
                         }
-                        object.material.customProgramCacheKey = () => "dice-liquid-interior-v1"
+                        object.material.customProgramCacheKey = () =>
+                            `dice-liquid-interior-v1:${original.customProgramCacheKey()}`
                         object.material.needsUpdate = true
                     } else if (
                         object.userData.role === "inclusion" ||

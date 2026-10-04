@@ -59,6 +59,13 @@ export interface Bounds {
     halfZ: number
     cameraHeight: number
     bottomInset: number
+    blocked?: { minX: number; maxX: number; minZ: number; maxZ: number }
+}
+export interface ScreenRectangle {
+    left: number
+    top: number
+    right: number
+    bottom: number
 }
 export interface Die {
     data: DiceData
@@ -136,23 +143,58 @@ export function supportHeight(data: DiceData, q: Quaternion) {
     return -Math.min(...data.vertices.map((v) => new Vector3(...v).applyQuaternion(q).y)) + 0.006
 }
 /** World extents at page plane. Enlarge the world for dense pools instead of shrinking margins. */
-export function pageBounds(width: number, height: number, count: number, dieSize = 1): Bounds {
+export function pageBounds(
+    width: number,
+    height: number,
+    count: number,
+    dieSize = 1,
+    controls?: ScreenRectangle
+): Bounds {
     const footerPixels = Math.min(110, height * 0.18)
     // Change apparent size through the camera; keep colliders and mass consistent.
     const size = Number.isFinite(dieSize) ? clamp(dieSize, 0.6, 1.4) : 1
     let ppu = Math.min(49, width / 8, height / 9) * size
-    while (
-        Math.floor((width / ppu - 3) / 2.35 + 1) *
-            Math.floor(((height - footerPixels) / ppu - 3) / 2.35 + 1) <
-        count
-    )
-        ppu *= 0.94
-    return {
+    const bounds = (): Bounds => ({
         halfX: width / ppu / 2,
         halfZ: height / ppu / 2,
         cameraHeight: 40,
-        bottomInset: footerPixels / ppu
+        bottomInset: footerPixels / ppu,
+        blocked: controls
+            ? {
+                  minX: controls.left / ppu - width / ppu / 2,
+                  maxX: controls.right / ppu - width / ppu / 2,
+                  minZ: controls.top / ppu - height / ppu / 2,
+                  maxZ: controls.bottom / ppu - height / ppu / 2
+              }
+            : undefined
+    })
+    while (landingSlots(bounds()).length < count) ppu *= 0.94
+    return bounds()
+}
+
+const landingSlots = (bounds: Bounds): [number, number][] => {
+    const { halfX: x, halfZ: z, blocked } = bounds
+    const cols = Math.max(1, Math.floor((2 * x - 3) / 2.35) + 1)
+    const rows = Math.max(1, Math.floor((2 * z - bounds.bottomInset - 3) / 2.35) + 1)
+    const points: [number, number][] = []
+    // Reserve the projected bounding sphere at resting height, not just the center.
+    const perspective = 1 - 2.04 / bounds.cameraHeight
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const px = (col - (cols - 1) / 2) * 2.35
+            const pz = (row - (rows - 1) / 2) * 2.35 - bounds.bottomInset / 2
+            if (
+                blocked &&
+                px + 1.12 > blocked.minX * perspective &&
+                px - 1.12 < blocked.maxX * perspective &&
+                pz + 1.12 > blocked.minZ * perspective &&
+                pz - 1.12 < blocked.maxZ * perspective
+            )
+                continue
+            points.push([px, pz])
+        }
     }
+    return points.sort((a, b) => Math.hypot(...a) - Math.hypot(...b))
 }
 export class PageDicePhysics {
     world: RAPIER.World
@@ -209,6 +251,26 @@ export class PageDicePhysics {
                         .setFriction(0.3)
                 )
             )
+        const blocked = this.bounds.blocked
+        if (blocked) {
+            this.walls.push(
+                this.world.createCollider(
+                    RAPIER.ColliderDesc.cuboid(
+                        (blocked.maxX - blocked.minX) / 2,
+                        12,
+                        (blocked.maxZ - blocked.minZ) / 2
+                    )
+                        .setTranslation(
+                            (blocked.minX + blocked.maxX) / 2,
+                            11,
+                            (blocked.minZ + blocked.maxZ) / 2
+                        )
+                        .setCollisionGroups(0x00020001)
+                        .setRestitution(0.32)
+                        .setFriction(0.3)
+                )
+            )
+        }
     }
     add(data: DiceData) {
         const body = this.world.createRigidBody(
@@ -319,18 +381,7 @@ export class PageDicePhysics {
         })
     }
     private slots(): [number, number][] {
-        const { halfX: x, halfZ: z } = this.bounds,
-            cols = Math.max(1, Math.floor((2 * x - 3) / 2.35) + 1),
-            rows = Math.max(1, Math.floor((2 * z - this.bounds.bottomInset - 3) / 2.35) + 1)
-        const points: [number, number][] = []
-        for (let row = 0; row < rows; row++)
-            for (let col = 0; col < cols; col++)
-                points.push([
-                    (col - (cols - 1) / 2) * 2.35,
-                    (row - (rows - 1) / 2) * 2.35 - this.bounds.bottomInset / 2
-                ])
-        points.sort((a, b) => Math.hypot(...a) - Math.hypot(...b))
-        return points
+        return landingSlots(this.bounds)
     }
     private contain(d: Die) {
         const p = d.body.translation(),
@@ -349,19 +400,41 @@ export class PageDicePhysics {
             d.entered = true
             d.collider.setCollisionGroups(0x00010003)
         }
-        const x = d.entered ? clamp(p.x, -xLimit, xLimit) : p.x,
+        let x = d.entered ? clamp(p.x, -xLimit, xLimit) : p.x,
             z = clamp(
                 p.z,
                 -zLimit,
                 Math.max(0.1, (halfZ - this.bounds.bottomInset) * perspective - 1.12)
             )
+        const blocked = this.bounds.blocked
+        if (blocked) {
+            const left = blocked.minX * perspective - 1.12
+            const right = blocked.maxX * perspective + 1.12
+            const top = blocked.minZ * perspective - 1.12
+            const bottom = blocked.maxZ * perspective + 1.12
+            if (x > left && x < right && z > top && z < bottom) {
+                const moves = [
+                    { x: left, z },
+                    { x: right, z },
+                    { x, z: top },
+                    { x, z: bottom }
+                ].filter(
+                    (point) =>
+                        Math.abs(point.x) <= xLimit &&
+                        point.z >= -zLimit &&
+                        point.z <= (halfZ - this.bounds.bottomInset) * perspective - 1.12
+                )
+                moves.sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))
+                if (moves[0]) ({ x, z } = moves[0])
+            }
+        }
         if (x !== p.x || z !== p.z || y !== p.y) {
             d.body.setTranslation({ x, y, z }, false)
             d.body.setLinvel(
                 {
-                    x: x !== p.x ? -Math.sign(p.x) * Math.abs(v.x) * 0.65 : v.x,
+                    x: x !== p.x ? Math.sign(x - p.x) * Math.abs(v.x) * 0.65 : v.x,
                     y: y !== p.y ? Math.min(0, v.y) : v.y,
-                    z: z !== p.z ? -Math.sign(p.z) * Math.abs(v.z) * 0.65 : v.z
+                    z: z !== p.z ? Math.sign(z - p.z) * Math.abs(v.z) * 0.65 : v.z
                 },
                 false
             )
@@ -374,22 +447,33 @@ export class PageDicePhysics {
         const p = d.body.translation(),
             q = new Quaternion().copy(d.body.rotation())
         const { halfX, halfZ, cameraHeight } = this.bounds
-        return d.data.vertices.every((v) => {
+        const projected = d.data.vertices.map((v) => {
             const world = new Vector3(...v).applyQuaternion(q).add(p)
             const scale = (cameraHeight - world.y) / cameraHeight
-            return (
-                scale > 0 &&
-                Math.abs(world.x) <= halfX * scale + 1e-6 &&
-                Math.abs(world.z) <= halfZ * scale + 1e-6
-            )
+            return { x: world.x / scale, z: world.z / scale, scale }
         })
+        if (
+            !projected.every(
+                (v) => v.scale > 0 && Math.abs(v.x) <= halfX + 1e-6 && Math.abs(v.z) <= halfZ + 1e-6
+            )
+        )
+            return false
+        const blocked = this.bounds.blocked
+        return (
+            !blocked ||
+            Math.max(...projected.map((v) => v.x)) <= blocked.minX ||
+            Math.min(...projected.map((v) => v.x)) >= blocked.maxX ||
+            Math.max(...projected.map((v) => v.z)) <= blocked.minZ ||
+            Math.min(...projected.map((v) => v.z)) >= blocked.maxZ
+        )
     }
     resize(bounds: Bounds) {
         if (
             bounds.halfX === this.bounds.halfX &&
             bounds.halfZ === this.bounds.halfZ &&
             bounds.cameraHeight === this.bounds.cameraHeight &&
-            bounds.bottomInset === this.bounds.bottomInset
+            bounds.bottomInset === this.bounds.bottomInset &&
+            JSON.stringify(bounds.blocked) === JSON.stringify(this.bounds.blocked)
         )
             return
         this.bounds = bounds

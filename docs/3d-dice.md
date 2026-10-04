@@ -23,8 +23,11 @@ roll analytics, and session-chat result sharing remain in use.
   `4d10` and `4 d 10` also work; other dice types do not. Quick-roll counts
   accept 1–100 dice. `Escape` cancels. Shortcuts ignore text entry, composing
   input, modifier chords, open dialogs, and an already rolling pool.
-- **Models:** VtM uses black regular and red hunger dice; Crystal VtM uses
-  ruby regular and violet hunger dice. Style and throw settings persist locally.
+- **Models:** Default uses black regular and red hunger dice; Crystal uses
+  violet regular and ruby hunger dice, retaining the correct face symbols for
+  each role. Style and throw settings persist locally; old style names migrate.
+- **Face captions:** Success, Failure, Critical, Messy, or Bestial failure
+  replace role names and numeric values. The hunger model's skull is face 1.
 - **Throw controls:** intensity, drop height, direction, spread, and horizontal
   start position. The default is the kit's weighty diagonal throw from the right.
 - **Results:** read the actual landed face after physics settles, then feed
@@ -34,7 +37,9 @@ roll analytics, and session-chat result sharing remain in use.
   button. Hunger dice cannot be selected. One superficial willpower damage is
   charged, and unselected bodies/results stay fixed. Chat updates keep the
   original roll ID and mark the update as a reroll.
-- **Mobile:** the smaller dice arena sits above the controls, with smaller
+- **Arena:** desktop dice can use the full page, including above the controls;
+  the controls rectangle is excluded from physics and landing positions.
+  The smaller mobile dice arena sits above the controls, with smaller
   dice and additional scaling for dense pools. The viewport and control bounds
   determine the physics arena, preventing dice from landing behind controls.
 - **Recovery:** clipped dice move to visible vacant positions. Cocked dice

@@ -34,6 +34,7 @@ import { getDisciplineRating } from "~/generator/utils"
 import ThrowControls from "./threeDice/ThrowControls"
 import {
     DEFAULT_VAMPIRE_THROW,
+    readDiceStyle,
     readThrowSettings,
     type VampireDiceStyle,
     type VampireThrowSettings
@@ -86,8 +87,8 @@ const DiceRollModal = ({
     const controlsRef = useRef<HTMLDivElement>(null)
     const [diceStyle, setDiceStyle] = useLocalStorage<VampireDiceStyle>({
         key: "vampire-dice-style",
-        defaultValue: "vtm",
-        deserialize: (raw) => (raw === '"crystal-vtm"' ? "crystal-vtm" : "vtm")
+        defaultValue: "default",
+        deserialize: readDiceStyle
     })
     const [throwSettings, setThrowSettings] = useLocalStorage<VampireThrowSettings>({
         key: "vampire-dice-throw",

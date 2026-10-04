@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest"
-import { Quaternion, Vector3 } from "three"
+import { PerspectiveCamera, Quaternion, Vector3 } from "three"
+import { layoutDieTargets } from "~/character_sheet/components/diceRollModal/threeDice/overlay-layout"
 import regular from "~/character_sheet/components/diceRollModal/threeDice/regular.json"
 import hunger from "~/character_sheet/components/diceRollModal/threeDice/hunger.json"
 import {
@@ -18,6 +19,126 @@ const finish = (physics: PageDicePhysics) => {
 }
 describe("imported vampire dice physics", () => {
     beforeAll(() => initDicePhysics())
+    it.each([
+        [374, 374, 16, 0.6],
+        [1264, 784, 100, 1.1]
+    ])(
+        "keeps projected die click targets separate in a %ix%i arena with %i dice",
+        (width, height, count, size) => {
+            const bounds = pageBounds(width, height, count, size)
+            const physics = new PageDicePhysics(bounds)
+            try {
+                for (let i = 0; i < count; i++) physics.add(regularData)
+                physics.showValues(Array(count).fill(6))
+                const camera = new PerspectiveCamera(
+                    (2 * Math.atan(bounds.halfZ / 40) * 180) / Math.PI,
+                    width / height,
+                    0.1,
+                    100
+                )
+                camera.position.set(0, 40, 0)
+                camera.up.set(0, 0, -1)
+                camera.lookAt(0, 0, 0)
+                camera.updateMatrixWorld()
+                const boxes = physics.dice.map((die) => {
+                    const points = die.data.vertices.map((vertex) => {
+                        const point = new Vector3(...vertex)
+                            .applyQuaternion(die.body.rotation())
+                            .add(die.body.translation())
+                            .project(camera)
+                        return { x: ((point.x + 1) * width) / 2, y: ((1 - point.y) * height) / 2 }
+                    })
+                    const left = Math.min(...points.map((p) => p.x)),
+                        top = Math.min(...points.map((p) => p.y))
+                    return {
+                        left,
+                        top,
+                        width: Math.max(...points.map((p) => p.x)) - left,
+                        height: Math.max(...points.map((p) => p.y)) - top
+                    }
+                })
+                const targets = layoutDieTargets(boxes)
+                for (let i = 0; i < targets.length; i++) {
+                    const a = targets[i]
+                    expect(a.width).toBeGreaterThan(0)
+                    expect(a.height).toBeGreaterThan(0)
+                    for (const b of targets.slice(i + 1)) {
+                        const overlapX =
+                            Math.min(a.left + a.width, b.left + b.width) - Math.max(a.left, b.left)
+                        const overlapY =
+                            Math.min(a.top + a.height, b.top + b.height) - Math.max(a.top, b.top)
+                        expect(overlapX > 1e-6 && overlapY > 1e-6).toBe(false)
+                    }
+                }
+            } finally {
+                physics.dispose()
+            }
+        }
+    )
+    it.each([16, 100])(
+        "settles %i dice around the controls, using the space above them",
+        (count) => {
+            const physics = new PageDicePhysics(
+                pageBounds(1264, 784, count, 1.1, {
+                    left: 840,
+                    top: 240,
+                    right: 1260,
+                    bottom: 784
+                })
+            )
+            try {
+                for (let index = 0; index < count; index++)
+                    physics.add(index < 5 ? hungerData : regularData)
+                physics.showValues(Array(count).fill(6))
+                if (count === 100) {
+                    expect(
+                        physics.dice.some((die) => {
+                            const p = die.body.translation()
+                            return (
+                                p.x > physics.bounds.blocked!.minX &&
+                                p.z < physics.bounds.blocked!.minZ
+                            )
+                        })
+                    ).toBe(true)
+                }
+                for (const die of physics.dice) expect(physics.isFullyVisible(die)).toBe(true)
+                physics.launch(() => 0.43, {
+                    intensity: 10,
+                    dropHeight: 30,
+                    startX: 150,
+                    direction: 200
+                })
+                finish(physics)
+                for (const die of physics.dice) expect(physics.isFullyVisible(die)).toBe(true)
+            } finally {
+                physics.dispose()
+            }
+        }
+    )
+
+    it("recovers a die covered by expanded controls without changing its face or a clear neighbour", () => {
+        const physics = new PageDicePhysics(pageBounds(1264, 784, 2))
+        try {
+            physics.add(regularData)
+            physics.add(hungerData)
+            physics.showValues([10, 1])
+            const clear = physics.dice[0]
+            const hidden = physics.dice[1]
+            clear.body.setTranslation({ x: 6, y: clear.body.translation().y, z: -6 }, false)
+            hidden.body.setTranslation({ x: 6, y: hidden.body.translation().y, z: 4 }, false)
+            const position = { ...clear.body.translation() }
+            physics.resize(
+                pageBounds(1264, 784, 2, 1, { left: 800, top: 200, right: 1264, bottom: 784 })
+            )
+            finish(physics)
+            expect(clear.body.translation()).toEqual(position)
+            expect(physics.isFullyVisible(clear)).toBe(true)
+            expect(physics.results().map((result) => result.value)).toEqual([10, 1])
+            expect(physics.isFullyVisible(hidden)).toBe(true)
+        } finally {
+            physics.dispose()
+        }
+    })
     it.each([
         [1280, 800, 1.1],
         [390, 420, 0.6],

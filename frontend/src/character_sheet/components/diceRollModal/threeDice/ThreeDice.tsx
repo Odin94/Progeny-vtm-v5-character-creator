@@ -43,12 +43,23 @@ export default function ThreeDice(props: Props) {
         const update = () => {
             if (!host.current || !props.controls.current) return
             const rect = props.controls.current.getBoundingClientRect()
-            // The dice arena stops before the controls. Its real bounds are used
-            // for physics containment, so settled dice cannot hide under them.
+            // Desktop uses the full page, excluding only the controls rectangle.
+            // Mobile keeps a full-width arena above its bottom controls.
             Object.assign(host.current.style, {
-                right: props.isMobile ? "8px" : `${window.innerWidth - rect.left + 12}px`,
-                bottom: props.isMobile ? `${window.innerHeight - rect.top + 8}px` : "8px"
+                right: "8px",
+                bottom: props.isMobile ? `${window.innerHeight - rect.top + 24}px` : "8px"
             })
+            const arena = host.current.getBoundingClientRect()
+            renderer.current?.setControlsBounds(
+                props.isMobile
+                    ? undefined
+                    : {
+                          left: rect.left - arena.left - 12,
+                          top: rect.top - arena.top - 28,
+                          right: rect.right - arena.left + 12,
+                          bottom: rect.bottom - arena.top + 12
+                      }
+            )
         }
         update()
         const observer = new ResizeObserver(update)

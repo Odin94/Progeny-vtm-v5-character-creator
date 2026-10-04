@@ -1,4 +1,18 @@
-export type VampireDiceStyle = "vtm" | "crystal-vtm"
+export type VampireDiceStyle = "default" | "crystal"
+export const VAMPIRE_DICE_MODELS = {
+    default: ["vtmblack", "vtmred"],
+    crystal: ["vtmruby", "vtmviolet"]
+} as const
+
+export const readDiceStyle = (raw: string | undefined): VampireDiceStyle =>
+    raw === '"crystal"' || raw === '"crystal-vtm"' ? "crystal" : "default"
+
+export const dieOutcome = (value: number, isBloodDie: boolean) => {
+    // The hunger model's skull is face 1; roll results retain their 1–10 values.
+    if (isBloodDie && value === 1) return "Bestial failure"
+    if (value === 10) return isBloodDie ? "Messy" : "Critical"
+    return value >= 6 ? "Success" : "Failure"
+}
 export type VampireThrowSettings = {
     intensity: number
     dropHeight: number

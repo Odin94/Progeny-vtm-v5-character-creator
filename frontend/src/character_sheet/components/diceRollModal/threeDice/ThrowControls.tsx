@@ -28,8 +28,8 @@ export default function ThrowControls({
                 value={style}
                 onChange={(value) => onStyleChange(value as VampireDiceStyle)}
                 data={[
-                    { label: "VtM", value: "vtm" },
-                    { label: "Crystal VtM", value: "crystal-vtm" }
+                    { label: "Default", value: "default" },
+                    { label: "Crystal", value: "crystal" }
                 ]}
             />
             <Accordion variant="default">

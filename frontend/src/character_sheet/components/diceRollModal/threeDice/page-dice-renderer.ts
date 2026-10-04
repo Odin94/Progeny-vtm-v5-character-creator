@@ -6,7 +6,15 @@ import { createLiquidRenderer } from "./liquid-renderer.js"
 import regular from "./regular.json"
 import hunger from "./hunger.json"
 import type { DieResult } from "../parts/DiceContainer"
-import type { VampireDiceStyle, VampireThrowSettings } from "./settings"
+import {
+    dieOutcome,
+    VAMPIRE_DICE_MODELS,
+    type VampireDiceStyle,
+    type VampireThrowSettings
+} from "./settings"
+import type { ScreenRectangle } from "./page-dice-physics"
+import { swapCrystalColors } from "./crystal-colors"
+import { layoutDieTargets } from "./overlay-layout"
 
 const downloads = new Map<string, Promise<ArrayBuffer>>()
 const loadBytes = (name: string) => {
@@ -55,6 +63,7 @@ export class PageDiceRenderer {
     private canSelect = false
     private materials = new Set<THREE.Material>()
     private geometries = new Set<THREE.BufferGeometry>()
+    private controlsBounds?: ScreenRectangle
 
     constructor(
         private host: HTMLElement,
@@ -138,6 +147,8 @@ export class PageDiceRenderer {
             const bytes = await loadBytes(name)
             if (this.disposed) throw new Error("Dice roller closed")
             const model = await new GLTFLoader().parseAsync(bytes, "")
+            if (name === "vtmruby" || name === "vtmviolet")
+                swapCrystalColors(model.scene, name === "vtmruby" ? "ruby" : "violet")
             this.trackResources(model.scene)
             if (this.disposed) {
                 this.disposeResources()
@@ -156,7 +167,7 @@ export class PageDiceRenderer {
         const generation = ++this.generation
         await initDicePhysics()
         if (this.disposed || generation !== this.generation) return
-        const names = style === "vtm" ? ["vtmblack", "vtmred"] : ["vtmruby", "vtmviolet"]
+        const names = VAMPIRE_DICE_MODELS[style]
         // Load each role once; every die uses a clone of its role's template.
         const templates = await Promise.all(names.map((name) => this.template(name)))
         if (this.disposed || generation !== this.generation) return
@@ -184,19 +195,27 @@ export class PageDiceRenderer {
                 const button = document.createElement("button")
                 Object.assign(button.style, {
                     position: "absolute",
-                    transform: "translate(-50%, -50%)",
-                    width: "66px",
-                    height: "76px",
+                    padding: "0",
+                    boxSizing: "border-box",
                     borderRadius: "14px",
                     background: "transparent",
                     border: "2px solid transparent",
                     color: "white",
-                    fontSize: "11px",
-                    display: "flex",
-                    alignItems: "end",
-                    justifyContent: "center",
                     textShadow: "0 1px 4px black"
                 })
+                const caption = document.createElement("span")
+                caption.setAttribute("aria-hidden", "true")
+                Object.assign(caption.style, {
+                    position: "absolute",
+                    top: "100%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    pointerEvents: "none",
+                    textAlign: "center",
+                    lineHeight: "1.1",
+                    whiteSpace: "normal"
+                })
+                button.append(caption)
                 button.addEventListener("click", () => this.onDieClick(die.id, die.isBloodDie))
                 this.host.append(button)
                 return button
@@ -209,7 +228,13 @@ export class PageDiceRenderer {
         if (!samePool) {
             this.physics?.dispose()
             this.physics = new PageDicePhysics(
-                pageBounds(this.host.clientWidth, this.host.clientHeight, dice.length, this.dieSize)
+                pageBounds(
+                    this.host.clientWidth,
+                    this.host.clientHeight,
+                    dice.length,
+                    this.dieSize,
+                    this.controlsBounds
+                )
             )
             dice.forEach((die) =>
                 this.physics!.add((die.isBloodDie ? hunger : regular) as unknown as DiceData)
@@ -233,12 +258,22 @@ export class PageDiceRenderer {
         this.last = performance.now()
         this.invalidate()
     }
+    setControlsBounds(bounds?: ScreenRectangle) {
+        this.controlsBounds = bounds
+        this.resize()
+    }
     private resize = () => {
         if (!this.dice.length || this.disposed) return
         const width = Math.max(1, this.host.clientWidth),
             height = Math.max(1, this.host.clientHeight)
         this.dieSize = width < 600 ? 0.6 : 1.1
-        const bounds = pageBounds(width, height, this.dice.length, this.dieSize)
+        const bounds = pageBounds(
+            width,
+            height,
+            this.dice.length,
+            this.dieSize,
+            this.controlsBounds
+        )
         this.renderer.setSize(width, height, false)
         this.camera.aspect = width / height
         this.camera.fov = THREE.MathUtils.radToDeg(
@@ -291,23 +326,64 @@ export class PageDiceRenderer {
         if (!this.physics.settled) this.invalidate()
     }
     private updateButtons() {
+        if (!this.physics) return
+        if (!this.physics.settled) {
+            for (const button of this.buttons) {
+                button.hidden = true
+                button.style.pointerEvents = "none"
+            }
+            return
+        }
+        const width = this.host.clientWidth,
+            height = this.host.clientHeight
+        const boxes = this.physics.dice.map((die) => {
+            const rotation = new THREE.Quaternion().copy(die.body.rotation())
+            const position = die.body.translation()
+            const points = die.data.vertices.map((vertex) => {
+                const point = new THREE.Vector3(...vertex)
+                    .applyQuaternion(rotation)
+                    .add(position)
+                    .project(this.camera)
+                return { x: ((point.x + 1) * width) / 2, y: ((1 - point.y) * height) / 2 }
+            })
+            const left = Math.max(0, Math.min(...points.map((point) => point.x)))
+            const top = Math.max(0, Math.min(...points.map((point) => point.y)))
+            return {
+                left,
+                top,
+                width: Math.max(
+                    0,
+                    Math.min(width, Math.max(...points.map((point) => point.x))) - left
+                ),
+                height: Math.max(
+                    0,
+                    Math.min(height, Math.max(...points.map((point) => point.y))) - top
+                )
+            }
+        })
+        const targets = layoutDieTargets(boxes)
         this.buttons.forEach((button, index) => {
             const die = this.dice[index]
             const settled = !!this.physics?.settled
-            const point = this.meshes[index].position.clone().project(this.camera)
             button.hidden = !settled
-            button.style.left = `${Math.max(33, Math.min(this.host.clientWidth - 33, ((point.x + 1) * this.host.clientWidth) / 2))}px`
-            button.style.top = `${Math.max(38, Math.min(this.host.clientHeight - 38, ((1 - point.y) * this.host.clientHeight) / 2 + 8))}px`
-            button.textContent = `${die.isBloodDie ? "Hunger" : "Regular"} · ${die.value}`
+            const target = targets[index]
+            button.style.left = `${target.left}px`
+            button.style.top = `${target.top}px`
+            button.style.width = `${target.width}px`
+            button.style.height = `${target.height}px`
+            const outcome = dieOutcome(die.value, die.isBloodDie)
+            const caption = button.firstElementChild as HTMLSpanElement
+            caption.textContent = outcome
+            caption.style.width = `${boxes[index].width}px`
+            caption.style.fontSize = `${Math.min(11, boxes[index].width / 7)}px`
             button.setAttribute(
                 "aria-label",
-                `${die.isBloodDie ? "Hunger" : "Regular"} die ${index + 1} showing ${die.value}`
+                `${outcome}, ${die.isBloodDie ? "hunger" : "regular"} die ${index + 1}`
             )
             button.disabled = die.isBloodDie || !this.canSelect || !settled
             // Disabled hunger dice still intercept taps, keeping the sheet
             // beneath them from treating a reroll attempt as a stat edit.
             button.style.pointerEvents = settled ? "auto" : "none"
-            button.style.whiteSpace = "nowrap"
             button.style.cursor = button.disabled ? "default" : "pointer"
             button.style.borderColor = this.selected.has(die.id) ? "#eacb7c" : "transparent"
             button.setAttribute("aria-pressed", String(this.selected.has(die.id)))
