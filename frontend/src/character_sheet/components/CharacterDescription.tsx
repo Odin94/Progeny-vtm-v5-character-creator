@@ -128,50 +128,56 @@ const CharacterDescription = memo(
                         </Text>
                         <Group justify={canEdit ? "space-between" : "flex-end"} align="center">
                             {canEdit ? (
-                                <Group gap={4} wrap="nowrap">
-                                    <Tooltip label="Undo description change" withArrow>
-                                        <ActionIcon
-                                            color="gray"
-                                            c="dimmed"
-                                            variant="subtle"
-                                            size={phoneScreen ? 44 : 28}
-                                            radius="sm"
-                                            aria-label="Undo description change"
-                                            disabled={!descriptionUndo.canUndo}
-                                            onClick={descriptionUndo.undo}
-                                            style={
-                                                !descriptionUndo.canUndo
-                                                    ? {
-                                                          backgroundColor: "transparent",
-                                                          opacity: 0.35
-                                                      }
-                                                    : undefined
-                                            }
-                                        >
-                                            <IconArrowBackUp size={16} stroke={1.5} />
-                                        </ActionIcon>
+                                <Group gap="md" wrap="nowrap">
+                                    <Tooltip label="Undo" withArrow zIndex={2300}>
+                                        <Box component="span" style={{ display: "inline-flex" }}>
+                                            <ActionIcon
+                                                color="gray"
+                                                c="dimmed"
+                                                variant="subtle"
+                                                size={phoneScreen ? 44 : 28}
+                                                radius="sm"
+                                                aria-label="Undo description change"
+                                                disabled={!descriptionUndo.canUndo}
+                                                onClick={descriptionUndo.undo}
+                                                style={
+                                                    !descriptionUndo.canUndo
+                                                        ? {
+                                                              backgroundColor: "transparent",
+                                                              opacity: 0.35,
+                                                              pointerEvents: "none"
+                                                          }
+                                                        : undefined
+                                                }
+                                            >
+                                                <IconArrowBackUp size={16} stroke={1.5} />
+                                            </ActionIcon>
+                                        </Box>
                                     </Tooltip>
-                                    <Tooltip label="Redo description change" withArrow>
-                                        <ActionIcon
-                                            color="gray"
-                                            c="dimmed"
-                                            variant="subtle"
-                                            size={phoneScreen ? 44 : 28}
-                                            radius="sm"
-                                            aria-label="Redo description change"
-                                            disabled={!descriptionUndo.canRedo}
-                                            onClick={descriptionUndo.redo}
-                                            style={
-                                                !descriptionUndo.canRedo
-                                                    ? {
-                                                          backgroundColor: "transparent",
-                                                          opacity: 0.35
-                                                      }
-                                                    : undefined
-                                            }
-                                        >
-                                            <IconArrowForwardUp size={16} stroke={1.5} />
-                                        </ActionIcon>
+                                    <Tooltip label="Redo" withArrow zIndex={2300}>
+                                        <Box component="span" style={{ display: "inline-flex" }}>
+                                            <ActionIcon
+                                                color="gray"
+                                                c="dimmed"
+                                                variant="subtle"
+                                                size={phoneScreen ? 44 : 28}
+                                                radius="sm"
+                                                aria-label="Redo description change"
+                                                disabled={!descriptionUndo.canRedo}
+                                                onClick={descriptionUndo.redo}
+                                                style={
+                                                    !descriptionUndo.canRedo
+                                                        ? {
+                                                              backgroundColor: "transparent",
+                                                              opacity: 0.35,
+                                                              pointerEvents: "none"
+                                                          }
+                                                        : undefined
+                                                }
+                                            >
+                                                <IconArrowForwardUp size={16} stroke={1.5} />
+                                            </ActionIcon>
+                                        </Box>
                                     </Tooltip>
                                 </Group>
                             ) : null}
