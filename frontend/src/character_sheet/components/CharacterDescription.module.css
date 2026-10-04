@@ -1,0 +1,6 @@
+.preview {
+    @media (max-width: 48em) {
+        flex-direction: column;
+        gap: 0;
+    }
+}

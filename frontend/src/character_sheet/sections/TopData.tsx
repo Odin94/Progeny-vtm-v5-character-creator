@@ -7,7 +7,6 @@ import {
     Title,
     Box,
     TextInput,
-    Textarea,
     NumberInput,
     useMantineTheme,
     Select
@@ -27,56 +26,13 @@ import type { HomebrewClan } from "~/data/Homebrew"
 import { getHomebrewSource } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import PredatorTypeModal from "~/components/PredatorTypeModal"
+import CharacterDescription from "../components/CharacterDescription"
 
 type TopDataProps = {
     options: SheetOptions
 }
 
-type DescriptionFieldProps = {
-    character: SheetOptions["character"]
-    setCharacter: SheetOptions["setCharacter"]
-    primaryColor: string
-}
-
 const sheetInputStyles = { input: { ...sheetSurfaceStyle, border: "none" } }
-
-// Keep the text editor's local state below the TopData boundary. A long description
-// should only re-render this textarea while typing, rather than all of the sheet's
-// top-level controls.
-const DescriptionField = memo(
-    ({ character, setCharacter, primaryColor }: DescriptionFieldProps) => {
-        const descriptionField = useDebouncedUncontrolledStringField({
-            character,
-            setCharacter,
-            field: "description"
-        })
-
-        return (
-            <Textarea
-                value={descriptionField.value}
-                onChange={(event) => descriptionField.onChange(event.target.value)}
-                placeholder="Character description..."
-                minRows={2}
-                maxRows={4}
-                color={primaryColor}
-                styles={{
-                    input: {
-                        ...sheetSurfaceStyle,
-                        border: "none",
-                        textAlign: "center",
-                        color: "var(--mantine-color-dimmed)"
-                    }
-                }}
-                mb="lg"
-            />
-        )
-    },
-    (prev, next) =>
-        getCharacterDraftIdentity(prev.character) === getCharacterDraftIdentity(next.character) &&
-        prev.character.description === next.character.description &&
-        prev.setCharacter === next.setCharacter &&
-        prev.primaryColor === next.primaryColor
-)
 
 const TopData = ({ options }: TopDataProps) => {
     const { character, primaryColor, mode, setCharacter } = options
@@ -194,17 +150,14 @@ const TopData = ({ options }: TopDataProps) => {
                         />
                     ) : null}
                 </Group>
-                {isFreeMode ? (
-                    <DescriptionField
-                        character={character}
-                        setCharacter={setCharacter}
-                        primaryColor={primaryColor}
-                    />
-                ) : character.description ? (
-                    <Text c="dimmed" ta="center" mb="lg">
-                        {character.description}
-                    </Text>
-                ) : null}
+                <CharacterDescription
+                    key={getCharacterDraftIdentity(character)}
+                    character={character}
+                    setCharacter={setCharacter}
+                    primaryColor={primaryColor}
+                    canEdit={options.canEdit}
+                    editDisabledReason={options.editDisabledReason}
+                />
             </Box>
 
             <Grid>
