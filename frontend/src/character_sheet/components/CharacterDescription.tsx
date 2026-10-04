@@ -10,7 +10,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
-import { IconArrowsMaximize, IconPlus } from "@tabler/icons-react"
+import { IconArrowsMaximize } from "@tabler/icons-react"
 import { memo, useState } from "react"
 import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
@@ -45,47 +45,32 @@ const CharacterDescription = memo(
         return (
             <>
                 <Box miw={0}>
-                    {hasDescription ? (
-                        <Group gap="xs" wrap="nowrap" align="center">
-                            <Text
-                                c="dimmed"
-                                lineClamp={2}
-                                style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}
-                            >
-                                {description.value}
-                            </Text>
-                            <Tooltip label="Expand description & appearance" withArrow>
-                                <ActionIcon
-                                    variant="subtle"
-                                    color={primaryColor}
-                                    size={44}
-                                    radius="md"
-                                    aria-label="Expand description & appearance"
-                                    aria-haspopup="dialog"
-                                    onClick={() => setOpened(true)}
-                                    style={{ flexShrink: 0 }}
-                                >
-                                    <IconArrowsMaximize size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                        </Group>
-                    ) : (
-                        <Group>
-                            <Button
+                    <Group gap="xs" wrap="nowrap" align="flex-start">
+                        <Text
+                            lineClamp={2}
+                            style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}
+                        >
+                            <Text component="span" fw={700}>
+                                Description:
+                            </Text>{" "}
+                            {hasDescription ? description.value : "—"}
+                        </Text>
+                        <Tooltip label="Expand description & appearance" withArrow>
+                            <ActionIcon
                                 variant="subtle"
-                                color={primaryColor}
-                                leftSection={<IconPlus size={16} />}
+                                color="gray"
+                                c="dimmed"
+                                size={phoneScreen ? 44 : 28}
+                                radius="sm"
+                                aria-label="Expand description & appearance"
                                 aria-haspopup="dialog"
                                 onClick={() => setOpened(true)}
-                                styles={{
-                                    root: { maxWidth: "100%", height: "auto", minHeight: 44 },
-                                    label: { whiteSpace: "normal", lineHeight: 1.4 }
-                                }}
+                                style={{ flexShrink: 0 }}
                             >
-                                Add description & appearance
-                            </Button>
-                        </Group>
-                    )}
+                                <IconArrowsMaximize size={14} stroke={1.5} />
+                            </ActionIcon>
+                        </Tooltip>
+                    </Group>
                 </Box>
                 <Modal
                     opened={opened}
