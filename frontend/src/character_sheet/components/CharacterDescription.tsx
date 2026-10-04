@@ -45,6 +45,7 @@ const CharacterDescription = memo(
             onChange: description.onChange
         })
         const hasDescription = !!description.value.trim()
+        const modalStyles = confirmationModalWithHeaderStyles(phoneScreen)
         const close = () => {
             descriptionUndo.finishGroup()
             setOpened(false)
@@ -92,9 +93,30 @@ const CharacterDescription = memo(
                     fullScreen={phoneScreen}
                     closeButtonProps={{ size: 44, "aria-label": "Close description & appearance" }}
                     overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                    styles={confirmationModalWithHeaderStyles(phoneScreen)}
+                    styles={
+                        phoneScreen
+                            ? {
+                                  ...modalStyles,
+                                  content: {
+                                      ...modalStyles.content,
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      overflow: "hidden"
+                                  },
+                                  header: { ...modalStyles.header, flexShrink: 0 },
+                                  body: {
+                                      ...modalStyles.body,
+                                      flex: 1,
+                                      minHeight: 0,
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      paddingBottom: "max(1.1rem, env(safe-area-inset-bottom))"
+                                  }
+                              }
+                            : modalStyles
+                    }
                 >
-                    <Stack gap="md">
+                    <Stack gap="md" style={phoneScreen ? { flex: 1, minHeight: 0 } : undefined}>
                         {canEdit ? (
                             <Textarea
                                 aria-label="Description & appearance"
@@ -104,8 +126,16 @@ const CharacterDescription = memo(
                                 onBlur={descriptionUndo.finishGroup}
                                 color={primaryColor}
                                 styles={{
+                                    root: phoneScreen
+                                        ? { flex: 1, minHeight: 0, display: "flex" }
+                                        : undefined,
+                                    wrapper: phoneScreen
+                                        ? { flex: 1, minHeight: 0, display: "flex" }
+                                        : undefined,
                                     input: {
-                                        height: "clamp(12rem, 50dvh, 28rem)",
+                                        height: phoneScreen ? "100%" : "clamp(12rem, 50dvh, 28rem)",
+                                        minHeight: phoneScreen ? 0 : undefined,
+                                        resize: phoneScreen ? "none" : undefined,
                                         fontSize: "1rem",
                                         lineHeight: 1.6
                                     }
@@ -115,18 +145,25 @@ const CharacterDescription = memo(
                             <Text
                                 style={{
                                     whiteSpace: "pre-wrap",
-                                    overflowWrap: "anywhere"
+                                    overflowWrap: "anywhere",
+                                    ...(phoneScreen
+                                        ? { flex: 1, minHeight: 0, overflowY: "auto" }
+                                        : {})
                                 }}
                             >
                                 {description.value}
                             </Text>
                         )}
-                        <Text c="dimmed" size="sm">
+                        <Text c="dimmed" size="sm" style={{ flexShrink: 0 }}>
                             {canEdit
                                 ? "Changes save automatically."
                                 : editDisabledReason || "This character is read-only."}
                         </Text>
-                        <Group justify={canEdit ? "space-between" : "flex-end"} align="center">
+                        <Group
+                            justify={canEdit ? "space-between" : "flex-end"}
+                            align="center"
+                            style={{ flexShrink: 0 }}
+                        >
                             {canEdit ? (
                                 <Group gap="md" wrap="nowrap">
                                     <Tooltip label="Undo" withArrow zIndex={2300}>
