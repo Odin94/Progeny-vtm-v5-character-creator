@@ -11,7 +11,7 @@ const useHarness = (
     return { value, setValue, ...useDescriptionUndo({ identity, value, onChange: setValue }) }
 }
 
-describe("description undo history", () => {
+describe("description undo and redo history", () => {
     beforeEach(() => vi.useFakeTimers())
     afterEach(() => {
         cleanup()
@@ -28,6 +28,12 @@ describe("description undo history", () => {
         expect(result.current.canUndo).toBe(false)
         act(() => vi.advanceTimersByTime(2000))
         expect(result.current.canUndo).toBe(false)
+        expect(result.current.canRedo).toBe(true)
+        act(() => result.current.redo())
+        expect(result.current.value).toBe("")
+        expect(result.current.canRedo).toBe(false)
+        act(() => result.current.undo())
+        expect(result.current.value).toBe(original)
     })
 
     it("groups ongoing typing and starts another undo step after a one-second pause", () => {
@@ -45,6 +51,32 @@ describe("description undo history", () => {
         act(() => result.current.undo())
         expect(result.current.value).toBe(original)
         expect(result.current.canUndo).toBe(false)
+        act(() => result.current.redo())
+        expect(result.current.value).toBe("First editing burst")
+        act(() => result.current.redo())
+        expect(result.current.value).toBe("Second edit")
+        expect(result.current.canRedo).toBe(false)
+        act(() => vi.advanceTimersByTime(2000))
+        act(() => result.current.undo())
+        expect(result.current.value).toBe("First editing burst")
+    })
+
+    it("clears redo on new typing but preserves it for an unchanged value", () => {
+        const { result } = renderHook(() => useHarness())
+        const original = result.current.value
+        act(() => result.current.onChange("Discarded branch"))
+        act(() => result.current.undo())
+        act(() => result.current.onChange(original))
+        expect(result.current.canRedo).toBe(true)
+        act(() => result.current.onChange("New"))
+        act(() => result.current.onChange("New editing burst"))
+        expect(result.current.canRedo).toBe(false)
+        act(() => result.current.redo())
+        expect(result.current.value).toBe("New editing burst")
+        act(() => result.current.undo())
+        expect(result.current.value).toBe(original)
+        act(() => result.current.redo())
+        expect(result.current.value).toBe("New editing burst")
     })
 
     it("ignores unchanged values and a burst that returns to its starting text", () => {
@@ -67,19 +99,33 @@ describe("description undo history", () => {
             initialProps: { identity: "A" }
         })
         act(() => result.current.onChange("Edited A"))
+        act(() => vi.advanceTimersByTime(1001))
+        act(() => result.current.onChange("Another edit"))
+        act(() => result.current.undo())
+        expect(result.current.canUndo).toBe(true)
+        expect(result.current.canRedo).toBe(true)
         rerender({ identity: "B" })
         expect(result.current.canUndo).toBe(false)
+        expect(result.current.canRedo).toBe(false)
         act(() => vi.advanceTimersByTime(2000))
         act(() => result.current.undo())
+        act(() => result.current.redo())
         expect(result.current.value).toBe("Edited A")
     })
 
     it("clears stale undo entries when an external description replaces the local text", () => {
         const { result } = renderHook(() => useHarness())
         act(() => result.current.onChange("Local edit"))
+        act(() => vi.advanceTimersByTime(1001))
+        act(() => result.current.onChange("Another local edit"))
+        act(() => result.current.undo())
+        expect(result.current.canUndo).toBe(true)
+        expect(result.current.canRedo).toBe(true)
         act(() => result.current.setValue("Updated elsewhere"))
         expect(result.current.canUndo).toBe(false)
+        expect(result.current.canRedo).toBe(false)
         act(() => result.current.undo())
+        act(() => result.current.redo())
         expect(result.current.value).toBe("Updated elsewhere")
     })
 

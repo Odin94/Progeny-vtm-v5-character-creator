@@ -10,7 +10,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
-import { IconArrowBackUp, IconArrowsMaximize } from "@tabler/icons-react"
+import { IconArrowBackUp, IconArrowForwardUp, IconArrowsMaximize } from "@tabler/icons-react"
 import { memo, useState } from "react"
 import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
@@ -128,17 +128,52 @@ const CharacterDescription = memo(
                         </Text>
                         <Group justify={canEdit ? "space-between" : "flex-end"} align="center">
                             {canEdit ? (
-                                <Button
-                                    color="gray"
-                                    variant="subtle"
-                                    mih={44}
-                                    leftSection={<IconArrowBackUp size={16} />}
-                                    aria-label="Undo description change"
-                                    disabled={!descriptionUndo.canUndo}
-                                    onClick={descriptionUndo.undo}
-                                >
-                                    Undo
-                                </Button>
+                                <Group gap={4} wrap="nowrap">
+                                    <Tooltip label="Undo description change" withArrow>
+                                        <ActionIcon
+                                            color="gray"
+                                            c="dimmed"
+                                            variant="subtle"
+                                            size={phoneScreen ? 44 : 28}
+                                            radius="sm"
+                                            aria-label="Undo description change"
+                                            disabled={!descriptionUndo.canUndo}
+                                            onClick={descriptionUndo.undo}
+                                            style={
+                                                !descriptionUndo.canUndo
+                                                    ? {
+                                                          backgroundColor: "transparent",
+                                                          opacity: 0.35
+                                                      }
+                                                    : undefined
+                                            }
+                                        >
+                                            <IconArrowBackUp size={16} stroke={1.5} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Redo description change" withArrow>
+                                        <ActionIcon
+                                            color="gray"
+                                            c="dimmed"
+                                            variant="subtle"
+                                            size={phoneScreen ? 44 : 28}
+                                            radius="sm"
+                                            aria-label="Redo description change"
+                                            disabled={!descriptionUndo.canRedo}
+                                            onClick={descriptionUndo.redo}
+                                            style={
+                                                !descriptionUndo.canRedo
+                                                    ? {
+                                                          backgroundColor: "transparent",
+                                                          opacity: 0.35
+                                                      }
+                                                    : undefined
+                                            }
+                                        >
+                                            <IconArrowForwardUp size={16} stroke={1.5} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                </Group>
                             ) : null}
                             <Button color={primaryColor} mih={44} onClick={close}>
                                 {canEdit ? "Done" : "Close"}

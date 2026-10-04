@@ -54,7 +54,7 @@ describe("sheet description and appearance", () => {
         ).toHaveValue(updated)
     })
 
-    it("can undo an autosaved deletion after closing and reopening the modal", async () => {
+    it("can undo and redo an autosaved deletion across modal reopenings", async () => {
         const user = userEvent.setup()
         const original = "Original description\n\nAppearance intact — 🦇."
         const Harness = () => {
@@ -79,6 +79,7 @@ describe("sheet description and appearance", () => {
         await user.click(screen.getByRole("button", { name: "Expand description & appearance" }))
         const editor = await screen.findByRole("textbox", { name: "Description & appearance" })
         expect(screen.getByRole("button", { name: "Undo description change" })).toBeDisabled()
+        expect(screen.getByRole("button", { name: "Redo description change" })).toBeDisabled()
         fireEvent.change(editor, { target: { value: "" } })
         await waitFor(() =>
             expect(screen.getByTestId("persisted-description")).toBeEmptyDOMElement()
@@ -97,6 +98,18 @@ describe("sheet description and appearance", () => {
             expect(screen.getByTestId("persisted-description").textContent).toBe(original)
         )
         expect(screen.getByRole("button", { name: "Undo description change" })).toBeDisabled()
+        expect(screen.getByRole("button", { name: "Redo description change" })).toBeEnabled()
+        await user.click(screen.getByRole("button", { name: "Done" }))
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+        await user.click(screen.getByRole("button", { name: "Expand description & appearance" }))
+        await screen.findByRole("textbox", { name: "Description & appearance" })
+        await user.click(screen.getByRole("button", { name: "Redo description change" }))
+        expect(screen.getByRole("textbox", { name: "Description & appearance" })).toHaveValue("")
+        await waitFor(() =>
+            expect(screen.getByTestId("persisted-description")).toBeEmptyDOMElement()
+        )
+        expect(screen.getByRole("button", { name: "Redo description change" })).toBeDisabled()
+        expect(screen.getByRole("button", { name: "Undo description change" })).toBeEnabled()
     })
 
     it("lets shared readers expand the full text without exposing editing controls", async () => {
@@ -121,6 +134,9 @@ describe("sheet description and appearance", () => {
         expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
         expect(
             screen.queryByRole("button", { name: "Undo description change" })
+        ).not.toBeInTheDocument()
+        expect(
+            screen.queryByRole("button", { name: "Redo description change" })
         ).not.toBeInTheDocument()
         expect(setCharacter).not.toHaveBeenCalled()
     })

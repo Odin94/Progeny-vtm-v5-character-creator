@@ -12,6 +12,8 @@ type DescriptionUndoOptions = {
 export const useDescriptionUndo = ({ identity, value, onChange }: DescriptionUndoOptions) => {
     const [history, setHistory] = useState<string[]>([])
     const historyRef = useRef<string[]>([])
+    const [future, setFuture] = useState<string[]>([])
+    const futureRef = useRef<string[]>([])
     const latest = useRef({ identity, value })
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -23,6 +25,10 @@ export const useDescriptionUndo = ({ identity, value, onChange }: DescriptionUnd
         historyRef.current = entries
         setHistory(entries)
     }
+    const updateFuture = (entries: string[]) => {
+        futureRef.current = entries
+        setFuture(entries)
+    }
 
     useEffect(() => {
         // Local writes update latest before the field rerenders. A different value
@@ -30,6 +36,7 @@ export const useDescriptionUndo = ({ identity, value, onChange }: DescriptionUnd
         if (latest.current.identity !== identity || latest.current.value !== value) {
             clearTimer()
             updateHistory([])
+            updateFuture([])
             latest.current = { identity, value }
         }
     }, [identity, value])
@@ -46,6 +53,7 @@ export const useDescriptionUndo = ({ identity, value, onChange }: DescriptionUnd
 
     const edit = (nextValue: string) => {
         if (latest.current.identity !== identity || nextValue === latest.current.value) return
+        updateFuture([])
         // Capture the pre-edit text immediately so deletion can be undone even
         // before the debounce expires. Subsequent keystrokes share this snapshot.
         if (timer.current === null) {
@@ -65,9 +73,30 @@ export const useDescriptionUndo = ({ identity, value, onChange }: DescriptionUnd
         const previous = entries.pop()
         updateHistory(entries)
         if (previous === undefined) return
+        updateFuture([...futureRef.current, latest.current.value].slice(-HISTORY_MAX_ENTRIES))
         latest.current.value = previous
         onChange(previous)
     }
 
-    return { onChange: edit, undo, finishGroup, canUndo: history.some((entry) => entry !== value) }
+    const redo = () => {
+        if (latest.current.identity !== identity) return
+        clearTimer()
+        const entries = [...futureRef.current]
+        while (entries.at(-1) === latest.current.value) entries.pop()
+        const next = entries.pop()
+        updateFuture(entries)
+        if (next === undefined) return
+        updateHistory([...historyRef.current, latest.current.value].slice(-HISTORY_MAX_ENTRIES))
+        latest.current.value = next
+        onChange(next)
+    }
+
+    return {
+        onChange: edit,
+        undo,
+        redo,
+        finishGroup,
+        canUndo: history.some((entry) => entry !== value),
+        canRedo: future.some((entry) => entry !== value)
+    }
 }
