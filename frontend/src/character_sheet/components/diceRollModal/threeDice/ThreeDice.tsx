@@ -1,4 +1,6 @@
-import { useEffect, useRef, type RefObject } from "react"
+import { Box, Menu } from "@mantine/core"
+import { IconTrash } from "@tabler/icons-react"
+import { useEffect, useRef, useState, type RefObject } from "react"
 import { createPortal } from "react-dom"
 import type { DieResult } from "../parts/DiceContainer"
 import { PageDiceRenderer } from "./page-dice-renderer"
@@ -15,18 +17,25 @@ type Props = {
     onDieClick: (id: number, isBloodDie: boolean) => void
     onComplete: (dice: DieResult[]) => void
     onUnavailable: () => void
+    onRemoveDie: (id: number) => void
 }
 export default function ThreeDice(props: Props) {
     const host = useRef<HTMLDivElement>(null)
     const renderer = useRef<PageDiceRenderer | null>(null)
     const latest = useRef(props)
     latest.current = props
+    const [context, setContext] = useState<{ id: number; x: number; y: number } | null>(null)
     useEffect(() => {
         const element = host.current!
         const unavailable = () => latest.current.onUnavailable()
         try {
-            renderer.current = new PageDiceRenderer(element, (id, blood) =>
-                latest.current.onDieClick(id, blood)
+            renderer.current = new PageDiceRenderer(
+                element,
+                (id, blood) => latest.current.onDieClick(id, blood),
+                (id, position) => {
+                    if (!latest.current.dice.some((die) => die.isRolling))
+                        setContext({ id, ...position })
+                }
             )
         } catch {
             unavailable()
@@ -82,28 +91,75 @@ export default function ThreeDice(props: Props) {
                 .catch(() => {
                     if (active) latest.current.onUnavailable()
                 })
-        }
+        } else renderer.current?.clear()
         return () => {
             active = false
         }
     }, [props.dice, props.style, props.settings])
     useEffect(() => {
+        if (
+            context &&
+            (props.dice.some((die) => die.isRolling) ||
+                !props.dice.some((die) => die.id === context.id))
+        )
+            setContext(null)
+    }, [props.dice, context])
+    useEffect(() => {
         renderer.current?.select(props.selectedDiceIds, props.canSelect)
     }, [props.selectedDiceIds, props.canSelect, props.dice])
-    return createPortal(
-        <div
-            ref={host}
-            data-testid="vampire-dice-arena"
-            style={{
-                position: "fixed",
-                left: 8,
-                top: 8,
-                right: 8,
-                bottom: 8,
-                zIndex: 1998,
-                pointerEvents: "none"
-            }}
-        />,
-        document.body
+    return (
+        <>
+            {createPortal(
+                <div
+                    ref={host}
+                    data-testid="vampire-dice-arena"
+                    style={{
+                        position: "fixed",
+                        left: 8,
+                        top: 8,
+                        right: 8,
+                        bottom: 8,
+                        zIndex: 1998,
+                        pointerEvents: "none"
+                    }}
+                />,
+                document.body
+            )}
+            <Menu
+                opened={!!context}
+                onChange={(opened) => {
+                    if (!opened) setContext(null)
+                }}
+                position="bottom-start"
+                zIndex={3100}
+                withinPortal
+            >
+                <Menu.Target>
+                    <Box
+                        aria-hidden="true"
+                        style={{
+                            position: "fixed",
+                            left: context?.x ?? 0,
+                            top: context?.y ?? 0,
+                            width: 1,
+                            height: 1,
+                            pointerEvents: "none"
+                        }}
+                    />
+                </Menu.Target>
+                <Menu.Dropdown aria-label="Die actions" aria-labelledby="">
+                    <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() => {
+                            if (context) latest.current.onRemoveDie(context.id)
+                            setContext(null)
+                        }}
+                    >
+                        Remove die
+                    </Menu.Item>
+                </Menu.Dropdown>
+            </Menu>
+        </>
     )
 }

@@ -15,6 +15,7 @@ import {
 import type { ScreenRectangle } from "./page-dice-physics"
 import { swapCrystalColors } from "./crystal-colors"
 import { layoutDieTargets } from "./overlay-layout"
+import { createSelectionSigil } from "./selection-sigil"
 
 const downloads = new Map<string, Promise<ArrayBuffer>>()
 const loadBytes = (name: string) => {
@@ -64,10 +65,13 @@ export class PageDiceRenderer {
     private materials = new Set<THREE.Material>()
     private geometries = new Set<THREE.BufferGeometry>()
     private controlsBounds?: ScreenRectangle
+    private selectionSigil = createSelectionSigil()
+    private selectionMarkers = new Map<number, THREE.Group>()
 
     constructor(
         private host: HTMLElement,
-        private onDieClick: (id: number, isBloodDie: boolean) => void
+        private onDieClick: (id: number, isBloodDie: boolean) => void,
+        private onDieContextMenu?: (id: number, position: { x: number; y: number }) => void
     ) {
         this.renderer = new THREE.WebGLRenderer({
             alpha: true,
@@ -122,6 +126,7 @@ export class PageDiceRenderer {
         floor.receiveShadow = true
         this.scene.add(floor)
         this.trackResources(floor)
+        this.trackResources(this.selectionSigil)
         this.camera.position.set(0, 40, 0)
         this.camera.up.set(0, 0, -1)
         this.camera.lookAt(0, 0, 0)
@@ -197,9 +202,8 @@ export class PageDiceRenderer {
                     position: "absolute",
                     padding: "0",
                     boxSizing: "border-box",
-                    borderRadius: "14px",
                     background: "transparent",
-                    border: "2px solid transparent",
+                    border: "0",
                     color: "white",
                     textShadow: "0 1px 4px black"
                 })
@@ -216,7 +220,19 @@ export class PageDiceRenderer {
                     whiteSpace: "normal"
                 })
                 button.append(caption)
-                button.addEventListener("click", () => this.onDieClick(die.id, die.isBloodDie))
+                button.addEventListener("click", () => {
+                    if (this.canSelect && !die.isBloodDie && this.physics?.settled)
+                        this.onDieClick(die.id, die.isBloodDie)
+                })
+                button.addEventListener("contextmenu", (event) => {
+                    event.preventDefault()
+                    if (!this.physics?.settled) return
+                    const rect = button.getBoundingClientRect()
+                    this.onDieContextMenu?.(die.id, {
+                        x: event.clientX || rect.left + rect.width / 2,
+                        y: event.clientY || rect.top + rect.height / 2
+                    })
+                })
                 this.host.append(button)
                 return button
             })
@@ -309,6 +325,7 @@ export class PageDiceRenderer {
             mesh.position.copy(this.physics!.dice[index].body.translation())
             mesh.quaternion.copy(this.physics!.dice[index].body.rotation())
         })
+        this.updateSelectionMarkers()
         this.liquid.render(() => this.renderer.render(this.scene, this.camera))
         this.updateButtons()
         if (this.physics.settled && !this.finished) {
@@ -380,12 +397,12 @@ export class PageDiceRenderer {
                 "aria-label",
                 `${outcome}, ${die.isBloodDie ? "hunger" : "regular"} die ${index + 1}`
             )
-            button.disabled = die.isBloodDie || !this.canSelect || !settled
-            // Disabled hunger dice still intercept taps, keeping the sheet
-            // beneath them from treating a reroll attempt as a stat edit.
+            const selectionDisabled = die.isBloodDie || !this.canSelect || !settled
+            // Keep the context menu available for hunger dice and exhausted willpower.
+            button.setAttribute("aria-disabled", String(selectionDisabled))
             button.style.pointerEvents = settled ? "auto" : "none"
-            button.style.cursor = button.disabled ? "default" : "pointer"
-            button.style.borderColor = this.selected.has(die.id) ? "#eacb7c" : "transparent"
+            button.style.cursor = selectionDisabled ? "default" : "pointer"
+            caption.style.color = this.selected.has(die.id) ? "#f2b7c0" : "white"
             button.setAttribute("aria-pressed", String(this.selected.has(die.id)))
         })
     }
@@ -393,6 +410,31 @@ export class PageDiceRenderer {
         this.selected = ids
         this.canSelect = canSelect
         this.updateButtons()
+        this.updateSelectionMarkers()
+        this.invalidate()
+    }
+    private updateSelectionMarkers() {
+        const visibleIds = new Set<number>()
+        if (this.physics?.settled) {
+            this.dice.forEach((die, index) => {
+                if (die.isBloodDie || die.isRolling || !this.selected.has(die.id)) return
+                visibleIds.add(die.id)
+                let marker = this.selectionMarkers.get(die.id)
+                if (!marker) {
+                    marker = this.selectionSigil.clone(true)
+                    this.selectionMarkers.set(die.id, marker)
+                    this.scene.add(marker)
+                }
+                const position = this.physics!.dice[index].body.translation()
+                marker.position.x = position.x
+                marker.position.z = position.z
+            })
+        }
+        for (const [id, marker] of this.selectionMarkers) {
+            if (visibleIds.has(id)) continue
+            this.scene.remove(marker)
+            this.selectionMarkers.delete(id)
+        }
     }
     private disposeResources() {
         for (const geometry of this.geometries) geometry.dispose()
@@ -410,6 +452,24 @@ export class PageDiceRenderer {
         this.geometries.clear()
         this.materials.clear()
     }
+    clear() {
+        this.generation++
+        cancelAnimationFrame(this.frameId)
+        this.frameId = 0
+        this.done = undefined
+        this.liquid.setRoots([])
+        for (const mesh of this.meshes) this.scene.remove(mesh)
+        for (const marker of this.selectionMarkers.values()) this.scene.remove(marker)
+        this.selectionMarkers.clear()
+        this.buttons.forEach((button) => button.remove())
+        this.buttons = []
+        this.meshes = []
+        this.dice = []
+        this.selected = new Set()
+        this.physics?.dispose()
+        this.physics = undefined
+        this.renderer.clear()
+    }
     dispose() {
         this.disposed = true
         this.generation++
@@ -418,6 +478,8 @@ export class PageDiceRenderer {
         document.removeEventListener("visibilitychange", this.onVisibility)
         this.renderer.domElement.removeEventListener("webglcontextlost", this.onContextLost)
         this.physics?.dispose()
+        for (const marker of this.selectionMarkers.values()) this.scene.remove(marker)
+        this.selectionMarkers.clear()
         this.liquid.dispose()
         this.environment.dispose()
         this.disposeResources()

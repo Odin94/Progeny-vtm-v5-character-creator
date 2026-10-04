@@ -22,6 +22,7 @@ vi.mock("~/character_sheet/components/diceRollModal/threeDice/ThreeDice", () => 
         onComplete: (dice: DieResult[]) => void
         onUnavailable: () => void
         onDieClick: (id: number, blood: boolean) => void
+        onRemoveDie: (id: number) => void
     }) => (
         <div>
             <button
@@ -39,7 +40,14 @@ vi.mock("~/character_sheet/components/diceRollModal/threeDice/ThreeDice", () => 
             </button>
             <button onClick={props.onUnavailable}>Lose WebGL</button>
             {props.dice.map((die) => (
-                <button key={die.id} onClick={() => props.onDieClick(die.id, die.isBloodDie)}>
+                <button
+                    key={die.id}
+                    onClick={() => props.onDieClick(die.id, die.isBloodDie)}
+                    onContextMenu={(event) => {
+                        event.preventDefault()
+                        props.onRemoveDie(die.id)
+                    }}
+                >
                     {die.isBloodDie ? "Hunger" : "Regular"} 3D die {die.id}
                 </button>
             ))}
@@ -204,5 +212,64 @@ describe("vampire dice integration", () => {
         })
         expect(useDiceRollModalStore.getState().dice).toEqual([])
         expect(useDiceRollModalStore.getState().opened).toBe(false)
+    })
+    it("removes selected and hunger dice without spending willpower or changing the next pool", async () => {
+        const character = getBasicTestCharacter()
+        const setCharacter = vi.fn()
+        const dice: DieResult[] = [1, 6, 10].map((value, index) => ({
+            id: index + 1,
+            value,
+            isBloodDie: index === 0,
+            isRolling: false
+        }))
+        useDiceRollModalStore.getState().open()
+        useDiceRollModalStore.getState().setDiceCount(3)
+        useDiceRollModalStore.getState().setDice(dice)
+        render(
+            <MantineProvider>
+                <DiceRollModal
+                    primaryColor="red"
+                    use3dDice
+                    character={character}
+                    setCharacter={setCharacter}
+                />
+            </MantineProvider>
+        )
+        const selected = await screen.findByRole("button", { name: "Regular 3D die 2" })
+        fireEvent.click(selected)
+        fireEvent.contextMenu(selected)
+        expect(useDiceRollModalStore.getState().dice).toEqual([dice[0], dice[2]])
+        expect(
+            screen.getByRole("button", { name: "Reroll selected dice with willpower" })
+        ).toBeDisabled()
+        fireEvent.contextMenu(screen.getByRole("button", { name: "Hunger 3D die 1" }))
+        expect(useDiceRollModalStore.getState().dice).toEqual([dice[2]])
+        fireEvent.click(screen.getByRole("button", { name: "Remove dice" }))
+        expect(useDiceRollModalStore.getState()).toMatchObject({
+            dice: [],
+            diceCount: 3,
+            opened: true
+        })
+        expect(setCharacter).not.toHaveBeenCalled()
+        expect(screen.getByRole("button", { name: "Remove dice" })).toBeDisabled()
+    })
+    it("prevents both removal actions while any dice are rolling", async () => {
+        useDiceRollModalStore.getState().requestQuickRoll(4)
+        render(
+            <MantineProvider>
+                <DiceRollModal primaryColor="red" use3dDice />
+            </MantineProvider>
+        )
+        await screen.findByRole("button", { name: "Land 3D dice" })
+        const rolling = useDiceRollModalStore.getState().dice
+        const remove = screen.getByRole("button", { name: "Remove dice" })
+        expect(remove).toBeDisabled()
+        fireEvent.click(remove)
+        fireEvent.contextMenu(
+            screen.getByRole("button", { name: `Regular 3D die ${rolling[0].id}` })
+        )
+        expect(useDiceRollModalStore.getState().dice).toEqual(rolling)
+        fireEvent.click(screen.getByRole("button", { name: "Land 3D dice" }))
+        expect(remove).toBeEnabled()
     })
 })

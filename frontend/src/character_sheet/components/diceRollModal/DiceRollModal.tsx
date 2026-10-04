@@ -1,6 +1,7 @@
 import { Button, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
+import { IconTrash } from "@tabler/icons-react"
 import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
@@ -140,6 +141,18 @@ const DiceRollModal = ({
     const currentRollIdRef = useRef<string | null>(null)
     const currentRollContextRef = useRef<RollShareContext | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
+    const removeDice = useCallback(
+        (id?: number) => {
+            if (useDiceRollModalStore.getState().dice.some((die) => die.isRolling)) return
+            setDice((previous) => (id === undefined ? [] : previous.filter((die) => die.id !== id)))
+            setSelectedDiceIds((previous) =>
+                id === undefined
+                    ? new Set()
+                    : new Set([...previous].filter((value) => value !== id))
+            )
+        },
+        [setDice]
+    )
     const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat((state) => ({
         sendDiceRoll: state.sendDiceRoll,
         connectionStatus: state.connectionStatus,
@@ -1071,6 +1084,7 @@ const DiceRollModal = ({
                                     availableWillpower > 0
                                 }
                                 onDieClick={handleDieClick}
+                                onRemoveDie={removeDice}
                                 onComplete={onThreeComplete}
                                 onUnavailable={() => {
                                     setThreeDiceUnavailable(true)
@@ -1116,6 +1130,18 @@ const DiceRollModal = ({
                         />
                     ) : null}
                 </AnimatePresence>
+                <Group justify="flex-end">
+                    <Button
+                        variant="subtle"
+                        color="gray"
+                        size="xs"
+                        leftSection={<IconTrash size={14} />}
+                        disabled={!dice.length || dice.some((die) => die.isRolling)}
+                        onClick={() => removeDice()}
+                    >
+                        Remove dice
+                    </Button>
+                </Group>
             </Stack>
         </>
     )
