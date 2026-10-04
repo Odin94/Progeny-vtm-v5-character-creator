@@ -16,7 +16,6 @@ import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionMod
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import type { SheetOptions } from "../CharacterSheet"
 import { useDebouncedUncontrolledStringField } from "../utils/useDebouncedUncontrolledField"
-import classes from "./CharacterDescription.module.css"
 
 type CharacterDescriptionProps = Pick<
     SheetOptions,
@@ -45,12 +44,11 @@ const CharacterDescription = memo(
 
         return (
             <>
-                <Box maw="min(70ch, calc(100% - 64px))" mx="auto" mb="lg">
+                <Box miw={0}>
                     {hasDescription ? (
-                        <Group className={classes.preview} gap="xs" wrap="nowrap" align="center">
+                        <Group gap="xs" wrap="nowrap" align="center">
                             <Text
                                 c="dimmed"
-                                ta="center"
                                 lineClamp={2}
                                 style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}
                             >
@@ -72,7 +70,7 @@ const CharacterDescription = memo(
                             </Tooltip>
                         </Group>
                     ) : (
-                        <Group justify="center">
+                        <Group>
                             <Button
                                 variant="subtle"
                                 color={primaryColor}

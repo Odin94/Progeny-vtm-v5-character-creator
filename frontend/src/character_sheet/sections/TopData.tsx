@@ -150,14 +150,6 @@ const TopData = ({ options }: TopDataProps) => {
                         />
                     ) : null}
                 </Group>
-                <CharacterDescription
-                    key={getCharacterDraftIdentity(character)}
-                    character={character}
-                    setCharacter={setCharacter}
-                    primaryColor={primaryColor}
-                    canEdit={options.canEdit}
-                    editDisabledReason={options.editDisabledReason}
-                />
             </Box>
 
             <Grid>
@@ -297,6 +289,14 @@ const TopData = ({ options }: TopDataProps) => {
                                 <Text>{character.predatorType.name || "—"}</Text>
                             )}
                         </Group>
+                        <CharacterDescription
+                            key={getCharacterDraftIdentity(character)}
+                            character={character}
+                            setCharacter={setCharacter}
+                            primaryColor={primaryColor}
+                            canEdit={options.canEdit}
+                            editDisabledReason={options.editDisabledReason}
+                        />
                     </Stack>
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 4 }}>
