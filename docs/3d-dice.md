@@ -7,6 +7,11 @@ and target specific signed-in users by their person `email` or distinct ID
 browsers without a fresh enabled flag keep the existing roller. Disabling the
 flag restores the standard roller and clears any active experiment roll.
 
+For local testing, the Vite development server forces the flag on at `localhost`,
+`127.0.0.1`, and IPv6 loopback. This preview requires neither login nor PostHog
+configuration. Production builds and non-loopback hosts still use the normal
+per-user flag checks.
+
 The flag gates the page dice, style/throw controls, and keyboard shortcuts.
 Three.js, Rapier/WASM, the crystal refraction pass, and the models load lazily
 only for the experimental roller. No backend or character-schema change is

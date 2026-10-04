@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { useVampireDiceFeatureFlag } from "~/hooks/useVampireDiceFeatureFlag"
 
 const flags = vi.hoisted(() => ({
@@ -20,9 +20,35 @@ vi.mock("posthog-js", () => ({
 }))
 describe("per-user vampire dice rollout", () => {
     beforeEach(() => {
+        vi.stubEnv("DEV", false)
         flags.identity = "user-a"
         flags.enabled = false
         flags.unsubscribe.mockClear()
+    })
+    afterEach(() => {
+        vi.unstubAllEnvs()
+        vi.unstubAllGlobals()
+    })
+
+    it.each(["localhost", "127.0.0.1", "[::1]"])(
+        "enables a signed-out development preview on %s without PostHog",
+        (hostname) => {
+            vi.stubEnv("DEV", true)
+            vi.stubGlobal("location", { hostname })
+            const hook = renderHook(() => useVampireDiceFeatureFlag())
+            expect(hook.result.current).toBe(true)
+        }
+    )
+
+    it("keeps production localhost and non-local development subject to the flag", () => {
+        vi.stubGlobal("location", { hostname: "localhost" })
+        const production = renderHook(() => useVampireDiceFeatureFlag())
+        expect(production.result.current).toBe(false)
+        production.unmount()
+        vi.stubEnv("DEV", true)
+        vi.stubGlobal("location", { hostname: "progeny.example.com" })
+        const development = renderHook(() => useVampireDiceFeatureFlag())
+        expect(development.result.current).toBe(false)
     })
     it("defaults to legacy and responds to flag updates for the identified user", () => {
         const hook = renderHook(() => useVampireDiceFeatureFlag("user-a"))
