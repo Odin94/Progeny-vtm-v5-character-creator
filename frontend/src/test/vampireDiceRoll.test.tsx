@@ -14,7 +14,18 @@ import { useDiceRollModalStore } from "~/character_sheet/stores/diceRollModalSto
 import { useCharacterSheetStore } from "~/character_sheet/stores/characterSheetStore"
 import { getBasicTestCharacter } from "./testUtils"
 
-const engine = vi.hoisted(() => ({ values: [1, 6, 8, 10], unavailable: false }))
+const engine = vi.hoisted(() => ({
+    values: [1, 6, 8, 10],
+    unavailable: false,
+    warmup: () => {},
+    cancelWarmup: vi.fn()
+}))
+vi.mock("~/character_sheet/components/diceRollModal/threeDice/warmup", () => ({
+    scheduleDiceWarmup: (prepare: () => void) => {
+        engine.warmup = prepare
+        return engine.cancelWarmup
+    }
+}))
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn(), get_distinct_id: () => "test-user" } }))
 vi.mock("~/character_sheet/components/diceRollModal/threeDice/ThreeDice", () => ({
     default: (props: {
@@ -250,7 +261,9 @@ describe("vampire dice integration", () => {
             opened: true
         })
         expect(setCharacter).not.toHaveBeenCalled()
-        expect(screen.getByRole("button", { name: "Context reroll (1 WP)" })).toBeDisabled()
+        expect(
+            screen.queryByRole("button", { name: "Context reroll (1 WP)" })
+        ).not.toBeInTheDocument()
         expect(screen.getByRole("button", { name: "Remove dice" })).toBeDisabled()
     })
     it("prevents both removal actions while any dice are rolling", async () => {
@@ -264,6 +277,7 @@ describe("vampire dice integration", () => {
         const rolling = useDiceRollModalStore.getState().dice
         const remove = screen.getByRole("button", { name: "Remove dice" })
         expect(remove).toBeDisabled()
+        expect(screen.getByRole("button", { name: "Sort dice" })).toBeEnabled()
         fireEvent.click(remove)
         fireEvent.contextMenu(
             screen.getByRole("button", { name: `Regular 3D die ${rolling[0].id}` })
@@ -271,5 +285,18 @@ describe("vampire dice integration", () => {
         expect(useDiceRollModalStore.getState().dice).toEqual(rolling)
         fireEvent.click(screen.getByRole("button", { name: "Land 3D dice" }))
         expect(remove).toBeEnabled()
+    })
+    it("opens controls before warming the 3D engine in the background", async () => {
+        useDiceRollModalStore.getState().open()
+        render(
+            <MantineProvider>
+                <DiceRollModal primaryColor="red" use3dDice />
+            </MantineProvider>
+        )
+        expect(screen.getByTestId("vampire-dice-controls")).toBeInTheDocument()
+        expect(screen.queryByRole("button", { name: "Land 3D dice" })).not.toBeInTheDocument()
+        expect(screen.queryByRole("spinbutton", { name: "Drop height" })).not.toBeInTheDocument()
+        act(() => engine.warmup())
+        expect(await screen.findByRole("button", { name: "Land 3D dice" })).toBeInTheDocument()
     })
 })

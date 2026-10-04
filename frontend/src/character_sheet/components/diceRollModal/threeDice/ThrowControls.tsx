@@ -35,7 +35,7 @@ export default function ThrowControls({
             <Accordion variant="default">
                 <Accordion.Item value="throw">
                     <Accordion.Control>Throw settings</Accordion.Control>
-                    <Accordion.Panel>
+                    <Accordion.Panel keepMounted={false}>
                         <Stack gap="sm">
                             <Text size="sm">Intensity · {settings.intensity.toFixed(1)}×</Text>
                             <Slider

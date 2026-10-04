@@ -107,7 +107,7 @@ it("offers sorting, removal of all dice, and a gated selected-dice reroll", asyn
     await waitFor(() => expect(engine.clear).toHaveBeenCalledOnce())
 })
 
-it("ignores context-menu requests during a roll", () => {
+it("allows manual sorting during a roll while keeping removal and reroll disabled", async () => {
     const controls = { current: document.createElement("div") }
     render(
         <MantineProvider env="test">
@@ -129,5 +129,32 @@ it("ignores context-menu requests during a roll", () => {
         </MantineProvider>
     )
     act(() => engine.context(1, { x: 120, y: 100 }))
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument()
+    expect(await screen.findByRole("menu", { name: "Die actions" })).toBeInTheDocument()
+    expect(screen.getByRole("menuitem", { name: "Remove all dice" })).toBeDisabled()
+    expect(screen.getByRole("menuitem", { name: "Reroll selected dice (1 WP)" })).toBeDisabled()
+    fireEvent.click(screen.getByRole("menuitem", { name: "Sort dice" }))
+    expect(engine.sort).toHaveBeenCalledOnce()
+})
+it("honors the roller's sort button request while dice are preparing", () => {
+    render(
+        <MantineProvider env="test">
+            <ThreeDice
+                dice={[{ id: 1, value: 0, isBloodDie: false, isRolling: true }]}
+                style="default"
+                settings={DEFAULT_VAMPIRE_THROW}
+                controls={{ current: document.createElement("div") }}
+                isMobile={false}
+                selectedDiceIds={new Set()}
+                canSelect={false}
+                canReroll={false}
+                onReroll={vi.fn()}
+                onDieClick={vi.fn()}
+                onComplete={vi.fn()}
+                onUnavailable={vi.fn()}
+                onRemoveAllDice={vi.fn()}
+                sortRequest={1}
+            />
+        </MantineProvider>
+    )
+    expect(engine.sort).toHaveBeenCalledOnce()
 })

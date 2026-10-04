@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Open the dice roller without rerendering the whole sheet, and prepare WebGL in idle time after the controls paint. Keep sorting manual after rerolls, and allow Sort dice to finish and arrange an active roll immediately.
 - Highlight dice selected for rerolls with a red glow. The dice context menu can sort results into an upright, readable grid, remove all dice, or reroll the selection for one willpower.
 - Show outcome captions on 3D dice, use Default/Crystal style names, swap Crystal die colors while preserving their symbols, and allow desktop dice above the roller controls.
 - Fill the mobile description editor’s available height and keep its controls above the safe area, removing unused space at the bottom.

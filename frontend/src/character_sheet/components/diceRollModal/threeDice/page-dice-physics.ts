@@ -521,11 +521,12 @@ export class PageDicePhysics {
         this.settled = true
     }
     /** Presentation only: preserve each die's value and identity while arranging high to low. */
-    sort(values: number[]) {
-        if (!this.settled || values.length !== this.dice.length) return false
+    sort(values: number[], finishRoll = false) {
+        if ((!this.settled && !finishRoll) || values.length !== this.dice.length) return false
         const points = sortedSlots(this.bounds, this.dice.length)
         if (points.length !== this.dice.length) return false
         this.recovery = undefined
+        this.settled = true
         this.held.clear()
         const order = values
             .map((value, index) => ({ value, index }))

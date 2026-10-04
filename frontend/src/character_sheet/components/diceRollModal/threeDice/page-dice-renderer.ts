@@ -65,7 +65,9 @@ export class PageDiceRenderer {
     private materials = new Set<THREE.Material>()
     private geometries = new Set<THREE.BufferGeometry>()
     private controlsBounds?: ScreenRectangle
-    private sorted = false
+    private gridSized = false
+    private preparing = false
+    private pendingSort = false
 
     constructor(
         private host: HTMLElement,
@@ -168,12 +170,14 @@ export class PageDiceRenderer {
         done: (dice: DieResult[]) => void
     ) {
         const generation = ++this.generation
+        this.preparing = true
         await initDicePhysics()
         if (this.disposed || generation !== this.generation) return
         const names = VAMPIRE_DICE_MODELS[style]
         // Load each role once; every die uses a clone of its role's template.
         const templates = await Promise.all(names.map((name) => this.template(name)))
         if (this.disposed || generation !== this.generation) return
+        this.preparing = false
         const samePool =
             dice.length === this.dice.length &&
             dice.every((die, index) => die.id === this.dice[index].id)
@@ -224,7 +228,6 @@ export class PageDiceRenderer {
                 })
                 button.addEventListener("contextmenu", (event) => {
                     event.preventDefault()
-                    if (!this.physics?.settled) return
                     const rect = button.getBoundingClientRect()
                     this.onDieContextMenu?.(die.id, {
                         x: event.clientX || rect.left + rect.width / 2,
@@ -236,7 +239,7 @@ export class PageDiceRenderer {
             })
             this.liquid.setRoots(this.meshes)
         }
-        if (!samePool) this.sorted = false
+        if (!samePool) this.gridSized = false
         this.style = style
         this.dice = dice
         this.dieSize = this.host.clientWidth < 600 ? 0.6 : 1.1
@@ -271,6 +274,10 @@ export class PageDiceRenderer {
             this.finished = true
         }
         this.last = performance.now()
+        if (this.pendingSort) {
+            this.pendingSort = false
+            this.sort()
+        }
         this.invalidate()
     }
     setControlsBounds(bounds?: ScreenRectangle) {
@@ -289,7 +296,7 @@ export class PageDiceRenderer {
             this.dieSize,
             this.controlsBounds
         )
-        if (this.sorted) {
+        if (this.gridSized) {
             // Dense pools must fit one readable grid, rather than scattered free slots.
             for (
                 let attempt = 0;
@@ -313,11 +320,6 @@ export class PageDiceRenderer {
         )
         this.camera.updateProjectionMatrix()
         this.physics?.resize(bounds)
-        if (this.sorted && this.physics && !this.dice.some((die) => die.isRolling)) {
-            // Resize recovery may start an animation; sorting restores the known values.
-            this.physics.showValues(this.dice.map((die) => die.value))
-            this.physics.sort(this.dice.map((die) => die.value))
-        }
         this.invalidate()
     }
     private onVisibility = () => {
@@ -348,29 +350,23 @@ export class PageDiceRenderer {
         })
         this.liquid.render(() => this.renderer.render(this.scene, this.camera))
         this.updateButtons()
-        if (this.physics.settled && !this.finished) {
-            this.finished = true
-            // Only moving dice acquire new values. Hunger and unselected dice
-            // preserve their result during a willpower reroll.
-            this.dice = this.dice.map((die, index) =>
-                die.isRolling
-                    ? { ...die, value: this.physics!.results()[index].value, isRolling: false }
-                    : die
-            )
-            this.updateButtons()
-            this.done?.(this.dice)
-        }
+        this.finishRoll()
         if (!this.physics.settled) this.invalidate()
+    }
+    private finishRoll() {
+        if (!this.physics?.settled || this.finished) return
+        this.finished = true
+        const results = this.physics.results()
+        // Only moving dice acquire new values. Hunger and unselected dice
+        // preserve their result during a willpower reroll.
+        this.dice = this.dice.map((die, index) =>
+            die.isRolling ? { ...die, value: results[index].value, isRolling: false } : die
+        )
+        this.updateButtons()
+        this.done?.(this.dice)
     }
     private updateButtons() {
         if (!this.physics) return
-        if (!this.physics.settled) {
-            for (const button of this.buttons) {
-                button.hidden = true
-                button.style.pointerEvents = "none"
-            }
-            return
-        }
         const width = this.host.clientWidth,
             height = this.host.clientHeight
         const boxes = this.physics.dice.map((die) => {
@@ -402,7 +398,7 @@ export class PageDiceRenderer {
         this.buttons.forEach((button, index) => {
             const die = this.dice[index]
             const settled = !!this.physics?.settled
-            button.hidden = !settled
+            button.hidden = false
             const target = targets[index]
             button.style.left = `${target.left}px`
             button.style.top = `${target.top}px`
@@ -410,17 +406,17 @@ export class PageDiceRenderer {
             button.style.height = `${target.height}px`
             const outcome = dieOutcome(die.value, die.isBloodDie)
             const caption = button.firstElementChild as HTMLSpanElement
-            caption.textContent = outcome
+            caption.textContent = die.isRolling ? "" : outcome
             caption.style.width = `${boxes[index].width}px`
             caption.style.fontSize = `${Math.min(11, boxes[index].width / 7)}px`
             button.setAttribute(
                 "aria-label",
-                `${outcome}, ${die.isBloodDie ? "hunger" : "regular"} die ${index + 1}`
+                `${die.isRolling ? "Rolling" : outcome}, ${die.isBloodDie ? "hunger" : "regular"} die ${index + 1}`
             )
             const selectionDisabled = die.isBloodDie || !this.canSelect || !settled
             // Keep the context menu available for hunger dice and exhausted willpower.
             button.setAttribute("aria-disabled", String(selectionDisabled))
-            button.style.pointerEvents = settled ? "auto" : "none"
+            button.style.pointerEvents = "auto"
             button.style.cursor = selectionDisabled ? "default" : "pointer"
             const selected = this.selected.has(die.id) && !die.isBloodDie
             button.style.borderRadius = "12px"
@@ -454,13 +450,28 @@ export class PageDiceRenderer {
         this.materials.clear()
     }
     sort() {
-        if (!this.physics?.settled || !this.dice.length || this.dice.some((die) => die.isRolling))
+        if (this.disposed) return
+        if (this.preparing) {
+            this.pendingSort = true
             return
-        this.sorted = true
+        }
+        if (!this.physics || !this.dice.length) return
+        // Capture the current top faces before resize can start recovery.
+        const results = this.physics.results()
+        const values = this.dice.map((die, index) =>
+            die.isRolling ? results[index].value : die.value
+        )
+        this.gridSized = true
         this.resize()
+        if (!this.physics.sort(values, true)) return
+        this.finishRoll()
+        this.updateButtons()
+        this.invalidate()
     }
     clear() {
-        this.sorted = false
+        this.preparing = false
+        this.pendingSort = false
+        this.gridSized = false
         this.generation++
         cancelAnimationFrame(this.frameId)
         this.frameId = 0

@@ -20,6 +20,7 @@ type Props = {
     onRemoveAllDice: () => void
     onReroll: () => void
     canReroll: boolean
+    sortRequest?: number
 }
 export default function ThreeDice(props: Props) {
     const host = useRef<HTMLDivElement>(null)
@@ -35,8 +36,7 @@ export default function ThreeDice(props: Props) {
                 element,
                 (id, blood) => latest.current.onDieClick(id, blood),
                 (id, position) => {
-                    if (!latest.current.dice.some((die) => die.isRolling))
-                        setContext({ id, ...position })
+                    setContext({ id, ...position })
                 }
             )
         } catch {
@@ -99,13 +99,11 @@ export default function ThreeDice(props: Props) {
         }
     }, [props.dice, props.style, props.settings])
     useEffect(() => {
-        if (
-            context &&
-            (props.dice.some((die) => die.isRolling) ||
-                !props.dice.some((die) => die.id === context.id))
-        )
-            setContext(null)
+        if (context && !props.dice.some((die) => die.id === context.id)) setContext(null)
     }, [props.dice, context])
+    useEffect(() => {
+        if (props.sortRequest) renderer.current?.sort()
+    }, [props.sortRequest])
     useEffect(() => {
         renderer.current?.select(props.selectedDiceIds, props.canSelect)
     }, [props.selectedDiceIds, props.canSelect, props.dice])
@@ -153,8 +151,7 @@ export default function ThreeDice(props: Props) {
                     <Menu.Item
                         leftSection={<IconSortDescending size={14} />}
                         onClick={() => {
-                            if (!latest.current.dice.some((die) => die.isRolling))
-                                renderer.current?.sort()
+                            renderer.current?.sort()
                             setContext(null)
                         }}
                     >
@@ -162,6 +159,7 @@ export default function ThreeDice(props: Props) {
                     </Menu.Item>
                     <Menu.Item
                         color="red"
+                        disabled={props.dice.some((die) => die.isRolling)}
                         leftSection={<IconTrash size={14} />}
                         onClick={() => {
                             latest.current.onRemoveAllDice()

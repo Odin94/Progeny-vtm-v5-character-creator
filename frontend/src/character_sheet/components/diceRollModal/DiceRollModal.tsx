@@ -1,7 +1,7 @@
 import { Button, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconTrash } from "@tabler/icons-react"
+import { IconTrash, IconSortDescending } from "@tabler/icons-react"
 import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
@@ -33,6 +33,7 @@ import {
 import { getDisciplineRating } from "~/generator/utils"
 
 import ThrowControls from "./threeDice/ThrowControls"
+import { scheduleDiceWarmup } from "./threeDice/warmup"
 import {
     DEFAULT_VAMPIRE_THROW,
     readDiceStyle,
@@ -85,6 +86,11 @@ const DiceRollModal = ({
 }: DiceRollModalProps) => {
     const [threeDiceUnavailable, setThreeDiceUnavailable] = useState(false)
     const useThreeDice = use3dDice && !threeDiceUnavailable
+    const [prepareThreeDice, setPrepareThreeDice] = useState(false)
+    useEffect(() => {
+        if (!useThreeDice) return
+        return scheduleDiceWarmup(() => setPrepareThreeDice(true))
+    }, [useThreeDice])
     const controlsRef = useRef<HTMLDivElement>(null)
     const [diceStyle, setDiceStyle] = useLocalStorage<VampireDiceStyle>({
         key: "vampire-dice-style",
@@ -141,6 +147,10 @@ const DiceRollModal = ({
     const currentRollIdRef = useRef<string | null>(null)
     const currentRollContextRef = useRef<RollShareContext | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
+    const [sortRequest, setSortRequest] = useState(0)
+    useEffect(() => {
+        if (!opened) setSortRequest(0)
+    }, [opened])
     const removeDice = useCallback(() => {
         if (useDiceRollModalStore.getState().dice.some((die) => die.isRolling)) return
         setDice([])
@@ -1063,44 +1073,51 @@ const DiceRollModal = ({
                                 reroll.
                             </Text>
                         ) : null}
-                        <Suspense fallback={<Text size="xs">Preparing 3D dice…</Text>}>
-                            <ThreeDice
-                                dice={dice}
-                                style={diceStyle}
-                                settings={throwSettings}
-                                controls={controlsRef}
-                                isMobile={!!isMobile}
-                                selectedDiceIds={selectedDiceIds}
-                                canSelect={
-                                    !!character &&
-                                    !!setCharacter &&
-                                    !editDisabledReason &&
-                                    availableWillpower > 0
+                        {(dice.length > 0 || prepareThreeDice) && (
+                            <Suspense
+                                fallback={
+                                    dice.length ? <Text size="xs">Preparing 3D dice…</Text> : null
                                 }
-                                onDieClick={handleDieClick}
-                                onRemoveAllDice={removeDice}
-                                onReroll={handleReroll}
-                                canReroll={canReroll}
-                                onComplete={onThreeComplete}
-                                onUnavailable={() => {
-                                    setThreeDiceUnavailable(true)
-                                    const resolved = useDiceRollModalStore
-                                        .getState()
-                                        .dice.map((die) =>
-                                            die.isRolling
-                                                ? { ...die, value: rollDie(), isRolling: false }
-                                                : die
-                                        )
-                                    onThreeComplete(resolved)
-                                    notifications.show({
-                                        title: "3D dice unavailable",
-                                        message:
-                                            "Using the standard dice roller. Close and reopen to retry.",
-                                        color: "yellow"
-                                    })
-                                }}
-                            />
-                        </Suspense>
+                            >
+                                <ThreeDice
+                                    dice={dice}
+                                    style={diceStyle}
+                                    settings={throwSettings}
+                                    controls={controlsRef}
+                                    isMobile={!!isMobile}
+                                    selectedDiceIds={selectedDiceIds}
+                                    canSelect={
+                                        !!character &&
+                                        !!setCharacter &&
+                                        !editDisabledReason &&
+                                        availableWillpower > 0
+                                    }
+                                    onDieClick={handleDieClick}
+                                    onRemoveAllDice={removeDice}
+                                    onReroll={handleReroll}
+                                    canReroll={canReroll}
+                                    sortRequest={sortRequest}
+                                    onComplete={onThreeComplete}
+                                    onUnavailable={() => {
+                                        setThreeDiceUnavailable(true)
+                                        const resolved = useDiceRollModalStore
+                                            .getState()
+                                            .dice.map((die) =>
+                                                die.isRolling
+                                                    ? { ...die, value: rollDie(), isRolling: false }
+                                                    : die
+                                            )
+                                        onThreeComplete(resolved)
+                                        notifications.show({
+                                            title: "3D dice unavailable",
+                                            message:
+                                                "Using the standard dice roller. Close and reopen to retry.",
+                                            color: "yellow"
+                                        })
+                                    }}
+                                />
+                            </Suspense>
+                        )}
                     </>
                 ) : (
                     <DiceContainer
@@ -1127,6 +1144,18 @@ const DiceRollModal = ({
                     ) : null}
                 </AnimatePresence>
                 <Group justify="flex-end">
+                    {useThreeDice && (
+                        <Button
+                            variant="subtle"
+                            color="gray"
+                            size="xs"
+                            leftSection={<IconSortDescending size={14} />}
+                            disabled={!dice.length}
+                            onClick={() => setSortRequest((previous) => previous + 1)}
+                        >
+                            Sort dice
+                        </Button>
+                    )}
                     <Button
                         variant="subtle"
                         color="gray"
@@ -1293,4 +1322,8 @@ const DiceRollModal = ({
     )
 }
 
-export default DiceRollModal
+// Opening the roller updates only this host, rather than rerendering the entire sheet.
+export default function DiceRollModalHost(props: DiceRollModalProps) {
+    const opened = useDiceRollModalStore((state) => state.opened)
+    return opened ? <DiceRollModal {...props} /> : null
+}

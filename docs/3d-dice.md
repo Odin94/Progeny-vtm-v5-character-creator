@@ -14,7 +14,10 @@ per-user flag checks.
 
 The flag gates the page dice, style/throw controls, and keyboard shortcuts.
 Three.js, Rapier/WASM, the crystal refraction pass, and the models load lazily
-only for the experimental roller. No backend or character-schema change is
+only for the experimental roller. Opening paints the controls first, then warms
+WebGL during browser idle time; rolling immediately starts preparation without
+waiting for that idle callback. Closing cancels pending warmup.
+No backend or character-schema change is
 needed. The existing custom/selected pools, bonuses, success/critical indicators,
 roll analytics, and session-chat result sharing remain in use.
 
@@ -42,6 +45,10 @@ roll analytics, and session-chat result sharing remain in use.
   pool from highest to lowest, left to right and top to bottom, in a centered grid
   outside the controls. Each existing result faces up with its symbol upright;
   sorting preserves die identities, selection, and results, and spends no willpower.
+  Sorting is manual: rerolled dice stay where they land until the next **Sort dice**.
+  The context action and roller button remain available during flight; choosing
+  either ends the animation immediately and arranges the current top faces.
+  Removing dice and spending additional willpower stay disabled during flight.
 - **Removal:** right-click a landed die and choose **Remove all dice**, or use
   **Remove dice** in the roller to clear the displayed pool. Hunger dice can
   also be removed. Removal clears the reroll selection, preserves the

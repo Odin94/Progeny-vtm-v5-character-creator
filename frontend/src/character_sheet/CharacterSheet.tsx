@@ -127,7 +127,6 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     // Editing remains disabled through canEdit until ownership has been confirmed.
     const effectiveMode = canEdit || ownershipLoading ? mode : "play"
     const openDiceModal = useDiceRollModalStore((state) => state.open)
-    const diceModalOpened = useDiceRollModalStore((state) => state.opened)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
     const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
@@ -231,6 +230,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 variant="light"
                                 color={primaryColor}
                                 radius="xl"
+                                aria-label="Open dice roller"
                                 onClick={() => {
                                     openDiceModal()
                                     try {
@@ -393,15 +393,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             <CharacterSheetMenu options={characterMenuOptions} />
             <ChatWindow options={sheetOptions} />
             {use3dDice ? <QuickRollHotkeys /> : null}
-            {diceModalOpened ? (
-                <DiceRollModal
-                    primaryColor={primaryColor}
-                    use3dDice={use3dDice}
-                    character={character}
-                    setCharacter={editableSetCharacter}
-                    editDisabledReason={editDisabledReason}
-                />
-            ) : null}
+            <DiceRollModal
+                primaryColor={primaryColor}
+                use3dDice={use3dDice}
+                character={character}
+                setCharacter={editableSetCharacter}
+                editDisabledReason={editDisabledReason}
+            />
         </MantineProvider>
     )
 }
