@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add undo for recent description edits, grouping nearby keystrokes and keeping history when the description modal closes.
 - Show a compact description and appearance preview below Predator Type in the sheet’s top grid, with a mobile-friendly modal to read and edit the full text.
 - Add opt-in 3D vampire dice with adjustable throws, landed-face results and willpower rerolls, while keeping the standard roller for users outside the feature flag.
 - Stop the Merits and Flaws creator step from repeatedly saving unchanged selections and freezing the page.

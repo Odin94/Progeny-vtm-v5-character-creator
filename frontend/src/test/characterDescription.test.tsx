@@ -54,6 +54,51 @@ describe("sheet description and appearance", () => {
         ).toHaveValue(updated)
     })
 
+    it("can undo an autosaved deletion after closing and reopening the modal", async () => {
+        const user = userEvent.setup()
+        const original = "Original description\n\nAppearance intact — 🦇."
+        const Harness = () => {
+            const [character, setCharacter] = useState({
+                ...getEmptyCharacter(),
+                id: "undo-owned-description",
+                description: original
+            })
+            return (
+                <MantineProvider>
+                    <CharacterDescription
+                        character={character}
+                        setCharacter={setCharacter}
+                        primaryColor="cyan"
+                        canEdit
+                    />
+                    <output data-testid="persisted-description">{character.description}</output>
+                </MantineProvider>
+            )
+        }
+        render(<Harness />)
+        await user.click(screen.getByRole("button", { name: "Expand description & appearance" }))
+        const editor = await screen.findByRole("textbox", { name: "Description & appearance" })
+        expect(screen.getByRole("button", { name: "Undo description change" })).toBeDisabled()
+        fireEvent.change(editor, { target: { value: "" } })
+        await waitFor(() =>
+            expect(screen.getByTestId("persisted-description")).toBeEmptyDOMElement()
+        )
+        await user.click(screen.getByRole("button", { name: "Done" }))
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+        await user.click(screen.getByRole("button", { name: "Expand description & appearance" }))
+        expect(
+            await screen.findByRole("textbox", { name: "Description & appearance" })
+        ).toHaveValue("")
+        await user.click(screen.getByRole("button", { name: "Undo description change" }))
+        expect(screen.getByRole("textbox", { name: "Description & appearance" })).toHaveValue(
+            original
+        )
+        await waitFor(() =>
+            expect(screen.getByTestId("persisted-description").textContent).toBe(original)
+        )
+        expect(screen.getByRole("button", { name: "Undo description change" })).toBeDisabled()
+    })
+
     it("lets shared readers expand the full text without exposing editing controls", async () => {
         const user = userEvent.setup()
         const setCharacter = vi.fn()
@@ -74,6 +119,9 @@ describe("sheet description and appearance", () => {
         expect(dialog).toHaveTextContent("Their full story.")
         expect(dialog).toHaveTextContent("You can only edit your own characters")
         expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+        expect(
+            screen.queryByRole("button", { name: "Undo description change" })
+        ).not.toBeInTheDocument()
         expect(setCharacter).not.toHaveBeenCalled()
     })
 })

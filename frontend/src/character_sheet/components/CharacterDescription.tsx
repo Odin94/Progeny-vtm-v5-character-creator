@@ -10,12 +10,13 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
-import { IconArrowsMaximize } from "@tabler/icons-react"
+import { IconArrowBackUp, IconArrowsMaximize } from "@tabler/icons-react"
 import { memo, useState } from "react"
 import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import type { SheetOptions } from "../CharacterSheet"
 import { useDebouncedUncontrolledStringField } from "../utils/useDebouncedUncontrolledField"
+import { useDescriptionUndo } from "../hooks/useDescriptionUndo"
 
 type CharacterDescriptionProps = Pick<
     SheetOptions,
@@ -38,7 +39,16 @@ const CharacterDescription = memo(
             setCharacter,
             field: "description"
         })
+        const descriptionUndo = useDescriptionUndo({
+            identity: getCharacterDraftIdentity(character),
+            value: description.value,
+            onChange: description.onChange
+        })
         const hasDescription = !!description.value.trim()
+        const close = () => {
+            descriptionUndo.finishGroup()
+            setOpened(false)
+        }
 
         if (!hasDescription && !canEdit) return null
 
@@ -74,7 +84,7 @@ const CharacterDescription = memo(
                 </Box>
                 <Modal
                     opened={opened}
-                    onClose={() => setOpened(false)}
+                    onClose={close}
                     title="Description & appearance"
                     size="lg"
                     zIndex={2200}
@@ -90,7 +100,8 @@ const CharacterDescription = memo(
                                 aria-label="Description & appearance"
                                 placeholder="Describe your character’s appearance, mannerisms, and story…"
                                 value={description.value}
-                                onChange={(event) => description.onChange(event.target.value)}
+                                onChange={(event) => descriptionUndo.onChange(event.target.value)}
+                                onBlur={descriptionUndo.finishGroup}
                                 color={primaryColor}
                                 styles={{
                                     input: {
@@ -110,13 +121,26 @@ const CharacterDescription = memo(
                                 {description.value}
                             </Text>
                         )}
-                        <Group justify="space-between" align="center">
-                            <Text c="dimmed" size="sm" style={{ flex: 1 }}>
-                                {canEdit
-                                    ? "Changes save automatically."
-                                    : editDisabledReason || "This character is read-only."}
-                            </Text>
-                            <Button color={primaryColor} mih={44} onClick={() => setOpened(false)}>
+                        <Text c="dimmed" size="sm">
+                            {canEdit
+                                ? "Changes save automatically."
+                                : editDisabledReason || "This character is read-only."}
+                        </Text>
+                        <Group justify={canEdit ? "space-between" : "flex-end"} align="center">
+                            {canEdit ? (
+                                <Button
+                                    color="gray"
+                                    variant="subtle"
+                                    mih={44}
+                                    leftSection={<IconArrowBackUp size={16} />}
+                                    aria-label="Undo description change"
+                                    disabled={!descriptionUndo.canUndo}
+                                    onClick={descriptionUndo.undo}
+                                >
+                                    Undo
+                                </Button>
+                            ) : null}
+                            <Button color={primaryColor} mih={44} onClick={close}>
                                 {canEdit ? "Done" : "Close"}
                             </Button>
                         </Group>
