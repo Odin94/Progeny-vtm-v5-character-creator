@@ -1,5 +1,6 @@
 import RAPIER from "@dimforge/rapier3d-compat"
 import { Quaternion, Vector3 } from "three"
+import { sortedSlots } from "./sorted-layout"
 
 export type Triple = [number, number, number]
 export interface DiceData {
@@ -10,6 +11,7 @@ export interface DiceData {
         value: number
         normal: Triple
         center: Triple
+        labelUp?: Triple
         label?: string
     }[]
     vertexValues?: { value: number; direction: Triple }[]
@@ -517,6 +519,43 @@ export class PageDicePhysics {
             die.body.setBodyType(RAPIER.RigidBodyType.Fixed, false)
         })
         this.settled = true
+    }
+    /** Presentation only: preserve each die's value and identity while arranging high to low. */
+    sort(values: number[]) {
+        if (!this.settled || values.length !== this.dice.length) return false
+        const points = sortedSlots(this.bounds, this.dice.length)
+        if (points.length !== this.dice.length) return false
+        this.recovery = undefined
+        this.held.clear()
+        const order = values
+            .map((value, index) => ({ value, index }))
+            .sort((a, b) => b.value - a.value || a.index - b.index)
+        order.forEach(({ value, index }, slot) => {
+            const die = this.dice[index]
+            const face = die.data.faceValues.find(
+                (face) => (face.value === 0 ? 10 : face.value) === value
+            )!
+            const q = new Quaternion().setFromUnitVectors(
+                new Vector3(...face.normal).normalize(),
+                up
+            )
+            if (face.labelUp) {
+                const direction = new Vector3(...face.labelUp).applyQuaternion(q)
+                q.premultiply(
+                    new Quaternion().setFromAxisAngle(up, Math.atan2(direction.x, -direction.z))
+                )
+            }
+            die.body.setBodyType(RAPIER.RigidBodyType.Fixed, false)
+            die.body.setLinvel({ x: 0, y: 0, z: 0 }, false)
+            die.body.setAngvel({ x: 0, y: 0, z: 0 }, false)
+            die.body.setRotation(q, false)
+            die.body.setTranslation(
+                { x: points[slot][0], y: supportHeight(die.data, q), z: points[slot][1] },
+                false
+            )
+            die.collider.setEnabled(true)
+        })
+        return true
     }
     private recoverDice(clipped: Die[], cocked: Die[] = []) {
         const moving = [...clipped, ...cocked]

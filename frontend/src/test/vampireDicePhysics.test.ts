@@ -3,6 +3,7 @@ import { PerspectiveCamera, Quaternion, Vector3 } from "three"
 import { layoutDieTargets } from "~/character_sheet/components/diceRollModal/threeDice/overlay-layout"
 import regular from "~/character_sheet/components/diceRollModal/threeDice/regular.json"
 import hunger from "~/character_sheet/components/diceRollModal/threeDice/hunger.json"
+import { sortedSlots } from "~/character_sheet/components/diceRollModal/threeDice/sorted-layout"
 import {
     initDicePhysics,
     PageDicePhysics,
@@ -19,6 +20,58 @@ const finish = (physics: PageDicePhysics) => {
 }
 describe("imported vampire dice physics", () => {
     beforeAll(() => initDicePhysics())
+    it.each([
+        [374, 374, 16],
+        [1264, 784, 100]
+    ])(
+        "sorts %ix%i dice upright without changing faces or hiding them behind controls",
+        (width, height, count) => {
+            const bounds = pageBounds(
+                width,
+                height,
+                count,
+                width < 600 ? 0.6 : 1.1,
+                width > 600 ? { left: 840, top: 240, right: 1260, bottom: 784 } : undefined
+            )
+            while (sortedSlots(bounds, count).length < count) {
+                bounds.halfX *= 1.08
+                bounds.halfZ *= 1.08
+                bounds.bottomInset *= 1.08
+                if (bounds.blocked)
+                    for (const key of ["minX", "maxX", "minZ", "maxZ"] as const)
+                        bounds.blocked[key] *= 1.08
+            }
+            const physics = new PageDicePhysics(bounds)
+            try {
+                const values = Array.from({ length: count }, (_, i) => (i % 10) + 1)
+                for (let i = 0; i < count; i++) physics.add(i % 2 ? regularData : hungerData)
+                physics.showValues(values)
+                expect(physics.sort(values)).toBe(true)
+                expect(physics.results().map((result) => result.value)).toEqual(values)
+                const readingOrder = [...physics.dice].sort(
+                    (a, b) =>
+                        a.body.translation().z - b.body.translation().z ||
+                        a.body.translation().x - b.body.translation().x
+                )
+                expect(
+                    readingOrder.map((die) => readTop(die.data, die.body.rotation()).value)
+                ).toEqual([...values].sort((a, b) => b - a))
+                for (const die of physics.dice) {
+                    expect(physics.isFullyVisible(die)).toBe(true)
+                    const value = readTop(die.data, die.body.rotation()).value
+                    const face = die.data.faceValues.find((face) => face.value === value)!
+                    const labelUp = new Vector3(...face.labelUp!).applyQuaternion(
+                        die.body.rotation()
+                    )
+                    expect(labelUp.x).toBeCloseTo(0, 5)
+                    expect(labelUp.y).toBeCloseTo(0, 5)
+                    expect(labelUp.z).toBeCloseTo(-1, 5)
+                }
+            } finally {
+                physics.dispose()
+            }
+        }
+    )
     it.each([
         [374, 374, 16, 0.6],
         [1264, 784, 100, 1.1]

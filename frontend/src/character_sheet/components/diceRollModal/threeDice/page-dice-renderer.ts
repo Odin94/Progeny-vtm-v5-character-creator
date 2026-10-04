@@ -15,7 +15,7 @@ import {
 import type { ScreenRectangle } from "./page-dice-physics"
 import { swapCrystalColors } from "./crystal-colors"
 import { layoutDieTargets } from "./overlay-layout"
-import { createSelectionSigil } from "./selection-sigil"
+import { sortedSlots } from "./sorted-layout"
 
 const downloads = new Map<string, Promise<ArrayBuffer>>()
 const loadBytes = (name: string) => {
@@ -65,8 +65,7 @@ export class PageDiceRenderer {
     private materials = new Set<THREE.Material>()
     private geometries = new Set<THREE.BufferGeometry>()
     private controlsBounds?: ScreenRectangle
-    private selectionSigil = createSelectionSigil()
-    private selectionMarkers = new Map<number, THREE.Group>()
+    private sorted = false
 
     constructor(
         private host: HTMLElement,
@@ -126,7 +125,6 @@ export class PageDiceRenderer {
         floor.receiveShadow = true
         this.scene.add(floor)
         this.trackResources(floor)
-        this.trackResources(this.selectionSigil)
         this.camera.position.set(0, 40, 0)
         this.camera.up.set(0, 0, -1)
         this.camera.lookAt(0, 0, 0)
@@ -238,6 +236,7 @@ export class PageDiceRenderer {
             })
             this.liquid.setRoots(this.meshes)
         }
+        if (!samePool) this.sorted = false
         this.style = style
         this.dice = dice
         this.dieSize = this.host.clientWidth < 600 ? 0.6 : 1.1
@@ -290,6 +289,23 @@ export class PageDiceRenderer {
             this.dieSize,
             this.controlsBounds
         )
+        if (this.sorted) {
+            // Dense pools must fit one readable grid, rather than scattered free slots.
+            for (
+                let attempt = 0;
+                attempt < 48 &&
+                this.dice.length &&
+                sortedSlots(bounds, this.dice.length).length < this.dice.length;
+                attempt++
+            ) {
+                bounds.halfX *= 1.08
+                bounds.halfZ *= 1.08
+                bounds.bottomInset *= 1.08
+                if (bounds.blocked)
+                    for (const key of ["minX", "maxX", "minZ", "maxZ"] as const)
+                        bounds.blocked[key] *= 1.08
+            }
+        }
         this.renderer.setSize(width, height, false)
         this.camera.aspect = width / height
         this.camera.fov = THREE.MathUtils.radToDeg(
@@ -297,6 +313,11 @@ export class PageDiceRenderer {
         )
         this.camera.updateProjectionMatrix()
         this.physics?.resize(bounds)
+        if (this.sorted && this.physics && !this.dice.some((die) => die.isRolling)) {
+            // Resize recovery may start an animation; sorting restores the known values.
+            this.physics.showValues(this.dice.map((die) => die.value))
+            this.physics.sort(this.dice.map((die) => die.value))
+        }
         this.invalidate()
     }
     private onVisibility = () => {
@@ -325,7 +346,6 @@ export class PageDiceRenderer {
             mesh.position.copy(this.physics!.dice[index].body.translation())
             mesh.quaternion.copy(this.physics!.dice[index].body.rotation())
         })
-        this.updateSelectionMarkers()
         this.liquid.render(() => this.renderer.render(this.scene, this.camera))
         this.updateButtons()
         if (this.physics.settled && !this.finished) {
@@ -402,7 +422,12 @@ export class PageDiceRenderer {
             button.setAttribute("aria-disabled", String(selectionDisabled))
             button.style.pointerEvents = settled ? "auto" : "none"
             button.style.cursor = selectionDisabled ? "default" : "pointer"
-            caption.style.color = this.selected.has(die.id) ? "#f2b7c0" : "white"
+            const selected = this.selected.has(die.id) && !die.isBloodDie
+            button.style.borderRadius = "12px"
+            button.style.boxShadow = selected
+                ? "0 0 12px 3px rgba(207, 34, 59, 0.65), inset 0 0 12px rgba(207, 34, 59, 0.25)"
+                : "none"
+            caption.style.color = selected ? "#f2b7c0" : "white"
             button.setAttribute("aria-pressed", String(this.selected.has(die.id)))
         })
     }
@@ -410,31 +435,7 @@ export class PageDiceRenderer {
         this.selected = ids
         this.canSelect = canSelect
         this.updateButtons()
-        this.updateSelectionMarkers()
         this.invalidate()
-    }
-    private updateSelectionMarkers() {
-        const visibleIds = new Set<number>()
-        if (this.physics?.settled) {
-            this.dice.forEach((die, index) => {
-                if (die.isBloodDie || die.isRolling || !this.selected.has(die.id)) return
-                visibleIds.add(die.id)
-                let marker = this.selectionMarkers.get(die.id)
-                if (!marker) {
-                    marker = this.selectionSigil.clone(true)
-                    this.selectionMarkers.set(die.id, marker)
-                    this.scene.add(marker)
-                }
-                const position = this.physics!.dice[index].body.translation()
-                marker.position.x = position.x
-                marker.position.z = position.z
-            })
-        }
-        for (const [id, marker] of this.selectionMarkers) {
-            if (visibleIds.has(id)) continue
-            this.scene.remove(marker)
-            this.selectionMarkers.delete(id)
-        }
     }
     private disposeResources() {
         for (const geometry of this.geometries) geometry.dispose()
@@ -452,15 +453,20 @@ export class PageDiceRenderer {
         this.geometries.clear()
         this.materials.clear()
     }
+    sort() {
+        if (!this.physics?.settled || !this.dice.length || this.dice.some((die) => die.isRolling))
+            return
+        this.sorted = true
+        this.resize()
+    }
     clear() {
+        this.sorted = false
         this.generation++
         cancelAnimationFrame(this.frameId)
         this.frameId = 0
         this.done = undefined
         this.liquid.setRoots([])
         for (const mesh of this.meshes) this.scene.remove(mesh)
-        for (const marker of this.selectionMarkers.values()) this.scene.remove(marker)
-        this.selectionMarkers.clear()
         this.buttons.forEach((button) => button.remove())
         this.buttons = []
         this.meshes = []
@@ -478,8 +484,6 @@ export class PageDiceRenderer {
         document.removeEventListener("visibilitychange", this.onVisibility)
         this.renderer.domElement.removeEventListener("webglcontextlost", this.onContextLost)
         this.physics?.dispose()
-        for (const marker of this.selectionMarkers.values()) this.scene.remove(marker)
-        this.selectionMarkers.clear()
         this.liquid.dispose()
         this.environment.dispose()
         this.disposeResources()

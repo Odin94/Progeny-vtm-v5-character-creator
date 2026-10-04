@@ -141,18 +141,11 @@ const DiceRollModal = ({
     const currentRollIdRef = useRef<string | null>(null)
     const currentRollContextRef = useRef<RollShareContext | null>(null)
     const [selectedDiceIds, setSelectedDiceIds] = useState<Set<number>>(new Set())
-    const removeDice = useCallback(
-        (id?: number) => {
-            if (useDiceRollModalStore.getState().dice.some((die) => die.isRolling)) return
-            setDice((previous) => (id === undefined ? [] : previous.filter((die) => die.id !== id)))
-            setSelectedDiceIds((previous) =>
-                id === undefined
-                    ? new Set()
-                    : new Set([...previous].filter((value) => value !== id))
-            )
-        },
-        [setDice]
-    )
+    const removeDice = useCallback(() => {
+        if (useDiceRollModalStore.getState().dice.some((die) => die.isRolling)) return
+        setDice([])
+        setSelectedDiceIds(new Set())
+    }, [setDice])
     const { sendDiceRoll, connectionStatus, sessionId } = useSessionChat((state) => ({
         sendDiceRoll: state.sendDiceRoll,
         connectionStatus: state.connectionStatus,
@@ -548,6 +541,7 @@ const DiceRollModal = ({
 
     const handleReroll = () => {
         if (!character || !setCharacter || editDisabledReason || !canReroll) return
+        if (useDiceRollModalStore.getState().dice.some((die) => die.isRolling)) return
 
         if (availableWillpower <= 0) return
 
@@ -1084,7 +1078,9 @@ const DiceRollModal = ({
                                     availableWillpower > 0
                                 }
                                 onDieClick={handleDieClick}
-                                onRemoveDie={removeDice}
+                                onRemoveAllDice={removeDice}
+                                onReroll={handleReroll}
+                                canReroll={canReroll}
                                 onComplete={onThreeComplete}
                                 onUnavailable={() => {
                                     setThreeDiceUnavailable(true)

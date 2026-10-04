@@ -1,5 +1,5 @@
 import { Box, Menu } from "@mantine/core"
-import { IconTrash } from "@tabler/icons-react"
+import { IconTrash, IconSortDescending, IconRefresh } from "@tabler/icons-react"
 import { useEffect, useRef, useState, type RefObject } from "react"
 import { createPortal } from "react-dom"
 import type { DieResult } from "../parts/DiceContainer"
@@ -17,7 +17,9 @@ type Props = {
     onDieClick: (id: number, isBloodDie: boolean) => void
     onComplete: (dice: DieResult[]) => void
     onUnavailable: () => void
-    onRemoveDie: (id: number) => void
+    onRemoveAllDice: () => void
+    onReroll: () => void
+    canReroll: boolean
 }
 export default function ThreeDice(props: Props) {
     const host = useRef<HTMLDivElement>(null)
@@ -149,14 +151,38 @@ export default function ThreeDice(props: Props) {
                 </Menu.Target>
                 <Menu.Dropdown aria-label="Die actions" aria-labelledby="">
                     <Menu.Item
-                        color="red"
-                        leftSection={<IconTrash size={14} />}
+                        leftSection={<IconSortDescending size={14} />}
                         onClick={() => {
-                            if (context) latest.current.onRemoveDie(context.id)
+                            if (!latest.current.dice.some((die) => die.isRolling))
+                                renderer.current?.sort()
                             setContext(null)
                         }}
                     >
-                        Remove die
+                        Sort dice
+                    </Menu.Item>
+                    <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() => {
+                            latest.current.onRemoveAllDice()
+                            setContext(null)
+                        }}
+                    >
+                        Remove all dice
+                    </Menu.Item>
+                    <Menu.Item
+                        leftSection={<IconRefresh size={14} />}
+                        disabled={!props.canReroll || props.dice.some((die) => die.isRolling)}
+                        onClick={() => {
+                            if (
+                                latest.current.canReroll &&
+                                !latest.current.dice.some((die) => die.isRolling)
+                            )
+                                latest.current.onReroll()
+                            setContext(null)
+                        }}
+                    >
+                        Reroll selected dice (1 WP)
                     </Menu.Item>
                 </Menu.Dropdown>
             </Menu>

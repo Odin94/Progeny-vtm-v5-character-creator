@@ -22,7 +22,9 @@ vi.mock("~/character_sheet/components/diceRollModal/threeDice/ThreeDice", () => 
         onComplete: (dice: DieResult[]) => void
         onUnavailable: () => void
         onDieClick: (id: number, blood: boolean) => void
-        onRemoveDie: (id: number) => void
+        onRemoveAllDice: () => void
+        onReroll: () => void
+        canReroll: boolean
     }) => (
         <div>
             <button
@@ -39,13 +41,16 @@ vi.mock("~/character_sheet/components/diceRollModal/threeDice/ThreeDice", () => 
                 Land 3D dice
             </button>
             <button onClick={props.onUnavailable}>Lose WebGL</button>
+            <button disabled={!props.canReroll} onClick={props.onReroll}>
+                Context reroll (1 WP)
+            </button>
             {props.dice.map((die) => (
                 <button
                     key={die.id}
                     onClick={() => props.onDieClick(die.id, die.isBloodDie)}
                     onContextMenu={(event) => {
                         event.preventDefault()
-                        props.onRemoveDie(die.id)
+                        props.onRemoveAllDice()
                     }}
                 >
                     {die.isBloodDie ? "Hunger" : "Regular"} 3D die {die.id}
@@ -106,6 +111,7 @@ describe("vampire dice integration", () => {
             screen.queryByRole("textbox", { name: "Quick roll dice count" })
         ).not.toBeInTheDocument()
         fireEvent.keyDown(window, { key: "r" })
+        expect(screen.getByText("Enter to roll, Escape to cancel")).toBeInTheDocument()
         const input = screen.getByRole("textbox", { name: "Quick roll dice count" })
         fireEvent.change(input, { target: { value: "4 d 10" } })
         fireEvent.keyDown(input, { key: "Enter" })
@@ -176,7 +182,7 @@ describe("vampire dice integration", () => {
             screen.getByRole("button", { name: "Reroll selected dice with willpower" })
         ).toBeDisabled()
         fireEvent.click(screen.getByRole("button", { name: "Regular 3D die 2" }))
-        fireEvent.click(screen.getByRole("button", { name: "Reroll selected dice with willpower" }))
+        fireEvent.click(screen.getByRole("button", { name: "Context reroll (1 WP)" }))
         expect(setCharacter).toHaveBeenCalledOnce()
         expect(setCharacter.mock.calls[0][0].ephemeral.superficialWillpowerDamage).toBe(1)
         expect(useDiceRollModalStore.getState().dice.map((die) => die.isRolling)).toEqual([
@@ -213,7 +219,7 @@ describe("vampire dice integration", () => {
         expect(useDiceRollModalStore.getState().dice).toEqual([])
         expect(useDiceRollModalStore.getState().opened).toBe(false)
     })
-    it("removes selected and hunger dice without spending willpower or changing the next pool", async () => {
+    it("removes all dice from the context action without spending willpower or changing the next pool", async () => {
         const character = getBasicTestCharacter()
         const setCharacter = vi.fn()
         const dice: DieResult[] = [1, 6, 10].map((value, index) => ({
@@ -237,20 +243,14 @@ describe("vampire dice integration", () => {
         )
         const selected = await screen.findByRole("button", { name: "Regular 3D die 2" })
         fireEvent.click(selected)
-        fireEvent.contextMenu(selected)
-        expect(useDiceRollModalStore.getState().dice).toEqual([dice[0], dice[2]])
-        expect(
-            screen.getByRole("button", { name: "Reroll selected dice with willpower" })
-        ).toBeDisabled()
         fireEvent.contextMenu(screen.getByRole("button", { name: "Hunger 3D die 1" }))
-        expect(useDiceRollModalStore.getState().dice).toEqual([dice[2]])
-        fireEvent.click(screen.getByRole("button", { name: "Remove dice" }))
         expect(useDiceRollModalStore.getState()).toMatchObject({
             dice: [],
             diceCount: 3,
             opened: true
         })
         expect(setCharacter).not.toHaveBeenCalled()
+        expect(screen.getByRole("button", { name: "Context reroll (1 WP)" })).toBeDisabled()
         expect(screen.getByRole("button", { name: "Remove dice" })).toBeDisabled()
     })
     it("prevents both removal actions while any dice are rolling", async () => {

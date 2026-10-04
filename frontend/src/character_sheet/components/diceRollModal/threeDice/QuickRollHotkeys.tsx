@@ -73,7 +73,7 @@ export default function QuickRollHotkeys() {
                 }}
             />
             <Text size="xs" c="dimmed" mt={6}>
-                1–100 dice · Hunger replaces regular dice · Enter to roll · Esc to cancel
+                Enter to roll, Escape to cancel
             </Text>
         </Paper>
     )

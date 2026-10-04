@@ -9,7 +9,8 @@ import type { DieResult } from "~/character_sheet/components/diceRollModal/parts
 const engine = vi.hoisted(() => ({
     context: (_id: number, _position: { x: number; y: number }) => {},
     roll: vi.fn(async () => {}),
-    clear: vi.fn()
+    clear: vi.fn(),
+    sort: vi.fn()
 }))
 vi.mock("~/character_sheet/components/diceRollModal/threeDice/page-dice-renderer", () => ({
     PageDiceRenderer: class {
@@ -18,6 +19,7 @@ vi.mock("~/character_sheet/components/diceRollModal/threeDice/page-dice-renderer
         }
         roll = engine.roll
         clear = engine.clear
+        sort = engine.sort
         select() {}
         setControlsBounds() {}
         dispose() {}
@@ -43,13 +45,14 @@ beforeEach(() => {
     vi.clearAllMocks()
 })
 
-it("opens a context menu for hunger and regular dice and clears the renderer after the last removal", async () => {
+it("offers sorting, removal of all dice, and a gated selected-dice reroll", async () => {
     const removed = vi.fn()
+    const reroll = vi.fn()
     const initial: DieResult[] = [
         { id: 1, value: 1, isBloodDie: true, isRolling: false },
         { id: 2, value: 10, isBloodDie: false, isRolling: false }
     ]
-    function Harness() {
+    function Harness({ canReroll = false }: { canReroll?: boolean }) {
         const controls = useRef<HTMLDivElement>(null)
         const [dice, setDice] = useState(initial)
         return (
@@ -61,40 +64,47 @@ it("opens a context menu for hunger and regular dice and clears the renderer aft
                     settings={DEFAULT_VAMPIRE_THROW}
                     controls={controls}
                     isMobile={false}
-                    selectedDiceIds={new Set()}
+                    selectedDiceIds={new Set([2])}
                     canSelect={false}
+                    canReroll={canReroll}
+                    onReroll={reroll}
                     onDieClick={vi.fn()}
                     onComplete={vi.fn()}
                     onUnavailable={vi.fn()}
-                    onRemoveDie={(id) => {
-                        removed(id)
-                        setDice((previous) => previous.filter((die) => die.id !== id))
+                    onRemoveAllDice={() => {
+                        removed()
+                        setDice([])
                     }}
                 />
             </>
         )
     }
-    render(
+    const view = render(
         <MantineProvider env="test">
             <Harness />
         </MantineProvider>
     )
     act(() => engine.context(1, { x: 120, y: 100 }))
-    expect(await screen.findByRole("menu", { name: "Die actions" })).toBeInTheDocument()
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove die" }))
-    expect(removed).toHaveBeenLastCalledWith(1)
-    await waitFor(() =>
-        expect(engine.roll).toHaveBeenLastCalledWith(
-            [initial[1]],
-            "default",
-            DEFAULT_VAMPIRE_THROW,
-            expect.any(Function)
-        )
+    const menu = await screen.findByRole("menu", { name: "Die actions" })
+    expect(
+        Array.from(menu.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent)
+    ).toEqual(["Sort dice", "Remove all dice", "Reroll selected dice (1 WP)"])
+    expect(screen.getByRole("menuitem", { name: "Reroll selected dice (1 WP)" })).toBeDisabled()
+    fireEvent.click(screen.getByRole("menuitem", { name: "Sort dice" }))
+    expect(engine.sort).toHaveBeenCalledOnce()
+    expect(removed).not.toHaveBeenCalled()
+    view.rerender(
+        <MantineProvider env="test">
+            <Harness canReroll />
+        </MantineProvider>
     )
     act(() => engine.context(2, { x: 180, y: 100 }))
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove die" }))
-    expect(removed).toHaveBeenLastCalledWith(2)
-    expect(engine.clear).toHaveBeenCalledOnce()
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Reroll selected dice (1 WP)" }))
+    expect(reroll).toHaveBeenCalledOnce()
+    act(() => engine.context(1, { x: 120, y: 100 }))
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove all dice" }))
+    expect(removed).toHaveBeenCalledOnce()
+    await waitFor(() => expect(engine.clear).toHaveBeenCalledOnce())
 })
 
 it("ignores context-menu requests during a roll", () => {
@@ -109,13 +119,15 @@ it("ignores context-menu requests during a roll", () => {
                 isMobile={false}
                 selectedDiceIds={new Set()}
                 canSelect
+                canReroll
+                onReroll={vi.fn()}
                 onDieClick={vi.fn()}
                 onComplete={vi.fn()}
                 onUnavailable={vi.fn()}
-                onRemoveDie={vi.fn()}
+                onRemoveAllDice={vi.fn()}
             />
         </MantineProvider>
     )
     act(() => engine.context(1, { x: 120, y: 100 }))
-    expect(screen.queryByRole("menuitem", { name: "Remove die" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument()
 })

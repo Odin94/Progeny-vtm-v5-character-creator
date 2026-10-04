@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Highlight dice selected for rerolls with a crimson sigil, and remove landed dice individually from their context menu or together from the roller.
+- Highlight dice selected for rerolls with a red glow. The dice context menu can sort results into an upright, readable grid, remove all dice, or reroll the selection for one willpower.
 - Show outcome captions on 3D dice, use Default/Crystal style names, swap Crystal die colors while preserving their symbols, and allow desktop dice above the roller controls.
 - Fill the mobile description editor’s available height and keep its controls above the safe area, removing unused space at the bottom.
 - Add subtle undo and redo controls for recent description edits, grouping nearby keystrokes and keeping history when the description modal closes.

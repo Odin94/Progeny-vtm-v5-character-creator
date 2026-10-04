@@ -34,12 +34,17 @@ roll analytics, and session-chat result sharing remain in use.
   its 1–10 value to Progeny's existing result logic. No separate random result
   is assigned to a displayed 3D die.
 - **Willpower:** select up to three regular dice and use the existing reroll
-  button. A crimson ground sigil marks selected dice. Hunger dice cannot be selected. One superficial willpower damage is
+  button or **Reroll selected dice (1 WP)** in the context menu. A red glow marks
+  selected dice. Hunger dice cannot be selected. One superficial willpower damage is
   charged, and unselected bodies/results stay fixed. Chat updates keep the
   original roll ID and mark the update as a reroll.
-- **Removal:** right-click a landed die and choose **Remove die**, or use
+- **Sorting:** right-click a landed die and choose **Sort dice** to arrange the
+  pool from highest to lowest, left to right and top to bottom, in a centered grid
+  outside the controls. Each existing result faces up with its symbol upright;
+  sorting preserves die identities, selection, and results, and spends no willpower.
+- **Removal:** right-click a landed die and choose **Remove all dice**, or use
   **Remove dice** in the roller to clear the displayed pool. Hunger dice can
-  also be removed. Removal clears the relevant reroll selection, preserves the
+  also be removed. Removal clears the reroll selection, preserves the
   next roll's configured pool, and is disabled while any dice are rolling.
 - **Arena:** desktop dice can use the full page, including above the controls;
   the controls rectangle is excluded from physics and landing positions.
