@@ -278,7 +278,16 @@ const SkillRow = ({
             mb="xs"
             wrap="nowrap"
             align="flex-start"
-            style={{ minWidth: 0, padding: "0.35rem 0.5rem", position: "relative" }}
+            style={{
+                minWidth: 0,
+                padding: "0.35rem 0.5rem",
+                position: "relative",
+                borderRadius: "var(--mantine-radius-sm)",
+                backgroundColor: isSelected
+                    ? `var(--mantine-color-${primaryColor}-light)`
+                    : "transparent",
+                transition: "background-color 0.2s"
+            }}
         >
             {showSpecialtiesBelow ? (
                 <Box style={{ flex: 1, minWidth: 0, position: "relative" }}>
@@ -288,12 +297,7 @@ const SkillRow = ({
                                 ...textStyle,
                                 cursor: "pointer",
                                 width: "fit-content",
-                                whiteSpace: "nowrap",
-                                borderRadius: "4px",
-                                backgroundColor: isSelected
-                                    ? `var(--mantine-color-${primaryColor}-light)`
-                                    : undefined,
-                                transition: "background-color 0.2s"
+                                whiteSpace: "nowrap"
                             }}
                             onClick={handleSkillClick}
                         >
@@ -389,12 +393,7 @@ const SkillRow = ({
                             ...textStyle,
                             cursor: "pointer",
                             flexShrink: 0,
-                            whiteSpace: "nowrap",
-                            borderRadius: "4px",
-                            backgroundColor: isSelected
-                                ? `var(--mantine-color-${primaryColor}-light)`
-                                : undefined,
-                            transition: "background-color 0.2s"
+                            whiteSpace: "nowrap"
                         }}
                         onClick={handleSkillClick}
                     >
