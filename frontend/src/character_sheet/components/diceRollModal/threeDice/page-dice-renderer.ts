@@ -218,6 +218,11 @@ export class PageDiceRenderer {
                     top: "100%",
                     left: "50%",
                     transform: "translateX(-50%)",
+                    width: "max-content",
+                    padding: "2px 6px",
+                    boxSizing: "border-box",
+                    background: "rgba(0, 0, 0, 0.5)",
+                    borderRadius: "4px",
                     pointerEvents: "none",
                     textAlign: "center",
                     lineHeight: "1.1",
@@ -423,7 +428,8 @@ export class PageDiceRenderer {
             const outcome = dieOutcome(die.value, die.isBloodDie)
             const caption = button.firstElementChild as HTMLSpanElement
             caption.textContent = die.isRolling ? "" : outcome
-            caption.style.width = `${boxes[index].width}px`
+            caption.hidden = die.isRolling
+            caption.style.maxWidth = `${boxes[index].width}px`
             caption.style.fontSize = `${Math.min(11, boxes[index].width / 7)}px`
             button.setAttribute(
                 "aria-label",
