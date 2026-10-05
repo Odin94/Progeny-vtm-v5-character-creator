@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add a Reset to default button to the 3D dice throw settings.
 - Angle sorted dice faces slightly toward the camera so every die in the grid reads evenly, without the bright environment flare that rolled dice keep.
 - Open the dice roller without rerendering the whole sheet, and prepare WebGL in idle time after the controls paint. Keep sorting manual after rerolls, and allow Sort dice to finish and arrange an active roll immediately.
 - Highlight dice selected for rerolls with a red glow. The dice context menu can sort results into an upright, readable grid, remove all dice, or reroll the selection for one willpower.

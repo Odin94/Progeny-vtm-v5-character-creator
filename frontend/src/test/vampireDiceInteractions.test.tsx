@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, expect, it, vi } from "vitest"
 import { useRef, useState } from "react"
 import ThreeDice from "~/character_sheet/components/diceRollModal/threeDice/ThreeDice"
+import ThrowControls from "~/character_sheet/components/diceRollModal/threeDice/ThrowControls"
 import { DEFAULT_VAMPIRE_THROW } from "~/character_sheet/components/diceRollModal/threeDice/settings"
 import type { DieResult } from "~/character_sheet/components/diceRollModal/parts/DiceContainer"
 
@@ -157,4 +158,24 @@ it("honors the roller's sort button request while dice are preparing", () => {
         </MantineProvider>
     )
     expect(engine.sort).toHaveBeenCalledOnce()
+})
+it("resets changed throw settings to the defaults", async () => {
+    const onSettingsChange = vi.fn()
+    const renderControls = (settings: typeof DEFAULT_VAMPIRE_THROW) => (
+        <MantineProvider env="test">
+            <ThrowControls
+                style="default"
+                onStyleChange={vi.fn()}
+                settings={settings}
+                onSettingsChange={onSettingsChange}
+                disabled={false}
+            />
+        </MantineProvider>
+    )
+    const { rerender } = render(renderControls(DEFAULT_VAMPIRE_THROW))
+    fireEvent.click(screen.getByRole("button", { name: "Throw settings" }))
+    expect(await screen.findByRole("button", { name: "Reset to default" })).toBeDisabled()
+    rerender(renderControls({ ...DEFAULT_VAMPIRE_THROW, intensity: 4, spread: 10 }))
+    fireEvent.click(screen.getByRole("button", { name: "Reset to default" }))
+    expect(onSettingsChange).toHaveBeenCalledWith(DEFAULT_VAMPIRE_THROW)
 })

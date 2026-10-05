@@ -1,5 +1,19 @@
-import { Accordion, Group, NumberInput, SegmentedControl, Slider, Stack, Text } from "@mantine/core"
-import type { VampireDiceStyle, VampireThrowSettings } from "./settings"
+import {
+    Accordion,
+    Button,
+    Group,
+    NumberInput,
+    SegmentedControl,
+    Slider,
+    Stack,
+    Text
+} from "@mantine/core"
+import { IconRestore } from "@tabler/icons-react"
+import {
+    DEFAULT_VAMPIRE_THROW,
+    type VampireDiceStyle,
+    type VampireThrowSettings
+} from "./settings"
 
 type Props = {
     style: VampireDiceStyle
@@ -19,6 +33,9 @@ export default function ThrowControls({
         if (typeof value === "number" && Number.isFinite(value))
             onSettingsChange({ ...settings, [key]: value })
     }
+    const isDefault = (Object.keys(DEFAULT_VAMPIRE_THROW) as (keyof VampireThrowSettings)[]).every(
+        (key) => settings[key] === DEFAULT_VAMPIRE_THROW[key]
+    )
     return (
         <Stack gap="xs">
             <SegmentedControl
@@ -83,6 +100,18 @@ export default function ThrowControls({
                                     value={settings.startX}
                                     onChange={(value) => set("startX", value)}
                                 />
+                            </Group>
+                            <Group justify="flex-end">
+                                <Button
+                                    variant="subtle"
+                                    color="gray"
+                                    size="xs"
+                                    leftSection={<IconRestore size={14} />}
+                                    disabled={disabled || isDefault}
+                                    onClick={() => onSettingsChange(DEFAULT_VAMPIRE_THROW)}
+                                >
+                                    Reset to default
+                                </Button>
                             </Group>
                         </Stack>
                     </Accordion.Panel>

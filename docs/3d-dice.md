@@ -32,7 +32,8 @@ roll analytics, and session-chat result sharing remain in use.
 - **Face captions:** Success, Failure, Critical, Messy, or Bestial failure
   replace role names and numeric values. The hunger model's skull is face 1.
 - **Throw controls:** intensity, drop height, direction, spread, and horizontal
-  start position. The default is the kit's weighty diagonal throw from the right.
+  start position. The default is the kit's weighty diagonal throw from the right;
+  **Reset to default** restores it.
 - **Results:** read the actual landed face after physics settles, then feed
   its 1–10 value to Progeny's existing result logic. No separate random result
   is assigned to a displayed 3D die.
