@@ -68,6 +68,8 @@ export class PageDiceRenderer {
     private gridSized = false
     private preparing = false
     private pendingSort = false
+    // Indices of dice resting in the sorted grid, rendered with a reading tilt.
+    private sorted = new Set<number>()
 
     constructor(
         private host: HTMLElement,
@@ -239,7 +241,10 @@ export class PageDiceRenderer {
             })
             this.liquid.setRoots(this.meshes)
         }
-        if (!samePool) this.gridSized = false
+        if (!samePool) {
+            this.gridSized = false
+            this.sorted.clear()
+        }
         this.style = style
         this.dice = dice
         this.dieSize = this.host.clientWidth < 600 ? 0.6 : 1.1
@@ -262,6 +267,7 @@ export class PageDiceRenderer {
         }
         this.resize()
         const rolling = new Set(dice.flatMap((die, index) => (die.isRolling ? [index] : [])))
+        for (const index of rolling) this.sorted.delete(index)
         if (rolling.size) {
             this.done = done
             this.finished = false
@@ -347,11 +353,21 @@ export class PageDiceRenderer {
         this.meshes.forEach((mesh, index) => {
             mesh.position.copy(this.physics!.dice[index].body.translation())
             mesh.quaternion.copy(this.physics!.dice[index].body.rotation())
+            if (this.sorted.has(index)) mesh.quaternion.premultiply(this.readingTilt(mesh))
         })
         this.liquid.render(() => this.renderer.render(this.scene, this.camera))
         this.updateButtons()
         this.finishRoll()
         if (!this.physics.settled) this.invalidate()
+    }
+    /** A flat face mirrors a different part of the environment at every grid
+     * position, so some sorted dice flare white. Turning the face halfway
+     * toward the camera mirrors straight up for every die, like the center one.
+     */
+    private readingTilt(mesh: THREE.Object3D) {
+        const up = new THREE.Vector3(0, 1, 0)
+        const normal = this.camera.position.clone().sub(mesh.position).normalize().add(up)
+        return new THREE.Quaternion().setFromUnitVectors(up, normal.normalize())
     }
     private finishRoll() {
         if (!this.physics?.settled || this.finished) return
@@ -464,6 +480,7 @@ export class PageDiceRenderer {
         this.gridSized = true
         this.resize()
         if (!this.physics.sort(values, true)) return
+        this.sorted = new Set(this.dice.map((_, index) => index))
         this.finishRoll()
         this.updateButtons()
         this.invalidate()
@@ -472,6 +489,7 @@ export class PageDiceRenderer {
         this.preparing = false
         this.pendingSort = false
         this.gridSized = false
+        this.sorted.clear()
         this.generation++
         cancelAnimationFrame(this.frameId)
         this.frameId = 0

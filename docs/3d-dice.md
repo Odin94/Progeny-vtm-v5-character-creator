@@ -43,7 +43,9 @@ roll analytics, and session-chat result sharing remain in use.
   original roll ID and mark the update as a reroll.
 - **Sorting:** right-click a landed die and choose **Sort dice** to arrange the
   pool from highest to lowest, left to right and top to bottom, in a centered grid
-  outside the controls. Each existing result faces up with its symbol upright;
+  outside the controls. Each existing result faces up with its symbol upright,
+  angled halfway toward the camera so every grid position mirrors the same dark
+  part of the environment instead of flaring white;
   sorting preserves die identities, selection, and results, and spends no willpower.
   Sorting is manual: rerolled dice stay where they land until the next **Sort dice**.
   The context action and roller button remain available during flight; choosing
