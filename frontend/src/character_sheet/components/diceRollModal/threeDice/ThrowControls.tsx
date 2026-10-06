@@ -9,11 +9,7 @@ import {
     Text
 } from "@mantine/core"
 import { IconRestore } from "@tabler/icons-react"
-import {
-    DEFAULT_VAMPIRE_THROW,
-    type VampireDiceStyle,
-    type VampireThrowSettings
-} from "./settings"
+import { DEFAULT_VAMPIRE_THROW, type VampireDiceStyle, type VampireThrowSettings } from "./settings"
 
 type Props = {
     style: VampireDiceStyle
