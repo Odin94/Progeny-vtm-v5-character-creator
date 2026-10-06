@@ -91,7 +91,10 @@ it("offers sorting, removal of all dice, and a gated selected-dice reroll", asyn
         Array.from(menu.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent)
     ).toEqual(["Sort dice", "Remove all dice", "Reroll selected dice (1 WP)"])
     expect(screen.getByRole("menuitem", { name: "Reroll selected dice (1 WP)" })).toBeDisabled()
+    const anchor = view.container.querySelector('[aria-hidden="true"]')
+    expect(anchor).toHaveStyle({ left: "120px", top: "100px" })
     fireEvent.click(screen.getByRole("menuitem", { name: "Sort dice" }))
+    expect(anchor).toHaveStyle({ left: "120px", top: "100px" })
     expect(engine.sort).toHaveBeenCalledOnce()
     expect(removed).not.toHaveBeenCalled()
     view.rerender(
@@ -100,6 +103,7 @@ it("offers sorting, removal of all dice, and a gated selected-dice reroll", asyn
         </MantineProvider>
     )
     act(() => engine.context(2, { x: 180, y: 100 }))
+    expect(anchor).toHaveStyle({ left: "180px", top: "100px" })
     fireEvent.click(await screen.findByRole("menuitem", { name: "Reroll selected dice (1 WP)" }))
     expect(reroll).toHaveBeenCalledOnce()
     act(() => engine.context(1, { x: 120, y: 100 }))

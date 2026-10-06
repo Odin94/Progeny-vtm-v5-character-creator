@@ -28,6 +28,8 @@ export default function ThreeDice(props: Props) {
     const latest = useRef(props)
     latest.current = props
     const [context, setContext] = useState<{ id: number; x: number; y: number } | null>(null)
+    // Keep the anchor in place while the closed menu finishes its exit transition.
+    const contextPosition = useRef({ x: 0, y: 0 })
     useEffect(() => {
         const element = host.current!
         const unavailable = () => latest.current.onUnavailable()
@@ -36,6 +38,7 @@ export default function ThreeDice(props: Props) {
                 element,
                 (id, blood) => latest.current.onDieClick(id, blood),
                 (id, position) => {
+                    contextPosition.current = position
                     setContext({ id, ...position })
                 }
             )
@@ -139,8 +142,8 @@ export default function ThreeDice(props: Props) {
                         aria-hidden="true"
                         style={{
                             position: "fixed",
-                            left: context?.x ?? 0,
-                            top: context?.y ?? 0,
+                            left: contextPosition.current.x,
+                            top: contextPosition.current.y,
                             width: 1,
                             height: 1,
                             pointerEvents: "none"
