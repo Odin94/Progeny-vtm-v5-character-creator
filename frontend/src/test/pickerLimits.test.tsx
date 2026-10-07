@@ -1,9 +1,11 @@
 import { MantineProvider } from "@mantine/core"
+import { useState } from "react"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import AttributePicker from "~/generator/components/AttributePicker"
 import SkillsPicker from "~/generator/components/SkillsPicker"
 import type { AttributeSetting, SkillsSetting } from "~/generator/creatorDrafts"
+import { getAttributeSetting } from "~/generator/creatorDrafts"
 import { getBasicTestCharacter } from "./testUtils"
 
 const { renderSpecialtyModal } = vi.hoisted(() => ({ renderSpecialtyModal: vi.fn() }))
@@ -38,6 +40,61 @@ globalThis.ResizeObserver = class {
 afterEach(cleanup)
 
 describe("creator picker limits", () => {
+    it("lets users repair an overallocated saved character and confirm", () => {
+        const savedCharacter = getBasicTestCharacter()
+        savedCharacter.attributes = {
+            strength: 3,
+            dexterity: 2,
+            stamina: 2,
+            charisma: 3,
+            manipulation: 4,
+            composure: 1,
+            intelligence: 3,
+            wits: 3,
+            resolve: 3
+        }
+        const nextStep = vi.fn()
+        const persistCharacter = vi.fn()
+        const Harness = () => {
+            const [character, setCharacter] = useState(savedCharacter)
+            const [draft, setDraft] = useState(() => getAttributeSetting(character.attributes))
+            return (
+                <MantineProvider>
+                    <AttributePicker
+                        character={character}
+                        setCharacter={(updated) => {
+                            persistCharacter(updated)
+                            setCharacter(updated)
+                        }}
+                        nextStep={nextStep}
+                        pickedAttributes={draft}
+                        setPickedAttributes={setDraft}
+                    />
+                </MantineProvider>
+            )
+        }
+        render(<Harness />)
+        expect(screen.getByRole("status")).toHaveTextContent("more than three")
+        expect(screen.getByText(/Remove 2/)).toBeInTheDocument()
+        expect(screen.getByTestId("attributes-confirm-button")).toBeDisabled()
+        expect(persistCharacter).not.toHaveBeenCalled()
+
+        fireEvent.click(screen.getByTestId("attribute-wits-button"))
+        expect(screen.getByText(/Remove 1/)).toBeInTheDocument()
+        expect(screen.getByTestId("attributes-confirm-button")).toBeDisabled()
+        fireEvent.click(screen.getByTestId("attribute-resolve-button"))
+        expect(screen.queryByRole("status")).not.toBeInTheDocument()
+        expect(screen.getByTestId("attributes-confirm-button")).toBeEnabled()
+        fireEvent.click(screen.getByTestId("attributes-confirm-button"))
+
+        expect(nextStep).toHaveBeenCalledOnce()
+        expect(persistCharacter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                attributes: { ...savedCharacter.attributes, wits: 2, resolve: 2 }
+            })
+        )
+    })
+
     it("opens the specialty dialog when confirming edited skills", () => {
         const nextStep = vi.fn()
         const character = getBasicTestCharacter()
