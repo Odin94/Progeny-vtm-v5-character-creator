@@ -5,6 +5,7 @@ import { useDiceRollModalStore } from "~/character_sheet/stores/diceRollModalSto
 import { getBasicTestCharacter } from "./testUtils"
 
 const mocks = vi.hoisted(() => ({
+    has3dDice: true,
     skills: vi.fn(() => null),
     preferences: { colorTheme: null, backgroundImage: null },
     updatePreferences: vi.fn()
@@ -13,7 +14,9 @@ vi.mock("~/hooks/useAuth", () => ({
     useAuth: () => ({ isAuthenticated: false, isLoading: false })
 }))
 vi.mock("~/hooks/useCharacters", () => ({ useCharacters: () => ({}), useCharacter: () => ({}) }))
-vi.mock("~/hooks/useVampireDiceFeatureFlag", () => ({ useVampireDiceFeatureFlag: () => true }))
+vi.mock("~/hooks/useVampireDiceFeatureFlag", () => ({
+    useVampireDiceFeatureFlag: () => mocks.has3dDice
+}))
 vi.mock("~/hooks/useUserPreferences", () => ({
     useUserPreferences: () => ({
         preferences: mocks.preferences,
@@ -21,6 +24,9 @@ vi.mock("~/hooks/useUserPreferences", () => ({
     })
 }))
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }))
+vi.mock("~/character_sheet/components/diceRollModal/threeDice/warmup", () => ({
+    scheduleDiceWarmup: () => () => {}
+}))
 vi.mock("~/character_sheet/sections/Skills", () => ({ default: mocks.skills }))
 vi.mock("~/character_sheet/sections/Attributes", () => ({ default: () => null }))
 vi.mock("~/character_sheet/sections/BottomData", () => ({ default: () => null }))
@@ -50,8 +56,37 @@ vi.stubGlobal(
     }
 )
 beforeEach(() => {
+    mocks.has3dDice = true
+    localStorage.removeItem("use-legacy-dice")
     useDiceRollModalStore.getState().reset()
     vi.clearAllMocks()
+})
+
+it("keeps users without the feature flag on the legacy roller", () => {
+    mocks.has3dDice = false
+    render(<CharacterSheet character={getBasicTestCharacter()} setCharacter={vi.fn()} />)
+    fireEvent.click(screen.getByRole("button", { name: "Open dice roller" }))
+    expect(screen.queryByRole("button", { name: "Dice rolling settings" })).not.toBeInTheDocument()
+    expect(screen.queryByTestId("vampire-dice-controls")).not.toBeInTheDocument()
+})
+
+it("lets eligible users switch to legacy dice, remembers it, and lets them switch back", async () => {
+    const props = { character: getBasicTestCharacter(), setCharacter: vi.fn() }
+    const view = render(<CharacterSheet {...props} />)
+    fireEvent.click(screen.getByRole("button", { name: "Open dice roller" }))
+    fireEvent.click(screen.getByRole("button", { name: "Dice rolling settings" }))
+    fireEvent.click(await screen.findByLabelText(/Use legacy dice roller/))
+    expect(screen.queryByRole("radiogroup", { name: "Vampire dice style" })).not.toBeInTheDocument()
+    expect(localStorage.getItem("use-legacy-dice")).toBe("true")
+    await act(async () => view.unmount())
+    render(<CharacterSheet {...props} />)
+    fireEvent.click(screen.getByRole("button", { name: "Open dice roller" }))
+    fireEvent.click(screen.getByRole("button", { name: "Dice rolling settings" }))
+    const legacySwitch = await screen.findByLabelText(/Use legacy dice roller/)
+    expect(legacySwitch).toBeChecked()
+    fireEvent.click(legacySwitch)
+    expect(screen.getByRole("radiogroup", { name: "Vampire dice style" })).toBeInTheDocument()
+    expect(localStorage.getItem("use-legacy-dice")).toBe("false")
 })
 
 it("opens and closes the roller without rerendering sheet sections or creating WebGL", () => {

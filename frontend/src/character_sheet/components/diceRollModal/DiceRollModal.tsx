@@ -1,4 +1,13 @@
-import { Button, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core"
+import {
+    Accordion,
+    Button,
+    Group,
+    Paper,
+    Stack,
+    Switch,
+    Text,
+    useMantineTheme
+} from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { IconTrash, IconSortDescending } from "@tabler/icons-react"
@@ -46,6 +55,8 @@ const ThreeDice = lazy(() => import("./threeDice/ThreeDice"))
 type DiceRollModalProps = {
     primaryColor: string
     use3dDice?: boolean
+    useLegacyDice?: boolean
+    onLegacyDiceChange?: (enabled: boolean) => void
     character?: Character
     setCharacter?: SetCharacter
     editDisabledReason?: string
@@ -80,6 +91,8 @@ type RollShareContext = {
 const DiceRollModal = ({
     primaryColor,
     use3dDice = false,
+    useLegacyDice = false,
+    onLegacyDiceChange,
     character,
     setCharacter,
     editDisabledReason
@@ -1057,6 +1070,25 @@ const DiceRollModal = ({
                         <div style={{ width: 36 }} />
                     )}
                 </Group>
+
+                {onLegacyDiceChange ? (
+                    <Accordion>
+                        <Accordion.Item value="dice-settings">
+                            <Accordion.Control>Dice rolling settings</Accordion.Control>
+                            <Accordion.Panel>
+                                <Switch
+                                    label="Use legacy dice roller"
+                                    description="Turn off to use the new 3D dice again. Saved for this browser."
+                                    checked={useLegacyDice}
+                                    disabled={dice.some((die) => die.isRolling)}
+                                    onChange={(event) =>
+                                        onLegacyDiceChange(event.currentTarget.checked)
+                                    }
+                                />
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    </Accordion>
+                ) : null}
 
                 {useThreeDice ? (
                     <>

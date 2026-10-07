@@ -80,12 +80,18 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         getInitialValueInEffect: false
     })
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
-    const use3dDice = useVampireDiceFeatureFlag(user?.id)
-    const previousDiceFlag = useRef(use3dDice)
+    const has3dDice = useVampireDiceFeatureFlag(user?.id)
+    const [useLegacyDice, setUseLegacyDice] = useLocalStorage<boolean>({
+        key: "use-legacy-dice",
+        defaultValue: false,
+        getInitialValueInEffect: false
+    })
+    const use3dDice = has3dDice && !useLegacyDice
+    const previousDiceFlag = useRef(has3dDice)
     useEffect(() => {
-        if (previousDiceFlag.current && !use3dDice) useDiceRollModalStore.getState().reset()
-        previousDiceFlag.current = use3dDice
-    }, [use3dDice])
+        if (previousDiceFlag.current && !has3dDice) useDiceRollModalStore.getState().reset()
+        previousDiceFlag.current = has3dDice
+    }, [has3dDice])
     const { data: userCharacters, isLoading: charactersLoading } = useCharacters(
         isAuthenticated && !!character.id
     )
@@ -396,6 +402,15 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             <DiceRollModal
                 primaryColor={primaryColor}
                 use3dDice={use3dDice}
+                useLegacyDice={useLegacyDice}
+                onLegacyDiceChange={
+                    has3dDice
+                        ? (enabled) => {
+                              useDiceRollModalStore.getState().setDice([])
+                              setUseLegacyDice(enabled)
+                          }
+                        : undefined
+                }
                 character={character}
                 setCharacter={editableSetCharacter}
                 editDisabledReason={editDisabledReason}
