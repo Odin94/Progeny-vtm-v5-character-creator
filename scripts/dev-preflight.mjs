@@ -54,7 +54,10 @@ if (flags.has("--wait-for-backend")) {
 function ensureDependencies({ dir }) {
     const nodeModulesDir = join(dir, "node_modules")
     const stateFile = join(nodeModulesDir, ".cache", "progeny", "dev-preflight.json")
-    const dependencyHash = hashExistingFiles([join(dir, "package.json"), join(dir, "pnpm-lock.yaml")])
+    const dependencyHash = hashExistingFiles([
+        join(dir, "package.json"),
+        join(dir, "pnpm-lock.yaml")
+    ])
     const state = readJson(stateFile) ?? {}
 
     if (existsSync(nodeModulesDir) && state.dependencyHash === dependencyHash) {
@@ -200,8 +203,12 @@ function writeJson(file, data) {
 }
 
 function run(command, args, cwd, env = {}) {
-    const executable = process.platform === "win32" ? `${command}.cmd` : command
-    const result = spawnSync(executable, args, {
+    // Windows batch shims require cmd.exe; spawning pnpm.cmd directly fails with EINVAL.
+    // Commands and arguments here are fixed internal values, not user input.
+    const isWindows = process.platform === "win32"
+    const executable = isWindows ? process.env.ComSpec || "cmd.exe" : command
+    const executableArgs = isWindows ? ["/d", "/s", "/c", `${command}.cmd ${args.join(" ")}`] : args
+    const result = spawnSync(executable, executableArgs, {
         cwd,
         stdio: "inherit",
         env: {
