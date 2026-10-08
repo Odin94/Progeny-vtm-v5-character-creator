@@ -14,6 +14,7 @@ import { adminRoutes } from "./routes/admin.js"
 import { preferencesRoutes } from "./routes/preferences.js"
 import { homebrewRoutes } from "./routes/homebrew.js"
 import { recentChangesRoutes } from "./routes/recentChanges.js"
+import { kofiRoutes } from "./routes/kofi.js"
 import { characterSyncWebSocket } from "./websocket/characterSync.js"
 import { sessionChatWebSocket } from "./websocket/sessionChat.js"
 import { env } from "./config/env.js"
@@ -180,6 +181,7 @@ export async function buildApp() {
     await fastify.register(authRoutes)
     await fastify.register(adminRoutes)
     await fastify.register(recentChangesRoutes)
+    await fastify.register(kofiRoutes)
     await fastify.register(preferencesRoutes)
     await fastify.register(characterRoutes)
     await fastify.register(characterNoteRoutes)

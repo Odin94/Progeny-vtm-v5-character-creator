@@ -44,6 +44,13 @@ fastify.post<{ Body: MyInput }>(
 
 Schemas live in `src/schemas/`. The `zodToFastifySchema` helper is in `src/utils/schema.ts`. Do not add routes without a Zod schema for any user-supplied input.
 
+## Ko-fi payments
+
+`POST /webhooks/ko-fi` receives verified, form-encoded Ko-fi payments and adds
+their emails to the PostHog crystal dice flag. It uses a dedicated verification
+token rather than browser session/CSRF credentials. Setup and retry behavior are
+documented in [kofi-crystal-dice.md](kofi-crystal-dice.md).
+
 ## Homebrew API
 
 `src/routes/homebrew.ts` owns the full Homebrew lifecycle. Its input contracts live in `src/schemas/homebrew.ts`, and collection serialization/copy helpers live in `src/utils/homebrew.ts`.

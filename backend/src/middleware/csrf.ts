@@ -42,6 +42,12 @@ export async function validateCsrfToken(
         return true
     }
 
+    // Ko-fi authenticates this server-to-server route with its verification token.
+    // Use the matched route, so query strings cannot bypass other routes' CSRF checks.
+    if (request.method === "POST" && request.routeOptions.url === "/webhooks/ko-fi") {
+        return true
+    }
+
     // Skip CSRF validation for health check and metrics endpoints
     if (request.url === "/health" || request.url.startsWith("/metrics")) {
         return true
