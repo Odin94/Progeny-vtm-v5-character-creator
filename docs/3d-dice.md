@@ -1,20 +1,15 @@
-# Vampire 3D dice experiment
+# Vampire 3D dice
 
-The character sheet supports an opt-in 3D roller controlled by the boolean
-PostHog feature flag `vampire-3d-dice`. Create that flag with no general rollout
-and target specific signed-in users by their person `email` or distinct ID
-(the WorkOS user ID). Anonymous users, users outside the targeting rules, and
-browsers without a fresh enabled flag keep the existing roller. Disabling the
-flag restores the standard roller and clears any active experiment roll.
+The character sheet uses the new 3D roller by default for everyone. The boolean PostHog feature flag `vampire-3d-dice` gates only the sparkly Crystal style. Anonymous users and browsers without a fresh enabled flag use the Default style, even if Crystal was previously saved. Everyone can switch to the legacy roller in Dice rolling settings; that preference is saved for the browser.
 
 For local testing, the Vite development server forces the flag on at `localhost`,
 `127.0.0.1`, and IPv6 loopback. This preview requires neither login nor PostHog
 configuration. Production builds and non-loopback hosts still use the normal
 per-user flag checks.
 
-The flag gates the page dice, style/throw controls, and keyboard shortcuts.
+The flag gates the Default/Crystal style selector. Throw controls and keyboard shortcuts are available to everyone using the new roller.
 Three.js, Rapier/WASM, the crystal refraction pass, and the models load lazily
-only for the experimental roller. Opening paints the controls first, then warms
+only for the new roller. Opening paints the controls first, then warms
 WebGL during browser idle time; rolling immediately starts preparation without
 waiting for that idle callback. Closing cancels pending warmup.
 No backend or character-schema change is

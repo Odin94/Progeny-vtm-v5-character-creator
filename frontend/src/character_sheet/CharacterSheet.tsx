@@ -11,7 +11,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
 import posthog from "posthog-js"
@@ -80,18 +80,13 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         getInitialValueInEffect: false
     })
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
-    const has3dDice = useVampireDiceFeatureFlag(user?.id)
+    const hasCrystalDice = useVampireDiceFeatureFlag(user?.id)
     const [useLegacyDice, setUseLegacyDice] = useLocalStorage<boolean>({
         key: "use-legacy-dice",
         defaultValue: false,
         getInitialValueInEffect: false
     })
-    const use3dDice = has3dDice && !useLegacyDice
-    const previousDiceFlag = useRef(has3dDice)
-    useEffect(() => {
-        if (previousDiceFlag.current && !has3dDice) useDiceRollModalStore.getState().reset()
-        previousDiceFlag.current = has3dDice
-    }, [has3dDice])
+    const use3dDice = !useLegacyDice
     const { data: userCharacters, isLoading: charactersLoading } = useCharacters(
         isAuthenticated && !!character.id
     )
@@ -403,14 +398,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                 primaryColor={primaryColor}
                 use3dDice={use3dDice}
                 useLegacyDice={useLegacyDice}
-                onLegacyDiceChange={
-                    has3dDice
-                        ? (enabled) => {
-                              useDiceRollModalStore.getState().setDice([])
-                              setUseLegacyDice(enabled)
-                          }
-                        : undefined
-                }
+                allowCrystalDice={hasCrystalDice}
+                onLegacyDiceChange={(enabled) => {
+                    useDiceRollModalStore.getState().setDice([])
+                    setUseLegacyDice(enabled)
+                }}
                 character={character}
                 setCharacter={editableSetCharacter}
                 editDisabledReason={editDisabledReason}

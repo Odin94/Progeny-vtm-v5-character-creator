@@ -3,7 +3,7 @@ import posthog from "posthog-js"
 
 export const VAMPIRE_DICE_FEATURE_FLAG = "vampire-3d-dice"
 
-// Local development can preview the dice without auth or PostHog. Elsewhere,
+// Local development can preview crystal dice without auth or PostHog. Elsewhere,
 // anonymous browsers, stale identities, and unavailable flags fail closed.
 export const useVampireDiceFeatureFlag = (userId?: string) => {
     const localPreview =
@@ -25,7 +25,7 @@ export const useVampireDiceFeatureFlag = (userId?: string) => {
                     posthog.get_distinct_id?.() === userId &&
                     posthog.isFeatureEnabled?.(VAMPIRE_DICE_FEATURE_FLAG, { fresh: true }) === true
             } catch {
-                /* Keep the standard roller when flag evaluation is unavailable. */
+                /* Keep the default dice style when flag evaluation is unavailable. */
             }
             setResolved({ userId, enabled })
         }

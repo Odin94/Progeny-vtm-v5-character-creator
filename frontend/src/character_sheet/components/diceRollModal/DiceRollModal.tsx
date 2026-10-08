@@ -54,6 +54,7 @@ const ThreeDice = lazy(() => import("./threeDice/ThreeDice"))
 
 type DiceRollModalProps = {
     primaryColor: string
+    allowCrystalDice?: boolean
     use3dDice?: boolean
     useLegacyDice?: boolean
     onLegacyDiceChange?: (enabled: boolean) => void
@@ -90,6 +91,7 @@ type RollShareContext = {
 
 const DiceRollModal = ({
     primaryColor,
+    allowCrystalDice = false,
     use3dDice = false,
     useLegacyDice = false,
     onLegacyDiceChange,
@@ -105,11 +107,12 @@ const DiceRollModal = ({
         return scheduleDiceWarmup(() => setPrepareThreeDice(true))
     }, [useThreeDice])
     const controlsRef = useRef<HTMLDivElement>(null)
-    const [diceStyle, setDiceStyle] = useLocalStorage<VampireDiceStyle>({
+    const [savedDiceStyle, setDiceStyle] = useLocalStorage<VampireDiceStyle>({
         key: "vampire-dice-style",
         defaultValue: "default",
         deserialize: readDiceStyle
     })
+    const diceStyle = allowCrystalDice ? savedDiceStyle : "default"
     const [throwSettings, setThrowSettings] = useLocalStorage<VampireThrowSettings>({
         key: "vampire-dice-throw",
         defaultValue: DEFAULT_VAMPIRE_THROW,
@@ -1071,34 +1074,8 @@ const DiceRollModal = ({
                     )}
                 </Group>
 
-                {onLegacyDiceChange ? (
-                    <Accordion>
-                        <Accordion.Item value="dice-settings">
-                            <Accordion.Control>Dice rolling settings</Accordion.Control>
-                            <Accordion.Panel>
-                                <Switch
-                                    label="Use legacy dice roller"
-                                    description="Turn off to use the new 3D dice again. Saved for this browser."
-                                    checked={useLegacyDice}
-                                    disabled={dice.some((die) => die.isRolling)}
-                                    onChange={(event) =>
-                                        onLegacyDiceChange(event.currentTarget.checked)
-                                    }
-                                />
-                            </Accordion.Panel>
-                        </Accordion.Item>
-                    </Accordion>
-                ) : null}
-
                 {useThreeDice ? (
                     <>
-                        <ThrowControls
-                            style={diceStyle}
-                            onStyleChange={setDiceStyle}
-                            settings={throwSettings}
-                            onSettingsChange={setThrowSettings}
-                            disabled={dice.some((die) => die.isRolling)}
-                        />
                         {!isMobile ? (
                             <Text size="xs" c="dimmed">
                                 Press R, enter a count, then Enter. Select up to 3 regular dice to
@@ -1175,7 +1152,7 @@ const DiceRollModal = ({
                         />
                     ) : null}
                 </AnimatePresence>
-                <Group justify="flex-end">
+                <Group justify="space-between">
                     {useThreeDice && (
                         <Button
                             variant="subtle"
@@ -1194,11 +1171,41 @@ const DiceRollModal = ({
                         size="xs"
                         leftSection={<IconTrash size={14} />}
                         disabled={!dice.length || dice.some((die) => die.isRolling)}
+                        style={{ marginLeft: "auto" }}
                         onClick={() => removeDice()}
                     >
                         Remove dice
                     </Button>
                 </Group>
+                {onLegacyDiceChange ? (
+                    <Accordion>
+                        <Accordion.Item value="dice-settings">
+                            <Accordion.Control>Dice rolling settings</Accordion.Control>
+                            <Accordion.Panel>
+                                <Switch
+                                    label="Use legacy dice roller"
+                                    description="Turn off to use the new 3D dice again. Saved for this browser."
+                                    checked={useLegacyDice}
+                                    disabled={dice.some((die) => die.isRolling)}
+                                    onChange={(event) =>
+                                        onLegacyDiceChange(event.currentTarget.checked)
+                                    }
+                                />
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    </Accordion>
+                ) : null}
+
+                {useThreeDice ? (
+                    <ThrowControls
+                        allowCrystalDice={allowCrystalDice}
+                        style={diceStyle}
+                        onStyleChange={setDiceStyle}
+                        settings={throwSettings}
+                        onSettingsChange={setThrowSettings}
+                        disabled={dice.some((die) => die.isRolling)}
+                    />
+                ) : null}
             </Stack>
         </>
     )

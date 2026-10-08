@@ -12,6 +12,7 @@ import { IconRestore } from "@tabler/icons-react"
 import { DEFAULT_VAMPIRE_THROW, type VampireDiceStyle, type VampireThrowSettings } from "./settings"
 
 type Props = {
+    allowCrystalDice?: boolean
     style: VampireDiceStyle
     onStyleChange: (style: VampireDiceStyle) => void
     settings: VampireThrowSettings
@@ -19,6 +20,7 @@ type Props = {
     disabled: boolean
 }
 export default function ThrowControls({
+    allowCrystalDice = false,
     style,
     onStyleChange,
     settings,
@@ -34,17 +36,19 @@ export default function ThrowControls({
     )
     return (
         <Stack gap="xs">
-            <SegmentedControl
-                aria-label="Vampire dice style"
-                fullWidth
-                disabled={disabled}
-                value={style}
-                onChange={(value) => onStyleChange(value as VampireDiceStyle)}
-                data={[
-                    { label: "Default", value: "default" },
-                    { label: "Crystal", value: "crystal" }
-                ]}
-            />
+            {allowCrystalDice ? (
+                <SegmentedControl
+                    aria-label="Vampire dice style"
+                    fullWidth
+                    disabled={disabled}
+                    value={style}
+                    onChange={(value) => onStyleChange(value as VampireDiceStyle)}
+                    data={[
+                        { label: "Default", value: "default" },
+                        { label: "Crystal", value: "crystal" }
+                    ]}
+                />
+            ) : null}
             <Accordion variant="default">
                 <Accordion.Item value="throw">
                     <Accordion.Control>Throw settings</Accordion.Control>

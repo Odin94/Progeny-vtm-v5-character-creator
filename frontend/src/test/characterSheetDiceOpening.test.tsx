@@ -62,12 +62,16 @@ beforeEach(() => {
     vi.clearAllMocks()
 })
 
-it("keeps users without the feature flag on the legacy roller", () => {
+it("gives users without the feature flag default 3D dice and hides crystal dice", () => {
     mocks.has3dDice = false
     render(<CharacterSheet character={getBasicTestCharacter()} setCharacter={vi.fn()} />)
     fireEvent.click(screen.getByRole("button", { name: "Open dice roller" }))
-    expect(screen.queryByRole("button", { name: "Dice rolling settings" })).not.toBeInTheDocument()
-    expect(screen.queryByTestId("vampire-dice-controls")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Dice rolling settings" })).toBeInTheDocument()
+    expect(screen.getByTestId("vampire-dice-controls")).toBeInTheDocument()
+    expect(screen.queryByRole("radiogroup", { name: "Vampire dice style" })).not.toBeInTheDocument()
+    const sort = screen.getByRole("button", { name: "Sort dice" })
+    const settings = screen.getByRole("button", { name: "Dice rolling settings" })
+    expect(sort.compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
 
 it("lets eligible users switch to legacy dice, remembers it, and lets them switch back", async () => {
