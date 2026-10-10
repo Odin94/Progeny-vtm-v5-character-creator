@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
     isFramelessSyntheticNoise,
+    isInjectedWalletNoise,
     isResizeObserverLoopNoise,
     isStaleAssetError,
     type ExceptionListEntry
@@ -107,6 +108,43 @@ describe("isResizeObserverLoopNoise", () => {
 
     it("ignores non-string candidates", () => {
         expect(isResizeObserverLoopNoise(undefined, null, 42, {})).toBe(false)
+    })
+})
+
+describe("isInjectedWalletNoise", () => {
+    it("keeps other errors mentioning the wallet API", () => {
+        expect(isInjectedWalletNoise("window.ethereum.request is not a function")).toBe(false)
+        expect(
+            isInjectedWalletNoise(
+                "Cannot assign to read only property window.ethereum.selectedAddress"
+            )
+        ).toBe(false)
+        expect(isInjectedWalletNoise("Failed to fetch /assets/window.ethereum.js")).toBe(false)
+    })
+
+    it("drops the Brave on iOS wallet script error", () => {
+        expect(
+            isInjectedWalletNoise(
+                "undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')"
+            )
+        ).toBe(true)
+    })
+
+    it("matches when only one of several candidates matches", () => {
+        expect(
+            isInjectedWalletNoise(
+                undefined,
+                "'TypeError' captured as exception with message: 'undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')'"
+            )
+        ).toBe(true)
+    })
+
+    it("keeps unrelated exception messages", () => {
+        expect(isInjectedWalletNoise("TypeError: cannot read property of undefined")).toBe(false)
+    })
+
+    it("ignores non-string candidates", () => {
+        expect(isInjectedWalletNoise(undefined, null, 42, {})).toBe(false)
     })
 })
 

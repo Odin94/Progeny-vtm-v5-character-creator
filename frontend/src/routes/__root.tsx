@@ -17,6 +17,7 @@ import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
     isFramelessSyntheticNoise,
+    isInjectedWalletNoise,
     isResizeObserverLoopNoise,
     isStaleAssetError,
     type ExceptionListEntry
@@ -132,6 +133,10 @@ const posthogOptions: Partial<PostHogConfig> = {
             }
 
             if (isResizeObserverLoopNoise(exceptionValue, exceptionMessage)) {
+                return null
+            }
+
+            if (isInjectedWalletNoise(exceptionValue, exceptionMessage)) {
                 return null
             }
         }

@@ -144,4 +144,55 @@ describe("reportAssetPreloadRecovery", () => {
 
         expect(posthog.capture).not.toHaveBeenCalled()
     })
+
+    it("counts once across a manual reload and keeps another preload failure blocked", async () => {
+        const requestedAt = String(Date.now())
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, requestedAt)
+
+        reportAssetPreloadRecovery()
+
+        // A manual reload loses module state but retains this tab's sessionStorage.
+        vi.resetModules()
+        const reloadedDocument = await import("~/utils/assetPreloadRecovery")
+        const reload = vi.fn()
+        delete (window as { location?: Location }).location
+        ;(window as unknown as { location: unknown }).location = { pathname: "/sheet", reload }
+        try {
+            reloadedDocument.reportAssetPreloadRecovery()
+            expect(posthog.capture).toHaveBeenCalledTimes(1)
+            expect(window.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBe(requestedAt)
+
+            reloadedDocument.handleAssetPreloadError()
+            expect(reloadedDocument.getAssetReloadState()).toBe("reload-blocked")
+            expect(reload).not.toHaveBeenCalled()
+        } finally {
+            delete (window as { location?: Location }).location
+            ;(window as unknown as { location: Location }).location = originalLocation
+        }
+    })
+
+    it("does not overcount when the reporting marker cannot be persisted", () => {
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()))
+        const storageWrite = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+            throw new Error("denied")
+        })
+        try {
+            reportAssetPreloadRecovery()
+            reportAssetPreloadRecovery()
+            expect(posthog.capture).not.toHaveBeenCalled()
+        } finally {
+            storageWrite.mockRestore()
+        }
+    })
+
+    it("captures again after the handler requests a fresh reload", () => {
+        const now = Date.now()
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(now))
+        reportAssetPreloadRecovery()
+
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(now + 1))
+        reportAssetPreloadRecovery()
+
+        expect(posthog.capture).toHaveBeenCalledTimes(2)
+    })
 })

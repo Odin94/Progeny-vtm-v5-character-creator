@@ -45,6 +45,18 @@ export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
         (candidate) => typeof candidate === "string" && RESIZE_OBSERVER_LOOP_NOISE.test(candidate)
     )
 
+// Brave on iOS injects a wallet script into every page. It throws from inline page code
+// while clearing selectedAddress, so PostHog marks its only frame in_app and
+// isFramelessSyntheticNoise misses it. Match the observed failure rather than
+// every mention of the wallet API, so other wallet errors remain visible.
+const INJECTED_WALLET_NOISE =
+    /undefined is not an object \(evaluating ['"]window\.ethereum\.selectedAddress\s*=\s*undefined['"]\)/
+
+export const isInjectedWalletNoise = (...candidates: unknown[]) =>
+    candidates.some(
+        (candidate) => typeof candidate === "string" && INJECTED_WALLET_NOISE.test(candidate)
+    )
+
 // Asset-load failures have several browser wordings. They may come from stale
 // bundles, network failures, or hosting errors; the message alone cannot prove
 // the cause or successful recovery. Group them without dropping occurrences.
