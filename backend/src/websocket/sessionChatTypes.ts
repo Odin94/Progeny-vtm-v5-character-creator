@@ -1,7 +1,4 @@
-import type {
-    ParticipantIdentity,
-    SessionHistoryMessage
-} from "../contracts/realtimeProtocol.js"
+import type { ParticipantIdentity, SessionHistoryMessage } from "../contracts/realtimeProtocol.js"
 
 export {
     clientMessageSchema,
@@ -22,8 +19,8 @@ export type {
     RouseCheckMessage,
     RouseCheckReceived,
     ServerMessage,
-    SessionHistoryMessage
-    ,SessionJoinedMessage,
+    SessionHistoryMessage,
+    SessionJoinedMessage,
     UserJoinedMessage,
     UserLeftMessage,
     UserIdentityUpdatedMessage,

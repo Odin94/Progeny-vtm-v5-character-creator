@@ -1,6 +1,6 @@
 import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character, getEmptyCharacter } from "../../data/Character"
@@ -26,6 +26,7 @@ const AttributePicker = ({
     setPickedAttributes
 }: AttributePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
+    const excessMediumAttributes = Math.max(0, pickedAttributes.medium.length - 3)
     const hasConfirmedAttributes = Object.values(character.attributes).some((value) => value !== 1)
     const isComplete =
         pickedAttributes.strongest !== null &&
@@ -291,11 +292,17 @@ const AttributePicker = ({
         },
         {
             key: "medium",
-            prompt: `Pick ${Math.max(0, 3 - pickedAttributes.medium.length)}`,
+            prompt:
+                excessMediumAttributes > 0
+                    ? `Remove ${excessMediumAttributes}`
+                    : `Pick ${Math.max(0, 3 - pickedAttributes.medium.length)}`,
             bold: "medium",
-            suffix: `attribute${pickedAttributes.medium.length < 2 ? "s" : ""}`,
+            suffix:
+                excessMediumAttributes > 0
+                    ? `attribute${excessMediumAttributes === 1 ? "" : "s"}`
+                    : `attribute${pickedAttributes.medium.length < 2 ? "s" : ""}`,
             level: 3,
-            done: pickedAttributes.medium.length >= 3
+            done: pickedAttributes.medium.length === 3
         }
     ]
 
@@ -309,6 +316,13 @@ const AttributePicker = ({
             />
 
             <GeneratorSectionDivider label="Attributes" />
+
+            {excessMediumAttributes > 0 ? (
+                <Text role="status" ta="center" mb="sm" c="gold">
+                    Your saved character has more than three level-3 attributes. Click a gold
+                    attribute to remove its selection, or reset attributes to start again.
+                </Text>
+            ) : null}
 
             {nothingPickedYet ? (
                 <Text

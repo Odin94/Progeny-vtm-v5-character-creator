@@ -1,207 +1,133 @@
 import { FastifyInstance } from "fastify"
 import { eq, and } from "drizzle-orm"
+import { z } from "zod"
 import { db, schema } from "../db/index.js"
 import { authenticateWebSocketRequest, AuthenticatedRequest } from "../middleware/auth.js"
 import { websocketConnectionRateLimit } from "../utils/rateLimit.js"
+import { updateCharacterSchema } from "../schemas/character.js"
+import { getCharacterAccess } from "../utils/characterAccess.js"
 
-interface CharacterUpdateMessage {
-    type: "character_update"
-    characterId: string
-    data: unknown
-    version: number
-    userId: string
-}
-
-interface CharacterSubscribeMessage {
-    type: "subscribe"
-    characterId: string
-}
-
-interface CharacterUnsubscribeMessage {
-    type: "unsubscribe"
-    characterId: string
-}
-
-type WebSocketMessage =
-    | CharacterUpdateMessage
-    | CharacterSubscribeMessage
-    | CharacterUnsubscribeMessage
-
-// Map of characterId -> Set of WebSocket connections
-const characterSubscriptions = new Map<string, Set<any>>()
+const characterIdSchema = z.string().min(1)
+const messageSchema = z.discriminatedUnion("type", [
+    z.object({ type: z.literal("subscribe"), characterId: characterIdSchema }),
+    z.object({ type: z.literal("unsubscribe"), characterId: characterIdSchema }),
+    updateCharacterSchema.extend({
+        type: z.literal("character_update"),
+        characterId: characterIdSchema
+    })
+])
+type Socket = { readyState: number; send: (message: string) => void }
+const characterSubscriptions = new Map<string, Set<Socket>>()
+const socketUsers = new WeakMap<Socket, string>()
 
 export async function characterSyncWebSocket(fastify: FastifyInstance) {
     fastify.get(
         "/ws/characters",
         {
             websocket: true,
-            config: {
-                rateLimit: websocketConnectionRateLimit
-            }
+            config: { rateLimit: websocketConnectionRateLimit }
         },
-        async (connection, request: AuthenticatedRequest) => {
-            // Authenticate WebSocket connection using WorkOS session (same as REST endpoints)
-            const user = await authenticateWebSocketRequest(request)
-
-            if (!user) {
-                connection.socket.close(1008, "Unauthorized")
-                return
-            }
-
-            const userId = user.id
-
+        (socket, request: AuthenticatedRequest) => {
             const subscribedCharacters = new Set<string>()
-
-            connection.socket.on("message", async (message: Buffer) => {
+            const send = (message: unknown) => {
+                if (socket.readyState === 1) socket.send(JSON.stringify(message))
+            }
+            // Attach listeners synchronously: frames can arrive while cookie auth is pending.
+            const authenticated = authenticateWebSocketRequest(request).catch(() => null)
+            void authenticated.then((user) => {
+                if (!user) socket.close(1008, "Unauthorized")
+                else socketUsers.set(socket, user.id)
+            })
+            socket.on("message", async (message: Buffer) => {
                 try {
-                    const data: WebSocketMessage = JSON.parse(message.toString())
-
-                    switch (data.type) {
-                        case "subscribe": {
-                            const { characterId } = data
-
-                            // Verify user has access to character
-                            const character = await db.query.characters.findFirst({
-                                where: eq(schema.characters.id, characterId)
-                            })
-
-                            if (!character) {
-                                connection.socket.send(
-                                    JSON.stringify({ error: "Character not found", characterId })
-                                )
-                                return
-                            }
-
-                            const isOwner = character.userId === userId
-                            const isShared = await db.query.characterShares.findFirst({
-                                where: and(
-                                    eq(schema.characterShares.characterId, characterId),
-                                    eq(schema.characterShares.sharedWithUserId, userId)
-                                )
-                            })
-
-                            if (!isOwner && !isShared) {
-                                connection.socket.send(
-                                    JSON.stringify({
-                                        error: "Forbidden: No access to character",
-                                        characterId
-                                    })
-                                )
-                                return
-                            }
-
-                            // Subscribe to character updates
-                            if (!characterSubscriptions.has(characterId)) {
-                                characterSubscriptions.set(characterId, new Set())
-                            }
-                            characterSubscriptions.get(characterId)!.add(connection.socket)
-                            subscribedCharacters.add(characterId)
-
-                            connection.socket.send(
-                                JSON.stringify({ type: "subscribed", characterId })
-                            )
-                            break
-                        }
-
-                        case "unsubscribe": {
-                            const { characterId } = data
-
-                            const subscribers = characterSubscriptions.get(characterId)
-                            if (subscribers) {
-                                subscribers.delete(connection.socket)
-                                if (subscribers.size === 0) {
-                                    characterSubscriptions.delete(characterId)
-                                }
-                            }
-                            subscribedCharacters.delete(characterId)
-
-                            connection.socket.send(
-                                JSON.stringify({ type: "unsubscribed", characterId })
-                            )
-                            break
-                        }
-
-                        case "character_update": {
-                            const { characterId, data: characterData, version } = data
-
-                            // Verify user owns the character
-                            const character = await db.query.characters.findFirst({
-                                where: eq(schema.characters.id, characterId)
-                            })
-
-                            if (!character) {
-                                connection.socket.send(
-                                    JSON.stringify({ error: "Character not found", characterId })
-                                )
-                                return
-                            }
-
-                            if (character.userId !== userId) {
-                                connection.socket.send(
-                                    JSON.stringify({
-                                        error: "Forbidden: Can only update own characters",
-                                        characterId
-                                    })
-                                )
-                                return
-                            }
-
-                            // Update character in database
-                            await db
-                                .update(schema.characters)
-                                .set({
-                                    data: JSON.stringify(characterData),
-                                    version,
-                                    updatedAt: new Date()
-                                })
-                                .where(eq(schema.characters.id, characterId))
-
-                            // Broadcast update to all subscribers
-                            const subscribers = characterSubscriptions.get(characterId)
-                            if (subscribers) {
-                                const updateMessage = JSON.stringify({
-                                    type: "character_updated",
-                                    characterId,
-                                    data: characterData,
-                                    version
-                                    // Don't leak userId to other subscribers
-                                })
-
-                                subscribers.forEach((socket) => {
-                                    if (socket !== connection.socket && socket.readyState === 1) {
-                                        socket.send(updateMessage)
-                                    }
-                                })
-                            }
-
-                            connection.socket.send(
-                                JSON.stringify({ type: "update_confirmed", characterId })
-                            )
-                            break
-                        }
-
-                        default:
-                            connection.socket.send(
-                                JSON.stringify({ error: "Unknown message type" })
-                            )
+                    const user = await authenticated
+                    if (!user || socket.readyState !== 1) return
+                    const data = messageSchema.parse(JSON.parse(message.toString()))
+                    const { characterId } = data
+                    if (data.type === "unsubscribe") {
+                        const subscribers = characterSubscriptions.get(characterId)
+                        subscribers?.delete(socket)
+                        if (subscribers?.size === 0) characterSubscriptions.delete(characterId)
+                        subscribedCharacters.delete(characterId)
+                        send({ type: "unsubscribed", characterId })
+                        return
                     }
-                } catch (error) {
-                    // Don't leak internal error details
-                    connection.socket.send(JSON.stringify({ error: "Invalid message format" }))
+                    const access = await getCharacterAccess(characterId, user.id)
+                    if (socket.readyState !== 1) return
+                    if (!access) {
+                        send({ error: "Character not found", characterId })
+                        return
+                    }
+                    if (
+                        !access.hasAccess ||
+                        (data.type === "character_update" && !access.isOwner)
+                    ) {
+                        send({ error: "Forbidden: Can only update own characters", characterId })
+                        return
+                    }
+                    if (data.type === "subscribe") {
+                        if (!characterSubscriptions.has(characterId))
+                            characterSubscriptions.set(characterId, new Set())
+                        characterSubscriptions.get(characterId)!.add(socket)
+                        subscribedCharacters.add(characterId)
+                        send({ type: "subscribed", characterId })
+                        return
+                    }
+                    const characterVersion = data.characterVersion + 1
+                    const characterData = {
+                        ...(data.data ?? JSON.parse(access.character.data)),
+                        characterVersion
+                    }
+                    const [updated] = await db
+                        .update(schema.characters)
+                        .set({
+                            name: data.name ?? access.character.name,
+                            data: JSON.stringify(characterData),
+                            version: data.version ?? access.character.version,
+                            characterVersion,
+                            updatedAt: new Date()
+                        })
+                        .where(
+                            and(
+                                eq(schema.characters.id, characterId),
+                                eq(schema.characters.userId, user.id),
+                                eq(schema.characters.characterVersion, data.characterVersion)
+                            )
+                        )
+                        .returning()
+                    if (!updated) {
+                        send({ error: "Character version conflict", status: 409, characterId })
+                        return
+                    }
+                    const updateMessage = JSON.stringify({
+                        type: "character_updated",
+                        characterId,
+                        data: characterData,
+                        version: updated.version,
+                        characterVersion
+                    })
+                    for (const subscriber of characterSubscriptions.get(characterId) ?? []) {
+                        // Sharing may have been revoked since subscription. Check access again.
+                        if (subscriber === socket || subscriber.readyState !== 1) continue
+                        const subscriberUser = socketUsers.get(subscriber)
+                        const subscriberAccess = subscriberUser
+                            ? await getCharacterAccess(characterId, subscriberUser)
+                            : null
+                        if (subscriberAccess?.hasAccess && subscriber.readyState === 1)
+                            subscriber.send(updateMessage)
+                        else characterSubscriptions.get(characterId)?.delete(subscriber)
+                    }
+                    send({ type: "update_confirmed", characterId, characterVersion })
+                } catch {
+                    send({ error: "Invalid message format", status: 400 })
                 }
             })
-
-            connection.socket.on("close", () => {
-                // Unsubscribe from all characters
-                subscribedCharacters.forEach((characterId) => {
-                    const subscribers = characterSubscriptions.get(characterId)
-                    if (subscribers) {
-                        subscribers.delete(connection.socket)
-                        if (subscribers.size === 0) {
-                            characterSubscriptions.delete(characterId)
-                        }
-                    }
-                })
+            socket.on("close", () => {
+                for (const id of subscribedCharacters) {
+                    const subscribers = characterSubscriptions.get(id)
+                    subscribers?.delete(socket)
+                    if (subscribers?.size === 0) characterSubscriptions.delete(id)
+                }
             })
         }
     )

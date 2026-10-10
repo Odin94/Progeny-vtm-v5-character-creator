@@ -1,0 +1,835 @@
+{
+  "baselineRef": "4a93b197f410868ea2193b055742279a3f0c1492",
+  "environment": {
+    "cpu": "Apple M5",
+    "node": "24.15.0",
+    "pnpm": "10.33.0",
+    "date": "2026-10-03"
+  },
+  "rendering": {
+    "before": [
+      {
+        "sample": 1,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 40.727122999993526,
+        "wallTimeMs": 49.425915999999916
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 2.469204999998965,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 3.6890829999999823
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 19.549047000000655,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 39.57158299999992
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 209.954612999986,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 293.5957920000001
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 503.01109800001996,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 642.2471249999999
+      },
+      {
+        "sample": 2,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 44.76548600000035,
+        "wallTimeMs": 53.800500000000056
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 2.9443710000000465,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 4.088250000000016
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 45.024925000005396,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 68.18058299999984
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 330.90395699996816,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 468.77891699999986
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 474.62566100001663,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 614.2552500000002
+      },
+      {
+        "sample": 3,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 41.909772000001226,
+        "wallTimeMs": 55.14816600000006
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 3.013584000000492,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 4.265458000000081
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 43.700326000001496,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 65.92570799999999
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 234.57213600001296,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 328.77595799999995
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 490.21085099994843,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 625.190333
+      },
+      {
+        "sample": 4,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 41.60446000000525,
+        "wallTimeMs": 50.95175000000006
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 3.1416249999995216,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 4.543124999999918
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 41.590401999988444,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 60.5166670000001
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 224.38421099998686,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 310.174
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 493.617925999976,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 632.703542
+      },
+      {
+        "sample": 5,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 46.29213299999685,
+        "wallTimeMs": 57.93037499999991
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 2.8184970000002068,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 3.936541000000034
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 41.66246199999728,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 60.265750000000025
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 226.7385679999943,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 317.13695800000005
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 493.9053379999823,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 635.7423330000001
+      },
+      {
+        "sample": 6,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 40.41942300000278,
+        "wallTimeMs": 49.218624999999975
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 2.9517559999997047,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 4.200874999999996
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 50.707226000001356,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 75.89937499999996
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 249.3243949999976,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 350.80233299999986
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 505.4309500000304,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 654.6822090000003
+      },
+      {
+        "sample": 7,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 100,
+        "actualDurationMs": 46.65775700000552,
+        "wallTimeMs": 56.00699999999995
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 2.9856239999994614,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 4.314208999999892
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 48.97268400000962,
+        "statRowRenders": 0,
+        "schemaParses": 30,
+        "wallTimeMs": 77.27545799999984
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 360.31632900000886,
+        "statRowRenders": 1044,
+        "schemaParses": 30,
+        "wallTimeMs": 501.43787499999985
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 501.76848900007303,
+        "statRowRenders": 1080,
+        "schemaParses": 30,
+        "wallTimeMs": 651.5170830000002
+      }
+    ],
+    "after": [
+      {
+        "sample": 1,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5185829999999214
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 1.0146689999978662,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.063959000000068
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 39.671052999990934,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 60.21966700000007
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.8191289999995206,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 1.462041999999883
+      },
+      {
+        "sample": 1,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 452.7121439999928,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 594.7804580000002
+      },
+      {
+        "sample": 2,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5611659999999574
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.9828239999994821,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.0252080000000205
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 41.60121900000331,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 64.22895799999992
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.8507520000023305,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 1.5711659999999483
+      },
+      {
+        "sample": 2,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 526.1587780000207,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 703.2263329999998
+      },
+      {
+        "sample": 3,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5242079999999305
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.9938269999988734,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.032375000000002
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 40.264960000004976,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 60.33199999999988
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.8076220000004923,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 1.4322919999999613
+      },
+      {
+        "sample": 3,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 434.12564699996733,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 572.0819159999999
+      },
+      {
+        "sample": 4,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5327920000000859
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 1.0128739999991012,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.0497499999999036
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 40.35223400000177,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 60.65016700000001
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.8041230000030737,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 1.4313339999998789
+      },
+      {
+        "sample": 4,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 503.7193529999761,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 667.511125
+      },
+      {
+        "sample": 5,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5269170000000258
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 1.201049999997167,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.8801670000000286
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 40.57339600000978,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 61.52129200000013
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.7885750000000371,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 1.4199999999998454
+      },
+      {
+        "sample": 5,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 437.8450319999995,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 577.1886249999998
+      },
+      {
+        "sample": 6,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5402919999999085
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 1.0270790000001853,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.0691249999999854
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 30.937594999998737,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 49.627083000000084
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.21844800000076248,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 0.8636670000000777
+      },
+      {
+        "sample": 6,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 521.5030320000265,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 677.4602080000002
+      },
+      {
+        "sample": 7,
+        "scenario": "dice-controls-unrelated-chat-updates",
+        "iterations": 100,
+        "commits": 0,
+        "actualDurationMs": 0,
+        "wallTimeMs": 0.5378329999999778
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-name-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 1.0166360000002896,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 2.0799590000001444
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-hunger-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 42.43048499999395,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 63.953666999999996
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-xp-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 0.8393259999993461,
+        "statRowRenders": 0,
+        "schemaParses": 0,
+        "wallTimeMs": 1.5045830000001388
+      },
+      {
+        "sample": 7,
+        "scenario": "sheet-xp-mode-edits",
+        "iterations": 30,
+        "commits": 30,
+        "actualDurationMs": 451.0917440000294,
+        "statRowRenders": 1080,
+        "schemaParses": 0,
+        "wallTimeMs": 598.161417
+      }
+    ]
+  },
+  "backend": {
+    "baseline": [
+      {
+        "scenario": "owner",
+        "iterations": 2000,
+        "samplesMs": [
+          0.04571802099999999,
+          0.04182970800000004,
+          0.04160737499999999,
+          0.04149306250000001,
+          0.04253810399999997,
+          0.044376270499999974,
+          0.04185025000000002
+        ],
+        "medianMs": 0.04185025000000002
+      },
+      {
+        "scenario": "shared-reader",
+        "iterations": 2000,
+        "samplesMs": [
+          0.08197022899999991,
+          0.07781799999999998,
+          0.07527552100000003,
+          0.07686231250000003,
+          0.0937780835000001,
+          0.07606910400000004,
+          0.07505868750000014
+        ],
+        "medianMs": 0.07686231250000003
+      },
+      {
+        "scenario": "unauthorized",
+        "iterations": 2000,
+        "samplesMs": [
+          0.0769025835,
+          0.07385512500000005,
+          0.075077229,
+          0.0754482915000001,
+          0.08572927049999998,
+          0.08108193749999987,
+          0.07499299999999993
+        ],
+        "medianMs": 0.0754482915000001
+      },
+      {
+        "scenario": "missing",
+        "iterations": 2000,
+        "samplesMs": [
+          0.037514166499999876,
+          0.038058437500000084,
+          0.04060468749999995,
+          0.04662460399999986,
+          0.037873354500000005,
+          0.0551853329999999,
+          0.03906812500000001
+        ],
+        "medianMs": 0.03906812500000001
+      }
+    ],
+    "after": [
+      {
+        "scenario": "owner",
+        "iterations": 2000,
+        "samplesMs": [
+          0.005224353999999977,
+          0.004725437499999998,
+          0.005209896000000015,
+          0.005340687500000002,
+          0.0056800624999999915,
+          0.004647812500000015,
+          0.004452687500000024
+        ],
+        "medianMs": 0.005209896000000015
+      },
+      {
+        "scenario": "shared-reader",
+        "iterations": 2000,
+        "samplesMs": [
+          0.00748595800000001,
+          0.007407312499999989,
+          0.007686020500000012,
+          0.007241500000000002,
+          0.007190228999999988,
+          0.00738764599999999,
+          0.0073448959999999775
+        ],
+        "medianMs": 0.00738764599999999
+      },
+      {
+        "scenario": "unauthorized",
+        "iterations": 2000,
+        "samplesMs": [
+          0.0070671460000000085,
+          0.0070091039999999796,
+          0.007163833499999981,
+          0.007305062499999991,
+          0.007090979000000004,
+          0.006850604000000033,
+          0.006869333499999982
+        ],
+        "medianMs": 0.0070671460000000085
+      },
+      {
+        "scenario": "missing",
+        "iterations": 2000,
+        "samplesMs": [
+          0.0029892080000000192,
+          0.0029718124999999988,
+          0.0029879789999999956,
+          0.0029937499999999773,
+          0.0029802500000000124,
+          0.002987312499999973,
+          0.002966916499999968
+        ],
+        "medianMs": 0.002987312499999973
+      }
+    ]
+  },
+  "bundles": {
+    "baseline": [
+      {
+        "entry": "index.html",
+        "staticChunks": 5,
+        "bytes": 1968114,
+        "gzipBytes": 655700
+      },
+      {
+        "entry": "src/character_sheet/CharacterSheet.tsx",
+        "staticChunks": 20,
+        "bytes": 3358104,
+        "gzipBytes": 1235288
+      }
+    ],
+    "after": [
+      {
+        "entry": "index.html",
+        "staticChunks": 5,
+        "bytes": 1968240,
+        "gzipBytes": 655756
+      },
+      {
+        "entry": "src/character_sheet/CharacterSheet.tsx",
+        "staticChunks": 20,
+        "bytes": 2217481,
+        "gzipBytes": 728963
+      }
+    ]
+  }
+}

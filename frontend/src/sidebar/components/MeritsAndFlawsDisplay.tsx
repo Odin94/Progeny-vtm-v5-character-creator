@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Box, Grid, Group, List, Stack, Text, Title } from "@mantine/core"
 import { MeritFlaw } from "../../data/Character"
 import Tally from "../../components/Tally"
@@ -70,4 +71,4 @@ const MeritsAndFlawsDisplay = ({ merits, flaws }: MeritsAndFlawsProps) => {
     )
 }
 
-export default MeritsAndFlawsDisplay
+export default memo(MeritsAndFlawsDisplay)

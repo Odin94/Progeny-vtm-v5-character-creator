@@ -31,13 +31,13 @@ import {
 } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import AnimatedCollapse from "~/components/AnimatedCollapse"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import ContentWarning from "~/components/ContentWarning"
 import HomebrewItemPreview from "~/components/HomebrewItemPreview"
-import type { HomebrewItemKind, HomebrewLibraryDetail } from "~/data/Homebrew"
+import type { HomebrewItem, HomebrewItemKind, HomebrewLibraryDetail } from "~/data/Homebrew"
 import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
@@ -97,7 +97,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
         queryFn: () => api.getHomebrewLibraryDetail(collectionId)
     })
 
-    const toggleItemKind = (kind: HomebrewItemKind, motionEnabled = true) => {
+    const toggleItemKind = useCallback((kind: HomebrewItemKind, motionEnabled = true) => {
         setMotionlessItemKinds((current) => {
             const next = new Set(current)
             if (motionEnabled) next.delete(kind)
@@ -113,7 +113,7 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
             }
             return next
         })
-    }
+    }, [])
     const refreshLibrary = () => client.invalidateQueries({ queryKey: ["homebrew", "library"] })
     const copyMutation = useMutation({
         mutationFn: () => api.copyHomebrewLibraryCollection(collectionId),
@@ -335,13 +335,6 @@ const LibraryDetail = ({
     onToggleItemKind,
     confirmation
 }: LibraryDetailProps) => {
-    const itemsByKind = homebrewItemKinds
-        .map((kind) => ({
-            kind,
-            items: detail.snapshot.items.filter((item) => item.kind === kind)
-        }))
-        .filter(({ items }) => items.length)
-
     return (
         <AppShell header={{ height: 52 }} padding={0}>
             <AppShell.Header>
@@ -450,92 +443,12 @@ const LibraryDetail = ({
                                 <ContentWarning>{detail.snapshot.contentWarning}</ContentWarning>
                             ) : null}
 
-                            <Stack gap="lg">
-                                <div>
-                                    <Title order={2}>Rules</Title>
-                                    <Text size="sm" c="dimmed">
-                                        Read-only details for this published snapshot.
-                                    </Text>
-                                </div>
-                                {itemsByKind.length ? (
-                                    itemsByKind.map(({ kind, items }) => {
-                                        const isCollapsed = collapsedItemKinds.has(kind)
-
-                                        return (
-                                            <Stack key={kind} gap="sm">
-                                                <Group gap="xs">
-                                                    <Badge color="grape" variant="light">
-                                                        {homebrewKindLabel(kind)}
-                                                    </Badge>
-                                                    <Text size="sm" c="dimmed">
-                                                        {items.length}{" "}
-                                                        {items.length === 1 ? "entry" : "entries"}
-                                                    </Text>
-                                                    <ActionIcon
-                                                        variant="subtle"
-                                                        color="gray"
-                                                        size="sm"
-                                                        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
-                                                        aria-expanded={!isCollapsed}
-                                                        onClick={(event) =>
-                                                            onToggleItemKind(
-                                                                kind,
-                                                                event.detail !== 0
-                                                            )
-                                                        }
-                                                    >
-                                                        <IconChevronDown
-                                                            size={16}
-                                                            className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
-                                                            style={{
-                                                                transform: isCollapsed
-                                                                    ? "rotate(-90deg)"
-                                                                    : undefined
-                                                            }}
-                                                        />
-                                                    </ActionIcon>
-                                                </Group>
-                                                <AnimatedCollapse
-                                                    opened={!isCollapsed}
-                                                    motionEnabled={!motionlessItemKinds.has(kind)}
-                                                >
-                                                    {kind === "merit" || kind === "flaw" ? (
-                                                        <SimpleGrid
-                                                            cols={{ base: 1, sm: 2, md: 3 }}
-                                                        >
-                                                            {items.map((item) => (
-                                                                <HomebrewItemPreview
-                                                                    key={
-                                                                        item.id ??
-                                                                        `${item.kind}-${item.name}`
-                                                                    }
-                                                                    item={item}
-                                                                />
-                                                            ))}
-                                                        </SimpleGrid>
-                                                    ) : (
-                                                        <Stack gap="md">
-                                                            {items.map((item) => (
-                                                                <HomebrewItemPreview
-                                                                    key={
-                                                                        item.id ??
-                                                                        `${item.kind}-${item.name}`
-                                                                    }
-                                                                    item={item}
-                                                                />
-                                                            ))}
-                                                        </Stack>
-                                                    )}
-                                                </AnimatedCollapse>
-                                            </Stack>
-                                        )
-                                    })
-                                ) : (
-                                    <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
-                                        <Text c="dimmed">This collection has no rules yet.</Text>
-                                    </Paper>
-                                )}
-                            </Stack>
+                            <LibraryRules
+                                items={detail.snapshot.items}
+                                collapsedItemKinds={collapsedItemKinds}
+                                motionlessItemKinds={motionlessItemKinds}
+                                onToggleItemKind={onToggleItemKind}
+                            />
 
                             <Divider />
                             <Group justify="space-between">
@@ -700,3 +613,101 @@ const LibraryDetail = ({
 }
 
 export default HomebrewLibraryDetailsPage
+
+const LibraryRules = memo(
+    ({
+        items,
+        collapsedItemKinds,
+        motionlessItemKinds,
+        onToggleItemKind
+    }: {
+        items: HomebrewItem[]
+        collapsedItemKinds: Set<HomebrewItemKind>
+        motionlessItemKinds: Set<HomebrewItemKind>
+        onToggleItemKind: LibraryDetailProps["onToggleItemKind"]
+    }) => {
+        const itemsByKind = useMemo(
+            () =>
+                homebrewItemKinds
+                    .map((kind) => ({ kind, items: items.filter((item) => item.kind === kind) }))
+                    .filter((group) => group.items.length),
+            [items]
+        )
+        return (
+            <Stack gap="lg">
+                <div>
+                    <Title order={2}>Rules</Title>
+                    <Text size="sm" c="dimmed">
+                        Read-only details for this published snapshot.
+                    </Text>
+                </div>
+                {itemsByKind.length ? (
+                    itemsByKind.map(({ kind, items }) => {
+                        const isCollapsed = collapsedItemKinds.has(kind)
+
+                        return (
+                            <Stack key={kind} gap="sm">
+                                <Group gap="xs">
+                                    <Badge color="grape" variant="light">
+                                        {homebrewKindLabel(kind)}
+                                    </Badge>
+                                    <Text size="sm" c="dimmed">
+                                        {items.length} {items.length === 1 ? "entry" : "entries"}
+                                    </Text>
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        size="sm"
+                                        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
+                                        aria-expanded={!isCollapsed}
+                                        onClick={(event) =>
+                                            onToggleItemKind(kind, event.detail !== 0)
+                                        }
+                                    >
+                                        <IconChevronDown
+                                            size={16}
+                                            className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
+                                            style={{
+                                                transform: isCollapsed
+                                                    ? "rotate(-90deg)"
+                                                    : undefined
+                                            }}
+                                        />
+                                    </ActionIcon>
+                                </Group>
+                                <AnimatedCollapse
+                                    opened={!isCollapsed}
+                                    motionEnabled={!motionlessItemKinds.has(kind)}
+                                >
+                                    {kind === "merit" || kind === "flaw" ? (
+                                        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
+                                            {items.map((item) => (
+                                                <HomebrewItemPreview
+                                                    key={item.id ?? `${item.kind}-${item.name}`}
+                                                    item={item}
+                                                />
+                                            ))}
+                                        </SimpleGrid>
+                                    ) : (
+                                        <Stack gap="md">
+                                            {items.map((item) => (
+                                                <HomebrewItemPreview
+                                                    key={item.id ?? `${item.kind}-${item.name}`}
+                                                    item={item}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    )}
+                                </AnimatedCollapse>
+                            </Stack>
+                        )
+                    })
+                ) : (
+                    <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
+                        <Text c="dimmed">This collection has no rules yet.</Text>
+                    </Paper>
+                )}
+            </Stack>
+        )
+    }
+)

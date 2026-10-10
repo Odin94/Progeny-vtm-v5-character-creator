@@ -15,6 +15,7 @@ type SuccessResult = {
 }
 
 type SuccessResultsProps = {
+    compact?: boolean
     results: SuccessResult[]
     totalSuccesses: number
     primaryColor: string
@@ -25,6 +26,7 @@ type SuccessResultsProps = {
 }
 
 const SuccessResults = ({
+    compact = false,
     results,
     totalSuccesses,
     primaryColor,
@@ -107,17 +109,17 @@ const SuccessResults = ({
                 style={{
                     border: `1px solid ${colorValue}`,
                     borderRadius: "8px",
-                    padding: "1rem",
+                    padding: compact ? "0.5rem" : "1rem",
                     backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    minHeight: "150px",
-                    maxHeight: "150px",
+                    minHeight: compact ? "120px" : "150px",
+                    maxHeight: compact ? "120px" : "150px",
                     display: "flex",
                     flexDirection: "column",
                     flexShrink: 0,
                     overflow: "hidden"
                 }}
             >
-                <Stack gap="sm" style={{ flex: 1 }}>
+                <Stack gap={compact ? "xs" : "sm"} style={{ flex: 1 }}>
                     <Group justify="space-between" align="center" wrap="nowrap">
                         <Text fw={700} fz="md" c={primaryColor} style={{ flex: 1 }}>
                             Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
@@ -194,7 +196,10 @@ const SuccessResults = ({
                                             key={index}
                                             src={iconSrc}
                                             alt={result.type}
-                                            style={{ width: "40px", height: "40px" }}
+                                            style={{
+                                                width: compact ? "32px" : "40px",
+                                                height: compact ? "32px" : "40px"
+                                            }}
                                             initial={{
                                                 opacity: 0,
                                                 scale: shouldReduceMotion ? 1 : 0.95,
@@ -215,7 +220,7 @@ const SuccessResults = ({
                                     )
                                 })}
                             </Group>
-                            <Text ref={totalSuccessesRef} fw={600} fz="lg">
+                            <Text ref={totalSuccessesRef} fw={600} fz={compact ? "md" : "lg"}>
                                 Total Successes: {totalSuccesses}
                             </Text>
                         </>

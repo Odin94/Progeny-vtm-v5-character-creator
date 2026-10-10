@@ -1,0 +1,20 @@
+.body {
+    padding: 1.35rem;
+}
+.header {
+    padding: 1.35rem 1.35rem 0;
+}
+.title {
+    font-size: 1.35rem;
+}
+@media (max-width: 48em) {
+    .body {
+        padding: 1.1rem;
+    }
+    .header {
+        padding: 1.1rem 1.1rem 0;
+    }
+    .title {
+        font-size: 1.2rem;
+    }
+}

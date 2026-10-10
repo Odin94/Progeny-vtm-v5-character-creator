@@ -1,10 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { notifications } from "@mantine/notifications"
-import { Buffer } from "buffer"
 import { z } from "zod"
-import { applyCharacterCompatibilityPatches, Character, characterSchema } from "../data/Character"
+import type { Character } from "../data/Character"
 import { GeneratorStepId } from "../generator/steps"
-import { getUploadFile } from "../generator/utils"
-import { reportCharacterValidationError } from "~/utils/characterRecoveryAnalytics"
+import { characterIntake } from "~/modules/characterIntake"
 import ConfirmActionModal from "./ConfirmActionModal"
 
 export type LoadModalProps = {
@@ -17,19 +17,13 @@ export type LoadModalProps = {
 }
 
 export const loadCharacterFromJson = async (json: string): Promise<Character> => {
-    let parsed: unknown
-    let phase: "json" | "compatibility" | "schema" = "json"
-    try {
-        parsed = JSON.parse(json)
-        phase = "compatibility"
-        applyCharacterCompatibilityPatches(parsed as Record<string, unknown>)
-        phase = "schema"
-        return characterSchema.parse(parsed)
-    } catch (error) {
-        reportCharacterValidationError(error, "json-import", phase, parsed)
-        throw error
-    }
+    const result = characterIntake.read(json, "json-import")
+    if (!result.success) throw result.error
+    return result.character
 }
+
+export const loadCharacterFromFile = async (file: File): Promise<Character> =>
+    loadCharacterFromJson(await file.text())
 
 const LoadModal = ({
     loadModalOpened,
@@ -39,29 +33,19 @@ const LoadModal = ({
     setSelectedStep,
     onCharacterReplaced
 }: LoadModalProps) => {
+    const persistence = characterPersistence(useQueryClient())
     return (
         <ConfirmActionModal
             opened={loadModalOpened}
             onClose={closeLoadModal}
             onConfirm={async () => {
+                const isCurrent = persistence.replacementGuard()
                 if (!loadedFile) {
                     return
                 }
                 try {
-                    const fileData = await getUploadFile(loadedFile)
-                    const base64 = fileData.split(",")[1]
-                    if (!base64) {
-                        throw new Error("Invalid file format")
-                    }
-
-                    let json: string
-                    try {
-                        json = atob(base64)
-                    } catch (_decodeError) {
-                        json = Buffer.from(base64, "base64").toString()
-                    }
-
-                    const loadedCharacter = await loadCharacterFromJson(json)
+                    const loadedCharacter = await loadCharacterFromFile(loadedFile)
+                    if (!isCurrent()) return
                     setCharacter({ ...loadedCharacter, id: "" })
                     onCharacterReplaced?.()
                     setSelectedStep("final")

@@ -1,3 +1,4 @@
+import { createRecoveredCharacterCopy, readRecoveredCharacterDrafts } from "~/utils/characterDraft"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
@@ -18,10 +19,9 @@ import {
     IconMessageCircle,
     IconHistory
 } from "@tabler/icons-react"
-import { Buffer } from "buffer"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { z } from "zod"
 import ErrorDetails from "~/components/ErrorDetails"
@@ -31,16 +31,12 @@ import RecentChangesModal from "~/components/RecentChangesModal"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
-import { loadCharacterFromJson } from "~/components/LoadModal"
+import { loadCharacterFromFile } from "~/components/LoadModal"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
-import { downloadCharacterSheet } from "~/generator/pdfCreator"
-import {
-    downloadJson,
-    getUploadFile,
-    updateHealthAndWillpowerAndBloodPotencyAndHumanity
-} from "~/generator/utils"
+import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { trackEvent, trackFeatureGuideOpened } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
@@ -53,7 +49,10 @@ type CharacterSheetMenuProps = {
 }
 
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
+    const persistence = characterPersistence(useQueryClient())
     const shouldReduceMotion = useReducedMotion()
+    const [recoveryOpened, setRecoveryOpened] = useState(false)
+    const recoveredDrafts = readRecoveredCharacterDrafts()
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
     const [menuOpened, { open: openMenu, close: closeMenu }] = useDisclosure(false)
     const [loadModalOpened, { open: openLoadModal, close: closeLoadModal }] = useDisclosure(false)
@@ -92,12 +91,15 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         setFoundryHelpOpen(false)
     }
 
-    const handleDownloadPDF = () => {
-        downloadCharacterSheet(character).catch((e) => {
+    const handleDownloadPDF = async () => {
+        handleMenuClose()
+        try {
+            const { downloadCharacterSheet } = await import("~/generator/pdfCreator")
+            await downloadCharacterSheet(character)
+        } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
-        })
-        handleMenuClose()
+        }
     }
 
     const handleDownloadJSON = () => {
@@ -211,16 +213,15 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     }
 
     const handleConfirmLoad = async () => {
+        const isCurrent = persistence.replacementGuard()
         if (!loadedFile) {
             console.log("Error: No file loaded!")
             return
         }
         try {
-            const fileData = await getUploadFile(loadedFile)
-            const base64 = fileData.split(",")[1]
-            const json = Buffer.from(base64, "base64").toString()
-            const loadedCharacter = await loadCharacterFromJson(json)
-            setCharacter(loadedCharacter)
+            const loadedCharacter = await loadCharacterFromFile(loadedFile)
+            if (!isCurrent()) return
+            setCharacter(persistence.replaceDraft(loadedCharacter))
             closeLoadModal()
             handleMenuClose()
             notifications.show({
@@ -285,6 +286,48 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                 <IconMenu2 size={24} />
             </ActionIcon>
 
+            <Modal
+                opened={recoveryOpened}
+                onClose={() => setRecoveryOpened(false)}
+                title="Recovered character drafts"
+                size="lg"
+                padding="lg"
+                styles={{
+                    header: {
+                        paddingTop: "1.5rem",
+                        paddingBottom: "1.5rem",
+                        alignItems: "flex-start"
+                    },
+                    title: { lineHeight: 1.3, paddingRight: "1rem" },
+                    body: { paddingTop: "1.5rem" }
+                }}
+                centered
+                zIndex={2100}
+            >
+                <Stack>
+                    <Text size="sm">
+                        These backups preserve edits interrupted by switching characters or a cloud
+                        conflict. Download a draft and use Load file to open it as a separate
+                        character.
+                    </Text>
+                    {recoveredDrafts.map((draft, index) => (
+                        <Stack gap="xs" key={`${draft.recoveredAt}:${index}`}>
+                            <Text fw={600}>{draft.character.name || "Unnamed character"}</Text>
+                            <Text size="xs" c="dimmed">
+                                {draft.reason}
+                            </Text>
+                            <Button
+                                variant="light"
+                                onClick={() =>
+                                    void downloadJson(createRecoveredCharacterCopy(draft.character))
+                                }
+                            >
+                                Download recovered draft {index + 1}
+                            </Button>
+                        </Stack>
+                    ))}
+                </Stack>
+            </Modal>
             {menuOpened ? (
                 <Modal
                     opened={menuOpened}
@@ -384,6 +427,17 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                     </div>
                                                 </Button>
                                             </div>
+                                            {recoveredDrafts.length > 0 && (
+                                                <Button
+                                                    variant="light"
+                                                    color="yellow"
+                                                    mt="md"
+                                                    onClick={() => setRecoveryOpened(true)}
+                                                >
+                                                    Recover interrupted drafts (
+                                                    {recoveredDrafts.length})
+                                                </Button>
+                                            )}
                                         </section>
 
                                         <div

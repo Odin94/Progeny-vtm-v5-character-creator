@@ -1,5 +1,34 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { coterieHttp } from "../utils/http/coteries"
+import { useSyncExternalStore } from "react"
+import { useBoundMutation } from "./useBoundMutation"
+import { coterieMembership, type MembershipCommand } from "~/modules/coterieMembership"
+import type { AcceptCoterieInviteResponse, CreatedCoterieInviteResponse } from "~/utils/api"
+
+export const useCoterieMembership = (coterieId: string | null) => {
+    const client = useQueryClient()
+    const module = coterieMembership(client)
+    const state = useSyncExternalStore(module.subscribe, module.snapshot, module.snapshot)
+    return { ...module, generatedInviteUrl: coterieId ? state.inviteUrls.get(coterieId) || "" : "" }
+}
+const useMembershipOperation = <Variables, Result = void>(
+    type: MembershipCommand["type"],
+    command: (variables: Variables) => MembershipCommand
+) => {
+    const client = useQueryClient()
+    const module = coterieMembership(client)
+    const state = useSyncExternalStore(module.subscribe, module.snapshot, module.snapshot)
+    const mutation = useBoundMutation(
+        () => coterieMembership(client),
+        (owner, variables: Variables) => owner.run<Result>(command(variables))
+    )
+    return {
+        ...mutation,
+        isPending:
+            mutation.isPending ||
+            [...state.pending].some((key) => (JSON.parse(key) as MembershipCommand).type === type)
+    }
+}
 
 export const useCoteries = (enabled = true) => {
     return useQuery({
@@ -82,54 +111,26 @@ export const useDeleteCoterie = () => {
     })
 }
 
-export const useCreateCoterieInvite = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: coterieHttp.createInvite,
-        onSuccess: (_, coterieId) => {
-            queryClient.invalidateQueries({ queryKey: ["coteries", coterieId, "invites"] })
-        }
-    })
-}
-
-export const useRevokeCoterieInvite = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ coterieId, inviteId }: { coterieId: string; inviteId: string }) =>
-            coterieHttp.revokeInvite(coterieId, inviteId),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({
-                queryKey: ["coteries", variables.coterieId, "invites"]
-            })
-        }
-    })
-}
-
-export const useAcceptCoterieInvite = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: coterieHttp.acceptInvite,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["coteries"] })
-        }
-    })
-}
-
-export const useRemoveCoteriePlayer = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ coterieId, membershipId }: { coterieId: string; membershipId: string }) =>
-            coterieHttp.removePlayer(coterieId, membershipId),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
-        }
-    })
-}
+export const useCreateCoterieInvite = () =>
+    useMembershipOperation<string, CreatedCoterieInviteResponse>("createInvite", (coterieId) => ({
+        type: "createInvite",
+        coterieId
+    }))
+export const useRevokeCoterieInvite = () =>
+    useMembershipOperation<{ coterieId: string; inviteId: string }>(
+        "revokeInvite",
+        (variables) => ({ type: "revokeInvite", ...variables })
+    )
+export const useAcceptCoterieInvite = () =>
+    useMembershipOperation<string, AcceptCoterieInviteResponse>("acceptInvite", (token) => ({
+        type: "acceptInvite",
+        token
+    }))
+export const useRemoveCoteriePlayer = () =>
+    useMembershipOperation<{ coterieId: string; membershipId: string }>(
+        "removePlayer",
+        (variables) => ({ type: "removePlayer", ...variables })
+    )
 
 export const useSaveCoterieNotes = () => {
     const queryClient = useQueryClient()
@@ -155,30 +156,13 @@ export const useRestoreCoterieNoteVersion = () => {
     })
 }
 
-export const useAddCharacterToCoterie = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ coterieId, characterId }: { coterieId: string; characterId: string }) =>
-            coterieHttp.addCharacter(coterieId, characterId),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
-            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
-        }
-    })
-}
-
-export const useRemoveCharacterFromCoterie = () => {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: ({ coterieId, characterId }: { coterieId: string; characterId: string }) =>
-            coterieHttp.removeCharacter(coterieId, characterId),
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["coteries"] })
-            queryClient.invalidateQueries({ queryKey: ["coteries", variables.coterieId] })
-            queryClient.invalidateQueries({ queryKey: ["coterieVitals"] })
-        }
-    })
-}
+export const useAddCharacterToCoterie = () =>
+    useMembershipOperation<{ coterieId: string; characterId: string }, unknown>(
+        "addCharacter",
+        (variables) => ({ type: "addCharacter", ...variables })
+    )
+export const useRemoveCharacterFromCoterie = () =>
+    useMembershipOperation<{ coterieId: string; characterId: string }>(
+        "removeCharacter",
+        (variables) => ({ type: "removeCharacter", ...variables })
+    )

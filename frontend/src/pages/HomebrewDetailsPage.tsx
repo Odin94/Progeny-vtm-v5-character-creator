@@ -23,7 +23,7 @@ import {
 import { notifications } from "@mantine/notifications"
 import { IconArrowLeft, IconChevronDown, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useEffect, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import AnimatedCollapse from "~/components/AnimatedCollapse"
 import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -144,7 +144,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
     const collectionQuery = useHomebrewCollection(collectionId, isAuthenticated && !isNew)
     const createMutation = useCreateHomebrewCollection()
     const updateMutation = useUpdateHomebrewCollection()
-    const [draft, setDraft] = useState<HomebrewCollectionInput>(emptyCollection())
+    const [draft, setDraft] = useState<HomebrewCollectionInput>(emptyCollection)
     const [error, setError] = useState("")
     const [itemValidationErrors, setItemValidationErrors] = useState<ItemValidationErrors>({})
     const [itemKind, setItemKind] = useState<HomebrewItemKind>("discipline")
@@ -167,15 +167,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         }
     }, [collectionQuery.data])
 
-    const itemsByKind = useMemo(
-        () =>
-            homebrewItemKinds
-                .map((kind) => ({ kind, items: draft.items.filter((item) => item.kind === kind) }))
-                .filter(({ items }) => items.length > 0),
-        [draft.items]
-    )
-
-    const toggleItemKind = (kind: HomebrewItemKind, motionEnabled = true) => {
+    const toggleItemKind = useCallback((kind: HomebrewItemKind, motionEnabled = true) => {
         setMotionlessItemKinds((current) => {
             const next = new Set(current)
             if (motionEnabled) next.delete(kind)
@@ -191,7 +183,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
             }
             return next
         })
-    }
+    }, [])
 
     const handleSaveError = (mutationError: unknown) => {
         const nextItemErrors = getItemValidationErrors(mutationError)
@@ -211,30 +203,33 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         showSaveError(mutationError, setError)
     }
 
-    const openNewItemEditor = (kind: HomebrewItemKind) => {
-        const firstHomebrewDiscipline = draft.items.find(
-            (item): item is Extract<HomebrewItem, { kind: "discipline" }> & { id: string } =>
-                item.kind === "discipline" && !!item.id
-        )
-        const newItem = createEmptyHomebrewItem(kind)
-        const item =
-            kind === "power" && firstHomebrewDiscipline
-                ? {
-                      ...newItem,
-                      discipline: firstHomebrewDiscipline.name,
-                      disciplineRef: {
-                          type: "homebrew" as const,
-                          itemId: firstHomebrewDiscipline.id,
-                          name: firstHomebrewDiscipline.name
+    const openNewItemEditor = useCallback(
+        (kind: HomebrewItemKind) => {
+            const firstHomebrewDiscipline = draft.items.find(
+                (item): item is Extract<HomebrewItem, { kind: "discipline" }> & { id: string } =>
+                    item.kind === "discipline" && !!item.id
+            )
+            const newItem = createEmptyHomebrewItem(kind)
+            const item =
+                kind === "power" && firstHomebrewDiscipline
+                    ? {
+                          ...newItem,
+                          discipline: firstHomebrewDiscipline.name,
+                          disciplineRef: {
+                              type: "homebrew" as const,
+                              itemId: firstHomebrewDiscipline.id,
+                              name: firstHomebrewDiscipline.name
+                          }
                       }
-                  }
-                : newItem
+                    : newItem
 
-        setItemEditor({
-            item: { ...item, id: crypto.randomUUID() },
-            index: null
-        })
-    }
+            setItemEditor({
+                item: { ...item, id: crypto.randomUUID() },
+                index: null
+            })
+        },
+        [draft.items]
+    )
 
     const saveCollection = async () => {
         if (!draft.name.trim()) {
@@ -469,215 +464,16 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                                     </Group>
                                 </Group>
 
-                                {itemsByKind.length === 0 ? (
-                                    <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
-                                        <Stack align="center" gap="xs">
-                                            <Text fw={600}>This collection has no rules yet.</Text>
-                                            <Text c="dimmed" size="sm" ta="center">
-                                                Choose an item type above to start filling out this
-                                                homebrew sheet.
-                                            </Text>
-                                        </Stack>
-                                    </Paper>
-                                ) : (
-                                    <Stack gap="lg">
-                                        {itemsByKind.map(({ kind, items }) => {
-                                            const isCollapsed = collapsedItemKinds.has(kind)
-
-                                            return (
-                                                <Stack key={kind} gap="sm">
-                                                    <Group gap="xs">
-                                                        <Badge color="grape" variant="light">
-                                                            {homebrewKindLabel(kind)}
-                                                        </Badge>
-                                                        <Text size="sm" c="dimmed">
-                                                            {items.length}{" "}
-                                                            {items.length === 1
-                                                                ? "entry"
-                                                                : "entries"}
-                                                        </Text>
-                                                        <ActionIcon
-                                                            variant="subtle"
-                                                            color="gray"
-                                                            size="sm"
-                                                            aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
-                                                            aria-expanded={!isCollapsed}
-                                                            onClick={(event) =>
-                                                                toggleItemKind(
-                                                                    kind,
-                                                                    event.detail !== 0
-                                                                )
-                                                            }
-                                                        >
-                                                            <IconChevronDown
-                                                                size={16}
-                                                                className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
-                                                                style={{
-                                                                    transform: isCollapsed
-                                                                        ? "rotate(-90deg)"
-                                                                        : undefined
-                                                                }}
-                                                            />
-                                                        </ActionIcon>
-                                                    </Group>
-                                                    <AnimatedCollapse
-                                                        opened={!isCollapsed}
-                                                        motionEnabled={
-                                                            !motionlessItemKinds.has(kind)
-                                                        }
-                                                    >
-                                                        <>
-                                                            <SimpleGrid
-                                                                cols={{
-                                                                    base: 1,
-                                                                    md:
-                                                                        kind === "merit" ||
-                                                                        kind === "flaw"
-                                                                            ? 3
-                                                                            : 2
-                                                                }}
-                                                                spacing="sm"
-                                                            >
-                                                                {items.map((item) => {
-                                                                    const index =
-                                                                        draft.items.indexOf(item)
-                                                                    return (
-                                                                        <Paper
-                                                                            key={
-                                                                                item.id ??
-                                                                                `${item.kind}-${index}`
-                                                                            }
-                                                                            withBorder
-                                                                            p="md"
-                                                                            bg="rgba(0,0,0,.2)"
-                                                                        >
-                                                                            <Stack gap="xs">
-                                                                                <Group
-                                                                                    justify="space-between"
-                                                                                    align="flex-start"
-                                                                                    wrap="nowrap"
-                                                                                >
-                                                                                    <div>
-                                                                                        <Text
-                                                                                            fw={600}
-                                                                                        >
-                                                                                            {item.name ||
-                                                                                                "Untitled rule"}
-                                                                                        </Text>
-                                                                                        {item.kind ===
-                                                                                        "power" ? (
-                                                                                            <Badge
-                                                                                                mt={
-                                                                                                    4
-                                                                                                }
-                                                                                                size="sm"
-                                                                                                variant="light"
-                                                                                                color="grape"
-                                                                                            >
-                                                                                                {item.discipline ||
-                                                                                                    "No discipline"}
-                                                                                            </Badge>
-                                                                                        ) : null}
-                                                                                        <Text
-                                                                                            size="sm"
-                                                                                            c="dimmed"
-                                                                                            lineClamp={
-                                                                                                2
-                                                                                            }
-                                                                                        >
-                                                                                            {item.summary ||
-                                                                                                item.description ||
-                                                                                                "No summary yet."}
-                                                                                        </Text>
-                                                                                    </div>
-                                                                                    <Group
-                                                                                        gap={4}
-                                                                                        wrap="nowrap"
-                                                                                    >
-                                                                                        <ActionIcon
-                                                                                            variant="subtle"
-                                                                                            color="grape"
-                                                                                            aria-label={`Edit ${item.name || "rule"}`}
-                                                                                            onClick={() =>
-                                                                                                setItemEditor(
-                                                                                                    {
-                                                                                                        item,
-                                                                                                        index
-                                                                                                    }
-                                                                                                )
-                                                                                            }
-                                                                                        >
-                                                                                            <IconEdit
-                                                                                                size={
-                                                                                                    16
-                                                                                                }
-                                                                                            />
-                                                                                        </ActionIcon>
-                                                                                        <ActionIcon
-                                                                                            variant="subtle"
-                                                                                            color="red"
-                                                                                            aria-label={`Delete ${item.name || "rule"}`}
-                                                                                            onClick={() =>
-                                                                                                setItemToDelete(
-                                                                                                    {
-                                                                                                        item,
-                                                                                                        index
-                                                                                                    }
-                                                                                                )
-                                                                                            }
-                                                                                        >
-                                                                                            <IconTrash
-                                                                                                size={
-                                                                                                    16
-                                                                                                }
-                                                                                            />
-                                                                                        </ActionIcon>
-                                                                                    </Group>
-                                                                                </Group>
-                                                                                {itemValidationErrors[
-                                                                                    index
-                                                                                ]?.map(
-                                                                                    (
-                                                                                        message,
-                                                                                        messageIndex
-                                                                                    ) => (
-                                                                                        <Alert
-                                                                                            key={`${message}-${messageIndex}`}
-                                                                                            color="red"
-                                                                                            variant="light"
-                                                                                        >
-                                                                                            {
-                                                                                                message
-                                                                                            }
-                                                                                        </Alert>
-                                                                                    )
-                                                                                )}
-                                                                            </Stack>
-                                                                        </Paper>
-                                                                    )
-                                                                })}
-                                                            </SimpleGrid>
-                                                            <Group justify="center" mt="xs">
-                                                                <ActionIcon
-                                                                    variant="light"
-                                                                    color="grape"
-                                                                    size="lg"
-                                                                    radius="xl"
-                                                                    aria-label={`Add ${homebrewKindLabel(kind)}`}
-                                                                    onClick={() =>
-                                                                        openNewItemEditor(kind)
-                                                                    }
-                                                                >
-                                                                    <IconPlus size={18} />
-                                                                </ActionIcon>
-                                                            </Group>
-                                                        </>
-                                                    </AnimatedCollapse>
-                                                </Stack>
-                                            )
-                                        })}
-                                    </Stack>
-                                )}
+                                <EditableRules
+                                    allItems={draft.items}
+                                    itemValidationErrors={itemValidationErrors}
+                                    collapsedItemKinds={collapsedItemKinds}
+                                    motionlessItemKinds={motionlessItemKinds}
+                                    toggleItemKind={toggleItemKind}
+                                    openNewItemEditor={openNewItemEditor}
+                                    setItemEditor={setItemEditor}
+                                    setItemToDelete={setItemToDelete}
+                                />
 
                                 {error ? <Alert color="red">{error}</Alert> : null}
                                 <Group justify="flex-end">
@@ -772,3 +568,199 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
 }
 
 export default HomebrewDetailsPage
+
+const EditableRules = memo(
+    ({
+        allItems,
+        itemValidationErrors,
+        collapsedItemKinds,
+        motionlessItemKinds,
+        toggleItemKind,
+        openNewItemEditor,
+        setItemEditor,
+        setItemToDelete
+    }: {
+        allItems: HomebrewItem[]
+        itemValidationErrors: ItemValidationErrors
+        collapsedItemKinds: Set<HomebrewItemKind>
+        motionlessItemKinds: Set<HomebrewItemKind>
+        toggleItemKind: (kind: HomebrewItemKind, motionEnabled?: boolean) => void
+        openNewItemEditor: (kind: HomebrewItemKind) => void
+        setItemEditor: (selection: { item: HomebrewItem; index: number | null }) => void
+        setItemToDelete: (selection: { item: HomebrewItem; index: number }) => void
+    }) => {
+        const itemsByKind = useMemo(
+            () =>
+                homebrewItemKinds
+                    .map((kind) => ({ kind, items: allItems.filter((item) => item.kind === kind) }))
+                    .filter((group) => group.items.length),
+            [allItems]
+        )
+        return (
+            <>
+                {itemsByKind.length === 0 ? (
+                    <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
+                        <Stack align="center" gap="xs">
+                            <Text fw={600}>This collection has no rules yet.</Text>
+                            <Text c="dimmed" size="sm" ta="center">
+                                Choose an item type above to start filling out this homebrew sheet.
+                            </Text>
+                        </Stack>
+                    </Paper>
+                ) : (
+                    <Stack gap="lg">
+                        {itemsByKind.map(({ kind, items }) => {
+                            const isCollapsed = collapsedItemKinds.has(kind)
+
+                            return (
+                                <Stack key={kind} gap="sm">
+                                    <Group gap="xs">
+                                        <Badge color="grape" variant="light">
+                                            {homebrewKindLabel(kind)}
+                                        </Badge>
+                                        <Text size="sm" c="dimmed">
+                                            {items.length}{" "}
+                                            {items.length === 1 ? "entry" : "entries"}
+                                        </Text>
+                                        <ActionIcon
+                                            variant="subtle"
+                                            color="gray"
+                                            size="sm"
+                                            aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
+                                            aria-expanded={!isCollapsed}
+                                            onClick={(event) =>
+                                                toggleItemKind(kind, event.detail !== 0)
+                                            }
+                                        >
+                                            <IconChevronDown
+                                                size={16}
+                                                className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
+                                                style={{
+                                                    transform: isCollapsed
+                                                        ? "rotate(-90deg)"
+                                                        : undefined
+                                                }}
+                                            />
+                                        </ActionIcon>
+                                    </Group>
+                                    <AnimatedCollapse
+                                        opened={!isCollapsed}
+                                        motionEnabled={!motionlessItemKinds.has(kind)}
+                                    >
+                                        <>
+                                            <SimpleGrid
+                                                cols={{
+                                                    base: 1,
+                                                    md: kind === "merit" || kind === "flaw" ? 3 : 2
+                                                }}
+                                                spacing="sm"
+                                            >
+                                                {items.map((item) => {
+                                                    const index = allItems.indexOf(item)
+                                                    return (
+                                                        <Paper
+                                                            key={item.id ?? `${item.kind}-${index}`}
+                                                            withBorder
+                                                            p="md"
+                                                            bg="rgba(0,0,0,.2)"
+                                                        >
+                                                            <Stack gap="xs">
+                                                                <Group
+                                                                    justify="space-between"
+                                                                    align="flex-start"
+                                                                    wrap="nowrap"
+                                                                >
+                                                                    <div>
+                                                                        <Text fw={600}>
+                                                                            {item.name ||
+                                                                                "Untitled rule"}
+                                                                        </Text>
+                                                                        {item.kind === "power" ? (
+                                                                            <Badge
+                                                                                mt={4}
+                                                                                size="sm"
+                                                                                variant="light"
+                                                                                color="grape"
+                                                                            >
+                                                                                {item.discipline ||
+                                                                                    "No discipline"}
+                                                                            </Badge>
+                                                                        ) : null}
+                                                                        <Text
+                                                                            size="sm"
+                                                                            c="dimmed"
+                                                                            lineClamp={2}
+                                                                        >
+                                                                            {item.summary ||
+                                                                                item.description ||
+                                                                                "No summary yet."}
+                                                                        </Text>
+                                                                    </div>
+                                                                    <Group gap={4} wrap="nowrap">
+                                                                        <ActionIcon
+                                                                            variant="subtle"
+                                                                            color="grape"
+                                                                            aria-label={`Edit ${item.name || "rule"}`}
+                                                                            onClick={() =>
+                                                                                setItemEditor({
+                                                                                    item,
+                                                                                    index
+                                                                                })
+                                                                            }
+                                                                        >
+                                                                            <IconEdit size={16} />
+                                                                        </ActionIcon>
+                                                                        <ActionIcon
+                                                                            variant="subtle"
+                                                                            color="red"
+                                                                            aria-label={`Delete ${item.name || "rule"}`}
+                                                                            onClick={() =>
+                                                                                setItemToDelete({
+                                                                                    item,
+                                                                                    index
+                                                                                })
+                                                                            }
+                                                                        >
+                                                                            <IconTrash size={16} />
+                                                                        </ActionIcon>
+                                                                    </Group>
+                                                                </Group>
+                                                                {itemValidationErrors[index]?.map(
+                                                                    (message, messageIndex) => (
+                                                                        <Alert
+                                                                            key={`${message}-${messageIndex}`}
+                                                                            color="red"
+                                                                            variant="light"
+                                                                        >
+                                                                            {message}
+                                                                        </Alert>
+                                                                    )
+                                                                )}
+                                                            </Stack>
+                                                        </Paper>
+                                                    )
+                                                })}
+                                            </SimpleGrid>
+                                            <Group justify="center" mt="xs">
+                                                <ActionIcon
+                                                    variant="light"
+                                                    color="grape"
+                                                    size="lg"
+                                                    radius="xl"
+                                                    aria-label={`Add ${homebrewKindLabel(kind)}`}
+                                                    onClick={() => openNewItemEditor(kind)}
+                                                >
+                                                    <IconPlus size={18} />
+                                                </ActionIcon>
+                                            </Group>
+                                        </>
+                                    </AnimatedCollapse>
+                                </Stack>
+                            )
+                        })}
+                    </Stack>
+                )}
+            </>
+        )
+    }
+)

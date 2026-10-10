@@ -2,6 +2,7 @@ import { MantineProvider } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { StrictMode, useState } from "react"
 import MeritsAndFlawsPicker from "~/generator/components/MeritsAndFlawsPicker"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 
@@ -62,6 +63,42 @@ const clickLevel = (name: string, level: string) => {
 }
 
 describe("Merits & Flaws affordability", () => {
+    it("persists an edit once with an inline parent setter in Strict Mode", () => {
+        const persisted = vi.fn()
+        const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        const Parent = () => {
+            const [character, setCharacter] = useState<Character>(() => ({
+                ...getEmptyCharacter(),
+                clan: "Brujah",
+                generation: 13
+            }))
+            return (
+                <MeritsAndFlawsPicker
+                    character={character}
+                    setCharacter={(next) => {
+                        persisted()
+                        setCharacter(next)
+                    }}
+                    nextStep={vi.fn()}
+                />
+            )
+        }
+        render(
+            <StrictMode>
+                <QueryClientProvider client={queryClient}>
+                    <MantineProvider>
+                        <Parent />
+                    </MantineProvider>
+                </QueryClientProvider>
+            </StrictMode>
+        )
+        expect(persisted).not.toHaveBeenCalled()
+        clickLevel("Beautiful", "2")
+        expect(persisted).toHaveBeenCalledTimes(1)
+        fireEvent.click(screen.getByRole("button", { name: "Show all merits" }))
+        expect(persisted).toHaveBeenCalledTimes(1)
+    })
+
     it("shows essential merits by default and reveals advanced merits only when requested", () => {
         renderPicker()
 

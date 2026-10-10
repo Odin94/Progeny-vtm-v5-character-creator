@@ -1,3 +1,4 @@
+import { useDebouncedValue } from "@mantine/hooks"
 import {
     ActionIcon,
     Alert,
@@ -80,6 +81,7 @@ const HomebrewLibraryPage = () => {
         (user?.actorIsSuperadmin ?? false) && !user?.impersonation.active
     const { data: collections = [] } = useHomebrewCollections(isAuthenticated)
     const [query, setQuery] = useState("")
+    const [searchQuery] = useDebouncedValue(query, 200)
     const [kind, setKind] = useState<string | null>(null)
     const [sort, setSort] = useState<"top" | "trending" | "newest" | "copied">("top")
     const [publishOpened, setPublishOpened] = useState(false)
@@ -88,8 +90,8 @@ const HomebrewLibraryPage = () => {
     const [withdrawRequestId, setWithdrawRequestId] = useState<string | null>(null)
 
     const libraryQuery = useQuery({
-        queryKey: ["homebrew", "library", query, kind, sort],
-        queryFn: () => api.getHomebrewLibrary({ query, type: kind ?? undefined, sort })
+        queryKey: ["homebrew", "library", searchQuery, kind, sort],
+        queryFn: () => api.getHomebrewLibrary({ query: searchQuery, type: kind ?? undefined, sort })
     })
     const requestsQuery = useQuery({
         queryKey: ["homebrew", "publish-requests"],

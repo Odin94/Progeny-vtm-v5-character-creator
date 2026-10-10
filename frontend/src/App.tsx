@@ -195,6 +195,7 @@ function App() {
         const payload = {
             name: character.name,
             data: character,
+            characterVersion: character.characterVersion ?? 0,
             version: character.version
         }
 
@@ -319,6 +320,7 @@ function App() {
             const payload = {
                 name: characterToSave.name,
                 data: characterToSave,
+                characterVersion: characterToSave.characterVersion ?? 0,
                 version: characterToSave.version
             }
             const savedCharacter = targetCharacter

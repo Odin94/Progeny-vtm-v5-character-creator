@@ -45,12 +45,14 @@ const characterNotesStore: VersionedNotesStore<CharacterNoteScope, CharacterNote
         db.transaction((tx) =>
             work({
                 create: ({ id, characterId, userId, content, createdAt }) =>
-                    tx.insert(schema.characterNoteVersions)
+                    tx
+                        .insert(schema.characterNoteVersions)
                         .values({ id, characterId, userId, content, createdAt })
                         .returning()
                         .get(),
                 update: (id, content) =>
-                    tx.update(schema.characterNoteVersions)
+                    tx
+                        .update(schema.characterNoteVersions)
                         .set({ content })
                         .where(eq(schema.characterNoteVersions.id, id))
                         .returning()
@@ -61,7 +63,8 @@ const characterNotesStore: VersionedNotesStore<CharacterNoteScope, CharacterNote
                         .run()
                 },
                 listOldest: ({ characterId }, userId) =>
-                    tx.select({ id: schema.characterNoteVersions.id })
+                    tx
+                        .select({ id: schema.characterNoteVersions.id })
                         .from(schema.characterNoteVersions)
                         .where(
                             and(
@@ -91,49 +94,134 @@ const getAccessibleCharacter = async (characterId: string, userId: string) => {
 }
 
 export async function characterNoteRoutes(fastify: FastifyInstance) {
-    fastify.get<{ Params: CharacterParams }>("/characters/:id/notes", {
-        preHandler: authenticateUser,
-        schema: { params: zodToFastifySchema(characterParamsSchema) }
-    }, async (request: AuthenticatedRequest, reply) => {
-        const userId = request.user!.id
-        const scope = { characterId: (request.params as CharacterParams).id }
-        const access = await getAccessibleCharacter(scope.characterId, userId)
-        if (access.status) return reply.code(access.status).send({ error: access.error })
-        const versions = await loadVersionedNotes(characterNotesStore, scope, userId)
-        await trackEvent("character_private_notes_loaded", { endpoint: "/characters/:id/notes", method: "GET", userId, characterId: scope.characterId, versionCount: versions.length, hasNotes: versions.length > 0 }, userId, request)
-        reply.send({ current: versions[0] ? serializeNoteVersion(versions[0]) : null, versions: versions.map(serializeNoteVersion) })
-    })
-
-    fastify.put<{ Params: CharacterParams; Body: CharacterNoteInput }>("/characters/:id/notes", {
-        preHandler: authenticateUser,
-        schema: { params: zodToFastifySchema(characterParamsSchema), body: zodToFastifySchema(characterNoteSchema) }
-    }, async (request: AuthenticatedRequest, reply) => {
-        const userId = request.user!.id
-        const scope = { characterId: (request.params as CharacterParams).id }
-        const { content } = request.body as CharacterNoteInput
-        const contentBytes = getUtf8ByteLength(content)
-        const access = await getAccessibleCharacter(scope.characterId, userId)
-        if (access.status) return reply.code(access.status).send({ error: access.error })
-        if (contentBytes > NOTE_MAX_BYTES) {
-            await trackEvent("character_private_notes_save_rejected", { endpoint: "/characters/:id/notes", method: "PUT", userId, characterId: scope.characterId, reason: "content_too_large", contentBytes, limitBytes: NOTE_MAX_BYTES }, userId, request)
-            return reply.code(413).send({ error: "Notes too large", message: "Private notes must be 200 KB or less." })
+    fastify.get<{ Params: CharacterParams }>(
+        "/characters/:id/notes",
+        {
+            preHandler: authenticateUser,
+            schema: { params: zodToFastifySchema(characterParamsSchema) }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const scope = { characterId: (request.params as CharacterParams).id }
+            const access = await getAccessibleCharacter(scope.characterId, userId)
+            if (access.status) return reply.code(access.status).send({ error: access.error })
+            const versions = await loadVersionedNotes(characterNotesStore, scope, userId)
+            await trackEvent(
+                "character_private_notes_loaded",
+                {
+                    endpoint: "/characters/:id/notes",
+                    method: "GET",
+                    userId,
+                    characterId: scope.characterId,
+                    versionCount: versions.length,
+                    hasNotes: versions.length > 0
+                },
+                userId,
+                request
+            )
+            reply.send({
+                current: versions[0] ? serializeNoteVersion(versions[0]) : null,
+                versions: versions.map(serializeNoteVersion)
+            })
         }
-        const result = await saveVersionedNotes(characterNotesStore, scope, userId, content)
-        await trackEvent("character_private_notes_saved", { endpoint: "/characters/:id/notes", method: "PUT", userId, characterId: scope.characterId, contentBytes, createdNewVersion: result.createdNewVersion, versionCount: result.versions.length }, userId, request)
-        reply.send({ current: result.current ? serializeNoteVersion(result.current) : null, versions: result.versions.map(serializeNoteVersion), createdNewVersion: result.createdNewVersion })
-    })
+    )
 
-    fastify.post<{ Params: CharacterNoteVersionParams }>("/characters/:id/notes/versions/:versionId/restore", {
-        preHandler: authenticateUser,
-        schema: { params: zodToFastifySchema(characterNoteVersionParamsSchema) }
-    }, async (request: AuthenticatedRequest, reply) => {
-        const userId = request.user!.id
-        const { id: characterId, versionId } = request.params as CharacterNoteVersionParams
-        const access = await getAccessibleCharacter(characterId, userId)
-        if (access.status) return reply.code(access.status).send({ error: access.error })
-        const result = await restoreVersionedNotes(characterNotesStore, { characterId }, userId, versionId)
-        if (!result) return reply.code(404).send({ error: "Note version not found" })
-        await trackEvent("character_private_notes_version_restored", { endpoint: "/characters/:id/notes/versions/:versionId/restore", method: "POST", userId, characterId, restoredVersionId: versionId, newVersionId: result.current.id, versionCount: result.versions.length }, userId, request)
-        reply.send({ current: serializeNoteVersion(result.current), versions: result.versions.map(serializeNoteVersion), createdNewVersion: result.createdNewVersion })
-    })
+    fastify.put<{ Params: CharacterParams; Body: CharacterNoteInput }>(
+        "/characters/:id/notes",
+        {
+            preHandler: authenticateUser,
+            schema: {
+                params: zodToFastifySchema(characterParamsSchema),
+                body: zodToFastifySchema(characterNoteSchema)
+            }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const scope = { characterId: (request.params as CharacterParams).id }
+            const { content } = request.body as CharacterNoteInput
+            const contentBytes = getUtf8ByteLength(content)
+            const access = await getAccessibleCharacter(scope.characterId, userId)
+            if (access.status) return reply.code(access.status).send({ error: access.error })
+            if (contentBytes > NOTE_MAX_BYTES) {
+                await trackEvent(
+                    "character_private_notes_save_rejected",
+                    {
+                        endpoint: "/characters/:id/notes",
+                        method: "PUT",
+                        userId,
+                        characterId: scope.characterId,
+                        reason: "content_too_large",
+                        contentBytes,
+                        limitBytes: NOTE_MAX_BYTES
+                    },
+                    userId,
+                    request
+                )
+                return reply.code(413).send({
+                    error: "Notes too large",
+                    message: "Private notes must be 200 KB or less."
+                })
+            }
+            const result = await saveVersionedNotes(characterNotesStore, scope, userId, content)
+            await trackEvent(
+                "character_private_notes_saved",
+                {
+                    endpoint: "/characters/:id/notes",
+                    method: "PUT",
+                    userId,
+                    characterId: scope.characterId,
+                    contentBytes,
+                    createdNewVersion: result.createdNewVersion,
+                    versionCount: result.versions.length
+                },
+                userId,
+                request
+            )
+            reply.send({
+                current: result.current ? serializeNoteVersion(result.current) : null,
+                versions: result.versions.map(serializeNoteVersion),
+                createdNewVersion: result.createdNewVersion
+            })
+        }
+    )
+
+    fastify.post<{ Params: CharacterNoteVersionParams }>(
+        "/characters/:id/notes/versions/:versionId/restore",
+        {
+            preHandler: authenticateUser,
+            schema: { params: zodToFastifySchema(characterNoteVersionParamsSchema) }
+        },
+        async (request: AuthenticatedRequest, reply) => {
+            const userId = request.user!.id
+            const { id: characterId, versionId } = request.params as CharacterNoteVersionParams
+            const access = await getAccessibleCharacter(characterId, userId)
+            if (access.status) return reply.code(access.status).send({ error: access.error })
+            const result = await restoreVersionedNotes(
+                characterNotesStore,
+                { characterId },
+                userId,
+                versionId
+            )
+            if (!result) return reply.code(404).send({ error: "Note version not found" })
+            await trackEvent(
+                "character_private_notes_version_restored",
+                {
+                    endpoint: "/characters/:id/notes/versions/:versionId/restore",
+                    method: "POST",
+                    userId,
+                    characterId,
+                    restoredVersionId: versionId,
+                    newVersionId: result.current.id,
+                    versionCount: result.versions.length
+                },
+                userId,
+                request
+            )
+            reply.send({
+                current: serializeNoteVersion(result.current),
+                versions: result.versions.map(serializeNoteVersion),
+                createdNewVersion: result.createdNewVersion
+            })
+        }
+    )
 }

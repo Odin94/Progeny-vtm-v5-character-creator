@@ -232,10 +232,30 @@ const getLibrarySummaries = async (query: LibraryQuery) => {
     const publicationById = new Map(
         publications.map((publication) => [publication.id, publication])
     )
-    const globalAverage =
-        ratings.length > 0
-            ? ratings.reduce((total, rating) => total + rating.rating, 0) / ratings.length
-            : 3.5
+    const ratingsByEntry = new Map<string, { count: number; total: number }>()
+    let ratingTotal = 0
+    for (const rating of ratings) {
+        const aggregate = ratingsByEntry.get(rating.libraryEntryId) ?? { count: 0, total: 0 }
+        aggregate.count += 1
+        aggregate.total += rating.rating
+        ratingTotal += rating.rating
+        ratingsByEntry.set(rating.libraryEntryId, aggregate)
+    }
+    const copiesByEntry = new Map<string, number>()
+    for (const copy of copies) {
+        if (copy.sourceLibraryEntryId)
+            copiesByEntry.set(
+                copy.sourceLibraryEntryId,
+                (copiesByEntry.get(copy.sourceLibraryEntryId) ?? 0) + 1
+            )
+    }
+    const commentsByEntry = new Map<string, number>()
+    for (const comment of comments)
+        commentsByEntry.set(
+            comment.libraryEntryId,
+            (commentsByEntry.get(comment.libraryEntryId) ?? 0) + 1
+        )
+    const globalAverage = ratings.length > 0 ? ratingTotal / ratings.length : 3.5
 
     const normalizedQuery = query.query?.toLocaleLowerCase()
     const now = Date.now()
@@ -245,21 +265,16 @@ const getLibrarySummaries = async (query: LibraryQuery) => {
             : undefined
         if (!publication) return []
         const snapshot = parseSnapshot(publication.snapshot)
-        const entryRatings = ratings.filter((rating) => rating.libraryEntryId === entry.id)
-        const ratingCount = entryRatings.length
-        const averageRating =
-            ratingCount > 0
-                ? entryRatings.reduce((total, rating) => total + rating.rating, 0) / ratingCount
-                : 0
+        const entryRatings = ratingsByEntry.get(entry.id)
+        const ratingCount = entryRatings?.count ?? 0
+        const averageRating = entryRatings ? entryRatings.total / entryRatings.count : 0
         const weightedRating =
             (ratingCount / (ratingCount + BAYESIAN_PRIOR_WEIGHT)) * averageRating +
             (BAYESIAN_PRIOR_WEIGHT / (ratingCount + BAYESIAN_PRIOR_WEIGHT)) * globalAverage
         const ageDays = Math.max(0, (now - publication.approvedAt.getTime()) / 86_400_000)
         const recencyBoost = 0.35 * Math.exp(-ageDays / 45)
-        const copyCount = copies.filter((copy) => copy.sourceLibraryEntryId === entry.id).length
-        const commentCount = comments.filter(
-            (comment) => comment.libraryEntryId === entry.id
-        ).length
+        const copyCount = copiesByEntry.get(entry.id) ?? 0
+        const commentCount = commentsByEntry.get(entry.id) ?? 0
         const kinds = countKinds(snapshot)
         const authorNickname = resolveAuthorNickname(entry)
         const searchable =

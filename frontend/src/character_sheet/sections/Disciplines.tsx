@@ -546,10 +546,10 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                 character={character}
                                                                 customText={
                                                                     isStaticPower
-                                                                        ? character.customText
+                                                                        ? (character.customText
                                                                               .disciplinePowers[
                                                                               customTextKey
-                                                                          ] ?? ""
+                                                                          ] ?? "")
                                                                         : undefined
                                                                 }
                                                                 onCustomTextChange={
@@ -580,84 +580,92 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                                 renderActions={
                                                                     isFreeMode
                                                                         ? () => (
-                                                                          <Group gap="xs">
-                                                                              {isStaticPower ? (
+                                                                              <Group gap="xs">
+                                                                                  {isStaticPower ? (
+                                                                                      <ActionIcon
+                                                                                          size="sm"
+                                                                                          variant="subtle"
+                                                                                          color={
+                                                                                              primaryColor
+                                                                                          }
+                                                                                          aria-label={`Edit ${power.name} custom note`}
+                                                                                          onClick={(
+                                                                                              event
+                                                                                          ) => {
+                                                                                              event.stopPropagation()
+                                                                                              setEditingPowerCustomText(
+                                                                                                  (
+                                                                                                      current
+                                                                                                  ) =>
+                                                                                                      current ===
+                                                                                                      customTextKey
+                                                                                                          ? null
+                                                                                                          : customTextKey
+                                                                                              )
+                                                                                          }}
+                                                                                          onMouseDown={(
+                                                                                              event
+                                                                                          ) =>
+                                                                                              event.preventDefault()
+                                                                                          }
+                                                                                      >
+                                                                                          <IconEdit
+                                                                                              size={
+                                                                                                  16
+                                                                                              }
+                                                                                          />
+                                                                                      </ActionIcon>
+                                                                                  ) : null}
+                                                                                  {power.isCustom ? (
+                                                                                      <ActionIcon
+                                                                                          size="sm"
+                                                                                          variant="subtle"
+                                                                                          color={
+                                                                                              primaryColor
+                                                                                          }
+                                                                                          onClick={(
+                                                                                              e
+                                                                                          ) => {
+                                                                                              e.stopPropagation()
+                                                                                              setEditingDisciplineName(
+                                                                                                  disciplineName
+                                                                                              )
+                                                                                              setEditingDisciplineSource(
+                                                                                                  customDiscipline?.homebrewSource
+                                                                                              )
+                                                                                              setEditingPower(
+                                                                                                  power
+                                                                                              )
+                                                                                              setCustomPowerModalOpened(
+                                                                                                  true
+                                                                                              )
+                                                                                          }}
+                                                                                      >
+                                                                                          <IconEdit
+                                                                                              size={
+                                                                                                  16
+                                                                                              }
+                                                                                          />
+                                                                                      </ActionIcon>
+                                                                                  ) : null}
                                                                                   <ActionIcon
                                                                                       size="sm"
                                                                                       variant="subtle"
-                                                                                      color={
-                                                                                          primaryColor
-                                                                                      }
-                                                                                      aria-label={`Edit ${power.name} custom note`}
-                                                                                      onClick={(
-                                                                                          event
-                                                                                      ) => {
-                                                                                          event.stopPropagation()
-                                                                                          setEditingPowerCustomText(
-                                                                                              (
-                                                                                                  current
-                                                                                              ) =>
-                                                                                                  current ===
-                                                                                                  customTextKey
-                                                                                                      ? null
-                                                                                                      : customTextKey
-                                                                                          )
-                                                                                      }}
-                                                                                      onMouseDown={(
-                                                                                          event
-                                                                                      ) => event.preventDefault()}
-                                                                                  >
-                                                                                      <IconEdit
-                                                                                          size={16}
-                                                                                      />
-                                                                                  </ActionIcon>
-                                                                              ) : null}
-                                                                              {power.isCustom ? (
-                                                                                  <ActionIcon
-                                                                                      size="sm"
-                                                                                      variant="subtle"
-                                                                                      color={
-                                                                                          primaryColor
-                                                                                      }
+                                                                                      color="red"
                                                                                       onClick={(
                                                                                           e
                                                                                       ) => {
                                                                                           e.stopPropagation()
-                                                                                          setEditingDisciplineName(
-                                                                                              disciplineName
-                                                                                          )
-                                                                                          setEditingDisciplineSource(
-                                                                                              customDiscipline?.homebrewSource
-                                                                                          )
-                                                                                          setEditingPower(
+                                                                                          handleDeletePower(
                                                                                               power
-                                                                                          )
-                                                                                          setCustomPowerModalOpened(
-                                                                                              true
                                                                                           )
                                                                                       }}
                                                                                   >
-                                                                                      <IconEdit
+                                                                                      <IconX
                                                                                           size={16}
                                                                                       />
                                                                                   </ActionIcon>
-                                                                              ) : null}
-                                                                              <ActionIcon
-                                                                                  size="sm"
-                                                                                  variant="subtle"
-                                                                                  color="red"
-                                                                                  onClick={(e) => {
-                                                                                      e.stopPropagation()
-                                                                                      handleDeletePower(
-                                                                                          power
-                                                                                      )
-                                                                                  }}
-                                                                              >
-                                                                                  <IconX
-                                                                                      size={16}
-                                                                                  />
-                                                                              </ActionIcon>
-                                                                          </Group>
+                                                                              </Group>
                                                                           )
                                                                         : undefined
                                                                 }

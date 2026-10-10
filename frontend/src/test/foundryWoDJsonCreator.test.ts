@@ -24,13 +24,14 @@ describe("createWoD5EVttJson", () => {
             },
             skillSpecialties: {},
             disciplinePowers: {
-                [getDisciplinePowerCustomTextKey(character.disciplines[0])]:
-                    "Custom power context"
+                [getDisciplinePowerCustomTextKey(character.disciplines[0])]: "Custom power context"
             }
         }
 
         const { json, validationErrors } = createWoD5EVttJson(character)
-        const power = json.items.find((item: any) => item.type === "power" && item.name === "Prowess")
+        const power = json.items.find(
+            (item: any) => item.type === "power" && item.name === "Prowess"
+        )
         const merit = json.items.find(
             (item: any) => item.type === "feature" && item.name === "Direct Merit"
         )
@@ -39,9 +40,7 @@ describe("createWoD5EVttJson", () => {
         expect((power!.system as any).description).toBe(
             "Test prowess power\n\nCustom power context"
         )
-        expect((merit!.system as any).description).toBe(
-            "A direct merit\n\nCustom merit context"
-        )
+        expect((merit!.system as any).description).toBe("A direct merit\n\nCustom merit context")
     })
 
     it("should create a valid WoD5E VTT JSON for a basic character (happy path)", () => {

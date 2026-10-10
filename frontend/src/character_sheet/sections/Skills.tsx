@@ -278,7 +278,16 @@ const SkillRow = ({
             mb="xs"
             wrap="nowrap"
             align="flex-start"
-            style={{ minWidth: 0, padding: "0.35rem 0.5rem", position: "relative" }}
+            style={{
+                minWidth: 0,
+                padding: "0.35rem 0.5rem",
+                position: "relative",
+                borderRadius: "var(--mantine-radius-sm)",
+                backgroundColor: isSelected
+                    ? `var(--mantine-color-${primaryColor}-light)`
+                    : "transparent",
+                transition: "background-color 0.2s"
+            }}
         >
             {showSpecialtiesBelow ? (
                 <Box style={{ flex: 1, minWidth: 0, position: "relative" }}>
@@ -288,12 +297,7 @@ const SkillRow = ({
                                 ...textStyle,
                                 cursor: "pointer",
                                 width: "fit-content",
-                                whiteSpace: "nowrap",
-                                borderRadius: "4px",
-                                backgroundColor: isSelected
-                                    ? `var(--mantine-color-${primaryColor}-light)`
-                                    : undefined,
-                                transition: "background-color 0.2s"
+                                whiteSpace: "nowrap"
                             }}
                             onClick={handleSkillClick}
                         >
@@ -389,12 +393,7 @@ const SkillRow = ({
                             ...textStyle,
                             cursor: "pointer",
                             flexShrink: 0,
-                            whiteSpace: "nowrap",
-                            borderRadius: "4px",
-                            backgroundColor: isSelected
-                                ? `var(--mantine-color-${primaryColor}-light)`
-                                : undefined,
-                            transition: "background-color 0.2s"
+                            whiteSpace: "nowrap"
                         }}
                         onClick={handleSkillClick}
                     >
@@ -489,11 +488,10 @@ const MemoizedSkillRow = memo(SkillRow, (prev, next) => {
         previous.editDisabledReason === following.editDisabledReason &&
         previous.setCharacter === following.setCharacter &&
         previous.character.skills[prev.skill] === following.character.skills[next.skill] &&
-        previous.character.generation === following.character.generation &&
-        previous.character.experience === following.character.experience &&
-        previous.character.ephemeral.experienceSpent ===
-            following.character.ephemeral.experienceSpent &&
-        previous.character.customText === following.character.customText
+        (previous.mode !== "xp" ||
+            getAvailableXP(previous.character) === getAvailableXP(following.character)) &&
+        previous.character.customText.skillSpecialties ===
+            following.character.customText.skillSpecialties
     )
 })
 
@@ -698,13 +696,16 @@ export default memo(Skills, (prev, next) => {
     return (
         prev.options.mode === next.options.mode &&
         prev.options.primaryColor === next.options.primaryColor &&
+        prev.options.canEdit === next.options.canEdit &&
+        prev.options.editDisabledReason === next.options.editDisabledReason &&
+        prev.options.setCharacter === next.options.setCharacter &&
         prev.options.character.skills === next.options.character.skills &&
         prev.options.character.skillSpecialties === next.options.character.skillSpecialties &&
         prev.options.character.predatorType.pickedSpecialties ===
             next.options.character.predatorType.pickedSpecialties &&
-        prev.options.character.customText === next.options.character.customText &&
-        prev.options.character.experience === next.options.character.experience &&
-        prev.options.character.ephemeral.experienceSpent ===
-            next.options.character.ephemeral.experienceSpent
+        prev.options.character.customText.skillSpecialties ===
+            next.options.character.customText.skillSpecialties &&
+        (prev.options.mode !== "xp" ||
+            getAvailableXP(prev.options.character) === getAvailableXP(next.options.character))
     )
 })

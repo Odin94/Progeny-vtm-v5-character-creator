@@ -20,9 +20,9 @@ describe("isCharacterEmpty", () => {
 
     it("does not depend on key order", () => {
         const empty = getEmptyCharacter()
-        const reordered = Object.fromEntries(
-            Object.entries(empty).reverse()
-        ) as ReturnType<typeof getEmptyCharacter>
+        const reordered = Object.fromEntries(Object.entries(empty).reverse()) as ReturnType<
+            typeof getEmptyCharacter
+        >
 
         expect(isCharacterEmpty(reordered)).toBe(true)
     })

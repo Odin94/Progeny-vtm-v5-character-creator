@@ -29,7 +29,7 @@ describe("zero-dot character flaw request validation", () => {
                 const response = await app.inject({
                     method,
                     url: "/characters",
-                    payload: { name: "Test", data: { flaws: [flaw] } }
+                    payload: { characterVersion: 0, name: "Test", data: { flaws: [flaw] } }
                 })
                 expect(response.statusCode).toBe(200)
                 expect(response.json().data.flaws).toEqual([flaw])
@@ -37,7 +37,11 @@ describe("zero-dot character flaw request validation", () => {
                     const invalid = await app.inject({
                         method,
                         url: "/characters",
-                        payload: { name: "Test", data: { flaws: [{ ...flaw, level }] } }
+                        payload: {
+                            characterVersion: 0,
+                            name: "Test",
+                            data: { flaws: [{ ...flaw, level }] }
+                        }
                     })
                     expect(invalid.statusCode).toBe(400)
                 }

@@ -1,4 +1,5 @@
 import { Modal } from "@mantine/core"
+import classes from "./modal.module.css"
 
 /**
  * The shared visual shell for ordinary application modals. Purpose-built modals
@@ -11,6 +12,7 @@ export const modalTheme = {
             centered: true,
             overlayProps: { backgroundOpacity: 0.72, blur: 8 }
         },
+        classNames: { body: classes.body, header: classes.header, title: classes.title },
         styles: {
             content: {
                 border: "1px solid rgba(125, 91, 72, 0.38)",
@@ -19,28 +21,15 @@ export const modalTheme = {
                 boxShadow:
                     "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
             },
-            body: {
-                padding: "1.35rem",
-                "@media (max-width: 48em)": {
-                    padding: "1.1rem"
-                }
-            },
             header: {
-                padding: "1.35rem 1.35rem 0",
-                justifyContent: "center",
-                "@media (max-width: 48em)": {
-                    padding: "1.1rem 1.1rem 0"
-                }
+                justifyContent: "center"
             },
             title: {
                 fontFamily: "Cinzel, Georgia, serif",
-                fontSize: "1.35rem",
+
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "rgba(244, 236, 232, 0.95)",
-                "@media (max-width: 48em)": {
-                    fontSize: "1.2rem"
-                }
+                color: "rgba(244, 236, 232, 0.95)"
             }
         }
     })

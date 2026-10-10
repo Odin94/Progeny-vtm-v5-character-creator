@@ -43,7 +43,10 @@ export const sessionIdSchema = z
     .max(100, "Session ID exceeds maximum length of 100 characters")
     .regex(/^[a-zA-Z0-9_-]+$/, "Session ID contains invalid characters")
 
-const characterNameSchema = z.string().max(200, "Character name exceeds maximum length of 200 characters").optional()
+const characterNameSchema = z
+    .string()
+    .max(200, "Character name exceeds maximum length of 200 characters")
+    .optional()
 
 export const joinSessionMessageSchema = z.object({
     type: z.literal("join_session"),
@@ -95,29 +98,71 @@ const identitySchema = z.object({
 })
 const timestampSchema = z.number().int()
 const chatMessageReceivedSchema = identitySchema.extend({
-    type: z.literal("chat_message"), message: messageSchema, timestamp: timestampSchema
+    type: z.literal("chat_message"),
+    message: messageSchema,
+    timestamp: timestampSchema
 })
 const diceRollReceivedSchema = identitySchema.extend({
-    type: z.literal("dice_roll"), rollData: diceRollDataSchema, timestamp: timestampSchema
+    type: z.literal("dice_roll"),
+    rollData: diceRollDataSchema,
+    timestamp: timestampSchema
 })
 const rouseCheckReceivedSchema = identitySchema.extend({
-    type: z.literal("rouse_check"), roll: z.number().int(), success: z.boolean(), newHunger: z.number().int(), timestamp: timestampSchema
+    type: z.literal("rouse_check"),
+    roll: z.number().int(),
+    success: z.boolean(),
+    newHunger: z.number().int(),
+    timestamp: timestampSchema
 })
 const remorseCheckReceivedSchema = identitySchema.extend({
-    type: z.literal("remorse_check"), rolls: z.array(z.number().int()), successes: z.number().int(), passed: z.boolean(), newHumanity: z.number().int(), timestamp: timestampSchema
+    type: z.literal("remorse_check"),
+    rolls: z.array(z.number().int()),
+    successes: z.number().int(),
+    passed: z.boolean(),
+    newHumanity: z.number().int(),
+    timestamp: timestampSchema
 })
 
 export const serverMessageSchema = z.discriminatedUnion("type", [
-    z.object({ type: z.literal("session_joined"), sessionId: z.string(), sessionType: z.enum(["temporary", "coterie"]), coterieId: z.string().optional(), participants: z.array(identitySchema), history: z.array(z.union([chatMessageReceivedSchema, diceRollReceivedSchema, rouseCheckReceivedSchema, remorseCheckReceivedSchema])).optional() }),
+    z.object({
+        type: z.literal("session_joined"),
+        sessionId: z.string(),
+        sessionType: z.enum(["temporary", "coterie"]),
+        coterieId: z.string().optional(),
+        participants: z.array(identitySchema),
+        history: z
+            .array(
+                z.union([
+                    chatMessageReceivedSchema,
+                    diceRollReceivedSchema,
+                    rouseCheckReceivedSchema,
+                    remorseCheckReceivedSchema
+                ])
+            )
+            .optional()
+    }),
     identitySchema.extend({ type: z.literal("user_joined") }),
     z.object({ type: z.literal("user_left"), userId: z.string() }),
-    z.object({ type: z.literal("user_identity_updated"), userId: z.string(), showNameTag: z.boolean(), userName: z.string().optional() }),
-    z.object({ type: z.literal("session_closed"), reason: z.enum(["coterie_deleted", "removed_from_coterie"]), message: z.string() }),
+    z.object({
+        type: z.literal("user_identity_updated"),
+        userId: z.string(),
+        showNameTag: z.boolean(),
+        userName: z.string().optional()
+    }),
+    z.object({
+        type: z.literal("session_closed"),
+        reason: z.enum(["coterie_deleted", "removed_from_coterie"]),
+        message: z.string()
+    }),
     chatMessageReceivedSchema,
     diceRollReceivedSchema,
     rouseCheckReceivedSchema,
     remorseCheckReceivedSchema,
-    z.object({ type: z.literal("error"), message: z.string(), timestamp: timestampSchema.optional() })
+    z.object({
+        type: z.literal("error"),
+        message: z.string(),
+        timestamp: timestampSchema.optional()
+    })
 ])
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>
@@ -132,7 +177,11 @@ export type ChatMessageReceived = z.infer<typeof chatMessageReceivedSchema>
 export type DiceRollReceived = z.infer<typeof diceRollReceivedSchema>
 export type RouseCheckReceived = z.infer<typeof rouseCheckReceivedSchema>
 export type RemorseCheckReceived = z.infer<typeof remorseCheckReceivedSchema>
-export type SessionHistoryMessage = ChatMessageReceived | DiceRollReceived | RouseCheckReceived | RemorseCheckReceived
+export type SessionHistoryMessage =
+    | ChatMessageReceived
+    | DiceRollReceived
+    | RouseCheckReceived
+    | RemorseCheckReceived
 export type ServerMessage = z.infer<typeof serverMessageSchema>
 export type SessionJoinedMessage = Extract<ServerMessage, { type: "session_joined" }>
 export type UserJoinedMessage = Extract<ServerMessage, { type: "user_joined" }>

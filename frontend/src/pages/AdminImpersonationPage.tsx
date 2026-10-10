@@ -1,3 +1,4 @@
+import { useDebouncedValue } from "@mantine/hooks"
 import {
     AppShell,
     Badge,
@@ -43,6 +44,7 @@ const AdminImpersonationPage = () => {
     const queryClient = useQueryClient()
     const [isVerifyingAdminSession, setIsVerifyingAdminSession] = useState(true)
     const [query, setQuery] = useState("")
+    const [searchQuery] = useDebouncedValue(query, 200)
     const [page, setPage] = useState(1)
     const [superadminCandidate, setSuperadminCandidate] = useState<AdminUser | null>(null)
     const canUseAdminTools =
@@ -66,8 +68,8 @@ const AdminImpersonationPage = () => {
     }, [refreshAuth])
 
     const usersQuery = useQuery({
-        queryKey: ["admin", "users", query, page],
-        queryFn: () => api.getAdminUsers({ query, page }),
+        queryKey: ["admin", "users", searchQuery, page],
+        queryFn: () => api.getAdminUsers({ query: searchQuery, page }),
         enabled: !!canUseAdminTools
     })
     const homebrewRequestsQuery = useQuery({

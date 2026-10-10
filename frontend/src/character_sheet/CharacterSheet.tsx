@@ -35,6 +35,8 @@ import CharacterNotesControl from "./components/CharacterNotesControl"
 import { useDiceRollModalStore } from "./stores/diceRollModalStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 import { useAuth } from "~/hooks/useAuth"
+import { useVampireDiceFeatureFlag } from "~/hooks/useVampireDiceFeatureFlag"
+import QuickRollHotkeys from "./components/diceRollModal/threeDice/QuickRollHotkeys"
 import { useCharacter, useCharacters } from "~/hooks/useCharacters"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 
@@ -77,7 +79,14 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         defaultValue: isEmptyCharacter ? "free" : "play",
         getInitialValueInEffect: false
     })
-    const { isAuthenticated, isLoading: authLoading } = useAuth()
+    const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+    const hasCrystalDice = useVampireDiceFeatureFlag(user?.id)
+    const [useLegacyDice, setUseLegacyDice] = useLocalStorage<boolean>({
+        key: "use-legacy-dice",
+        defaultValue: false,
+        getInitialValueInEffect: false
+    })
+    const use3dDice = !useLegacyDice
     const { data: userCharacters, isLoading: charactersLoading } = useCharacters(
         isAuthenticated && !!character.id
     )
@@ -119,7 +128,6 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
     // Editing remains disabled through canEdit until ownership has been confirmed.
     const effectiveMode = canEdit || ownershipLoading ? mode : "play"
     const openDiceModal = useDiceRollModalStore((state) => state.open)
-    const diceModalOpened = useDiceRollModalStore((state) => state.opened)
     const { preferences, updatePreferences } = useUserPreferences()
     const primaryColor = preferences.colorTheme ?? getPrimaryColor(character.clan)
     const sheetTheme = useMemo(() => createTheme({ primaryColor }), [primaryColor])
@@ -223,6 +231,7 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
                                 variant="light"
                                 color={primaryColor}
                                 radius="xl"
+                                aria-label="Open dice roller"
                                 onClick={() => {
                                     openDiceModal()
                                     try {
@@ -384,14 +393,20 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             </Box>
             <CharacterSheetMenu options={characterMenuOptions} />
             <ChatWindow options={sheetOptions} />
-            {diceModalOpened ? (
-                <DiceRollModal
-                    primaryColor={primaryColor}
-                    character={character}
-                    setCharacter={editableSetCharacter}
-                    editDisabledReason={editDisabledReason}
-                />
-            ) : null}
+            {use3dDice ? <QuickRollHotkeys /> : null}
+            <DiceRollModal
+                primaryColor={primaryColor}
+                use3dDice={use3dDice}
+                useLegacyDice={useLegacyDice}
+                allowCrystalDice={hasCrystalDice}
+                onLegacyDiceChange={(enabled) => {
+                    useDiceRollModalStore.getState().setDice([])
+                    setUseLegacyDice(enabled)
+                }}
+                character={character}
+                setCharacter={editableSetCharacter}
+                editDisabledReason={editDisabledReason}
+            />
         </MantineProvider>
     )
 }
