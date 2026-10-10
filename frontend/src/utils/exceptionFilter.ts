@@ -46,9 +46,11 @@ export const isResizeObserverLoopNoise = (...candidates: unknown[]) =>
     )
 
 // Brave on iOS injects a wallet script into every page. It throws from inline page code
-// while it touches `window.ethereum`, so PostHog marks its only frame in_app and
-// isFramelessSyntheticNoise misses it. Our code never references `window.ethereum`.
-const INJECTED_WALLET_NOISE = /window\.ethereum/
+// while clearing selectedAddress, so PostHog marks its only frame in_app and
+// isFramelessSyntheticNoise misses it. Match the observed failure rather than
+// every mention of the wallet API, so other wallet errors remain visible.
+const INJECTED_WALLET_NOISE =
+    /undefined is not an object \(evaluating ['"]window\.ethereum\.selectedAddress\s*=\s*undefined['"]\)/
 
 export const isInjectedWalletNoise = (...candidates: unknown[]) =>
     candidates.some(

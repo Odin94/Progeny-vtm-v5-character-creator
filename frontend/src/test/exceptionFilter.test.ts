@@ -112,6 +112,16 @@ describe("isResizeObserverLoopNoise", () => {
 })
 
 describe("isInjectedWalletNoise", () => {
+    it("keeps other errors mentioning the wallet API", () => {
+        expect(isInjectedWalletNoise("window.ethereum.request is not a function")).toBe(false)
+        expect(
+            isInjectedWalletNoise(
+                "Cannot assign to read only property window.ethereum.selectedAddress"
+            )
+        ).toBe(false)
+        expect(isInjectedWalletNoise("Failed to fetch /assets/window.ethereum.js")).toBe(false)
+    })
+
     it("drops the Brave on iOS wallet script error", () => {
         expect(
             isInjectedWalletNoise(
