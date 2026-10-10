@@ -77,9 +77,9 @@ export const reportAssetPreloadRecovery = () => {
         }
         window.sessionStorage.setItem(RECOVERY_REPORTED_KEY, requestedAt)
     } catch {
-        // sessionStorage can throw in private modes. The guard window still
-        // expires the reload timestamp, so at worst one reload is miscounted,
-        // never a reload loop.
+        // Without a persisted marker we cannot guarantee this request is counted
+        // once. Skip telemetry rather than count every subsequent manual reload.
+        return
     }
 
     trackAssetPreloadRecovered(window.location.pathname)

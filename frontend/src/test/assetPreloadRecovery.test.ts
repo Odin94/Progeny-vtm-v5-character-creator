@@ -146,12 +146,28 @@ describe("reportAssetPreloadRecovery", () => {
     })
 
     it("captures only once when a manual reload repeats within the guard window", () => {
-        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()))
+        const requestedAt = String(Date.now())
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, requestedAt)
 
         reportAssetPreloadRecovery()
         reportAssetPreloadRecovery()
 
         expect(posthog.capture).toHaveBeenCalledTimes(1)
+        expect(window.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBe(requestedAt)
+    })
+
+    it("does not overcount when the reporting marker cannot be persisted", () => {
+        window.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()))
+        const storageWrite = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+            throw new Error("denied")
+        })
+        try {
+            reportAssetPreloadRecovery()
+            reportAssetPreloadRecovery()
+            expect(posthog.capture).not.toHaveBeenCalled()
+        } finally {
+            storageWrite.mockRestore()
+        }
     })
 
     it("captures again after the handler requests a fresh reload", () => {
