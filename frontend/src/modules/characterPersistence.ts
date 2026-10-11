@@ -1,3 +1,4 @@
+import { CharacterOperationError } from "~/utils/characterOperationError"
 import type { QueryClient } from "@tanstack/react-query"
 import { isCharacterEmpty, stableStringify, type Character } from "~/data/Character"
 import { api } from "~/utils/api"
@@ -65,7 +66,8 @@ export const createCharacterPersistence = (
     const transitionListeners = new Set<() => void>()
     const assertCurrentSession = () => {
         if (!isCurrentSession())
-            throw new Error(
+            throw new CharacterOperationError(
+                "account_changed",
                 "Your account changed while saving. Your draft is still in this browser."
             )
     }
@@ -92,13 +94,20 @@ export const createCharacterPersistence = (
                 transitionListeners.delete(listener)
             }
         },
-        transition: async (operation: (isCurrent: () => boolean) => Promise<void>) => {
-            if (transitioning || !isCurrentSession()) return false
+        transition: async (
+            operation: (isCurrent: () => boolean) => Promise<void>,
+            onRefused?: (reason: "busy" | "session") => void
+        ) => {
+            if (transitioning || !isCurrentSession()) {
+                onRefused?.(transitioning ? "busy" : "session")
+                return false
+            }
             transitioning = true
             transitionListeners.forEach((listener) => listener())
             const isCurrent = replacementGuard()
             try {
                 await operation(isCurrent)
+                if (!isCurrentSession()) onRefused?.("session")
                 return isCurrent()
             } finally {
                 transitioning = false
@@ -131,11 +140,15 @@ export const createCharacterPersistence = (
             const execute = async () => {
                 assertCurrentSession()
                 if (options.ownershipLoaded === false)
-                    throw new Error(
+                    throw new CharacterOperationError(
+                        "characters_unavailable",
                         "Reload your saved characters before saving or switching characters."
                     )
                 if (!character.name.trim())
-                    throw new Error("Please give the current character a name before switching.")
+                    throw new CharacterOperationError(
+                        "name_required",
+                        "Please give the current character a name before switching."
+                    )
                 const acknowledged = acknowledgements.get(acknowledgementKey(queueId))
                 const key = getCharacterSaveKey(character)
                 let targetId = options.owned ? character.id : acknowledged?.saved.id
@@ -143,7 +156,8 @@ export const createCharacterPersistence = (
                     const remote = await transport.get(character.id)
                     assertCurrentSession()
                     if (remote.canEdit !== true || remote.shared === true)
-                        throw new Error(
+                        throw new CharacterOperationError(
+                            "ownership_unverified",
                             "Could not verify ownership. Save a copy or discard before switching."
                         )
                     targetId = character.id
@@ -156,9 +170,13 @@ export const createCharacterPersistence = (
                     const remote = await transport.get(targetId)
                     assertCurrentSession()
                     if (remote.shared === true || remote.canEdit === false)
-                        throw new Error("This shared character is read-only. Save a copy instead.")
+                        throw new CharacterOperationError(
+                            "read_only",
+                            "This shared character is read-only. Save a copy instead."
+                        )
                     if (savedVersion(remote, 0) > localVersion)
-                        throw new Error(
+                        throw new CharacterOperationError(
+                            "version_conflict",
                             `"${character.name}" has a newer version in the database. Resolve that conflict before switching characters.`
                         )
                 }

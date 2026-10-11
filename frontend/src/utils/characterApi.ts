@@ -10,7 +10,9 @@ const characterDataResponseSchema = z.unknown().transform((data, context): Chara
     if (!character) {
         context.addIssue({
             code: "custom",
-            message: "Invalid character data returned by the API"
+            message: "Invalid character data returned by the API",
+            // Intake already reports this failure; Zod creates a new outer error.
+            params: { characterValidationReported: true }
         })
         return z.NEVER
     }

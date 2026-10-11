@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { useQueryClient } from "@tanstack/react-query"
 import { characterPersistence } from "~/modules/characterPersistence"
 import { notifications } from "@mantine/notifications"
@@ -51,6 +52,7 @@ const LoadModal = ({
                     setSelectedStep("final")
                     closeLoadModal()
                 } catch (e) {
+                    reportCharacterOperationFailure("import", e)
                     if (e instanceof z.ZodError) {
                         notifications.show({
                             title: "JSON content error loading character",

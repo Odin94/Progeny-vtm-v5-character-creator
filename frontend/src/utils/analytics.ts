@@ -82,7 +82,12 @@ export const trackFeatureGuideNavigationSelected = ({
 // previously invisible in analytics.
 export const trackCharacterSwitchBlockedUnnamed = () => {
     try {
-        posthog.capture("character_switch_blocked_unnamed", { surface: "profile" })
+        posthog.capture("character_switch_blocked_unnamed", {
+            surface: "profile",
+            severity: "warning",
+            operation: "save-before-load",
+            failure_reason: "name_required"
+        })
     } catch (error) {
         console.warn("Character switch blocked tracking failed:", error)
     }

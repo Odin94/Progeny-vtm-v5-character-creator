@@ -1,3 +1,4 @@
+import { CharacterOperationError } from "~/utils/characterOperationError"
 import type {
     HomebrewCollection,
     HomebrewCollectionInput,
@@ -96,7 +97,10 @@ export const request = async <T>(endpoint: string, options: RequestOptions = {})
     const { method = "GET", body, headers = {} } = options
     const assertCurrentSession = () => {
         if (options.isCurrentSession && !options.isCurrentSession())
-            throw new Error("Your account changed. Your draft is still in this browser.")
+            throw new CharacterOperationError(
+                "account_changed",
+                "Your account changed. Your draft is still in this browser."
+            )
     }
     assertCurrentSession()
 

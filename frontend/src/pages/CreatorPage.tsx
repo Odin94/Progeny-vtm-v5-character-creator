@@ -1,3 +1,5 @@
+import { notifyCharacterTransitionRefused } from "~/modules/characterTransition"
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { AppShell, BackgroundImage, useComputedColorScheme } from "@mantine/core"
 import { RAW_GOLD, rgba } from "~/theme/colors"
 import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
@@ -131,7 +133,10 @@ export default function CreatorPage() {
     ) => {
         await characterPersistence(queryClient).settle(character.id)
         if (!isCurrent()) return
-        const response = await characterHttp.get(characterId)
+        const response = await characterHttp.get(characterId).catch((error: unknown) => {
+            reportCharacterOperationFailure("load", error, { characterId })
+            throw error
+        })
         if (!isCurrent()) return
         const loadedCharacter = parseCharacterData((response as { data: unknown }).data)
         if (!loadedCharacter) throw new Error("Unable to load character data")
@@ -230,6 +235,9 @@ export default function CreatorPage() {
                     try {
                         await saveCurrentCharacter(character, isCurrent)
                     } catch (error) {
+                        reportCharacterOperationFailure("save-before-load", error, {
+                            characterId: character.id
+                        })
                         const notifiedError =
                             error instanceof Error
                                 ? error
@@ -246,7 +254,7 @@ export default function CreatorPage() {
                 }
 
                 if (isCurrent()) await loadSavedCharacter(characterId, isCurrent)
-            })
+            }, notifyCharacterTransitionRefused)
             .then(() => undefined)
 
     const handleCreateCharacter = () =>
@@ -260,6 +268,9 @@ export default function CreatorPage() {
                 try {
                     await saveCurrentCharacter(character, isCurrent)
                 } catch (error) {
+                    reportCharacterOperationFailure("save-and-start-new", error, {
+                        characterId: character.id
+                    })
                     const notifiedError =
                         error instanceof Error
                             ? error
@@ -274,7 +285,7 @@ export default function CreatorPage() {
                 }
 
                 await completePendingSwitchAction({ type: "create" }, isCurrent)
-            })
+            }, notifyCharacterTransitionRefused)
             .then(() => undefined)
 
     const handleCreateNewFromSharedCharacter = () => {
@@ -287,6 +298,9 @@ export default function CreatorPage() {
     const handleSaveAndContinueSwitch = () =>
         persistence.transition(async (isCurrent) => {
             if (!switchNameValue.trim()) {
+                reportCharacterOperationFailure("save-before-load", undefined, {
+                    reason: "name_required"
+                })
                 notifications.show({
                     title: "Name required",
                     message: "Enter a character name before saving and switching.",
@@ -306,6 +320,9 @@ export default function CreatorPage() {
                 closeNameBeforeSwitchModal()
                 await completePendingSwitchAction(action, isCurrent)
             } catch (error) {
+                reportCharacterOperationFailure("save-before-load", error, {
+                    characterId: character.id
+                })
                 notifications.show({
                     title: "Error saving character",
                     message:
@@ -314,7 +331,7 @@ export default function CreatorPage() {
                 })
                 setIsSavingBeforeSwitch(false)
             }
-        })
+        }, notifyCharacterTransitionRefused)
 
     const handleDeleteAndContinueSwitch = () =>
         persistence.transition(async (isCurrent) => {
@@ -326,7 +343,7 @@ export default function CreatorPage() {
             setCharacter(getEmptyCharacter())
             resetGeneratorSession()
             await completePendingSwitchAction(action)
-        })
+        }, notifyCharacterTransitionRefused)
 
     useEffect(() => {
         if (storedSelectedStep !== selectedStep) {

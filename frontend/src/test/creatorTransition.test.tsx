@@ -278,3 +278,21 @@ it("restores editing after a foreground switch save fails without replacing the 
     })
     expect(state.character.description).toBe("edit after failure")
 })
+
+
+it("shows a warning when a competing Creator transition is refused", async () => {
+    const { characterPersistence } = await import("~/modules/characterPersistence")
+    const { notifications } = await import("@mantine/notifications")
+    state.client = new QueryClient()
+    state.client.setQueryData(["auth", "me"], { id: "alice" })
+    state.character = getEmptyCharacter()
+    render(<CreatorPage />)
+    let release!: () => void
+    const pending = characterPersistence(state.client).transition(() => new Promise<void>(resolve => { release = resolve }))
+    await act(async () => { await state.sidebar.onLoadSavedCharacter("B") })
+    expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({
+        title: "Character operation in progress", color: "orange"
+    }))
+    release()
+    await pending
+})

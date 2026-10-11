@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { useLocalStorage } from "@mantine/hooks"
 import { useCallback, useRef, useState } from "react"
 import { Character, getEmptyCharacter, schemaVersion } from "~/data/Character"
@@ -20,7 +21,7 @@ const resetCachedCharacter = () => {
 
 export const useCharacterLocalStorage = () => {
     const [emptyCharacter] = useState(getEmptyCharacter)
-    const [character, setCharacterInternal] = useLocalStorage<Character>({
+    const [character, setCharacterInternal, removeCharacterInternal] = useLocalStorage<Character>({
         key: "character",
         defaultValue: emptyCharacter,
         getInitialValueInEffect: false,
@@ -77,5 +78,20 @@ export const useCharacterLocalStorage = () => {
         [setCharacterInternal]
     )
 
-    return [character, setCharacter] as const
+    const clearCharacter = useCallback((matches?: (current: Character) => boolean) => {
+        if (matches && !matches(cachedCharacter ?? latestCharacterRef.current)) return false
+        // Mantine swallows removal errors. Verify deletion ourselves before
+        // broadcasting the empty draft to all mounted storage subscribers.
+        try {
+            localStorage.removeItem("character")
+        } catch (error) {
+            reportCharacterOperationFailure("storage-write", error, { reason: "storage_failed" })
+            throw error
+        }
+        latestCharacterRef.current = resetCachedCharacter()
+        removeCharacterInternal()
+        return true
+    }, [removeCharacterInternal])
+
+    return [character, setCharacter, clearCharacter] as const
 }

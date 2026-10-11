@@ -1,3 +1,4 @@
+import posthog from "posthog-js"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook } from "@testing-library/react"
 import type { CharacterApiResponse } from "~/utils/characterApi"
@@ -10,6 +11,8 @@ import {
     isOwnedSavedCharacter,
     useAutosaveCharacter
 } from "~/hooks/useAutosaveCharacter"
+
+vi.mock("posthog-js", () => ({ default: { capture: vi.fn(), captureException: vi.fn() } }))
 
 const apiMocks = vi.hoisted(() => ({
     updateCharacter: vi.fn()
@@ -58,6 +61,8 @@ const finishPendingPromises = async () => {
 
 describe("useAutosaveCharacter", () => {
     beforeEach(() => {
+        vi.mocked(posthog.capture).mockClear()
+        vi.mocked(posthog.captureException).mockClear()
         localStorage.clear()
         vi.useFakeTimers()
         apiMocks.updateCharacter.mockReset()
@@ -257,6 +262,14 @@ describe("useAutosaveCharacter", () => {
             await finishPendingPromises()
         })
         expect(apiMocks.updateCharacter).not.toHaveBeenCalled()
+        expect(posthog.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                operation: "autosave",
+                failure_reason: "version_conflict",
+                severity: "error"
+            })
+        )
         expect(
             JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character
         ).toEqual(draft)
@@ -296,6 +309,15 @@ describe("useAutosaveCharacter", () => {
         })
 
         expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(2)
+        expect(posthog.capture).toHaveBeenCalledWith(
+            "character_operation_warning",
+            expect.objectContaining({
+                operation: "autosave",
+                http_status: 503,
+                severity: "warning"
+            })
+        )
+        expect(posthog.captureException).not.toHaveBeenCalled()
         warn.mockRestore()
     })
 })

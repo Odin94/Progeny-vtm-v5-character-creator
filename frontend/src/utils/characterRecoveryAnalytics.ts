@@ -1,3 +1,4 @@
+import { markCharacterFailureReported } from "./characterOperationAnalytics"
 import posthog from "posthog-js"
 import { z } from "zod"
 import type { CharacterRepairChange } from "./repairCharacter"
@@ -62,12 +63,16 @@ export const reportCharacterValidationError = (
         const now = Date.now()
         // Local-storage deserializers run in multiple mounted consumers. Report a failure
         // once per minute rather than creating an exception for every render/query retry.
-        if (recentErrors.has(key) && now - recentErrors.get(key)! < 60_000) return
+        if (recentErrors.has(key) && now - recentErrors.get(key)! < 60_000) {
+            markCharacterFailureReported(error)
+            return
+        }
         const exception = new Error(
             `Character validation failed (${source}, ${phase}): ${safeMessage}`
         )
         exception.name = "CharacterValidationError"
         posthog.captureException(exception, properties)
+        markCharacterFailureReported(error)
         if (recentErrors.size >= 100) recentErrors.delete(recentErrors.keys().next().value!)
         recentErrors.set(key, now)
     } catch {
