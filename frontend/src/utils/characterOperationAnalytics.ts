@@ -12,6 +12,8 @@ export type CharacterOperation =
     | "import"
     | "save-before-import"
     | "autosave"
+    | "restore-deleted-draft"
+    | "delete-local-draft"
     | "storage-read"
     | "storage-write"
 

@@ -7,6 +7,7 @@ import { useEffect } from "react"
 import posthog, { type PostHogConfig } from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { globals } from "~/globals"
+import DeletedCharacterDraftModal from "~/components/DeletedCharacterDraftModal"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import RouteOutlet from "~/components/RouteOutlet"
 import CharacterAutosave from "~/components/CharacterAutosave"
@@ -209,6 +210,7 @@ export const Route = createRootRoute({
                     <AuthSignInConfirmation />
                     <CharacterAutosave />
                     <BrokenSaveModal />
+                    <DeletedCharacterDraftModal />
                     <CookiesBanner />
                     <RecentChangesGate />
                     <RouteOutlet />
