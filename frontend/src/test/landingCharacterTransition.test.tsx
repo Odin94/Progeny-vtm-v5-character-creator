@@ -44,6 +44,7 @@ beforeEach(() => {
         }))
     })
     state.character = { ...getEmptyCharacter(), name: "Avery", description: "Unsaved choices" }
+    state.navigate.mockReset()
     state.create.mockResolvedValue({ id: "saved", characterVersion: 1 })
 })
 
@@ -74,6 +75,10 @@ it("saves and navigates even when the rendered coordinator has been retired", as
     await waitFor(() =>
         expect(state.navigate).toHaveBeenCalledWith(expect.objectContaining({ to: "/create" }))
     )
+    const attempt = vi.mocked(posthog.capture).mock.calls.find(call => call[0] === "character_save_attempt")!
+    expect(posthog.capture).toHaveBeenCalledWith("character_save_outcome", expect.objectContaining({
+        operation_id: attempt[1]!.operation_id, outcome: "success"
+    }))
     expect(state.create.mock.calls[0][0].data.name).toBe("Avery")
     expect(notifications.show).toHaveBeenCalledWith(
         expect.objectContaining({ title: "Character saved" })
@@ -99,6 +104,9 @@ it("shows feedback for a busy transition and successfully saves when retried", a
         "character_operation_warning",
         expect.objectContaining({ failure_reason: "busy", severity: "warning" })
     )
+    expect(posthog.capture).toHaveBeenCalledWith("character_save_outcome", expect.objectContaining({
+        outcome: "refused", reason: "busy"
+    }))
     expect(posthog.captureException).not.toHaveBeenCalled()
     expect(state.create).not.toHaveBeenCalled()
     expect(state.setCharacter).not.toHaveBeenCalled()
@@ -139,10 +147,42 @@ it("reports a deleted draft identity as a blocking error and keeps the draft", a
             })
         )
     )
+    expect(posthog.capture).toHaveBeenCalledWith("character_save_outcome", expect.objectContaining({
+        outcome: "failure", reason: "save_failed"
+    }))
     expect(state.create).not.toHaveBeenCalled()
     expect(state.setCharacter).not.toHaveBeenCalled()
     expect(state.navigate).not.toHaveBeenCalled()
     expect(notifications.show).toHaveBeenCalledWith(
         expect.objectContaining({ title: "Error saving character" })
     )
+})
+
+it("pairs an account change during saving with a refused outcome", async () => {
+    const client = await open()
+    let complete!: (value: unknown) => void
+    state.create.mockImplementation(() => new Promise(resolve => { complete = resolve }))
+    fireEvent.click(screen.getByRole("button", { name: "Save and start new" }))
+    await waitFor(() => expect(state.create).toHaveBeenCalledTimes(1))
+    await act(async () => {
+        client.setQueryData(["auth", "me"], { id: "bob" })
+        complete({ id: "saved", characterVersion: 1 })
+    })
+    await waitFor(() => expect(posthog.capture).toHaveBeenCalledWith(
+        "character_save_outcome", expect.objectContaining({ outcome: "refused", reason: "account_changed" })
+    ))
+    expect(state.navigate).not.toHaveBeenCalled()
+    expect(vi.mocked(posthog.capture).mock.calls.filter(call => call[0] === "character_save_outcome")).toHaveLength(1)
+})
+
+
+it("reports failure rather than success when navigation after saving fails", async () => {
+    await open()
+    state.navigate.mockRejectedValueOnce(new Error("Route failed"))
+    fireEvent.click(screen.getByRole("button", { name: "Save and start new" }))
+    await waitFor(() => expect(posthog.capture).toHaveBeenCalledWith(
+        "character_save_outcome", expect.objectContaining({ outcome: "failure" })
+    ))
+    expect(vi.mocked(posthog.capture).mock.calls.filter(call => call[0] === "character_save_outcome")).toHaveLength(1)
+    expect(posthog.capture).not.toHaveBeenCalledWith("character_save_outcome", expect.objectContaining({ outcome: "success" }))
 })

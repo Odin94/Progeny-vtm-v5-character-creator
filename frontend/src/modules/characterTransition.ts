@@ -9,12 +9,16 @@ export const transitionCharacter = (
     operation: (
         isCurrent: () => boolean,
         persistence: ReturnType<typeof characterPersistence>
-    ) => Promise<void>
+    ) => Promise<void>,
+    onRefused?: (reason: "busy" | "session") => void
 ) => {
     const persistence = characterPersistence(queryClient)
     return persistence.transition(
         (isCurrent) => operation(isCurrent, persistence),
-        notifyCharacterTransitionRefused
+        (reason) => {
+            onRefused?.(reason)
+            notifyCharacterTransitionRefused(reason)
+        }
     )
 }
 

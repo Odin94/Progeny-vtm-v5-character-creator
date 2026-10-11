@@ -138,3 +138,36 @@ export const reportCharacterOperationFailure = (
         // Reporting must not block a save, retry, notification or recovery action.
     }
 }
+
+
+// Pair the reported landing-page click with its terminal outcome. Do not include
+// draft contents or error messages; telemetry must never interrupt the action.
+export const beginSaveAndStartNewAttempt = () => {
+    let operationId: string
+    try {
+        operationId = crypto.randomUUID()
+    } catch {
+        operationId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    }
+    const capture = (event: string, properties: Record<string, string>) => {
+        try {
+            posthog.capture(event, {
+                operation: "save-and-start-new",
+                operation_id: operationId,
+                ...properties
+            })
+        } catch {
+            // A failed analytics SDK cannot block saving or recovery.
+        }
+    }
+    capture("character_save_attempt", {})
+    let finished = false
+    return (
+        outcome: "success" | "refused" | "failure" | "cancelled",
+        reason?: "busy" | "account_changed" | "name_required" | "save_failed" | "interrupted"
+    ) => {
+        if (finished) return
+        finished = true
+        capture("character_save_outcome", { outcome, ...(reason ? { reason } : {}) })
+    }
+}

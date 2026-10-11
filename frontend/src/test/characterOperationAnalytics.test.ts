@@ -168,3 +168,18 @@ it("reports failed storage reads without swallowing the original error", () => {
         expect.objectContaining({ operation: "storage-read", error_type: "SecurityError" })
     )
 })
+
+
+it("pairs attempt outcomes once and tolerates SDK failures", async () => {
+    const { beginSaveAndStartNewAttempt } = await import("~/utils/characterOperationAnalytics")
+    vi.mocked(posthog.capture).mockClear()
+    const finish = beginSaveAndStartNewAttempt()
+    finish("cancelled", "interrupted")
+    finish("success")
+    const calls = vi.mocked(posthog.capture).mock.calls
+    expect(calls).toHaveLength(2)
+    expect(calls[0][1]!.operation_id).toBe(calls[1][1]!.operation_id)
+    expect(calls[1][1]).toMatchObject({ outcome: "cancelled", reason: "interrupted" })
+    vi.mocked(posthog.capture).mockImplementationOnce(() => { throw new Error("SDK unavailable") })
+    expect(() => beginSaveAndStartNewAttempt()("success")).not.toThrow()
+})

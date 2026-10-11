@@ -1,4 +1,4 @@
-import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
+import { beginSaveAndStartNewAttempt, reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import AppTopbar from "~/components/AppTopbar"
 import {
     Anchor,
@@ -129,7 +129,7 @@ export default function LandingPage() {
         persistence.startDraft()
         setCharacter(getEmptyCharacter())
         setStoredSelectedStep(defaultGeneratorStepId)
-        navigate({ to: "/create", hash: defaultGeneratorStepId })
+        await navigate({ to: "/create", hash: defaultGeneratorStepId })
     }
 
     const openGenerator = () => {
@@ -142,70 +142,87 @@ export default function LandingPage() {
         openStartNewCharacterModal()
     }
 
-    const saveCurrentCharacterAndStartNew = () =>
-        transitionCharacter(queryClient, async (isCurrent, persistence) => {
-            const trimmedName = currentCharacterName.trim()
+    const saveCurrentCharacterAndStartNew = async () => {
+        const finish = beginSaveAndStartNewAttempt()
+        let outcome: Parameters<typeof finish>[0] = "cancelled"
+        let reason: Parameters<typeof finish>[1] = "interrupted"
+        try {
+            await transitionCharacter(queryClient, async (isCurrent, persistence) => {
+                const trimmedName = currentCharacterName.trim()
 
-            if (!trimmedName) {
-                reportCharacterOperationFailure("save-and-start-new", undefined, {
-                    reason: "name_required"
-                })
-                notifications.show({
-                    title: "Name required",
-                    message: "Give the current character a name before saving it to your account.",
-                    color: "red"
-                })
-                return
-            }
+                if (!trimmedName) {
+                    outcome = "refused"
+                    reason = "name_required"
+                    reportCharacterOperationFailure("save-and-start-new", undefined, {
+                        reason: "name_required"
+                    })
+                    notifications.show({
+                        title: "Name required",
+                        message: "Give the current character a name before saving it to your account.",
+                        color: "red"
+                    })
+                    return
+                }
 
-            setIsSavingCurrentCharacter(true)
+                setIsSavingCurrentCharacter(true)
 
-            try {
-                const characterToSave: Character = { ...character, name: trimmedName }
-                const saved = await persistence.save(characterToSave, {
-                    owned: isOwnedSavedCharacter(characterToSave.id, characters),
-                    ownershipLoaded: characters !== undefined,
-                    beforeSwitch: true,
-                    allowCopy: characters?.some(
-                        (candidate) =>
-                            candidate.id === character.id &&
-                            (candidate.shared || candidate.canEdit === false)
+                try {
+                    const characterToSave: Character = { ...character, name: trimmedName }
+                    const saved = await persistence.save(characterToSave, {
+                        owned: isOwnedSavedCharacter(characterToSave.id, characters),
+                        ownershipLoaded: characters !== undefined,
+                        beforeSwitch: true,
+                        allowCopy: characters?.some(
+                            (candidate) =>
+                                candidate.id === character.id &&
+                                (candidate.shared || candidate.canEdit === false)
+                        )
+                    })
+                    if (!isCurrent()) return
+                    setCharacter((current) =>
+                        current.id === characterToSave.id
+                            ? {
+                                  ...current,
+                                  id: saved.id,
+                                  name: current.name === character.name ? trimmedName : current.name,
+                                  characterVersion: saved.characterVersion
+                              }
+                            : current
                     )
-                })
-                if (!isCurrent()) return
-                setCharacter((current) =>
-                    current.id === characterToSave.id
-                        ? {
-                              ...current,
-                              id: saved.id,
-                              name: current.name === character.name ? trimmedName : current.name,
-                              characterVersion: saved.characterVersion
-                          }
-                        : current
-                )
 
-                notifications.show({
-                    title: "Character saved",
-                    message: `"${trimmedName}" was saved to your account.`,
-                    color: "green",
-                    autoClose: 3000
-                })
+                    notifications.show({
+                        title: "Character saved",
+                        message: `"${trimmedName}" was saved to your account.`,
+                        color: "green",
+                        autoClose: 3000
+                    })
 
-                await startNewCharacter(isCurrent, persistence)
-            } catch (error) {
-                reportCharacterOperationFailure("save-and-start-new", error, {
-                    characterId: character.id
-                })
-                notifications.show({
-                    title: "Error saving character",
-                    message:
-                        error instanceof Error ? error.message : "Failed to save current character",
-                    color: "red"
-                })
-            } finally {
-                setIsSavingCurrentCharacter(false)
-            }
-        }).then(() => undefined)
+                    await startNewCharacter(isCurrent, persistence)
+                    outcome = "success"
+                    reason = undefined
+                } catch (error) {
+                    outcome = "failure"
+                    reason = "save_failed"
+                    reportCharacterOperationFailure("save-and-start-new", error, {
+                        characterId: character.id
+                    })
+                    notifications.show({
+                        title: "Error saving character",
+                        message:
+                            error instanceof Error ? error.message : "Failed to save current character",
+                        color: "red"
+                    })
+                } finally {
+                    setIsSavingCurrentCharacter(false)
+                }
+            }, (refusal) => {
+                outcome = "refused"
+                reason = refusal === "busy" ? "busy" : "account_changed"
+            })
+        } finally {
+            finish(outcome, reason)
+        }
+    }
 
     return (
         <Box className="landing-page">
