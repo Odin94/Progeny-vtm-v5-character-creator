@@ -1,7 +1,7 @@
 import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconSparkles } from "@tabler/icons-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
 import { Skills, SkillsKey, allSkills, skillsKeySchema } from "../../data/Skills"
@@ -60,8 +60,17 @@ export const SpecialtyModal = ({
         trackEvent({ action: "specialty step reached", category: "specialties" })
     }, [modalOpened])
 
+    const initializedForOpening = useRef(false)
+
     useEffect(() => {
-        if (!modalOpened) return
+        if (!modalOpened) {
+            initializedForOpening.current = false
+            return
+        }
+        // Parent renders can recreate the arrays below. Restore saved values only
+        // when opening the modal so those renders cannot overwrite in-progress edits.
+        if (initializedForOpening.current) return
+        initializedForOpening.current = true
 
         // The one free specialty belongs to the character rather than a particular skill
         // allocation, so preserve its skill and text even when that skill was removed. Bonus
