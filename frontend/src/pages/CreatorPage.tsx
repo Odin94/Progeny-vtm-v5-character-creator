@@ -1,3 +1,4 @@
+import { notifyCharacterTransitionRefused } from "~/modules/characterTransition"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { AppShell, BackgroundImage, useComputedColorScheme } from "@mantine/core"
 import { RAW_GOLD, rgba } from "~/theme/colors"
@@ -253,7 +254,7 @@ export default function CreatorPage() {
                 }
 
                 if (isCurrent()) await loadSavedCharacter(characterId, isCurrent)
-            })
+            }, notifyCharacterTransitionRefused)
             .then(() => undefined)
 
     const handleCreateCharacter = () =>
@@ -284,7 +285,7 @@ export default function CreatorPage() {
                 }
 
                 await completePendingSwitchAction({ type: "create" }, isCurrent)
-            })
+            }, notifyCharacterTransitionRefused)
             .then(() => undefined)
 
     const handleCreateNewFromSharedCharacter = () => {
@@ -330,7 +331,7 @@ export default function CreatorPage() {
                 })
                 setIsSavingBeforeSwitch(false)
             }
-        })
+        }, notifyCharacterTransitionRefused)
 
     const handleDeleteAndContinueSwitch = () =>
         persistence.transition(async (isCurrent) => {
@@ -342,7 +343,7 @@ export default function CreatorPage() {
             setCharacter(getEmptyCharacter())
             resetGeneratorSession()
             await completePendingSwitchAction(action)
-        })
+        }, notifyCharacterTransitionRefused)
 
     useEffect(() => {
         if (storedSelectedStep !== selectedStep) {

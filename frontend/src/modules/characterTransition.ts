@@ -14,18 +14,20 @@ export const transitionCharacter = (
     const persistence = characterPersistence(queryClient)
     return persistence.transition(
         (isCurrent) => operation(isCurrent, persistence),
-        (reason) => {
-            reportCharacterOperationFailure("transition", undefined, {
-                reason: reason === "busy" ? "busy" : "account_changed"
-            })
-            notifications.show({
-                title: reason === "busy" ? "Character operation in progress" : "Account changed",
-                message:
-                    reason === "busy"
-                        ? "Wait for the current save or load to finish, then try again. Your draft is still in this browser."
-                        : "Try again to use your current account. Your draft is still in this browser.",
-                color: "orange"
-            })
-        }
+        notifyCharacterTransitionRefused
     )
+}
+
+export const notifyCharacterTransitionRefused = (reason: "busy" | "session") => {
+    reportCharacterOperationFailure("transition", undefined, {
+        reason: reason === "busy" ? "busy" : "account_changed"
+    })
+    notifications.show({
+        title: reason === "busy" ? "Character operation in progress" : "Account changed",
+        message:
+            reason === "busy"
+                ? "Wait for the current save or load to finish, then try again. Your draft is still in this browser."
+                : "Try again to use your current account. Your draft is still in this browser.",
+        color: "orange"
+    })
 }

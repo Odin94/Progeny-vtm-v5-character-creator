@@ -1,5 +1,5 @@
 import { CharacterOperationError } from "~/utils/characterOperationError"
-import { Alert, Button, Group, Modal, Stack, Text } from "@mantine/core"
+import { Alert, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
@@ -23,6 +23,7 @@ export default function DeletedCharacterDraftModal() {
     })
     const missing = remote.isError && (remote.error as { status?: number })?.status === 404
     const [pending, setPending] = useState(false)
+    const [restoreName, setRestoreName] = useState("")
     const [failure, setFailure] = useState("")
     const latest = useRef(character)
     latest.current = character
@@ -47,6 +48,7 @@ export default function DeletedCharacterDraftModal() {
 
     useEffect(() => {
         setFailure("")
+        setRestoreName("")
         restored.current = null
     }, [accountId, character.id])
 
@@ -54,6 +56,8 @@ export default function DeletedCharacterDraftModal() {
         if (!missing || !character.id || !accountId || pending) return
         const draft = structuredClone(character)
         const sourceKey = getCharacterSaveKey(draft)
+        if (action === "restore" && !draft.name.trim()) draft.name = restoreName.trim()
+        const restoredKey = getCharacterSaveKey(draft)
         const matchesDraft = () =>
             latest.current.id === draft.id && getCharacterSaveKey(latest.current) === sourceKey
         void transitionCharacter(client, async (isCurrent, persistence) => {
@@ -72,7 +76,7 @@ export default function DeletedCharacterDraftModal() {
                     const previous = restored.current
                     const copy =
                         previous?.accountId === accountId && previous.sourceId === draft.id
-                            ? previous.key === sourceKey
+                            ? previous.key === restoredKey
                                 ? previous.character
                                 : await persistence.save(
                                       {
@@ -87,7 +91,7 @@ export default function DeletedCharacterDraftModal() {
                     restored.current = {
                         accountId,
                         sourceId: draft.id,
-                        key: sourceKey,
+                        key: restoredKey,
                         character: copy
                     }
                     if (!matchesDraft()) return
@@ -155,6 +159,15 @@ export default function DeletedCharacterDraftModal() {
                 <Text>
                     Restore it as a new saved copy, or delete the local draft to start fresh.
                 </Text>
+                {!character.name.trim() && (
+                    <TextInput
+                        label="Character name"
+                        value={restoreName}
+                        onChange={(event) => setRestoreName(event.currentTarget.value)}
+                        disabled={pending}
+                        required
+                    />
+                )}
                 {failure && (
                     <Alert color="red" role="alert">
                         {failure}

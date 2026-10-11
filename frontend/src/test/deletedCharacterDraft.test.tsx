@@ -19,6 +19,7 @@ vi.mock("@mantine/core", () => {
     const box = ({ children }: any) => <div>{children}</div>
     return {
         Modal: ({ opened, children }: any) => (opened ? <div role="dialog">{children}</div> : null),
+        TextInput: ({ label, value, onChange }: any) => <label>{label}<input value={value} onChange={onChange} /></label>,
         Stack: box,
         Group: box,
         Text: box,
@@ -218,4 +219,15 @@ it("requires a new missing-character check after switching accounts", async () =
     await waitFor(() => expect(state.get).toHaveBeenCalledTimes(2))
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     expect(current[0].id).toBe("deleted")
+})
+
+
+it("lets an unnamed deleted draft receive a name and restore without losing content", async () => {
+    setup()
+    act(() => current[1](value => ({ ...value, name: "   " })))
+    fireEvent.change(await screen.findByLabelText("Character name"), { target: { value: "Recovered" } })
+    fireEvent.click(screen.getByRole("button", { name: "Restore character" }))
+    await waitFor(() => expect(current[0].id).toBe("restored"))
+    expect(current[0].name).toBe("Recovered")
+    expect(current[0].notes).toBe("Keep my notes")
 })
