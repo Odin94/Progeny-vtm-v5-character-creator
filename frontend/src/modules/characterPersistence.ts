@@ -92,13 +92,20 @@ export const createCharacterPersistence = (
                 transitionListeners.delete(listener)
             }
         },
-        transition: async (operation: (isCurrent: () => boolean) => Promise<void>) => {
-            if (transitioning || !isCurrentSession()) return false
+        transition: async (
+            operation: (isCurrent: () => boolean) => Promise<void>,
+            onRefused?: (reason: "busy" | "session") => void
+        ) => {
+            if (transitioning || !isCurrentSession()) {
+                onRefused?.(transitioning ? "busy" : "session")
+                return false
+            }
             transitioning = true
             transitionListeners.forEach((listener) => listener())
             const isCurrent = replacementGuard()
             try {
                 await operation(isCurrent)
+                if (!isCurrentSession()) onRefused?.("session")
                 return isCurrent()
             } finally {
                 transitioning = false

@@ -104,6 +104,7 @@ import {
     type CoterieResponse
 } from "~/utils/api"
 import { characterHttp } from "~/utils/http/characters"
+import { transitionCharacter } from "~/modules/characterTransition"
 import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
@@ -725,7 +726,7 @@ const MePage = () => {
         // If characterToLoad is set, we're in a loading scenario
         if (characterToLoad) {
             // Load the character (overwriting current with older version)
-            persistence.startDraft()
+            characterPersistence(queryClient).startDraft()
             setCharacter({
                 ...characterToLoad.data,
                 id: characterToLoad.id
@@ -883,7 +884,7 @@ const MePage = () => {
             setLoadingCharacterId(null)
             return
         }
-        persistence.startDraft()
+        characterPersistence(queryClient).startDraft()
         setCharacter({
             ...char.data,
             id: char.id
@@ -897,7 +898,7 @@ const MePage = () => {
     }
 
     const handleLoadCharacter = (char: Character) =>
-        persistence.transition(async (isCurrent) => {
+        transitionCharacter(queryClient, async (isCurrent) => {
             const charData = char.data as CharacterType | undefined
             if (!charData) return
             const switchDecision = characterPersistence(queryClient).decision(
@@ -988,7 +989,7 @@ const MePage = () => {
         _currentCharacter?: Character,
         isCurrent = persistence.replacementGuard()
     ) => {
-        const saved = await persistence.save(characterToSave, {
+        const saved = await characterPersistence(queryClient).save(characterToSave, {
             owned: isOwnedSavedCharacter(characterToSave.id, characters),
             ownershipLoaded: characters !== undefined && !charactersLoadError,
             beforeSwitch: true
@@ -1013,7 +1014,7 @@ const MePage = () => {
     }
 
     const handleSaveAndContinueSwitch = () =>
-        persistence.transition(async (isCurrent) => {
+        transitionCharacter(queryClient, async (isCurrent) => {
             if (!pendingSwitchTarget) return
 
             if (!switchNameValue.trim()) {
@@ -1050,11 +1051,11 @@ const MePage = () => {
         })
 
     const handleDiscardAndContinueSwitch = () =>
-        persistence.transition(async (isCurrent) => {
+        transitionCharacter(queryClient, async (isCurrent) => {
             if (!pendingSwitchTarget) return
 
             const target = pendingSwitchTarget
-            await persistence.settle(character.id)
+            await characterPersistence(queryClient).settle(character.id)
             if (!isCurrent()) return
             closePendingSwitch()
             await performLoadCharacter(target, isCurrent)
@@ -1063,9 +1064,12 @@ const MePage = () => {
     const handleConfirmLoadSameCharacter = () => {
         if (!characterToLoad) return
 
-        void persistence.transition((isCurrent) => performLoadCharacter(characterToLoad, isCurrent))
-        setLoadSameCharacterWarningModalOpened(false)
-        setCharacterToLoad(null)
+        const target = characterToLoad
+        void transitionCharacter(queryClient, async (isCurrent) => {
+            setLoadSameCharacterWarningModalOpened(false)
+            setCharacterToLoad(null)
+            await performLoadCharacter(target, isCurrent)
+        })
     }
 
     const handleLoadFromFile = async (file: File | null) => {
