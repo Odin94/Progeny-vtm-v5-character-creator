@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import AppTopbar from "~/components/AppTopbar"
 import {
     Anchor,
@@ -146,6 +147,9 @@ export default function LandingPage() {
             const trimmedName = currentCharacterName.trim()
 
             if (!trimmedName) {
+                reportCharacterOperationFailure("save-and-start-new", undefined, {
+                    reason: "name_required"
+                })
                 notifications.show({
                     title: "Name required",
                     message: "Give the current character a name before saving it to your account.",
@@ -189,6 +193,9 @@ export default function LandingPage() {
 
                 await startNewCharacter(isCurrent, persistence)
             } catch (error) {
+                reportCharacterOperationFailure("save-and-start-new", error, {
+                    characterId: character.id
+                })
                 notifications.show({
                     title: "Error saving character",
                     message:

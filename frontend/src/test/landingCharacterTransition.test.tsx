@@ -1,3 +1,4 @@
+import posthog from "posthog-js"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MantineProvider } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
@@ -10,6 +11,7 @@ const state = vi.hoisted(() => ({
     character: null as any,
     setCharacter: vi.fn(),
     create: vi.fn(),
+    get: vi.fn(),
     navigate: vi.fn()
 }))
 vi.mock("~/hooks/useAuth", () => ({ useAuth: () => ({ isAuthenticated: true }) }))
@@ -21,10 +23,11 @@ vi.mock("@tanstack/react-router", () => ({
     useNavigate: () => state.navigate,
     Link: ({ children }: any) => <span>{children}</span>
 }))
+vi.mock("posthog-js", () => ({ default: { capture: vi.fn(), captureException: vi.fn() } }))
 vi.mock("@mantine/notifications", () => ({ notifications: { show: vi.fn() } }))
 vi.mock("~/components/AppTopbar", () => ({ default: () => null }))
 vi.mock("~/components/SupportConversationButton", () => ({ default: () => null }))
-vi.mock("~/utils/api", () => ({ api: { createCharacter: state.create } }))
+vi.mock("~/utils/api", () => ({ api: { createCharacter: state.create, getCharacter: state.get } }))
 import LandingPage from "~/pages/LandingPage"
 
 afterEach(cleanup)
@@ -92,6 +95,11 @@ it("shows feedback for a busy transition and successfully saves when retried", a
             expect.objectContaining({ title: "Character operation in progress" })
         )
     )
+    expect(posthog.capture).toHaveBeenCalledWith(
+        "character_operation_warning",
+        expect.objectContaining({ failure_reason: "busy", severity: "warning" })
+    )
+    expect(posthog.captureException).not.toHaveBeenCalled()
     expect(state.create).not.toHaveBeenCalled()
     expect(state.setCharacter).not.toHaveBeenCalled()
     expect(state.navigate).not.toHaveBeenCalled()
@@ -103,5 +111,38 @@ it("shows feedback for a busy transition and successfully saves when retried", a
     await waitFor(() => expect(state.create).toHaveBeenCalledTimes(1))
     await waitFor(() =>
         expect(state.navigate).toHaveBeenCalledWith(expect.objectContaining({ to: "/create" }))
+    )
+})
+
+it("reports a deleted draft identity as a blocking error and keeps the draft", async () => {
+    const client = new QueryClient()
+    client.setQueryData(["auth", "me"], { id: "alice" })
+    state.character.id = "deleted"
+    state.get.mockRejectedValue(Object.assign(new Error("Character not found"), { status: 404 }))
+    render(
+        <QueryClientProvider client={client}>
+            <MantineProvider>
+                <LandingPage />
+            </MantineProvider>
+        </QueryClientProvider>
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Embrace a new character" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Save and start new" }))
+    await waitFor(() =>
+        expect(posthog.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                operation: "save-and-start-new",
+                failure_reason: "not_found",
+                http_status: 404,
+                character_id: "deleted"
+            })
+        )
+    )
+    expect(state.create).not.toHaveBeenCalled()
+    expect(state.setCharacter).not.toHaveBeenCalled()
+    expect(state.navigate).not.toHaveBeenCalled()
+    expect(notifications.show).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "Error saving character" })
     )
 })

@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import {
     Accordion,
     AppShell,
@@ -508,6 +509,7 @@ const MePage = () => {
 
     const requireLoadedCharacters = () => {
         if (characters === undefined || charactersLoadError) {
+            reportCharacterOperationFailure("save", undefined, { reason: "characters_unavailable" })
             notifications.show({
                 title: "Characters unavailable",
                 message:
@@ -522,6 +524,7 @@ const MePage = () => {
     const handleCreateEmptyCharacter = () => {
         if (!requireLoadedCharacters()) return
         if (!newCharacterName.trim()) {
+            reportCharacterOperationFailure("create", undefined, { reason: "name_required" })
             notifications.show({
                 title: "Error",
                 message: "Character name is required",
@@ -551,6 +554,7 @@ const MePage = () => {
                     setNewCharacterName("")
                 },
                 onError: (error) => {
+                    reportCharacterOperationFailure("create", error, { characterId: character.id })
                     notifications.show({
                         title: "Error",
                         message:
@@ -569,7 +573,11 @@ const MePage = () => {
             try {
                 const saved = await characterHttp.get(character.id)
                 source = { ...saved, shared: saved.canEdit !== true }
-            } catch {
+            } catch (error) {
+                reportCharacterOperationFailure("save", error, {
+                    severity: "warning",
+                    characterId: character.id
+                })
                 // Keep the local draft available for an explicitly confirmed copy.
             }
         }
@@ -586,6 +594,7 @@ const MePage = () => {
         }
         if (!source && !requireLoadedCharacters()) return
         if (!character.name.trim()) {
+            reportCharacterOperationFailure("save", undefined, { reason: "name_required" })
             notifications.show({
                 title: "Error",
                 message: "Character must have a name",
@@ -606,6 +615,11 @@ const MePage = () => {
                 const feVersion = character.characterVersion ?? 0
 
                 if (beCharacter.characterVersion > feVersion) {
+                    reportCharacterOperationFailure("save", undefined, {
+                        severity: "warning",
+                        reason: "version_conflict",
+                        characterId: character.id
+                    })
                     // Show version conflict modal
                     setVersionConflictInfo({
                         beVersion: beCharacter.characterVersion,
@@ -661,6 +675,9 @@ const MePage = () => {
                         })
                     },
                     onError: (error) => {
+                        reportCharacterOperationFailure("save", error, {
+                            characterId: character.id
+                        })
                         notifications.show({
                             title: "Error",
                             message:
@@ -707,6 +724,9 @@ const MePage = () => {
                         })
                     },
                     onError: (error) => {
+                        reportCharacterOperationFailure("save", error, {
+                            characterId: character.id
+                        })
                         notifications.show({
                             title: "Error",
                             message:
@@ -750,7 +770,12 @@ const MePage = () => {
             try {
                 const saved = await characterHttp.get(character.id)
                 targetCharacter = { ...saved, shared: saved.canEdit !== true }
-            } catch {
+            } catch (error) {
+                reportCharacterOperationFailure("save", error, {
+                    severity: "warning",
+                    reason: "ownership_unverified",
+                    characterId: character.id
+                })
                 notifications.show({
                     title: "Could not verify ownership",
                     message: "Please retry or save your character as a copy.",
@@ -816,6 +841,7 @@ const MePage = () => {
                     })
                 },
                 onError: (error) => {
+                    reportCharacterOperationFailure("save", error, { characterId: character.id })
                     notifications.show({
                         title: "Error",
                         message:
@@ -863,6 +889,11 @@ const MePage = () => {
             const feVersion = char.data.characterVersion ?? 0
 
             if (beCharacter.characterVersion > feVersion) {
+                reportCharacterOperationFailure("load", undefined, {
+                    severity: "warning",
+                    reason: "version_conflict",
+                    characterId: char.id
+                })
                 // Backend version is newer - warn user they're about to load an older version
                 setLoadingCharacterId(null)
                 setVersionConflictInfo({
@@ -963,6 +994,9 @@ const MePage = () => {
                 try {
                     await saveCharacterBeforeSwitch(character, currentCharacter, isCurrent)
                 } catch (error) {
+                    reportCharacterOperationFailure("save-before-load", error, {
+                        characterId: character.id
+                    })
                     console.warn("Failed to save current character before loading:", error)
                     const reason = error instanceof Error ? error.message : "Unknown save error"
                     notifications.show({
@@ -1018,6 +1052,9 @@ const MePage = () => {
             if (!pendingSwitchTarget) return
 
             if (!switchNameValue.trim()) {
+                reportCharacterOperationFailure("save-before-load", undefined, {
+                    reason: "name_required"
+                })
                 notifications.show({
                     title: "Name required",
                     message: "Enter a character name before saving and switching.",
@@ -1040,6 +1077,9 @@ const MePage = () => {
                 closePendingSwitch()
                 await performLoadCharacter(target, isCurrent)
             } catch (error) {
+                reportCharacterOperationFailure("save-before-load", error, {
+                    characterId: character.id
+                })
                 const reason = error instanceof Error ? error.message : "Unknown save error"
                 notifications.show({
                     title: "Error saving character",
@@ -1088,6 +1128,7 @@ const MePage = () => {
         if (!requireLoadedCharacters()) return
         console.log("handleConfirmLoadJson", loadedFile)
         if (!loadedFile) {
+            reportCharacterOperationFailure("import", undefined, { reason: "file_required" })
             notifications.show({
                 title: "Error",
                 message: "No file selected",
@@ -1108,6 +1149,11 @@ const MePage = () => {
                     const feVersion = character.characterVersion ?? 0
 
                     if (beCharacter.characterVersion > feVersion) {
+                        reportCharacterOperationFailure("save-before-import", undefined, {
+                            severity: "warning",
+                            reason: "version_conflict",
+                            characterId: character.id
+                        })
                         // Version conflict - warn but continue with JSON load
                         notifications.show({
                             title: "Version Conflict",
@@ -1163,6 +1209,10 @@ const MePage = () => {
                         })
                     }
                 } catch (error) {
+                    reportCharacterOperationFailure("save-before-import", error, {
+                        severity: "warning",
+                        characterId: character.id
+                    })
                     console.warn("Failed to save current character before loading JSON:", error)
                     notifications.show({
                         title: "Warning",
@@ -1196,6 +1246,7 @@ const MePage = () => {
             })
             console.log("Notification shown")
         } catch (e) {
+            reportCharacterOperationFailure("import", e)
             console.error("Error loading JSON:", e)
             if (e instanceof z.ZodError) {
                 notifications.show({

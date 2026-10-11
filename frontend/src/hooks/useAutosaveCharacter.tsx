@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { notifications } from "@mantine/notifications"
 import { preserveCharacterDraft } from "~/utils/characterDraft"
 import type { CharacterApiResponse } from "~/utils/characterApi"
@@ -38,7 +39,11 @@ const writeConfirmedBase = (id: string, character: Character) => {
         /* Remote revision comparison still protects the active local draft. */
     }
 }
-const notifyConflict = () =>
+const notifyConflict = (characterId: string) => {
+    reportCharacterOperationFailure("autosave", undefined, {
+        reason: "version_conflict",
+        characterId
+    })
     notifications.show({
         id: "character-save-conflict",
         title: "Newer cloud changes found",
@@ -47,6 +52,7 @@ const notifyConflict = () =>
         color: "yellow",
         autoClose: false
     })
+}
 
 export const useAutosaveCharacter = (
     character: Character,
@@ -156,6 +162,12 @@ export const useAutosaveCharacter = (
                 generationRef.current === saveGeneration &&
                 activeCharacterIdRef.current === characterId
             ) {
+                if ((error as ApiError)?.status !== 409) {
+                    reportCharacterOperationFailure("autosave", error, {
+                        severity: shouldRetry(error) ? "warning" : undefined,
+                        characterId
+                    })
+                }
                 console.warn("Failed to autosave character:", error)
 
                 if (shouldRetry(error)) {
@@ -166,7 +178,7 @@ export const useAutosaveCharacter = (
                     if ((error as ApiError)?.status === 409) {
                         blockedKeyRef.current = savedKey
                         preserveCharacterDraft(latestCharacterRef.current, "Cloud save conflict")
-                        notifyConflict()
+                        notifyConflict(characterId)
                         void queryClient.invalidateQueries({ queryKey: ["characters"] })
                     }
                 }
@@ -254,7 +266,7 @@ export const useAutosaveCharacter = (
                         character,
                         "Cloud revision changed while local draft was pending"
                     )
-                    notifyConflict()
+                    notifyConflict(characterId)
                 }
             }
         }
@@ -283,7 +295,7 @@ export const useAutosaveCharacter = (
                     character,
                     "Cloud revision changed while local draft was pending"
                 )
-                notifyConflict()
+                notifyConflict(characterId)
                 return
             }
             lastSavedKeyRef.current = remoteKey

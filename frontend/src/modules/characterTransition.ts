@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import type { QueryClient } from "@tanstack/react-query"
 import { notifications } from "@mantine/notifications"
 import { characterPersistence } from "./characterPersistence"
@@ -13,7 +14,10 @@ export const transitionCharacter = (
     const persistence = characterPersistence(queryClient)
     return persistence.transition(
         (isCurrent) => operation(isCurrent, persistence),
-        (reason) =>
+        (reason) => {
+            reportCharacterOperationFailure("transition", undefined, {
+                reason: reason === "busy" ? "busy" : "account_changed"
+            })
             notifications.show({
                 title: reason === "busy" ? "Character operation in progress" : "Account changed",
                 message:
@@ -22,5 +26,6 @@ export const transitionCharacter = (
                         : "Try again to use your current account. Your draft is still in this browser.",
                 color: "orange"
             })
+        }
     )
 }

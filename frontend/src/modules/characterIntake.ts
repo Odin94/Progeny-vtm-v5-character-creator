@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { z } from "zod"
 import {
     applyCharacterCompatibilityPatches,
@@ -20,7 +21,27 @@ type RecoveryStorage = Pick<Storage, "getItem" | "setItem">
 
 // All original bytes are retained before any repair or replacement. Storage failures
 // propagate: callers must keep the current draft/recovery prompt visible on failure.
-export const createCharacterIntake = (storage: () => RecoveryStorage) => {
+export const createCharacterIntake = (getStorage: () => RecoveryStorage) => {
+    const storage = (): RecoveryStorage => ({
+        getItem: (key) => {
+            try {
+                return getStorage().getItem(key)
+            } catch (error) {
+                reportCharacterOperationFailure("storage-read", error, { reason: "storage_failed" })
+                throw error
+            }
+        },
+        setItem: (key, value) => {
+            try {
+                getStorage().setItem(key, value)
+            } catch (error) {
+                reportCharacterOperationFailure("storage-write", error, {
+                    reason: "storage_failed"
+                })
+                throw error
+            }
+        }
+    })
     const archive = (data: string, error: string) => {
         const saves = recoverySavesSchema.parse(
             JSON.parse(storage().getItem(CHARACTER_RECOVERY_KEY) || "[]")

@@ -43,3 +43,10 @@ Character picker integration resolves `/characters/:id/homebrew`, so a collectio
 `src/modules/coterieMembership.ts` owns invite links, invitation consumption, membership operation pending/errors, duplicate-submit coordination and refresh of affected coterie, vitals and character reads. `useCoteries` adapts those operations to the existing React Query mutation interface. Permissions and the backend coterie read model remain authoritative.
 
 The contract tests in `src/test/characterIntakeContract.test.ts`, `characterPersistenceContract.test.ts` and `coterieMembershipContract.test.ts` exercise the same module interfaces with local storage and transport adapters, including write failures and overlapping requests.
+
+
+## Character failure telemetry
+
+`src/utils/characterOperationAnalytics.ts` reports character actions that fail or need recovery. Blocking failures use `posthog.captureException` with the sanitized `CharacterOperationError` name. Recoverable prompts (busy/account changes, missing names/files, retry/reload requests, conflict confirmations and automatic autosave retries) use `character_operation_warning` with `severity: warning`. An unresolved conflict that stops autosave or a foreground save is an exception; a conflict prompt offering an explicit resolution is a warning.
+
+Use fixed operation/reason codes and optional character IDs/HTTP status. Never forward raw error messages, causes, character names, notes, file contents or response bodies. `CharacterOperationError` in `src/utils/characterOperationError.ts` gives persistence failures stable reasons without parsing user-facing messages. Repeated autosave retry warnings are throttled for one minute. The reporter cannot throw, and the same error object is reported once across propagation layers; intake validation retains its existing `CharacterValidationError` exception. Instrument the place that knows whether the user is blocked or can continue, rather than every HTTP error indiscriminately.
