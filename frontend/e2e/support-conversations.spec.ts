@@ -18,12 +18,17 @@ const ticketId = "support-browser-test-ticket"
 const supportServer = async (context: BrowserContext) => {
     let unread = 0
     let readRequests = 0
+    let ticketRequests = 0
     let hasTicket = false
+    let extraUnread = 0
+    let hasExtraTicket = false
     const messages: Array<Record<string, unknown>> = []
     const ticket = () => ({
         id: ticketId,
         status: "open",
         message_count: messages.length,
+        last_message: messages.at(-1)?.content,
+        last_message_at: messages.at(-1)?.created_at,
         unread_count: unread,
         created_at: "2026-01-01T00:00:00Z"
     })
@@ -56,11 +61,30 @@ const supportServer = async (context: BrowserContext) => {
                 has_more: false
             }
         } else if (pathname.endsWith("/widget/tickets")) {
-            data = { count: hasTicket ? 1 : 0, results: hasTicket ? [ticket()] : [] }
+            ticketRequests += 1
+            const tickets = hasTicket ? [ticket()] : []
+            if (hasExtraTicket)
+                tickets.push({
+                    id: "other-ticket",
+                    status: "open",
+                    message_count: 1,
+                    unread_count: extraUnread,
+                    created_at: "2026-01-01T00:00:00Z",
+                    last_message: "Older support response",
+                    last_message_at: "2026-01-02T00:00:00Z"
+                })
+            data = { count: tickets.length, results: tickets }
         }
         await route.fulfill({ contentType: "application/json", body: JSON.stringify(data) })
     })
     return {
+        seedOtherUnreadTicket: () => {
+            hasExtraTicket = true
+            extraUnread = 1
+        },
+        readOtherTicket: () => {
+            extraUnread = 0
+        },
         reply: (content: string) => {
             messages.push({
                 id: `reply-${messages.length}`,
@@ -74,6 +98,9 @@ const supportServer = async (context: BrowserContext) => {
         },
         get unread() {
             return unread
+        },
+        get ticketRequests() {
+            return ticketRequests
         },
         get readRequests() {
             return readRequests
@@ -160,4 +187,52 @@ test("background panels and background reloads do not acknowledge replies before
     await visibility(page, "visible")
     await expect(page.getByText("Reply on background reload", { exact: true })).toBeVisible()
     await expect.poll(() => server.unread).toBe(0)
+})
+
+test("multiple-ticket dismissal survives reload and unchanged totals do not conceal a new reply", async ({
+    page,
+    context
+}) => {
+    test.setTimeout(45_000)
+    const server = await supportServer(context)
+    await startConversation(page)
+    await close(page).click()
+    server.seedOtherUnreadTicket()
+    await page.reload()
+    await expect(close(page)).toBeVisible()
+    await expect(page.getByText("Older support response", { exact: true })).toBeVisible()
+    await close(page).click()
+    await page.reload()
+    await expect(page.locator('button[aria-label="Open chat (1 unread)"]')).toHaveCount(1)
+    await visibility(page, "visible")
+    await expect(close(page)).toHaveCount(0)
+    // Another tab reads the old reply while a new reply arrives elsewhere.
+    // Total unread remains 1, but the ticket/reply version is different.
+    server.readOtherTicket()
+    server.reply("New reply despite unchanged total")
+    await visibility(page, "visible")
+    await expect(close(page)).toBeVisible()
+    await expect(page.getByText("New reply despite unchanged total", { exact: true })).toBeVisible({
+        timeout: 15_000
+    })
+})
+
+test("a tab with no conversations discovers a first ticket created in another tab", async ({
+    page,
+    context
+}) => {
+    test.setTimeout(45_000)
+    const server = await supportServer(context)
+    await page.goto(fixture)
+    await expect.poll(() => server.ticketRequests).toBeGreaterThanOrEqual(2)
+    await visibility(page, "hidden")
+    const other = await context.newPage()
+    await startConversation(other)
+    await visibility(other, "hidden")
+    await expect(close(other)).toHaveCount(0)
+    server.reply("Reply to the other tab's first conversation")
+    await visibility(page, "visible")
+    await expect(
+        page.getByText("Reply to the other tab's first conversation", { exact: true })
+    ).toBeVisible()
 })

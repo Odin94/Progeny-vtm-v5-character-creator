@@ -1,10 +1,14 @@
 import { notifications } from "@mantine/notifications"
 import posthog from "posthog-js"
+import { z } from "zod"
 
 const WIDGET_CONTAINER_ID = "ph-conversations-widget-container"
 const WIDGET_OPEN_ATTRIBUTE = "data-progeny-support-open"
 const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="Open chat ("]'
 const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
+const UNREAD_REPLY_POLL_MS = 15_000
+const NOTIFIED_REPLIES_KEY = "progeny:support-notified-replies"
+const notifiedRepliesSchema = z.array(z.tuple([z.string(), z.string()]))
 const REOPEN_WHEN_VISIBLE_KEY = "progeny:support-reopen-when-visible"
 // Support is preloaded on app startup. Three seconds is enough to absorb a
 // slow remote-config response without making a failed user action feel stuck.
@@ -169,13 +173,118 @@ const expandRenderedWidget = () => {
     return true
 }
 
-/** Use the SDK's existing unread polling rather than issuing duplicate requests. */
+/** Open unseen replies using ticket versions, so concurrent reads cannot mask them. */
 export const monitorUnreadSupportReplies = () => {
     if (stopUnreadMonitoring || !document.body) {
         return stopUnreadMonitoring
     }
 
-    const handledCounts = new WeakMap<HTMLElement, number>()
+    const isTabHidden = () => document.visibilityState === "hidden"
+    let stopped = false
+    let checkingReplies = false
+    let hasTickets: boolean | null = null
+    let checkedSession: string | null = null
+    let checkedIdentity: string | null = null
+    let refreshedTicketSet: string | null = null
+    let lastLauncherLabel: string | null = null
+    let notifiedSession: string | null = null
+    let notifiedReplies = new Map<string, string>()
+    const checkReplies = async () => {
+        if (
+            stopped ||
+            checkingReplies ||
+            isTabHidden() ||
+            posthog.get_explicit_consent_status() !== "granted" ||
+            !posthog.conversations.isAvailable()
+        )
+            return
+        const session = posthog.conversations.getWidgetSessionId()
+        if (!session) return
+        const identity = posthog.get_distinct_id()
+        if (session !== checkedSession || identity !== checkedIdentity) hasTickets = null
+        // The initial lookup discovers multiple-ticket sessions. Thereafter,
+        // idle visitors generate no polling until they start a conversation
+        // or authentication changes which tickets this session can access.
+        if (hasTickets === false && !posthog.conversations.getCurrentTicketId()) return
+        checkingReplies = true
+        try {
+            const tickets = []
+            let offset = 0
+            while (true) {
+                const response = await posthog.conversations.getTickets({ limit: 100, offset })
+                if (!response) return
+                tickets.push(...response.results)
+                offset += response.results.length
+                if (offset >= response.count || response.results.length === 0) break
+            }
+            if (
+                stopped ||
+                isTabHidden() ||
+                posthog.get_explicit_consent_status() !== "granted" ||
+                posthog.conversations.getWidgetSessionId() !== session ||
+                posthog.get_distinct_id() !== identity
+            )
+                return
+            hasTickets = tickets.length > 0
+            checkedSession = session
+            checkedIdentity = identity
+            if (notifiedSession !== session) {
+                notifiedSession = session
+                notifiedReplies = new Map()
+                try {
+                    const parsed = notifiedRepliesSchema.safeParse(
+                        JSON.parse(
+                            sessionStorage.getItem(`${NOTIFIED_REPLIES_KEY}:${session}`) ?? "[]"
+                        )
+                    )
+                    if (parsed.success) notifiedReplies = new Map(parsed.data)
+                } catch {
+                    // In-memory dismissal tracking still works without storage.
+                }
+            }
+            const unread = tickets.filter((ticket) => (ticket.unread_count ?? 0) > 0)
+            const version = (ticket: (typeof unread)[number]) =>
+                `${ticket.message_count}:${ticket.last_message_at ?? ""}`
+            if (!unread.some((ticket) => notifiedReplies.get(ticket.id) !== version(ticket))) return
+            const currentTicket = posthog.conversations.getCurrentTicketId()
+            const container = document.getElementById(WIDGET_CONTAINER_ID)
+            if (currentTicket === null || unread.some((ticket) => ticket.id !== currentTicket)) {
+                // Another tab can create tickets while this SDK still holds its
+                // old view in memory. Re-render a closed widget to load the list.
+                // Preserve a conversation the user is actively writing in.
+                if (container?.querySelector(CLOSE_CHAT_SELECTOR) && currentTicket !== null) return
+                const ticketSet = tickets
+                    .map((ticket) => ticket.id)
+                    .sort()
+                    .join(",")
+                if (
+                    !container?.querySelector(CLOSE_CHAT_SELECTOR) &&
+                    refreshedTicketSet !== ticketSet
+                ) {
+                    refreshedTicketSet = ticketSet
+                    lastLauncherLabel = null
+                    posthog.conversations.hide()
+                    posthog.conversations.show()
+                    return
+                }
+            }
+            posthog.conversations.show()
+            if (!expandRenderedWidget()) return
+            for (const ticket of unread) notifiedReplies.set(ticket.id, version(ticket))
+            try {
+                sessionStorage.setItem(
+                    `${NOTIFIED_REPLIES_KEY}:${session}`,
+                    JSON.stringify([...notifiedReplies])
+                )
+            } catch {
+                // In-memory dismissal tracking still works without storage.
+            }
+        } catch (error) {
+            console.warn("PostHog Support unread check failed:", error)
+        } finally {
+            checkingReplies = false
+        }
+    }
     let reopenWhenVisible = false
     try {
         reopenWhenVisible = sessionStorage.getItem(REOPEN_WHEN_VISIBLE_KEY) === "true"
@@ -199,7 +308,7 @@ export const monitorUnreadSupportReplies = () => {
 
         const container = document.getElementById(WIDGET_CONTAINER_ID)
         if (!container) return
-        if (document.visibilityState === "hidden") {
+        if (isTabHidden()) {
             const closeButton = container.querySelector<HTMLButtonElement>(CLOSE_CHAT_SELECTOR)
             if (closeButton) {
                 // The SDK marks replies read whenever its panel is open, even
@@ -225,17 +334,10 @@ export const monitorUnreadSupportReplies = () => {
         const button = container.querySelector(OPEN_CHAT_SELECTOR)
         if (!button) return
 
-        // PostHog OpenChatButton exposes its server-backed unread count here.
-        const match = /^Open chat \((\d+) unread\)$/.exec(button.getAttribute("aria-label") ?? "")
-        const count = match ? Number(match[1]) : 0
-        const previousCount = handledCounts.get(container) ?? 0
-        handledCounts.set(container, count)
-        if (count === 0) {
-            handledCounts.delete(container)
-        } else if (count > previousCount) {
-            // A decrease can mean another tab read a ticket, not a new reply.
-            // Record before clicking: rendering the panel also mutates the DOM.
-            if (!expandRenderedWidget()) handledCounts.delete(container)
+        const label = button.getAttribute("aria-label")
+        if (label !== lastLauncherLabel) {
+            lastLauncherLabel = label
+            void checkReplies()
         }
     }
 
@@ -246,10 +348,28 @@ export const monitorUnreadSupportReplies = () => {
         attributes: true,
         attributeFilter: ["aria-label"]
     })
-    document.addEventListener("visibilitychange", checkUnread)
+    const onVisibilityChange = () => {
+        hasTickets = null
+        checkUnread()
+        void checkReplies()
+    }
+    const onStorage = (event: StorageEvent) => {
+        // The SDK's dedicated conversation persistence changes when another
+        // tab starts/restores a ticket. Its in-memory ticket ID does not sync.
+        if (event.key === `ph_conv_${posthog.config.token}`) {
+            hasTickets = null
+            void checkReplies()
+        }
+    }
+    const pollId = window.setInterval(() => void checkReplies(), UNREAD_REPLY_POLL_MS)
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    window.addEventListener("storage", onStorage)
     stopUnreadMonitoring = () => {
+        stopped = true
+        window.clearInterval(pollId)
         observer.disconnect()
-        document.removeEventListener("visibilitychange", checkUnread)
+        document.removeEventListener("visibilitychange", onVisibilityChange)
+        window.removeEventListener("storage", onStorage)
         stopUnreadMonitoring = null
     }
     checkUnread()

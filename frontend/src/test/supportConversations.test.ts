@@ -23,12 +23,38 @@ describe("unseen support replies", () => {
         button.setAttribute("aria-label", count ? `Open chat (${count} unread)` : "Open chat")
         container.append(button)
         document.body.append(container)
+        let previousCount = 0
+        let messageCount = 0
+        vi.mocked(posthog.conversations.getTickets).mockImplementation(async () => {
+            const count = Number(
+                /\((\d+) unread\)/.exec(button.getAttribute("aria-label") ?? "")?.[1] ?? 0
+            )
+            if (count > previousCount) messageCount += 1
+            previousCount = count
+            return {
+                count: 1,
+                results: [
+                    {
+                        id: "unit-ticket",
+                        status: "open",
+                        message_count: messageCount,
+                        unread_count: count,
+                        created_at: "2026-01-01"
+                    }
+                ]
+            }
+        })
         return { container, button, click: vi.spyOn(button, "click") }
     }
     beforeEach(() => {
         document.body.innerHTML = ""
         sessionStorage.clear()
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
+        vi.mocked(posthog.get_distinct_id).mockReturnValue("unit-user")
+        vi.mocked(posthog.conversations.isAvailable).mockReturnValue(true)
+        vi.mocked(posthog.conversations.getCurrentTicketId).mockReturnValue("unit-ticket")
+        vi.mocked(posthog.conversations.getWidgetSessionId).mockReturnValue("unit-session")
+        vi.mocked(posthog.conversations.getTickets).mockResolvedValue({ count: 0, results: [] })
     })
     afterEach(() => {
         stop?.()
@@ -37,6 +63,7 @@ describe("unseen support replies", () => {
     it("opens for unread replies on load and replies arriving later", async () => {
         const { container, button, click } = renderLauncher(1)
         stop = monitorUnreadSupportReplies()
+        await flush()
         expect(click).toHaveBeenCalledOnce()
         expect(container).toHaveAttribute("data-progeny-support-open", "true")
         button.setAttribute("aria-label", "Open chat (1 unread)")
@@ -57,6 +84,33 @@ describe("unseen support replies", () => {
         await flush()
         expect(click).toHaveBeenCalledOnce()
     })
+    it("discovers existing unread tickets after anonymous startup becomes authenticated", async () => {
+        vi.mocked(posthog.conversations.getTickets).mockClear()
+        vi.mocked(posthog.conversations.hide).mockClear()
+        const { button, click } = renderLauncher(0)
+        vi.mocked(posthog.conversations.getCurrentTicketId).mockReturnValue(null)
+        vi.mocked(posthog.conversations.getTickets).mockResolvedValue({ count: 0, results: [] })
+        stop = monitorUnreadSupportReplies()
+        await flush()
+        expect(click).not.toHaveBeenCalled()
+        vi.mocked(posthog.get_distinct_id).mockReturnValue("returning-user")
+        vi.mocked(posthog.conversations.getTickets).mockResolvedValue({
+            count: 1,
+            results: [
+                {
+                    id: "existing-ticket",
+                    status: "open",
+                    unread_count: 1,
+                    message_count: 2,
+                    created_at: "2026-01-01"
+                }
+            ]
+        })
+        button.setAttribute("aria-label", "Open chat (1 unread)")
+        await flush()
+        expect(posthog.conversations.getTickets).toHaveBeenCalledTimes(2)
+        expect(posthog.conversations.hide).toHaveBeenCalledOnce()
+    })
     it("waits for a visible tab and respects revoked consent", async () => {
         const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden")
         const { button, click } = renderLauncher(1)
@@ -64,6 +118,7 @@ describe("unseen support replies", () => {
         expect(click).not.toHaveBeenCalled()
         visibility.mockReturnValue("visible")
         document.dispatchEvent(new Event("visibilitychange"))
+        await flush()
         expect(click).toHaveBeenCalledOnce()
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("denied")
         button.setAttribute("aria-label", "Open chat (2 unread)")
@@ -81,7 +136,7 @@ describe("unseen support replies", () => {
             expect(container).toHaveAttribute("data-progeny-support-open", "true")
             close.addEventListener("click", () => close.replaceWith(button))
             close.click()
-            await vi.runAllTimersAsync()
+            await vi.advanceTimersByTimeAsync(0)
             expect(container).not.toHaveAttribute("data-progeny-support-open")
         } finally {
             vi.useRealTimers()
@@ -103,7 +158,7 @@ describe("unseen support replies", () => {
             stop = monitorUnreadSupportReplies()
             visibility.mockReturnValue("hidden")
             document.dispatchEvent(new Event("visibilitychange"))
-            await vi.runAllTimersAsync()
+            await vi.advanceTimersByTimeAsync(0)
             expect(closeClick).toHaveBeenCalledOnce()
             expect(container).not.toHaveAttribute("data-progeny-support-open")
             visibility.mockReturnValue("visible")
@@ -140,8 +195,9 @@ describe("unseen support replies", () => {
             close.addEventListener("click", () => close.replaceWith(button))
             stop = monitorUnreadSupportReplies()
             await flush()
+            await flush()
             close.click()
-            await vi.runAllTimersAsync()
+            await vi.advanceTimersByTimeAsync(0)
             expect(container).not.toHaveAttribute("data-progeny-support-open")
             button.setAttribute("aria-label", "Open chat (1 unread)")
             await flush()
@@ -169,21 +225,32 @@ vi.mock("posthog-js", () => ({
             api_host: "https://info.odin-matthias.com"
         },
         get_explicit_consent_status: vi.fn(),
+        get_distinct_id: vi.fn(),
         conversations: {
             isAvailable: vi.fn(),
             loadIfEnabled: vi.fn(),
             show: vi.fn(),
-            hide: vi.fn()
+            hide: vi.fn(),
+            getTickets: vi.fn(),
+            getCurrentTicketId: vi.fn(),
+            getWidgetSessionId: vi.fn()
         }
     }
 }))
 
 describe("openSupportConversation", () => {
+    afterEach(() => {
+        monitorUnreadSupportReplies()?.()
+    })
     beforeEach(() => {
         document.body.innerHTML = ""
         sessionStorage.clear()
         vi.clearAllMocks()
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
+        vi.mocked(posthog.conversations.isAvailable).mockReturnValue(true)
+        vi.mocked(posthog.conversations.getCurrentTicketId).mockReturnValue("unit-ticket")
+        vi.mocked(posthog.conversations.getWidgetSessionId).mockReturnValue("unit-session")
+        vi.mocked(posthog.conversations.getTickets).mockResolvedValue({ count: 0, results: [] })
     })
 
     it("shows and expands the PostHog Support widget", async () => {
@@ -233,7 +300,7 @@ describe("openSupportConversation", () => {
 
         await expect(openSupportConversation("character-sheet-menu")).resolves.toBe("opened")
         closeButton.click()
-        await vi.runAllTimersAsync()
+        await vi.advanceTimersByTimeAsync(0)
 
         expect(container).not.toHaveAttribute("data-progeny-support-open")
         expect(posthog.conversations.hide).not.toHaveBeenCalled()
