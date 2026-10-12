@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     getCurrentUser: vi.fn(),
     capture: vi.fn(),
     identify: vi.fn(),
+    consentStatus: vi.fn(() => "granted"),
     notificationsShow: vi.fn()
 }))
 
@@ -27,7 +28,7 @@ vi.mock("posthog-js", () => ({
         capture: mocks.capture,
         identify: mocks.identify,
         reset: vi.fn(),
-        get_explicit_consent_status: vi.fn(() => "pending"),
+        get_explicit_consent_status: mocks.consentStatus,
         opt_in_capturing: vi.fn(),
         opt_out_capturing: vi.fn()
     }
@@ -117,6 +118,7 @@ const wrapper = ({ children }: { children: ReactNode }) => {
 describe("auth callback success feedback + telemetry", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mocks.consentStatus.mockReturnValue("granted")
         clearSignInPending()
         sessionStorage.clear()
         stubLocation()
@@ -182,6 +184,7 @@ describe("auth callback success feedback + telemetry", () => {
 describe("useAuth sign-in seed", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mocks.consentStatus.mockReturnValue("granted")
         sessionStorage.clear()
         window.history.replaceState(null, "", "/sheet")
     })
@@ -219,6 +222,7 @@ describe("useAuth sign-in seed", () => {
 describe("useAuth sign-in pending state", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mocks.consentStatus.mockReturnValue("granted")
         clearSignInPending()
         sessionStorage.clear()
         window.history.replaceState(null, "", "/sheet")
@@ -283,6 +287,7 @@ describe("useAuth sign-in pending state", () => {
 describe("AuthSignInConfirmation", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mocks.consentStatus.mockReturnValue("granted")
         sessionStorage.clear()
     })
 
@@ -307,5 +312,24 @@ describe("AuthSignInConfirmation", () => {
         unmount()
         render(<AuthSignInConfirmation />)
         expect(mocks.notificationsShow).toHaveBeenCalledTimes(1)
+    })
+})
+
+
+describe("authenticated analytics consent", () => {
+    afterEach(() => cleanup())
+
+    it("waits for consent and identifies when preferences change", async () => {
+        vi.clearAllMocks()
+        sessionStorage.clear()
+        mocks.consentStatus.mockReturnValue("denied")
+        mocks.getCurrentUser.mockResolvedValue(testUser)
+        const { result } = renderHook(() => useAuth(), { wrapper })
+        await waitFor(() => expect(result.current.isAuthenticated).toBe(true))
+        expect(mocks.identify).not.toHaveBeenCalled()
+
+        mocks.consentStatus.mockReturnValue("granted")
+        act(() => window.dispatchEvent(new Event("progeny:cookie-preferences-changed")))
+        expect(mocks.identify).toHaveBeenCalledWith(testUser.id, expect.objectContaining({ email: testUser.email }))
     })
 })

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
 import {
+    identifyPostHogUser,
     removeUtmParametersFromCurrentUrl,
     resetPostHogIdentity,
     trackFeatureGuideNavigationSelected,
@@ -10,6 +11,7 @@ import {
 vi.mock("posthog-js", () => ({
     default: {
         capture: vi.fn(),
+        identify: vi.fn(),
         get_explicit_consent_status: vi.fn(),
         opt_in_capturing: vi.fn(),
         opt_out_capturing: vi.fn(),
@@ -95,5 +97,25 @@ describe("removeUtmParametersFromCurrentUrl", () => {
 
         expect(removeUtmParametersFromCurrentUrl()).toBe(false)
         expect(replaceState).not.toHaveBeenCalled()
+    })
+})
+
+
+describe("identifyPostHogUser", () => {
+    beforeEach(() => vi.clearAllMocks())
+
+    it.each(["pending", "denied"] as const)("does not identify with %s consent", (consent) => {
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue(consent)
+        identifyPostHogUser({ id: "user-1", email: "test@example.com" })
+        expect(posthog.identify).not.toHaveBeenCalled()
+    })
+
+    it("identifies after consent is granted", () => {
+        const user = { id: "user-1", email: "test@example.com", firstName: "Test", lastName: null }
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
+        identifyPostHogUser(user)
+        expect(posthog.identify).toHaveBeenCalledWith(user.id, {
+            email: user.email, firstName: user.firstName, lastName: user.lastName
+        })
     })
 })

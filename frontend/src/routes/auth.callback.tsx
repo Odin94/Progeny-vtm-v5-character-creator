@@ -4,6 +4,7 @@ import { Alert, Button, Container, Group, Loader, Stack, Text } from "@mantine/c
 import { IconAlertCircle, IconHome, IconRefresh } from "@tabler/icons-react"
 import { useCallback, useEffect, useState } from "react"
 import posthog from "posthog-js"
+import { identifyPostHogUser } from "~/utils/analytics"
 import RenderProfiler from "~/components/RenderProfiler"
 import { clearStoredAuthReturnTo, getSafeAuthReturnTo, storeAuthSignInSeed } from "~/hooks/useAuth"
 import type { ApiError } from "~/utils/api"
@@ -103,11 +104,7 @@ export function AuthCallback() {
                 storeAuthSignInSeed(data.user)
 
                 try {
-                    posthog.identify(data.user.id, {
-                        email: data.user.email,
-                        firstName: data.user.firstName,
-                        lastName: data.user.lastName
-                    })
+                    identifyPostHogUser(data.user)
                     posthog.capture("sign_in_completed", { userId: data.user.id })
                 } catch (error) {
                     console.warn("PostHog identify failed:", error)

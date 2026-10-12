@@ -1,5 +1,21 @@
 import posthog from "posthog-js"
 
+/** Cookieless events cannot create or update person profiles. */
+export const identifyPostHogUser = (user: {
+    id: string
+    email: string
+    firstName?: string | null
+    lastName?: string | null
+}) => {
+    if (posthog.get_explicit_consent_status() !== "granted") return
+
+    posthog.identify(user.id, {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+    })
+}
+
 type PostHogConsentStatus = ReturnType<typeof posthog.get_explicit_consent_status>
 
 type EventParams = {

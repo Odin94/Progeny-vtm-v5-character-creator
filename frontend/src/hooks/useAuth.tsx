@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useSyncExternalStore } from "react"
 import { api, API_URL, type ApiError, type CurrentUser } from "../utils/api"
 import { PREFERENCES_QUERY_KEY } from "./useUserPreferences"
 import posthog from "posthog-js"
-import { resetPostHogIdentity } from "~/utils/analytics"
+import { identifyPostHogUser, resetPostHogIdentity } from "~/utils/analytics"
+import { COOKIE_PREFERENCES_CHANGED_EVENT } from "~/utils/cookiePreferences"
 
 const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
 const AUTH_SIGN_IN_SEED_KEY = "auth:signInSeed"
@@ -184,17 +185,17 @@ export const useAuth = () => {
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
     useEffect(() => {
-        if (currentUser) {
+        const identify = () => {
+            if (!currentUser) return
             try {
-                posthog.identify(currentUser.id, {
-                    email: currentUser.email,
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName
-                })
+                identifyPostHogUser(currentUser)
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
         }
+        identify()
+        window.addEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, identify)
+        return () => window.removeEventListener(COOKIE_PREFERENCES_CHANGED_EVENT, identify)
     }, [currentUser])
 
     const refreshAuth = useCallback(async () => {
@@ -253,11 +254,7 @@ export const useAuth = () => {
 
             // Identify user in PostHog
             try {
-                posthog.identify(data.user.id, {
-                    email: data.user.email,
-                    firstName: data.user.firstName,
-                    lastName: data.user.lastName
-                })
+                identifyPostHogUser(data.user)
             } catch (error) {
                 console.warn("PostHog identify failed:", error)
             }
