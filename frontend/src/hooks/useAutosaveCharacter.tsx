@@ -50,9 +50,10 @@ const readPendingWrite = (id: string) => {
         return null
     }
 }
-const writePendingWrite = (id: string, saveKey: string) => {
+const writePendingWrite = (id: string, saveKey: string | null) => {
     try {
-        localStorage.setItem(pendingWriteKey(id), saveKey)
+        if (saveKey === null) localStorage.removeItem(pendingWriteKey(id))
+        else localStorage.setItem(pendingWriteKey(id), saveKey)
     } catch {
         /* Without it, a lost save response is reported as a conflict. */
     }
@@ -185,6 +186,7 @@ export const useAutosaveCharacter = (
 
             savedVersionRef.current = savedVersion
             writeConfirmedBase(characterId, { ...characterToSave, characterVersion: savedVersion })
+            writePendingWrite(characterId, null)
             setCharacterRef.current((currentCharacter) =>
                 currentCharacter.id === characterId
                     ? { ...currentCharacter, characterVersion: savedVersion }
@@ -303,7 +305,7 @@ export const useAutosaveCharacter = (
                         "Cloud revision changed while local draft was pending"
                     )
                     notifyConflict(characterId, {
-                        localVersion: savedVersionRef.current ?? undefined,
+                        localVersion: savedVersionRef.current,
                         remoteVersion: remote.characterVersion
                     })
                 }
@@ -329,6 +331,8 @@ export const useAutosaveCharacter = (
                     setCharacterRef.current(remote)
                     return
                 }
+                // If the cloud holds this device's last sent save, keep the newer local
+                // edits and save them on top of that revision.
                 if (readPendingWrite(characterId) !== remoteKey) {
                     blockedKeyRef.current = autosaveKey
                     preserveCharacterDraft(
@@ -342,8 +346,6 @@ export const useAutosaveCharacter = (
                     })
                     return
                 }
-                // The cloud holds this device's last sent save. Keep the newer local
-                // edits and save them on top of that revision.
             }
             lastSavedKeyRef.current = remoteKey
             savedVersionRef.current = remote.characterVersion
