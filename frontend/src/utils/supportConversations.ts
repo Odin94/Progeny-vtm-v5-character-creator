@@ -185,17 +185,26 @@ export const monitorUnreadSupportReplies = () => {
 
         const container = document.getElementById(WIDGET_CONTAINER_ID)
         if (!container) return
+        if (container.querySelector(CLOSE_CHAT_SELECTOR)) {
+            // The SDK restores its persisted open state on return. Keep that
+            // panel visible: it marks replies read while internally open.
+            hideWidgetAfterConversationCloses(container)
+            container.setAttribute(WIDGET_OPEN_ATTRIBUTE, "true")
+            return
+        }
         const button = container.querySelector(OPEN_CHAT_SELECTOR)
-        if (!button) return // The conversation is already open.
+        if (!button) return
 
         // PostHog OpenChatButton exposes its server-backed unread count here.
         const match = /^Open chat \((\d+) unread\)$/.exec(button.getAttribute("aria-label") ?? "")
         const count = match ? Number(match[1]) : 0
+        const previousCount = handledCounts.get(container) ?? 0
+        handledCounts.set(container, count)
         if (count === 0) {
             handledCounts.delete(container)
-        } else if (handledCounts.get(container) !== count) {
+        } else if (count > previousCount) {
+            // A decrease can mean another tab read a ticket, not a new reply.
             // Record before clicking: rendering the panel also mutates the DOM.
-            handledCounts.set(container, count)
             if (!expandRenderedWidget()) handledCounts.delete(container)
         }
     }

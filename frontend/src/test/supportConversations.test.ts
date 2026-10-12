@@ -69,6 +69,47 @@ describe("unseen support replies", () => {
         await flush()
         expect(click).toHaveBeenCalledOnce()
     })
+    it("reveals a restored open panel and hides it when dismissed", async () => {
+        vi.useFakeTimers()
+        try {
+            const { container, button } = renderLauncher(0)
+            const close = document.createElement("button")
+            close.setAttribute("aria-label", "Close chat")
+            button.replaceWith(close)
+            stop = monitorUnreadSupportReplies()
+            expect(container).toHaveAttribute("data-progeny-support-open", "true")
+            close.addEventListener("click", () => close.replaceWith(button))
+            close.click()
+            await vi.runAllTimersAsync()
+            expect(container).not.toHaveAttribute("data-progeny-support-open")
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+    it("keeps dismissed replies closed when another tab reduces the unread count", async () => {
+        vi.useFakeTimers()
+        try {
+            const { container, button, click } = renderLauncher(2)
+            const close = document.createElement("button")
+            close.setAttribute("aria-label", "Close chat")
+            button.addEventListener("click", () => button.replaceWith(close))
+            close.addEventListener("click", () => close.replaceWith(button))
+            stop = monitorUnreadSupportReplies()
+            await flush()
+            close.click()
+            await vi.runAllTimersAsync()
+            expect(container).not.toHaveAttribute("data-progeny-support-open")
+            button.setAttribute("aria-label", "Open chat (1 unread)")
+            await flush()
+            expect(click).toHaveBeenCalledOnce()
+            expect(container).not.toHaveAttribute("data-progeny-support-open")
+            button.setAttribute("aria-label", "Open chat (2 unread)")
+            await flush()
+            expect(click).toHaveBeenCalledTimes(2)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
 })
 
 vi.mock("@mantine/notifications", () => ({
