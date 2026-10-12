@@ -1388,12 +1388,14 @@ const MePage = () => {
     const handleConfirmDeleteCharacter = () => {
         if (!characterToDelete) return
         const deletedId = characterToDelete.id
+        const deletionSession = characterPersistence(queryClient)
 
         deleteCharacterMutation.mutate(deletedId, {
             onSuccess: () => {
+                if (!deletionSession.isCurrentSession()) return
                 try {
                     if (clearCharacter((current) => current.id === deletedId))
-                        persistence.startDraft()
+                        deletionSession.startDraft()
                 } catch {
                     void recheckDeletedCharacterDraft(queryClient)
                 }

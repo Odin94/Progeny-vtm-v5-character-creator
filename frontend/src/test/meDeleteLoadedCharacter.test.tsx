@@ -15,7 +15,9 @@ const state = vi.hoisted(() => ({
     update: vi.fn(),
     remove: vi.fn(),
     report: vi.fn(),
-    notify: vi.fn()
+    notify: vi.fn(),
+    deferDelete: false,
+    completeDelete: null as (() => void) | null
 }))
 vi.mock("~/utils/api", () => ({
     api: { getCharacter: state.get, createCharacter: state.create, updateCharacter: state.update }
@@ -49,7 +51,8 @@ vi.mock("~/hooks/useCharacters", async (original) => ({
         mutate: (id: string, options: { onSuccess: () => void }) => {
             state.remove(id)
             state.characters = state.characters.filter((candidate) => candidate.id !== id)
-            options.onSuccess()
+            if (state.deferDelete) state.completeDelete = options.onSuccess
+            else options.onSuccess()
         }
     })
 }))
@@ -131,6 +134,8 @@ const renderMePage = () => {
 
 beforeEach(() => {
     vi.clearAllMocks()
+    state.deferDelete = false
+    state.completeDelete = null
 })
 
 it("Account clears the loaded draft when its character is deleted, so another character loads", async () => {
@@ -198,4 +203,17 @@ it("Account sends a save-before-load 404 to the deleted-draft dialog as a warnin
         expect.objectContaining({ title: "Unable to load character" })
     )
     expect(state.character).toMatchObject({ id: "a", concept: "Edited in browser" })
+})
+
+it("Account retains the draft when deletion completes after an account change", async () => {
+    state.character = { ...alice, concept: "Retained draft" }
+    state.characters = [{ id: "a", name: "Alice", data: alice, characterVersion: 1 }]
+    state.deferDelete = true
+    const client = renderMePage()
+    act(() => state.section.handleDeleteCharacter("a", "Alice"))
+    act(() => state.deleteModal.onConfirm())
+    client.setQueryData(["auth", "me"], { id: "bob" })
+    act(() => state.completeDelete!())
+    expect(state.character).toMatchObject({ id: "a", concept: "Retained draft" })
+    expect(state.notify).not.toHaveBeenCalledWith(expect.objectContaining({ title: "Success" }))
 })
