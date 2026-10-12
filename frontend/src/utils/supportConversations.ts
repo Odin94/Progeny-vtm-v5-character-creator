@@ -15,6 +15,7 @@ let warmupRetryId: number | null = null
 let warmupAttempt = 0
 let supportResourceFailureAt: number | null = null
 let isMonitoringSupportResources = false
+let stopUnreadMonitoring: (() => void) | null = null
 
 export const SUPPORT_CONSENT_REQUEST_EVENT = "progeny:request-posthog-consent"
 
@@ -116,6 +117,7 @@ export const warmSupportConversation = () => {
     }
 
     try {
+        monitorUnreadSupportReplies()
         posthog.conversations.loadIfEnabled()
 
         if (posthog.conversations.isAvailable()) {
@@ -164,6 +166,55 @@ const expandRenderedWidget = () => {
 
     openButton.click()
     return true
+}
+
+/** Use the SDK's existing unread polling rather than issuing duplicate requests. */
+export const monitorUnreadSupportReplies = () => {
+    if (stopUnreadMonitoring || !document.body) {
+        return stopUnreadMonitoring
+    }
+
+    const handledCounts = new WeakMap<HTMLElement, number>()
+    const checkUnread = () => {
+        if (
+            document.visibilityState === "hidden" ||
+            posthog.get_explicit_consent_status() !== "granted"
+        ) {
+            return
+        }
+
+        const container = document.getElementById(WIDGET_CONTAINER_ID)
+        if (!container) return
+        const button = container.querySelector(OPEN_CHAT_SELECTOR)
+        if (!button) return // The conversation is already open.
+
+        // PostHog OpenChatButton exposes its server-backed unread count here.
+        const match = /^Open chat \((\d+) unread\)$/.exec(button.getAttribute("aria-label") ?? "")
+        const count = match ? Number(match[1]) : 0
+        if (count === 0) {
+            handledCounts.delete(container)
+        } else if (handledCounts.get(container) !== count) {
+            // Record before clicking: rendering the panel also mutates the DOM.
+            handledCounts.set(container, count)
+            if (!expandRenderedWidget()) handledCounts.delete(container)
+        }
+    }
+
+    const observer = new MutationObserver(checkUnread)
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["aria-label"]
+    })
+    document.addEventListener("visibilitychange", checkUnread)
+    stopUnreadMonitoring = () => {
+        observer.disconnect()
+        document.removeEventListener("visibilitychange", checkUnread)
+        stopUnreadMonitoring = null
+    }
+    checkUnread()
+    return stopUnreadMonitoring
 }
 
 /**

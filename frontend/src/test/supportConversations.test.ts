@@ -1,7 +1,8 @@
 import posthog from "posthog-js"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
     monitorSupportConversationResources,
+    monitorUnreadSupportReplies,
     openSupportConversation,
     showSupportUnavailableNotification
 } from "~/utils/supportConversations"
@@ -9,6 +10,66 @@ import {
 const mocks = vi.hoisted(() => ({
     notificationsShow: vi.fn()
 }))
+
+describe("unseen support replies", () => {
+    let stop: (() => void) | null
+    const flush = async () => {
+        await new Promise<void>((resolve) => queueMicrotask(resolve))
+    }
+    const renderLauncher = (count: number) => {
+        const container = document.createElement("div")
+        container.id = "ph-conversations-widget-container"
+        const button = document.createElement("button")
+        button.setAttribute("aria-label", count ? `Open chat (${count} unread)` : "Open chat")
+        container.append(button)
+        document.body.append(container)
+        return { container, button, click: vi.spyOn(button, "click") }
+    }
+    beforeEach(() => {
+        document.body.innerHTML = ""
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
+    })
+    afterEach(() => {
+        stop?.()
+        vi.restoreAllMocks()
+    })
+    it("opens for unread replies on load and replies arriving later", async () => {
+        const { container, button, click } = renderLauncher(1)
+        stop = monitorUnreadSupportReplies()
+        expect(click).toHaveBeenCalledOnce()
+        expect(container).toHaveAttribute("data-progeny-support-open", "true")
+        button.setAttribute("aria-label", "Open chat (1 unread)")
+        await flush()
+        expect(click).toHaveBeenCalledOnce()
+        button.setAttribute("aria-label", "Open chat")
+        await flush()
+        button.setAttribute("aria-label", "Open chat (1 unread)")
+        await flush()
+        expect(click).toHaveBeenCalledTimes(2)
+    })
+    it("observes a widget mounted after monitoring starts and ignores read messages", async () => {
+        stop = monitorUnreadSupportReplies()
+        const { button, click } = renderLauncher(0)
+        await flush()
+        expect(click).not.toHaveBeenCalled()
+        button.setAttribute("aria-label", "Open chat (2 unread)")
+        await flush()
+        expect(click).toHaveBeenCalledOnce()
+    })
+    it("waits for a visible tab and respects revoked consent", async () => {
+        const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden")
+        const { button, click } = renderLauncher(1)
+        stop = monitorUnreadSupportReplies()
+        expect(click).not.toHaveBeenCalled()
+        visibility.mockReturnValue("visible")
+        document.dispatchEvent(new Event("visibilitychange"))
+        expect(click).toHaveBeenCalledOnce()
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("denied")
+        button.setAttribute("aria-label", "Open chat (2 unread)")
+        await flush()
+        expect(click).toHaveBeenCalledOnce()
+    })
+})
 
 vi.mock("@mantine/notifications", () => ({
     notifications: {
