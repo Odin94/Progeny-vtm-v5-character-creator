@@ -9,7 +9,8 @@ export type CharacterFailureReason =
 export class CharacterOperationError extends Error {
     constructor(
         readonly reason: CharacterFailureReason,
-        message: string
+        message: string,
+        readonly versions?: { local: number; remote: number }
     ) {
         super(message)
         this.name = "CharacterOperationError"

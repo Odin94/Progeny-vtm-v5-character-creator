@@ -55,8 +55,15 @@ export const useUpdateCharacter = () => {
         async (persistence, { id, data }: { id: string; data: UpdateCharacterPayload }) => {
             const draft =
                 data.data ?? (await api.getCharacter(id, persistence.isCurrentSession)).data
+            // The caller's characterVersion is the base it chose to overwrite,
+            // e.g. the database version after "Overwrite DB version".
             const saved = await persistence.save(
-                { ...draft, id, name: data.name ?? draft.name },
+                {
+                    ...draft,
+                    id,
+                    name: data.name ?? draft.name,
+                    characterVersion: data.characterVersion
+                },
                 { owned: true, force: true }
             )
             return {

@@ -54,6 +54,33 @@ it("a full update submitted for Alice must not dispatch under Bob after mutation
     expect(spies.update).not.toHaveBeenCalled()
 })
 
+it("a full update saves on top of the version the caller chose to overwrite", async () => {
+    spies.update.mockClear()
+    const client = new QueryClient()
+    client.setQueryData(["auth", "me"], { id: "alice" })
+    spies.update.mockResolvedValue({ id: "alice-character", characterVersion: 6 })
+    const wrapper = ({ children }: any) =>
+        React.createElement(QueryClientProvider, { client }, children)
+    const { result } = renderHook(() => useUpdateCharacter(), { wrapper })
+    const draft = {
+        ...getEmptyCharacter(),
+        id: "alice-character",
+        name: "Alice",
+        characterVersion: 3
+    }
+    await act(async () => {
+        await result.current.mutateAsync({
+            id: "alice-character",
+            data: { name: "Alice", characterVersion: 5, data: draft }
+        })
+    })
+    expect(spies.update).toHaveBeenCalledWith(
+        "alice-character",
+        expect.objectContaining({ characterVersion: 5 }),
+        expect.any(Function)
+    )
+})
+
 it("submitted account survives a hook rerender while onMutate is pending", async () => {
     spies.create.mockClear()
     let release!: () => void

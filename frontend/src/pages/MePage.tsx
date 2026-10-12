@@ -1,4 +1,5 @@
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
+import { CharacterOperationError } from "~/utils/characterOperationError"
 import {
     Accordion,
     AppShell,
@@ -361,6 +362,12 @@ const MePage = () => {
         name: string
     } | null>(null)
     const [characterToLoad, setCharacterToLoad] = useState<{
+        id: string
+        name: string
+        data: CharacterType
+    } | null>(null)
+    // Set when saving before a switch hit a version conflict: overwriting continues the switch.
+    const [switchConflictTarget, setSwitchConflictTarget] = useState<{
         id: string
         name: string
         data: CharacterType
@@ -739,9 +746,13 @@ const MePage = () => {
         }
     }
 
+    const conflictDismissalGeneration = useRef(0)
+
     const handleConfirmOverwriteVersion = async () => {
+        const dismissalGeneration = conflictDismissalGeneration.current
         const isCurrent = persistence.replacementGuard()
         if (!versionConflictInfo) return
+        const switchTarget = switchConflictTarget
 
         // If characterToLoad is set, we're in a loading scenario
         if (characterToLoad) {
@@ -788,6 +799,7 @@ const MePage = () => {
         if (targetCharacter.shared) {
             setVersionConflictModalOpened(false)
             setVersionConflictInfo(null)
+            setSwitchConflictTarget(null)
             setCopySource({
                 character: structuredClone(character),
                 ownerId: targetCharacter.ownerId,
@@ -832,13 +844,19 @@ const MePage = () => {
                               }
                             : current
                     )
+                    if (dismissalGeneration !== conflictDismissalGeneration.current) return
                     setVersionConflictModalOpened(false)
                     setVersionConflictInfo(null)
+                    setSwitchConflictTarget(null)
                     notifications.show({
                         title: "Success",
                         message: `Character "${character.name}" saved`,
                         color: "green"
                     })
+                    if (switchTarget)
+                        void transitionCharacter(queryClient, (isCurrentLoad) =>
+                            performLoadCharacter(switchTarget, isCurrentLoad)
+                        )
                 },
                 onError: (error) => {
                     reportCharacterOperationFailure("save", error, { characterId: character.id })
@@ -994,6 +1012,27 @@ const MePage = () => {
                 try {
                     await saveCharacterBeforeSwitch(character, currentCharacter, isCurrent)
                 } catch (error) {
+                    if (
+                        error instanceof CharacterOperationError &&
+                        error.reason === "version_conflict" &&
+                        error.versions
+                    ) {
+                        const { local, remote } = error.versions
+                        reportCharacterOperationFailure("save-before-load", error, {
+                            severity: "warning",
+                            characterId: character.id,
+                            localVersion: local,
+                            remoteVersion: remote
+                        })
+                        setVersionConflictInfo({
+                            beVersion: remote,
+                            feVersion: local,
+                            message: `(Loading ${char.name}): ${character.name} version in database (${remote}) is higher than in browser (${local}) - overwriting saves your browser changes over changes you might have made on another device, then loads ${char.name}.`
+                        })
+                        setSwitchConflictTarget({ id: char.id, name: char.name, data: charData })
+                        setVersionConflictModalOpened(true)
+                        return
+                    }
                     reportCharacterOperationFailure("save-before-load", error, {
                         characterId: character.id
                     })
@@ -2496,11 +2535,19 @@ const MePage = () => {
                     setVersionConflictModalOpened(false)
                     setVersionConflictInfo(null)
                     setCharacterToLoad(null)
+                    setSwitchConflictTarget(null)
+                    conflictDismissalGeneration.current += 1
                 }}
                 onConfirm={handleConfirmOverwriteVersion}
                 title="Version Conflict"
                 body={versionConflictInfo?.message ?? ""}
-                confirmLabel={characterToLoad ? "Load older version" : "Overwrite DB version"}
+                confirmLabel={
+                    characterToLoad
+                        ? "Load older version"
+                        : switchConflictTarget
+                          ? "Overwrite and load"
+                          : "Overwrite DB version"
+                }
             />
 
             {/* Coterie Summary Modal */}
