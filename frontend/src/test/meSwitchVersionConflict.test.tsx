@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { MantineProvider } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, render, waitFor } from "@testing-library/react"
-import { expect, it, vi } from "vitest"
+import { beforeEach, expect, it, vi } from "vitest"
 import { getEmptyCharacter } from "~/data/Character"
 
 const state = vi.hoisted(() => ({
@@ -94,7 +94,9 @@ Object.defineProperty(window, "matchMedia", {
     }))
 })
 
-it("Account opens the version conflict modal when saving before a load conflicts, and overwrite continues the load", async () => {
+beforeEach(() => vi.clearAllMocks())
+
+it.each(["preflight", "update race", "cancel pending"])("Account resolves a save-before-load conflict: %s", async (scenario) => {
     const local = { ...getEmptyCharacter(), id: "a", name: "Alice", characterVersion: 1 }
     const target = { ...getEmptyCharacter(), id: "b", name: "Bob", characterVersion: 3 }
     state.character = { ...local, concept: "Edited in browser" }
@@ -113,6 +115,10 @@ it("Account opens the version conflict modal when saving before a load conflicts
         b: { id: "b", name: "Bob", data: target, characterVersion: 3, canEdit: true }
     }
     state.get.mockImplementation(async (id: "a" | "b") => remote[id])
+    if (scenario === "update race") {
+        state.get.mockResolvedValueOnce({ ...remote.a, characterVersion: 1 })
+        state.update.mockRejectedValueOnce(Object.assign(new Error("Conflict"), { status: 409 }))
+    }
     state.update.mockImplementation(async (id: string, payload: any) => ({
         id,
         name: payload.name,
@@ -135,7 +141,7 @@ it("Account opens the version conflict modal when saving before a load conflicts
 
     expect(state.conflict.opened).toBe(true)
     expect(state.conflict.confirmLabel).toBe("Overwrite and load")
-    expect(state.update).not.toHaveBeenCalled()
+    expect(state.update).toHaveBeenCalledTimes(scenario === "update race" ? 1 : 0)
     expect(state.character).toMatchObject({ id: "a", concept: "Edited in browser" })
     expect(state.report).toHaveBeenCalledWith(
         "save-before-load",
@@ -143,14 +149,25 @@ it("Account opens the version conflict modal when saving before a load conflicts
         expect.objectContaining({ severity: "warning", localVersion: 1, remoteVersion: 2 })
     )
 
+    let complete!: (value: any) => void
+    if (scenario === "cancel pending")
+        state.update.mockImplementationOnce(() => new Promise((resolve) => { complete = resolve }))
     await act(async () => {
         await state.conflict.onConfirm()
     })
+    if (scenario === "cancel pending") {
+        act(() => state.conflict.onClose())
+        await act(async () => complete({ id: "a", name: "Alice", characterVersion: 3 }))
+        await waitFor(() => expect(state.character.characterVersion).toBe(3))
+        expect(state.character).toMatchObject({ id: "a", concept: "Edited in browser" })
+        expect(state.conflict.opened).toBe(false)
+        return
+    }
 
     await waitFor(() => expect(state.character).toMatchObject({ id: "b", name: "Bob" }))
-    expect(state.update).toHaveBeenCalledOnce()
-    expect(state.update.mock.calls[0][0]).toBe("a")
-    expect(state.update.mock.calls[0][1]).toMatchObject({
+    expect(state.update).toHaveBeenCalledTimes(scenario === "update race" ? 2 : 1)
+    expect(state.update.mock.calls.at(-1)![0]).toBe("a")
+    expect(state.update.mock.calls.at(-1)![1]).toMatchObject({
         characterVersion: 2,
         data: { concept: "Edited in browser" }
     })

@@ -201,9 +201,23 @@ export const createCharacterPersistence = (
                     characterVersion: localVersion
                 }
                 assertCurrentSession()
-                const saved = targetId
-                    ? await transport.update(targetId, payload)
-                    : await transport.create(payload)
+                let saved: SavedCharacter
+                try {
+                    saved = targetId
+                        ? await transport.update(targetId, payload)
+                        : await transport.create(payload)
+                } catch (error) {
+                    if (options.beforeSwitch && targetId && (error as { status?: number })?.status === 409) {
+                        const remote = await transport.get(targetId)
+                        assertCurrentSession()
+                        throw new CharacterOperationError(
+                            "version_conflict",
+                            `"${character.name}" has newer saved changes. Resolve that conflict before switching characters.`,
+                            { local: localVersion, remote: savedVersion(remote, localVersion) }
+                        )
+                    }
+                    throw error
+                }
                 assertCurrentSession()
                 const version = savedVersion(saved, localVersion)
                 acknowledgements.set(acknowledgementKey(queueId), { key, version, saved })

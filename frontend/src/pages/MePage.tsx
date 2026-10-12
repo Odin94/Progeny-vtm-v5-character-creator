@@ -746,7 +746,10 @@ const MePage = () => {
         }
     }
 
+    const conflictDismissalGeneration = useRef(0)
+
     const handleConfirmOverwriteVersion = async () => {
+        const dismissalGeneration = conflictDismissalGeneration.current
         const isCurrent = persistence.replacementGuard()
         if (!versionConflictInfo) return
         const switchTarget = switchConflictTarget
@@ -841,6 +844,7 @@ const MePage = () => {
                               }
                             : current
                     )
+                    if (dismissalGeneration !== conflictDismissalGeneration.current) return
                     setVersionConflictModalOpened(false)
                     setVersionConflictInfo(null)
                     setSwitchConflictTarget(null)
@@ -2532,6 +2536,7 @@ const MePage = () => {
                     setVersionConflictInfo(null)
                     setCharacterToLoad(null)
                     setSwitchConflictTarget(null)
+                    conflictDismissalGeneration.current += 1
                 }}
                 onConfirm={handleConfirmOverwriteVersion}
                 title="Version Conflict"
