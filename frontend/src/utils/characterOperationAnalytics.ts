@@ -41,6 +41,9 @@ export const reportCharacterOperationFailure = (
         severity?: "error" | "warning"
         reason?: FailureReason
         characterId?: string
+        localVersion?: number
+        remoteVersion?: number
+        hasConfirmedBase?: boolean
     } = {}
 ) => {
     try {
@@ -117,7 +120,10 @@ export const reportCharacterOperationFailure = (
             severity,
             http_status: status,
             character_id: options.characterId,
-            error_type: errorType
+            error_type: errorType,
+            local_version: options.localVersion,
+            remote_version: options.remoteVersion,
+            has_confirmed_base: options.hasConfirmedBase
         }
         if (severity === "warning") {
             posthog.capture("character_operation_warning", properties)

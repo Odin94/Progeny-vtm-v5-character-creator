@@ -2,7 +2,7 @@ import posthog from "posthog-js"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook } from "@testing-library/react"
 import type { CharacterApiResponse } from "~/utils/characterApi"
-import type { PropsWithChildren } from "react"
+import { useState, type PropsWithChildren } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import {
@@ -273,6 +273,79 @@ describe("useAutosaveCharacter", () => {
         expect(
             JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character
         ).toEqual(draft)
+        expect(posthog.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                local_version: 1,
+                remote_version: 2,
+                has_confirmed_base: false
+            })
+        )
+    })
+
+    it("reports a blocked draft once across reloads", async () => {
+        const server = makeCharacter({ description: "Other device edit", characterVersion: 2 })
+        const draft = makeCharacter({ description: "Offline draft", characterVersion: 1 })
+        for (let load = 0; load < 2; load++) {
+            const { unmount } = renderHook(
+                () => useAutosaveCharacter(draft, vi.fn(), true, remoteFor(server)),
+                { wrapper: makeWrapper() }
+            )
+            await act(async () => {
+                vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+                await finishPendingPromises()
+            })
+            unmount()
+        }
+        expect(apiMocks.updateCharacter).not.toHaveBeenCalled()
+        expect(posthog.captureException).toHaveBeenCalledTimes(1)
+    })
+
+    it("continues from its own save when a reload lost the save response", async () => {
+        const useStatefulAutosave = (initial: Character, remote: CharacterApiResponse) => {
+            const [character, setCharacter] = useState(initial)
+            useAutosaveCharacter(character, setCharacter, true, remote)
+            return setCharacter
+        }
+        const base = makeCharacter({ description: "Cloud base", characterVersion: 1 })
+        const sent = { ...base, description: "Power picked" }
+        // The server stores the save, but the tab reloads before the response arrives.
+        apiMocks.updateCharacter.mockImplementationOnce(() => new Promise(() => undefined))
+        const firstLoad = renderHook(() => useStatefulAutosave(base, remoteFor(base)), {
+            wrapper: makeWrapper()
+        })
+        act(() => firstLoad.result.current(sent))
+        await act(async () => {
+            vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+            await finishPendingPromises()
+        })
+        expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(1)
+        firstLoad.unmount()
+
+        apiMocks.updateCharacter.mockResolvedValueOnce({
+            id: "character-1",
+            characterVersion: 3,
+            data: { characterVersion: 3 }
+        })
+        const localDraft = { ...sent, description: "Edited after the lost response" }
+        renderHook(
+            () => useStatefulAutosave(localDraft, remoteFor({ ...sent, characterVersion: 2 })),
+            { wrapper: makeWrapper() }
+        )
+        await act(async () => {
+            vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+            await finishPendingPromises()
+        })
+
+        expect(posthog.captureException).not.toHaveBeenCalled()
+        expect(localStorage.getItem("progeny-character-recovery")).toBeNull()
+        expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(2)
+        expect(apiMocks.updateCharacter.mock.calls[1][1]).toEqual(
+            expect.objectContaining({
+                characterVersion: 2,
+                data: { ...localDraft, characterVersion: 2 }
+            })
+        )
     })
 
     it("retries transient failures after the retry delay", async () => {

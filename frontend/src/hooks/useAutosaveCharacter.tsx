@@ -39,11 +39,44 @@ const writeConfirmedBase = (id: string, character: Character) => {
         /* Remote revision comparison still protects the active local draft. */
     }
 }
-const notifyConflict = (characterId: string) => {
-    reportCharacterOperationFailure("autosave", undefined, {
-        reason: "version_conflict",
-        characterId
-    })
+// A save can reach the server after this tab stops waiting for the response,
+// e.g. on reload. Remember what was sent so the next load can recognize that
+// cloud revision as this device's own write instead of a conflict.
+const pendingWriteKey = (id: string) => `progeny-character-pending:${id}`
+const readPendingWrite = (id: string) => {
+    try {
+        return localStorage.getItem(pendingWriteKey(id))
+    } catch {
+        return null
+    }
+}
+const writePendingWrite = (id: string, saveKey: string) => {
+    try {
+        localStorage.setItem(pendingWriteKey(id), saveKey)
+    } catch {
+        /* Without it, a lost save response is reported as a conflict. */
+    }
+}
+const conflictReportKey = (id: string) => `progeny-character-conflict-reported:${id}`
+const notifyConflict = (
+    characterId: string,
+    versions: { localVersion?: number; remoteVersion?: number; hasConfirmedBase?: boolean }
+) => {
+    // The guard runs again on every load. Report each blocked draft once.
+    const signature = `${versions.localVersion ?? ""}:${versions.remoteVersion ?? ""}`
+    let reported = false
+    try {
+        reported = localStorage.getItem(conflictReportKey(characterId)) === signature
+        if (!reported) localStorage.setItem(conflictReportKey(characterId), signature)
+    } catch {
+        /* Report again rather than lose the conflict. */
+    }
+    if (!reported)
+        reportCharacterOperationFailure("autosave", undefined, {
+            reason: "version_conflict",
+            characterId,
+            ...versions
+        })
     notifications.show({
         id: "character-save-conflict",
         title: "Newer cloud changes found",
@@ -133,6 +166,7 @@ export const useAutosaveCharacter = (
         let followupSuppressed = false
 
         try {
+            writePendingWrite(characterId, savedKey)
             const savedCharacter = await characterPersistence(queryClient).save(characterToSave, {
                 owned: true
             })
@@ -178,7 +212,9 @@ export const useAutosaveCharacter = (
                     if ((error as ApiError)?.status === 409) {
                         blockedKeyRef.current = savedKey
                         preserveCharacterDraft(latestCharacterRef.current, "Cloud save conflict")
-                        notifyConflict(characterId)
+                        notifyConflict(characterId, {
+                            localVersion: characterToSave.characterVersion
+                        })
                         void queryClient.invalidateQueries({ queryKey: ["characters"] })
                     }
                 }
@@ -266,7 +302,10 @@ export const useAutosaveCharacter = (
                         character,
                         "Cloud revision changed while local draft was pending"
                     )
-                    notifyConflict(characterId)
+                    notifyConflict(characterId, {
+                        localVersion: savedVersionRef.current ?? undefined,
+                        remoteVersion: remote.characterVersion
+                    })
                 }
             }
         }
@@ -290,18 +329,26 @@ export const useAutosaveCharacter = (
                     setCharacterRef.current(remote)
                     return
                 }
-                blockedKeyRef.current = autosaveKey
-                preserveCharacterDraft(
-                    character,
-                    "Cloud revision changed while local draft was pending"
-                )
-                notifyConflict(characterId)
-                return
+                if (readPendingWrite(characterId) !== remoteKey) {
+                    blockedKeyRef.current = autosaveKey
+                    preserveCharacterDraft(
+                        character,
+                        "Cloud revision changed while local draft was pending"
+                    )
+                    notifyConflict(characterId, {
+                        localVersion,
+                        remoteVersion: remote.characterVersion,
+                        hasConfirmedBase: confirmedBase !== null
+                    })
+                    return
+                }
+                // The cloud holds this device's last sent save. Keep the newer local
+                // edits and save them on top of that revision.
             }
             lastSavedKeyRef.current = remoteKey
             savedVersionRef.current = remote.characterVersion
             writeConfirmedBase(characterId, remote)
-            if (remoteKey === autosaveKey && localVersion !== remote.characterVersion) {
+            if (localVersion !== remote.characterVersion) {
                 setCharacterRef.current((current) =>
                     current.id === characterId
                         ? { ...current, characterVersion: remote.characterVersion }
