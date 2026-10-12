@@ -1,7 +1,7 @@
 import { CharacterOperationError } from "~/utils/characterOperationError"
 import { Alert, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import type { Character } from "~/data/Character"
 import { useAuth } from "~/hooks/useAuth"
@@ -10,6 +10,12 @@ import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { getCharacterSaveKey } from "~/modules/characterPersistence"
 import { transitionCharacter } from "~/modules/characterTransition"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
+
+export const isCharacterNotFound = (error: unknown) =>
+    (error as { status?: number } | undefined)?.status === 404
+
+export const recheckDeletedCharacterDraft = (client: QueryClient) =>
+    client.invalidateQueries({ queryKey: ["deleted-draft-check"] })
 
 export default function DeletedCharacterDraftModal() {
     const client = useQueryClient()
@@ -21,7 +27,7 @@ export default function DeletedCharacterDraftModal() {
         queryFn: () => characterHttp.get(character.id),
         enabled: isAuthenticated && !authLoading && !!accountId && !!character.id
     })
-    const missing = remote.isError && (remote.error as { status?: number })?.status === 404
+    const missing = remote.isError && isCharacterNotFound(remote.error)
     const [pending, setPending] = useState(false)
     const [restoreName, setRestoreName] = useState("")
     const [failure, setFailure] = useState("")
