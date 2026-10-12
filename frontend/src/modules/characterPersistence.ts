@@ -174,10 +174,12 @@ export const createCharacterPersistence = (
                             "read_only",
                             "This shared character is read-only. Save a copy instead."
                         )
-                    if (savedVersion(remote, 0) > localVersion)
+                    const remoteVersion = savedVersion(remote, 0)
+                    if (remoteVersion > localVersion)
                         throw new CharacterOperationError(
                             "version_conflict",
-                            `"${character.name}" has a newer version in the database. Resolve that conflict before switching characters.`
+                            `"${character.name}" has a newer version in the database. Resolve that conflict before switching characters.`,
+                            { local: localVersion, remote: remoteVersion }
                         )
                 }
                 // An overlapping explicit save can use the autosave acknowledgement.
