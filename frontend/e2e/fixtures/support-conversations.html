@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Support conversation browser test</title>
+    </head>
+    <body>
+        <style>
+            #ph-conversations-widget-container:not([data-progeny-support-open="true"]) {
+                display: none !important;
+            }
+        </style>
+        <button id="open">Open support</button>
+        <button id="send">Start test conversation</button>
+        <script type="module">
+            import posthog from "posthog-js"
+            import {
+                openSupportConversation,
+                warmSupportConversation
+            } from "/src/utils/supportConversations.ts"
+            posthog.init("phc_support_browser_test", {
+                api_host: "https://support-widget.invalid",
+                defaults: "2025-05-24",
+                autocapture: false,
+                capture_pageview: false,
+                disable_session_recording: true
+            })
+            posthog.opt_in_capturing({ captureEventName: false })
+            posthog.conversations.onRemoteConfig({
+                ok: true,
+                config: {
+                    conversations: {
+                        enabled: true,
+                        widgetEnabled: false,
+                        token: "widget-test-token",
+                        domains: [],
+                        requireEmail: false
+                    }
+                }
+            })
+            warmSupportConversation()
+            document.getElementById("open").onclick = () => openSupportConversation("landing-page")
+            document.getElementById("send").onclick = () =>
+                posthog.conversations.sendMessage("Test request")
+            window.supportTest = { posthog }
+        </script>
+    </body>
+</html>

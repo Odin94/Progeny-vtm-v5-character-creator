@@ -27,6 +27,7 @@ describe("unseen support replies", () => {
     }
     beforeEach(() => {
         document.body.innerHTML = ""
+        sessionStorage.clear()
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
     })
     afterEach(() => {
@@ -86,6 +87,49 @@ describe("unseen support replies", () => {
             vi.useRealTimers()
         }
     })
+    it("closes an open panel in a background tab and restores it on return", async () => {
+        vi.useFakeTimers()
+        try {
+            const visibility = vi
+                .spyOn(document, "visibilityState", "get")
+                .mockReturnValue("visible")
+            const { container, button, click } = renderLauncher(0)
+            const close = document.createElement("button")
+            close.setAttribute("aria-label", "Close")
+            const closeClick = vi.spyOn(close, "click")
+            button.addEventListener("click", () => button.replaceWith(close))
+            close.addEventListener("click", () => close.replaceWith(button))
+            button.replaceWith(close)
+            stop = monitorUnreadSupportReplies()
+            visibility.mockReturnValue("hidden")
+            document.dispatchEvent(new Event("visibilitychange"))
+            await vi.runAllTimersAsync()
+            expect(closeClick).toHaveBeenCalledOnce()
+            expect(container).not.toHaveAttribute("data-progeny-support-open")
+            visibility.mockReturnValue("visible")
+            document.dispatchEvent(new Event("visibilitychange"))
+            await flush()
+            expect(click).toHaveBeenCalledOnce()
+            expect(container).toHaveAttribute("data-progeny-support-open", "true")
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+    it("closes a persisted open panel when initially loaded in a background tab", async () => {
+        const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden")
+        const { button, click } = renderLauncher(0)
+        const close = document.createElement("button")
+        close.setAttribute("aria-label", "Close")
+        const closeClick = vi.spyOn(close, "click")
+        close.addEventListener("click", () => close.replaceWith(button))
+        button.replaceWith(close)
+        stop = monitorUnreadSupportReplies()
+        expect(closeClick).toHaveBeenCalledOnce()
+        visibility.mockReturnValue("visible")
+        document.dispatchEvent(new Event("visibilitychange"))
+        await flush()
+        expect(click).toHaveBeenCalledOnce()
+    })
     it("keeps dismissed replies closed when another tab reduces the unread count", async () => {
         vi.useFakeTimers()
         try {
@@ -137,6 +181,7 @@ vi.mock("posthog-js", () => ({
 describe("openSupportConversation", () => {
     beforeEach(() => {
         document.body.innerHTML = ""
+        sessionStorage.clear()
         vi.clearAllMocks()
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
     })

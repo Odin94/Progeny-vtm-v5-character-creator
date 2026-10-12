@@ -5,6 +5,7 @@ const WIDGET_CONTAINER_ID = "ph-conversations-widget-container"
 const WIDGET_OPEN_ATTRIBUTE = "data-progeny-support-open"
 const OPEN_CHAT_SELECTOR = 'button[aria-label="Open chat"], button[aria-label^="Open chat ("]'
 const CLOSE_CHAT_SELECTOR = 'button[aria-label="Close"], button[aria-label="Close chat"]'
+const REOPEN_WHEN_VISIBLE_KEY = "progeny:support-reopen-when-visible"
 // Support is preloaded on app startup. Three seconds is enough to absorb a
 // slow remote-config response without making a failed user action feel stuck.
 const OPEN_RETRY_COUNT = 30
@@ -175,16 +176,45 @@ export const monitorUnreadSupportReplies = () => {
     }
 
     const handledCounts = new WeakMap<HTMLElement, number>()
+    let reopenWhenVisible = false
+    try {
+        reopenWhenVisible = sessionStorage.getItem(REOPEN_WHEN_VISIBLE_KEY) === "true"
+    } catch {
+        // Keep the in-memory fallback when browser storage is unavailable.
+    }
+    const setReopenWhenVisible = (reopen: boolean) => {
+        reopenWhenVisible = reopen
+        try {
+            if (reopen) sessionStorage.setItem(REOPEN_WHEN_VISIBLE_KEY, "true")
+            else sessionStorage.removeItem(REOPEN_WHEN_VISIBLE_KEY)
+        } catch {
+            // Background replies still remain unread without storage access.
+        }
+    }
     const checkUnread = () => {
-        if (
-            document.visibilityState === "hidden" ||
-            posthog.get_explicit_consent_status() !== "granted"
-        ) {
+        if (posthog.get_explicit_consent_status() !== "granted") {
+            setReopenWhenVisible(false)
             return
         }
 
         const container = document.getElementById(WIDGET_CONTAINER_ID)
         if (!container) return
+        if (document.visibilityState === "hidden") {
+            const closeButton = container.querySelector<HTMLButtonElement>(CLOSE_CHAT_SELECTOR)
+            if (closeButton) {
+                // The SDK marks replies read whenever its panel is open, even
+                // in a background tab. Close through its UI to stop those reads.
+                // Per-tab storage preserves this intent through a reload,
+                // since clicking Close also changes the SDK's saved state.
+                setReopenWhenVisible(true)
+                closeButton.click()
+            }
+            return
+        }
+        if (reopenWhenVisible && expandRenderedWidget()) {
+            setReopenWhenVisible(false)
+            return
+        }
         if (container.querySelector(CLOSE_CHAT_SELECTOR)) {
             // The SDK restores its persisted open state on return. Keep that
             // panel visible: it marks replies read while internally open.
