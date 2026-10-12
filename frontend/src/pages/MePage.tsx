@@ -68,6 +68,10 @@ import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import {
+    isCharacterNotFound,
+    recheckDeletedCharacterDraft
+} from "~/components/DeletedCharacterDraftModal"
+import {
     useCharacters,
     useCreateCharacter,
     useDeleteCharacter,
@@ -289,7 +293,7 @@ const MePage = () => {
         return vitalsMap
     }, [coterieVitals])
     const queryClient = useQueryClient()
-    const [character, setCharacter] = useCharacterLocalStorage()
+    const [character, setCharacter, clearCharacter] = useCharacterLocalStorage()
     const persistence = characterPersistence(queryClient)
     const isTransitioningCharacter = useSyncExternalStore(
         persistence.subscribeTransitions,
@@ -995,9 +999,15 @@ const MePage = () => {
                     await saveCharacterBeforeSwitch(character, currentCharacter, isCurrent)
                 } catch (error) {
                     reportCharacterOperationFailure("save-before-load", error, {
+                        severity: isCharacterNotFound(error) ? "warning" : undefined,
                         characterId: character.id
                     })
                     console.warn("Failed to save current character before loading:", error)
+                    // The saved character is gone, so let the deleted-draft dialog take over.
+                    if (isCharacterNotFound(error)) {
+                        void recheckDeletedCharacterDraft(queryClient)
+                        return
+                    }
                     const reason = error instanceof Error ? error.message : "Unknown save error"
                     notifications.show({
                         title: "Unable to load character",
@@ -1377,9 +1387,16 @@ const MePage = () => {
 
     const handleConfirmDeleteCharacter = () => {
         if (!characterToDelete) return
+        const deletedId = characterToDelete.id
 
-        deleteCharacterMutation.mutate(characterToDelete.id, {
+        deleteCharacterMutation.mutate(deletedId, {
             onSuccess: () => {
+                try {
+                    if (clearCharacter((current) => current.id === deletedId))
+                        persistence.startDraft()
+                } catch {
+                    void recheckDeletedCharacterDraft(queryClient)
+                }
                 notifications.show({
                     title: "Success",
                     message: `Character "${characterToDelete.name}" deleted`,
