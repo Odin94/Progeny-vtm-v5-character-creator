@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "./characterOperationAnalytics"
 import type { Character } from "~/data/Character"
 
 // Local-only identities do not change the exported character schema. Functional
@@ -58,7 +59,11 @@ export const preserveCharacterDraft = (character: Character, reason: string) => 
             })
             localStorage.setItem(key, JSON.stringify(entries))
         }
-    } catch {
+    } catch (error) {
+        reportCharacterOperationFailure("preserve-draft", error, {
+            reason: "storage_failed",
+            characterId: character.id
+        })
         // The active draft remains available even if browser storage is exhausted.
         console.warn("Could not preserve an interrupted character draft")
     }

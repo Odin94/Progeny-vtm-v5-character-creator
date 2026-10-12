@@ -14,6 +14,7 @@ export type CharacterOperation =
     | "autosave"
     | "restore-deleted-draft"
     | "delete-local-draft"
+    | "preserve-draft"
     | "storage-read"
     | "storage-write"
 
@@ -67,17 +68,28 @@ export const reportCharacterOperationFailure = (
                       : status
                         ? "request_failed"
                         : "unknown")
-        const severity =
-            options.severity ??
-            ([
-                "busy",
-                "account_changed",
-                "characters_unavailable",
-                "name_required",
-                "file_required"
-            ].includes(reason)
-                ? "warning"
-                : "error")
+        const routineRefusal = [
+            "busy",
+            "account_changed",
+            "characters_unavailable",
+            "name_required",
+            "file_required"
+        ].includes(reason)
+        // A resolution dialog does not make an unsaved draft durable. Keep these
+        // failures in error tracking even when the caller shows a warning UI.
+        const dataLossRisk =
+            reason === "storage_failed" ||
+            (!routineRefusal &&
+                (operation === "save-before-import" ||
+                    (reason === "version_conflict" &&
+                        ["save", "save-before-load", "autosave"].includes(operation)) ||
+                    (reason === "not_found" &&
+                        ["save", "save-before-load", "autosave", "restore-deleted-draft"].includes(
+                            operation
+                        ))))
+        const severity = dataLossRisk
+            ? "error"
+            : options.severity ?? (routineRefusal ? "warning" : "error")
         if (error && typeof error === "object" && reportedErrors.has(error)) return
         if (
             error instanceof z.ZodError &&
@@ -121,6 +133,7 @@ export const reportCharacterOperationFailure = (
             http_status: status,
             character_id: options.characterId,
             error_type: errorType,
+            data_loss_risk: dataLossRisk,
             local_version: options.localVersion,
             remote_version: options.remoteVersion,
             has_confirmed_base: options.hasConfirmedBase

@@ -183,3 +183,41 @@ it("pairs attempt outcomes once and tolerates SDK failures", async () => {
     vi.mocked(posthog.capture).mockImplementationOnce(() => { throw new Error("SDK unavailable") })
     expect(() => beginSaveAndStartNewAttempt()("success")).not.toThrow()
 })
+
+
+it.each([
+    ["save", "version_conflict"],
+    ["save-before-load", "version_conflict"],
+    ["save-before-load", "not_found"],
+    ["save-before-import", "request_failed"],
+    ["restore-deleted-draft", "not_found"],
+    ["storage-write", "storage_failed"]
+] as const)("keeps at-risk %s/%s in error tracking despite warning UI", (operation, reason) => {
+    reportCharacterOperationFailure(operation, undefined, { severity: "warning", reason })
+    expect(posthog.capture).not.toHaveBeenCalled()
+    expect(posthog.captureException).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({
+        operation, failure_reason: reason, severity: "error", data_loss_risk: true
+    }))
+})
+
+it("keeps a load version confirmation as a normal event", () => {
+    reportCharacterOperationFailure("load", undefined, { severity: "warning", reason: "version_conflict" })
+    expect(posthog.captureException).not.toHaveBeenCalled()
+    expect(posthog.capture).toHaveBeenCalledWith("character_operation_warning", expect.objectContaining({ data_loss_risk: false }))
+})
+
+it("reports recovery-copy storage failure without exposing draft contents or interrupting the caller", async () => {
+    const { preserveCharacterDraft } = await import("~/utils/characterDraft")
+    const write = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("Private draft contents", "QuotaExceededError")
+    })
+    try {
+        expect(() => preserveCharacterDraft({ ...getEmptyCharacter(), notes: "Private notes" }, "Private reason")).not.toThrow()
+        expect(posthog.captureException).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({
+            operation: "preserve-draft", data_loss_risk: true, severity: "error"
+        }))
+        expect(JSON.stringify(vi.mocked(posthog.captureException).mock.calls)).not.toContain("Private")
+    } finally {
+        write.mockRestore()
+    }
+})
