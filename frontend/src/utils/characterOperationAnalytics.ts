@@ -17,6 +17,8 @@ export type CharacterOperation =
     | "preserve-draft"
     | "storage-read"
     | "storage-write"
+    | "download-backup"
+    | "resolve-conflict"
 
 type FailureReason =
     | CharacterFailureReason
@@ -46,6 +48,9 @@ export const reportCharacterOperationFailure = (
         remoteVersion?: number
         hasConfirmedBase?: boolean
         resolution?: "modal"
+        conflictContext?: import("./characterConflictAnalytics").ConflictTelemetryContext
+        resolutionId?: string
+        conflictChoice?: "browser" | "backend" | "copy"
     } = {}
 ) => {
     try {
@@ -132,6 +137,9 @@ export const reportCharacterOperationFailure = (
                 ? errorName
                 : "unknown"
         const properties = {
+            ...options.conflictContext,
+            resolution_id: options.resolutionId,
+            choice: options.conflictChoice,
             operation,
             failure_reason: reason,
             severity,

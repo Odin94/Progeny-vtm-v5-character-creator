@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { StrictMode, useEffect, useState } from "react"
 import { MantineProvider } from "@mantine/core"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
@@ -206,11 +206,14 @@ it.each(["Keep browser", "Keep backend"])(
         const resolved = vi.fn()
         function Host() {
             const [draft, setDraft] = useState(browser)
+            const [undoTelemetry, setUndoTelemetry] =
+                useState<CharacterConflictRequest["undoTelemetry"]>()
             const [originalBackend, setOriginalBackend] = useState<typeof backend>()
             const [opened, setOpened] = useState(true)
             useEffect(() => {
                 const reopen = (event: Event) => {
                     const request = (event as CustomEvent<CharacterConflictRequest>).detail
+                    setUndoTelemetry(request.undoTelemetry)
                     setDraft(request.browser!)
                     setOriginalBackend(request.backend)
                     setOpened(true)
@@ -222,6 +225,7 @@ it.each(["Keep browser", "Keep backend"])(
                 <CharacterConflictModal
                     opened={opened}
                     browser={draft}
+                    undoTelemetry={undoTelemetry}
                     originalBackend={originalBackend}
                     onClose={() => setOpened(false)}
                     onResolved={(value) => {
@@ -255,6 +259,18 @@ it.each(["Keep browser", "Keep backend"])(
         fireEvent.click(screen.getByRole("button", { name: "Undo" }))
         await screen.findByText("Browser version: 4 · Backend version: 85")
         expect(mocks.hide).toHaveBeenCalledWith("success-toast")
+        const undo = mocks.capture.mock.calls.find(
+            ([name]) => name === "character_conflict_undo_requested"
+        )![1]
+        const reopened = mocks.capture.mock.calls
+            .filter(([name]) => name === "character_conflict_opened")
+            .at(-1)![1]
+        expect(reopened).toMatchObject({
+            is_undo: true,
+            parent_dialog_id: undo.dialog_id,
+            parent_resolution_id: undo.resolution_id
+        })
+        expect(reopened.dialog_id).not.toBe(undo.dialog_id)
         const other = firstChoice === "Keep browser" ? "Keep backend" : "Keep browser"
         fireEvent.click(screen.getByRole("button", { name: other }))
         fireEvent.click(
@@ -408,4 +424,93 @@ it("requires confirmation before keeping backend and lets Back preserve the brow
     await screen.findByText("Browser version: 4 · Backend version: 85")
     expect(onResolved).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
+})
+
+it("tracks selection, backing out, confirmation and a correlated successful resolution", async () => {
+    mocks.updateCharacter.mockResolvedValue(response({ ...browser, characterVersion: 86 }))
+    setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
+    fireEvent.click(screen.getByRole("button", { name: "Back" }))
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
+    fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
+    await waitFor(() => expect(mocks.show).toHaveBeenCalled())
+    const events = mocks.capture.mock.calls.filter(([name]) =>
+        name.startsWith("character_conflict_")
+    )
+    expect(events.map(([name]) => name)).toEqual([
+        "character_conflict_opened",
+        "character_conflict_ready",
+        "character_conflict_choice_selected",
+        "character_conflict_confirmation_back",
+        "character_conflict_choice_selected",
+        "character_conflict_confirmed",
+        "character_conflict_resolution_started",
+        "character_conflict_resolution_outcome"
+    ])
+    const started = events.find(([name]) => name === "character_conflict_resolution_started")![1]
+    const finished = events.at(-1)![1]
+    expect(finished).toMatchObject({
+        dialog_id: started.dialog_id,
+        resolution_id: started.resolution_id,
+        choice: "browser",
+        outcome: "success",
+        resulting_version: 86
+    })
+    expect(JSON.stringify(events)).not.toContain("Browser draft")
+    expect(JSON.stringify(events)).not.toContain("Backend draft")
+})
+
+it("reports failed backups with sanitized errors and dialog context", async () => {
+    mocks.downloadJson.mockRejectedValue(new Error("secret notes and filename"))
+    setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    fireEvent.click(screen.getByRole("button", { name: "Download backend JSON" }))
+    await screen.findByRole("alert")
+    expect(mocks.capture).toHaveBeenCalledWith(
+        "character_conflict_backup_outcome",
+        expect.objectContaining({ outcome: "failure", backup_source: "backend" })
+    )
+    expect(mocks.captureException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ operation: "download-backup", dialog_id: expect.any(String) })
+    )
+    expect(mocks.captureException.mock.calls[0][0].message).not.toContain("secret")
+})
+
+it("does not let an unavailable analytics SDK block choosing the backend", async () => {
+    mocks.capture.mockImplementation(() => {
+        throw new Error("SDK unavailable")
+    })
+    const { onResolved } = setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    fireEvent.click(screen.getByRole("button", { name: "Keep backend" }))
+    fireEvent.click(screen.getByRole("button", { name: "Replace browser" }))
+    await waitFor(() => expect(onResolved).toHaveBeenCalledWith(backend, "backend"))
+})
+
+it("emits one open and ready event under StrictMode effect replay", async () => {
+    const client = new QueryClient()
+    client.setQueryData(["auth", "me"], { id: "owner" })
+    render(
+        <StrictMode>
+            <QueryClientProvider client={client}>
+                <MantineProvider>
+                    <CharacterConflictModal
+                        opened
+                        browser={browser}
+                        onClose={vi.fn()}
+                        onResolved={vi.fn()}
+                    />
+                </MantineProvider>
+            </QueryClientProvider>
+        </StrictMode>
+    )
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    expect(
+        mocks.capture.mock.calls.filter(([name]) => name === "character_conflict_opened")
+    ).toHaveLength(1)
+    expect(
+        mocks.capture.mock.calls.filter(([name]) => name === "character_conflict_ready")
+    ).toHaveLength(1)
 })

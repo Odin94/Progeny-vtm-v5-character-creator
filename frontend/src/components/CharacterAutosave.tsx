@@ -48,6 +48,7 @@ const CharacterAutosave = () => {
                 (!!conflict.browser || conflict.characterId === character.id)
             }
             browser={conflict?.browser ?? character}
+            undoTelemetry={conflict?.undoTelemetry}
             originalBackend={conflict?.backend}
             originalBrowserChangedAt={conflict?.browserChangedAt}
             originalBackendUpdatedAt={conflict?.backendUpdatedAt}

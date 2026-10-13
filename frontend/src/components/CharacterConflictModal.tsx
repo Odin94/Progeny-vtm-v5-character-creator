@@ -1,3 +1,9 @@
+import {
+    conflictTelemetryId,
+    trackCharacterConflict,
+    type ConflictTelemetryContext,
+    type ConflictTelemetryDetails
+} from "~/utils/characterConflictAnalytics"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import {
     readBrowserCharacterChangeTime,
@@ -17,6 +23,7 @@ import ConfirmActionModal from "./ConfirmActionModal"
 export const CHARACTER_CONFLICT_EVENT = "progeny:character-conflict"
 export type CharacterConflictRequest = {
     characterId: string
+    undoTelemetry?: { dialogId: string; resolutionId: string }
     browser?: Character
     backend?: Character
     browserChangedAt?: string | null
@@ -39,6 +46,7 @@ export default function CharacterConflictModal({
     originalBackend,
     originalBrowserChangedAt,
     originalBackendUpdatedAt,
+    undoTelemetry,
     onClose,
     onResolved
 }: {
@@ -47,6 +55,7 @@ export default function CharacterConflictModal({
     originalBackend?: Character
     originalBrowserChangedAt?: string | null
     originalBackendUpdatedAt?: string | null
+    undoTelemetry?: CharacterConflictRequest["undoTelemetry"]
     onClose: () => void
     onResolved: (character: Character, choice: ConflictChoice) => void
 }) {
@@ -70,6 +79,25 @@ export default function CharacterConflictModal({
     const latest = useRef(browser)
     latest.current = browser
     const operation = useRef(0)
+    const telemetry = useRef<ConflictTelemetryContext | null>(null)
+    const readyReported = useRef(false)
+    const track = (
+        event: Parameters<typeof trackCharacterConflict>[0],
+        details: ConflictTelemetryDetails = {}
+    ) => {
+        if (telemetry.current)
+            trackCharacterConflict(event, telemetry.current, {
+                local_version: latest.current.characterVersion,
+                remote_version: backend?.characterVersion,
+                reviewed_version: reviewedRevision ?? undefined,
+                ...details
+            })
+    }
+    const selectChoice = (choice: ConflictChoice) => {
+        track("choice_selected", { choice })
+        if (choice === "copy") void resolve(choice)
+        else setConfirmChoice(choice)
+    }
     useEffect(() => {
         const generation = ++operation.current
         setBackend(null)
@@ -78,12 +106,40 @@ export default function CharacterConflictModal({
         setError("")
         setBusy(false)
         setConfirmChoice(null)
-        if (!opened || !browser.id) return
+        if (!opened) {
+            telemetry.current = null
+            readyReported.current = false
+            return
+        }
+        if (!browser.id) return
+        if (
+            !telemetry.current ||
+            telemetry.current.character_id !== browser.id ||
+            telemetry.current.parent_resolution_id !== undoTelemetry?.resolutionId
+        ) {
+            telemetry.current = {
+                dialog_id: conflictTelemetryId(),
+                character_id: browser.id,
+                is_undo: !!originalBackend,
+                parent_dialog_id: undoTelemetry?.dialogId,
+                parent_resolution_id: undoTelemetry?.resolutionId
+            }
+            readyReported.current = false
+            trackCharacterConflict("opened", telemetry.current, {
+                local_version: browser.characterVersion
+            })
+        }
+        const context = telemetry.current
         const isCurrent = persistence.replacementGuard()
         api.getCharacter(browser.id, isCurrent)
             .then((saved) => {
                 if (generation !== operation.current || !isCurrent()) return
                 if (saved.shared === true || saved.canEdit !== true) {
+                    trackCharacterConflict("resolution_outcome", context, {
+                        outcome: "blocked",
+                        reason: "read_only",
+                        phase: "load"
+                    })
                     setError(
                         "This character is read-only. Close this dialog and save a copy instead."
                     )
@@ -92,6 +148,14 @@ export default function CharacterConflictModal({
                 setBackendUpdatedAt(
                     originalBackend ? (originalBackendUpdatedAt ?? null) : (saved.updatedAt ?? null)
                 )
+                if (!readyReported.current) {
+                    readyReported.current = true
+                    trackCharacterConflict("ready", context, {
+                        local_version: browser.characterVersion,
+                        remote_version: originalBackend?.characterVersion ?? saved.characterVersion,
+                        reviewed_version: saved.characterVersion
+                    })
+                }
                 setReviewedRevision(saved.characterVersion)
                 setBackend(
                     originalBackend ?? {
@@ -104,7 +168,15 @@ export default function CharacterConflictModal({
             })
             .catch((failure) => {
                 if (generation === operation.current && isCurrent()) {
-                    reportCharacterOperationFailure("load", failure, { characterId: browser.id })
+                    reportCharacterOperationFailure("load", failure, {
+                        characterId: browser.id,
+                        conflictContext: context
+                    })
+                    trackCharacterConflict("resolution_outcome", context, {
+                        outcome: "failure",
+                        reason: "request_failed",
+                        phase: "load"
+                    })
                     setError(
                         "Could not load the backend version. Close and retry; your browser draft is unchanged."
                     )
@@ -113,11 +185,29 @@ export default function CharacterConflictModal({
         return () => {
             operation.current += 1
         }
-    }, [opened, browser.id, persistence, originalBackend, originalBackendUpdatedAt])
+    }, [opened, browser.id, persistence, originalBackend, originalBackendUpdatedAt, undoTelemetry])
 
     const resolve = async (choice: ConflictChoice) => {
         if (!backend || reviewedRevision === null || busy) return
         const generation = operation.current
+        const context = telemetry.current!
+        const resolutionId = conflictTelemetryId()
+        const attempt = (
+            event: Parameters<typeof trackCharacterConflict>[0],
+            details: ConflictTelemetryDetails = {}
+        ) =>
+            trackCharacterConflict(event, context, {
+                choice,
+                resolution_id: resolutionId,
+                local_version: browser.characterVersion,
+                remote_version: backend.characterVersion,
+                reviewed_version: reviewedRevision,
+                ...details
+            })
+        attempt("resolution_started")
+        let resolutionFinished = false
+        let blockedReason: ConflictTelemetryDetails["reason"]
+        let phase: ConflictTelemetryDetails["phase"] = "review"
         const isCurrent = persistence.replacementGuard()
         const draft = structuredClone(latest.current)
         setBusy(true)
@@ -127,10 +217,20 @@ export default function CharacterConflictModal({
             // Review again if another device saved since the dialog opened.
             const fresh = await api.getCharacter(draft.id, isCurrent)
             requestOperation = undefined
-            if (!isCurrent() || generation !== operation.current) return
-            if (fresh.shared === true || fresh.canEdit !== true)
+            if (!isCurrent() || generation !== operation.current) {
+                attempt("resolution_outcome", {
+                    outcome: "interrupted",
+                    reason: !isCurrent() ? "account_changed" : "dialog_changed",
+                    phase
+                })
+                return
+            }
+            if (fresh.shared === true || fresh.canEdit !== true) {
+                blockedReason = "read_only"
                 throw new Error("This character is now read-only.")
+            }
             if (fresh.characterVersion !== reviewedRevision) {
+                blockedReason = "backend_changed"
                 setBackendUpdatedAt(
                     originalBackend ? (originalBackendUpdatedAt ?? null) : (fresh.updatedAt ?? null)
                 )
@@ -147,8 +247,10 @@ export default function CharacterConflictModal({
                     "The backend version changed. Review the updated version and choose again."
                 )
             }
-            if (getCharacterSaveKey(latest.current) !== getCharacterSaveKey(draft))
+            if (getCharacterSaveKey(latest.current) !== getCharacterSaveKey(draft)) {
+                blockedReason = "browser_changed"
                 throw new Error("The browser version changed. Review it and choose again.")
+            }
             preserveCharacterDraft(draft, "Before resolving a save conflict")
             preserveCharacterDraft(backend, "Backend version before resolving a save conflict")
             requestOperation =
@@ -157,6 +259,7 @@ export default function CharacterConflictModal({
                     : choice === "copy"
                       ? "create"
                       : "save"
+            phase = requestOperation ?? "apply"
             const resolved =
                 choice === "backend" && !originalBackend
                     ? backend
@@ -171,7 +274,14 @@ export default function CharacterConflictModal({
                               ? { owned: false, newDocument: true, force: true }
                               : { owned: true, force: true }
                       )
-            if (!isCurrent() || generation !== operation.current) return
+            if (!isCurrent() || generation !== operation.current) {
+                attempt("resolution_outcome", {
+                    outcome: "interrupted",
+                    reason: !isCurrent() ? "account_changed" : "dialog_changed",
+                    phase
+                })
+                return
+            }
             // Keep edits made while saving on top of the acknowledged revision.
             const next =
                 choice === "backend"
@@ -188,7 +298,14 @@ export default function CharacterConflictModal({
                 choice === "backend"
                     ? backendUpdatedAt
                     : (readBrowserCharacterChangeTime(latest.current) ?? browserChangedAt)
+            phase = "apply"
+            requestOperation = undefined
             onResolved(markBrowserCharacterReplacement(next, sourceChangedAt), choice)
+            resolutionFinished = true
+            attempt("resolution_outcome", {
+                outcome: "success",
+                resulting_version: resolved.characterVersion
+            })
             onClose()
             if (choice === "copy") {
                 notifications.show({
@@ -199,6 +316,7 @@ export default function CharacterConflictModal({
             } else {
                 const snapshots = {
                     characterId: draft.id,
+                    undoTelemetry: { dialogId: context.dialog_id, resolutionId },
                     browser: structuredClone(draft),
                     backend: structuredClone(backend),
                     browserChangedAt,
@@ -220,7 +338,11 @@ export default function CharacterConflictModal({
                                 variant="light"
                                 style={{ alignSelf: "flex-start" }}
                                 onClick={() => {
-                                    if (!persistence.isCurrentSession()) return
+                                    if (!persistence.isCurrentSession()) {
+                                        attempt("undo_blocked", { reason: "account_changed" })
+                                        return
+                                    }
+                                    attempt("undo_requested")
                                     notifications.hide(toastId)
                                     window.dispatchEvent(
                                         new CustomEvent(CHARACTER_CONFLICT_EVENT, {
@@ -236,11 +358,48 @@ export default function CharacterConflictModal({
                 })
             }
         } catch (failure) {
+            const modalConflict =
+                requestOperation === "save" && (failure as { status?: number })?.status === 409
+            if (!resolutionFinished)
+                attempt("resolution_outcome", {
+                    outcome:
+                        !isCurrent() || generation !== operation.current
+                            ? "interrupted"
+                            : blockedReason || modalConflict
+                              ? "blocked"
+                              : "failure",
+                    reason: !isCurrent()
+                        ? "account_changed"
+                        : generation !== operation.current
+                          ? "dialog_changed"
+                          : (blockedReason ??
+                            (modalConflict
+                                ? "backend_changed"
+                                : requestOperation
+                                  ? "request_failed"
+                                  : "application_failed")),
+                    phase
+                })
+            if (
+                !requestOperation &&
+                !blockedReason &&
+                generation === operation.current &&
+                isCurrent()
+            )
+                reportCharacterOperationFailure("resolve-conflict", failure, {
+                    characterId: draft.id,
+                    conflictContext: context,
+                    resolutionId,
+                    conflictChoice: choice
+                })
             if (requestOperation && generation === operation.current && isCurrent()) {
                 const modalConflict =
                     requestOperation === "save" && (failure as { status?: number })?.status === 409
                 reportCharacterOperationFailure(requestOperation, failure, {
                     characterId: draft.id,
+                    conflictContext: context,
+                    resolutionId,
+                    conflictChoice: choice,
                     ...(modalConflict ? { resolution: "modal" as const } : {})
                 })
             }
@@ -255,9 +414,24 @@ export default function CharacterConflictModal({
         }
     }
     const backup = async (value: Character, source: "browser" | "backend") => {
+        const context = telemetry.current!
+        track("backup_started", { backup_source: source })
         try {
             await downloadJson(value, `progeny_${source}_v${value.characterVersion ?? 0}.json`)
-        } catch {
+            trackCharacterConflict("backup_outcome", context, {
+                backup_source: source,
+                outcome: "success"
+            })
+        } catch (failure) {
+            trackCharacterConflict("backup_outcome", context, {
+                backup_source: source,
+                outcome: "failure",
+                reason: "download_failed"
+            })
+            reportCharacterOperationFailure("download-backup", failure, {
+                characterId: value.id,
+                conflictContext: context
+            })
             setError("Could not download the JSON backup. Please retry.")
         }
     }
@@ -279,8 +453,12 @@ export default function CharacterConflictModal({
                 }
                 confirmLabel={confirmChoice === "browser" ? "Overwrite backend" : "Replace browser"}
                 cancelLabel="Back"
-                onClose={() => setConfirmChoice(null)}
+                onClose={() => {
+                    track("confirmation_back", { choice: confirmChoice })
+                    setConfirmChoice(null)
+                }}
                 onConfirm={() => {
+                    track("confirmed", { choice: confirmChoice })
                     setConfirmChoice(null)
                     void resolve(confirmChoice)
                 }}
@@ -297,17 +475,20 @@ export default function CharacterConflictModal({
                     <Button
                         disabled={!backend || busy}
                         loading={busy}
-                        onClick={() => setConfirmChoice("browser")}
+                        onClick={() => selectChoice("browser")}
                     >
                         Keep browser
                     </Button>
-                    <Button disabled={!backend || busy} onClick={() => setConfirmChoice("backend")}>
+                    <Button disabled={!backend || busy} onClick={() => selectChoice("backend")}>
                         Keep backend
                     </Button>
                 </Group>
             }
             onClose={() => {
-                if (!busy) onClose()
+                if (!busy) {
+                    track("dismissed")
+                    onClose()
+                }
             }}
             title="Choose a character version"
             body={
@@ -316,7 +497,7 @@ export default function CharacterConflictModal({
                     : "Keeping one version replaces the other active version. Download backups first if you want both."
             }
             confirmLabel="Keep browser"
-            onConfirm={() => setConfirmChoice("browser")}
+            onConfirm={() => selectChoice("browser")}
             loading={busy}
             disabled={!backend || busy}
         >
@@ -351,7 +532,7 @@ export default function CharacterConflictModal({
                         <Button
                             color="grape"
                             disabled={!backend || busy || !browser.name.trim()}
-                            onClick={() => void resolve("copy")}
+                            onClick={() => selectChoice("copy")}
                         >
                             Save browser as new
                         </Button>
