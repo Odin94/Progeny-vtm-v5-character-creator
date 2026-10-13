@@ -2,6 +2,7 @@ import posthog from "posthog-js"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook } from "@testing-library/react"
 import type { CharacterApiResponse } from "~/utils/characterApi"
+import { characterPersistence } from "~/modules/characterPersistence"
 import { useState, type PropsWithChildren } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { getEmptyCharacter, type Character } from "~/data/Character"
@@ -347,6 +348,158 @@ describe("useAutosaveCharacter", () => {
             })
         )
     })
+
+    it.each([1, 2])(
+        "keeps editing after a foreground save while the local revision is %s",
+        async (localVersion) => {
+            const client = new QueryClient()
+            const wrapper = ({ children }: PropsWithChildren) => (
+                <QueryClientProvider client={client}>{children}</QueryClientProvider>
+            )
+            const base = makeCharacter({ description: "Base", characterVersion: 1 })
+            const foreground = { ...base, description: "Explicitly saved" }
+            const local = {
+                ...foreground,
+                description: "Edited again before refresh",
+                characterVersion: localVersion
+            }
+            const hook = renderHook(
+                ({ character, remote }) => useAutosaveCharacter(character, vi.fn(), true, remote),
+                { initialProps: { character: base, remote: remoteFor(base) }, wrapper }
+            )
+            await act(async () => {
+                await characterPersistence(client).save(foreground, { owned: true })
+            })
+            hook.rerender({
+                character: local,
+                remote: remoteFor({ ...foreground, characterVersion: 2 })
+            })
+            await act(async () => {
+                vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+                await finishPendingPromises()
+            })
+            expect(posthog.captureException).not.toHaveBeenCalled()
+            expect(localStorage.getItem("progeny-character-recovery")).toBeNull()
+            expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(2)
+            expect(apiMocks.updateCharacter.mock.calls[1][1]).toMatchObject({
+                characterVersion: 2,
+                data: { description: local.description }
+            })
+        }
+    )
+
+    it.each(["different content", "newer revision", "replaced draft"])(
+        "still blocks divergence from a foreground acknowledgement: %s",
+        async (scenario) => {
+            const client = new QueryClient()
+            const wrapper = ({ children }: PropsWithChildren) => (
+                <QueryClientProvider client={client}>{children}</QueryClientProvider>
+            )
+            const base = makeCharacter({ description: "Base", characterVersion: 1 })
+            const foreground = { ...base, description: "Explicitly saved" }
+            const hook = renderHook(
+                ({ character, remote }) => useAutosaveCharacter(character, vi.fn(), true, remote),
+                { initialProps: { character: base, remote: remoteFor(base) }, wrapper }
+            )
+            await act(async () => {
+                await characterPersistence(client).save(foreground, { owned: true })
+            })
+            if (scenario === "replaced draft") characterPersistence(client).startDraft()
+            const remote = {
+                ...foreground,
+                characterVersion: scenario === "newer revision" ? 3 : 2,
+                description:
+                    scenario === "different content" ? "External edit" : foreground.description
+            }
+            hook.rerender({
+                character: { ...base, description: "Local edits" },
+                remote: remoteFor(remote)
+            })
+            await act(async () => {
+                vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS * 2)
+                await finishPendingPromises()
+            })
+            expect(posthog.captureException).toHaveBeenCalledWith(
+                expect.any(Error),
+                expect.objectContaining({ failure_reason: "version_conflict" })
+            )
+            expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(1)
+            expect(
+                JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character
+                    .description
+            ).toBe("Local edits")
+        }
+    )
+
+    it.each([true, false])(
+        "does not let a pre-conflict foreground acknowledgement undo a 409 (refetch arrived: %s)",
+        async (refetchArrived) => {
+            const client = new QueryClient()
+            const wrapper = ({ children }: PropsWithChildren) => (
+                <QueryClientProvider client={client}>{children}</QueryClientProvider>
+            )
+            const base = makeCharacter({ description: "Base", characterVersion: 1 })
+            const foreground = { ...base, description: "Foreground save" }
+            const hook = renderHook(
+                ({ character, remote }) => useAutosaveCharacter(character, vi.fn(), true, remote),
+                { initialProps: { character: base, remote: remoteFor(base) }, wrapper }
+            )
+            await act(async () => {
+                await characterPersistence(client).save(foreground, { owned: true })
+            })
+            const acknowledged = { ...foreground, characterVersion: 2 }
+            if (refetchArrived)
+                hook.rerender({ character: acknowledged, remote: remoteFor(acknowledged) })
+            apiMocks.updateCharacter.mockRejectedValueOnce(
+                Object.assign(new Error("Other device saved revision 3"), { status: 409 })
+            )
+            const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+            hook.rerender({
+                character: { ...acknowledged, description: "Pending local edit" },
+                remote: remoteFor(refetchArrived ? acknowledged : base)
+            })
+            await act(async () => {
+                vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+                await finishPendingPromises()
+            })
+            expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(2)
+            // The refetch has not returned yet; cached revision 2 is still present.
+            hook.rerender({
+                character: { ...acknowledged, description: "Another local edit" },
+                remote: remoteFor(acknowledged)
+            })
+            await act(async () => {
+                vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS * 2)
+                await finishPendingPromises()
+            })
+            expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(2)
+            // An explicit successful resolution at a newer revision can unblock edits.
+            apiMocks.updateCharacter.mockResolvedValueOnce({ id: base.id, characterVersion: 4 })
+            const resolved = {
+                ...acknowledged,
+                description: "Resolved local edit",
+                characterVersion: 3
+            }
+            await act(async () => {
+                await characterPersistence(client).save(resolved, { owned: true, force: true })
+            })
+            hook.rerender({
+                character: {
+                    ...resolved,
+                    description: "Edit after resolution",
+                    characterVersion: 4
+                },
+                remote: remoteFor({ ...resolved, characterVersion: 4 })
+            })
+            await act(async () => {
+                vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS)
+                await finishPendingPromises()
+            })
+            expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(4)
+            expect(apiMocks.updateCharacter.mock.calls[3][1]).toMatchObject({ characterVersion: 4 })
+            warn.mockRestore()
+        }
+    )
 
     it("retries transient failures after the retry delay", async () => {
         const transientError = Object.assign(new Error("Unavailable"), { status: 503 })

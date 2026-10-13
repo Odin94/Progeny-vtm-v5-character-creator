@@ -72,3 +72,17 @@ Emit privacy-safe operation IDs and terminal outcomes for all lifecycle intents,
 Read the relevant frontend modules, hooks, transition pages, storage/edit buffering, telemetry, backend character update revision check, recent history, and prior Oct 3 audit. Ran six focused suites: characterPersistenceContract, characterAutosave, creatorTransition, charactersSection, accountDraftIdentity, characterTransition. All **45 tests passed**. This confirms existing covered scenarios; it does not reproduce the proposed risks or replace browser and backend concurrency verification.
 
 No application code changed in this investigation. No deployment, external write, full build, or full test suite was performed.
+
+## October 13 reproduction and fix
+
+Pulled the latest production SQLite backup with `pnpm run db:pull-backup` and inspected it read-only. For the sampled surviving characters, row and payload revisions agree and the owners match the authenticated event identities. The character from the save-before-load `not_found` timeline is absent. Current database state cannot reconstruct historical browser drafts or prove an account switch.
+
+The missing-character timeline contains a successful deletion followed by attempted saves of that same identity. It occurred before `78dd11e`/`9902959` cleared deleted active drafts and protected deletion across account changes. Existing regression tests cover those paths; no further deletion behavior change is needed for that historical example.
+
+A local hook reproduction found a separate false conflict still present: initialize autosave at revision 1; complete a foreground save at revision 2 through the shared persistence queue; make another local edit before the cloud refetch arrives; deliver the acknowledged revision 2. Autosave previously interpreted that revision increase as external divergence and blocked. Persistence now exposes an exact content/revision acknowledgement scoped to the current account and draft generation, which autosave can adopt while retaining newer local edits.
+
+This does not accept arbitrary newer revisions. Tests retain conflicts for different content, a later cloud revision, and a retired draft generation. A cached acknowledgement cannot clear a subsequent HTTP 409 block; a newer successful explicit resolution can. The reproduction demonstrates the code defect, but does not establish that it caused every production conflict.
+
+The October 3 persistence/guard changes introduced separate acknowledgement owners. October 11 `09644ed` added exception reporting; October 12 `540dda9` promoted draft-loss risks to errors. New issue visibility therefore does not independently date the underlying behavior regression.
+
+Validation: 101 frontend suites / 589 tests, TypeScript, lint, and the production build pass. Independent review found two acknowledgement-ordering edge cases; both have regression coverage and were fixed. Browser ownership/shared/read-only and restore checks passed. The unknown-identity browser scenario is also blocked by the existing missing-draft modal on untouched main. The delete-local-draft browser assertion is timing-sensitive because the app may re-persist an empty draft after removing the storage key. No production database writes or schema changes were made.

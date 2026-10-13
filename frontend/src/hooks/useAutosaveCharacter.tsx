@@ -104,6 +104,7 @@ export const useAutosaveCharacter = (
     const lastSavedKeyRef = useRef<string | null>(null)
     const savedVersionRef = useRef<number | null>(null)
     const blockedKeyRef = useRef<string | null>(null)
+    const blockedRevisionRef = useRef<number | null>(null)
     const saveInFlightRef = useRef(false)
     const saveRequestedRef = useRef(false)
     const timeoutRef = useRef<number | undefined>(undefined)
@@ -213,6 +214,13 @@ export const useAutosaveCharacter = (
                     followupSuppressed = true
                     if ((error as ApiError)?.status === 409) {
                         blockedKeyRef.current = savedKey
+                        // The queue may have advanced beyond this hook's last refetch.
+                        // Do not let that pre-conflict acknowledgement resolve the 409.
+                        blockedRevisionRef.current = Math.max(
+                            characterToSave.characterVersion ?? 0,
+                            savedVersionRef.current ?? 0,
+                            characterPersistence(queryClient).acknowledgedVersion(characterId) ?? 0
+                        )
                         preserveCharacterDraft(latestCharacterRef.current, "Cloud save conflict")
                         notifyConflict(characterId, {
                             localVersion: characterToSave.characterVersion
@@ -259,6 +267,7 @@ export const useAutosaveCharacter = (
             lastSavedKeyRef.current = null
             savedVersionRef.current = null
             blockedKeyRef.current = null
+            blockedRevisionRef.current = null
             saveRequestedRef.current = false
             clearScheduledSave()
         }
@@ -274,6 +283,29 @@ export const useAutosaveCharacter = (
                 characterVersion: remoteCharacter.characterVersion
             }
             const remoteKey = getAutosaveKey(remote)
+            // Foreground saves share the write queue but can finish between hook
+            // renders. Their exact acknowledged content/revision is our own base,
+            // even if the user has already made another edit before the refetch.
+            if (
+                remote.characterVersion >= (savedVersionRef.current ?? 0) &&
+                // A cached acknowledgement predating a 409 cannot resolve it.
+                (blockedKeyRef.current === null ||
+                    remote.characterVersion >
+                        (blockedRevisionRef.current ?? savedVersionRef.current ?? 0)) &&
+                characterPersistence(queryClient).isAcknowledged(remote)
+            ) {
+                blockedKeyRef.current = null
+                blockedRevisionRef.current = null
+                lastSavedKeyRef.current = remoteKey
+                savedVersionRef.current = remote.characterVersion
+                writeConfirmedBase(characterId, remote)
+                if (character.characterVersion < remote.characterVersion)
+                    setCharacterRef.current((current) =>
+                        current.id === characterId
+                            ? { ...current, characterVersion: remote.characterVersion }
+                            : current
+                    )
+            }
             if (
                 remoteKey === autosaveKey &&
                 remote.characterVersion >=
@@ -300,6 +332,7 @@ export const useAutosaveCharacter = (
                 }
                 if (blockedKeyRef.current === null) {
                     blockedKeyRef.current = autosaveKey
+                    blockedRevisionRef.current = remote.characterVersion
                     preserveCharacterDraft(
                         character,
                         "Cloud revision changed while local draft was pending"
@@ -335,6 +368,7 @@ export const useAutosaveCharacter = (
                 // edits and save them on top of that revision.
                 if (readPendingWrite(characterId) !== remoteKey) {
                     blockedKeyRef.current = autosaveKey
+                    blockedRevisionRef.current = remote.characterVersion
                     preserveCharacterDraft(
                         character,
                         "Cloud revision changed while local draft was pending"
@@ -360,5 +394,13 @@ export const useAutosaveCharacter = (
         }
         if (blockedKeyRef.current === null && lastSavedKeyRef.current !== autosaveKey)
             scheduleSave()
-    }, [autosaveKey, character, clearScheduledSave, enabled, remoteCharacter, scheduleSave])
+    }, [
+        autosaveKey,
+        character,
+        clearScheduledSave,
+        enabled,
+        queryClient,
+        remoteCharacter,
+        scheduleSave
+    ])
 }

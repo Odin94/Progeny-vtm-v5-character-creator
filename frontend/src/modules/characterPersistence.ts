@@ -86,6 +86,18 @@ export const createCharacterPersistence = (
             return { ...structuredClone(input), id: "" }
         },
         isCurrentSession,
+        acknowledgedVersion: (id: string) =>
+            isCurrentSession()
+                ? acknowledgements.get(`${draftGeneration}:${id}`)?.version
+                : undefined,
+        isAcknowledged: (character: Character) => {
+            if (!isCurrentSession()) return false
+            const acknowledged = acknowledgements.get(`${draftGeneration}:${character.id}`)
+            return (
+                acknowledged?.version === character.characterVersion &&
+                acknowledged.key === getCharacterSaveKey(character)
+            )
+        },
         replacementGuard,
         transitionSnapshot: () => transitioning,
         subscribeTransitions: (listener: () => void) => {
