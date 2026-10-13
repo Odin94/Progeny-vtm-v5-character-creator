@@ -27,6 +27,7 @@ vi.mock("~/components/ConfirmActionModal", () => ({
             <div>
                 {props.body}
                 {props.children}
+                <button onClick={props.onClose}>{props.cancelLabel ?? "Cancel"}</button>
                 <button disabled={props.disabled} onClick={props.onConfirm}>
                     {props.confirmLabel}
                 </button>
@@ -109,6 +110,7 @@ it("keeps the browser using the reviewed backend revision", async () => {
     const { onResolved, client } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByText("Keep browser"))
+    fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await waitFor(() =>
         expect(onResolved).toHaveBeenCalledWith({ ...browser, characterVersion: 86 })
     )
@@ -143,6 +145,7 @@ it("requires a new choice if another device saved after the dialog opened", asyn
     await screen.findByText("Browser version: 4 · Backend version: 85")
     mocks.getCharacter.mockResolvedValue(response({ ...backend, characterVersion: 86 }))
     fireEvent.click(screen.getByText("Keep browser"))
+    fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await screen.findByText(
         "The backend version changed. Review the updated version and choose again."
     )
@@ -154,6 +157,7 @@ it("leaves the dialog and browser intact after a failed write", async () => {
     const { onResolved, onClose } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByText("Keep browser"))
+    fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await screen.findByRole("alert")
     expect(onResolved).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
@@ -218,6 +222,8 @@ it.each(["Keep browser", "Keep backend"])(
         )
         await screen.findByText("Browser version: 4 · Backend version: 85")
         fireEvent.click(screen.getByRole("button", { name: firstChoice }))
+        if (firstChoice === "Keep browser")
+            fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
         await waitFor(() => expect(resolved).toHaveBeenCalledTimes(1))
         expect(mocks.show).toHaveBeenCalledWith(
             expect.objectContaining({ color: "green", autoClose: false })
@@ -228,6 +234,8 @@ it.each(["Keep browser", "Keep backend"])(
         expect(mocks.hide).toHaveBeenCalledWith("success-toast")
         const other = firstChoice === "Keep browser" ? "Keep backend" : "Keep browser"
         fireEvent.click(screen.getByRole("button", { name: other }))
+        if (other === "Keep browser")
+            fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
         await waitFor(() => expect(resolved).toHaveBeenCalledTimes(2))
         expect(saved.name).toBe(firstChoice === "Keep browser" ? "Backend draft" : "Browser draft")
         expect(saved.characterVersion).toBe(firstChoice === "Keep browser" ? 87 : 86)
@@ -236,3 +244,19 @@ it.each(["Keep browser", "Keep backend"])(
         )
     }
 )
+
+it("requires explicit overwrite confirmation and lets Back return without saving", async () => {
+    const { onResolved, onClose } = setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
+    await screen.findByText(
+        "Keeping the browser version will overwrite the backend version of this character. Go back and download the backend JSON first if you want a backup."
+    )
+    expect(mocks.updateCharacter).not.toHaveBeenCalled()
+    expect(onResolved).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("button", { name: "Back" }))
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    expect(mocks.updateCharacter).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(mocks.show).not.toHaveBeenCalled()
+})

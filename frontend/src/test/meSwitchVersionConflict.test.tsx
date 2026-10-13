@@ -9,6 +9,7 @@ const state = vi.hoisted(() => ({
     character: null as any,
     section: null as any,
     conflict: null as any,
+    confirmation: null as any,
     characters: [] as any[],
     get: vi.fn(),
     update: vi.fn(),
@@ -73,6 +74,7 @@ vi.mock("~/pages/sections/UserProfileSection", () => ({ default: () => null }))
 vi.mock("~/components/ConfirmActionModal", () => ({
     default: (props: any) => {
         if (props.title === "Choose a character version") state.conflict = props
+        if (props.title === "Overwrite backend version?") state.confirmation = props
         return null
     },
     confirmationModalCancelButtonStyles: {},
@@ -194,6 +196,10 @@ it.each(["preflight", "update race", "cancel pending"])(
         await waitFor(() => expect(state.conflict.disabled).toBe(false))
         await act(async () => {
             state.conflict.onConfirm()
+        })
+        expect(state.confirmation.opened).toBe(true)
+        await act(async () => {
+            state.confirmation.onConfirm()
         })
         if (scenario === "cancel pending") {
             await waitFor(() => expect(complete).toBeTypeOf("function"))

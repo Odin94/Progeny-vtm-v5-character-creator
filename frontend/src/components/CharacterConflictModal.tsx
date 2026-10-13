@@ -38,6 +38,7 @@ export default function CharacterConflictModal({
     const [reviewedRevision, setReviewedRevision] = useState<number | null>(null)
     const [error, setError] = useState("")
     const [busy, setBusy] = useState(false)
+    const [confirmOverwrite, setConfirmOverwrite] = useState(false)
     const latest = useRef(browser)
     latest.current = browser
     const operation = useRef(0)
@@ -47,6 +48,7 @@ export default function CharacterConflictModal({
         setReviewedRevision(null)
         setError("")
         setBusy(false)
+        setConfirmOverwrite(false)
         if (!opened || !browser.id) return
         const isCurrent = persistence.replacementGuard()
         api.getCharacter(browser.id, isCurrent)
@@ -199,6 +201,23 @@ export default function CharacterConflictModal({
             setError("Could not download the JSON backup. Please retry.")
         }
     }
+    if (opened && confirmOverwrite) {
+        return (
+            <ConfirmActionModal
+                opened
+                title="Overwrite backend version?"
+                body="Keeping the browser version will overwrite the backend version of this character. Go back and download the backend JSON first if you want a backup."
+                confirmLabel="Overwrite backend"
+                cancelLabel="Back"
+                onClose={() => setConfirmOverwrite(false)}
+                onConfirm={() => {
+                    setConfirmOverwrite(false)
+                    void resolve("browser")
+                }}
+                disabled={!backend || busy}
+            />
+        )
+    }
     return (
         <ConfirmActionModal
             opened={opened}
@@ -212,7 +231,7 @@ export default function CharacterConflictModal({
                     : "Keeping one version replaces the other active version. Download backups first if you want both."
             }
             confirmLabel="Keep browser"
-            onConfirm={() => void resolve("browser")}
+            onConfirm={() => setConfirmOverwrite(true)}
             loading={busy}
             disabled={!backend || busy}
         >
