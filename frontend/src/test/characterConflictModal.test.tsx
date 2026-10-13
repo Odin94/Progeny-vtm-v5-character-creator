@@ -109,6 +109,7 @@ it("keeps the backend without modifying the saved character", async () => {
     const { onResolved } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByText("Keep backend"))
+    fireEvent.click(screen.getByRole("button", { name: "Replace browser" }))
     await waitFor(() => expect(onResolved).toHaveBeenCalledWith(backend, "backend"))
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
     expect(mocks.createCharacter).not.toHaveBeenCalled()
@@ -241,8 +242,11 @@ it.each(["Keep browser", "Keep backend"])(
         )
         await screen.findByText("Browser version: 4 · Backend version: 85")
         fireEvent.click(screen.getByRole("button", { name: firstChoice }))
-        if (firstChoice === "Keep browser")
-            fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: firstChoice === "Keep browser" ? "Overwrite backend" : "Replace browser"
+            })
+        )
         await waitFor(() => expect(resolved).toHaveBeenCalledTimes(1))
         expect(mocks.show).toHaveBeenCalledWith(
             expect.objectContaining({ color: "green", autoClose: false })
@@ -253,8 +257,11 @@ it.each(["Keep browser", "Keep backend"])(
         expect(mocks.hide).toHaveBeenCalledWith("success-toast")
         const other = firstChoice === "Keep browser" ? "Keep backend" : "Keep browser"
         fireEvent.click(screen.getByRole("button", { name: other }))
-        if (other === "Keep browser")
-            fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: other === "Keep browser" ? "Overwrite backend" : "Replace browser"
+            })
+        )
         await waitFor(() => expect(resolved).toHaveBeenCalledTimes(2))
         expect(saved.name).toBe(firstChoice === "Keep browser" ? "Backend draft" : "Browser draft")
         expect(saved.characterVersion).toBe(firstChoice === "Keep browser" ? 87 : 86)
@@ -269,7 +276,7 @@ it("requires explicit overwrite confirmation and lets Back return without saving
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
     await screen.findByText(
-        "Keeping the browser version will overwrite the backend version of this character. Go back and download the backend JSON first if you want a backup."
+        "Keeping the browser version will delete the current backend version by overwriting it. Go back and download the backend JSON first if you want a backup."
     )
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
     expect(onResolved).not.toHaveBeenCalled()
@@ -385,4 +392,20 @@ it("reports a genuine failure loading the backend version", async () => {
             character_id: browser.id
         })
     )
+})
+
+it("requires confirmation before keeping backend and lets Back preserve the browser draft", async () => {
+    const { onResolved, onClose } = setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    fireEvent.click(screen.getByRole("button", { name: "Keep backend" }))
+    await screen.findByText(
+        "Keeping the backend version will delete the current browser version by replacing it. Go back and download the browser JSON first if you want a backup."
+    )
+    expect(onResolved).not.toHaveBeenCalled()
+    expect(mocks.updateCharacter).not.toHaveBeenCalled()
+    expect(mocks.show).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("button", { name: "Back" }))
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    expect(onResolved).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
 })

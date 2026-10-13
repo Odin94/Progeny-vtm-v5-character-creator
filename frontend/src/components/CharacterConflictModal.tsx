@@ -66,7 +66,7 @@ export default function CharacterConflictModal({
     const [reviewedRevision, setReviewedRevision] = useState<number | null>(null)
     const [error, setError] = useState("")
     const [busy, setBusy] = useState(false)
-    const [confirmOverwrite, setConfirmOverwrite] = useState(false)
+    const [confirmChoice, setConfirmChoice] = useState<"browser" | "backend" | null>(null)
     const latest = useRef(browser)
     latest.current = browser
     const operation = useRef(0)
@@ -77,7 +77,7 @@ export default function CharacterConflictModal({
         setReviewedRevision(null)
         setError("")
         setBusy(false)
-        setConfirmOverwrite(false)
+        setConfirmChoice(null)
         if (!opened || !browser.id) return
         const isCurrent = persistence.replacementGuard()
         api.getCharacter(browser.id, isCurrent)
@@ -218,6 +218,7 @@ export default function CharacterConflictModal({
                             <Button
                                 size="xs"
                                 variant="light"
+                                style={{ alignSelf: "flex-start" }}
                                 onClick={() => {
                                     if (!persistence.isCurrentSession()) return
                                     notifications.hide(toastId)
@@ -260,18 +261,28 @@ export default function CharacterConflictModal({
             setError("Could not download the JSON backup. Please retry.")
         }
     }
-    if (opened && confirmOverwrite) {
+    if (opened && confirmChoice) {
         return (
             <ConfirmActionModal
                 opened
-                title="Overwrite backend version?"
-                body="Keeping the browser version will overwrite the backend version of this character. Go back and download the backend JSON first if you want a backup."
-                confirmLabel="Overwrite backend"
+                title={
+                    confirmChoice === "browser"
+                        ? "Overwrite backend version?"
+                        : "Replace browser version?"
+                }
+                body={
+                    confirmChoice === "browser"
+                        ? "Keeping the browser version will delete the current backend version by overwriting it. Go back and download the backend JSON first if you want a backup."
+                        : originalBackend
+                          ? "Keeping this backend version will delete the current browser version and overwrite the current backend contents. Go back and download backups first if you want to keep them."
+                          : "Keeping the backend version will delete the current browser version by replacing it. Go back and download the browser JSON first if you want a backup."
+                }
+                confirmLabel={confirmChoice === "browser" ? "Overwrite backend" : "Replace browser"}
                 cancelLabel="Back"
-                onClose={() => setConfirmOverwrite(false)}
+                onClose={() => setConfirmChoice(null)}
                 onConfirm={() => {
-                    setConfirmOverwrite(false)
-                    void resolve("browser")
+                    setConfirmChoice(null)
+                    void resolve(confirmChoice)
                 }}
                 disabled={!backend || busy}
             />
@@ -286,11 +297,11 @@ export default function CharacterConflictModal({
                     <Button
                         disabled={!backend || busy}
                         loading={busy}
-                        onClick={() => setConfirmOverwrite(true)}
+                        onClick={() => setConfirmChoice("browser")}
                     >
                         Keep browser
                     </Button>
-                    <Button disabled={!backend || busy} onClick={() => void resolve("backend")}>
+                    <Button disabled={!backend || busy} onClick={() => setConfirmChoice("backend")}>
                         Keep backend
                     </Button>
                 </Group>
@@ -305,7 +316,7 @@ export default function CharacterConflictModal({
                     : "Keeping one version replaces the other active version. Download backups first if you want both."
             }
             confirmLabel="Keep browser"
-            onConfirm={() => setConfirmOverwrite(true)}
+            onConfirm={() => setConfirmChoice("browser")}
             loading={busy}
             disabled={!backend || busy}
         >

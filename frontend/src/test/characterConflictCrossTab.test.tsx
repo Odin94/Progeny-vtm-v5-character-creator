@@ -92,6 +92,7 @@ it("preserves cross-tab edits arriving during Undo backend restoration", async (
     )
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByRole("button", { name: "Keep backend" }))
+    fireEvent.click(screen.getByRole("button", { name: "Replace browser" }))
     await waitFor(() => expect(mocks.updateCharacter).toHaveBeenCalledTimes(1))
     act(() => {
         localStorage.setItem("character", JSON.stringify(updatedInOtherTab))
