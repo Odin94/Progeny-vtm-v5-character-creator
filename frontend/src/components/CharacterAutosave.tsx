@@ -1,3 +1,9 @@
+import { getCharacterSaveKey } from "~/modules/characterPersistence"
+import {
+    browserCharacterReplacementTime,
+    markBrowserCharacterReplacement,
+    readBrowserCharacterChangeTime
+} from "~/utils/characterChangeTime"
 import CharacterConflictModal, {
     CHARACTER_CONFLICT_EVENT,
     type CharacterConflictRequest
@@ -49,15 +55,34 @@ const CharacterAutosave = () => {
                 conflict?.onClose?.()
                 setConflict(null)
             }}
-            onResolved={(resolved) => {
-                // A restore can await a write while another tab edits the active
-                // draft. Read the freshest storage snapshot when replacing it.
+            onResolved={(resolved, choice) => {
+                let applied = resolved
+                // Storage events update the cached draft before React renders.
+                // Read that freshest value, preserve it, and retain newer edits
+                // when saving the browser version or a copy of it.
                 setCharacter((current) => {
-                    if (conflict?.browser)
-                        preserveCharacterDraft(current, "Before revisiting a save conflict")
-                    return resolved
+                    preserveCharacterDraft(current, "Before resolving a save conflict")
+                    if (
+                        !conflict?.browser &&
+                        choice !== "backend" &&
+                        current.id === conflict?.characterId
+                    ) {
+                        const changedAt =
+                            getCharacterSaveKey(current) === getCharacterSaveKey(resolved)
+                                ? (browserCharacterReplacementTime(resolved) ?? null)
+                                : readBrowserCharacterChangeTime(current)
+                        applied = markBrowserCharacterReplacement(
+                            {
+                                ...current,
+                                id: resolved.id,
+                                characterVersion: resolved.characterVersion
+                            },
+                            changedAt
+                        )
+                    }
+                    return applied
                 })
-                conflict?.onResolved?.(resolved)
+                conflict?.onResolved?.(applied)
             }}
         />
     )

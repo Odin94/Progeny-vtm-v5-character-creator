@@ -16,7 +16,12 @@ const mocks = vi.hoisted(() => ({
     updateCharacter: vi.fn(),
     downloadJson: vi.fn(),
     show: vi.fn(),
-    hide: vi.fn()
+    hide: vi.fn(),
+    captureException: vi.fn(),
+    capture: vi.fn()
+}))
+vi.mock("posthog-js", () => ({
+    default: { captureException: mocks.captureException, capture: mocks.capture }
 }))
 vi.mock("@mantine/notifications", () => ({ notifications: { show: mocks.show, hide: mocks.hide } }))
 vi.mock("~/utils/api", () => ({ api: mocks }))
@@ -104,7 +109,7 @@ it("keeps the backend without modifying the saved character", async () => {
     const { onResolved } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByText("Keep backend"))
-    await waitFor(() => expect(onResolved).toHaveBeenCalledWith(backend))
+    await waitFor(() => expect(onResolved).toHaveBeenCalledWith(backend, "backend"))
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
     expect(mocks.createCharacter).not.toHaveBeenCalled()
     const { browserCharacterReplacementTime } = await import("~/utils/characterChangeTime")
@@ -122,7 +127,7 @@ it("keeps the browser using the reviewed backend revision", async () => {
     fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
     fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await waitFor(() =>
-        expect(onResolved).toHaveBeenCalledWith({ ...browser, characterVersion: 86 })
+        expect(onResolved).toHaveBeenCalledWith({ ...browser, characterVersion: 86 }, "browser")
     )
     expect(characterPersistence(client).isAcknowledged(onResolved.mock.calls[0][0])).toBe(true)
     expect(mocks.updateCharacter).toHaveBeenCalledWith(
@@ -142,7 +147,10 @@ it("creates a new browser copy while leaving the backend untouched", async () =>
     await screen.findByText("Browser version: 4 · Backend version: 85")
     fireEvent.click(screen.getByText("Save browser as new"))
     await waitFor(() =>
-        expect(onResolved).toHaveBeenCalledWith({ ...browser, id: "copy", characterVersion: 0 })
+        expect(onResolved).toHaveBeenCalledWith(
+            { ...browser, id: "copy", characterVersion: 0 },
+            "copy"
+        )
     )
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
     expect(mocks.createCharacter).toHaveBeenCalledWith(
@@ -161,6 +169,7 @@ it("requires a new choice if another device saved after the dialog opened", asyn
     )
     expect(onResolved).not.toHaveBeenCalled()
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
+    expect(mocks.captureException).not.toHaveBeenCalled()
 })
 it("leaves the dialog and browser intact after a failed write", async () => {
     mocks.updateCharacter.mockRejectedValue(new Error("offline"))
@@ -283,6 +292,7 @@ it("puts both keep choices in the footer without a Cancel button and groups back
     expect(screen.getByRole("button", { name: "Download browser JSON" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Download backend JSON" })).toBeInTheDocument()
     expect(screen.getByText("Keep both versions")).toBeInTheDocument()
+    expect(screen.getByText("Download backups")).toBeInTheDocument()
 })
 
 it("shows reliable dates and never invents a date for an older browser draft", async () => {
@@ -312,4 +322,67 @@ it("shows original snapshot dates when Undo revisits a conflict", async () => {
     await screen.findByText(format("2026-10-11T10:00:00Z"))
     expect(screen.getByText(format("2026-10-10T09:00:00Z"))).toBeInTheDocument()
     expect(screen.queryByText(format("2026-10-13T12:34:00Z"))).not.toBeInTheDocument()
+})
+
+it.each(["Keep browser", "Save browser as new"])(
+    "reports genuine request failures during %s resolution",
+    async (choice) => {
+        const failure = Object.assign(new Error("Server unavailable"), { status: 500 })
+        if (choice === "Keep browser") mocks.updateCharacter.mockRejectedValue(failure)
+        else mocks.createCharacter.mockRejectedValue(failure)
+        const { onResolved } = setup()
+        await screen.findByText("Browser version: 4 · Backend version: 85")
+        fireEvent.click(screen.getByRole("button", { name: choice }))
+        if (choice === "Keep browser")
+            fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
+        await screen.findByRole("alert")
+        expect(onResolved).not.toHaveBeenCalled()
+        expect(mocks.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                operation: choice === "Keep browser" ? "save" : "create",
+                http_status: 500,
+                severity: "error",
+                character_id: browser.id
+            })
+        )
+    }
+)
+
+it("keeps a new save conflict as an ordinary event while its modal remains open", async () => {
+    mocks.updateCharacter.mockRejectedValue(
+        Object.assign(new Error("Version conflict"), { status: 409 })
+    )
+    setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
+    fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
+    await screen.findByRole("alert")
+    expect(mocks.captureException).not.toHaveBeenCalled()
+    expect(mocks.capture).toHaveBeenCalledWith(
+        "character_operation_warning",
+        expect.objectContaining({
+            operation: "save",
+            failure_reason: "version_conflict",
+            http_status: 409,
+            resolution: "modal"
+        })
+    )
+})
+
+it("reports a genuine failure loading the backend version", async () => {
+    mocks.getCharacter.mockRejectedValue(
+        Object.assign(new Error("Server unavailable"), { status: 500 })
+    )
+    setup()
+    await screen.findByRole("alert")
+    expect(mocks.captureException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+            operation: "load",
+            http_status: 500,
+            severity: "error",
+            character_id: browser.id
+        })
+    )
 })

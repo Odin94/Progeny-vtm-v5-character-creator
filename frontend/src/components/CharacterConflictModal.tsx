@@ -1,3 +1,4 @@
+import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import {
     readBrowserCharacterChangeTime,
     markBrowserCharacterReplacement
@@ -47,7 +48,7 @@ export default function CharacterConflictModal({
     originalBrowserChangedAt?: string | null
     originalBackendUpdatedAt?: string | null
     onClose: () => void
-    onResolved: (character: Character) => void
+    onResolved: (character: Character, choice: ConflictChoice) => void
 }) {
     const client = useQueryClient()
     const persistence = characterPersistence(client)
@@ -101,11 +102,13 @@ export default function CharacterConflictModal({
                     }
                 )
             })
-            .catch(() => {
-                if (generation === operation.current)
+            .catch((failure) => {
+                if (generation === operation.current && isCurrent()) {
+                    reportCharacterOperationFailure("load", failure, { characterId: browser.id })
                     setError(
                         "Could not load the backend version. Close and retry; your browser draft is unchanged."
                     )
+                }
             })
         return () => {
             operation.current += 1
@@ -119,9 +122,11 @@ export default function CharacterConflictModal({
         const draft = structuredClone(latest.current)
         setBusy(true)
         setError("")
+        let requestOperation: "load" | "save" | "create" | undefined = "load"
         try {
             // Review again if another device saved since the dialog opened.
             const fresh = await api.getCharacter(draft.id, isCurrent)
+            requestOperation = undefined
             if (!isCurrent() || generation !== operation.current) return
             if (fresh.shared === true || fresh.canEdit !== true)
                 throw new Error("This character is now read-only.")
@@ -146,6 +151,12 @@ export default function CharacterConflictModal({
                 throw new Error("The browser version changed. Review it and choose again.")
             preserveCharacterDraft(draft, "Before resolving a save conflict")
             preserveCharacterDraft(backend, "Backend version before resolving a save conflict")
+            requestOperation =
+                choice === "backend" && !originalBackend
+                    ? undefined
+                    : choice === "copy"
+                      ? "create"
+                      : "save"
             const resolved =
                 choice === "backend" && !originalBackend
                     ? backend
@@ -177,7 +188,7 @@ export default function CharacterConflictModal({
                 choice === "backend"
                     ? backendUpdatedAt
                     : (readBrowserCharacterChangeTime(latest.current) ?? browserChangedAt)
-            onResolved(markBrowserCharacterReplacement(next, sourceChangedAt))
+            onResolved(markBrowserCharacterReplacement(next, sourceChangedAt), choice)
             onClose()
             if (choice === "copy") {
                 notifications.show({
@@ -224,6 +235,14 @@ export default function CharacterConflictModal({
                 })
             }
         } catch (failure) {
+            if (requestOperation && generation === operation.current && isCurrent()) {
+                const modalConflict =
+                    requestOperation === "save" && (failure as { status?: number })?.status === 409
+                reportCharacterOperationFailure(requestOperation, failure, {
+                    characterId: draft.id,
+                    ...(modalConflict ? { resolution: "modal" as const } : {})
+                })
+            }
             if (generation === operation.current)
                 setError(
                     failure instanceof Error
@@ -313,7 +332,7 @@ export default function CharacterConflictModal({
                         </Text>
                     </Stack>
                 </SimpleGrid>
-                <Paper withBorder p="md" radius="md" bg="var(--mantine-color-grape-light)">
+                <Paper withBorder p="md" radius="md">
                     <Stack gap="xs">
                         <Text fw={600} ta="center">
                             Keep both versions
@@ -332,7 +351,7 @@ export default function CharacterConflictModal({
                 </Paper>
                 <Stack gap="xs">
                     <Text size="sm" c="dimmed">
-                        JSON backups
+                        Download backups
                     </Text>
                     <SimpleGrid cols={2} spacing="sm">
                         <Button
