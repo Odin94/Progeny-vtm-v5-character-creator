@@ -1,3 +1,7 @@
+import {
+    recordBrowserCharacterChange,
+    browserCharacterReplacementTime
+} from "~/utils/characterChangeTime"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { useLocalStorage } from "@mantine/hooks"
 import { useCallback, useRef, useState } from "react"
@@ -72,26 +76,36 @@ export const useCharacterLocalStorage = () => {
             // updaters more than once in Strict Mode, while Mantine writes storage from inside
             // that updater, causing duplicate storage events and duplicate sheet commits.
             characterIntake.persist(characterWithVersion)
+            recordBrowserCharacterChange(
+                cachedCharacter ?? latestCharacterRef.current,
+                characterWithVersion,
+                browserCharacterReplacementTime(updatedCharacter)
+            )
             latestCharacterRef.current = characterWithVersion
             setCharacterInternal(characterWithVersion)
         },
         [setCharacterInternal]
     )
 
-    const clearCharacter = useCallback((matches?: (current: Character) => boolean) => {
-        if (matches && !matches(cachedCharacter ?? latestCharacterRef.current)) return false
-        // Mantine swallows removal errors. Verify deletion ourselves before
-        // broadcasting the empty draft to all mounted storage subscribers.
-        try {
-            localStorage.removeItem("character")
-        } catch (error) {
-            reportCharacterOperationFailure("storage-write", error, { reason: "storage_failed" })
-            throw error
-        }
-        latestCharacterRef.current = resetCachedCharacter()
-        removeCharacterInternal()
-        return true
-    }, [removeCharacterInternal])
+    const clearCharacter = useCallback(
+        (matches?: (current: Character) => boolean) => {
+            if (matches && !matches(cachedCharacter ?? latestCharacterRef.current)) return false
+            // Mantine swallows removal errors. Verify deletion ourselves before
+            // broadcasting the empty draft to all mounted storage subscribers.
+            try {
+                localStorage.removeItem("character")
+            } catch (error) {
+                reportCharacterOperationFailure("storage-write", error, {
+                    reason: "storage_failed"
+                })
+                throw error
+            }
+            latestCharacterRef.current = resetCachedCharacter()
+            removeCharacterInternal()
+            return true
+        },
+        [removeCharacterInternal]
+    )
 
     return [character, setCharacter, clearCharacter] as const
 }

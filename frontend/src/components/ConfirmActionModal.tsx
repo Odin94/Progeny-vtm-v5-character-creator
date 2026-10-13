@@ -63,6 +63,8 @@ type ConfirmActionModalProps = {
     loading?: boolean
     disabled?: boolean
     children?: ReactNode
+    footer?: ReactNode
+    size?: string | number
 }
 
 const ConfirmActionModal = ({
@@ -76,13 +78,16 @@ const ConfirmActionModal = ({
     confirmColor = "red",
     loading = false,
     disabled = false,
-    children
+    children,
+    footer,
+    size
 }: ConfirmActionModalProps) => {
     const phoneScreen = useMediaQuery("(max-width: 48em)")
 
     return (
         <Modal
             opened={opened}
+            size={size}
             onClose={onClose}
             title=""
             centered
@@ -104,29 +109,31 @@ const ConfirmActionModal = ({
 
                 <Divider color={COLOR_MODAL_DIVIDER} />
 
-                <Group justify="space-between">
-                    <Button
-                        color="gray"
-                        variant="subtle"
-                        onClick={onClose}
-                        styles={confirmationModalCancelButtonStyles}
-                    >
-                        {cancelLabel}
-                    </Button>
-                    <Button
-                        color={confirmColor}
-                        onClick={onConfirm}
-                        loading={loading}
-                        disabled={disabled}
-                        styles={
-                            confirmColor === "red"
-                                ? confirmationModalDangerConfirmButtonStyles
-                                : undefined
-                        }
-                    >
-                        {confirmLabel}
-                    </Button>
-                </Group>
+                {footer ?? (
+                    <Group justify="space-between">
+                        <Button
+                            color="gray"
+                            variant="subtle"
+                            onClick={onClose}
+                            styles={confirmationModalCancelButtonStyles}
+                        >
+                            {cancelLabel}
+                        </Button>
+                        <Button
+                            color={confirmColor}
+                            onClick={onConfirm}
+                            loading={loading}
+                            disabled={disabled}
+                            styles={
+                                confirmColor === "red"
+                                    ? confirmationModalDangerConfirmButtonStyles
+                                    : undefined
+                            }
+                        >
+                            {confirmLabel}
+                        </Button>
+                    </Group>
+                )}
             </Stack>
         </Modal>
     )

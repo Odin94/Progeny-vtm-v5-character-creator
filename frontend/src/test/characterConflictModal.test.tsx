@@ -27,10 +27,14 @@ vi.mock("~/components/ConfirmActionModal", () => ({
             <div>
                 {props.body}
                 {props.children}
-                <button onClick={props.onClose}>{props.cancelLabel ?? "Cancel"}</button>
-                <button disabled={props.disabled} onClick={props.onConfirm}>
-                    {props.confirmLabel}
-                </button>
+                {props.footer ?? (
+                    <>
+                        <button onClick={props.onClose}>{props.cancelLabel ?? "Cancel"}</button>
+                        <button disabled={props.disabled} onClick={props.onConfirm}>
+                            {props.confirmLabel}
+                        </button>
+                    </>
+                )}
             </div>
         )
 }))
@@ -46,7 +50,8 @@ const response = (data = backend) => ({
     name: data.name,
     data,
     characterVersion: data.characterVersion,
-    canEdit: true
+    canEdit: true,
+    updatedAt: "2026-10-12T12:34:00Z"
 })
 beforeEach(() => {
     vi.resetAllMocks()
@@ -64,7 +69,7 @@ beforeEach(() => {
     mocks.downloadJson.mockResolvedValue(undefined)
 })
 afterEach(cleanup)
-function setup() {
+function setup(props: Partial<import("react").ComponentProps<typeof CharacterConflictModal>> = {}) {
     const client = new QueryClient()
     client.setQueryData(["auth", "me"], { id: "owner" })
     const onResolved = vi.fn()
@@ -77,6 +82,7 @@ function setup() {
                     browser={browser}
                     onClose={onClose}
                     onResolved={onResolved}
+                    {...props}
                 />
             </MantineProvider>
         </QueryClientProvider>
@@ -86,8 +92,8 @@ function setup() {
 it("downloads both independent versions without resolving or saving", async () => {
     const { onResolved } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
-    fireEvent.click(screen.getByText("Download browser JSON"))
-    fireEvent.click(screen.getByText("Download backend JSON"))
+    fireEvent.click(screen.getByRole("button", { name: "Download browser JSON" }))
+    fireEvent.click(screen.getByRole("button", { name: "Download backend JSON" }))
     expect(mocks.downloadJson.mock.calls.map(([value]) => value)).toEqual([browser, backend])
     expect(mocks.downloadJson).toHaveBeenCalledWith(browser, "progeny_browser_v4.json")
     expect(mocks.downloadJson).toHaveBeenCalledWith(backend, "progeny_backend_v85.json")
@@ -101,6 +107,10 @@ it("keeps the backend without modifying the saved character", async () => {
     await waitFor(() => expect(onResolved).toHaveBeenCalledWith(backend))
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
     expect(mocks.createCharacter).not.toHaveBeenCalled()
+    const { browserCharacterReplacementTime } = await import("~/utils/characterChangeTime")
+    expect(browserCharacterReplacementTime(onResolved.mock.calls[0][0])).toBe(
+        "2026-10-12T12:34:00Z"
+    )
     expect(JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character).toEqual(
         browser
     )
@@ -109,7 +119,7 @@ it("keeps the browser using the reviewed backend revision", async () => {
     mocks.updateCharacter.mockResolvedValue(response({ ...browser, characterVersion: 86 }))
     const { onResolved, client } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
-    fireEvent.click(screen.getByText("Keep browser"))
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
     fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await waitFor(() =>
         expect(onResolved).toHaveBeenCalledWith({ ...browser, characterVersion: 86 })
@@ -144,7 +154,7 @@ it("requires a new choice if another device saved after the dialog opened", asyn
     const { onResolved } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
     mocks.getCharacter.mockResolvedValue(response({ ...backend, characterVersion: 86 }))
-    fireEvent.click(screen.getByText("Keep browser"))
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
     fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await screen.findByText(
         "The backend version changed. Review the updated version and choose again."
@@ -156,7 +166,7 @@ it("leaves the dialog and browser intact after a failed write", async () => {
     mocks.updateCharacter.mockRejectedValue(new Error("offline"))
     const { onResolved, onClose } = setup()
     await screen.findByText("Browser version: 4 · Backend version: 85")
-    fireEvent.click(screen.getByText("Keep browser"))
+    fireEvent.click(screen.getByRole("button", { name: "Keep browser" }))
     fireEvent.click(screen.getByRole("button", { name: "Overwrite backend" }))
     await screen.findByRole("alert")
     expect(onResolved).not.toHaveBeenCalled()
@@ -168,7 +178,7 @@ it("does not allow replacing a shared character", async () => {
     mocks.getCharacter.mockResolvedValue({ ...response(), canEdit: false, shared: true })
     const { onResolved } = setup()
     await screen.findByRole("alert")
-    expect(screen.getByText("Keep browser")).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Keep browser" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Keep backend" })).toBeDisabled()
     expect(onResolved).not.toHaveBeenCalled()
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
@@ -259,4 +269,47 @@ it("requires explicit overwrite confirmation and lets Back return without saving
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
     expect(mocks.show).not.toHaveBeenCalled()
+})
+
+it("puts both keep choices in the footer without a Cancel button and groups backups separately", async () => {
+    setup()
+    await screen.findByText("Browser version: 4 · Backend version: 85")
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument()
+    const buttons = screen.getAllByRole("button")
+    expect(buttons.slice(-2).map((button) => button.textContent)).toEqual([
+        "Keep browser",
+        "Keep backend"
+    ])
+    expect(screen.getByRole("button", { name: "Download browser JSON" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Download backend JSON" })).toBeInTheDocument()
+    expect(screen.getByText("Keep both versions")).toBeInTheDocument()
+})
+
+it("shows reliable dates and never invents a date for an older browser draft", async () => {
+    setup()
+    await screen.findByText(
+        new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
+            new Date("2026-10-12T12:34:00Z")
+        )
+    )
+    expect(screen.getByText("Date not recorded")).toBeInTheDocument()
+})
+
+it("shows original snapshot dates when Undo revisits a conflict", async () => {
+    mocks.getCharacter.mockResolvedValue({
+        ...response({ ...browser, characterVersion: 86 }),
+        updatedAt: "2026-10-13T12:34:00Z"
+    })
+    setup({
+        originalBackend: backend,
+        originalBrowserChangedAt: "2026-10-10T09:00:00Z",
+        originalBackendUpdatedAt: "2026-10-11T10:00:00Z"
+    })
+    const format = (value: string) =>
+        new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
+            new Date(value)
+        )
+    await screen.findByText(format("2026-10-11T10:00:00Z"))
+    expect(screen.getByText(format("2026-10-10T09:00:00Z"))).toBeInTheDocument()
+    expect(screen.queryByText(format("2026-10-13T12:34:00Z"))).not.toBeInTheDocument()
 })

@@ -1,3 +1,4 @@
+import { markBrowserCharacterReplacement } from "~/utils/characterChangeTime"
 import { CharacterOperationError } from "~/utils/characterOperationError"
 import type { QueryClient } from "@tanstack/react-query"
 import { isCharacterEmpty, stableStringify, type Character } from "~/data/Character"
@@ -83,7 +84,7 @@ export const createCharacterPersistence = (
         replaceDraft: (input: Character) => {
             draftGeneration += 1
             replacementGeneration += 1
-            return { ...structuredClone(input), id: "" }
+            return markBrowserCharacterReplacement({ ...structuredClone(input), id: "" })
         },
         isCurrentSession,
         acknowledgedVersion: (id: string) =>
@@ -219,7 +220,11 @@ export const createCharacterPersistence = (
                         ? await transport.update(targetId, payload)
                         : await transport.create(payload)
                 } catch (error) {
-                    if (options.beforeSwitch && targetId && (error as { status?: number })?.status === 409) {
+                    if (
+                        options.beforeSwitch &&
+                        targetId &&
+                        (error as { status?: number })?.status === 409
+                    ) {
                         const remote = await transport.get(targetId)
                         assertCurrentSession()
                         throw new CharacterOperationError(

@@ -22,9 +22,11 @@ vi.mock("~/components/ConfirmActionModal", () => ({
         props.opened && (
             <div>
                 {props.children}
-                <button disabled={props.disabled} onClick={props.onConfirm}>
-                    {props.confirmLabel}
-                </button>
+                {props.footer ?? (
+                    <button disabled={props.disabled} onClick={props.onConfirm}>
+                        {props.confirmLabel}
+                    </button>
+                )}
             </div>
         )
 }))

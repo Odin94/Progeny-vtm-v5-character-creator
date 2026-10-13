@@ -43,6 +43,8 @@ const CharacterAutosave = () => {
             }
             browser={conflict?.browser ?? character}
             originalBackend={conflict?.backend}
+            originalBrowserChangedAt={conflict?.browserChangedAt}
+            originalBackendUpdatedAt={conflict?.backendUpdatedAt}
             onClose={() => {
                 conflict?.onClose?.()
                 setConflict(null)

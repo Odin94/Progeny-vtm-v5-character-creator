@@ -1,5 +1,9 @@
-import { useEffect, useRef, useState } from "react"
-import { Button, Stack, Text } from "@mantine/core"
+import {
+    readBrowserCharacterChangeTime,
+    markBrowserCharacterReplacement
+} from "~/utils/characterChangeTime"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Character } from "~/data/Character"
@@ -14,27 +18,50 @@ export type CharacterConflictRequest = {
     characterId: string
     browser?: Character
     backend?: Character
+    browserChangedAt?: string | null
+    backendUpdatedAt?: string | null
     onResolved?: (character: Character) => void
     onClose?: () => void
 }
+const formatVersionDate = (value: string | null) =>
+    value && Number.isFinite(Date.parse(value))
+        ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
+              new Date(value)
+          )
+        : "Date not recorded"
+
 export type ConflictChoice = "browser" | "backend" | "copy"
 
 export default function CharacterConflictModal({
     opened,
     browser,
     originalBackend,
+    originalBrowserChangedAt,
+    originalBackendUpdatedAt,
     onClose,
     onResolved
 }: {
     opened: boolean
     browser: Character
     originalBackend?: Character
+    originalBrowserChangedAt?: string | null
+    originalBackendUpdatedAt?: string | null
     onClose: () => void
     onResolved: (character: Character) => void
 }) {
     const client = useQueryClient()
     const persistence = characterPersistence(client)
     const [backend, setBackend] = useState<Character | null>(null)
+    const [backendUpdatedAt, setBackendUpdatedAt] = useState<string | null>(null)
+    const browserChangedAt = useMemo(
+        () =>
+            originalBrowserChangedAt !== undefined
+                ? originalBrowserChangedAt
+                : opened
+                  ? readBrowserCharacterChangeTime(browser)
+                  : null,
+        [browser, opened, originalBrowserChangedAt]
+    )
     const [reviewedRevision, setReviewedRevision] = useState<number | null>(null)
     const [error, setError] = useState("")
     const [busy, setBusy] = useState(false)
@@ -45,6 +72,7 @@ export default function CharacterConflictModal({
     useEffect(() => {
         const generation = ++operation.current
         setBackend(null)
+        setBackendUpdatedAt(null)
         setReviewedRevision(null)
         setError("")
         setBusy(false)
@@ -60,6 +88,9 @@ export default function CharacterConflictModal({
                     )
                     return
                 }
+                setBackendUpdatedAt(
+                    originalBackend ? (originalBackendUpdatedAt ?? null) : (saved.updatedAt ?? null)
+                )
                 setReviewedRevision(saved.characterVersion)
                 setBackend(
                     originalBackend ?? {
@@ -79,7 +110,7 @@ export default function CharacterConflictModal({
         return () => {
             operation.current += 1
         }
-    }, [opened, browser.id, persistence, originalBackend])
+    }, [opened, browser.id, persistence, originalBackend, originalBackendUpdatedAt])
 
     const resolve = async (choice: ConflictChoice) => {
         if (!backend || reviewedRevision === null || busy) return
@@ -95,6 +126,9 @@ export default function CharacterConflictModal({
             if (fresh.shared === true || fresh.canEdit !== true)
                 throw new Error("This character is now read-only.")
             if (fresh.characterVersion !== reviewedRevision) {
+                setBackendUpdatedAt(
+                    originalBackend ? (originalBackendUpdatedAt ?? null) : (fresh.updatedAt ?? null)
+                )
                 setReviewedRevision(fresh.characterVersion)
                 setBackend(
                     originalBackend ?? {
@@ -139,7 +173,11 @@ export default function CharacterConflictModal({
             // Keep successful write acknowledgements so autosave cannot mistake
             // this resolution for an external write or save the same draft again.
             if (choice === "backend" && !originalBackend) persistence.startDraft()
-            onResolved(next)
+            const sourceChangedAt =
+                choice === "backend"
+                    ? backendUpdatedAt
+                    : (readBrowserCharacterChangeTime(latest.current) ?? browserChangedAt)
+            onResolved(markBrowserCharacterReplacement(next, sourceChangedAt))
             onClose()
             if (choice === "copy") {
                 notifications.show({
@@ -151,7 +189,9 @@ export default function CharacterConflictModal({
                 const snapshots = {
                     characterId: draft.id,
                     browser: structuredClone(draft),
-                    backend: structuredClone(backend)
+                    backend: structuredClone(backend),
+                    browserChangedAt,
+                    backendUpdatedAt
                 }
                 const toastId = notifications.show({
                     title: "Character version kept",
@@ -221,6 +261,21 @@ export default function CharacterConflictModal({
     return (
         <ConfirmActionModal
             opened={opened}
+            size="lg"
+            footer={
+                <Group justify="space-between" wrap="nowrap">
+                    <Button
+                        disabled={!backend || busy}
+                        loading={busy}
+                        onClick={() => setConfirmOverwrite(true)}
+                    >
+                        Keep browser
+                    </Button>
+                    <Button disabled={!backend || busy} onClick={() => void resolve("backend")}>
+                        Keep backend
+                    </Button>
+                </Group>
+            }
             onClose={() => {
                 if (!busy) onClose()
             }}
@@ -235,36 +290,72 @@ export default function CharacterConflictModal({
             loading={busy}
             disabled={!backend || busy}
         >
-            <Stack gap="sm">
+            <Stack gap="md">
                 <Text ta="center">
                     Browser version: {browser.characterVersion ?? 0} · Backend version:{" "}
                     {backend?.characterVersion ?? (error ? "Unavailable" : "Loading…")}
                 </Text>
+                <SimpleGrid cols={2} spacing="sm">
+                    <Stack gap={4}>
+                        <Text size="sm" fw={600}>
+                            Browser last changed
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                            {formatVersionDate(browserChangedAt)}
+                        </Text>
+                    </Stack>
+                    <Stack gap={4}>
+                        <Text size="sm" fw={600}>
+                            Backend saved
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                            {formatVersionDate(backendUpdatedAt)}
+                        </Text>
+                    </Stack>
+                </SimpleGrid>
+                <Paper withBorder p="md" radius="md" bg="var(--mantine-color-grape-light)">
+                    <Stack gap="xs">
+                        <Text fw={600} ta="center">
+                            Keep both versions
+                        </Text>
+                        <Button
+                            color="grape"
+                            disabled={!backend || busy || !browser.name.trim()}
+                            onClick={() => void resolve("copy")}
+                        >
+                            Save browser as new
+                        </Button>
+                        <Text size="sm" ta="center" c="dimmed">
+                            Creates a new character and keeps the existing backend character.
+                        </Text>
+                    </Stack>
+                </Paper>
                 <Stack gap="xs">
-                    <Button variant="light" onClick={() => void backup(browser, "browser")}>
-                        Download browser JSON
-                    </Button>
-                    <Button
-                        variant="light"
-                        disabled={!backend}
-                        onClick={() => backend && void backup(backend, "backend")}
-                    >
-                        Download backend JSON
-                    </Button>
+                    <Text size="sm" c="dimmed">
+                        JSON backups
+                    </Text>
+                    <SimpleGrid cols={2} spacing="sm">
+                        <Button
+                            color="gray"
+                            variant="light"
+                            size="sm"
+                            aria-label="Download browser JSON"
+                            onClick={() => void backup(browser, "browser")}
+                        >
+                            Browser JSON
+                        </Button>
+                        <Button
+                            color="gray"
+                            variant="light"
+                            size="sm"
+                            aria-label="Download backend JSON"
+                            disabled={!backend}
+                            onClick={() => backend && void backup(backend, "backend")}
+                        >
+                            Backend JSON
+                        </Button>
+                    </SimpleGrid>
                 </Stack>
-                <Button disabled={!backend || busy} onClick={() => void resolve("backend")}>
-                    Keep backend
-                </Button>
-                <Button
-                    variant="light"
-                    disabled={!backend || busy || !browser.name.trim()}
-                    onClick={() => void resolve("copy")}
-                >
-                    Save browser as new
-                </Button>
-                <Text size="sm" ta="center">
-                    Save as new keeps the existing backend character too.
-                </Text>
                 {error && (
                     <Text role="alert" c="red">
                         {error}
