@@ -110,6 +110,7 @@ import {
     type CoterieResponse
 } from "~/utils/api"
 import { characterHttp } from "~/utils/http/characters"
+import type { CharacterApiResponse } from "~/utils/characterApi"
 import { transitionCharacter } from "~/modules/characterTransition"
 import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
 import CharactersSection from "./sections/CharactersSection"
@@ -903,6 +904,22 @@ const MePage = () => {
         try {
             const response = await characterHttp.get(char.id)
             if (!isCurrent()) return
+
+            // Global autosave reads the list cache. Publish the same fresh record
+            // before replacing the draft so it cannot reconcile against stale data.
+            // Single-record GET omits sharing metadata supplied by the list endpoint.
+            const cached = queryClient
+                .getQueryData<CharacterApiResponse[]>(["characters"])
+                ?.find((entry) => entry.id === response.id)
+            const loaded = {
+                ...cached,
+                ...response,
+                shared: response.shared ?? response.canEdit === false
+            }
+            queryClient.setQueryData<CharacterApiResponse[]>(["characters"], (previous) =>
+                previous?.map((entry) => (entry.id === response.id ? loaded : entry))
+            )
+            queryClient.setQueryData(["characters", response.id], loaded)
 
             // The list is a snapshot. Install the freshly validated cloud record,
             // including its authoritative revision, rather than that cached snapshot.

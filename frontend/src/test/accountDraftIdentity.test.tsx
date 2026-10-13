@@ -1,12 +1,13 @@
-import React, { useState } from "react"
+import React, { useSyncExternalStore } from "react"
 import { MantineProvider } from "@mantine/core"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
 import { act, render, waitFor } from "@testing-library/react"
 import { expect, it, vi } from "vitest"
 import { getEmptyCharacter } from "~/data/Character"
 
 const state = vi.hoisted(() => ({
     character: null as any,
+    listeners: new Set<() => void>(),
     section: null as any,
     confirm: null as any,
     get: vi.fn(),
@@ -23,14 +24,32 @@ vi.mock("~/hooks/useAuth", () => ({
 }))
 vi.mock("~/hooks/useCharacterLocalStorage", () => ({
     useCharacterLocalStorage: () => {
-        const [character, setCharacter] = useState(state.character)
-        state.character = character
+        const character = useSyncExternalStore(
+            (listener) => {
+                state.listeners.add(listener)
+                return () => {
+                    state.listeners.delete(listener)
+                }
+            },
+            () => state.character
+        )
+        const setCharacter = (next: any) => {
+            state.character = typeof next === "function" ? next(state.character) : next
+            state.listeners.forEach((listener) => listener())
+        }
         return [character, setCharacter]
     }
 }))
 vi.mock("~/hooks/useCharacters", async (original) => ({
     ...(await original<any>()),
-    useCharacters: () => ({ data: state.characters, isPending: false, isError: false })
+    useCharacters: (enabled = true) =>
+        useQuery({
+            queryKey: ["characters"],
+            queryFn: async () => state.characters,
+            initialData: state.characters,
+            staleTime: 300_000,
+            enabled
+        })
 }))
 vi.mock("~/hooks/useCoteries", () => {
     const query = () => ({ data: [] })
@@ -89,6 +108,7 @@ vi.mock("~/generator/utils", async (original) => ({
 }))
 
 import MePage from "~/pages/MePage"
+import CharacterAutosave from "~/components/CharacterAutosave"
 Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn(() => ({
@@ -203,5 +223,93 @@ it.each([new Error("Offline"), { status: 404 }, new Error("Invalid character dat
             name: "Current",
             description: "Keep me"
         })
+    }
+)
+
+it.each([
+    { hasConfirmedBase: false, shared: false },
+    { hasConfirmedBase: true, shared: false },
+    { hasConfirmedBase: false, shared: true }
+])(
+    "fresh account loads retain data and ownership (confirmed base: $hasConfirmedBase, shared: $shared)",
+    async ({ hasConfirmedBase, shared }) => {
+        localStorage.clear()
+        state.update.mockClear()
+        state.character = getEmptyCharacter()
+        const cached = {
+            ...getEmptyCharacter(),
+            id: "saved",
+            name: "Cached",
+            description: "Old cloud data",
+            characterVersion: 1
+        }
+        const fresh = {
+            ...cached,
+            name: "Fresh",
+            description: "Latest cloud edits",
+            characterVersion: 3
+        }
+        const envelope = (data: any) => ({
+            id: data.id,
+            name: data.name,
+            data,
+            characterVersion: data.characterVersion,
+            version: data.version,
+            canEdit: !shared
+        })
+        state.characters = [{ ...envelope(cached), shared, sharedBy: shared ? "Owner" : null }]
+        state.get.mockResolvedValue(envelope(fresh))
+        state.update.mockImplementation(async (_id, payload) => {
+            const data = { ...payload.data, characterVersion: payload.characterVersion + 1 }
+            state.characters = [envelope(data)]
+            return envelope(data)
+        })
+        if (hasConfirmedBase)
+            localStorage.setItem("progeny-character-confirmed:saved", JSON.stringify(fresh))
+        const client = new QueryClient()
+        client.setQueryData(["auth", "me"], { id: "alice" })
+        render(
+            <QueryClientProvider client={client}>
+                <MantineProvider>
+                    <MePage />
+                    <CharacterAutosave />
+                </MantineProvider>
+            </QueryClientProvider>
+        )
+        await act(async () => {
+            await state.section.handleLoadCharacter(state.characters[0])
+        })
+        // Allow the global cache subscriber to process the loaded draft.
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 20))
+        })
+        expect(state.character).toMatchObject(fresh)
+        expect(localStorage.getItem("progeny-character-recovery")).toBeNull()
+        expect(client.getQueryData<any[]>(["characters"])?.[0]).toMatchObject({
+            shared,
+            canEdit: !shared,
+            sharedBy: shared ? "Owner" : null
+        })
+        if (shared) {
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 1000))
+            })
+            expect(state.update).not.toHaveBeenCalled()
+            client.clear()
+            localStorage.clear()
+            return
+        }
+        act(() => {
+            state.character = { ...state.character, description: "Edit after fresh load" }
+            state.listeners.forEach((listener) => listener())
+        })
+        await waitFor(() => expect(state.update).toHaveBeenCalledOnce(), { timeout: 2500 })
+        expect(state.update.mock.calls[0][1]).toMatchObject({
+            characterVersion: 3,
+            data: { description: "Edit after fresh load" }
+        })
+        await waitFor(() => expect(state.character.characterVersion).toBe(4))
+        client.clear()
+        localStorage.clear()
     }
 )
