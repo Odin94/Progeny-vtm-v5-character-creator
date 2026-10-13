@@ -48,9 +48,13 @@ const CharacterAutosave = () => {
                 setConflict(null)
             }}
             onResolved={(resolved) => {
-                if (conflict?.browser)
-                    preserveCharacterDraft(character, "Before revisiting a save conflict")
-                setCharacter(resolved)
+                // A restore can await a write while another tab edits the active
+                // draft. Read the freshest storage snapshot when replacing it.
+                setCharacter((current) => {
+                    if (conflict?.browser)
+                        preserveCharacterDraft(current, "Before revisiting a save conflict")
+                    return resolved
+                })
                 conflict?.onResolved?.(resolved)
             }}
         />
