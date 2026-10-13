@@ -900,54 +900,35 @@ const MePage = () => {
             return
         }
 
-        // Check version conflict before loading the character
         try {
             const response = await characterHttp.get(char.id)
-            if (!isCurrent()) {
-                setLoadingCharacterId(null)
-                return
-            }
-            const beCharacter = parseStoredCharacter((response as any).data)
-            const feVersion = char.data.characterVersion ?? 0
+            if (!isCurrent()) return
 
-            if (beCharacter.characterVersion > feVersion) {
-                reportCharacterOperationFailure("load", undefined, {
-                    severity: "warning",
-                    reason: "version_conflict",
-                    characterId: char.id
-                })
-                // Backend version is newer - warn user they're about to load an older version
-                setLoadingCharacterId(null)
-                setVersionConflictInfo({
-                    beVersion: beCharacter.characterVersion,
-                    feVersion,
-                    message: `(Loading ${char.name}): ${char.name} version in database (${beCharacter.characterVersion}) is higher than in browser (${feVersion}) - loading will overwrite your current changes with an older version.`
-                })
-                setCharacterToLoad({ id: char.id, name: char.name, data: char.data })
-                setVersionConflictModalOpened(true)
-                return
-            }
+            // The list is a snapshot. Install the freshly validated cloud record,
+            // including its authoritative revision, rather than that cached snapshot.
+            characterPersistence(queryClient).startDraft()
+            setCharacter({
+                ...response.data,
+                id: response.id,
+                name: response.name,
+                characterVersion: response.characterVersion
+            })
+            notifications.show({
+                title: "Success",
+                message: `Loaded "${response.name}"`,
+                color: "green"
+            })
         } catch (error) {
-            // If fetch fails, continue with load (character might not exist or network error)
-            console.warn("Failed to fetch character for version check:", error)
-        }
-
-        // Load the character
-        if (!isCurrent()) {
+            if (!isCurrent()) return
+            reportCharacterOperationFailure("load", error, { characterId: char.id })
+            notifications.show({
+                title: "Unable to load character",
+                message: `Couldn't load "${char.name}". Your current character is still open. Please try again.`,
+                color: "red"
+            })
+        } finally {
             setLoadingCharacterId(null)
-            return
         }
-        characterPersistence(queryClient).startDraft()
-        setCharacter({
-            ...char.data,
-            id: char.id
-        } as CharacterType & { id: string })
-        setLoadingCharacterId(null)
-        notifications.show({
-            title: "Success",
-            message: `Loaded "${char.name}"`,
-            color: "green"
-        })
     }
 
     const handleLoadCharacter = (char: Character) =>

@@ -9,9 +9,12 @@ const state = vi.hoisted(() => ({
     character: null as any,
     section: null as any,
     confirm: null as any,
+    get: vi.fn(),
+    characters: [] as any[],
     create: vi.fn(),
     update: vi.fn()
 }))
+vi.mock("~/utils/http/characters", () => ({ characterHttp: { get: state.get } }))
 vi.mock("~/utils/api", () => ({
     api: { createCharacter: state.create, updateCharacter: state.update }
 }))
@@ -27,7 +30,7 @@ vi.mock("~/hooks/useCharacterLocalStorage", () => ({
 }))
 vi.mock("~/hooks/useCharacters", async (original) => ({
     ...(await original<any>()),
-    useCharacters: () => ({ data: [], isPending: false, isError: false })
+    useCharacters: () => ({ data: state.characters, isPending: false, isError: false })
 }))
 vi.mock("~/hooks/useCoteries", () => {
     const query = () => ({ data: [] })
@@ -138,3 +141,67 @@ it("Account ignores a pending creation acknowledgement after importing another i
     expect(state.create).toHaveBeenCalledTimes(2)
     expect(state.update).not.toHaveBeenCalled()
 })
+
+it("Account loads the fresh cloud record instead of the stale list snapshot", async () => {
+    state.character = getEmptyCharacter()
+    const cached = { ...getEmptyCharacter(), id: "saved", name: "Cached", characterVersion: 1 }
+    state.characters = [{ id: "saved", name: "Cached", data: cached, canEdit: true }]
+    state.get.mockResolvedValue({
+        id: "saved",
+        name: "Fresh",
+        characterVersion: 3,
+        data: { ...cached, description: "Latest cloud edits", characterVersion: 2 }
+    })
+    const client = new QueryClient()
+    client.setQueryData(["auth", "me"], { id: "alice" })
+    render(
+        <QueryClientProvider client={client}>
+            <MantineProvider>
+                <MePage />
+            </MantineProvider>
+        </QueryClientProvider>
+    )
+    await act(async () => {
+        await state.section.handleLoadCharacter(state.characters[0])
+    })
+    expect(state.character).toMatchObject({
+        id: "saved",
+        name: "Fresh",
+        description: "Latest cloud edits",
+        characterVersion: 3
+    })
+})
+
+it.each([new Error("Offline"), { status: 404 }, new Error("Invalid character data")])(
+    "Account keeps the current character when the destination cannot be fetched: %s",
+    async (error) => {
+        state.character = {
+            ...getEmptyCharacter(),
+            id: "shared",
+            name: "Current",
+            description: "Keep me"
+        }
+        state.characters = [
+            { id: "shared", shared: true, data: state.character },
+            { id: "saved", name: "Cached", data: { ...getEmptyCharacter(), name: "Cached" } }
+        ]
+        state.get.mockRejectedValue(error)
+        const client = new QueryClient()
+        client.setQueryData(["auth", "me"], { id: "alice" })
+        render(
+            <QueryClientProvider client={client}>
+                <MantineProvider>
+                    <MePage />
+                </MantineProvider>
+            </QueryClientProvider>
+        )
+        await act(async () => {
+            await state.section.handleLoadCharacter(state.characters[1])
+        })
+        expect(state.character).toMatchObject({
+            id: "shared",
+            name: "Current",
+            description: "Keep me"
+        })
+    }
+)
