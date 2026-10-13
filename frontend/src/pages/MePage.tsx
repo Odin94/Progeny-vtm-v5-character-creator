@@ -1,3 +1,4 @@
+import { CHARACTER_CONFLICT_EVENT } from "~/components/CharacterConflictModal"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { CharacterOperationError } from "~/utils/characterOperationError"
 import {
@@ -37,7 +38,7 @@ import {
 } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import { z } from "zod"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
@@ -353,11 +354,6 @@ const MePage = () => {
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
     const [loadingCharacterId, setLoadingCharacterId] = useState<string | null>(null)
     const [versionConflictModalOpened, setVersionConflictModalOpened] = useState(false)
-    const [versionConflictInfo, setVersionConflictInfo] = useState<{
-        beVersion: number
-        feVersion: number
-        message: string
-    } | null>(null)
     const [characterToDelete, setCharacterToDelete] = useState<{
         id: string
         name: string
@@ -633,11 +629,6 @@ const MePage = () => {
                         characterId: character.id
                     })
                     // Show version conflict modal
-                    setVersionConflictInfo({
-                        beVersion: beCharacter.characterVersion,
-                        feVersion,
-                        message: `(Saving ${beCharacter.name}): Character version in database (${beCharacter.characterVersion}) is higher than in browser (${feVersion}) - saving might overwrite changes you made on another device.`
-                    })
                     setVersionConflictModalOpened(true)
                     return
                 }
@@ -690,6 +681,10 @@ const MePage = () => {
                         reportCharacterOperationFailure("save", error, {
                             characterId: character.id
                         })
+                        if (isCurrent() && (error as { status?: number })?.status === 409) {
+                            setVersionConflictModalOpened(true)
+                            return
+                        }
                         notifications.show({
                             title: "Error",
                             message:
@@ -751,130 +746,28 @@ const MePage = () => {
         }
     }
 
-    const conflictDismissalGeneration = useRef(0)
-
-    const handleConfirmOverwriteVersion = async () => {
-        const dismissalGeneration = conflictDismissalGeneration.current
-        const isCurrent = persistence.replacementGuard()
-        if (!versionConflictInfo) return
-        const switchTarget = switchConflictTarget
-
-        // If characterToLoad is set, we're in a loading scenario
-        if (characterToLoad) {
-            // Load the character (overwriting current with older version)
-            characterPersistence(queryClient).startDraft()
-            setCharacter({
-                ...characterToLoad.data,
-                id: characterToLoad.id
-            } as CharacterType & { id: string })
-            setVersionConflictModalOpened(false)
-            setVersionConflictInfo(null)
-            setCharacterToLoad(null)
-            notifications.show({
-                title: "Success",
-                message: `Loaded "${characterToLoad.name}"`,
-                color: "green"
-            })
-            return
-        }
-
-        // Otherwise, we're in a saving scenario
-        if (!character.id) return
-
-        let targetCharacter = characters?.find((c) => c.id === character.id)
-        if (!targetCharacter) {
-            try {
-                const saved = await characterHttp.get(character.id)
-                targetCharacter = { ...saved, shared: saved.canEdit !== true }
-            } catch (error) {
-                reportCharacterOperationFailure("save", error, {
-                    severity: "warning",
-                    reason: "ownership_unverified",
-                    characterId: character.id
-                })
-                notifications.show({
-                    title: "Could not verify ownership",
-                    message: "Please retry or save your character as a copy.",
-                    color: "red"
-                })
-                return
-            }
-        }
-        if (!isCurrent()) return
-        if (targetCharacter.shared) {
-            setVersionConflictModalOpened(false)
-            setVersionConflictInfo(null)
-            setSwitchConflictTarget(null)
-            setCopySource({
-                character: structuredClone(character),
-                ownerId: targetCharacter.ownerId,
-                sharedBy: targetCharacter.sharedBy,
-                classification: "shared",
-                viewerId: user?.id
-            })
-            return
-        }
-
-        // Proceed with save (overwrite)
-        updateCharacterMutation.mutate(
-            {
-                id: targetCharacter.id,
-                data: {
-                    name: character.name,
-                    data: character,
-                    characterVersion:
-                        versionConflictInfo?.beVersion ?? targetCharacter.characterVersion ?? 0,
-                    version: character.version
-                }
-            },
-            {
-                onSuccess: (savedCharacter) => {
-                    if (!isCurrent()) return
-                    // Update character in memory with the ID and characterVersion from backend
-                    const saved = savedCharacter as {
-                        id: string
-                        name: string
-                        data: unknown
-                        version?: number
-                        characterVersion?: number
+    useEffect(() => {
+        if (!versionConflictModalOpened) return
+        window.dispatchEvent(
+            new CustomEvent(CHARACTER_CONFLICT_EVENT, {
+                detail: {
+                    characterId: character.id,
+                    onClose: () => {
+                        setVersionConflictModalOpened(false)
+                        setCharacterToLoad(null)
+                        setSwitchConflictTarget(null)
+                    },
+                    onResolved: (resolved: CharacterType) => {
+                        setCharacter(resolved)
+                        if (switchConflictTarget)
+                            void transitionCharacter(queryClient, (isCurrentLoad) =>
+                                performLoadCharacter(switchConflictTarget, isCurrentLoad)
+                            )
                     }
-                    const savedData = saved.data as { characterVersion?: number } | undefined
-                    setCharacter((current) =>
-                        isCurrent() && current.id === character.id
-                            ? {
-                                  ...current,
-                                  id: saved.id,
-                                  characterVersion:
-                                      saved.characterVersion ?? savedData?.characterVersion ?? 0
-                              }
-                            : current
-                    )
-                    if (dismissalGeneration !== conflictDismissalGeneration.current) return
-                    setVersionConflictModalOpened(false)
-                    setVersionConflictInfo(null)
-                    setSwitchConflictTarget(null)
-                    notifications.show({
-                        title: "Success",
-                        message: `Character "${character.name}" saved`,
-                        color: "green"
-                    })
-                    if (switchTarget)
-                        void transitionCharacter(queryClient, (isCurrentLoad) =>
-                            performLoadCharacter(switchTarget, isCurrentLoad)
-                        )
-                },
-                onError: (error) => {
-                    reportCharacterOperationFailure("save", error, { characterId: character.id })
-                    notifications.show({
-                        title: "Error",
-                        message:
-                            error instanceof Error ? error.message : "Failed to save character",
-                        color: "red"
-                    })
                 }
-            }
+            })
         )
-    }
+    }, [versionConflictModalOpened, character.id, switchConflictTarget, queryClient])
 
     const isSavingCharacter = createCharacterMutation.isPending || updateCharacterMutation.isPending
     const isLoadingCharacter = loadingCharacterId !== null
@@ -1025,11 +918,6 @@ const MePage = () => {
                             characterId: character.id,
                             localVersion: local,
                             remoteVersion: remote
-                        })
-                        setVersionConflictInfo({
-                            beVersion: remote,
-                            feVersion: local,
-                            message: `(Loading ${char.name}): ${character.name} version in database (${remote}) is higher than in browser (${local}) - overwriting saves your browser changes over changes you might have made on another device, then loads ${char.name}.`
                         })
                         setSwitchConflictTarget({ id: char.id, name: char.name, data: charData })
                         setVersionConflictModalOpened(true)
@@ -2544,27 +2432,6 @@ const MePage = () => {
                 onSaveAndContinue={handleSaveAndContinueSwitch}
                 onDiscardAndContinue={handleDiscardAndContinueSwitch}
                 isSaving={isSavingBeforeSwitch}
-            />
-
-            <ConfirmActionModal
-                opened={versionConflictModalOpened}
-                onClose={() => {
-                    setVersionConflictModalOpened(false)
-                    setVersionConflictInfo(null)
-                    setCharacterToLoad(null)
-                    setSwitchConflictTarget(null)
-                    conflictDismissalGeneration.current += 1
-                }}
-                onConfirm={handleConfirmOverwriteVersion}
-                title="Version Conflict"
-                body={versionConflictInfo?.message ?? ""}
-                confirmLabel={
-                    characterToLoad
-                        ? "Load older version"
-                        : switchConflictTarget
-                          ? "Overwrite and load"
-                          : "Overwrite DB version"
-                }
             />
 
             {/* Coterie Summary Modal */}

@@ -51,13 +51,13 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     character.humanity = humanity
 }
 
-export const downloadJson = async (character: Character) => {
+export const downloadJson = async (character: Character, filename?: string) => {
     const json = JSON.stringify(character, null, 2)
     const blob = new Blob([json], { type: "application/json" })
     const link = document.createElement("a")
 
     link.href = window.URL.createObjectURL(blob)
-    link.download = `progeny_${character.name}.json`
+    link.download = filename ?? `progeny_${character.name}.json`
     link.click()
     // Clean up the object URL to prevent memory leaks
     setTimeout(() => {

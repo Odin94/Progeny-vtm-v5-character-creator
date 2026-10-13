@@ -78,11 +78,12 @@ const notifyConflict = (
             characterId,
             ...versions
         })
+    window.dispatchEvent(new CustomEvent("progeny:character-conflict", { detail: { characterId } }))
     notifications.show({
         id: "character-save-conflict",
         title: "Newer cloud changes found",
         message:
-            "Your local draft is kept on this device. Use Recover interrupted drafts in the sheet menu to download a separate copy before loading the cloud version.",
+            "Choose which version to keep in the conflict dialog. Your browser draft is also preserved under Recover interrupted drafts in the sheet menu.",
         color: "yellow",
         autoClose: false
     })
