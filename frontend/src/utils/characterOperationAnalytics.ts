@@ -45,6 +45,7 @@ export const reportCharacterOperationFailure = (
         localVersion?: number
         remoteVersion?: number
         hasConfirmedBase?: boolean
+        resolution?: "modal"
     } = {}
 ) => {
     try {
@@ -75,8 +76,8 @@ export const reportCharacterOperationFailure = (
             "name_required",
             "file_required"
         ].includes(reason)
-        // A resolution dialog does not make an unsaved draft durable. Keep these
-        // failures in error tracking even when the caller shows a warning UI.
+        // Keep the risk metadata even when a version conflict has an explicit
+        // modal resolution path and belongs in ordinary event telemetry.
         const dataLossRisk =
             reason === "storage_failed" ||
             (!routineRefusal &&
@@ -87,9 +88,12 @@ export const reportCharacterOperationFailure = (
                         ["save", "save-before-load", "autosave", "restore-deleted-draft"].includes(
                             operation
                         ))))
-        const severity = dataLossRisk
-            ? "error"
-            : options.severity ?? (routineRefusal ? "warning" : "error")
+        const modalConflict = reason === "version_conflict" && options.resolution === "modal"
+        const severity = modalConflict
+            ? "warning"
+            : dataLossRisk
+              ? "error"
+              : (options.severity ?? (routineRefusal ? "warning" : "error"))
         if (error && typeof error === "object" && reportedErrors.has(error)) return
         if (
             error instanceof z.ZodError &&
@@ -101,10 +105,11 @@ export const reportCharacterOperationFailure = (
         )
             return
         // Autosave retries every few seconds. Keep a persistent outage visible
-        // without emitting a warning on every timer tick.
+        // without emitting a warning on every timer tick. Modal conflicts already
+        // deduplicate per draft/revision at the caller; keep distinct conflicts.
         const key = `${operation}:${reason}:${status}:${options.characterId ?? ""}`
         const now = Date.now()
-        if (operation === "autosave" && severity === "warning") {
+        if (operation === "autosave" && severity === "warning" && !modalConflict) {
             const last = retryWarnings.get(key)
             if (last !== undefined && now - last < 60_000) return
         }
@@ -136,7 +141,8 @@ export const reportCharacterOperationFailure = (
             data_loss_risk: dataLossRisk,
             local_version: options.localVersion,
             remote_version: options.remoteVersion,
-            has_confirmed_base: options.hasConfirmedBase
+            has_confirmed_base: options.hasConfirmedBase,
+            ...(options.resolution ? { resolution: options.resolution } : {})
         }
         if (severity === "warning") {
             posthog.capture("character_operation_warning", properties)
@@ -149,7 +155,7 @@ export const reportCharacterOperationFailure = (
             })
         }
         markCharacterFailureReported(error)
-        if (operation === "autosave" && severity === "warning") {
+        if (operation === "autosave" && severity === "warning" && !modalConflict) {
             if (retryWarnings.size >= 100) retryWarnings.delete(retryWarnings.keys().next().value!)
             retryWarnings.set(key, now)
         }
@@ -157,7 +163,6 @@ export const reportCharacterOperationFailure = (
         // Reporting must not block a save, retry, notification or recovery action.
     }
 }
-
 
 // Pair the reported landing-page click with its terminal outcome. Do not include
 // draft contents or error messages; telemetry must never interrupt the action.

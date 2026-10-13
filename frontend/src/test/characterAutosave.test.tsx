@@ -263,19 +263,20 @@ describe("useAutosaveCharacter", () => {
             await finishPendingPromises()
         })
         expect(apiMocks.updateCharacter).not.toHaveBeenCalled()
-        expect(posthog.captureException).toHaveBeenCalledWith(
-            expect.any(Error),
+        expect(posthog.captureException).not.toHaveBeenCalled()
+        expect(posthog.capture).toHaveBeenCalledWith(
+            "character_operation_warning",
             expect.objectContaining({
                 operation: "autosave",
                 failure_reason: "version_conflict",
-                severity: "error"
+                severity: "warning"
             })
         )
         expect(
             JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character
         ).toEqual(draft)
-        expect(posthog.captureException).toHaveBeenCalledWith(
-            expect.any(Error),
+        expect(posthog.capture).toHaveBeenCalledWith(
+            "character_operation_warning",
             expect.objectContaining({
                 local_version: 1,
                 remote_version: 2,
@@ -299,7 +300,7 @@ describe("useAutosaveCharacter", () => {
             unmount()
         }
         expect(apiMocks.updateCharacter).not.toHaveBeenCalled()
-        expect(posthog.captureException).toHaveBeenCalledTimes(1)
+        expect(posthog.capture).toHaveBeenCalledTimes(1)
     })
 
     it("continues from its own save when a reload lost the save response", async () => {
@@ -419,10 +420,15 @@ describe("useAutosaveCharacter", () => {
                 vi.advanceTimersByTime(CHARACTER_AUTOSAVE_DELAY_MS * 2)
                 await finishPendingPromises()
             })
-            expect(posthog.captureException).toHaveBeenCalledWith(
-                expect.any(Error),
-                expect.objectContaining({ failure_reason: "version_conflict" })
+            expect(posthog.capture).toHaveBeenCalledWith(
+                "character_operation_warning",
+                expect.objectContaining({
+                    failure_reason: "version_conflict",
+                    resolution: "modal",
+                    severity: "warning"
+                })
             )
+            expect(posthog.captureException).not.toHaveBeenCalled()
             expect(apiMocks.updateCharacter).toHaveBeenCalledTimes(1)
             expect(
                 JSON.parse(localStorage.getItem("progeny-character-recovery")!)[0].character

@@ -75,6 +75,7 @@ const notifyConflict = (
     if (!reported)
         reportCharacterOperationFailure("autosave", undefined, {
             reason: "version_conflict",
+            resolution: "modal",
             characterId,
             ...versions
         })

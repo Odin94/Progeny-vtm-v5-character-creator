@@ -175,7 +175,12 @@ it.each(["preflight", "update race", "cancel pending"])(
         expect(state.report).toHaveBeenCalledWith(
             "save-before-load",
             expect.anything(),
-            expect.objectContaining({ severity: "warning", localVersion: 1, remoteVersion: 2 })
+            expect.objectContaining({
+                severity: "warning",
+                localVersion: 1,
+                remoteVersion: 2,
+                resolution: "modal"
+            })
         )
 
         let complete!: (value: any) => void
@@ -205,5 +210,61 @@ it.each(["preflight", "update race", "cancel pending"])(
             data: { concept: "Edited in browser" }
         })
         expect(state.conflict.opened).toBe(false)
+    }
+)
+
+it.each(["preflight", "update race"])(
+    "marks manual-save %s conflicts as modal-resolvable telemetry",
+    async (scenario) => {
+        const local = {
+            ...getEmptyCharacter(),
+            id: "manual-conflict",
+            name: "Test character",
+            characterVersion: 4
+        }
+        const remoteData = { ...local, characterVersion: 85 }
+        state.character = local
+        state.conflict = null
+        state.characters = [{ id: local.id, name: local.name, data: local, characterVersion: 4 }]
+        state.get.mockResolvedValue({
+            id: local.id,
+            name: local.name,
+            data: remoteData,
+            characterVersion: 85,
+            canEdit: true
+        })
+        if (scenario === "update race") {
+            state.get.mockResolvedValueOnce({
+                id: local.id,
+                name: local.name,
+                data: local,
+                characterVersion: 4,
+                canEdit: true
+            })
+            state.update.mockRejectedValueOnce(
+                Object.assign(new Error("Version conflict"), { status: 409 })
+            )
+        }
+        const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+        client.setQueryData(["auth", "me"], { id: "alice" })
+        render(
+            <QueryClientProvider client={client}>
+                <MantineProvider>
+                    <ConflictHost />
+                    <MePage />
+                </MantineProvider>
+            </QueryClientProvider>
+        )
+        await act(async () => {
+            await state.section.handleSaveCurrentCharacter()
+        })
+        await waitFor(() =>
+            expect(state.report).toHaveBeenCalledWith(
+                "save",
+                scenario === "preflight" ? undefined : expect.objectContaining({ status: 409 }),
+                expect.objectContaining({ characterId: local.id, resolution: "modal" })
+            )
+        )
+        await waitFor(() => expect(state.conflict?.opened).toBe(true))
     }
 )

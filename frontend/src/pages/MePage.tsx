@@ -626,6 +626,7 @@ const MePage = () => {
                     reportCharacterOperationFailure("save", undefined, {
                         severity: "warning",
                         reason: "version_conflict",
+                        resolution: "modal",
                         characterId: character.id
                     })
                     // Show version conflict modal
@@ -678,10 +679,13 @@ const MePage = () => {
                         })
                     },
                     onError: (error) => {
+                        const canResolveConflict =
+                            isCurrent() && (error as { status?: number })?.status === 409
                         reportCharacterOperationFailure("save", error, {
-                            characterId: character.id
+                            characterId: character.id,
+                            ...(canResolveConflict ? { resolution: "modal" as const } : {})
                         })
-                        if (isCurrent() && (error as { status?: number })?.status === 409) {
+                        if (canResolveConflict) {
                             setVersionConflictModalOpened(true)
                             return
                         }
@@ -916,6 +920,7 @@ const MePage = () => {
                         reportCharacterOperationFailure("save-before-load", error, {
                             severity: "warning",
                             characterId: character.id,
+                            resolution: "modal",
                             localVersion: local,
                             remoteVersion: remote
                         })
