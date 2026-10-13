@@ -315,7 +315,6 @@ describe("AuthSignInConfirmation", () => {
     })
 })
 
-
 describe("authenticated analytics consent", () => {
     afterEach(() => cleanup())
 
@@ -330,6 +329,38 @@ describe("authenticated analytics consent", () => {
 
         mocks.consentStatus.mockReturnValue("granted")
         act(() => window.dispatchEvent(new Event("progeny:cookie-preferences-changed")))
-        expect(mocks.identify).toHaveBeenCalledWith(testUser.id, expect.objectContaining({ email: testUser.email }))
+        expect(mocks.identify).toHaveBeenCalledWith(
+            testUser.id,
+            expect.objectContaining({ email: testUser.email })
+        )
     })
+})
+
+it("reports a shared auth failure once across observers and remounts, retaining later failures", async () => {
+    vi.clearAllMocks()
+    sessionStorage.clear()
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const sharedWrapper = ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    )
+    const failure = Object.assign(new Error("offline"), { status: 502 })
+    mocks.getCurrentUser.mockRejectedValue(failure)
+    const first = renderHook(() => useAuth(), { wrapper: sharedWrapper })
+    const second = renderHook(() => useAuth(), { wrapper: sharedWrapper })
+    await waitFor(() => expect(first.result.current.isLoading).toBe(false))
+    const failures = () => mocks.capture.mock.calls.filter(([name]) => name === "auth_me_failure")
+    expect(failures()).toHaveLength(1)
+    second.unmount()
+    const third = renderHook(() => useAuth(), { wrapper: sharedWrapper })
+    await waitFor(() => expect(third.result.current.isLoading).toBe(false))
+    const beforeRetry = failures().length
+    mocks.getCurrentUser.mockRejectedValue(Object.assign(new Error("offline"), { status: 502 }))
+    await act(async () => {
+        await first.result.current.refreshAuth()
+    })
+    await waitFor(() => expect(failures()).toHaveLength(beforeRetry + 1))
+    expect(failures().every(([, data]) => data.status === 502 && data.message === "offline")).toBe(
+        true
+    )
+    cleanup()
 })

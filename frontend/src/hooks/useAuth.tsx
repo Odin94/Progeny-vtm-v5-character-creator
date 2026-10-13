@@ -6,6 +6,9 @@ import posthog from "posthog-js"
 import { identifyPostHogUser, resetPostHogIdentity } from "~/utils/analytics"
 import { COOKIE_PREFERENCES_CHANGED_EVENT } from "~/utils/cookiePreferences"
 
+// Share reporting across observers, but retain every distinct failed query result.
+const reportedAuthFailures = new WeakMap<object, { error: unknown; updatedAt: number }>()
+
 const AUTH_RETURN_TO_STORAGE_KEY = "auth:returnTo"
 const AUTH_SIGN_IN_SEED_KEY = "auth:signInSeed"
 const AUTH_SIGN_IN_CONFIRM_KEY = "auth:signInConfirm"
@@ -127,6 +130,7 @@ export const useAuth = () => {
         isLoading,
         error,
         isError,
+        errorUpdatedAt,
         refetch
     } = useQuery({
         queryKey: ["auth", "me"],
@@ -167,21 +171,20 @@ export const useAuth = () => {
     // which resolves to null) is otherwise invisible in analytics. Capture it once
     // per error so a real sign-in outage becomes a metric, not a replay someone
     // happens to watch.
-    const reportedAuthMeErrorRef = useRef<unknown>(null)
     useEffect(() => {
-        if (!isError || !error || reportedAuthMeErrorRef.current === error) {
-            return
-        }
-        reportedAuthMeErrorRef.current = error
+        if (!isError || !error) return
+        const previous = reportedAuthFailures.get(queryClient)
+        if (previous?.error === error && previous.updatedAt === errorUpdatedAt) return
         try {
             posthog.capture("auth_me_failure", {
                 status: (error as ApiError)?.status ?? null,
                 message: error instanceof Error ? error.message : String(error)
             })
+            reportedAuthFailures.set(queryClient, { error, updatedAt: errorUpdatedAt })
         } catch (captureError) {
             console.warn("PostHog capture failed:", captureError)
         }
-    }, [isError, error])
+    }, [isError, error, errorUpdatedAt, queryClient])
 
     // Identify user in PostHog when query succeeds (for already-authenticated users)
     useEffect(() => {
