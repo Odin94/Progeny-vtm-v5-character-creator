@@ -113,11 +113,12 @@ const TheBlood = ({ options }: TheBloodProps) => {
                             Clan Traits
                         </Text>
                         <Group gap="xs" align="center" wrap="nowrap">
+                            {/* Keep trait elements stable when page translation replaces their text nodes. */}
                             <Text size="sm">
                                 <Text span fw={600} c={primaryColor}>
                                     Clan Bane:
                                 </Text>{" "}
-                                {baneText}
+                                <span>{baneText}</span>
                             </Text>
                         </Group>
                         {canToggleClanBane ? (
@@ -148,7 +149,7 @@ const TheBlood = ({ options }: TheBloodProps) => {
                             <Text span fw={600} c={primaryColor}>
                                 Clan Compulsion:
                             </Text>{" "}
-                            {compulsionText}
+                            <span>{compulsionText}</span>
                         </Text>
                     </Stack>
                 </Grid.Col>
