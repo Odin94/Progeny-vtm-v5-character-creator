@@ -27,6 +27,26 @@ const reloadedWithinGuard = () => {
     return Date.now() - timestamp < RELOAD_GUARD_MS
 }
 
+// Navigating away (a link, a reload, or the user) stops the page's in-flight
+// loads. Firefox and Safari then reject a pending import() or CSS preload, and
+// Vite reports it as a preload error. The navigation already loads the current
+// bundle, so that failure is not a stale asset: it must not request a reload or
+// count as a recovery on the next page.
+let pageUnloading = false
+
+const markPageUnloading = (event: Event) => {
+    if (event.type === "beforeunload" && event.defaultPrevented) {
+        return
+    }
+    pageUnloading = true
+}
+
+// A page restored from the back/forward cache runs again, so its later preload
+// errors are real.
+const clearPageUnloading = () => {
+    pageUnloading = false
+}
+
 type AssetReloadState = "reload-requested" | "reload-blocked" | "unattempted"
 let lastAttempt: { at: number; state: AssetReloadState } | undefined
 
@@ -36,6 +56,10 @@ export const getAssetReloadState = (): AssetReloadState =>
     lastAttempt && Date.now() - lastAttempt.at < RELOAD_GUARD_MS ? lastAttempt.state : "unattempted"
 
 export const handleAssetPreloadError = () => {
+    if (pageUnloading) {
+        return
+    }
+
     if (reloadedWithinGuard()) {
         if (getAssetReloadState() !== "reload-requested") {
             lastAttempt = { at: Date.now(), state: "reload-blocked" }
@@ -87,5 +111,8 @@ export const reportAssetPreloadRecovery = () => {
 
 export const installAssetPreloadRecovery = () => {
     reportAssetPreloadRecovery()
+    window.addEventListener("beforeunload", markPageUnloading)
+    window.addEventListener("pagehide", markPageUnloading)
+    window.addEventListener("pageshow", clearPageUnloading)
     window.addEventListener("vite:preloadError", handleAssetPreloadError)
 }
