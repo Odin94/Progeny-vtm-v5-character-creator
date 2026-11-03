@@ -100,11 +100,6 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
             console.error(e)
             setDownloadError(e as Error)
         }
-        trackEvent({
-            action: "PDF downloaded",
-            category: "downloads",
-            label: JSON.stringify(character)
-        })
     }
 
     const handleDownloadJSON = () => {
