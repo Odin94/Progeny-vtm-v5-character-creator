@@ -119,7 +119,11 @@ import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
 import { getCharacterVitals, isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
-import { trackCharacterSwitchBlockedUnnamed, trackFeatureGuideOpened } from "~/utils/analytics"
+import {
+    trackCharacterSwitchBlockedUnnamed,
+    trackFeatureGuideOpened,
+    trackPdfDownloaded
+} from "~/utils/analytics"
 
 const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 const topbarHeight = 52
@@ -1234,6 +1238,9 @@ const MePage = () => {
 
         import("~/generator/pdfCreator")
             .then(({ downloadCharacterSheet }) => downloadCharacterSheet(charData))
+            .then((saved) => {
+                if (saved) trackPdfDownloaded(charData)
+            })
             .catch((e) => {
                 console.error(e)
                 notifications.show({

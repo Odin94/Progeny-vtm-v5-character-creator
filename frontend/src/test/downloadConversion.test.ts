@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { Character } from "~/data/Character"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
-import { downloadCharacterSheet, testTemplate } from "~/generator/pdfCreator"
+import { downloadCharacterSheet, isIosInAppBrowser, testTemplate } from "~/generator/pdfCreator"
 import { getBasicTestCharacter } from "./testUtils"
 
 // Mock the notifications module
@@ -217,10 +217,80 @@ describe("Download Conversion Logic", () => {
                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
-            await downloadCharacterSheet(mockCharacter)
+            await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
 
             expect(mockAnchor.click).toHaveBeenCalled()
             expect(mockAnchor.download).toBe("progeny_Test Vampire.pdf")
+        })
+
+        describe("in an iOS in-app browser", () => {
+            const googleAppUserAgent =
+                "Mozilla/5.0 (iPad; CPU OS 26_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/444.2.1001595231 Mobile/15E148 Safari/604.1"
+            const share = vi.fn()
+            const canShare = vi.fn()
+            const assign = vi.fn()
+
+            beforeEach(async () => {
+                const { PDFDocument } = await import("pdf-lib")
+                vi.mocked(PDFDocument.load).mockResolvedValue(createMockPdfDoc() as any)
+                vi.mocked(fetch).mockResolvedValue({
+                    arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
+                } as Response)
+
+                vi.spyOn(navigator, "userAgent", "get").mockReturnValue(googleAppUserAgent)
+                Object.assign(navigator, { share, canShare })
+                vi.stubGlobal("location", { assign })
+                canShare.mockReturnValue(true)
+            })
+
+            afterEach(() => {
+                vi.unstubAllGlobals()
+                Reflect.deleteProperty(navigator, "share")
+                Reflect.deleteProperty(navigator, "canShare")
+            })
+
+            it("detects the Google Search app but not Safari", () => {
+                expect(isIosInAppBrowser()).toBe(true)
+
+                vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+                    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1"
+                )
+                expect(isIosInAppBrowser()).toBe(false)
+            })
+
+            it("shares the PDF as a file instead of clicking a download link", async () => {
+                share.mockResolvedValue(undefined)
+
+                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
+
+                const sharedFile = share.mock.calls[0][0].files[0] as File
+                expect(sharedFile.name).toBe("progeny_Test Vampire.pdf")
+                expect(sharedFile.type).toBe("application/pdf")
+                expect(mockAnchor.click).not.toHaveBeenCalled()
+                expect(assign).not.toHaveBeenCalled()
+            })
+
+            it("reports a cancelled share as not saved", async () => {
+                share.mockRejectedValue(new DOMException("cancelled", "AbortError"))
+
+                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(false)
+                expect(assign).not.toHaveBeenCalled()
+            })
+
+            it("opens the PDF when sharing is not allowed", async () => {
+                share.mockRejectedValue(new DOMException("no activation", "NotAllowedError"))
+
+                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
+                expect(assign).toHaveBeenCalledWith("blob:mock-url")
+            })
+
+            it("opens the PDF when file sharing is not supported", async () => {
+                canShare.mockReturnValue(false)
+
+                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
+                expect(share).not.toHaveBeenCalled()
+                expect(assign).toHaveBeenCalledWith("blob:mock-url")
+            })
         })
 
         it("should handle testTemplate function", async () => {

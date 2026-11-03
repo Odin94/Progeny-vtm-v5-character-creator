@@ -1,4 +1,5 @@
 import posthog from "posthog-js"
+import type { Character } from "~/data/Character"
 
 /** Cookieless events cannot create or update person profiles. */
 export const identifyPostHogUser = (user: {
@@ -70,6 +71,13 @@ export const trackEvent = ({ action, category, label, value }: EventParams) => {
         console.warn("PostHog event tracking failed:", error)
     }
 }
+
+export const trackPdfDownloaded = (character: Character) =>
+    trackEvent({
+        action: "PDF downloaded",
+        category: "downloads",
+        label: JSON.stringify(character)
+    })
 
 export const trackFeatureGuideOpened = (entryPoint: FeatureGuideEntryPoint) => {
     try {

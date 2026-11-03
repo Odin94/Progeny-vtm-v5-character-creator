@@ -24,7 +24,7 @@ import ErrorDetails from "~/components/ErrorDetails"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
-import { trackEvent } from "../../utils/analytics"
+import { trackEvent, trackPdfDownloaded } from "../../utils/analytics"
 import {
     openSupportConversation,
     showSupportUnavailableNotification
@@ -95,16 +95,13 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
     const handleDownloadPDF = async () => {
         try {
             const { downloadCharacterSheet } = await import("../pdfCreator")
-            await downloadCharacterSheet(character)
+            if (await downloadCharacterSheet(character)) {
+                trackPdfDownloaded(character)
+            }
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
         }
-        trackEvent({
-            action: "PDF downloaded",
-            category: "downloads",
-            label: JSON.stringify(character)
-        })
     }
 
     const handleDownloadJSON = () => {

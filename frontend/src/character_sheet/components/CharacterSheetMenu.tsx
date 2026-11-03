@@ -37,7 +37,7 @@ import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { trackEvent, trackFeatureGuideOpened } from "~/utils/analytics"
+import { trackEvent, trackFeatureGuideOpened, trackPdfDownloaded } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
 import "./CharacterSheetMenu.css"
@@ -95,7 +95,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         handleMenuClose()
         try {
             const { downloadCharacterSheet } = await import("~/generator/pdfCreator")
-            await downloadCharacterSheet(character)
+            if (await downloadCharacterSheet(character)) {
+                trackPdfDownloaded(character)
+            }
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
