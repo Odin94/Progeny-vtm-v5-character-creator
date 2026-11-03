@@ -14,6 +14,7 @@ import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import { trackPdfDownloaded } from "~/utils/analytics"
 import {
     appendCustomText,
     getDisciplinePowerCustomTextKey,
@@ -124,7 +125,6 @@ const IOS_IN_APP_BROWSER_TOKENS =
     /\b(GSA|FBAN|FBAV|FBIOS|Instagram|Line|Twitter|LinkedInApp|Snapchat|Pinterest|musical_ly|BytedanceWebview)\//i
 
 export const isIosInAppBrowser = () => {
-    if (typeof navigator === "undefined") return false
     const userAgent = navigator.userAgent
     const isIos =
         /iPad|iPhone|iPod/.test(userAgent) ||
@@ -609,8 +609,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     return await pdfDoc.save({ updateFieldAppearances: true })
 }
 
-/** Resolves to false when the user cancels the save. */
-export const downloadCharacterSheet = async (character: Character): Promise<boolean> => {
+export const downloadCharacterSheet = async (character: Character) => {
     const pdfBytes = await createPdf_nerdbert(character)
     notifications.show({
         title: "PDF template kindly provided by Nerdbert!",
@@ -619,7 +618,9 @@ export const downloadCharacterSheet = async (character: Character): Promise<bool
         color: "grape"
     })
 
-    return downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)
+    if (await downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)) {
+        trackPdfDownloaded(character)
+    }
 }
 
 function base64ToArrayBuffer(base64: string) {

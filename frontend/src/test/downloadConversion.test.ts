@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { Character } from "~/data/Character"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet, isIosInAppBrowser, testTemplate } from "~/generator/pdfCreator"
+import { trackPdfDownloaded } from "~/utils/analytics"
 import { getBasicTestCharacter } from "./testUtils"
 
 // Mock the notifications module
@@ -9,6 +10,10 @@ vi.mock("@mantine/notifications", () => ({
     notifications: {
         show: vi.fn()
     }
+}))
+
+vi.mock("~/utils/analytics", () => ({
+    trackPdfDownloaded: vi.fn()
 }))
 
 // Mock the PDF-lib and fontkit modules
@@ -217,8 +222,8 @@ describe("Download Conversion Logic", () => {
                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
             } as Response)
 
-            await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
-
+            await downloadCharacterSheet(mockCharacter)
+            expect(trackPdfDownloaded).toHaveBeenCalledWith(mockCharacter)
             expect(mockAnchor.click).toHaveBeenCalled()
             expect(mockAnchor.download).toBe("progeny_Test Vampire.pdf")
         })
@@ -261,7 +266,8 @@ describe("Download Conversion Logic", () => {
             it("shares the PDF as a file instead of clicking a download link", async () => {
                 share.mockResolvedValue(undefined)
 
-                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
+                await downloadCharacterSheet(mockCharacter)
+                expect(trackPdfDownloaded).toHaveBeenCalledWith(mockCharacter)
 
                 const sharedFile = share.mock.calls[0][0].files[0] as File
                 expect(sharedFile.name).toBe("progeny_Test Vampire.pdf")
@@ -270,24 +276,27 @@ describe("Download Conversion Logic", () => {
                 expect(assign).not.toHaveBeenCalled()
             })
 
-            it("reports a cancelled share as not saved", async () => {
+            it("does not track a cancelled share", async () => {
                 share.mockRejectedValue(new DOMException("cancelled", "AbortError"))
 
-                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(false)
+                await downloadCharacterSheet(mockCharacter)
+                expect(trackPdfDownloaded).not.toHaveBeenCalled()
                 expect(assign).not.toHaveBeenCalled()
             })
 
             it("opens the PDF when sharing is not allowed", async () => {
                 share.mockRejectedValue(new DOMException("no activation", "NotAllowedError"))
 
-                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
+                await downloadCharacterSheet(mockCharacter)
+                expect(trackPdfDownloaded).toHaveBeenCalledWith(mockCharacter)
                 expect(assign).toHaveBeenCalledWith("blob:mock-url")
             })
 
             it("opens the PDF when file sharing is not supported", async () => {
                 canShare.mockReturnValue(false)
 
-                await expect(downloadCharacterSheet(mockCharacter)).resolves.toBe(true)
+                await downloadCharacterSheet(mockCharacter)
+                expect(trackPdfDownloaded).toHaveBeenCalledWith(mockCharacter)
                 expect(share).not.toHaveBeenCalled()
                 expect(assign).toHaveBeenCalledWith("blob:mock-url")
             })
