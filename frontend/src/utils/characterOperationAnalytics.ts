@@ -94,11 +94,18 @@ export const reportCharacterOperationFailure = (
                             operation
                         ))))
         const modalConflict = reason === "version_conflict" && options.resolution === "modal"
-        const severity = modalConflict
-            ? "warning"
-            : dataLossRisk
-              ? "error"
-              : (options.severity ?? (routineRefusal ? "warning" : "error"))
+        // A caller that hands a 404 to the deleted-draft dialog reports a warning.
+        // The dialog reports the unrecovered draft as its own exception.
+        const deletedDraftHandoff =
+            reason === "not_found" &&
+            options.resolution === "modal" &&
+            operation !== "restore-deleted-draft"
+        const severity =
+            modalConflict || deletedDraftHandoff
+                ? "warning"
+                : dataLossRisk
+                  ? "error"
+                  : (options.severity ?? (routineRefusal ? "warning" : "error"))
         if (error && typeof error === "object" && reportedErrors.has(error)) return
         if (
             error instanceof z.ZodError &&
