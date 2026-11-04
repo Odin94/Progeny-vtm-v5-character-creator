@@ -930,10 +930,9 @@ const MePage = () => {
                     }
                     const notFound = isCharacterNotFound(error)
                     reportCharacterOperationFailure("save-before-load", error, {
-                        characterId: character.id,
-                        ...(notFound
-                            ? { severity: "warning" as const, resolution: "modal" as const }
-                            : {})
+                        severity: notFound ? "warning" : undefined,
+                        resolution: notFound ? "modal" : undefined,
+                        characterId: character.id
                     })
                     console.warn("Failed to save current character before loading:", error)
                     // The saved character is gone, so let the deleted-draft dialog take over.
