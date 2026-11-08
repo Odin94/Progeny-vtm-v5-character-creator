@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { MantineProvider } from "@mantine/core"
 import HomebrewItemEditor from "~/components/HomebrewItemEditor"
 import { createEmptyHomebrewItem, homebrewItemKinds, type HomebrewItemKind } from "~/data/Homebrew"
+Element.prototype.scrollIntoView = vi.fn()
 vi.stubGlobal(
     "ResizeObserver",
     class {
@@ -77,6 +78,20 @@ describe("new homebrew item drafts", () => {
             open(kind)
             expect(nameInput(kind)).toHaveValue(`Draft ${kind}`)
         })
+    it("fills an existing merit choice while keeping custom names editable", () => {
+        open("predatorType")
+        fireEvent.click(screen.getByRole("button", { name: "Add choice group" }))
+        fireEvent.click(screen.getByRole("button", { name: "Add choice option" }))
+        fireEvent.click(screen.getByPlaceholderText("Search existing Merits & Flaws"))
+        fireEvent.click(screen.getByRole("option", { name: "Resources (Merit)" }))
+        expect(screen.getByRole("textbox", { name: /Merit or Flaw name/ })).toHaveValue("Resources")
+        fireEvent.change(screen.getByRole("textbox", { name: /Merit or Flaw name/ }), {
+            target: { value: "Custom favor" }
+        })
+        expect(screen.getByRole("textbox", { name: /Merit or Flaw name/ })).toHaveValue(
+            "Custom favor"
+        )
+    })
     it("isolates types and clears the draft after a successful save", () => {
         const first = open("discipline")
         fireEvent.change(screen.getAllByRole("textbox")[0], { target: { value: "Nightcraft" } })

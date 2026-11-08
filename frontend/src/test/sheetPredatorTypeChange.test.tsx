@@ -1,3 +1,5 @@
+import PredatorTypeModal from "~/components/PredatorTypeModal"
+import { customPredator } from "./fixtures/homebrewPredator"
 import { describe, expect, it, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { MantineProvider } from "@mantine/core"
@@ -63,6 +65,38 @@ const hunter = (): Character => ({
     ]
 })
 describe("sheet predator changes", () => {
+    it("confirms a homebrew predator with no specialty choices", () => {
+        const setCharacter = vi.fn()
+        render(
+            <MantineProvider>
+                <PredatorTypeModal
+                    modalOpened
+                    closeModal={vi.fn()}
+                    character={hunter()}
+                    pickedPredatorType="No specialty"
+                    predatorTypeDefinition={{
+                        ...customPredator,
+                        name: "No specialty",
+                        specialtyOptions: [],
+                        selectableMeritsAndFlaws: []
+                    }}
+                    setCharacter={setCharacter}
+                    nextStep={vi.fn()}
+                    specialty=""
+                    setSpecialty={vi.fn()}
+                    discipline="auspex"
+                    setDiscipline={vi.fn()}
+                    onPredatorTypeChanged={vi.fn()}
+                />
+            </MantineProvider>
+        )
+        fireEvent.click(screen.getByTestId("predator-type-confirm-button"))
+        expect(setCharacter).toHaveBeenCalledWith(
+            expect.objectContaining({
+                predatorType: expect.objectContaining({ pickedSpecialties: [] })
+            })
+        )
+    })
     it("preserves unrelated powers and cascades invalid amalgams", () => {
         const result = changeSheetPredatorType(hunter(), nextPredator)
         expect(result.disciplines.map((p) => p.name)).toEqual(["Independent"])

@@ -1,3 +1,4 @@
+import { meritsAndFlaws } from "~/data/MeritsAndFlaws"
 import HomebrewValidationSummary from "./HomebrewValidationSummary"
 import {
     Button,
@@ -41,6 +42,18 @@ const skillOptions = allSkills.map((skill) => ({
     label: skill.replace(/\b\w/g, (c) => c.toUpperCase())
 }))
 
+const catalogGrants = [
+    ...new Map(
+        meritsAndFlaws.flatMap((category) =>
+            (["merit", "flaw"] as const).flatMap((type) =>
+                category[type === "merit" ? "merits" : "flaws"].map(
+                    (entry) => [`${type}:${entry.name}`, { ...entry, type }] as const
+                )
+            )
+        )
+    ).entries()
+]
+
 const GrantFields = ({
     grant,
     update,
@@ -58,6 +71,30 @@ const GrantFields = ({
 }) => (
     <Paper withBorder p="sm" bg="rgba(0,0,0,.15)">
         <Stack gap="xs">
+            <Select
+                label="Existing Merit or Flaw"
+                description="Choose an existing rule to fill its details, or enter your own below."
+                placeholder="Search existing Merits & Flaws"
+                searchable
+                clearable
+                data={catalogGrants.map(([value, entry]) => ({
+                    value,
+                    label: `${entry.name} (${entry.type === "merit" ? "Merit" : "Flaw"})`
+                }))}
+                value={null}
+                onChange={(value) => {
+                    const entry = catalogGrants.find(([key]) => key === value)?.[1]
+                    if (entry)
+                        update({
+                            name: entry.name,
+                            summary: entry.summary,
+                            excludes: [...entry.excludes],
+                            type: entry.type,
+                            level: Math.max(...entry.cost)
+                        })
+                }}
+                classNames={homebrewDropdownClassNames}
+            />
             <SimpleGrid cols={{ base: 1, sm: 3 }}>
                 <TextInput
                     label="Merit or Flaw name"
@@ -195,7 +232,7 @@ const HomebrewPredatorTypeEditor = ({
                             Specialty choices
                         </Text>
                         <Text size="sm" c="dimmed" mb="sm">
-                            The player chooses one specialty. Add at least one option.
+                            Optional. Add choices if this predator type grants a specialty.
                         </Text>
                         <Stack gap="sm">
                             {specialties.map((specialty, index) => (

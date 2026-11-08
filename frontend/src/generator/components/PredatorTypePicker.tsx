@@ -145,7 +145,9 @@ const PredatorTypePicker = ({
 
         const predatorType = predatorTypes[predatorTypeName]
         const firstSpecialtyOption = predatorType.specialtyOptions[0]
-        const firstSpecialtyKey = `${firstSpecialtyOption?.skill}_${firstSpecialtyOption?.name}`
+        const firstSpecialtyKey = firstSpecialtyOption
+            ? `${firstSpecialtyOption.skill}_${firstSpecialtyOption.name}`
+            : ""
         const firstDisciplineName = predatorType.disciplineOptions[0]
             ? predatorDisciplineKey(predatorType.disciplineOptions[0])
             : ""

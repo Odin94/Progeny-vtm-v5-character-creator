@@ -696,43 +696,45 @@ const PredatorTypeModal = ({
                     <Text style={{ whiteSpace: "pre-wrap" }}>{predatorType.description}</Text>
                 )}
                 {/* Skill Specialty */}
-                <div>
-                    <SectionDivider
-                        label="Skill Specialty"
-                        color={cat.accentColor}
-                        lineColor="rgba(80, 80, 90, 0.4)"
-                    />
-                    <SegmentedControl
-                        size={phoneScreen ? "sm" : "md"}
-                        color={cat.mantineColor}
-                        fullWidth
-                        value={specialty}
-                        onChange={(value) => {
-                            setSpecialty(value)
-                            setCustomSpecialtyText("")
-                        }}
-                        data={predatorType.specialtyOptions.map((s) => ({
-                            label: s.customInput
-                                ? upcase(s.skill)
-                                : `${upcase(s.skill)}: ${s.name}`,
-                            value: `${s.skill}_${s.name}`
-                        }))}
-                    />
-                    {(() => {
-                        const selectedSpecialtyOption = predatorType.specialtyOptions.find(
-                            (s) => `${s.skill}_${s.name}` === specialty
-                        )
-                        return selectedSpecialtyOption?.customInput ? (
-                            <TextInput
-                                placeholder={selectedSpecialtyOption.customInput}
-                                value={customSpecialtyText}
-                                onChange={(e) => setCustomSpecialtyText(e.target.value)}
-                                color={cat.accentColor}
-                                mt="xs"
-                            />
-                        ) : null
-                    })()}
-                </div>
+                {predatorType.specialtyOptions.length > 0 && (
+                    <div>
+                        <SectionDivider
+                            label="Skill Specialty"
+                            color={cat.accentColor}
+                            lineColor="rgba(80, 80, 90, 0.4)"
+                        />
+                        <SegmentedControl
+                            size={phoneScreen ? "sm" : "md"}
+                            color={cat.mantineColor}
+                            fullWidth
+                            value={specialty}
+                            onChange={(value) => {
+                                setSpecialty(value)
+                                setCustomSpecialtyText("")
+                            }}
+                            data={predatorType.specialtyOptions.map((s) => ({
+                                label: s.customInput
+                                    ? upcase(s.skill)
+                                    : `${upcase(s.skill)}: ${s.name}`,
+                                value: `${s.skill}_${s.name}`
+                            }))}
+                        />
+                        {(() => {
+                            const selectedSpecialtyOption = predatorType.specialtyOptions.find(
+                                (s) => `${s.skill}_${s.name}` === specialty
+                            )
+                            return selectedSpecialtyOption?.customInput ? (
+                                <TextInput
+                                    placeholder={selectedSpecialtyOption.customInput}
+                                    value={customSpecialtyText}
+                                    onChange={(e) => setCustomSpecialtyText(e.target.value)}
+                                    color={cat.accentColor}
+                                    mt="xs"
+                                />
+                            ) : null
+                        })()}
+                    </div>
+                )}
 
                 {/* Discipline */}
                 <div>
@@ -788,15 +790,22 @@ const PredatorTypeModal = ({
                             const pickedDisciplineOption = predatorType.disciplineOptions.find(
                                 (option) => predatorDisciplineKey(option) === discipline
                             )
-                            if (!pickedSpecialtyOption) {
+                            if (
+                                !pickedSpecialtyOption &&
+                                predatorType.specialtyOptions.length > 0
+                            ) {
                                 console.error(`Couldn't find specialty with key ${specialty}`)
                             } else if (!pickedDisciplineOption) {
                                 console.error(`Couldn't find discipline with name ${discipline}`)
                             } else {
-                                const resolvedSpecialty = {
-                                    skill: pickedSpecialtyOption.skill,
-                                    name: customSpecialtyText.trim() || pickedSpecialtyOption.name
-                                }
+                                const resolvedSpecialty = pickedSpecialtyOption
+                                    ? {
+                                          skill: pickedSpecialtyOption.skill,
+                                          name:
+                                              customSpecialtyText.trim() ||
+                                              pickedSpecialtyOption.name
+                                      }
+                                    : undefined
 
                                 const pickedMeritsAndFlaws =
                                     predatorType.selectableMeritsAndFlaws.flatMap(
@@ -826,7 +835,7 @@ const PredatorTypeModal = ({
                                         pickedDisciplineRef: pickedDisciplineOption
                                     }),
                                     pickedDiscipline: pickedDisciplineName,
-                                    pickedSpecialties: [resolvedSpecialty],
+                                    pickedSpecialties: resolvedSpecialty ? [resolvedSpecialty] : [],
                                     pickedMeritsAndFlaws
                                 }
                                 if (onConfirmPredatorType) {

@@ -129,7 +129,6 @@ export const homebrewPredatorTypeSchema = itemBaseSchema.extend({
                 customInput: z.string().trim().min(1).max(200).optional()
             })
         )
-        .min(1, "Add at least one specialty choice.")
         .max(10),
     disciplineOptions: z
         .array(

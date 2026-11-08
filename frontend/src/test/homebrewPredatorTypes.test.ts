@@ -10,7 +10,11 @@ import {
     getPredatorTypeOptions,
     replacePredatorSkillBonuses
 } from "~/data/predatorTypeOptions"
-import { getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
+import {
+    getPredatorTypeMeritsByName,
+    getMeritFlawPointCost,
+    getResolvedMeritsAndFlaws
+} from "~/data/meritsAndFlawsResolution"
 import { getHomebrewDisciplineOptions } from "~/utils/homebrewOptions"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
@@ -74,6 +78,18 @@ describe("homebrew predator types", () => {
         ])
         expect(resolved.flaws[0].meritFlaw.name).toBe("Marked")
         expect(resolved.merits.every((item) => item.isFromPredatorType)).toBe(true)
+    })
+    it("adds paid merit dots on top of an existing predator grant", () => {
+        const character = withPredator()
+        character.merits = [{ name: "Haven", type: "merit", level: 3, summary: "", excludes: [] }]
+        expect(
+            getMeritFlawPointCost(character.merits[0], getPredatorTypeMeritsByName(character))
+        ).toBe(2)
+        expect(
+            getResolvedMeritsAndFlaws(character).merits.find(
+                ({ meritFlaw }) => meritFlaw.name === "Haven"
+            )?.meritFlaw.level
+        ).toBe(3)
     })
     it("caps skill grants, reconfirms without stacking, and removes only applied dots", () => {
         const character = getEmptyCharacter()
@@ -176,8 +192,11 @@ describe("homebrew predator types", () => {
     })
     it("rejects empty choices, invalid skills, unreachable budgets and unsupported disciplines", () => {
         expect(homebrewPredatorTypeSchema.safeParse(customPredator).success).toBe(true)
+        expect(
+            homebrewPredatorTypeSchema.safeParse({ ...customPredator, specialtyOptions: [] })
+                .success
+        ).toBe(true)
         for (const override of [
-            { specialtyOptions: [] },
             { disciplineOptions: [] },
             { skillBonuses: [{ skill: "flying", dots: 2 }] },
             { disciplineOptions: [{ type: "official", name: "Unknown" }] },

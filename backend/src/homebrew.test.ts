@@ -190,6 +190,34 @@ describe("Homebrew collections and library", () => {
         return approved.json().libraryEntryId as string
     }
 
+    it("saves a predator type without specialty choices", async () => {
+        const response = await app.inject({
+            method: "POST",
+            url: "/homebrew/collections",
+            headers: csrfHeaders,
+            payload: {
+                name: "Optional specialties",
+                items: [
+                    {
+                        kind: "predatorType",
+                        name: "Watcher",
+                        summary: "",
+                        description: "",
+                        specialtyOptions: [],
+                        disciplineOptions: [{ type: "official", name: "auspex" }],
+                        skillBonuses: [],
+                        meritsAndFlaws: [],
+                        selectableMeritsAndFlaws: [],
+                        humanityChange: 0,
+                        bloodPotencyChange: 0
+                    }
+                ]
+            }
+        })
+        expect(response.statusCode, response.body).toBe(201)
+        expect(response.json().items[0].specialtyOptions).toEqual([])
+    })
+
     it("rejects exclusive predator choices that overfill an option's maximum", async () => {
         const option = { name: "Haven", maxLevel: 3, type: "merit", summary: "", excludes: [] }
         const response = await app.inject({
