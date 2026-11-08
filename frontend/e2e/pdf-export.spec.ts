@@ -1,0 +1,71 @@
+import { expect, test } from "@playwright/test"
+
+test.beforeEach(async ({ page }) => {
+    await page.route("**/api/auth/me", (route) =>
+        route.fulfill({
+            status: 401,
+            contentType: "application/json",
+            body: JSON.stringify({ error: "Unauthorized" })
+        })
+    )
+})
+
+const exportPdf = async (page: import("@playwright/test").Page) => {
+    await page.evaluate(async () => {
+        // Exercise the real lazy template/font loading and PDF generator.
+        const { getBasicTestCharacter } = await import("/src/test/testUtils.ts")
+        const { downloadCharacterSheet } = await import("/src/generator/pdfCreator.ts")
+        await downloadCharacterSheet(getBasicTestCharacter())
+    })
+}
+
+test("downloads the generated PDF in a regular browser", async ({ page }) => {
+    await page.goto("/create")
+    const pendingDownload = page.waitForEvent("download")
+    await exportPdf(page)
+    const download = await pendingDownload
+    expect(download.suggestedFilename()).toBe("progeny_Test Vampire.pdf")
+    const path = await download.path()
+    const { readFile } = await import("node:fs/promises")
+    const bytes = await readFile(path!)
+    expect(bytes.length).toBeGreaterThan(100_000)
+    expect(bytes.subarray(0, 4).toString()).toBe("%PDF")
+})
+
+test("offers the generated file for sharing from a fresh tap in the Google iOS app", async ({
+    page
+}) => {
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, "userAgent", {
+            value: "Mozilla/5.0 (iPad; CPU OS 26_6_1 like Mac OS X) GSA/444.2 Mobile/15E148 Safari/604.1"
+        })
+        Object.defineProperty(navigator, "canShare", { value: () => true })
+        Object.defineProperty(navigator, "share", {
+            value: async ({ files }: { files: File[] }) => {
+                const file = files[0]
+                document.documentElement.dataset.pdfShare = JSON.stringify({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    active: navigator.userActivation.isActive
+                })
+            }
+        })
+    })
+    await page.goto("/create")
+    await exportPdf(page)
+    await expect(page.getByText("Your PDF is ready")).toBeVisible()
+    expect(await page.locator("html").getAttribute("data-pdf-share")).toBeNull()
+    await page.getByRole("button", { name: "Save or share PDF" }).click()
+    const result = JSON.parse((await page.locator("html").getAttribute("data-pdf-share"))!)
+    expect(result).toMatchObject({
+        name: "progeny_Test Vampire.pdf",
+        type: "application/pdf",
+        active: true
+    })
+    expect(result.size).toBeGreaterThan(100_000)
+    await expect(page.getByRole("status")).toHaveText(
+        "PDF shared. You can share it again or close this message."
+    )
+    await expect(page).toHaveURL(/\/create/)
+})

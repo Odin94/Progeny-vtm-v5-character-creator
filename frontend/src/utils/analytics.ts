@@ -1,5 +1,4 @@
 import posthog from "posthog-js"
-import type { Character } from "~/data/Character"
 
 /** Cookieless events cannot create or update person profiles. */
 export const identifyPostHogUser = (user: {
@@ -72,12 +71,23 @@ export const trackEvent = ({ action, category, label, value }: EventParams) => {
     }
 }
 
-export const trackPdfDownloaded = (character: Character) =>
-    trackEvent({
-        action: "PDF downloaded",
-        category: "downloads",
-        label: JSON.stringify(character)
-    })
+// These are observable delivery stages, never confirmation of a file saved to disk.
+export const trackPdfExport = (
+    outcome:
+        | "started"
+        | "ready"
+        | "download_requested"
+        | "shared"
+        | "preview_requested"
+        | "cancelled"
+        | "failed"
+) => {
+    try {
+        posthog.capture("pdf_export", { outcome })
+    } catch (error) {
+        console.warn("PDF export tracking failed:", error)
+    }
+}
 
 export const trackFeatureGuideOpened = (entryPoint: FeatureGuideEntryPoint) => {
     try {

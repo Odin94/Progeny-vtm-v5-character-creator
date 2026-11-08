@@ -14,7 +14,8 @@ import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
-import { trackPdfDownloaded } from "~/utils/analytics"
+import { trackPdfExport } from "~/utils/analytics"
+import { isIosInAppBrowser, showIosPdfSavePrompt } from "~/components/PdfSavePrompt"
 import {
     appendCustomText,
     getDisciplinePowerCustomTextKey,
@@ -119,57 +120,25 @@ export const testTemplate = async (basePdf: string) => {
     return { success: true, error: null }
 }
 
-// In-app browsers on iOS (Google Search app, Facebook, Instagram, ...) ignore
-// the `download` attribute on Blob links without an error, so no file is saved.
-const IOS_IN_APP_BROWSER_TOKENS =
-    /\b(GSA|FBAN|FBAV|FBIOS|Instagram|Line|Twitter|LinkedInApp|Snapchat|Pinterest|musical_ly|BytedanceWebview)\//i
-
-export const isIosInAppBrowser = () => {
-    const userAgent = navigator.userAgent
-    const isIos =
-        /iPad|iPhone|iPod/.test(userAgent) ||
-        (/Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1)
-    if (!isIos) return false
-    return IOS_IN_APP_BROWSER_TOKENS.test(userAgent) || !/Safari\//.test(userAgent)
-}
-
-/** Resolves to false when the user cancels the save. */
-const savePdfInIosInAppBrowser = async (fileName: string, blob: Blob): Promise<boolean> => {
-    const file = new File([blob], fileName, { type: "application/pdf" })
-    if (navigator.canShare?.({ files: [file] })) {
-        try {
-            await navigator.share({ files: [file] })
-            return true
-        } catch (e) {
-            if (e instanceof DOMException && e.name === "AbortError") return false
-            // NotAllowedError: PDF creation took longer than the click's user activation.
-        }
-    }
-
-    // A top-level navigation needs no user activation. iOS shows the PDF with its own share button.
-    window.location.assign(window.URL.createObjectURL(blob))
-    return true
-}
-
-const downloadPdf = async (fileName: string, bytes: Uint8Array): Promise<boolean> => {
+const downloadPdf = (fileName: string, bytes: Uint8Array) => {
     const blob = new Blob([bytes as BlobPart], { type: "application/pdf" })
     if (isIosInAppBrowser()) {
-        return savePdfInIosInAppBrowser(fileName, blob)
+        showIosPdfSavePrompt(new File([blob], fileName, { type: blob.type }))
+        return
     }
 
+    const url = window.URL.createObjectURL(blob)
     const link = document.createElement("a")
-
-    link.href = window.URL.createObjectURL(blob)
+    link.href = url
     link.download = fileName
-    link.click()
-
-    // Clean up the object URL to prevent memory leaks
-    setTimeout(() => {
-        if (typeof window !== "undefined") {
-            window.URL.revokeObjectURL?.(link.href)
-        }
-    }, 100)
-    return true
+    try {
+        link.click()
+        // A click requests a download; browsers do not report whether it was saved.
+        trackPdfExport("download_requested")
+    } finally {
+        // Allow the browser to consume the Blob before releasing it.
+        setTimeout(() => window.URL.revokeObjectURL?.(url), 60_000)
+    }
 }
 
 export const setButtonImageOverlay = (
@@ -610,16 +579,21 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
 }
 
 export const downloadCharacterSheet = async (character: Character) => {
-    const pdfBytes = await createPdf_nerdbert(character)
-    notifications.show({
-        title: "PDF template kindly provided by Nerdbert!",
-        message: "https://linktr.ee/nerdbert",
-        autoClose: 5000,
-        color: "grape"
-    })
-
-    if (await downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)) {
-        trackPdfDownloaded(character)
+    trackPdfExport("started")
+    try {
+        const pdfBytes = await createPdf_nerdbert(character)
+        downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)
+        if (!isIosInAppBrowser()) {
+            notifications.show({
+                title: "PDF template kindly provided by Nerdbert!",
+                message: "https://linktr.ee/nerdbert",
+                autoClose: 5000,
+                color: "grape"
+            })
+        }
+    } catch (error) {
+        trackPdfExport("failed")
+        throw error
     }
 }
 
