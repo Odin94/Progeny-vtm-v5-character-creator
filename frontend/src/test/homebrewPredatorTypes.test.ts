@@ -111,6 +111,27 @@ describe("homebrew predator types", () => {
             disciplineHomebrewSource: { itemId: "noctis", collectionId: "night-arts" }
         })
     })
+    it("resolves a saved Discipline reference after its source Discipline is renamed", () => {
+        const renamed = {
+            ...predatorCollection,
+            items: predatorCollection.items.map((item) => {
+                if (item.id === "noctis") return { ...item, name: "Nightcraft" }
+                if (item.kind === "power" && item.disciplineRef?.type === "homebrew")
+                    return {
+                        ...item,
+                        discipline: "Nightcraft",
+                        disciplineRef: { ...item.disciplineRef, name: "Nightcraft" }
+                    }
+                return item
+            })
+        }
+        const options = getHomebrewDisciplineOptions(
+            [renamed],
+            [{ type: "homebrew", itemId: "noctis", name: "Noctis" }]
+        )
+        expect(options["homebrew:night-arts:noctis"]?.name).toBe("Nightcraft")
+        expect(options["homebrew:night-arts:noctis"]?.powers[0].name).toBe("Night Sight")
+    })
     it("supports increases and decreases while clamping Humanity and Blood Potency", () => {
         const character = withPredator()
         character.predatorType.homebrew!.humanityChange = 10
@@ -134,6 +155,24 @@ describe("homebrew predator types", () => {
         })
         expect(json.system.skills.stealth).toMatchObject({ value: 2 })
         expect(json.items.some((item) => item.name === "Night Contacts")).toBe(true)
+    })
+    it("rejects exclusive choices whose smaller option cannot cover the budget", () => {
+        const group = customPredator.selectableMeritsAndFlaws[0]
+        expect(
+            homebrewPredatorTypeSchema.safeParse({
+                ...customPredator,
+                selectableMeritsAndFlaws: [
+                    {
+                        ...group,
+                        totalPoints: 3,
+                        options: group.options.map((option, index) => ({
+                            ...option,
+                            maxLevel: index === 0 ? 3 : 1
+                        }))
+                    }
+                ]
+            }).success
+        ).toBe(false)
     })
     it("rejects empty choices, invalid skills, unreachable budgets and unsupported disciplines", () => {
         expect(homebrewPredatorTypeSchema.safeParse(customPredator).success).toBe(true)

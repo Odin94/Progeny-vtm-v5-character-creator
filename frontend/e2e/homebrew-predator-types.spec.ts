@@ -124,15 +124,33 @@ test("official bonus disciplines include homebrew powers and grants survive relo
     expect((await stored(page)).predatorType.homebrew).toBeUndefined()
 })
 
-test("homebrew bonus disciplines and custom specialties persist on the sheet", async ({ page }) => {
+test("homebrew bonus disciplines survive source renames and preserve specialties on the sheet", async ({
+    page
+}) => {
     await openPredator(page)
     await chooseGrant(page)
     await page.locator(".mantine-SegmentedControl-innerLabel", { hasText: "Investigation" }).click()
     await page.getByPlaceholder("Which patterns?").fill("Night routes")
     await page.locator(".mantine-SegmentedControl-innerLabel", { hasText: "Noctis" }).click()
     await page.getByTestId("predator-type-confirm-button").click()
+    await page.goto("/homebrew/night-arts")
+    await page.getByRole("button", { name: "Edit Noctis", exact: true }).click()
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Nightcraft")
+    await page.getByRole("button", { name: "Save item", exact: true }).click()
+    const savedCollection = page.waitForResponse(
+        (response) =>
+            response.url().endsWith("/api/homebrew/collections/night-arts") &&
+            response.request().method() === "PUT" &&
+            response.status() === 200
+    )
+    await page.getByRole("button", { name: "Save changes", exact: true }).first().click()
+    await savedCollection
+    await page.goto("/create#basics")
     await page.getByTestId("basics-confirm-button").click()
     await chooseClanPowers(page)
+    await expect(
+        page.getByRole("button", { name: "Nightcraft — Night Arts", exact: true })
+    ).toBeVisible()
     await page.getByTestId("discipline-noctis-accordion").click()
     await page.getByTestId("take-power-night-sight-button").click()
     await page.getByTestId("disciplines-confirm-button").click()
