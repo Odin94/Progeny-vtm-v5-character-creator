@@ -1,3 +1,4 @@
+import { downloadFile } from "~/utils/fileDownload"
 import { notifications } from "@mantine/notifications"
 import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
@@ -24,7 +25,6 @@ import ErrorDetails from "~/components/ErrorDetails"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
-import { trackEvent } from "../../utils/analytics"
 import {
     openSupportConversation,
     showSupportUnavailableNotification
@@ -95,28 +95,18 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
     const handleDownloadPDF = async () => {
         try {
             const { downloadCharacterSheet } = await import("../pdfCreator")
-            await downloadCharacterSheet(character)
+            await downloadCharacterSheet(character, "generator")
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
         }
-        trackEvent({
-            action: "PDF downloaded",
-            category: "downloads",
-            label: JSON.stringify(character)
-        })
     }
 
     const handleDownloadJSON = () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        downloadJson(character).catch((e) => {
+        downloadJson(character, undefined, "generator").catch((e) => {
             console.error(e)
             setDownloadError(e as Error)
-        })
-        trackEvent({
-            action: "JSON downloaded (progeny)",
-            category: "downloads",
-            label: JSON.stringify(character)
         })
     }
 
@@ -754,16 +744,24 @@ function ExportModal({
 }) {
     const [popoverOpen, setPopoverOpen] = useState(false)
 
-    const exportFoundry = () => {
+    const exportFoundry = async () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
-            const { json: vtt, validationErrors } = createWoD5EVttJson(character)
-            const blob = new Blob([JSON.stringify(vtt, null, 2)], { type: "application/json" })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `foundry_wod5e_${character.name}.json`
-            link.click()
-            setTimeout(() => window.URL.revokeObjectURL(link.href), 100)
+            let validationErrors: string[] = []
+            await downloadFile(
+                {
+                    filename: `foundry_wod5e_${character.name}.json`,
+                    format: "foundry-json",
+                    source: "generator"
+                },
+                () => {
+                    const result = createWoD5EVttJson(character)
+                    validationErrors = result.validationErrors
+                    return new Blob([JSON.stringify(result.json, null, 2)], {
+                        type: "application/json"
+                    })
+                }
+            )
 
             if (validationErrors.length > 0) {
                 const errorCount = validationErrors.length
@@ -779,12 +777,6 @@ function ExportModal({
                     autoClose: 10000
                 })
             }
-
-            trackEvent({
-                action: "JSON downloaded (foundry_wod5e vtt)",
-                category: "downloads",
-                label: JSON.stringify(character)
-            })
             onClose()
         } catch (e) {
             console.error(e)
@@ -792,24 +784,20 @@ function ExportModal({
         }
     }
 
-    const exportInconnu = () => {
+    const exportInconnu = async () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
-            const inconnuJson = createInconnuJson(character)
-            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], {
-                type: "application/json"
-            })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `inconnu_${character.name}.json`
-            link.click()
-            setTimeout(() => window.URL.revokeObjectURL(link.href), 100)
-
-            trackEvent({
-                action: "JSON downloaded (inconnu)",
-                category: "downloads",
-                label: JSON.stringify(character)
-            })
+            await downloadFile(
+                {
+                    filename: `inconnu_${character.name}.json`,
+                    format: "inconnu-json",
+                    source: "generator"
+                },
+                () =>
+                    new Blob([JSON.stringify(createInconnuJson(character), null, 2)], {
+                        type: "application/json"
+                    })
+            )
             onClose()
         } catch (e) {
             console.error(e)
@@ -817,23 +805,20 @@ function ExportModal({
         }
     }
 
-    const exportInconnuCommands = () => {
+    const exportInconnuCommands = async () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
-            const inconnuJson = createInconnuJson(character)
-            const commands = createInconnuCommandExport(inconnuJson)
-            const blob = new Blob([commands], { type: "text/plain" })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `inconnu_${character.name}_discord_commands_progeny.txt`
-            link.click()
-            setTimeout(() => window.URL.revokeObjectURL(link.href), 100)
-
-            trackEvent({
-                action: "Commands downloaded (inconnu)",
-                category: "downloads",
-                label: JSON.stringify(character)
-            })
+            await downloadFile(
+                {
+                    filename: `inconnu_${character.name}_discord_commands_progeny.txt`,
+                    format: "inconnu-commands",
+                    source: "generator"
+                },
+                () =>
+                    new Blob([createInconnuCommandExport(createInconnuJson(character))], {
+                        type: "text/plain"
+                    })
+            )
             onClose()
         } catch (e) {
             console.error(e)

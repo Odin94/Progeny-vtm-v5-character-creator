@@ -1,3 +1,5 @@
+import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
+import { downloadFile } from "~/utils/fileDownload"
 import { createRecoveredCharacterCopy, readRecoveredCharacterDrafts } from "~/utils/characterDraft"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
@@ -37,7 +39,7 @@ import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createInconnuJson } from "~/generator/inconnuJsonCreator"
 import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
-import { trackEvent, trackFeatureGuideOpened } from "~/utils/analytics"
+import { trackFeatureGuideOpened } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
 import "./CharacterSheetMenu.css"
@@ -51,6 +53,7 @@ type CharacterSheetMenuProps = {
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const persistence = characterPersistence(useQueryClient())
     const shouldReduceMotion = useReducedMotion()
+    const fileSaveOpen = useFileSavePromptOpen()
     const [recoveryOpened, setRecoveryOpened] = useState(false)
     const recoveredDrafts = readRecoveredCharacterDrafts()
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
@@ -95,7 +98,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         handleMenuClose()
         try {
             const { downloadCharacterSheet } = await import("~/generator/pdfCreator")
-            await downloadCharacterSheet(character)
+            await downloadCharacterSheet(character, "sheet")
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
@@ -104,28 +107,31 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 
     const handleDownloadJSON = () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        downloadJson(character).catch((e) => {
+        downloadJson(character, undefined, "sheet").catch((e) => {
             console.error(e)
             setDownloadError(e as Error)
         })
         handleMenuClose()
     }
 
-    const handleExportToFoundry = () => {
+    const handleExportToFoundry = async () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
-            const { json: vtt, validationErrors } = createWoD5EVttJson(character)
-            const blob = new Blob([JSON.stringify(vtt, null, 2)], {
-                type: "application/json"
-            })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `foundry_wod5e_${character.name}.json`
-            link.click()
-
-            setTimeout(() => {
-                window.URL.revokeObjectURL(link.href)
-            }, 100)
+            let validationErrors: string[] = []
+            await downloadFile(
+                {
+                    filename: `foundry_wod5e_${character.name}.json`,
+                    format: "foundry-json",
+                    source: "sheet"
+                },
+                () => {
+                    const result = createWoD5EVttJson(character)
+                    validationErrors = result.validationErrors
+                    return new Blob([JSON.stringify(result.json, null, 2)], {
+                        type: "application/json"
+                    })
+                }
+            )
 
             if (validationErrors.length > 0) {
                 const errorCount = validationErrors.length
@@ -142,11 +148,6 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     autoClose: 10000
                 })
             }
-
-            trackEvent({
-                action: "JSON downloaded (foundry_wod5e vtt)",
-                category: "downloads"
-            })
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -154,26 +155,20 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         }
     }
 
-    const handleExportToInconnu = () => {
+    const handleExportToInconnu = async () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
-            const inconnuJson = createInconnuJson(character)
-            const blob = new Blob([JSON.stringify(inconnuJson, null, 2)], {
-                type: "application/json"
-            })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `inconnu_${character.name}.json`
-            link.click()
-
-            setTimeout(() => {
-                window.URL.revokeObjectURL(link.href)
-            }, 100)
-
-            trackEvent({
-                action: "JSON downloaded (inconnu)",
-                category: "downloads"
-            })
+            await downloadFile(
+                {
+                    filename: `inconnu_${character.name}.json`,
+                    format: "inconnu-json",
+                    source: "sheet"
+                },
+                () =>
+                    new Blob([JSON.stringify(createInconnuJson(character), null, 2)], {
+                        type: "application/json"
+                    })
+            )
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -181,24 +176,20 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         }
     }
 
-    const handleExportInconnuCommands = () => {
+    const handleExportInconnuCommands = async () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         try {
-            const commands = createInconnuCommandExport(createInconnuJson(character))
-            const blob = new Blob([commands], { type: "text/plain" })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `inconnu_${character.name}_discord_commands_progeny.txt`
-            link.click()
-
-            setTimeout(() => {
-                window.URL.revokeObjectURL(link.href)
-            }, 100)
-
-            trackEvent({
-                action: "Commands downloaded (inconnu)",
-                category: "downloads"
-            })
+            await downloadFile(
+                {
+                    filename: `inconnu_${character.name}_discord_commands_progeny.txt`,
+                    format: "inconnu-commands",
+                    source: "sheet"
+                },
+                () =>
+                    new Blob([createInconnuCommandExport(createInconnuJson(character))], {
+                        type: "text/plain"
+                    })
+            )
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -288,6 +279,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 
             <Modal
                 opened={recoveryOpened}
+                trapFocus={!fileSaveOpen}
+                aria-hidden={fileSaveOpen || undefined}
+                closeOnEscape={!fileSaveOpen}
                 onClose={() => setRecoveryOpened(false)}
                 title="Recovered character drafts"
                 size="lg"
@@ -319,7 +313,11 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                             <Button
                                 variant="light"
                                 onClick={() =>
-                                    void downloadJson(createRecoveredCharacterCopy(draft.character))
+                                    void downloadJson(
+                                        createRecoveredCharacterCopy(draft.character),
+                                        undefined,
+                                        "recovery"
+                                    ).catch((error) => setDownloadError(error as Error))
                                 }
                             >
                                 Download recovered draft {index + 1}

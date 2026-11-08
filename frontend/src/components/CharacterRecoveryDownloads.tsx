@@ -1,17 +1,27 @@
+import { downloadFile } from "~/utils/fileDownload"
+import { useState } from "react"
 import { Button, Card, Stack, Text, Title } from "@mantine/core"
 import { useCharacterRecoverySaves } from "~/hooks/useBrokenCharacter"
 
 export default function CharacterRecoveryDownloads() {
+    const [error, setError] = useState("")
     const [saves] = useCharacterRecoverySaves()
     if (!saves.length) return null
 
     const download = (data: string, savedAt: string) => {
-        const url = URL.createObjectURL(new Blob([data], { type: "application/json" }))
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `character_recovery_${savedAt.replaceAll(":", "-")}.json`
-        link.click()
-        setTimeout(() => URL.revokeObjectURL(url), 100)
+        setError("")
+        void downloadFile(
+            {
+                filename: `character_recovery_${savedAt.replaceAll(":", "-")}.json`,
+                format: "recovery-json",
+                source: "recovery"
+            },
+            () => new Blob([data], { type: "application/json" })
+        ).catch(() => {
+            setError(
+                "Could not prepare your recovery copy. It is still kept in this browser. Please retry."
+            )
+        })
     }
 
     return (
@@ -21,6 +31,11 @@ export default function CharacterRecoveryDownloads() {
                 These copies were preserved when you reset a character that could not be loaded.
                 Download them before clearing this browser’s storage. Support can help recover them.
             </Text>
+            {error && (
+                <Text c="red" role="alert">
+                    {error}
+                </Text>
+            )}
             <Stack gap="xs">
                 {saves.map((save, index) => (
                     <Button

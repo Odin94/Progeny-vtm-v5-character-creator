@@ -2,13 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { Character } from "~/data/Character"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet, testTemplate } from "~/generator/pdfCreator"
+const { trackDownload } = vi.hoisted(() => ({ trackDownload: vi.fn() }))
+import { showFileSavePrompt } from "~/utils/fileSavePromptStore"
 import { getBasicTestCharacter } from "./testUtils"
+
+vi.mock("~/utils/fileSavePromptStore", () => ({ showFileSavePrompt: vi.fn() }))
 
 // Mock the notifications module
 vi.mock("@mantine/notifications", () => ({
     notifications: {
         show: vi.fn()
     }
+}))
+
+vi.mock("~/utils/downloadAnalytics", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("~/utils/downloadAnalytics")>()),
+    createDownloadTracker: () => trackDownload
 }))
 
 // Mock the PDF-lib and fontkit modules
@@ -218,9 +227,28 @@ describe("Download Conversion Logic", () => {
             } as Response)
 
             await downloadCharacterSheet(mockCharacter)
-
+            expect(trackDownload).toHaveBeenCalledWith("download_requested", expect.any(Object))
             expect(mockAnchor.click).toHaveBeenCalled()
             expect(mockAnchor.download).toBe("progeny_Test Vampire.pdf")
+        })
+
+        it("offers a persistent save prompt after PDF generation in the Google iOS app", async () => {
+            const { PDFDocument } = await import("pdf-lib")
+            vi.mocked(PDFDocument.load).mockResolvedValue(createMockPdfDoc() as any)
+            vi.mocked(fetch).mockResolvedValue({
+                arrayBuffer: async () => new ArrayBuffer(8)
+            } as Response)
+            vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+                "Mozilla/5.0 (iPad; CPU OS 26_6_1 like Mac OS X) GSA/444.2 Mobile/15E148 Safari/604.1"
+            )
+            await downloadCharacterSheet(mockCharacter)
+            expect(mockAnchor.click).not.toHaveBeenCalled()
+            expect(showFileSavePrompt).toHaveBeenCalledWith(
+                expect.any(File),
+                false,
+                expect.any(Function)
+            )
+            expect(trackDownload).not.toHaveBeenCalledWith("download_requested", expect.any(Object))
         })
 
         it("should handle testTemplate function", async () => {
@@ -263,6 +291,11 @@ describe("Download Conversion Logic", () => {
             vi.mocked(PDFDocument.load).mockRejectedValue(new Error("PDF load failed"))
 
             await expect(downloadCharacterSheet(mockCharacter)).rejects.toThrow("PDF load failed")
+            expect(trackDownload).toHaveBeenCalledWith(
+                "failed",
+                expect.objectContaining({ stage: "prepare" })
+            )
+            expect(trackDownload).not.toHaveBeenCalledWith("download_requested", expect.any(Object))
         })
 
         it("should handle font loading errors", async () => {
