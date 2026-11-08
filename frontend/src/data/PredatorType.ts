@@ -1,26 +1,10 @@
 import { z } from "zod"
-import { specialtySchema } from "./Specialties"
-import { disciplineNameSchema, PredatorTypeName } from "./NameSchemas"
-import { meritFlawSchema } from "./Character"
+import { PredatorTypeName } from "./NameSchemas"
+import { predatorTypeRulesSchema } from "./PredatorTypeRules"
 
-const selectableMeritsAndFlawsSchema = z.object({
-    options: meritFlawSchema.extend({ maxLevel: z.number().int() }).omit({ level: true }).array(),
-    totalPoints: z.number().int(),
-    exclusive: z.boolean().optional()
-})
-export type SelectableMeritsAndFlaws = z.infer<typeof selectableMeritsAndFlawsSchema>
-
-export const predatorTypeSchema = z.object({
-    name: z.string(),
-    summary: z.string(),
-    specialtyOptions: specialtySchema.extend({ customInput: z.string().optional() }).array(),
-    disciplineOptions: z.object({ name: disciplineNameSchema }).array(),
-    meritsAndFlaws: meritFlawSchema.array(),
-    selectableMeritsAndFlaws: selectableMeritsAndFlawsSchema.array(),
-    humanityChange: z.number().int(),
-    bloodPotencyChange: z.number().int()
-})
+export const predatorTypeSchema = predatorTypeRulesSchema
 export type PredatorType = z.infer<typeof predatorTypeSchema>
+export type SelectableMeritsAndFlaws = PredatorType["selectableMeritsAndFlaws"][number]
 
 // TODO: consider referencing merits&flaws from the list instead of duplicating their definitions here
 export const PredatorTypes: Record<PredatorTypeName, PredatorType> = {

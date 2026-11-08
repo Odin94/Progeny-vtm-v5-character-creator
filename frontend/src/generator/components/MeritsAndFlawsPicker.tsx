@@ -34,7 +34,7 @@ import {
     isThinbloodMerit,
     MeritOrFlaw
 } from "../../data/MeritsAndFlaws"
-import { PredatorTypes } from "../../data/PredatorType"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 import { globals } from "../../globals"
 import { Loresheets } from "./Loresheets"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
@@ -545,7 +545,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                 isMeritFlawCoveredByPredatorTypeGrant(meritFlaw, predatorTypeMeritsByName)
             )
         })
-        const predatorType = PredatorTypes[character.predatorType.name]
+        const predatorType = getCharacterPredatorType(character)
         const predatorTypeItems = [
             ...(predatorType?.meritsAndFlaws ?? []),
             ...character.predatorType.pickedMeritsAndFlaws

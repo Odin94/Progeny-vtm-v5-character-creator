@@ -29,6 +29,7 @@ import {
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewClan } from "~/data/Homebrew"
+import { replacePredatorSkillBonuses } from "~/data/predatorTypeOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type ClanPickerProps = {
@@ -115,7 +116,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                                 rituals: [],
                                 ceremonies: [],
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
-                                predatorType,
+                                ...replacePredatorSkillBonuses(character, predatorType),
                                 merits: newMerits,
                                 flaws: newFlaws
                             })
@@ -125,7 +126,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                                 clan,
                                 homebrewClan: undefined,
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
-                                predatorType,
+                                ...replacePredatorSkillBonuses(character, predatorType),
                                 merits: newMerits,
                                 flaws: newFlaws
                             })
@@ -235,7 +236,7 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                         rituals: [],
                         ceremonies: [],
                         availableDisciplineNames: clan.nativeDisciplines,
-                        predatorType
+                        ...replacePredatorSkillBonuses(character, predatorType)
                     })
                     if (clanChanged) onClanChanged?.()
                     nextStep()

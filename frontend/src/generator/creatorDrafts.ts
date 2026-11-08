@@ -1,3 +1,4 @@
+import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
 import type { Attributes, AttributesKey } from "~/data/Attributes"
 import type { Power } from "~/data/Disciplines"
 import type { Skills, SkillsKey } from "~/data/Skills"
@@ -81,11 +82,16 @@ export const getSkillDistribution = (setting: SkillsSetting): DistributionKey | 
 
 export const getDisciplineDraft = (
     pickedPowers: Power[],
-    predatorDiscipline: string
+    predatorDiscipline: string,
+    predatorDisciplineIdentity?: string
 ): { clanPowers: Power[]; predatorPower: Power | undefined } => {
     const predatorPower = [...pickedPowers]
         .reverse()
-        .find((power) => power.discipline === predatorDiscipline)
+        .find((power) =>
+            predatorDisciplineIdentity
+                ? getPowerDisciplineIdentity(power) === predatorDisciplineIdentity
+                : power.discipline === predatorDiscipline
+        )
 
     return {
         clanPowers: predatorPower

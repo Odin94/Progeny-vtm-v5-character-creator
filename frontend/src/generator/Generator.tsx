@@ -4,6 +4,11 @@ import posthog from "posthog-js"
 import ErrorBoundary from "../components/ErrorBoundary"
 import { Character, getEmptyCharacter } from "../data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
+import {
+    replacePredatorSkillBonuses,
+    getSkillsWithoutPredatorBonuses,
+    getPredatorDisciplineIdentity
+} from "~/data/predatorTypeOptions"
 import { PredatorTypeName } from "../data/NameSchemas"
 import {
     AttributeSetting,
@@ -54,10 +59,10 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
         getAttributeSetting(character.attributes)
     )
     const [skillsDraft, setSkillsDraft] = useState<SkillsSetting>(() =>
-        getSkillsSetting(character.skills)
+        getSkillsSetting(getSkillsWithoutPredatorBonuses(character))
     )
     const [skillsDistribution, setSkillsDistribution] = useState<DistributionKey | null>(() =>
-        getSkillDistribution(getSkillsSetting(character.skills))
+        getSkillDistribution(getSkillsSetting(getSkillsWithoutPredatorBonuses(character)))
     )
     const [generationDraft, setGenerationDraft] = useState<string | null>(() =>
         character.generation ? character.generation.toString() : null
@@ -66,7 +71,11 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
         { clanPowers: disciplineDraft, predatorPower: predatorDisciplineDraft },
         setDisciplinesDraft
     ] = useState(() =>
-        getDisciplineDraft(character.disciplines, character.predatorType.pickedDiscipline)
+        getDisciplineDraft(
+            character.disciplines,
+            character.predatorType.pickedDiscipline,
+            getPredatorDisciplineIdentity(character)
+        )
     )
 
     const clearClanDependentDrafts = () => {
@@ -99,7 +108,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
         const nextCharacter = {
             ...character,
             ...adjustedPickedMeritsAndFlaws,
-            predatorType: skippedPredatorType,
+            ...replacePredatorSkillBonuses(character, skippedPredatorType),
             disciplines: hadPredatorType ? [] : character.disciplines,
             disciplineLevels: hadPredatorType ? {} : character.disciplineLevels,
             rituals: hadPredatorType ? [] : character.rituals,

@@ -1,6 +1,6 @@
 import type { Character, MeritFlaw } from "./Character"
 import { getLoresheetBonusMeritsAndFlaws } from "./loresheetBonuses"
-import { PredatorTypes } from "./PredatorType"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 
 export type ResolvedMeritFlaw = {
     meritFlaw: MeritFlaw
@@ -80,7 +80,7 @@ const mergeDuplicateMeritFlawDetails = (base: MeritFlaw, incoming: MeritFlaw): M
 })
 
 export const getPredatorTypeMeritsByName = (character: Character): Map<string, MeritFlaw> => {
-    const predatorType = PredatorTypes[character.predatorType?.name ?? ""]
+    const predatorType = getCharacterPredatorType(character)
     const pickedPredatorTypeMeritsAndFlaws = character.predatorType?.pickedMeritsAndFlaws ?? []
     const selectableKeys = new Set(
         predatorType?.selectableMeritsAndFlaws.flatMap(({ options }) =>

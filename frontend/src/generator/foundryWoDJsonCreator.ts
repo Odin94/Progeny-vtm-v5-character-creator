@@ -10,7 +10,7 @@ import {
     getMeritFlawDisplayName,
     getResolvedMeritsAndFlaws
 } from "../data/meritsAndFlawsResolution"
-import { PredatorTypes } from "../data/PredatorType"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 import { getDisciplineRating, getValueForKey } from "./utils"
 import {
     appendCustomText,
@@ -462,7 +462,7 @@ export const createWoD5EVttJson = (
 
     // Predator type item
     if (character.predatorType?.name) {
-        const predDef = PredatorTypes[character.predatorType.name as keyof typeof PredatorTypes]
+        const predDef = getCharacterPredatorType(character)
         items.push({
             name: character.predatorType.name,
             type: "predatorType",

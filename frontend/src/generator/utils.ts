@@ -1,6 +1,6 @@
 import { downloadFile } from "~/utils/fileDownload"
 import type { DownloadSource } from "~/utils/downloadAnalytics"
-import { PredatorTypes } from "~/data/PredatorType"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 import { Attributes, AttributesKey } from "../data/Attributes"
 import { Character, getDisciplineLevel, getEmptyCharacter } from "../data/Character"
 import {
@@ -45,12 +45,12 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     // Blood Potency
     const bloodPotency = calculateBloodPotency(character)
 
-    const humanity = 7 + (PredatorTypes[character.predatorType.name]?.humanityChange ?? 0)
+    const humanity = 7 + (getCharacterPredatorType(character)?.humanityChange ?? 0)
 
     character.maxHealth = health
     character.willpower = willpower
     character.bloodPotency = bloodPotency
-    character.humanity = humanity
+    character.humanity = Math.max(0, Math.min(10, humanity))
 }
 
 export const downloadJson = (
