@@ -34,6 +34,7 @@ import "./HomebrewItemEditor.css"
 type Props = {
     opened: boolean
     isNew?: boolean
+    draftStorageKey?: string
     item: HomebrewItem
     collectionItems: HomebrewItem[]
     onClose: () => void
@@ -42,19 +43,48 @@ type Props = {
 
 type FieldErrors = Partial<Record<string, string>>
 
-const HomebrewItemEditor = ({ opened, isNew, item, collectionItems, onClose, onSave }: Props) => {
-    const [draft, setDraft] = useState(item)
+const HomebrewItemEditor = ({
+    opened,
+    isNew,
+    draftStorageKey,
+    item,
+    collectionItems,
+    onClose,
+    onSave
+}: Props) => {
+    const restoreDraft = (): HomebrewItem => {
+        if (!draftStorageKey) return item
+        try {
+            const saved = JSON.parse(localStorage.getItem(draftStorageKey) ?? "null")
+            if (saved && saved.kind === item.kind && typeof saved.name === "string")
+                return { ...item, ...saved, id: item.id }
+        } catch {
+            /* An unavailable or malformed local draft must not block editing. */
+        }
+        return item
+    }
+    const [draft, setDraft] = useState(restoreDraft)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
     useEffect(() => {
         if (opened) {
-            setDraft(item)
+            setDraft(restoreDraft())
             setFieldErrors({})
         }
-    }, [item, opened])
+    }, [item, opened, draftStorageKey])
 
     const update = (values: Partial<HomebrewItem>) =>
-        setDraft((current) => ({ ...current, ...values }) as HomebrewItem)
+        setDraft((current) => {
+            const next = { ...current, ...values } as HomebrewItem
+            if (draftStorageKey) {
+                try {
+                    localStorage.setItem(draftStorageKey, JSON.stringify(next))
+                } catch {
+                    /* Keep the editor usable when storage is full. */
+                }
+            }
+            return next
+        })
 
     const homebrewDisciplines = collectionItems.filter(
         (candidate): candidate is HomebrewDiscipline & { id: string } =>
@@ -270,6 +300,13 @@ const HomebrewItemEditor = ({ opened, isNew, item, collectionItems, onClose, onS
                     }
                   : draft
         onSave(normalizedDraft)
+        if (draftStorageKey) {
+            try {
+                localStorage.removeItem(draftStorageKey)
+            } catch {
+                /* Saving the rule still succeeds without local storage. */
+            }
+        }
     }
 
     const commonFields = (

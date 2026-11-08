@@ -157,6 +157,7 @@ type PredatorTypeModalProps = {
     character: Character
     pickedPredatorType: PredatorTypeName
     predatorTypeDefinition?: PredatorType
+    onConfirmPredatorType?: (predatorType: Character["predatorType"]) => void
     setCharacter: (character: Character) => void
     nextStep: () => void
     specialty: string
@@ -174,6 +175,7 @@ const PredatorTypeModal = ({
     character,
     pickedPredatorType,
     predatorTypeDefinition,
+    onConfirmPredatorType,
     specialty,
     setSpecialty,
     discipline,
@@ -826,6 +828,12 @@ const PredatorTypeModal = ({
                                     pickedDiscipline: pickedDisciplineName,
                                     pickedSpecialties: [resolvedSpecialty],
                                     pickedMeritsAndFlaws
+                                }
+                                if (onConfirmPredatorType) {
+                                    onConfirmPredatorType(nextPredatorType)
+                                    closeModal()
+                                    nextStep()
+                                    return
                                 }
                                 const adjustedPickedMeritsAndFlaws =
                                     adjustPickedMeritsAndFlawsForPredatorTypeChange(

@@ -1,3 +1,4 @@
+import { changeSheetPredatorType } from "../utils/changePredatorType"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import {
     Grid,
@@ -481,6 +482,9 @@ const TopData = ({ options }: TopDataProps) => {
                     character={character}
                     pickedPredatorType={pendingPredatorType}
                     predatorTypeDefinition={predatorTypes[pendingPredatorType]}
+                    onConfirmPredatorType={(predatorType) =>
+                        setCharacter((current) => changeSheetPredatorType(current, predatorType))
+                    }
                     setCharacter={setCharacter}
                     nextStep={() => undefined}
                     specialty={pendingPredatorSpecialty}

@@ -149,7 +149,7 @@ const replaceItemAndReferences = (
 const HomebrewDetailsPage = ({ collectionId }: Props) => {
     const isNew = collectionId === "new"
     const navigate = useNavigate()
-    const { isAuthenticated, isLoading: authLoading, signIn } = useAuth()
+    const { user, isAuthenticated, isLoading: authLoading, signIn } = useAuth()
     const collectionQuery = useHomebrewCollection(collectionId, isAuthenticated && !isNew)
     const createMutation = useCreateHomebrewCollection()
     const updateMutation = useUpdateHomebrewCollection()
@@ -506,6 +506,11 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
             {itemEditor ? (
                 <HomebrewItemEditor
                     isNew={itemEditor.index === null}
+                    draftStorageKey={
+                        itemEditor.index === null
+                            ? `homebrew:new-item:${user?.id ?? "local"}:${collectionId}:${itemEditor.item.kind}`
+                            : undefined
+                    }
                     opened
                     item={itemEditor.item}
                     collectionItems={draft.items}
