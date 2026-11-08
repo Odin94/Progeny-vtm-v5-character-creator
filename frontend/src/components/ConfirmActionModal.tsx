@@ -1,3 +1,4 @@
+import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
 import { useMediaQuery } from "@mantine/hooks"
 import { Button, Divider, Group, Modal, ModalStylesNames, Stack, Text } from "@mantine/core"
 import { CSSProperties, ReactNode } from "react"
@@ -82,11 +83,15 @@ const ConfirmActionModal = ({
     footer,
     size
 }: ConfirmActionModalProps) => {
+    const fileSaveOpen = useFileSavePromptOpen()
     const phoneScreen = useMediaQuery("(max-width: 48em)")
 
     return (
         <Modal
             opened={opened}
+            trapFocus={!fileSaveOpen}
+            aria-hidden={fileSaveOpen || undefined}
+            closeOnEscape={!fileSaveOpen}
             size={size}
             onClose={onClose}
             title=""

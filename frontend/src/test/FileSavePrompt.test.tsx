@@ -1,12 +1,13 @@
 import { MantineProvider } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { FileSavePrompt, showFileSavePrompt } from "~/components/FileSavePrompt"
+import { FileSavePrompt, FileSaveDialog } from "~/components/FileSavePrompt"
 import { isIosInAppBrowser } from "~/utils/fileDownload"
+import { showFileSavePrompt, dismissFileSavePrompts } from "~/utils/fileSavePromptStore"
+import userEvent from "@testing-library/user-event"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 const trackDownload = vi.fn()
 
-vi.mock("@mantine/notifications", () => ({ notifications: { show: vi.fn() } }))
 const file = new File(["%PDF-1.7"], "progeny_Test.pdf", { type: "application/pdf" })
 const share = vi.fn()
 const canShare = vi.fn()
@@ -35,6 +36,7 @@ beforeEach(() => {
 })
 afterEach(() => {
     cleanup()
+    dismissFileSavePrompts()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
     vi.useRealTimers()
@@ -117,6 +119,67 @@ describe("PDF save prompt", () => {
         fireEvent.click(screen.getByRole("button", { name: "I saved the file" }))
         expect(trackDownload).toHaveBeenCalledWith("reported_saved", { stage: "feedback" })
     })
+    it("gives the saving dialog focus above a confirmation modal and restores it on Escape", async () => {
+        const user = userEvent.setup()
+        const onClose = vi.fn()
+        render(
+            <MantineProvider>
+                <ConfirmActionModal
+                    opened
+                    onClose={onClose}
+                    onConfirm={() => {}}
+                    title="Review backup"
+                    body={
+                        <button onClick={() => showFileSavePrompt(file, true, trackDownload)}>
+                            Prepare backup
+                        </button>
+                    }
+                    confirmLabel="Continue"
+                />
+                <FileSaveDialog />
+            </MantineProvider>
+        )
+        const backup = screen.getByRole("button", { name: "Prepare backup" })
+        await user.click(backup)
+        const dialog = await screen.findByRole("dialog", { name: "Your PDF is ready" })
+        await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true))
+        for (let i = 0; i < 8; i++) {
+            await user.tab()
+            expect(dialog.contains(document.activeElement)).toBe(true)
+        }
+        await user.keyboard("{Escape}")
+        await waitFor(() => expect(backup).toHaveFocus())
+        expect(onClose).not.toHaveBeenCalled()
+    })
+    it("retains both pending backups until each is dismissed", () => {
+        vi.useFakeTimers()
+        const revoke = vi.fn()
+        vi.stubGlobal("URL", {
+            createObjectURL: vi
+                .fn()
+                .mockReturnValueOnce("blob:first")
+                .mockReturnValueOnce("blob:second"),
+            revokeObjectURL: revoke
+        })
+        render(
+            <MantineProvider>
+                <FileSaveDialog />
+            </MantineProvider>
+        )
+        act(() => {
+            showFileSavePrompt(new File(["first"], "first.json"), false, trackDownload)
+            showFileSavePrompt(new File(["second"], "second.json"), false, trackDownload)
+        })
+        act(() => vi.advanceTimersByTime(500))
+        expect(screen.getByText("first.json")).toBeVisible()
+        expect(screen.getByText("second.json")).toBeVisible()
+        fireEvent.click(screen.getAllByRole("button", { name: "Close this file" })[0])
+        expect(screen.queryByText("first.json")).toBeNull()
+        expect(screen.getByText("second.json")).toBeVisible()
+        expect(revoke).not.toHaveBeenCalled()
+        act(() => vi.advanceTimersByTime(60_000))
+        expect(revoke).toHaveBeenCalledExactlyOnceWith("blob:first")
+    })
     it("keeps the PDF available until dismissal and releases its URL afterwards", () => {
         vi.useFakeTimers()
         const revoke = vi.fn()
@@ -124,13 +187,16 @@ describe("PDF save prompt", () => {
             createObjectURL: vi.fn().mockReturnValue("blob:test-pdf"),
             revokeObjectURL: revoke
         })
-        showFileSavePrompt(file, true, trackDownload)
-        const config = vi.mocked(notifications.show).mock.calls[0][0]
-        expect(config.autoClose).toBe(false)
+        render(
+            <MantineProvider>
+                <FileSaveDialog />
+            </MantineProvider>
+        )
+        act(() => showFileSavePrompt(file, true, trackDownload))
         expect(trackDownload).toHaveBeenCalledWith("prompt_shown", expect.any(Object))
-        vi.advanceTimersByTime(120_000)
+        act(() => vi.advanceTimersByTime(120_000))
         expect(revoke).not.toHaveBeenCalled()
-        config.onClose?.({} as never)
+        act(() => dismissFileSavePrompts())
         vi.advanceTimersByTime(60_000)
         expect(revoke).toHaveBeenCalledWith("blob:test-pdf")
     })

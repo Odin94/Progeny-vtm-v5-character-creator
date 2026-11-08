@@ -138,3 +138,33 @@ test("shares synchronous iOS JSON with the original tap and no extra save prompt
     })
     await expect(page.getByText("Your file is ready")).toHaveCount(0)
 })
+
+test("keeps backup saving keyboard accessible above the broken-save recovery dialog", async ({
+    page
+}) => {
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, "userAgent", { value: "iPad GSA/444.2 Safari/604.1" })
+        Object.defineProperty(navigator, "canShare", { value: () => false })
+        localStorage.setItem("character_broken_save", JSON.stringify("original unrepaired bytes"))
+        localStorage.setItem("character_broken_save_error", JSON.stringify("Cannot load save"))
+    })
+    await page.goto("/create")
+    const recovery = page.getByRole("dialog", { name: "Character Data Error" })
+    await expect(recovery).toBeVisible()
+    const download = recovery.getByRole("button", { name: "Download Broken Save Data" })
+    await download.click()
+    const saving = page.getByRole("dialog", { name: "Your file is ready" })
+    await expect(saving).toBeVisible()
+    await expect(saving.getByRole("button", { name: "Saving didn't work" })).toBeInViewport()
+    for (let i = 0; i < 10; i++) {
+        await page.keyboard.press("Tab")
+        expect(await saving.evaluate((node) => node.contains(document.activeElement))).toBe(true)
+    }
+    await page.keyboard.press("Escape")
+    await expect(saving).toBeHidden()
+    await expect(recovery).toBeVisible()
+    await expect(download).toBeFocused()
+    expect(await page.evaluate(() => localStorage.getItem("character_broken_save"))).toBe(
+        JSON.stringify("original unrepaired bytes")
+    )
+})

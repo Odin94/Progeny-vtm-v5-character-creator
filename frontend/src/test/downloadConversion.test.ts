@@ -3,8 +3,10 @@ import { Character } from "~/data/Character"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet, testTemplate } from "~/generator/pdfCreator"
 const { trackDownload } = vi.hoisted(() => ({ trackDownload: vi.fn() }))
-import { notifications } from "@mantine/notifications"
+import { showFileSavePrompt } from "~/utils/fileSavePromptStore"
 import { getBasicTestCharacter } from "./testUtils"
+
+vi.mock("~/utils/fileSavePromptStore", () => ({ showFileSavePrompt: vi.fn() }))
 
 // Mock the notifications module
 vi.mock("@mantine/notifications", () => ({
@@ -241,13 +243,11 @@ describe("Download Conversion Logic", () => {
             )
             await downloadCharacterSheet(mockCharacter)
             expect(mockAnchor.click).not.toHaveBeenCalled()
-            expect(notifications.show).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    title: "Your PDF is ready",
-                    autoClose: false
-                })
+            expect(showFileSavePrompt).toHaveBeenCalledWith(
+                expect.any(File),
+                false,
+                expect.any(Function)
             )
-            expect(trackDownload).toHaveBeenCalledWith("prompt_shown", expect.any(Object))
             expect(trackDownload).not.toHaveBeenCalledWith("download_requested", expect.any(Object))
         })
 

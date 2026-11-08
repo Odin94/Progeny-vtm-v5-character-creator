@@ -1,3 +1,4 @@
+import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
 import { downloadFile } from "~/utils/fileDownload"
 import { createRecoveredCharacterCopy, readRecoveredCharacterDrafts } from "~/utils/characterDraft"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
@@ -52,6 +53,7 @@ type CharacterSheetMenuProps = {
 const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const persistence = characterPersistence(useQueryClient())
     const shouldReduceMotion = useReducedMotion()
+    const fileSaveOpen = useFileSavePromptOpen()
     const [recoveryOpened, setRecoveryOpened] = useState(false)
     const recoveredDrafts = readRecoveredCharacterDrafts()
     const { character, setCharacter, primaryColor, preferences, onUpdatePreferences } = options
@@ -277,6 +279,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
 
             <Modal
                 opened={recoveryOpened}
+                trapFocus={!fileSaveOpen}
+                aria-hidden={fileSaveOpen || undefined}
+                closeOnEscape={!fileSaveOpen}
                 onClose={() => setRecoveryOpened(false)}
                 title="Recovered character drafts"
                 size="lg"

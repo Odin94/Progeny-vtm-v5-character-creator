@@ -1,4 +1,4 @@
-import { showFileSavePrompt } from "~/components/FileSavePrompt"
+import { showFileSavePrompt } from "./fileSavePromptStore"
 import {
     createDownloadTracker,
     downloadErrorName,

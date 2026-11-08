@@ -1,3 +1,4 @@
+import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
 import { downloadFile } from "~/utils/fileDownload"
 import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -28,6 +29,7 @@ const describeBrokenAttribute = (error: string) => {
 }
 
 const BrokenSaveModal = () => {
+    const fileSaveOpen = useFileSavePromptOpen()
     const queryClient = useQueryClient()
     const [recoveryError, setRecoveryError] = useState("")
     const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
@@ -80,6 +82,8 @@ const BrokenSaveModal = () => {
     return (
         <Modal
             opened={hasBrokenCharacter}
+            trapFocus={!fileSaveOpen}
+            aria-hidden={fileSaveOpen || undefined}
             onClose={() => {}}
             title="Character Data Error"
             centered

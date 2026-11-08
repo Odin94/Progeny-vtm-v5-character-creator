@@ -1,6 +1,10 @@
-import { Button, Group, Stack, Text } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { useState } from "react"
+import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
+import {
+    dismissFileSavePrompt,
+    dismissFileSavePrompts,
+    useFileSavePrompts
+} from "~/utils/fileSavePromptStore"
+import { useRef, useState } from "react"
 import { downloadErrorName, type DownloadTracker } from "~/utils/downloadAnalytics"
 
 export const FileSavePrompt = ({
@@ -116,23 +120,59 @@ export const FileSavePrompt = ({
     )
 }
 
-export const showFileSavePrompt = (file: File, canShare: boolean, track: DownloadTracker) => {
-    const url = URL.createObjectURL(file)
-    try {
-        notifications.show({
-            title: file.type === "application/pdf" ? "Your PDF is ready" : "Your file is ready",
-            message: <FileSavePrompt file={file} url={url} canShare={canShare} track={track} />,
-            autoClose: false,
-            withCloseButton: true,
-            color: "grape",
-            onClose: () => {
-                track("dismissed", { stage: "prompt", method: "prompt" })
-                setTimeout(() => URL.revokeObjectURL(url), 60_000)
-            }
-        })
-        track("prompt_shown", { stage: "prompt", method: "prompt", file_share_supported: canShare })
-    } catch (error) {
-        URL.revokeObjectURL(url)
-        throw error
+/** Own focus above recovery/conflict dialogs instead of placing controls outside their traps. */
+export const FileSaveDialog = () => {
+    const prompts = useFileSavePrompts()
+    const returnFocusTarget = useRef<HTMLElement | null>(null)
+    const close = () => {
+        returnFocusTarget.current = prompts[0]?.trigger ?? null
+        dismissFileSavePrompts()
     }
+    const restoreFocus = () => {
+        // Covered dialogs re-enable their own trap during dismissal. Return
+        // focus after those effects and our closing transition have finished.
+        if (returnFocusTarget.current?.isConnected)
+            returnFocusTarget.current.focus({ preventScroll: true })
+        returnFocusTarget.current = null
+    }
+    const single = prompts.length === 1 ? prompts[0] : undefined
+    const title = single
+        ? single.file.type === "application/pdf"
+            ? "Your PDF is ready"
+            : "Your file is ready"
+        : "Your files are ready"
+    return (
+        <Modal
+            opened={prompts.length > 0}
+            onClose={close}
+            returnFocus={false}
+            onExitTransitionEnd={restoreFocus}
+            title={title}
+            size="md"
+            zIndex={4000}
+            closeOnClickOutside={false}
+        >
+            <Stack>
+                {prompts.map((prompt, index) => (
+                    <Stack key={prompt.id}>
+                        {index > 0 && <Divider />}
+                        <FileSavePrompt
+                            file={prompt.file}
+                            url={prompt.url}
+                            canShare={prompt.canShare}
+                            track={prompt.track}
+                        />
+                        {prompts.length > 1 && (
+                            <Button
+                                variant="subtle"
+                                onClick={() => dismissFileSavePrompt(prompt.id)}
+                            >
+                                Close this file
+                            </Button>
+                        )}
+                    </Stack>
+                ))}
+            </Stack>
+        </Modal>
+    )
 }

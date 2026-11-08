@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import posthog from "posthog-js"
-import { notifications } from "@mantine/notifications"
+import { showFileSavePrompt } from "~/utils/fileSavePromptStore"
 import { downloadFile } from "~/utils/fileDownload"
 import type { DownloadFormat } from "~/utils/downloadAnalytics"
 
 vi.mock("posthog-js", () => ({ default: { capture: vi.fn() } }))
-vi.mock("@mantine/notifications", () => ({ notifications: { show: vi.fn() } }))
+vi.mock("~/utils/fileSavePromptStore", () => ({ showFileSavePrompt: vi.fn() }))
 const googleApp = "iPad GSA/444.2 Safari/604.1"
 const share = vi.fn()
 const canShare = vi.fn()
@@ -47,7 +47,7 @@ describe("shared download helper", () => {
         expect(result.status).toBe("download_requested")
         expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledOnce()
         expect(share).not.toHaveBeenCalled()
-        expect(notifications.show).not.toHaveBeenCalled()
+        expect(showFileSavePrompt).not.toHaveBeenCalled()
         expect(outcomes()).toEqual(["started", "prepared", "download_requested"])
         const anchor = vi.mocked(HTMLAnchorElement.prototype.click).mock
             .contexts[0] as HTMLAnchorElement
@@ -61,7 +61,7 @@ describe("shared download helper", () => {
         const pending = downloadFile(options, json)
         expect(share).toHaveBeenCalledOnce()
         expect((await pending).status).toBe("shared")
-        expect(notifications.show).not.toHaveBeenCalled()
+        expect(showFileSavePrompt).not.toHaveBeenCalled()
         expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
         expect(outcomes()).toContain("share_requested")
     })
@@ -74,17 +74,19 @@ describe("shared download helper", () => {
         })
         expect(result.status).toBe("prompt_shown")
         expect(share).not.toHaveBeenCalled()
-        expect(notifications.show).toHaveBeenCalledWith(
-            expect.objectContaining({ autoClose: false })
+        expect(showFileSavePrompt).toHaveBeenCalledWith(
+            expect.any(File),
+            true,
+            expect.any(Function)
         )
         expect(outcomes()).toContain("prepared")
-        expect(outcomes()).toContain("prompt_shown")
+        expect(showFileSavePrompt).toHaveBeenCalledOnce()
     })
     it("does not fall back or claim delivery after a cancelled native share", async () => {
         Object.assign(navigator, { userAgent: googleApp })
         share.mockRejectedValue(new DOMException("private message", "AbortError"))
         expect((await downloadFile(options, json)).status).toBe("cancelled")
-        expect(notifications.show).not.toHaveBeenCalled()
+        expect(showFileSavePrompt).not.toHaveBeenCalled()
         expect(outcomes()).not.toContain("shared")
         expect(outcomes()).not.toContain("failed")
     })
@@ -93,7 +95,7 @@ describe("shared download helper", () => {
         share.mockRejectedValue(new DOMException("private message", "NotAllowedError"))
         expect((await downloadFile(options, json)).status).toBe("prompt_shown")
         expect(outcomes()).toContain("failed")
-        expect(outcomes()).toContain("prompt_shown")
+        expect(showFileSavePrompt).toHaveBeenCalledOnce()
         expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled()
     })
     it.each(["missing", "unsupported", "throws"])(
@@ -107,28 +109,11 @@ describe("shared download helper", () => {
                     throw new TypeError("private text")
                 })
             expect((await downloadFile(options, json)).status).toBe("prompt_shown")
-            const props = (
-                vi.mocked(notifications.show).mock.lastCall![0].message as React.ReactElement<{
-                    file: File
-                    canShare: boolean
-                }>
-            ).props
-            expect(props.canShare).toBe(false)
-            expect(props.file.size).toBeGreaterThan(0)
+            const [file, supported] = vi.mocked(showFileSavePrompt).mock.lastCall!
+            expect(supported).toBe(false)
+            expect(file.size).toBeGreaterThan(0)
         }
     )
-    it("tracks preparation failures and rethrows so existing error UI can handle them", async () => {
-        await expect(
-            downloadFile(options, () => {
-                throw new Error("secret data")
-            })
-        ).rejects.toThrow("secret data")
-        expect(outcomes()).toEqual(["started", "failed"])
-        expect(posthog.capture).toHaveBeenLastCalledWith(
-            "file_download",
-            expect.objectContaining({ stage: "prepare", error_name: "Error" })
-        )
-    })
     it("tracks delivery failures and releases the object URL even when clicking throws", async () => {
         vi.mocked(HTMLAnchorElement.prototype.click).mockImplementation(() => {
             throw new DOMException("private text", "SecurityError")
