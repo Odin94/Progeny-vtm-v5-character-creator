@@ -1,3 +1,4 @@
+import { downloadFile } from "~/utils/fileDownload"
 import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Alert, Anchor, Button, Divider, List, Modal, ScrollArea, Stack, Text } from "@mantine/core"
@@ -44,14 +45,18 @@ const BrokenSaveModal = () => {
 
     const onDownload = () => {
         if (brokenData) {
-            const blob = new Blob([brokenData], { type: "application/json" })
-            const link = document.createElement("a")
-            link.href = window.URL.createObjectURL(blob)
-            link.download = `broken_character_save_${new Date().toISOString()}.json`
-            link.click()
-            setTimeout(() => {
-                window.URL.revokeObjectURL(link.href)
-            }, 100)
+            void downloadFile(
+                {
+                    filename: `broken_character_save_${new Date().toISOString()}.json`,
+                    format: "broken-save-json",
+                    source: "broken-save"
+                },
+                () => new Blob([brokenData], { type: "application/json" })
+            ).catch(() => {
+                setRecoveryError(
+                    "Could not prepare your backup. Your original save is still kept in this browser. Please retry."
+                )
+            })
         }
     }
 

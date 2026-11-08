@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { Character } from "~/data/Character"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { downloadCharacterSheet, testTemplate } from "~/generator/pdfCreator"
-import { trackPdfExport } from "~/utils/analytics"
+const { trackDownload } = vi.hoisted(() => ({ trackDownload: vi.fn() }))
 import { notifications } from "@mantine/notifications"
 import { getBasicTestCharacter } from "./testUtils"
 
@@ -13,8 +13,9 @@ vi.mock("@mantine/notifications", () => ({
     }
 }))
 
-vi.mock("~/utils/analytics", () => ({
-    trackPdfExport: vi.fn()
+vi.mock("~/utils/downloadAnalytics", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("~/utils/downloadAnalytics")>()),
+    createDownloadTracker: () => trackDownload
 }))
 
 // Mock the PDF-lib and fontkit modules
@@ -224,7 +225,7 @@ describe("Download Conversion Logic", () => {
             } as Response)
 
             await downloadCharacterSheet(mockCharacter)
-            expect(trackPdfExport).toHaveBeenCalledWith("download_requested")
+            expect(trackDownload).toHaveBeenCalledWith("download_requested", expect.any(Object))
             expect(mockAnchor.click).toHaveBeenCalled()
             expect(mockAnchor.download).toBe("progeny_Test Vampire.pdf")
         })
@@ -246,8 +247,8 @@ describe("Download Conversion Logic", () => {
                     autoClose: false
                 })
             )
-            expect(trackPdfExport).toHaveBeenCalledWith("ready")
-            expect(trackPdfExport).not.toHaveBeenCalledWith("download_requested")
+            expect(trackDownload).toHaveBeenCalledWith("prompt_shown", expect.any(Object))
+            expect(trackDownload).not.toHaveBeenCalledWith("download_requested", expect.any(Object))
         })
 
         it("should handle testTemplate function", async () => {
@@ -290,8 +291,11 @@ describe("Download Conversion Logic", () => {
             vi.mocked(PDFDocument.load).mockRejectedValue(new Error("PDF load failed"))
 
             await expect(downloadCharacterSheet(mockCharacter)).rejects.toThrow("PDF load failed")
-            expect(trackPdfExport).toHaveBeenCalledWith("failed")
-            expect(trackPdfExport).not.toHaveBeenCalledWith("download_requested")
+            expect(trackDownload).toHaveBeenCalledWith(
+                "failed",
+                expect.objectContaining({ stage: "prepare" })
+            )
+            expect(trackDownload).not.toHaveBeenCalledWith("download_requested", expect.any(Object))
         })
 
         it("should handle font loading errors", async () => {

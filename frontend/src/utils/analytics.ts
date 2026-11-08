@@ -71,24 +71,6 @@ export const trackEvent = ({ action, category, label, value }: EventParams) => {
     }
 }
 
-// These are observable delivery stages, never confirmation of a file saved to disk.
-export const trackPdfExport = (
-    outcome:
-        | "started"
-        | "ready"
-        | "download_requested"
-        | "shared"
-        | "preview_requested"
-        | "cancelled"
-        | "failed"
-) => {
-    try {
-        posthog.capture("pdf_export", { outcome })
-    } catch (error) {
-        console.warn("PDF export tracking failed:", error)
-    }
-}
-
 export const trackFeatureGuideOpened = (entryPoint: FeatureGuideEntryPoint) => {
     try {
         posthog.capture("feature_guide_opened", { entry_point: entryPoint })

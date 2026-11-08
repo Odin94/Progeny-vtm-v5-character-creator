@@ -1213,7 +1213,7 @@ const MePage = () => {
         if (!charData) return
 
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(charData)
-        downloadJson(charData).catch((e) => {
+        downloadJson(charData, undefined, "account").catch((e) => {
             console.error(e)
             notifications.show({
                 title: "Error",
@@ -1233,7 +1233,7 @@ const MePage = () => {
         if (!charData) return
 
         import("~/generator/pdfCreator")
-            .then(({ downloadCharacterSheet }) => downloadCharacterSheet(charData))
+            .then(({ downloadCharacterSheet }) => downloadCharacterSheet(charData, "account"))
             .catch((e) => {
                 console.error(e)
                 notifications.show({

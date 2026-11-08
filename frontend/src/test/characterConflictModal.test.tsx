@@ -71,7 +71,7 @@ beforeEach(() => {
     })
     localStorage.clear()
     mocks.getCharacter.mockResolvedValue(response())
-    mocks.downloadJson.mockResolvedValue(undefined)
+    mocks.downloadJson.mockResolvedValue({ status: "download_requested" })
 })
 afterEach(cleanup)
 function setup(props: Partial<import("react").ComponentProps<typeof CharacterConflictModal>> = {}) {
@@ -100,8 +100,16 @@ it("downloads both independent versions without resolving or saving", async () =
     fireEvent.click(screen.getByRole("button", { name: "Download browser JSON" }))
     fireEvent.click(screen.getByRole("button", { name: "Download backend JSON" }))
     expect(mocks.downloadJson.mock.calls.map(([value]) => value)).toEqual([browser, backend])
-    expect(mocks.downloadJson).toHaveBeenCalledWith(browser, "progeny_browser_v4.json")
-    expect(mocks.downloadJson).toHaveBeenCalledWith(backend, "progeny_backend_v85.json")
+    expect(mocks.downloadJson).toHaveBeenCalledWith(
+        browser,
+        "progeny_browser_v4.json",
+        "conflict-backup"
+    )
+    expect(mocks.downloadJson).toHaveBeenCalledWith(
+        backend,
+        "progeny_backend_v85.json",
+        "conflict-backup"
+    )
     expect(onResolved).not.toHaveBeenCalled()
     expect(mocks.updateCharacter).not.toHaveBeenCalled()
 })

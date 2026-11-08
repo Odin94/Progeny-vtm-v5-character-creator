@@ -14,7 +14,15 @@ export type ConflictTelemetryDetails = {
     remote_version?: number
     reviewed_version?: number
     resulting_version?: number
-    outcome?: "success" | "failure" | "blocked" | "interrupted"
+    outcome?:
+        | "success"
+        | "failure"
+        | "blocked"
+        | "interrupted"
+        | "download_requested"
+        | "shared"
+        | "cancelled"
+        | "prompt_shown"
     reason?:
         | "read_only"
         | "backend_changed"

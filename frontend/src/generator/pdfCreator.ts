@@ -14,8 +14,8 @@ import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
-import { trackPdfExport } from "~/utils/analytics"
-import { isIosInAppBrowser, showIosPdfSavePrompt } from "~/components/PdfSavePrompt"
+import { downloadFile } from "~/utils/fileDownload"
+import type { DownloadSource } from "~/utils/downloadAnalytics"
 import {
     appendCustomText,
     getDisciplinePowerCustomTextKey,
@@ -118,27 +118,6 @@ export const testTemplate = async (basePdf: string) => {
     }
 
     return { success: true, error: null }
-}
-
-const downloadPdf = (fileName: string, bytes: Uint8Array) => {
-    const blob = new Blob([bytes as BlobPart], { type: "application/pdf" })
-    if (isIosInAppBrowser()) {
-        showIosPdfSavePrompt(new File([blob], fileName, { type: blob.type }))
-        return
-    }
-
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = fileName
-    try {
-        link.click()
-        // A click requests a download; browsers do not report whether it was saved.
-        trackPdfExport("download_requested")
-    } finally {
-        // Allow the browser to consume the Blob before releasing it.
-        setTimeout(() => window.URL.revokeObjectURL?.(url), 60_000)
-    }
 }
 
 export const setButtonImageOverlay = (
@@ -578,23 +557,26 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     return await pdfDoc.save({ updateFieldAppearances: true })
 }
 
-export const downloadCharacterSheet = async (character: Character) => {
-    trackPdfExport("started")
-    try {
-        const pdfBytes = await createPdf_nerdbert(character)
-        downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)
-        if (!isIosInAppBrowser()) {
-            notifications.show({
-                title: "PDF template kindly provided by Nerdbert!",
-                message: "https://linktr.ee/nerdbert",
-                autoClose: 5000,
-                color: "grape"
-            })
+export const downloadCharacterSheet = async (
+    character: Character,
+    source: DownloadSource = "unknown"
+) => {
+    const result = await downloadFile(
+        { filename: `progeny_${character.name}.pdf`, format: "pdf", source },
+        async () => {
+            const bytes = await createPdf_nerdbert(character)
+            return new Blob([bytes as BlobPart], { type: "application/pdf" })
         }
-    } catch (error) {
-        trackPdfExport("failed")
-        throw error
+    )
+    if (result.status === "download_requested" || result.status === "shared") {
+        notifications.show({
+            title: "PDF template kindly provided by Nerdbert!",
+            message: "https://linktr.ee/nerdbert",
+            autoClose: 5000,
+            color: "grape"
+        })
     }
+    return result
 }
 
 function base64ToArrayBuffer(base64: string) {
