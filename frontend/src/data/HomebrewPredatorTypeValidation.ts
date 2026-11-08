@@ -76,7 +76,7 @@ export const homebrewPredatorTypeSchema = itemBaseSchema.extend({
                 .refine(
                     (group) =>
                         group.exclusive
-                            ? group.options.some((option) => option.maxLevel >= group.totalPoints)
+                            ? group.options.every((option) => option.maxLevel >= group.totalPoints)
                             : group.options.reduce((sum, option) => sum + option.maxLevel, 0) >=
                               group.totalPoints,
                     "Options must cover the point budget"

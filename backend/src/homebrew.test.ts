@@ -190,6 +190,40 @@ describe("Homebrew collections and library", () => {
         return approved.json().libraryEntryId as string
     }
 
+    it("rejects exclusive predator choices that overfill an option's maximum", async () => {
+        const option = { name: "Haven", maxLevel: 3, type: "merit", summary: "", excludes: [] }
+        const response = await app.inject({
+            method: "POST",
+            url: "/homebrew/collections",
+            headers: csrfHeaders,
+            payload: {
+                name: "Invalid choices",
+                items: [
+                    {
+                        kind: "predatorType",
+                        name: "Night Stalker",
+                        summary: "",
+                        description: "",
+                        specialtyOptions: [{ skill: "stealth", name: "Stalking" }],
+                        disciplineOptions: [{ type: "official", name: "auspex" }],
+                        skillBonuses: [],
+                        meritsAndFlaws: [],
+                        humanityChange: 0,
+                        bloodPotencyChange: 0,
+                        selectableMeritsAndFlaws: [
+                            {
+                                exclusive: true,
+                                totalPoints: 3,
+                                options: [option, { ...option, name: "Resources", maxLevel: 1 }]
+                            }
+                        ]
+                    }
+                ]
+            }
+        })
+        expect(response.statusCode, response.body).toBe(400)
+    })
+
     it("saves, edits and copies predator types with all grants and remapped discipline references", async () => {
         const predator = {
             id: "stalker",
