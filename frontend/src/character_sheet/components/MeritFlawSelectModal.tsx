@@ -32,7 +32,7 @@ import {
     Loresheet,
     MeritOrFlaw
 } from "~/data/MeritsAndFlaws"
-import { PredatorTypes } from "~/data/PredatorType"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 import {
     addMeritFlawExclusions,
     getPredatorTypeMeritsByName,
@@ -176,7 +176,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
         character.predatorType.pickedMeritsAndFlaws.forEach((meritFlaw) => {
             addMeritFlawExclusions(map, meritFlaw, true)
         })
-        const predatorType = PredatorTypes[character.predatorType.name]
+        const predatorType = getCharacterPredatorType(character)
         if (predatorType) {
             predatorType.meritsAndFlaws.forEach((meritFlaw) => {
                 addMeritFlawExclusions(map, meritFlaw, true)

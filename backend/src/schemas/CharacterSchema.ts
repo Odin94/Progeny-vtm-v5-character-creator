@@ -10,6 +10,7 @@ import {
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas.js"
 import { skillsSchema } from "./Skills.js"
 import { specialtySchema } from "./Specialties.js"
+import { predatorTypeRulesSchema, predatorDisciplineSchema } from "./PredatorTypeRules.js"
 
 export const meritFlawSchema = z.object({
     name: z.string(),
@@ -35,7 +36,7 @@ export type Touchstone = z.infer<typeof touchstoneSchema>
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
 
-export const schemaVersion = 11
+export const schemaVersion = 12
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -75,7 +76,15 @@ export const characterSchema = z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
         pickedSpecialties: specialtySchema.array(),
-        pickedMeritsAndFlaws: meritFlawSchema.array()
+        pickedMeritsAndFlaws: meritFlawSchema.array(),
+        homebrew: predatorTypeRulesSchema
+            .extend({ homebrewSource: homebrewSourceSchema })
+            .optional(),
+        pickedDisciplineRef: predatorDisciplineSchema.optional(),
+        appliedSkillBonuses: z
+            .object({ skill: skillsSchema.keyof(), dots: z.number().int().min(0).max(5) })
+            .array()
+            .optional()
     }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),

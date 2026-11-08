@@ -121,6 +121,15 @@ const replaceItemAndReferences = (
                 disciplineRef: { ...item.disciplineRef, name: replacement.name }
             }
         }
+        if (item.kind === "predatorType")
+            return {
+                ...item,
+                disciplineOptions: item.disciplineOptions.map((reference) =>
+                    reference.type === "homebrew" && reference.itemId === previous.id
+                        ? { ...reference, name: replacement.name }
+                        : reference
+                )
+            }
         if (item.kind === "clan" && item.nativeDisciplineRefs) {
             const nativeDisciplineRefs = item.nativeDisciplineRefs.map((reference) =>
                 reference.type === "homebrew" && reference.itemId === previous.id
@@ -496,6 +505,7 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
 
             {itemEditor ? (
                 <HomebrewItemEditor
+                    isNew={itemEditor.index === null}
                     opened
                     item={itemEditor.item}
                     collectionItems={draft.items}

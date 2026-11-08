@@ -160,6 +160,8 @@ const canonicalizeDisciplineReferences = (items: HomebrewItemWithId[]): Homebrew
                 discipline: disciplineRef.name
             } as HomebrewItemWithId
         }
+        if (item.kind === "predatorType")
+            return { ...item, disciplineOptions: item.disciplineOptions.map(canonicalizeReference) }
         if (item.kind === "clan" && item.nativeDisciplineRefs) {
             const nativeDisciplineRefs = item.nativeDisciplineRefs.map(canonicalizeReference)
             return {
@@ -260,6 +262,8 @@ const normalizeItemIds = async (collectionId: string, items: HomebrewItemInput[]
                 })
             }
         }
+        if (item.kind === "predatorType")
+            return { ...item, disciplineOptions: item.disciplineOptions.map(remapReference) }
         if (item.kind === "clan") {
             return {
                 ...item,
@@ -363,6 +367,12 @@ export const insertSnapshotAsCollection = async ({
                     })
                 }
             }
+            if (item.kind === "predatorType")
+                return {
+                    ...item,
+                    id,
+                    disciplineOptions: item.disciplineOptions.map(remapReference)
+                }
             if (item.kind === "clan") {
                 return {
                     ...item,

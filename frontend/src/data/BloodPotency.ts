@@ -1,5 +1,5 @@
 import { Character } from "./Character"
-import { PredatorTypes } from "./PredatorType"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 
 export type BloodPotencyEffect = {
     surge: number
@@ -160,6 +160,6 @@ export const calculateBloodPotency = (character: Character): number => {
                 return 1
         }
     })()
-    bloodPotency += PredatorTypes[character.predatorType.name].bloodPotencyChange
-    return bloodPotency
+    bloodPotency += getCharacterPredatorType(character).bloodPotencyChange
+    return Math.max(0, Math.min(10, bloodPotency))
 }

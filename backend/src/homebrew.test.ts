@@ -190,6 +190,127 @@ describe("Homebrew collections and library", () => {
         return approved.json().libraryEntryId as string
     }
 
+    it("saves, edits and copies predator types with all grants and remapped discipline references", async () => {
+        const predator = {
+            id: "stalker",
+            kind: "predatorType",
+            name: "Night Stalker",
+            summary: "Hunt at midnight",
+            description: "Follow the shadows",
+            specialtyOptions: [{ skill: "stealth", name: "Stalking", customInput: "Which prey?" }],
+            disciplineOptions: [{ type: "homebrew", itemId: "noctis", name: "Noctis" }],
+            skillBonuses: [{ skill: "stealth", dots: 2 }],
+            humanityChange: -1,
+            bloodPotencyChange: 1,
+            meritsAndFlaws: [
+                {
+                    name: "Contacts",
+                    level: 2,
+                    type: "merit",
+                    summary: "Night watchers",
+                    excludes: ["Isolated"]
+                }
+            ],
+            selectableMeritsAndFlaws: [
+                {
+                    totalPoints: 1,
+                    exclusive: true,
+                    options: [
+                        {
+                            name: "Haven",
+                            maxLevel: 1,
+                            type: "merit",
+                            summary: "A refuge",
+                            excludes: ["No Haven"]
+                        }
+                    ]
+                }
+            ]
+        }
+        const input = {
+            name: "Hunting styles",
+            items: [
+                {
+                    id: "noctis",
+                    kind: "discipline",
+                    name: "Noctis",
+                    summary: "",
+                    description: "",
+                    logo: ""
+                },
+                predator
+            ]
+        }
+        const saved = await app.inject({
+            method: "POST",
+            url: "/homebrew/collections",
+            headers: csrfHeaders,
+            payload: input
+        })
+        expect(saved.statusCode, saved.body).toBe(201)
+        expect(saved.json().items[1]).toMatchObject(predator)
+        const id = saved.json().id as string
+        const updated = await app.inject({
+            method: "PUT",
+            url: `/homebrew/collections/${id}`,
+            headers: csrfHeaders,
+            payload: { ...input, items: [{ ...input.items[0], name: "Nightcraft" }, predator] }
+        })
+        expect(updated.statusCode, updated.body).toBe(200)
+        expect(updated.json().items[1].disciplineOptions[0].name).toBe("Nightcraft")
+        const { getHomebrewCollectionSnapshot, insertSnapshotAsCollection } =
+            await import("./utils/homebrew.js")
+        const snapshot = await getHomebrewCollectionSnapshot(id)
+        const copy = await insertSnapshotAsCollection({ ownerId: RATER_ID, snapshot: snapshot! })
+        const discipline = copy!.items.find((item) => item.kind === "discipline")!
+        const copied = copy!.items.find((item) => item.kind === "predatorType")!
+        expect(copied.id).not.toBe(predator.id)
+        expect(copied.kind === "predatorType" && copied.disciplineOptions).toEqual([
+            { type: "homebrew", itemId: discipline.id, name: "Nightcraft" }
+        ])
+        expect(copied).toMatchObject({
+            skillBonuses: predator.skillBonuses,
+            humanityChange: -1,
+            bloodPotencyChange: 1
+        })
+        const { characterSchema } = await import("./schemas/CharacterSchema.js")
+        expect(
+            characterSchema.shape.predatorType.parse({
+                name: predator.name,
+                homebrew: {
+                    ...predator,
+                    homebrewSource: {
+                        itemId: "stalker",
+                        collectionId: id,
+                        collectionName: "Hunting styles"
+                    }
+                },
+                pickedDiscipline: "Noctis",
+                pickedDisciplineRef: predator.disciplineOptions[0],
+                pickedSpecialties: predator.specialtyOptions,
+                pickedMeritsAndFlaws: [],
+                appliedSkillBonuses: predator.skillBonuses
+            }).homebrew?.skillBonuses
+        ).toEqual(predator.skillBonuses)
+        const invalid = await app.inject({
+            method: "POST",
+            url: "/homebrew/collections",
+            headers: csrfHeaders,
+            payload: {
+                ...input,
+                items: [
+                    {
+                        ...predator,
+                        disciplineOptions: [
+                            { type: "homebrew", name: "Missing", itemId: "missing" }
+                        ]
+                    }
+                ]
+            }
+        })
+        expect(invalid.statusCode).toBe(400)
+    })
+
     it("scopes an owner's live collection to characters in an enabled coterie", async () => {
         const collection = await createCollection()
         const attach = await app.inject({

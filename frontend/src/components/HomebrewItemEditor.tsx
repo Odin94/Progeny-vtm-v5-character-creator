@@ -13,6 +13,8 @@ import {
     Textarea
 } from "@mantine/core"
 import { useEffect, useState } from "react"
+import HomebrewPredatorTypeEditor from "~/components/HomebrewPredatorTypeEditor"
+import { homebrewPredatorTypeSchema } from "~/data/HomebrewPredatorTypeValidation"
 import HomebrewPowerCardEditor from "~/components/HomebrewPowerCardEditor"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
@@ -31,6 +33,7 @@ import "./HomebrewItemEditor.css"
 
 type Props = {
     opened: boolean
+    isNew?: boolean
     item: HomebrewItem
     collectionItems: HomebrewItem[]
     onClose: () => void
@@ -39,7 +42,7 @@ type Props = {
 
 type FieldErrors = Partial<Record<string, string>>
 
-const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: Props) => {
+const HomebrewItemEditor = ({ opened, isNew, item, collectionItems, onClose, onSave }: Props) => {
     const [draft, setDraft] = useState(item)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
@@ -227,6 +230,23 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             }
         }
 
+        if (draft.kind === "predatorType") {
+            const result = homebrewPredatorTypeSchema.safeParse(draft)
+            if (!result.success)
+                for (const issue of result.error.issues)
+                    addError(issue.path.join("."), issue.message)
+            if (
+                draft.disciplineOptions.some(
+                    (ref) =>
+                        ref.type === "homebrew" &&
+                        !homebrewDisciplines.some((d) => d.id === ref.itemId)
+                )
+            )
+                addError(
+                    "disciplineOptions",
+                    "Each Homebrew Discipline must target an item in this collection."
+                )
+        }
         return errors
     }
 
@@ -411,6 +431,35 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
               )
           })()
         : null
+
+    if (draft.kind === "predatorType") {
+        return (
+            <Modal
+                opened={opened}
+                onClose={onClose}
+                aria-label="Homebrew Predator Type editor"
+                centered
+                size="xl"
+                withCloseButton={false}
+                classNames={{
+                    content: "homebrew-loresheet__modal",
+                    body: "homebrew-loresheet__modal-body"
+                }}
+            >
+                <HomebrewPredatorTypeEditor
+                    isNew={isNew ?? !item.id}
+                    draft={draft}
+                    update={update}
+                    errors={fieldErrors}
+                    disciplineOptions={disciplineOptions}
+                    encodeDisciplineReference={encodeDisciplineReference}
+                    decodeDisciplineReference={decodeDisciplineReference}
+                    onClose={onClose}
+                    onSave={save}
+                />
+            </Modal>
+        )
+    }
 
     if (draft.kind === "loresheet") {
         return (

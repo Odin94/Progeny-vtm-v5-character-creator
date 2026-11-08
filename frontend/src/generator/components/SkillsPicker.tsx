@@ -1,3 +1,4 @@
+import { replacePredatorSkillBonuses } from "~/data/predatorTypeOptions"
 import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
@@ -324,7 +325,14 @@ const SkillsPicker = ({
         setPickedDistribution(null)
         setCharacter({
             ...character,
-            skills: { ...emptySkills },
+            ...replacePredatorSkillBonuses(
+                {
+                    ...character,
+                    skills: { ...emptySkills },
+                    predatorType: { ...character.predatorType, appliedSkillBonuses: undefined }
+                },
+                character.predatorType
+            ),
             skillSpecialties: []
         })
     }
