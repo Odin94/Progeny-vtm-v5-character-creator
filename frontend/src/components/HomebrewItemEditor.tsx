@@ -1,3 +1,4 @@
+import HomebrewValidationSummary from "./HomebrewValidationSummary"
 import {
     Button,
     Group,
@@ -584,6 +585,7 @@ const HomebrewItemEditor = ({
                         errors={fieldErrors}
                     />
                 ) : null}
+                <HomebrewValidationSummary errors={fieldErrors} />
                 <Group justify="flex-end">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
@@ -825,6 +827,7 @@ const LoresheetEditor = ({
                         {errors.tiers}
                     </Text>
                 ) : null}
+                <HomebrewValidationSummary errors={errors} />
                 <footer className="homebrew-loresheet__footer">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel

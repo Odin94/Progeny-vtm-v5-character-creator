@@ -50,6 +50,23 @@ const open = (kind: HomebrewItemKind, collection = "one", onSave = vi.fn()) =>
 beforeEach(() => localStorage.clear())
 describe("new homebrew item drafts", () => {
     for (const kind of homebrewItemKinds)
+        it(`lists required fixes for ${kind} while keeping field errors`, () => {
+            open(kind)
+            const label =
+                kind === "power"
+                    ? "Save power"
+                    : kind === "loresheet"
+                      ? "Save loresheet"
+                      : kind === "predatorType"
+                        ? "Save predator type"
+                        : "Save item"
+            fireEvent.click(screen.getByRole("button", { name: label }))
+            expect(screen.getByRole("alert")).toHaveTextContent("Invalid values:")
+            expect(screen.getByRole("alert")).toHaveTextContent("Name: Name is required.")
+            expect(nameInput(kind)).toHaveAttribute("aria-invalid", "true")
+        })
+
+    for (const kind of homebrewItemKinds)
         it(`restores unsaved ${kind} fields after reopening or reloading`, () => {
             const view = open(kind)
             fireEvent.change(nameInput(kind), { target: { value: `Draft ${kind}` } })

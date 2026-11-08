@@ -1,3 +1,4 @@
+import HomebrewValidationSummary from "./HomebrewValidationSummary"
 import {
     Button,
     Checkbox,
@@ -554,11 +555,7 @@ const HomebrewPredatorTypeEditor = ({
                         </Button>
                     </section>
                 </Stack>
-                {!!Object.keys(errors).length && (
-                    <Text c="red" mt="md">
-                        Review the highlighted fields before saving.
-                    </Text>
-                )}
+                <HomebrewValidationSummary errors={errors} />
                 <footer className="homebrew-loresheet__footer">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
