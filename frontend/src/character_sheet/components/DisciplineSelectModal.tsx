@@ -10,8 +10,7 @@ import {
     Modal,
     Stack,
     Text,
-    Title,
-    Tooltip
+    Title
 } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { useMediaQuery } from "@mantine/hooks"
@@ -355,7 +354,8 @@ const DisciplineSelectModal = ({
                                                         vars={() => ({
                                                             root: {
                                                                 "--button-bg": "transparent",
-                                                                "--button-hover": `var(--mantine-color-${primaryColor}-light-hover)`
+                                                                "--button-hover":
+                                                                    "rgba(130, 25, 35, 0.12)"
                                                             }
                                                         })}
                                                         fullWidth
@@ -413,23 +413,14 @@ const DisciplineSelectModal = ({
                                                                     }}
                                                                 >
                                                                     {discipline.summary ? (
-                                                                        <Tooltip
-                                                                            label={
-                                                                                discipline.summary
-                                                                            }
-                                                                            multiline
-                                                                            w={260}
-                                                                            withArrow
+                                                                        <Text
+                                                                            size="sm"
+                                                                            c="dimmed"
+                                                                            ta="center"
+                                                                            lineClamp={2}
                                                                         >
-                                                                            <Text
-                                                                                size="sm"
-                                                                                c="dimmed"
-                                                                                ta="center"
-                                                                                lineClamp={2}
-                                                                            >
-                                                                                {discipline.summary}
-                                                                            </Text>
-                                                                        </Tooltip>
+                                                                            {discipline.summary}
+                                                                        </Text>
                                                                     ) : null}
                                                                 </Box>
                                                             </Stack>
