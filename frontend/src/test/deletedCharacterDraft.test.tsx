@@ -5,7 +5,12 @@ import { getEmptyCharacter } from "~/data/Character"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import DeletedCharacterDraftModal from "~/components/DeletedCharacterDraftModal"
 
-const state = vi.hoisted(() => ({ get: vi.fn(), create: vi.fn(), update: vi.fn(), accountId: "alice" }))
+const state = vi.hoisted(() => ({
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    accountId: "alice"
+}))
 vi.mock("~/hooks/useAuth", () => ({
     useAuth: () => ({ user: { id: state.accountId }, isAuthenticated: true, isLoading: false })
 }))
@@ -19,7 +24,12 @@ vi.mock("@mantine/core", () => {
     const box = ({ children }: any) => <div>{children}</div>
     return {
         Modal: ({ opened, children }: any) => (opened ? <div role="dialog">{children}</div> : null),
-        TextInput: ({ label, value, onChange }: any) => <label>{label}<input value={value} onChange={onChange} /></label>,
+        TextInput: ({ label, value, onChange }: any) => (
+            <label>
+                {label}
+                <input value={value} onChange={onChange} />
+            </label>
+        ),
         Stack: box,
         Group: box,
         Text: box,
@@ -100,7 +110,9 @@ it.each([403, 500])("does not offer deletion or restoration for HTTP %s", async 
     state.get.mockRejectedValue(Object.assign(new Error("Unavailable"), { status }))
     const client = setup()
     await waitFor(() =>
-        expect(client.getQueryState(["deleted-draft-check", "alice", "deleted"])?.status).toBe("error")
+        expect(client.getQueryState(["deleted-draft-check", "alice", "deleted"])?.status).toBe(
+            "error"
+        )
     )
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     expect(current[0].id).toBe("deleted")
@@ -178,13 +190,18 @@ it("preserves a replacement draft when a restore response arrives late", async (
 
 it("updates the same restored copy when the source draft is edited during creation", async () => {
     let finish!: (response: unknown) => void
-    state.create.mockImplementation(() => new Promise(resolve => { finish = resolve }))
+    state.create.mockImplementation(
+        () =>
+            new Promise((resolve) => {
+                finish = resolve
+            })
+    )
     state.update.mockResolvedValue({ id: "restored", characterVersion: 2 })
     setup()
     fireEvent.click(await screen.findByRole("button", { name: "Restore character" }))
     await waitFor(() => expect(state.create).toHaveBeenCalledTimes(1))
     await act(async () => {
-        current[1](value => ({ ...value, notes: "New edits" }))
+        current[1]((value) => ({ ...value, notes: "New edits" }))
         finish({ id: "restored", characterVersion: 1 })
     })
     fireEvent.click(await screen.findByRole("button", { name: "Restore character" }))
@@ -199,11 +216,10 @@ it("checks the freshest cached draft before removing storage", async () => {
     await screen.findByRole("button", { name: "Delete local draft" })
     act(() => {
         current[1]({ ...getEmptyCharacter(), name: "Replacement" })
-        expect(current[2](value => value.id === "deleted")).toBe(false)
+        expect(current[2]((value) => value.id === "deleted")).toBe(false)
     })
     expect(JSON.parse(localStorage.getItem("character")!).name).toBe("Replacement")
 })
-
 
 it("requires a new missing-character check after switching accounts", async () => {
     const client = setup()
@@ -221,11 +237,12 @@ it("requires a new missing-character check after switching accounts", async () =
     expect(current[0].id).toBe("deleted")
 })
 
-
 it("lets an unnamed deleted draft receive a name and restore without losing content", async () => {
     setup()
-    act(() => current[1](value => ({ ...value, name: "   " })))
-    fireEvent.change(await screen.findByLabelText("Character name"), { target: { value: "Recovered" } })
+    act(() => current[1]((value) => ({ ...value, name: "   " })))
+    fireEvent.change(await screen.findByLabelText("Character name"), {
+        target: { value: "Recovered" }
+    })
     fireEvent.click(screen.getByRole("button", { name: "Restore character" }))
     await waitFor(() => expect(current[0].id).toBe("restored"))
     expect(current[0].name).toBe("Recovered")

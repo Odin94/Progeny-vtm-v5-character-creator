@@ -100,7 +100,6 @@ describe("removeUtmParametersFromCurrentUrl", () => {
     })
 })
 
-
 describe("identifyPostHogUser", () => {
     beforeEach(() => vi.clearAllMocks())
 
@@ -115,7 +114,9 @@ describe("identifyPostHogUser", () => {
         vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
         identifyPostHogUser(user)
         expect(posthog.identify).toHaveBeenCalledWith(user.id, {
-            email: user.email, firstName: user.firstName, lastName: user.lastName
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName
         })
     })
 })

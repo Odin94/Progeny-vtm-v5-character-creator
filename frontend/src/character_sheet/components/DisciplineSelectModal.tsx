@@ -352,6 +352,12 @@ const DisciplineSelectModal = ({
                                                     <Button
                                                         variant="light"
                                                         color={primaryColor}
+                                                        vars={() => ({
+                                                            root: {
+                                                                "--button-bg": "transparent",
+                                                                "--button-hover": `var(--mantine-color-${primaryColor}-light-hover)`
+                                                            }
+                                                        })}
                                                         fullWidth
                                                         h="auto"
                                                         p="md"
@@ -360,7 +366,8 @@ const DisciplineSelectModal = ({
                                                         }
                                                         style={{
                                                             height: "100%",
-                                                            minHeight: "180px"
+                                                            minHeight: "180px",
+                                                            border: "1px solid var(--mantine-color-gray-8)"
                                                         }}
                                                     >
                                                         <Box pos="relative" w="100%">

@@ -118,7 +118,8 @@ export default function DeletedCharacterDraftModal() {
                     if (
                         !clearCharacter(
                             (current) =>
-                                current.id === draft.id && getCharacterSaveKey(current) === sourceKey
+                                current.id === draft.id &&
+                                getCharacterSaveKey(current) === sourceKey
                         )
                     )
                         return
