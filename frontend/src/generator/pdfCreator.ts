@@ -14,6 +14,8 @@ import { calculateBloodPotency } from "~/data/BloodPotency"
 import { getMeritFlawDisplayName, getResolvedMeritsAndFlaws } from "~/data/meritsAndFlawsResolution"
 import { getClanBaneText, getClanCompulsionText } from "~/data/VariantClanBanes"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import { downloadFile } from "~/utils/fileDownload"
+import type { DownloadSource } from "~/utils/downloadAnalytics"
 import {
     appendCustomText,
     getDisciplinePowerCustomTextKey,
@@ -116,22 +118,6 @@ export const testTemplate = async (basePdf: string) => {
     }
 
     return { success: true, error: null }
-}
-
-const downloadPdf = (fileName: string, bytes: Uint8Array) => {
-    const blob = new Blob([bytes as BlobPart], { type: "application/pdf" })
-    const link = document.createElement("a")
-
-    link.href = window.URL.createObjectURL(blob)
-    link.download = fileName
-    link.click()
-
-    // Clean up the object URL to prevent memory leaks
-    setTimeout(() => {
-        if (typeof window !== "undefined") {
-            window.URL.revokeObjectURL?.(link.href)
-        }
-    }, 100)
 }
 
 export const setButtonImageOverlay = (
@@ -571,16 +557,26 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     return await pdfDoc.save({ updateFieldAppearances: true })
 }
 
-export const downloadCharacterSheet = async (character: Character) => {
-    const pdfBytes = await createPdf_nerdbert(character)
-    notifications.show({
-        title: "PDF template kindly provided by Nerdbert!",
-        message: "https://linktr.ee/nerdbert",
-        autoClose: 5000,
-        color: "grape"
-    })
-
-    downloadPdf(`progeny_${character.name}.pdf`, pdfBytes)
+export const downloadCharacterSheet = async (
+    character: Character,
+    source: DownloadSource = "unknown"
+) => {
+    const result = await downloadFile(
+        { filename: `progeny_${character.name}.pdf`, format: "pdf", source },
+        async () => {
+            const bytes = await createPdf_nerdbert(character)
+            return new Blob([bytes as BlobPart], { type: "application/pdf" })
+        }
+    )
+    if (result.status === "download_requested" || result.status === "shared") {
+        notifications.show({
+            title: "PDF template kindly provided by Nerdbert!",
+            message: "https://linktr.ee/nerdbert",
+            autoClose: 5000,
+            color: "grape"
+        })
+    }
+    return result
 }
 
 function base64ToArrayBuffer(base64: string) {

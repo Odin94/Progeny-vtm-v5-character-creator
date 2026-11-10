@@ -417,10 +417,14 @@ export default function CharacterConflictModal({
         const context = telemetry.current!
         track("backup_started", { backup_source: source })
         try {
-            await downloadJson(value, `progeny_${source}_v${value.characterVersion ?? 0}.json`)
+            const delivery = await downloadJson(
+                value,
+                `progeny_${source}_v${value.characterVersion ?? 0}.json`,
+                "conflict-backup"
+            )
             trackCharacterConflict("backup_outcome", context, {
                 backup_source: source,
-                outcome: "success"
+                outcome: delivery.status
             })
         } catch (failure) {
             trackCharacterConflict("backup_outcome", context, {

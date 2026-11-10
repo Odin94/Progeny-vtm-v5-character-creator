@@ -1,3 +1,4 @@
+import { changeSheetPredatorType } from "../utils/changePredatorType"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import {
     Grid,
@@ -14,7 +15,12 @@ import {
 import { memo, useState } from "react"
 import { clans } from "~/data/Clans"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
-import { PredatorTypes } from "~/data/PredatorType"
+import {
+    getPredatorTypeOptions,
+    getCharacterPredatorTypeKey,
+    getPredatorDisciplineKey
+} from "~/data/predatorTypeOptions"
+import { predatorDisciplineKey } from "~/data/PredatorTypeRules"
 import { SheetOptions } from "../CharacterSheet"
 import { sheetSurfaceStyle } from "../utils/style"
 import {
@@ -44,6 +50,7 @@ const TopData = ({ options }: TopDataProps) => {
             .filter((item): item is HomebrewClan & { id: string } => item.kind === "clan")
             .map((item) => ({ item, collection }))
     )
+    const predatorTypes = getPredatorTypeOptions(homebrewCollections, character)
     const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isFreeMode = mode === "free"
     const isExperienceEditable = mode === "xp" || isFreeMode
@@ -234,22 +241,28 @@ const TopData = ({ options }: TopDataProps) => {
                             {isFreeMode ? (
                                 <Select
                                     placeholder="Select a predator type"
-                                    data={Object.keys(PredatorTypes)
+                                    data={Object.keys(predatorTypes)
                                         .filter((predatorTypeName) => predatorTypeName !== "")
                                         .map((predatorTypeName) => ({
                                             value: predatorTypeName,
-                                            label: predatorTypeName
+                                            label:
+                                                predatorTypes[predatorTypeName].name +
+                                                (predatorTypes[predatorTypeName].homebrewSource
+                                                    ? ` — ${predatorTypes[predatorTypeName].homebrewSource!.collectionName}`
+                                                    : "")
                                         }))}
-                                    value={character.predatorType.name || null}
-                                    onChange={(value) => {
+                                    value={getCharacterPredatorTypeKey(character) || null}
+                                    allowDeselect={false}
+                                    onOptionSubmit={(value) => {
                                         if (value) {
                                             const selectedPredatorType = value as PredatorTypeName
                                             const selectedPredatorTypeData =
-                                                PredatorTypes[selectedPredatorType]
+                                                predatorTypes[selectedPredatorType]
                                             const firstSpecialty =
                                                 selectedPredatorTypeData.specialtyOptions[0]
                                             const storedSpecialty =
-                                                character.predatorType.name === selectedPredatorType
+                                                getCharacterPredatorTypeKey(character) ===
+                                                selectedPredatorType
                                                     ? character.predatorType.pickedSpecialties[0]
                                                     : undefined
                                             const storedSpecialtyOption = storedSpecialty
@@ -272,10 +285,15 @@ const TopData = ({ options }: TopDataProps) => {
                                                     : ""
                                             )
                                             setPendingPredatorDiscipline(
-                                                character.predatorType.name === selectedPredatorType
-                                                    ? character.predatorType.pickedDiscipline
-                                                    : (selectedPredatorTypeData.disciplineOptions[0]
-                                                          ?.name ?? "")
+                                                getCharacterPredatorTypeKey(character) ===
+                                                    selectedPredatorType
+                                                    ? getPredatorDisciplineKey(character)
+                                                    : selectedPredatorTypeData.disciplineOptions[0]
+                                                      ? predatorDisciplineKey(
+                                                            selectedPredatorTypeData
+                                                                .disciplineOptions[0]
+                                                        )
+                                                      : ""
                                             )
                                             setPredatorTypeModalOpened(true)
                                         }
@@ -463,6 +481,10 @@ const TopData = ({ options }: TopDataProps) => {
                     }}
                     character={character}
                     pickedPredatorType={pendingPredatorType}
+                    predatorTypeDefinition={predatorTypes[pendingPredatorType]}
+                    onConfirmPredatorType={(predatorType) =>
+                        setCharacter((current) => changeSheetPredatorType(current, predatorType))
+                    }
                     setCharacter={setCharacter}
                     nextStep={() => undefined}
                     specialty={pendingPredatorSpecialty}

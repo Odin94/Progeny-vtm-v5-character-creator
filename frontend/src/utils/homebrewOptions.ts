@@ -154,9 +154,14 @@ export const getHomebrewDisciplineOptions = (
     const explicitReferences = availableDisciplines.filter(
         (reference): reference is HomebrewDisciplineReference => typeof reference !== "string"
     )
-    const availableNames = availableDisciplines.map((reference) =>
-        typeof reference === "string" ? reference : reference.name
-    )
+    const availableNames = availableDisciplines.map((reference) => {
+        if (typeof reference === "string") return reference
+        // Saved snapshots retain their names; item IDs survive collection renames.
+        return reference.type === "homebrew"
+            ? (disciplineItems.find(({ item }) => item.id === reference.itemId)?.item.name ??
+                  reference.name)
+            : reference.name
+    })
     const allowedHomebrewIds = new Set(
         explicitReferences.flatMap((reference) =>
             reference.type === "homebrew" && reference.itemId ? [reference.itemId] : []
@@ -212,10 +217,11 @@ export const getHomebrewDisciplineOptions = (
                     .filter(
                         ({ item, collection }) =>
                             collection.id === homebrew.collection.id &&
-                            item.discipline.toLowerCase() === name.toLowerCase() &&
                             (item.disciplineRef?.type === "homebrew"
                                 ? item.disciplineRef.itemId === homebrew.item.id
-                                : !item.disciplineRef)
+                                : !item.disciplineRef &&
+                                  item.discipline.toLowerCase() ===
+                                      homebrew.item.name.toLowerCase())
                     )
                     .map(({ item, collection }) => homebrewPowerToCharacterPower(item, collection)),
                 isCustom: true,

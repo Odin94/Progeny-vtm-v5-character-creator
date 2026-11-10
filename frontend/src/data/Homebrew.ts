@@ -1,3 +1,5 @@
+import type { PredatorType } from "./PredatorType"
+
 export const homebrewItemKinds = [
     "discipline",
     "power",
@@ -7,7 +9,8 @@ export const homebrewItemKinds = [
     "loresheet",
     "merit",
     "flaw",
-    "clan"
+    "clan",
+    "predatorType"
 ] as const
 
 export type HomebrewItemKind = (typeof homebrewItemKinds)[number]
@@ -82,7 +85,15 @@ export type HomebrewClan = HomebrewItemBase & {
     excludedMeritsAndFlaws: string[]
 }
 
+export type HomebrewPredatorType = HomebrewItemBase &
+    PredatorType & {
+        kind: "predatorType"
+        description: string
+        skillBonuses: NonNullable<PredatorType["skillBonuses"]>
+    }
+
 export type HomebrewItem =
+    | HomebrewPredatorType
     | HomebrewDiscipline
     | HomebrewPower
     | HomebrewMeritFlaw
@@ -177,6 +188,21 @@ export type HomebrewPublishRequest = {
 }
 
 export const createEmptyHomebrewItem = (kind: HomebrewItemKind): HomebrewItem => {
+    if (kind === "predatorType") {
+        return {
+            kind,
+            name: "",
+            summary: "",
+            description: "",
+            specialtyOptions: [],
+            disciplineOptions: [],
+            meritsAndFlaws: [],
+            selectableMeritsAndFlaws: [],
+            skillBonuses: [],
+            humanityChange: 0,
+            bloodPotencyChange: 0
+        }
+    }
     if (kind === "discipline") {
         return { kind, name: "", summary: "", description: "", logo: "" }
     }
@@ -243,4 +269,8 @@ export const createEmptyHomebrewItem = (kind: HomebrewItemKind): HomebrewItem =>
 }
 
 export const homebrewKindLabel = (kind: HomebrewItemKind) =>
-    kind === "formula" ? "Thin-Blood Formula" : kind.charAt(0).toUpperCase() + kind.slice(1)
+    kind === "predatorType"
+        ? "Predator Type"
+        : kind === "formula"
+          ? "Thin-Blood Formula"
+          : kind.charAt(0).toUpperCase() + kind.slice(1)

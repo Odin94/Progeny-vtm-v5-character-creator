@@ -2,6 +2,7 @@ import { memo } from "react"
 import { Badge, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 import type { HomebrewItem, HomebrewPower } from "~/data/Homebrew"
 import { homebrewKindLabel } from "~/data/Homebrew"
+import HomebrewPredatorTypePreview from "~/components/HomebrewPredatorTypePreview"
 import HomebrewLoresheetPreview from "~/components/HomebrewLoresheetPreview"
 
 const Detail = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -83,6 +84,7 @@ const HomebrewMeritFlawPreview = ({
 )
 
 const HomebrewItemPreview = ({ item }: { item: HomebrewItem }) => {
+    if (item.kind === "predatorType") return <HomebrewPredatorTypePreview item={item} />
     if (item.kind === "loresheet") {
         return <HomebrewLoresheetPreview item={item} />
     }

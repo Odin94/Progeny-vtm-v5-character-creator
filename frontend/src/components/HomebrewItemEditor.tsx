@@ -1,3 +1,4 @@
+import HomebrewValidationSummary from "./HomebrewValidationSummary"
 import {
     Button,
     Group,
@@ -13,6 +14,8 @@ import {
     Textarea
 } from "@mantine/core"
 import { useEffect, useState } from "react"
+import HomebrewPredatorTypeEditor from "~/components/HomebrewPredatorTypeEditor"
+import { homebrewPredatorTypeSchema } from "~/data/HomebrewPredatorTypeValidation"
 import HomebrewPowerCardEditor from "~/components/HomebrewPowerCardEditor"
 import OrnamentalDivider from "~/components/OrnamentalDivider"
 import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
@@ -31,6 +34,8 @@ import "./HomebrewItemEditor.css"
 
 type Props = {
     opened: boolean
+    isNew?: boolean
+    draftStorageKey?: string
     item: HomebrewItem
     collectionItems: HomebrewItem[]
     onClose: () => void
@@ -39,19 +44,48 @@ type Props = {
 
 type FieldErrors = Partial<Record<string, string>>
 
-const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: Props) => {
-    const [draft, setDraft] = useState(item)
+const HomebrewItemEditor = ({
+    opened,
+    isNew,
+    draftStorageKey,
+    item,
+    collectionItems,
+    onClose,
+    onSave
+}: Props) => {
+    const restoreDraft = (): HomebrewItem => {
+        if (!draftStorageKey) return item
+        try {
+            const saved = JSON.parse(localStorage.getItem(draftStorageKey) ?? "null")
+            if (saved && saved.kind === item.kind && typeof saved.name === "string")
+                return { ...item, ...saved, id: item.id }
+        } catch {
+            /* An unavailable or malformed local draft must not block editing. */
+        }
+        return item
+    }
+    const [draft, setDraft] = useState(restoreDraft)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
     useEffect(() => {
         if (opened) {
-            setDraft(item)
+            setDraft(restoreDraft())
             setFieldErrors({})
         }
-    }, [item, opened])
+    }, [item, opened, draftStorageKey])
 
     const update = (values: Partial<HomebrewItem>) =>
-        setDraft((current) => ({ ...current, ...values }) as HomebrewItem)
+        setDraft((current) => {
+            const next = { ...current, ...values } as HomebrewItem
+            if (draftStorageKey) {
+                try {
+                    localStorage.setItem(draftStorageKey, JSON.stringify(next))
+                } catch {
+                    /* Keep the editor usable when storage is full. */
+                }
+            }
+            return next
+        })
 
     const homebrewDisciplines = collectionItems.filter(
         (candidate): candidate is HomebrewDiscipline & { id: string } =>
@@ -227,6 +261,23 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
             }
         }
 
+        if (draft.kind === "predatorType") {
+            const result = homebrewPredatorTypeSchema.safeParse(draft)
+            if (!result.success)
+                for (const issue of result.error.issues)
+                    addError(issue.path.join("."), issue.message)
+            if (
+                draft.disciplineOptions.some(
+                    (ref) =>
+                        ref.type === "homebrew" &&
+                        !homebrewDisciplines.some((d) => d.id === ref.itemId)
+                )
+            )
+                addError(
+                    "disciplineOptions",
+                    "Each Homebrew Discipline must target an item in this collection."
+                )
+        }
         return errors
     }
 
@@ -250,6 +301,13 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                     }
                   : draft
         onSave(normalizedDraft)
+        if (draftStorageKey) {
+            try {
+                localStorage.removeItem(draftStorageKey)
+            } catch {
+                /* Saving the rule still succeeds without local storage. */
+            }
+        }
     }
 
     const commonFields = (
@@ -412,6 +470,35 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
           })()
         : null
 
+    if (draft.kind === "predatorType") {
+        return (
+            <Modal
+                opened={opened}
+                onClose={onClose}
+                aria-label="Homebrew Predator Type editor"
+                centered
+                size="xl"
+                withCloseButton={false}
+                classNames={{
+                    content: "homebrew-loresheet__modal",
+                    body: "homebrew-loresheet__modal-body"
+                }}
+            >
+                <HomebrewPredatorTypeEditor
+                    isNew={isNew ?? !item.id}
+                    draft={draft}
+                    update={update}
+                    errors={fieldErrors}
+                    disciplineOptions={disciplineOptions}
+                    encodeDisciplineReference={encodeDisciplineReference}
+                    decodeDisciplineReference={decodeDisciplineReference}
+                    onClose={onClose}
+                    onSave={save}
+                />
+            </Modal>
+        )
+    }
+
     if (draft.kind === "loresheet") {
         return (
             <Modal
@@ -498,6 +585,7 @@ const HomebrewItemEditor = ({ opened, item, collectionItems, onClose, onSave }: 
                         errors={fieldErrors}
                     />
                 ) : null}
+                <HomebrewValidationSummary errors={fieldErrors} />
                 <Group justify="flex-end">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
@@ -739,6 +827,7 @@ const LoresheetEditor = ({
                         {errors.tiers}
                     </Text>
                 ) : null}
+                <HomebrewValidationSummary errors={errors} />
                 <footer className="homebrew-loresheet__footer">
                     <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel

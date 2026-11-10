@@ -1,3 +1,4 @@
+import { getPredatorDisciplineIdentity } from "~/data/predatorTypeOptions"
 import { Character, getDisciplineLevel } from "~/data/Character"
 import { DisciplineName } from "~/data/NameSchemas"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
@@ -41,7 +42,7 @@ export const getDisciplineCost = (
                   disciplineIdentity
                 : `official:${reference.name}` === disciplineIdentity
         ) ||
-        character.predatorType.pickedDiscipline === disciplineName
+        getPredatorDisciplineIdentity(character) === disciplineIdentity
     ) {
         return newLevel * 5
     } else {

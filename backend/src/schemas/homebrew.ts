@@ -1,4 +1,6 @@
 import { z } from "zod"
+import { knownDisciplineNameSchema } from "./NameSchemas.js"
+import { predatorTypeRulesSchema } from "./PredatorTypeRules.js"
 
 const idSchema = z.string().min(1).max(128)
 const nameSchema = z.string().trim().min(1).max(100)
@@ -109,6 +111,82 @@ export const homebrewClanSchema = itemBaseSchema.extend({
     excludedMeritsAndFlaws: z.array(nameSchema).max(50)
 })
 
+const predatorGrantSchema = z.object({
+    name: nameSchema,
+    level: z.number().int().min(0).max(5),
+    summary: summarySchema,
+    excludes: z.array(nameSchema).max(20),
+    type: z.enum(["merit", "flaw"])
+})
+export const homebrewPredatorTypeSchema = itemBaseSchema.extend({
+    kind: z.literal("predatorType"),
+    summary: summarySchema,
+    description: descriptionSchema,
+    specialtyOptions: z
+        .array(
+            predatorTypeRulesSchema.shape.specialtyOptions.element.extend({
+                name: nameSchema,
+                customInput: z.string().trim().min(1).max(200).optional()
+            })
+        )
+        .max(10),
+    disciplineOptions: z
+        .array(
+            disciplineReferenceSchema.refine(
+                (ref) =>
+                    ref.type === "homebrew" ||
+                    (ref.name !== "" && knownDisciplineNameSchema.safeParse(ref.name).success),
+                "Choose a supported Discipline"
+            )
+        )
+        .min(1, "Choose at least one bonus Discipline.")
+        .max(5)
+        .refine(
+            (options) =>
+                new Set(
+                    options.map((option) =>
+                        option.type === "homebrew" ? `homebrew:${option.itemId}` : option.name
+                    )
+                ).size === options.length,
+            "Choose each Discipline once"
+        ),
+    skillBonuses: z
+        .array(predatorTypeRulesSchema.shape.skillBonuses.unwrap().element)
+        .max(27)
+        .refine(
+            (bonuses) => new Set(bonuses.map(({ skill }) => skill)).size === bonuses.length,
+            "Use one grant per skill"
+        ),
+    meritsAndFlaws: z.array(predatorGrantSchema).max(20),
+    selectableMeritsAndFlaws: z
+        .array(
+            z
+                .object({
+                    options: z
+                        .array(
+                            predatorGrantSchema
+                                .omit({ level: true })
+                                .extend({ maxLevel: z.number().int().min(1).max(5) })
+                        )
+                        .min(1)
+                        .max(20),
+                    totalPoints: z.number().int().min(1).max(20),
+                    exclusive: z.boolean().optional()
+                })
+                .refine(
+                    (group) =>
+                        group.exclusive
+                            ? group.options.every((option) => option.maxLevel >= group.totalPoints)
+                            : group.options.reduce((sum, option) => sum + option.maxLevel, 0) >=
+                              group.totalPoints,
+                    "Options must cover the point budget"
+                )
+        )
+        .max(10),
+    humanityChange: z.number().int().min(-10).max(10),
+    bloodPotencyChange: z.number().int().min(-10).max(10)
+})
+
 export const homebrewItemSchema = z.discriminatedUnion("kind", [
     homebrewDisciplineSchema,
     homebrewPowerSchema,
@@ -118,7 +196,8 @@ export const homebrewItemSchema = z.discriminatedUnion("kind", [
     homebrewLoresheetSchema,
     homebrewMeritSchema,
     homebrewFlawSchema,
-    homebrewClanSchema
+    homebrewClanSchema,
+    homebrewPredatorTypeSchema
 ])
 
 export const homebrewCollectionInputSchema = z
@@ -167,6 +246,16 @@ export const homebrewCollectionInputSchema = z
                     "disciplineRef"
                 ])
             }
+            if (item.kind === "predatorType") {
+                item.disciplineOptions.forEach((reference, referenceIndex) =>
+                    validateReference(reference, [
+                        "items",
+                        index,
+                        "disciplineOptions",
+                        referenceIndex
+                    ])
+                )
+            }
             if (item.kind === "clan") {
                 item.nativeDisciplineRefs?.forEach((reference, referenceIndex) =>
                     validateReference(reference, [
@@ -202,7 +291,8 @@ export const libraryQuerySchema = z.object({
             "loresheet",
             "merit",
             "flaw",
-            "clan"
+            "clan",
+            "predatorType"
         ])
         .optional(),
     tag: z.string().trim().max(32).optional(),

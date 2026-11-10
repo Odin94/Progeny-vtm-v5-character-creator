@@ -16,7 +16,15 @@ import { trackEvent } from "../utils/analytics"
 import { Character, getCharacterExcludedPredatorTypes, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
 import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "../data/meritsAndFlawsResolution"
-import { PredatorTypes } from "../data/PredatorType"
+import type { PredatorType } from "../data/PredatorType"
+import {
+    getPredatorTypeOptions,
+    getCharacterPredatorTypeKey,
+    getPredatorDisciplineKey,
+    replacePredatorSkillBonuses
+} from "~/data/predatorTypeOptions"
+import { predatorDisciplineKey } from "~/data/PredatorTypeRules"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../generator/utils"
 import { globals } from "../globals"
 import usePointStates from "../hooks/usePointStates"
@@ -148,6 +156,8 @@ type PredatorTypeModalProps = {
     closeModal: () => void
     character: Character
     pickedPredatorType: PredatorTypeName
+    predatorTypeDefinition?: PredatorType
+    onConfirmPredatorType?: (predatorType: Character["predatorType"]) => void
     setCharacter: (character: Character) => void
     nextStep: () => void
     specialty: string
@@ -164,6 +174,8 @@ const PredatorTypeModal = ({
     nextStep,
     character,
     pickedPredatorType,
+    predatorTypeDefinition,
+    onConfirmPredatorType,
     specialty,
     setSpecialty,
     discipline,
@@ -172,10 +184,14 @@ const PredatorTypeModal = ({
 }: PredatorTypeModalProps) => {
     const phoneScreen = globals.isPhoneScreen
 
-    const predatorType = PredatorTypes[pickedPredatorType]
+    const { data: collections = [] } = useCharacterHomebrew(character.id)
+    const predatorType =
+        predatorTypeDefinition ?? getPredatorTypeOptions(collections, character)[pickedPredatorType]
     const pickedDiscipline = disciplines[discipline as DisciplineName]
 
-    const cat = CATEGORY_INFO[PREDATOR_TO_CATEGORY[pickedPredatorType] ?? "violent"]
+    const cat = predatorType.homebrewSource
+        ? { ...CATEGORY_INFO.sociable, label: "Homebrew" }
+        : CATEGORY_INFO[PREDATOR_TO_CATEGORY[pickedPredatorType] ?? "violent"]
 
     const [customSpecialtyText, setCustomSpecialtyText] = useState("")
 
@@ -190,7 +206,7 @@ const PredatorTypeModal = ({
 
         setFromSelectableMeritsAndFlaws(
             predatorType.selectableMeritsAndFlaws,
-            character.predatorType.name === pickedPredatorType
+            getCharacterPredatorTypeKey(character) === pickedPredatorType
                 ? character.predatorType.pickedMeritsAndFlaws
                 : []
         )
@@ -199,7 +215,7 @@ const PredatorTypeModal = ({
         // pre-filled "which scene?"-style input isn't silently blanked on the way back in.
         // A fresh pick (or a different type) starts empty.
         const storedSpecialty =
-            character.predatorType.name === pickedPredatorType
+            getCharacterPredatorTypeKey(character) === pickedPredatorType
                 ? character.predatorType.pickedSpecialties[0]
                 : undefined
         const selectedOption = predatorType.specialtyOptions.find(
@@ -236,7 +252,7 @@ const PredatorTypeModal = ({
         return subPointStates.some((s) => s.selectedPoints > 0)
     })
 
-    const clanExcluded = getCharacterExcludedPredatorTypes(character).includes(pickedPredatorType)
+    const clanExcluded = getCharacterExcludedPredatorTypes(character).includes(predatorType.name)
     const activeClanName = character.homebrewClan?.name ?? character.clan
 
     const canConfirm = exclusiveGroupsFilled && !clanExcluded
@@ -662,44 +678,63 @@ const PredatorTypeModal = ({
                     </div>
                 )}
 
+                {!!predatorType.skillBonuses?.length && (
+                    <div>
+                        <SectionDivider
+                            label="Skill Dots"
+                            color={cat.accentColor}
+                            lineColor="rgba(80,80,90,.4)"
+                        />
+                        <Text>
+                            {predatorType.skillBonuses
+                                .map((grant) => `+${grant.dots} ${upcase(grant.skill)}`)
+                                .join(" · ")}
+                        </Text>
+                    </div>
+                )}
+                {predatorType.description && (
+                    <Text style={{ whiteSpace: "pre-wrap" }}>{predatorType.description}</Text>
+                )}
                 {/* Skill Specialty */}
-                <div>
-                    <SectionDivider
-                        label="Skill Specialty"
-                        color={cat.accentColor}
-                        lineColor="rgba(80, 80, 90, 0.4)"
-                    />
-                    <SegmentedControl
-                        size={phoneScreen ? "sm" : "md"}
-                        color={cat.mantineColor}
-                        fullWidth
-                        value={specialty}
-                        onChange={(value) => {
-                            setSpecialty(value)
-                            setCustomSpecialtyText("")
-                        }}
-                        data={predatorType.specialtyOptions.map((s) => ({
-                            label: s.customInput
-                                ? upcase(s.skill)
-                                : `${upcase(s.skill)}: ${s.name}`,
-                            value: `${s.skill}_${s.name}`
-                        }))}
-                    />
-                    {(() => {
-                        const selectedSpecialtyOption = predatorType.specialtyOptions.find(
-                            (s) => `${s.skill}_${s.name}` === specialty
-                        )
-                        return selectedSpecialtyOption?.customInput ? (
-                            <TextInput
-                                placeholder={selectedSpecialtyOption.customInput}
-                                value={customSpecialtyText}
-                                onChange={(e) => setCustomSpecialtyText(e.target.value)}
-                                color={cat.accentColor}
-                                mt="xs"
-                            />
-                        ) : null
-                    })()}
-                </div>
+                {predatorType.specialtyOptions.length > 0 && (
+                    <div>
+                        <SectionDivider
+                            label="Skill Specialty"
+                            color={cat.accentColor}
+                            lineColor="rgba(80, 80, 90, 0.4)"
+                        />
+                        <SegmentedControl
+                            size={phoneScreen ? "sm" : "md"}
+                            color={cat.mantineColor}
+                            fullWidth
+                            value={specialty}
+                            onChange={(value) => {
+                                setSpecialty(value)
+                                setCustomSpecialtyText("")
+                            }}
+                            data={predatorType.specialtyOptions.map((s) => ({
+                                label: s.customInput
+                                    ? upcase(s.skill)
+                                    : `${upcase(s.skill)}: ${s.name}`,
+                                value: `${s.skill}_${s.name}`
+                            }))}
+                        />
+                        {(() => {
+                            const selectedSpecialtyOption = predatorType.specialtyOptions.find(
+                                (s) => `${s.skill}_${s.name}` === specialty
+                            )
+                            return selectedSpecialtyOption?.customInput ? (
+                                <TextInput
+                                    placeholder={selectedSpecialtyOption.customInput}
+                                    value={customSpecialtyText}
+                                    onChange={(e) => setCustomSpecialtyText(e.target.value)}
+                                    color={cat.accentColor}
+                                    mt="xs"
+                                />
+                            ) : null
+                        })()}
+                    </div>
+                )}
 
                 {/* Discipline */}
                 <div>
@@ -721,7 +756,7 @@ const PredatorTypeModal = ({
                             onChange={setDiscipline}
                             data={predatorType.disciplineOptions.map((d) => ({
                                 label: upcase(d.name),
-                                value: d.name
+                                value: predatorDisciplineKey(d)
                             }))}
                         />
                     </Tooltip>
@@ -753,17 +788,24 @@ const PredatorTypeModal = ({
                                 (s) => `${s.skill}_${s.name}` === specialty
                             )
                             const pickedDisciplineOption = predatorType.disciplineOptions.find(
-                                ({ name }) => name === discipline
+                                (option) => predatorDisciplineKey(option) === discipline
                             )
-                            if (!pickedSpecialtyOption) {
+                            if (
+                                !pickedSpecialtyOption &&
+                                predatorType.specialtyOptions.length > 0
+                            ) {
                                 console.error(`Couldn't find specialty with key ${specialty}`)
                             } else if (!pickedDisciplineOption) {
                                 console.error(`Couldn't find discipline with name ${discipline}`)
                             } else {
-                                const resolvedSpecialty = {
-                                    skill: pickedSpecialtyOption.skill,
-                                    name: customSpecialtyText.trim() || pickedSpecialtyOption.name
-                                }
+                                const resolvedSpecialty = pickedSpecialtyOption
+                                    ? {
+                                          skill: pickedSpecialtyOption.skill,
+                                          name:
+                                              customSpecialtyText.trim() ||
+                                              pickedSpecialtyOption.name
+                                      }
+                                    : undefined
 
                                 const pickedMeritsAndFlaws =
                                     predatorType.selectableMeritsAndFlaws.flatMap(
@@ -780,12 +822,27 @@ const PredatorTypeModal = ({
                                         }
                                     )
 
-                                const pickedDisciplineName = disciplineNameSchema.parse(discipline)
+                                const pickedDisciplineName = disciplineNameSchema.parse(
+                                    pickedDisciplineOption.name
+                                )
                                 const nextPredatorType = {
-                                    name: pickedPredatorType,
+                                    name: predatorType.name,
+                                    ...(predatorType.homebrewSource && {
+                                        homebrew: {
+                                            ...predatorType,
+                                            homebrewSource: predatorType.homebrewSource
+                                        },
+                                        pickedDisciplineRef: pickedDisciplineOption
+                                    }),
                                     pickedDiscipline: pickedDisciplineName,
-                                    pickedSpecialties: [resolvedSpecialty],
+                                    pickedSpecialties: resolvedSpecialty ? [resolvedSpecialty] : [],
                                     pickedMeritsAndFlaws
+                                }
+                                if (onConfirmPredatorType) {
+                                    onConfirmPredatorType(nextPredatorType)
+                                    closeModal()
+                                    nextStep()
+                                    return
                                 }
                                 const adjustedPickedMeritsAndFlaws =
                                     adjustPickedMeritsAndFlawsForPredatorTypeChange(
@@ -793,15 +850,15 @@ const PredatorTypeModal = ({
                                         nextPredatorType
                                     )
                                 const changedPickedDiscipline =
-                                    pickedDisciplineName !== character.predatorType.pickedDiscipline
+                                    discipline !== getPredatorDisciplineKey(character)
                                 const changedPredatorType =
-                                    pickedPredatorType !== character.predatorType.name
+                                    pickedPredatorType !== getCharacterPredatorTypeKey(character)
                                 const shouldResetDisciplineProgress =
                                     changedPredatorType || changedPickedDiscipline
                                 const nextCharacter = {
                                     ...character,
                                     ...adjustedPickedMeritsAndFlaws,
-                                    predatorType: nextPredatorType,
+                                    ...replacePredatorSkillBonuses(character, nextPredatorType),
                                     disciplines: shouldResetDisciplineProgress
                                         ? []
                                         : character.disciplines,

@@ -10,6 +10,7 @@ import { ceremonySchema } from "./Ceremonies.js"
 import { clanNameSchema, disciplineNameSchema, predatorTypeNameSchema } from "./NameSchemas.js"
 import { skillsSchema } from "./Skills.js"
 import { specialtySchema } from "./Specialties.js"
+import { predatorTypeRulesSchema, predatorDisciplineSchema } from "./PredatorTypeRules.js"
 import { clans } from "./Clans"
 import { getAllKnownMeritsAndFlaws } from "./MeritsAndFlaws"
 import type { Power } from "./Disciplines.js"
@@ -39,7 +40,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 11
+export const schemaVersion = 12
 
 export const disciplineLevelsSchema = z.record(z.string(), z.number().int().min(0).max(5))
 
@@ -87,7 +88,15 @@ export const characterSchema = z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
         pickedSpecialties: specialtySchema.array(),
-        pickedMeritsAndFlaws: meritFlawSchema.array()
+        pickedMeritsAndFlaws: meritFlawSchema.array(),
+        homebrew: predatorTypeRulesSchema
+            .extend({ homebrewSource: homebrewSourceSchema })
+            .optional(),
+        pickedDisciplineRef: predatorDisciplineSchema.optional(),
+        appliedSkillBonuses: z
+            .object({ skill: skillsSchema.keyof(), dots: z.number().int().min(0).max(5) })
+            .array()
+            .optional()
     }),
     touchstones: touchstoneSchema.array(),
     ambition: z.string(),
@@ -401,8 +410,14 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV8ToV9Compatibility(parsed)
     patchV9ToV10Compatibility(parsed)
     patchV10ToV11Compatibility(parsed)
+    patchV11ToV12Compatibility(parsed)
 
     parsed["version"] = schemaVersion
+}
+
+export const patchV11ToV12Compatibility = (parsed: Record<string, unknown>): void => {
+    // Custom predator rules and applied grants are optional; official characters need no new data.
+    if (typeof parsed["version"] !== "number" || parsed["version"] < 12) parsed["version"] = 12
 }
 
 export const patchV9ToV10Compatibility = (parsed: Record<string, unknown>): void => {
@@ -478,7 +493,7 @@ export const patchV2ToV3Compatibility = (parsed: Record<string, unknown>): void 
 
     if (isRecord(parsed["predatorType"])) {
         const predatorType = parsed["predatorType"]
-        if (Array.isArray(predatorType["pickedMeritsAndFlaws"])) {
+        if (Array.isArray(predatorType["pickedMeritsAndFlaws"]) && !predatorType["homebrew"]) {
             predatorType["pickedMeritsAndFlaws"].forEach((meritFlaw: unknown) => {
                 if (meritFlaw && typeof meritFlaw === "object") {
                     updateMeritFlawExcludes(meritFlaw as Record<string, unknown>)

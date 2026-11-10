@@ -3,7 +3,7 @@ import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import { trackEvent } from "../../utils/analytics"
 import { Character, getCharacterExcludedPredatorTypes } from "../../data/Character"
-import { PredatorType, PredatorTypes } from "../../data/PredatorType"
+import { PredatorType } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
@@ -14,6 +14,14 @@ import {
     generatorScrollableShellStyle
 } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
+import { useCharacterHomebrew } from "~/hooks/useHomebrew"
+import {
+    getPredatorTypeOptions,
+    getCharacterPredatorTypeKey,
+    getPredatorDisciplineKey
+} from "~/data/predatorTypeOptions"
+import { predatorDisciplineKey } from "~/data/PredatorTypeRules"
+import HomebrewBadge from "~/components/HomebrewBadge"
 import { GeneratorStepHero } from "./sharedGeneratorUi"
 
 type PredatorTypePickerProps = {
@@ -125,6 +133,8 @@ const PredatorTypePicker = ({
     skipPredatorType
 }: PredatorTypePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
+    const { data: collections = [] } = useCharacterHomebrew(character.id)
+    const predatorTypes = getPredatorTypeOptions(collections, character)
 
     const isThinBlood = character.clan === "Thin-blood"
 
@@ -133,10 +143,14 @@ const PredatorTypePicker = ({
     const openPredatorType = (predatorTypeName: PredatorTypeName) => {
         if (isThinBlood) return
 
-        const predatorType = PredatorTypes[predatorTypeName]
+        const predatorType = predatorTypes[predatorTypeName]
         const firstSpecialtyOption = predatorType.specialtyOptions[0]
-        const firstSpecialtyKey = `${firstSpecialtyOption?.skill}_${firstSpecialtyOption?.name}`
-        const firstDisciplineName = predatorType.disciplineOptions[0]?.name
+        const firstSpecialtyKey = firstSpecialtyOption
+            ? `${firstSpecialtyOption.skill}_${firstSpecialtyOption.name}`
+            : ""
+        const firstDisciplineName = predatorType.disciplineOptions[0]
+            ? predatorDisciplineKey(predatorType.disciplineOptions[0])
+            : ""
 
         // Re-opening the same card after stepping away: the lifted state still holds the
         // in-progress edits, so keep them instead of resetting to the first option.
@@ -151,7 +165,7 @@ const PredatorTypePicker = ({
         // non-destructive — it no longer trips the reset that clears disciplines, rituals and
         // ceremonies in PredatorTypeModal.
         const confirmed = character.predatorType
-        if (confirmed.name === predatorTypeName) {
+        if (getCharacterPredatorTypeKey(character) === predatorTypeName) {
             setPickedPredatorType(predatorTypeName)
             setSpecialty(
                 specialtyKeyForStored(
@@ -160,7 +174,7 @@ const PredatorTypePicker = ({
                     firstSpecialtyKey
                 )
             )
-            setDiscipline(confirmed.pickedDiscipline || firstDisciplineName)
+            setDiscipline(getPredatorDisciplineKey(character) || firstDisciplineName)
             openModal()
             return
         }
@@ -173,9 +187,11 @@ const PredatorTypePicker = ({
     }
 
     const createCard = (predatorTypeName: PredatorTypeName, meta: CategoryMeta) => {
-        const clanDisabled = getCharacterExcludedPredatorTypes(character).includes(predatorTypeName)
-        const isSelected = character.predatorType.name === predatorTypeName
-        const predatorType = PredatorTypes[predatorTypeName]
+        const predatorType = predatorTypes[predatorTypeName]
+        const clanDisabled = getCharacterExcludedPredatorTypes(character).includes(
+            predatorType.name
+        )
+        const isSelected = getCharacterPredatorTypeKey(character) === predatorTypeName
 
         return (
             <div
@@ -227,7 +243,10 @@ const PredatorTypePicker = ({
                         color: "rgb(244, 236, 232)"
                     }}
                 >
-                    {predatorTypeName}
+                    {predatorType.name}
+                    {predatorType.homebrewSource && (
+                        <HomebrewBadge source={predatorType.homebrewSource} />
+                    )}
                     {clanDisabled && (
                         <span
                             style={{
@@ -313,7 +332,20 @@ const PredatorTypePicker = ({
                 marginBottom={phoneScreen ? 18 : 26}
             />
 
-            {CATEGORIES.map((meta) => (
+            {[
+                ...CATEGORIES,
+                ...(Object.values(predatorTypes).some((option) => option.homebrewSource)
+                    ? [
+                          {
+                              ...CATEGORIES[1],
+                              label: "Homebrew",
+                              predatorTypes: Object.keys(predatorTypes).filter(
+                                  (key) => predatorTypes[key].homebrewSource
+                              )
+                          }
+                      ]
+                    : [])
+            ].map((meta) => (
                 <Box key={meta.label} px={phoneScreen ? 4 : 12}>
                     <CategoryHeading
                         label={meta.label}
@@ -404,6 +436,7 @@ const PredatorTypePicker = ({
                     closeModal={closeModal}
                     character={character}
                     pickedPredatorType={pickedPredatorType}
+                    predatorTypeDefinition={predatorTypes[pickedPredatorType]}
                     setCharacter={setCharacter}
                     nextStep={nextStep}
                     specialty={specialty}

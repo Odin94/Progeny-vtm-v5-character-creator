@@ -121,6 +121,15 @@ const replaceItemAndReferences = (
                 disciplineRef: { ...item.disciplineRef, name: replacement.name }
             }
         }
+        if (item.kind === "predatorType")
+            return {
+                ...item,
+                disciplineOptions: item.disciplineOptions.map((reference) =>
+                    reference.type === "homebrew" && reference.itemId === previous.id
+                        ? { ...reference, name: replacement.name }
+                        : reference
+                )
+            }
         if (item.kind === "clan" && item.nativeDisciplineRefs) {
             const nativeDisciplineRefs = item.nativeDisciplineRefs.map((reference) =>
                 reference.type === "homebrew" && reference.itemId === previous.id
@@ -140,7 +149,7 @@ const replaceItemAndReferences = (
 const HomebrewDetailsPage = ({ collectionId }: Props) => {
     const isNew = collectionId === "new"
     const navigate = useNavigate()
-    const { isAuthenticated, isLoading: authLoading, signIn } = useAuth()
+    const { user, isAuthenticated, isLoading: authLoading, signIn } = useAuth()
     const collectionQuery = useHomebrewCollection(collectionId, isAuthenticated && !isNew)
     const createMutation = useCreateHomebrewCollection()
     const updateMutation = useUpdateHomebrewCollection()
@@ -496,6 +505,12 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
 
             {itemEditor ? (
                 <HomebrewItemEditor
+                    isNew={itemEditor.index === null}
+                    draftStorageKey={
+                        itemEditor.index === null
+                            ? `homebrew:new-item:${user?.id ?? "local"}:${collectionId}:${itemEditor.item.kind}`
+                            : undefined
+                    }
                     opened
                     item={itemEditor.item}
                     collectionItems={draft.items}

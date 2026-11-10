@@ -44,6 +44,7 @@ export const disciplineNameSchema = z.string()
 export type DisciplineName = z.infer<typeof disciplineNameSchema>
 
 export const predatorTypeNameSchema = z.union([
+    z.string().max(100),
     z.literal("Alleycat"),
     z.literal("Extortionist"),
     z.literal("Roadside Killer"),

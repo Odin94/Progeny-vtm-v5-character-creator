@@ -1,4 +1,6 @@
-import { PredatorTypes } from "~/data/PredatorType"
+import { downloadFile } from "~/utils/fileDownload"
+import type { DownloadSource } from "~/utils/downloadAnalytics"
+import { getCharacterPredatorType } from "~/data/predatorTypeOptions"
 import { Attributes, AttributesKey } from "../data/Attributes"
 import { Character, getDisciplineLevel, getEmptyCharacter } from "../data/Character"
 import {
@@ -43,27 +45,23 @@ export const updateHealthAndWillpowerAndBloodPotencyAndHumanity = (character: Ch
     // Blood Potency
     const bloodPotency = calculateBloodPotency(character)
 
-    const humanity = 7 + (PredatorTypes[character.predatorType.name]?.humanityChange ?? 0)
+    const humanity = 7 + (getCharacterPredatorType(character)?.humanityChange ?? 0)
 
     character.maxHealth = health
     character.willpower = willpower
     character.bloodPotency = bloodPotency
-    character.humanity = humanity
+    character.humanity = Math.max(0, Math.min(10, humanity))
 }
 
-export const downloadJson = async (character: Character, filename?: string) => {
-    const json = JSON.stringify(character, null, 2)
-    const blob = new Blob([json], { type: "application/json" })
-    const link = document.createElement("a")
-
-    link.href = window.URL.createObjectURL(blob)
-    link.download = filename ?? `progeny_${character.name}.json`
-    link.click()
-    // Clean up the object URL to prevent memory leaks
-    setTimeout(() => {
-        window.URL.revokeObjectURL(link.href)
-    }, 100)
-}
+export const downloadJson = (
+    character: Character,
+    filename?: string,
+    source: DownloadSource = "unknown"
+) =>
+    downloadFile(
+        { filename: filename ?? `progeny_${character.name}.json`, format: "progeny-json", source },
+        () => new Blob([JSON.stringify(character, null, 2)], { type: "application/json" })
+    )
 
 export const getUploadFile = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {

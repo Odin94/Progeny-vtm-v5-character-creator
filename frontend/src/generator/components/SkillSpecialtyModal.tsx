@@ -1,3 +1,4 @@
+import { replacePredatorSkillBonuses } from "~/data/predatorTypeOptions"
 import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
 import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import { IconSparkles } from "@tabler/icons-react"
@@ -143,7 +144,18 @@ export const SpecialtyModal = ({
         })
 
         closeModal()
-        setCharacter({ ...character, skills, skillSpecialties: result })
+        setCharacter({
+            ...character,
+            ...replacePredatorSkillBonuses(
+                {
+                    ...character,
+                    skills,
+                    predatorType: { ...character.predatorType, appliedSkillBonuses: undefined }
+                },
+                character.predatorType
+            ),
+            skillSpecialties: result
+        })
         nextStep()
     }
 

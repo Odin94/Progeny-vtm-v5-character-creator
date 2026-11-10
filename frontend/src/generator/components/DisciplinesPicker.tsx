@@ -113,7 +113,15 @@ const DisciplinesPicker = ({
             .map((item) => ({ item, collection }))
     )
     const hasPredatorType = character.predatorType.name !== ""
-    const predatorTypeDiscipline = disciplines[character.predatorType.pickedDiscipline]
+    const predatorReference = character.predatorType.pickedDisciplineRef ?? {
+        type: "official" as const,
+        name: character.predatorType.pickedDiscipline
+    }
+    const predatorTypeDiscipline = Object.values(
+        getHomebrewDisciplineOptions(homebrewCollections, [
+            { ...predatorReference, type: predatorReference.type ?? "official" }
+        ])
+    )[0]
 
     const isPicked = (power: Power) =>
         allPickedPowers.some(
@@ -733,7 +741,7 @@ const DisciplinesPicker = ({
                             >
                                 Clan powers {pickedPowers.length}/3
                             </Badge>
-                            {hasPredatorType ? (
+                            {hasPredatorType && predatorTypeDiscipline ? (
                                 <Badge
                                     color={pickedPredatorTypePower ? "green" : "red"}
                                     variant="light"
@@ -803,7 +811,7 @@ const DisciplinesPicker = ({
                             </>
                         ) : null}
 
-                        {hasPredatorType ? (
+                        {hasPredatorType && predatorTypeDiscipline ? (
                             <>
                                 <GeneratorSectionDivider
                                     label={`Predator Type · ${upcase(character.predatorType.pickedDiscipline)}`}

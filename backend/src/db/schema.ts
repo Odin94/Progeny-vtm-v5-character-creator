@@ -273,7 +273,8 @@ export const homebrewItems = sqliteTable(
                 "loresheet",
                 "merit",
                 "flaw",
-                "clan"
+                "clan",
+                "predatorType"
             ]
         }).notNull(),
         data: text("data").notNull(),

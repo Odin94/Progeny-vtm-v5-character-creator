@@ -1,3 +1,4 @@
+import HomebrewValidationSummary from "./HomebrewValidationSummary"
 import {
     ActionIcon,
     Button,
@@ -264,6 +265,7 @@ const HomebrewPowerCardEditor = ({
                         error={errors.description}
                     />
 
+                    <HomebrewValidationSummary errors={errors} />
                     <Group justify="flex-end" className="homebrew-power-card__footer">
                         <Button variant="subtle" color="gray" onClick={onClose}>
                             Cancel

@@ -1,3 +1,4 @@
+import { FileSaveDialog } from "~/components/FileSavePrompt"
 import { createRootRoute } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createTheme, MantineProvider } from "@mantine/core"
@@ -206,6 +207,7 @@ export const Route = createRootRoute({
                     forceColorScheme="dark"
                 >
                     <Notifications position="bottom-center" zIndex={3000} />
+                    <FileSaveDialog />
                     <AuthUnauthorizedHandler />
                     <AuthSignInConfirmation />
                     <CharacterAutosave />
